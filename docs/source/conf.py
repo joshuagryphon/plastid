@@ -19,7 +19,7 @@ import os
 import unittest
 import datetime
 import yeti #JGD
-from yeti.mini2to3 import cStringIO
+from yeti.util.services.mini2to3 import cStringIO
 
 from pp.sphinxlib import autodoc_process_docstring
 
