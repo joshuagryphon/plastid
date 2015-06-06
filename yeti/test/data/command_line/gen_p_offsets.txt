@@ -1,0 +1,24 @@
+## date = '2015-03-30 19:44:02.849556'
+## args = {  
+##          'count_files'      : ['gen_reads.bam'],
+##          'countfile_format' : 'BAM',
+##          'default'          : 13,
+##          'mapping'          : 'fiveprime',
+##          'max_length'       : 31,
+##          'min_counts'       : 10,
+##          'min_length'       : 26,
+##          'nibble'           : 0,
+##          'norm_region'      : [70, 150],
+##          'offset'           : 0,
+##          'outbase'          : 'gen',
+##          'require_upstream' : True,
+##          'roi_file'         : 'gen_cds_start_rois.txt'
+##        }
+#length	p_offset
+26	12
+27	12
+28	13
+29	13
+30	14
+31	13
+default	13

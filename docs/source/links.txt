@@ -1,0 +1,39 @@
+.. File format links
+
+.. _Wiggle: http://genome.ucsc.edu/goldenpath/help/wiggle.html
+.. _bedGraph: http://genome.ucsc.edu/goldenpath/help/bedgraph.html
+.. _BAM: http://genome.ucsc.edu/goldenpath/help/bam.html
+.. _BED: http://genome.ucsc.edu/FAQ/FAQformat.html#format1
+.. _BigBed: http://genome.ucsc.edu/goldenPath/help/bigBed.html
+.. _GTF2: http://mblab.wustl.edu/GTF22.html
+.. _GFF3: http://www.sequenceontology.org/gff3.shtml
+.. _PSL: http://genome.ucsc.edu/FAQ/FAQformat.html#format2
+.. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
+.. _autoSql: http://genomewiki.ucsc.edu/index.php/AutoSql
+.. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
+.. _tabix: http://samtools.sourceforge.net/tabix.shtml 
+
+.. Python links
+
+.. _Python: https://www.python.org/
+.. _Pip: https://pypi.python.org/pypi/pip
+.. _PyPi: https://pypi.python.org
+.. _NumPy: http://docs.scipy.org/doc/numpy/reference/
+.. _SciPy: http://docs.scipy.org/doc/scipy/reference/
+.. _Pandas: http://pandas.pydata.org/
+.. _Pysam: http://pysam.readthedocs.org/en/latest/
+.. _matplotlib: http://matplotlib.org/
+.. _Biopython: http://biopython.org
+.. _Virtualenv: https://virtualenv.pypa.io/en/latest/
+.. _nose: https://nose.readthedocs.org/en/latest/
+
+
+.. Non-Python software links
+
+.. _SAMtools: http://samtools.sourceforge.net/
+.. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
+.. _Tophat: http://tophat.cbcb.umd.edu/
+
+.. Our links
+
+.. _our github link: https://github.com 

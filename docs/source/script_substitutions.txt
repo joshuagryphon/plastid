@@ -1,0 +1,22 @@
+ .. |counts_in_region|  replace:: :py:mod:`~yeti.bin.counts_in_region`
+ .. |crossmap|  replace:: :py:mod:`~yeti.bin.crossmap`
+ .. |cs|  replace:: :py:mod:`~yeti.bin.cs`
+ .. |demux_reads|  replace:: :py:mod:`~yeti.bin.demux_reads`
+ .. |findjuncs|  replace:: :py:mod:`~yeti.bin.findjuncs`
+ .. |get_count_vectors|  replace:: :py:mod:`~yeti.bin.get_count_vectors`
+ .. |gff_parent_types|  replace:: :py:mod:`~yeti.bin.gff_parent_types`
+ .. |make_wiggle|  replace:: :py:mod:`~yeti.bin.make_wiggle`
+ .. |metagene|  replace:: :py:mod:`~yeti.bin.metagene`
+ .. |phase_by_size|  replace:: :py:mod:`~yeti.bin.phase_by_size`
+ .. |psite|  replace:: :py:mod:`~yeti.bin.psite`
+ .. |reformat_transcripts|  replace:: :py:mod:`~yeti.bin.reformat_transcripts`
+ .. |slidejuncs|  replace:: :py:mod:`~yeti.bin.slidejuncs`
+
+
+ .. |bin|  replace:: :py:obj:`yeti.bin`
+ .. |genomics|  replace:: :py:obj:`yeti.genomics`
+ .. |readers|  replace:: :py:obj:`yeti.readers`
+ .. |scriptlib|  replace:: :py:obj:`yeti.util.scriptlib`
+ .. |util|  replace:: :py:obj:`yeti.util`
+ .. |test|  replace:: :py:obj:`yeti.test`
+

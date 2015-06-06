@@ -1,0 +1,13 @@
+*swp
+*pyc
+*~
+.*project
+.noseids
+.svn/
+.coverage/
+.settings/
+__pycache__/
+build/
+dist/
+*egg-info/
+docs/source/generated
