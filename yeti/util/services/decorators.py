@@ -139,7 +139,7 @@ def catch_warnings(simple_filter="ignore"):
         
     See also
     --------
-    :py:mod:`warnings`
+    warnings
         Warnings module, especially sections on warnings filters
     """
     def decorator(func):

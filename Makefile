@@ -1,10 +1,10 @@
-# Makefile for genometools
+# Makefile for yeti
 #
 # Run in project folder, not source folder.
 date := $(shell date +%Y-%m-%d)
 
 help:
-	@echo "genometools make help"
+	@echo "yeti make help"
 	@echo " "
 	@echo "Please use \`make <target>\`, choosing <target> from the following:"
 	@echo "    dist        to make HTML documentation and eggs for distribution"
@@ -18,18 +18,18 @@ help:
 	@echo "    clean       to remove everything previously built"
 	@echo " "
 
-docs/source/substitutions.txt :
+docs/source/class_substitutions.txt :
 	mkdir -p docs/source
-	get_class_substitutions genometools genometools
-	mv genometools_substitutions.txt docs/source/class_substitutions.txt
+	get_class_substitutions yeti yeti
+	mv yeti_substitutions.txt docs/source/class_substitutions.txt
 
-docs/build/html : docs/source/substitutions.txt | docs/source/generated
+docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
 	$(MAKE) html -C docs
 
 docs/source/generated :
-	sphinx-apidoc -e -o docs/source/generated genometools
-	rm docs/source/generated/genometools.test*rst
-	fix_package_template -e test genometools docs/source/generated
+	sphinx-apidoc -e -o docs/source/generated yeti
+	rm docs/source/generated/yeti.test*rst
+	fix_package_template -e test yeti docs/source/generated
 
 docs : | docs/build/html docs/source/generated
 
