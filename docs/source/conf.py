@@ -12,21 +12,14 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import shlex
-import subprocess
 import os
 import unittest
 import datetime
-import yeti #JGD
+import yeti
 from yeti.util.services.mini2to3 import cStringIO
 
 from pp.sphinxlib import autodoc_process_docstring
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
 
@@ -42,7 +35,7 @@ rst_prolog = """
 # like a typical sidebar
 master_doc = 'master_toctree'
 
-#JGD - don't alphabetize everything by "g"
+# ignore package prefix when alphabetizing index
 modindex_common_prefix = ["yeti."]
 
 extensions = [
@@ -61,7 +54,7 @@ extensions = [
 
 
 
-# JGD - theming, compatibility both for local and builds on readthedocs --------
+# theming, compatibility both for local and builds on readthedocs -------------
 
 # code from http://read-the-docs.readthedocs.org/en/latest/theme.html
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -71,45 +64,48 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
-# JGD - sphinx autodoc config --------------------------------------------------
+# sphinx autodoc config -------------------------------------------------------
 
-autodoc_default_flags = ["show-inheritance",
-                         "undoc-members",
-                         "special-members",
-                         "private-members",
-                         "inherited-members",
-                        ]
+autodoc_default_flags = [
+    "show-inheritance",
+    "undoc-members",
+    "special-members",
+    "private-members",
+    "inherited-members",
+]
 autodoc_member_order = "bysource"
 
 # never document these methods/attributes
 exclude_always = {
-              "__class__",
-              "__delattr__",
-              "__dict__",
-              "__format__",
-              "__hash__",
-              "__iter__",
-              "__module__",
-              "__new__",
-              "__reduce__",
-              "__reduce_ex__",
-              "__repr__",
-              "__sizeof__",
-              "__subclasshook__",
-              "__weakref__",
-              }
+    "__class__",
+    "__delattr__",
+    "__dict__",
+    "__format__",
+    "__hash__",
+    "__iter__",
+    "__module__",
+    "__new__",
+    "__reduce__",
+    "__reduce_ex__",
+    "__repr__",
+    "__sizeof__",
+    "__subclasshook__",
+    "__weakref__",
+    "__del__"
+}
 
-# document these only if I have redefined their docstrings compared to 
-# the base classes
+# document these only if their docstrings don't match those of their base classes
 exclude_if_no_redoc_base_classes = [object,unittest.TestCase]
 exclude_if_no_redoc = {
-                    "__init__",
-                    "__getattribute__",
-                   # "__getitem__",
-                    "__setattr__",
-                    "__str__",
-                   # "__setitem__",
-                    }
+    "__init__",
+    "__getattribute__",
+    "__setattribute__",
+    "__getattr__",
+    "__setattr__",
+    "__getitem__",
+    "__setitem__",
+    "__str__",
+}
 exclude_if_no_redoc |= set(dir(unittest.TestCase))
 
 
@@ -118,8 +114,10 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     either:
     
         1.  Appear above ``exclude_always``
+
+        2.  Have an attribute called ``yeti_skipdoc`` set to *True*
         
-        2.  Have the same docstring as the method with the same name defined in 
+        3.  Have the same docstring as the method with the same name defined in 
             a base class that appears in ``exclude_if_no_redoc_base_classes``
     
     Parameters
@@ -151,10 +149,10 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     """
     if skip == False:
         if name in exclude_always:
-            #print("Skipping %s:%s because excluded" % (obj,name))
+            skip = True
+        elif getattr(obj,"yeti_skipdoc",False) == True:
             skip = True
         elif name in exclude_if_no_redoc:
-            #print("Skipping %s because docstring not redefined" % obj.__name__)
             for cls in exclude_if_no_redoc_base_classes:
                 if isinstance(obj,cls):
                     try:
@@ -171,7 +169,7 @@ def setup(app):
     app.connect("autodoc-process-docstring",autodoc_process_docstring)
 
 
-# JGD - intersphinx config -----------------------------------------------------
+# intersphinx config ------------------------------------------------------------
 intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         #"numpy"  : ("http://docs.scipy.org/numpy/doc",None), # 404 error
                         #"scipy"  : ("http://docs.scipy.org/scipy/reference",None), # 404 error
@@ -181,7 +179,7 @@ intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         }
 
 
-# JGD - sphinx.ext.extlinks config ---------------------------------------------
+# sphinx.ext.extlinks config ----------------------------------------------------
 extlinks = { 'link_github'      : ('https://some_url',None),
              'link_weissmanlab' : ('http://weissmanlab.ucsf.edu',None),
            }
@@ -190,7 +188,7 @@ for k,v in intersphinx_mapping.items():
         extlinks["%s_link"] = v
 
 
-# JGD - other ------------------------------------------------------------------
+# other -------------------------------------------------------------------------
 
 
 # General information about the project.

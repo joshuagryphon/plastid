@@ -166,9 +166,8 @@ def catch_warnings(simple_filter="ignore"):
         return new_func
     
     return decorator
-        
 
-def deprecated(obj):
+def deprecated(func_or_class):
     """Deprecation annotation decorator for functions or classes. Wrapped
     functions or classes will raise FutureWarnings with called or instantiated,
     respectively.
@@ -177,7 +176,7 @@ def deprecated(obj):
 
     Parameters
     ----------
-    obj : function or class
+    func_or_class : function or class
         Function or class to deprecate
 
     Returns
@@ -185,35 +184,35 @@ def deprecated(obj):
     object
         wrapped function or class
     """
-    if isinstance(obj,types.FunctionType):
-        @functools.wraps(obj)
+    if isinstance(func_or_class,types.FunctionType):
+        @functools.wraps(func_or_class)
         def new_func(*args,**kwargs):
-            message = "Call to deprecated function %s() which will be removed from future versions of module %s" % (obj.__name__,
-                                                                                                                    obj.__module__)
-            func_code = get_func_code(obj)
+            message = "Call to deprecated function %s() which will be removed from future versions of module %s" % (func_or_class.__name__,
+                                                                                                                    func_or_class.__module__)
+            func_code = get_func_code(func_or_class)
             warnings.warn_explicit(message,
                                    category = DeprecationWarning,
                                    filename = func_code.co_filename,
                                    lineno = func_code.co_firstlineno + 1)
-            return obj(*args,**kwargs)
+            return func_or_class(*args,**kwargs)
         
         return new_func
     # two tests here. Top line for Python 2.7. Bottom for 3.x
-    elif (sys.version_info <= (3,) and (isinstance(obj,types.ClassType) or isinstance(obj,types.TypeType))) \
-          or isinstance(obj,type):
-        old_init = obj.__init__
-        @functools.wraps(obj.__init__)
+    elif (sys.version_info <= (3,) and (isinstance(func_or_class,types.ClassType) or isinstance(func_or_class,types.TypeType))) \
+          or isinstance(func_or_class,type):
+        old_init = func_or_class.__init__
+        @functools.wraps(func_or_class.__init__)
         def new_func(self,*args,**kwargs):
-            message = "Instantiation of deprecated class %s which will be removed from future versions of module %s" % (obj.__name__,
-                                                                                                                        obj.__module__)
+            message = "Instantiation of deprecated class %s which will be removed from future versions of module %s" % (func_or_class.__name__,
+                                                                                                                        func_or_class.__module__)
             warnings.warn_explicit(message,
                                    category = DeprecationWarning,
                                    filename = sys._getframe(1).f_globals["__name__"],
                                    lineno = sys._getframe(1).f_lineno )
             return old_init(self,*args,**kwargs)
         
-        obj.__init__ = new_func
-        return obj
+        func_or_class.__init__ = new_func
+        return func_or_class
     else:
         raise AttributeError("Attempt to deprecate non-function non-class element")
 
@@ -488,3 +487,19 @@ def parallelize(func):
     else:
         new_func.__doc__ = message 
     return new_func
+
+def skipdoc(func_or_class):
+    """Instruct Sphinx not to generate documentation for ``func_or_class``
+
+    Parameters
+    ----------
+    func_or_class : function or class
+        Function or class not to document
+
+    Returns
+    -------
+    object
+        Wrapped function or class
+    """
+    func_or_class.yeti_skipdoc = True
+    return func_or_class
