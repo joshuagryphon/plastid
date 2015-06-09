@@ -7,8 +7,9 @@
     install
     cli_howto
     interactive_howto
-    modindex
     citing
     contributing
     license
     FAQ
+    glossary
+    zreferences
