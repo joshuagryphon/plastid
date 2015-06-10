@@ -8,7 +8,6 @@
 .. _GTF2: http://mblab.wustl.edu/GTF22.html
 .. _GFF3: http://www.sequenceontology.org/gff3.shtml
 .. _PSL: http://genome.ucsc.edu/FAQ/FAQformat.html#format2
-.. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
 .. _autoSql: http://genomewiki.ucsc.edu/index.php/AutoSql
 .. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml 
@@ -27,12 +26,18 @@
 .. _Virtualenv: https://virtualenv.pypa.io/en/latest/
 .. _nose: https://nose.readthedocs.org/en/latest/
 
+.. Genome browsers
+
+.. _IGV: https://www.broadinstitute.org/igv/
+.. _UCSC genome browser: https://genome.ucsc.edu
 
 .. Non-Python software links
 
 .. _SAMtools: http://samtools.sourceforge.net/
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
+.. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
+.. _BWA: http://bio-bwa.sourceforge.net
 
 .. Our links
 

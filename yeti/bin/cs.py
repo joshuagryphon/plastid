@@ -1,60 +1,92 @@
 #!/usr/bin/env python
-"""Obtain sequencing counts and RPKM densisties for genomic regions of interest,
-applying the following corrections:
+"""Count the number of :term:`read alignments<alignment>` and calculate
+read densities (in :term:`RPKM`) specifically covering genes.
 
-    1.  If provided with a crossmap file (see :py:mod:`~yeti.bin.crossmap`),
-        which annotates which positions of the genome cannot give rise to uniquely-
-        mapping reads, such positions are ignored from quantitation of raw counts
-        and of RPKM densities
+:term:`Counts <counts>` and densities are calculated separately per gene for
+exons, 5' UTRs, coding regions, and 3' UTRs. In addition, positions overlapped
+by multiple genes are excluded, as are positions annotated in
+:term:`mask annotation files<crossmap>`, if one is provided.
+
+To avoid unnecessarily repeating calculations of gene overlap, the script's
+operation is divided into three modes:
+
+Generate mode
+    The :func:`generate <do_generate>` mode first takes a gene annotation file,
+    finds all genes that share exons, and maps these to a "merged" genes that
+    represent their groups. The reason to do this is that in some genome
+    annotations, polycistronic messages (such as *polished rice* in
+    *D. melanogaster*) are annotated as entirely separate genes, when in reality
+    they are a single gene. Positions covered by more than one non-merged gene
+    on the same strand are excluded from analysis.
     
-    2.  Genomic positions that are covered by more than one gene on the same
-        strand are similarly excluded from quantitation of raw counts and RPKM
-        densities.
-
-This script performs the quantitation in three steps, to save time:
-
-    1.  A ``generate`` mode first takes a gene annotation file, finds all genes
-        that share exons, and maps these to a "merged" genes that represent
-        their groups. The reason to do this is that in some genome annotations,
-        polycistronic messages (such as *polished rice* in *D. melanogaster*)
-        are annotated as entirely separate genes, when in reality they are a
-        single gene. Positions covered by more than one non-merged gene on the
-        same strand are excluded from analysis.
-        
-        The remaining positions in each merged gene are then divided
-        into four groups:
-        
+    The remaining positions in each merged gene are then divided
+    into the following groups:
+    
         *exon*
-            all positions in all transcripts in the gene
+            all positions in all transcripts mapping to the merged gene
         
         *CDS*
-            positions which are annotated only as CDS in all transcript
-            isoforms, (i.e. not doubly-annotated as fiveprime or three UTR).
+            positions which appear in coding regions in *all* transcript
+            isoforms mapping to the merged gene. i.e. These positions
+            are never part of a fiveprime or threeprime UTR in *any*
+            transcript mapping to the merged gene
         
         *UTR5*
-            positions which are annotated only as fiveprime UTR  in all transcript
-            isoforms
+            positions which are annotated only as *fiveprime UTR* in all
+            transcript isoforms mapping to the merged gene
             
         *UTR3*
-            positions which are annotated only as threeprime UTR  in all transcript
-            isoforms
+            positions which are annotated only as *threeprime UTR* in all
+            transcript isoforms mapping to the merged gene
         
+        *masked*
+            positions excluded from analyses as directed in an optional
+            :term:`mask file`
+
+    .. Rubric :: Output files
+    The following files are output, where `OUTBASE` is a name supplied 
+    by the user:
+    
+        OUTBASE_gene.positions
+            Tab-delimited text file. Each line is a merged gene, and columns
+            indicate the genomic coordinates and lengths of each of the position
+            sets above.
         
-        The script outputs each of the four position types as BED files for
-        convenience. The same data is also represented in a tab-delimited
-        *positions* file, which is used by the ``count`` mode. In addition,
-        a two-column text file mapping gene names to merged genes is also output.
+        OUTBASE_transcript.positions
+            Tab-delimited text file. Each line is a transcript, and columns
+            indicate the genomic coordinates and lengths of each of the position
+            sets above.
         
-    2.  A ``count`` mode, in which the number of reads mapping to each type of
-        position (e.g. "total", "CDS", "UTR5", and "UTR3") is tabulated for
-        each gene. Output is given in a tab-delimited text file that gives
-        raw reads, as well as RPKM for each feature.
+        OUTBASE_gene_REGION.bed
+             `BED`_ files showing position sets for `REGION`,
+             where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
+             *masked*. These contain the same information in
+             ``OUTBASE_gene.positions``, but can be visualized easily in a
+             :term:`genome browser` 
+
+
+Count mode    
+    A :func:`count <do_count>` mode, in which the number of reads mapping to
+    each type of position (e.g. *exon*, *CDS*, *UTR5*, and *UTR3*) is tabulated
+    for each merged gene. Output is given in a tab-delimited text file that gives
+    raw read counts, as well as :term:`RPKM` and corrected lengths for each
+    feature.
+
+
+Chart mode
+    A :func:`chart <do_chart>` mode, which takes output from the ``count`` mode
+    and generates several tables and charts that provide broad overviews
+    of the data.
         
-    3.  A ``chart`` mode, which takes output from the ``count`` mode and
-        generates several tables and charts that provide broad overviews
-        of the data.
-        
-See command-line help for each subprogram for details on parameters for each        
+See command-line help for each subprogram for details on each mode
+
+See also
+--------
+:mod:`~yeti.bin.counts_in_region` script
+    Count the number of :term:`read alignments<alignment>` covering arbitrary
+    regions of interest -- rather than merged genes, as are counted here in
+    :mod:`~yeti.bin.cs` -- in the genome, and calculate read densities
+    (in reads per nucleotide and in :term:`RPKM`) over these regions.
 """
 
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
@@ -68,12 +100,12 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.array_table import ArrayTable
 
-from yeti.genomics.roitools import positionlist_to_segments,\
-                                         SegmentChain, GenomicSegment
+from yeti.genomics.roitools import positionlist_to_segments, SegmentChain
 from yeti.genomics.genome_hash import GenomeHash
 from yeti.util.io.openers import opener, get_short_name, argsopener
-from yeti.util.io.filters import NameDateWriter, CommentReader
+from yeti.util.io.filters import NameDateWriter
 from yeti.util.services.sets import merge_sets
+from yeti.util.services.decorators import skipdoc
 from scipy.misc import comb as combination
 
 import os
@@ -94,8 +126,27 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 # 'generate' subprogram
 #===============================================================================
 
+@skipdoc
 def write_output_files(table,title,args):
-    """Write gene info table from :py:func:`do_generate` to several output files
+    """Write gene info table from :py:func:`do_generate` to several output files:
+
+        OUTBASE_gene.positions
+            Tab-delimited text file. Each line is a merged gene, and columns
+            indicate the genomic coordinates and lengths of each of the position
+            sets above.
+        
+        OUTBASE_transcript.positions
+            Tab-delimited text file. Each line is a transcript, and columns
+            indicate the genomic coordinates and lengths of each of the position
+            sets above.
+        
+        OUTBASE_gene_REGION.bed
+             `BED`_ files showing position sets for `REGION`,
+             where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
+             *masked*. These contain the same information in
+             ``OUTBASE_gene.positions``, but can be visualized easily in a
+             :term:`genome browser` 
+
     
     Parameters
     ----------
@@ -139,27 +190,30 @@ def write_output_files(table,title,args):
         for k in table.keys():
             printer.write(", ".join([str(X) for X in [k, table[k].dtype, table[k].dtype.type]]))
 
+@skipdoc
 def merge_genes(tx_ivcs,tx_gene):
-    """Merge genes that share exons into a group
+    """Merge genes whose transcripts share exons into a combined, "merged" gene
     
     Parameters
     ----------
     tx_ivcs : dict
-    
-        dict[txid] = |Transcript|
+        Dictionary mapping unique transcript IDs to :class:`Transcript`
+        objects
         
-    tx_gene : dict<str,str>
-        dict[transcript_name] = [gene_name]
+    tx_gene : dict
+        Dictionary mapping unique transcript IDs to the IDs of the genes
+        from which they derive
         
     Returns
     -------
-    dict[old_gene_name] = merged_gene_name
+    dict
+        Dictionary mapping raw gene names to the names of the merged genes
     """
     dout = {}
     exondict = {}
     
     # backmap exons to genes as tuples
-    printer("Mapping exons to genes...")
+    printer.write("Mapping exons to genes...")
     for txid in tx_ivcs.keys():
         my_segmentchain  = tx_ivcs[txid]
         my_gene = tx_gene[txid]
@@ -179,7 +233,7 @@ def merge_genes(tx_ivcs,tx_gene):
     
     # map exons to find gene groups
     for chrom, strand in combos:
-        printer("Flattening genes on %s(%s)..." % (chrom,strand))
+        printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
         
         chromstrandgenes = map(lambda x: x[1],filter(lambda x: x[0][0] == chrom and x[0][3] == strand,exondict.items()))
         gene_groups = merge_sets(chromstrandgenes,verbose=True,printer=printer)
@@ -190,18 +244,29 @@ def merge_genes(tx_ivcs,tx_gene):
             for gene in group:
                 dout[gene] = merged_name
         
-    printer("Flattened to %s groups." % len(dout))
+    printer.write("Flattened to %s groups." % len(dout))
     return dout
 
 def do_generate(args):
-    """Generates gene position files from gene annotations.
+    """Generate gene position files from gene annotations.
     
-    Classifies every position in a gene as being in a CDS,
-    5' UTR, or 3' UTR. Positions that fit in more than one
-    of these categories are removed. In addition, positions
-    overlapped by multiple genes are also removed. For the
-    purposes of this script, polycistronic genes (e.g. 
-    polished rice) are considered to be single entities
+    1.  Genes whose transcripts share exons are first merged into merged genes 
+        using :func:`merge_genes`.
+        
+    2.  Within merged genes, all positions are classified. All positions are
+        included in a set called *exon*. All positions that appear as coding
+        regions in all transcripts (i.e. are never part of a 5'UTR or 3'UTR)
+        included in a set called *CDS*. Similarly, all positions that appear
+        as 5' UTR or 3' UTR in all transcripts are included in sets called
+        *UTR5* or *UTR3*, respectively.
+    
+    3.  Genomic positions that are overlapped by multiple merged genes are
+        excluded from the position sets for those genes.
+    
+    4.  If a :term:`mask file` is supplied, positions annotated in the mask file
+        are also excluded
+    
+    5.  Output is written using :func:`write_output_files`
     
     Parameters
     ----------
@@ -450,10 +515,10 @@ def do_generate(args):
 #===============================================================================
 
 def do_count(args):
-    """Counts the number of reads falling within a gene (as
-    specified in a position file made with the ``generate``
-    subcommand). Reads are reported both in raw counts,
-    and as RPKM.
+    """Count the number of reads falling within a gene (as specified in a
+    position file made using the ``generate` subcommand). Reads are reported
+    both in raw :term:`counts` and as :term:`RPKM`, and saved to a 
+    tab-delimited text file.
     
     Parameters
     ----------
@@ -507,8 +572,9 @@ def do_count(args):
 # 'chart' subprogram
 #===============================================================================
 
+@skipdoc
 def read_count_file(fh,genes_to_include=None):
-    """Read a count file into a dictionary of numpy arrays
+    """Read a count file into an |ArrayTable|
     
     Parameters
     ----------
@@ -521,27 +587,32 @@ def read_count_file(fh,genes_to_include=None):
     
     Returns
     -------
-    dict[name] = numpy.array
+    ArrayTable
+        Count data
     """
     dtmp = ArrayTable.from_file(fh)
     import_mask = numpy.array([True if X in genes_to_include else False for X in dtmp["region"]])
     dout = { K : dtmp[K][import_mask] for K in dtmp.keys() }
     return ArrayTable(dout)
 
-
-def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="total_reads"):
-    """Bins genes into groups based upon a value summed between two samples
+@skipdoc
+def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
+    """Bins genes into groups based upon the summed counts in samples
+    `rep_a` and `rep_b`
     
     Parameters
     ----------
-    rep_a
+    rep_a : |ArrayTable|
         replicate a, from read_count_file()
-    rep_b
+        
+    rep_b : |ArrayTable|
         replicate b, from read_count_file()
-    bins
+        
+    bins : numpy.ndarray
         sequence of bins, specified as floors
-    key
-        quantity on which to perform binning
+        
+    key : str, optional
+        quantity on which to perform binning (Default: "exon_reads")
 
     Returns
     -------
@@ -563,15 +634,31 @@ def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="total_reads"):
             dout[bins[-1]][n] = True
     return dout
 
+@skipdoc
 def get_nonzero_either_mask(vector_a,vector_b):
     """Returns a numpy array of boolean values indicating where values in two
     vectors are both greater than zero.
+    
+    Parameters
+    ----------
+    vector_a : numpy.ndarray
+        Array of counts or RPKM
+        
+    vector_b : numpy.ndarray
+        Array of counts or RPKM
+    
+    Returns
+    -------
+    numpy.ndarray    
+        Boolean array that is `True` where both `vector_a` and `vector_b`
+        have values greater than zero, and `False` elsewhere.
     """
     return (vector_a > 0) & (vector_b > 0)
                         
+@skipdoc
 def get_short_samplename(inp):
     """Creates a sample legend label from a sample filename
-    by removing everything including and after ".txt"
+    by removing everything including and after ``".txt"``
 
     Parameters
     ----------
@@ -584,44 +671,58 @@ def get_short_samplename(inp):
     """
     return get_short_name(inp,separator=os.path.sep,terminator=".txt")
 
+@skipdoc
 def gaussian(mu,sigma):
-    """Returns a function that calculates a gaussian specified by mu and sigma
+    """Returns a function that calculates a Gaussian specified by `mu` and `sigma`
     for an arbitrary X
     
     Parameters
     ----------
-    mu
+    mu : float
         mean of Gaussian
         
-        
-    sigma
+    sigma : float
         standard deviation of Gaussian
+    
+    Returns
+    -------
+    function
+        Gaussian probability density function
     """
     coeff = (2*numpy.pi*(sigma**2))**-0.5
     def f(x):
         return coeff*numpy.e**( -(x-mu)**2 / (2*(sigma**2)) )
     return f
 
+@skipdoc
 def fit_gaussian(my_x,my_y):
     """Fits a Gaussian to data
+    
     Parameters
     ----------
-    my_x
+    my_x : numpy.ndarray
         vector of x-values
-    my_y
+        
+    my_y : numpy.ndarray
         vector of y-values
+        
     Returns
     -------
-    fit_mu, fit_sigma
+    float
+        mean from Gaussian fit
+    
+    float
+        standard deviation from Gaussian fit
     """
     fitfunc = lambda x, mu, sigma2: (2*numpy.pi*sigma2)**-0.5 * numpy.exp( -(x-mu)**2 / (2*sigma2) )
     p0 = [0.0, 0.05]
-    params, cov = scipy.optimize.curve_fit(fitfunc,my_x,my_y,p0=p0[:])
+    params, _ = scipy.optimize.curve_fit(fitfunc,my_x,my_y,p0=p0[:])
     return tuple(params)
     
 def do_chart(args):
-    """Produces log2 fold change histograms comparing samples,
-    scatter plots, correlation coefficients, and other nice info
+    """Produce log-2 fold change histograms and scatter plots for :term:`count`
+    and :term:`RPKM` values between two samples, as well as a chart plotting
+    correlation coefficients as a function of summed read counts in both samples 
 
     Parameters
     ----------
@@ -736,7 +837,7 @@ def do_chart(args):
                 min_diff    = 2**(3*log2_std)
                 
                 plt.figure()
-                n,hbins,patches = plt.hist(log2_ratios,bins=50,normed=True)
+                n,hbins,_ = plt.hist(log2_ratios,bins=50,normed=True)
                 hbins_centered = numpy.convolve(hbins,numpy.array([0.5,0.5]),"valid")
                 
                 # fit a gaussian
@@ -916,9 +1017,10 @@ def main(argv=sys.argv[1:]):
     argv : list, optional
         A list of command-line arguments, which will be processed
         as if the script were called from the command line if
-        :py:func:`main` is called directly.
+        :func:`main` is called directly.
 
-        Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])

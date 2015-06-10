@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-"""Formatters and docstring processors for command-line helptext"""
+"""This module contains post-processors that reformats module docstrings for
+use as command-line script help, by removing rich formatting, substitutions,
+and reStructuredText tokens.
+"""
 import re
 
 def shorten_help(inp):
@@ -53,10 +56,12 @@ def format_module_docstring(inp):
     """
     return _separator + shorten_help(inp) + _separator
 
+#TODO: add support for :domain:role:`Text <argument>`
+#TODO: add support for links `Link`_
 pyrst_pattern = re.compile(r"(?P<spacing>^|\s+)(?::(?P<domain>py))?:(?P<role>[^:]*):`(?P<argument>[^`]*)`")
 """RegEx pattern that detects reStructuredText markup of python tokens
-of the form ``:domain:role:`argument``` or simply ``:role:`argument```, if the token is
-preceded by whitespace or begins a line.
+of the form ``:domain:role:`argument``` or simply ``:role:`argument```,
+if the token is preceded by whitespace or begins a line.
 
 Retrieves domain, role, and argument as named attributes if
 :py:meth:`pyrst_pattern.groupdict` is called.

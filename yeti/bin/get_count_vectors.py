@@ -1,16 +1,14 @@
 #!/usr/bin/env python
-"""Retrieve masked vectors of mapped sequencing reads for regions of interest (ROIs).
-Vectors are saved as individual files, one for each region of interest,
-in a user-specified output folder. If a mask annotation -- e.g. from  
-:py:mod:`~yeti.bin.crossmap` -- is provided, masked positions will be
-saved as ``nan`` s in output.
+"""Fetch vectors of :term:`counts` at each nucleotide position in one or more
+regions of interest (ROIs).
 
 
 Output files
 ------------
-An output folder is created, and the count vector for each ROI is saved as
-an individual line-delimited file in the output folder. Each output file is
-named after the ROI for which it is created.
+Vectors are saved as individual line-delimited files -- one position per line --
+in a user-specified output folder. Each file is named for the ROI to which it
+corresponds. If a :term:`mask file` -- e.g. from  :py:mod:`~yeti.bin.crossmap`
+-- is provided, masked positions will be have value `nan` in output.
 """
 import argparse
 import inspect
@@ -22,10 +20,9 @@ from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
                                                       get_genome_array_from_args,\
                                                       get_segmentchains_from_args,\
                                                       get_segmentchain_file_parser,\
-                                                      get_annotation_file_parser,\
                                                       get_mask_file_parser,\
                                                       get_genome_hash_from_mask_args
-from yeti.util.io.openers import opener, get_short_name, argsopener
+from yeti.util.io.openers import get_short_name
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
@@ -40,9 +37,10 @@ def main(args=sys.argv[1:]):
     argv : list, optional
         A list of command-line arguments, which will be processed
         as if the script were called from the command line if
-        :py:func:`main` is called directly.
+        :func:`main` is called directly.
 
-        Default: sys.argv[1:] (actual command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     alignment_file_parser  = get_alignment_file_parser()
     annotation_file_parser = get_segmentchain_file_parser()
@@ -54,9 +52,9 @@ def main(args=sys.argv[1:]):
                                               annotation_file_parser,
                                               mask_file_parser])
     
-    parser.add_argument("out_folder",type=str,help="Folder in which to put output")
+    parser.add_argument("out_folder",type=str,help="Folder in which to save output vectors")
     parser.add_argument("--out_prefix",default="",type=str,
-                        help="Prefix to prepend to output files (default: none)")
+                        help="Prefix to prepend to output files (default: no prefix)")
     parser.add_argument("--format",default="%.8f",type=str,
                         help=r"printf-style format string for output (default: '%%.8f')")
     args = parser.parse_args(args)

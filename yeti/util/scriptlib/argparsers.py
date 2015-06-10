@@ -129,8 +129,8 @@ from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
 # INDEX: Alignment/count file parser, and helper functions
 #===============================================================================
 
-_default_alignment_file_parser_description = "Open alignment or count files and optionally set mapping options for P-site assignment"
-_default_alignment_file_parser_title = "alignment mapping options (for BAM & bowtie files)"
+_default_alignment_file_parser_description = "Open alignment or count files and optionally set mapping rules"
+_default_alignment_file_parser_title = "alignment mapping rules (for BAM & bowtie files)"
 
 def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                               disabled=[],
@@ -400,8 +400,8 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
 # INDEX: Annotation file parser, and helper functions
 #===============================================================================
 
-_default_annotation_parser_description = "Open a genome annotation file"
-_default_annotation_parser_title = "annotation file options (one annotation file required)"
+_default_annotation_parser_description = "Open one or more genome annotation files"
+_default_annotation_parser_title = "annotation file options (one or more annotation files required)"
 
 def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                disabled=[],
@@ -462,7 +462,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                                   help="Zero or more annotation files (max 1 file if BigBed)")),                               
                     ("annotation_format"   , dict(choices=input_choices,
                                                   default="GTF2",
-                                                  help="Format of %sannotation_files (default: GTF2). Note: GFF3 support is dodgy. Only GFF3s using the parent-child schema used by FlyBase is officially supported." % prefix)),    
+                                                  help="Format of %sannotation_files (default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file." % prefix)),    
                     ("add_three"           , dict(default=False,
                                                   action="store_true",
                                                   help="If supplied, coding regions will be extended by 3 nucleotides at their 3' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS.")),

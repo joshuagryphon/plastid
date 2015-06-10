@@ -1,22 +1,24 @@
 #!/usr/bin/env python
-"""Converts alignments in bowtie or BAM format to BEDGraph or wiggle files for genome browsing.
-Optionally applies read mapping transformations (e.g. for P-site mapping)
-and/or normalization.
+"""Convert alignments in `bowtie`_ or `BAM`_ format to `bedGraph`_ or `wiggle`_ 
+files for use in :term:`genome browsers <genome browser>`, optionally applying
+a :term:`mapping rule` to convert alignments to :term:`counts` (e.g. for P-site
+mapping of ribosome profiling data) and/or normalization.
 
 Output files
 ------------
 Because `Wiggle`_ and `bedGraph`_ files are unstranded, two files are created:
 
     ${OUTBASE}_fw.wig
-        Counts at each position for the plus strand of each chromosome
+        Counts at each position for the plus/forward strand of each chromosome
     
     ${OUTBASE}_rc.wig
-        Counts at each position for the minus strand of each chromosome
+        Counts at each position for the minus/reverse strand of each chromosome
 
 
-See Also
+See also
 --------
-:py:mod:`~yeti.genomics.genome_array` : explanations of mapping transformations and why they can be useful
+:py:mod:`~yeti.genomics.genome_array`
+    Explanations of mapping transformations and why they can be useful
 """
 __author__ = "joshua"
 __date__ = "2011-03-18"
@@ -57,7 +59,7 @@ def main(argv=sys.argv[1:]):
                              "Large values are faster but require more memory "+\
                              "(default: 100000)")
 
-    track_opts = parser.add_argument_group(title="track options")
+    track_opts = parser.add_argument_group(title="Browser track options")
     track_opts.add_argument("--color",type=str,default=None,
                         help="An RGB hex string (#NNNNNN, N in [0-9,A-F]) specifying \
                               the track color.")

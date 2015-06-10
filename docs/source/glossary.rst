@@ -5,7 +5,7 @@ Glossary of terms
     :sorted:
 
     alignment
-    read alignment
+    read alignments
         A record matching a sequencing read to the genomic coordinates from
         which it presumably derived. These are produced by running sequencing
         data through alignment programs, such as `Bowtie`_, `Tophat`_, or `BWA`_.
@@ -14,13 +14,17 @@ Glossary of terms
     annotation
         A file that describes locations of features (e.g. genes, mRNAs)
         in a genome. These come in various formats, e.g.  `BED`_, `BigBed`_,
-        `GTF2`_, `GFF3`_, `PSL`_.
+        `GTF2`_, `GFF3`_, and `PSL`_, among others.
 
+    counts
+        Colloquially, the number of :term:`read alignments` overlapping a region
+        of interest, or mapped to a nucleotide.
+    
     count file
         A file that assigns quantitative data -- for example, read alignment
         counts, or conservation scores -- to genomic coordinates. Strictly
         speaking, these include  `bedGraph`_ or `wiggle`_ files but :py:obj:`yeti`
-        can also treat :term:`alignment` files in `Bowtie`_ or `BAM`_ format
+        can also treat :term:`alignment` files in `bowtie`_ or `BAM`_ format
         as count files, if a :term:`mapping rule` is applied.
 
     crossmap
@@ -33,13 +37,18 @@ Glossary of terms
         generated from genome sequence using the included
         :py:mod:`~yeti.bin.crossmap` script.
 
-    factory
     factory function
         A function that produces functions
 
     feature
         A region of the genome with interesting or specific properties, such
         as a gene, an mRNA, an exon, a centromere, et c.
+
+    genome browser
+        Software used for visualizing genomic sequence, :term:`feature`
+        annotations, :term:`read alignments`, and other quantitative data
+        (e.g. nucleotide-wise sequence conservation). Popular genome browsers
+        include `IGV`_ and the `UCSC genome browser`_. 
 
     k-mer
         A sequence *k* nucleotides long.

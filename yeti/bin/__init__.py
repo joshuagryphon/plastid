@@ -1,21 +1,34 @@
 #!/usr/bin/env python
-"""Command-line scripts that implement common sequencing workflows.
+"""Command-line scripts that implement common sequencing workflows, provided
+a genome :term:`annotation` file and/or a file containing :term:`read alignments`
 
     ======================   ==========================================================
     **Sequencing analysis**                   
     -----------------------------------------------------------------------------------
-    |counts_in_region|       Compute raw counts and RPKM for arbitrary regions
-                             of interest
-    |cs|                     Compute raw counts and RPKM for genes, transcripts,
-                             5'UTRs, CDS, and 3'UTRs, excluding positions overlapped
-                             by neighboring genes
-    |get_count_vectors|      Compute vectors of counts at each position in one
-                             or more regions of interest
-    |make_wiggle|            Create `wiggle`_ or `bedGraph`_ files from alignments
-                             after applying read mapping (e.g. P-site mapping) rules
-    |metagene|               Compute metagene averages of read profiles over one
-                             or more regions of interest, after applying read
-                             mapping rules
+    |counts_in_region|       Count the number of :term:`read alignment` s covering
+                             arbitrary regions of interest in the genome, and calculate
+                             read densities (in reads per nucleotide and in :term:`RPKM`)
+                             over these regions
+    
+    |cs|                     Count the number of :term:`read alignments<alignment>`
+                             and calculate read densities (in :term:`RPKM`)
+                             specifically for genes and sub-regions (5' UTR,
+                             CDS, 3' UTR)
+
+    |get_count_vectors|      Fetch vectors of :term:`counts` at each nucleotide position
+                             in one or more regions of interest, saving each vector
+                             as its own line-delimited text file
+                             
+    |make_wiggle|            Create `wiggle`_ or `bedGraph`_ files from alignment files
+                             after applying a read :term:`mapping rule` (e.g.
+                             to map :term:`ribosome-protected footprints <footprint>`
+                             at their :term:`P-sites <P-site offset>`), for
+                             visualization in a :term:`genome browser`
+                             
+    |metagene|               Compute a :term:`metagene` profile of :term:`read alignments`
+                             or :term:`counts` over one or more regions of interest,
+                             optionally applying a :term:`mapping rule`
+                             
     |phase_by_size|          Compute sub-codon periodicity for ribosome profiling data
     |psite|                  Estimate position of ribosomal P-site within ribosome
                              profiling reads, as a function of read length

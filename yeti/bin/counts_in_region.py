@@ -1,6 +1,40 @@
 #!/usr/bin/env python
-"""Computes read counts and densities (in reads per nucleotide and in RPKM)
-for arbitrary features in an annotation file.
+"""Count the number of :term:`read alignments<alignment>` covering arbitrary
+regions of interest in the genome, and calculate read densities (in reads
+per nucleotide and in :term:`RPKM`) over these regions.
+
+Results are output as a table with the following columns:
+
+    ========================  ==================================================
+    Name                      Definition
+    ------------------------  --------------------------------------------------
+    `region_name`             Name or ID of region of interest
+    
+    `region`                  Genomic coordinates of region, formatted as
+                              described in
+                              :meth:`yeti.genomics.roitools.SegmentChain.from_str`
+                              
+    `counts`                  Number of reads mapping to region
+    
+    `counts_per_nucleotide`   Read density, measured in number of reads mapping
+                              to region, divided by length of region
+                              
+    `rpkm`                    Read density, measured in :term:`RPKM`
+    
+    `length`                  Region length, in nucleotides
+    ========================  ==================================================
+    
+If a :term:`mask annotation file` is supplied, masked portions of regions
+will be excluded when tabulating counts, measuring region length, and calculating
+`counts_per_nucleotide` and `rpkm`.
+
+
+See also
+--------
+:mod:`~yeti.bin.cs` script
+    Count the number of :term:`read alignments<alignment>` and calculate
+    read densities (in :term:`RPKM`) specifically for genes and sub-regions
+    (5' UTR, CDS, 3' UTR), excluding positions covered by multiple genes
 """
 import argparse
 import warnings
@@ -11,14 +45,14 @@ import numpy
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from yeti.util.io.filters import CommentReader, NameDateWriter
-    from yeti.util.io.openers import opener, argsopener, get_short_name, guess_opener
+    from yeti.util.io.filters import NameDateWriter
+    from yeti.util.io.openers import argsopener, get_short_name
     from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                                      get_segmentchains_from_args,\
-                                                      get_genome_hash_from_mask_args,\
-                                                      get_alignment_file_parser,\
-                                                      get_segmentchain_file_parser,\
-                                                      get_mask_file_parser
+                                               get_segmentchains_from_args,\
+                                               get_genome_hash_from_mask_args,\
+                                               get_alignment_file_parser,\
+                                               get_segmentchain_file_parser,\
+                                               get_mask_file_parser
     from yeti.util.scriptlib.help_formatters import format_module_docstring
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -32,9 +66,10 @@ def main(argv=sys.argv[1:]):
     argv : list, optional
         A list of command-line arguments, which will be processed
         as if the script were called from the command line if
-        :py:func:`main` is called directly.
+        :func:`main` is called directly.
 
-        Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     annotation_file_parser = get_segmentchain_file_parser()
     alignment_file_parser  = get_alignment_file_parser(disabled=_DISABLED)
