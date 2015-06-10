@@ -1008,20 +1008,8 @@ def do_chart(args):
 #===============================================================================
 # main program body
 #===============================================================================
- 
-def main(argv=sys.argv[1:]):
-    """Command-line program
-    
-    Parameters
-    ----------
-    argv : list, optional
-        A list of command-line arguments, which will be processed
-        as if the script were called from the command line if
-        :func:`main` is called directly.
 
-        Default: `sys.argv[1:]`. The command-line arguments, if the script is
-        invoked from the command line
-    """
+def get_parser():
     
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
     annotation_file_parser = get_annotation_file_parser()
@@ -1080,7 +1068,23 @@ def main(argv=sys.argv[1:]):
                          help="File listing regions (genes or transcripts), one per line, to include in count")
     pparser.add_argument("outbase",type=str,
                          help="Basename for output files")
-                         
+    return parser    
+    
+def main(argv=sys.argv[1:]):
+    """Command-line program
+    
+    Parameters
+    ----------
+    argv : list, optional
+        A list of command-line arguments, which will be processed
+        as if the script were called from the command line if
+        :func:`main` is called directly.
+
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
+    """
+
+    parser = get_parser()              
     args = parser.parse_args(argv)
 
     if args.program == "generate":
