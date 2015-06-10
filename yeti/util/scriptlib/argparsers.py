@@ -111,32 +111,48 @@ from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
 
 from yeti.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
 from yeti.readers.bed import BED_Reader
-from yeti.readers.bigbed import BigBedReader, BigBed_to_Transcripts
+from yeti.readers.bigbed import BigBedReader
 from yeti.readers.psl import PSL_Reader
-from yeti.genomics.roitools import GenomicSegment, SegmentChain, Transcript
+from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
 from yeti.util.io.openers import opener, NullWriter
 from yeti.util.io.filters import CommentReader
 
-
 from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
-                                             _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
-                                             _DEFAULT_GFF3_EXON_TYPES,\
-                                             _DEFAULT_GFF3_CDS_TYPES
+                             _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
+                             _DEFAULT_GFF3_EXON_TYPES,\
+                             _DEFAULT_GFF3_CDS_TYPES
+
+
+#===============================================================================
+# INDEX: String constants used in parsers below
+#===============================================================================
+
+_MAPPING_RULE_DESCRIPTION = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
+(`fiveprime_variable`, `fiveprime`, `threeprime`, or `center`) is required.
+Offsets, nibbles, minimum and maximum lengths are optional."""
+
+_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = "Open alignment or count files and optionally set mapping rules"
+_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "alignment mapping rules (for BAM & bowtie files)"
+
+_DEFAULT_ANNOTATION_PARSER_DESCRIPTION = "Open one or more genome annotation files"
+_DEFAULT_ANNOTATION_PARSER_TITLE = "annotation file options (one or more annotation files required)"
+
+_MASK_PARSER_TITLE = "mask file options (optional)"
+_MASK_PARSER_DESCRIPTION = """Add mask file(s) that annotate regions that should be excluded from analyses
+(e.g. repetitive genomic regions)."""
 
 
 #===============================================================================
 # INDEX: Alignment/count file parser, and helper functions
 #===============================================================================
 
-_default_alignment_file_parser_description = "Open alignment or count files and optionally set mapping rules"
-_default_alignment_file_parser_title = "alignment mapping rules (for BAM & bowtie files)"
 
 def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                               disabled=[],
                               prefix="",
-                              title=_default_alignment_file_parser_title,
-                              description=_default_alignment_file_parser_description,
+                              title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
+                              description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
                               return_subparsers=False):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     alignment (BAM or bowtie) or count (Wiggle, BEDGraph) files.
@@ -179,9 +195,6 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
     """
 
     # pardon the long line. it is essential for Sphinx
-    map_desc = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
-(fiveprime_variable, fiveprime, threeprime, or center) is required.
-Offsets, nibbles, minimum and maximum lengths are optional."""
  
     alignment_file_parser = argparse.ArgumentParser(description=description,
                                                     add_help=False)
@@ -189,7 +202,7 @@ Offsets, nibbles, minimum and maximum lengths are optional."""
     subparsers = { }
     if len({ "BAM", "bowtie" } & set(input_choices)) > 0:
         subparsers["mapping"] = alignment_file_parser.add_argument_group(title=title,
-                                                           description=map_desc)
+                                                           description=_MAPPING_RULE_DESCRIPTION)
         
         # dictionary of options for mapping. Defined initially as a dict
         # so we can disable anything programmatically above
@@ -400,14 +413,12 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
 # INDEX: Annotation file parser, and helper functions
 #===============================================================================
 
-_default_annotation_parser_description = "Open one or more genome annotation files"
-_default_annotation_parser_title = "annotation file options (one or more annotation files required)"
 
 def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                disabled=[],
                                prefix="",
-                               title=_default_annotation_parser_title,
-                               description=_default_annotation_parser_description,
+                               title=_DEFAULT_ANNOTATION_PARSER_TITLE,
+                               description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
                                return_subparsers=False):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from BED, GTF2, or GFF3 formats
@@ -449,12 +460,10 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    annotation_file_parser_description = description
-    annotation_file_parser = argparse.ArgumentParser(description=annotation_file_parser_description,
-                                                     add_help=False)
+    annotation_file_parser = argparse.ArgumentParser(add_help=False)
     """Open genome annotation files in %s format""" % ", ".join(input_choices)
     
-    subparsers = { "annotation" : annotation_file_parser.add_argument_group(title=title) }
+    subparsers = { "annotation" : annotation_file_parser.add_argument_group(title=title,description=description) }
 
     option_dict = OrderedDict([
                     ("annotation_files"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),# | psl]",
@@ -552,8 +561,12 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
             sys.exit(2)
         if tabix == True:
             printer.write("Tabix compression is incompatible with BigBed files. Ignoring.")
-        transcripts = BigBed_to_Transcripts(args.annotation_files[0],
-                                            add_three_for_stop=add_three)
+        transcripts = BigBedReader(args.annotation_files[0],
+                                   return_type=Transcript,
+                                   cache_depth=1,
+                                   add_three_for_stop=add_three,
+                                   printer=printer)
+        
     elif tabix == True:
         #streams = [pysam.tabix_iterator(opener(X), lambda x,y: x) for X in args.annotation_files] # used to work in earlier pysam
         # string parsing by supplying None instead of `asTuple()` no longer works
@@ -592,8 +605,8 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
 def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PSL"],
                                  disabled=[],
                                  prefix="",
-                                 title=_default_annotation_parser_title,
-                                 description=_default_annotation_parser_description):
+                                 title=_DEFAULT_ANNOTATION_PARSER_TITLE,
+                                 description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION):
     """Convenience method to open annotation files as |SegmentChains|
     
     Parameters
@@ -704,8 +717,8 @@ def get_mask_file_parser(prefix="mask_",disabled=[]):
     return get_segmentchain_file_parser(prefix=prefix,
                                         disabled=disabled,
                                         input_choices=["BED","BigBed","PSL"],
-                                        title="mask file options (optional)",
-                                        description="Open an annotation of regions to mask")
+                                        title=_MASK_PARSER_TITLE,
+                                        description=_MASK_PARSER_DESCRIPTION)
 
 
 def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
