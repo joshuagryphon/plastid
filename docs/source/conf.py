@@ -16,9 +16,6 @@ import os
 import unittest
 import datetime
 import yeti
-from yeti.util.services.mini2to3 import cStringIO
-
-from pp.sphinxlib import autodoc_process_docstring
 
 
 # -- General configuration ------------------------------------------------
@@ -42,6 +39,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'argdoc.ext',
     #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     #'sphinx.ext.ifconfig',
@@ -166,7 +164,6 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
 def setup(app):
     """Activate custom event handlers for autodoc"""
     app.connect("autodoc-skip-member",autodoc_skip_member)
-    app.connect("autodoc-process-docstring",autodoc_process_docstring)
 
 
 # intersphinx config ------------------------------------------------------------

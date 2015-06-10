@@ -3,7 +3,7 @@
 by aliasing various commands and modules as follows:
 
     ================    ===========================   =======================
-    Exported object     Points to in 2.x             Points to 3.x
+    Exported object     Points to in 2.x              Points to 3.x
     ----------------    ---------------------------   -----------------------
     ``cStringIO``       :mod:`StringIO`               :mod:`io`
     ``StringIO``        :mod:`cStringIO`              :mod:`io`
