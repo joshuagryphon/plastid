@@ -1,141 +1,124 @@
 #!/usr/bin/env python
-"""Implements array-like data structures called |GenomeArray|, that map numerical values 
-to genomic positions (nucleotides) under various configurable mapping rules.
+"""Implements dictionary-like data structures called GenomeArrays, which
+map quantitative data or :term:`read alignments` to genomic positions, under
+various configurable :term:`mapping rules <mapping rule>`.
+
+GenomeArrays
+------------
+
 Several different implementations are provided, depending on how the alignment
-and/or count data is stored:
+and/or count data is stored. All GenomeArrays provide interfaces for:
 
-Important classes
------------------
+    - retrieving vectors (as :py:class:`numpy.ndarray` s) of counts or
+      quantitative data at each position of a |GenomicSegment|
+      
+    - getting the sum of read alignments in a dataset
     
-    |AbstractGenomeArray|
-        Base class for all genome arrays, array-like data structures mapping
-        read counts to specific nucleotide positions.  
-        
-        Defines interfaces for:
-            - retrieving vectors (as :py:class:`numpy.ndarray` s) of read counts
-              at each position of a |GenomicSegment|
-              
-            - getting the sum of read counts in a dataset
-            
-            - toggling normalization of fetched counts to reads-per-million
+    - toggling normalization of fetched counts to reads-per-million
+
+    - export to `Wiggle`_ and `bedGraph`_ formats.
     
-    |MutableAbstractGenomeArray|
-        Base class for |GenomeArray| and |SparseGenomeArray|. Contains all interfaces
-        from |AbstractGenomeArray|, and additionally defines interfaces for:
-        
-            - setting values, manually or mathematically, over regions of the
-              genome, or over the entire genome, element wise
-            
+
+In addition, the following subclasses of GenomeArrays add their own features:
+
     |GenomeArray|
-        A |MutableAbstractGenomeArray| that provides convenience functions for import of
-        data from `Wiggle`_ files, `bedGraph`_ files, and `bowtie`_ alignments, as well
-        as export to `Wiggle`_ and `bedGraph`_ formats.
+        A mutable GenomeArray that additionally provides convenience functions
+        for:
         
-        Additionally supplies interfaces for mathematical operations such as
-        addition and subtraction with scalar values or other |GenomeArray| s,
-        both over the entire arrray or at specific |GenomicSegment| s within the
-        array. 
+            - setting values within the array
 
-        When importing from a `bowtie`_ file, the user must specify a *mapping rule*
-        to determine how each read alignment should be converted into a sequencing
-        count. Available mapping rules are specified in
-        :py:mod:`yeti.readers.bowtie`. These include:
-        
-            #.  *Fiveprime end mapping*
-                    Each read alignment is mapped at a fixed distance from its fiveprime end
+            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
             
-            #.  *Variable fiveprime end mapping*
-                    Each read alignment is mapped at a fixed distance from its
-                    fiveprime end, the distance determined by the length of the read
-                    alignment
-            
-            #.  *Threeprime end mapping*
-                    Each read alignment is mapped at a fixed distance from its threeprime end
-            
-            #.  *Center* or *nibble mapping*
-                    A fixed number of positions is trimmed from each end of the read alignment,
-                    and the remaining N positions in the alignment are incremented by 1/N
-                    read counts
+            - import of :term:`read alignments` from native `bowtie`_ alignments,
+              and their convertion to :term:`counts` under configurable
+              :term:`mapping rules <mapping rule>`.
+    
+            - mathematical operations such as addition and subtraction of scalars,
+              or positionwise addition and subtraction of other |GenomeArray| s
+    
     
     |SparseGenomeArray|
         A slower but more memory-efficient implementation of |GenomeArray|,
         useful for large genomes or on computers with limited memory.
-    
+
+
     |BAMGenomeArray|
-        An |AbstractGenomeArray| for alignments in one or more `BAM`_ files. Because
-        `BAM`_ files are randomly-accessible, this implementation is much faster
-        to instantiate and far more memory-efficient than other |GenomeArray| 
-        or |SparseGenomeArray|. This yields several advantages:
+        An non-mutable GenomeArray that fetches alignments in one or more
+        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` to
+        convert these to vectors of counts.
         
-            #.  Mapping functions may be changed at runtime, with no speed cost,
-                rather than having to be set at import time (as is the case for
-                import of `bowtie`_ files into a |GenomeArray|).
+        Because `BAM`_ files are indexed and randomly-accessible:
+        
+            - Mapping functions may be changed at runtime, with no speed cost,
+              rather than having to be set at import time (as is the case for
+              import of `bowtie`_ files into a |GenomeArray|). See
+              :meth:`BAMGenomeArray.set_mapping` for details.
                 
-                All of the same mapping strategies for |GenomeArray| are available
-                here via :py:meth:`BAMGenomeArray.set_mapping`.
-                See the section `Mapping and filtering factories`_.
+            - |BAMGenomeArray| objects can be much faster to create and far more
+              memory-efficient than |GenomeArray| or |SparseGenomeArray|.
         
-            #.  Because `BAM`_ files include rich descriptions of each read alignment
-                (e.g. mismatches, read lengths, et c), reads may be filtered or
-                transformed before assignment to genomic positions by the
-                use of arbitrary filter functions. These filter functions,
-                like mapping rules, are also changeable at run time. See
-                :py:meth:`.BAMGenomeArray.add_filter` below
+        Furthermore, because `BAM`_ files include rich descriptions of each read
+        alignment (e.g. mismatches, read lengths, et c), reads may be filtered or
+        transformed before mapping by arbitrary filter functions. Such filters,
+        like mapping rules, are also changeable at run time. See
+        :py:meth:`.BAMGenomeArray.add_filter` for details.
         
-        Because a |BAMGenomeArray| is a view of the data in an
+        However, because a |BAMGenomeArray| is a view of the data in an
         underlying `BAM`_ file (rather than a collection of counts imported from
         one or more `Wiggle`_ or `bowtie`_ files), |BAMGenomeArray| s do not support
-        "setter" operations. Mathematical operations, if desired, must be
+        "setter" operations. Instead, mathematical operations, if desired, must be
         applied to vectors of counts, once fetched.
 
 
-Mapping and filtering factories
--------------------------------
+Mapping rules
+-------------
+In order to convert :term:`read alignments` to :term:`counts`, a :term:`mapping rule`
+must be applied. Depending on the data type and the purpose of the experiment,
+different rules may be appropriate. The following mapping rules are provided,
+although users are encouraged to provide their own if needed. These include
 
-For |BAMGenomeArray|, several factories are provided to generate mapping functions
-similar to those used in import of `bowtie`_ files for a |GenomeArray|. As mentioned
-above, an advantage of |BAMGenomeArray| s is that these mapping and filter functions
-may be changed at arbitrarily after the |BAMGenomeArray| is created, as opposed
-to being unchangeable after import.
-
-All mapping functions must take two parameters: a list of :py:class:`pysam.AlignedSegment`,
-and a |GenomicSegment|, and must return two values: a list of :py:class:`pysam.AlignedSegment` s
-included in the count data, and a vector of counts corresponding to the values at
-each genomic position specified by the |GenomicSegment|.
-
-Sample mapping factories include:
-
-    :py:func:`FivePrimeMapFactory`
-        Returns a mapping function in which reads are mapped at a user-configurable
-        offset (default: 0), from the fiveprime end of the read alignment.
+    #.  *Fiveprime end mapping*
+        Each read alignment is mapped to its 5\' end, or a fixed
+        distance from its 5\' end. This is common for RNA-seq or CLiP-seq
+        experiments.
     
-    :py:func:`VariableFivePrimeMapFactory`
-        Returns a mapping function in which reads are mapped at different user-configurable
-        offsets as a function of the read length.
-
-    :py:func:`ThreePrimeMapFactory`
-        Returns a mapping function in which reads are mapped at a user-configurable
-        offset (default: 0), from the threeprime end of the read alignment.
-
-    :py:func:`NibbleMapFactory`
-        Returns a mapping function in which a user-specified number of positions
-        is removed from each side of the read alignment, and the N remaining
-        bases are each apportioned 1/N of a read count.
-
-
-Filter functions must take and return the same data type, a list of
-:py:class:`pysam.AlignedSegment` s. This allows multiple filters to be composed.
-The following filter factories are provided:
-
-    :py:func:`SizeFilterFactory`
-        Returns a filter function that can low-pass, high-pass, or band-pass
-        read alignments based upon alignment length
+    #.  *Variable fiveprime end mapping*
+        Each read alignment is mapped at a fixed distance from its
+        5\' end, the distance determined by the length of the read
+        alignment. This is commonly used for mapping :term:`ribosome-protected footprints`
+        to their P-sites in :term:`ribosome profiling` experiments.
     
+    #.  *Threeprime end mapping*
+        Each read alignment is mapped to its 3\' end, or a fixed
+        distance from its 3\' end.
+    
+    #.  *Entire,* *Center-weighted,* or *nibble mapping*
+        Zero or more positions are trimmed from each end of the read alignment,
+        and the remaining `N` positions in the alignment are incremented by `1/N`
+        read counts (so that each read is still counted once, when integrated
+        over its mapped length). This is also occasionally used for 
+        :term:`ribosome profiling` or RNA-seq. 
 
-Finally
--------
-This module also contains dictionaries mapping chromosome names to chromosome lengths
-for genome builds of several model organisms (e.g. hg19, dm3, sgd2013)
+Implementations of each are provided for |GenomeArray|\/|SparseGenomeArray|
+and |BAMGenomeArray|. For |GenomeArray| and |SparseGenomeArray|, functions
+are provided as arguments to the method :meth:`~GenomeArray.add_from_bowtie`.
+For |BAMGenomeArray|, a function is generated from one of the :term:`factories <factory>`
+below, and passed to the method :meth:`BAMGenomeArray.set_mapping`:
+
+======================   ====================================    =======================================
+Strategy                 |GenomeArray|, |SparseGenomeArray|      |BAMGenomeArray|
+----------------------   ------------------------------------    ---------------------------------------
+
+Fiveprime                :func:`five_prime_map`                  :py:func:`FivePrimeMapFactory`
+
+Fiveprime variable       :func:`five_prime_variable_map`         :py:func:`VariableFivePrimeMapFactory`
+
+Threeprime               :func:`three_prime_variable_map`        :py:func:`ThreePrimeMapFactory`
+
+Center/entire/nibble     :func:`center_map`                      :py:func:`CenterMapFactory`
+======================   ====================================    =======================================
+
+
 """
 __date__ =  "May 3, 2011"
 __author__ = "joshua"
@@ -148,9 +131,8 @@ import numpy
 import scipy.sparse
 from collections import OrderedDict
 from yeti.readers.wiggle import WiggleReader
-from yeti.readers.bowtie import BowtieReader, TagalignReader
+from yeti.readers.bowtie import BowtieReader
 from yeti.genomics.roitools import GenomicSegment
-from yeti.genomics.splicing import junction_pat
 from yeti.util.services.mini2to3 import xrange, ifilter
 
 MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
@@ -165,16 +147,16 @@ MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes
 # in the GenomicSegment
 #===============================================================================
 
-def NibbleMapFactory(nibble=0):
+def CenterMapFactory(nibble=0):
     """Returns a mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
     A user-specified number of bases is removed from each side of each
-    read alignment, and the N remaining bases are each apportioned 1/N
+    read alignment, and the `N` remaining bases are each apportioned `1/N`
     of the read count.
      
     Parameters
     ----------
-    nibble : int
-        Number of bases to remove from each side of read (Default: *0*)
+    nibble : int, optional
+        Number of bases to remove from each side of read (Default: `0`)
     
     Returns
     -------
@@ -185,32 +167,32 @@ def NibbleMapFactory(nibble=0):
     # set it up here so we can put the string substitution in it
     docstring = """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region. %s bases are trimmed from each
-        side of the read, and each of the N remaining alignment positions
-        are incremented by 1/N
+        side of the read, and each of the `N` remaining alignment positions
+        are incremented by `1/N`
         
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
-        reads : list<:py:class:`pysam.AlignedSegment`>
+        reads : list of :py:class:`pysam.AlignedSegment`
             Reads to map
             
         Returns
         -------
         :py:class:`numpy.ndarray`
-            Vector of counts at each position in ``iv``
+            Vector of counts at each position in `seg`
         """ % nibble
  
-    def map_func(reads,iv):
-        iv_positions = set(range(iv.start,iv.end))
+    def map_func(reads,seg):
+        seg_positions = set(range(seg.start,seg.end))
         reads_out = []
-        count_array = numpy.zeros(len(iv))
+        count_array = numpy.zeros(len(seg))
         
         #reads = ifilter(lambda x: len(x.positions) > 2*nibble,reads)
         for read in reads:
             if len(read.positions) <= 2*nibble:
-                warnings.warn("Read alignment length %s nt is less than 2*'nibble' value of %s nt. Ignoring." % (len(read.positions),2*nibble),
+                warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
                               UserWarning)
                 continue
             
@@ -219,9 +201,9 @@ def NibbleMapFactory(nibble=0):
             else:
                 read_positions = read.positions[nibble:-nibble]
  
-            overlap = set(read_positions) & iv_positions
+            overlap = set(read_positions) & seg_positions
             if len(overlap) > 0:
-                overlap_array_coordinates = [X-iv.start for X in overlap]
+                overlap_array_coordinates = [X-seg.start for X in overlap]
                 reads_out.append(read)
                 val = 1.0 / len(read_positions)
                 count_array[overlap_array_coordinates] += val
@@ -240,8 +222,8 @@ def FivePrimeMapFactory(offset=0):
     Parameters
     ----------
     offset : int, optional
-        Offset from 5' end of read, in direction of threeprime end, at which 
-        reads should be counted (Default: *0*)
+        Offset from 5\' end of read, in direction of 3\' end, at which 
+        reads should be counted (Default: `0`)
     
     Returns
     -------
@@ -257,34 +239,34 @@ def FivePrimeMapFactory(offset=0):
  
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
-        reads : list<:py:class:`pysam.AlignedSegment`>
+        reads : list of :py:class:`pysam.AlignedSegment`
             Reads to map
             
         Returns
         -------
         :py:class:`numpy.ndarray`
-            Vector of counts at each position in ``iv``
+            Vector of counts at each position in `seg`
         """ % offset
          
-    def map_func(reads,iv):
+    def map_func(reads,seg):
         reads_out = []         
-        count_array = numpy.zeros(len(iv))
+        count_array = numpy.zeros(len(seg))
         for read in reads:
             if offset > len(read.positions):
                 warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
                               UserWarning)
                 continue
-            if iv.strand == "+":
+            if seg.strand == "+":
                 p_site = read.positions[offset] # read.pos + self.offset
             else:
                 p_site = read.positions[-offset - 1] #read.pos + read.rlen - self.offset - 1
              
-            if p_site >= iv.start and p_site < iv.end:
+            if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
-                count_array[p_site - iv.start] += 1
+                count_array[p_site - seg.start] += 1
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -294,8 +276,8 @@ def FivePrimeMapFactory(offset=0):
  
 def ThreePrimeMapFactory(offset=0):
     """Returns a mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a specified offset from the threeprime end of the alignment,
-    in the direction of the fiveprime end
+    Reads are mapped at a specified offset from the 3\' end of the alignment,
+    in the direction of the 5\' end
      
     Parameters
     ----------
@@ -317,33 +299,33 @@ def ThreePrimeMapFactory(offset=0):
  
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
-        reads : list<:py:class:`pysam.AlignedSegment`>
+        reads : list of :py:class:`pysam.AlignedSegment`
             Reads to map
             
         Returns
         -------
         :py:class:`numpy.ndarray`
-            Vector of counts at each position in ``iv``
+            Vector of counts at each position in `seg`
         """ % offset
-    def map_func(reads,iv):
+    def map_func(reads,seg):
         reads_out = []
-        count_array = numpy.zeros(len(iv))
+        count_array = numpy.zeros(len(seg))
         for read in reads:
             if offset > len(read.positions):
                 warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
                               UserWarning)
                 continue
-            if iv.strand == "+":
+            if seg.strand == "+":
                 p_site = read.positions[-offset - 1] #read.pos + read.rlen - 1 - self.offset
             else:
                 p_site = read.positions[offset] #read.pos + self.offset
                  
-            if p_site >= iv.start and p_site < iv.end:
+            if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
-                count_array[p_site - iv.start] += 1
+                count_array[p_site - seg.start] += 1
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -355,15 +337,15 @@ def ThreePrimeMapFactory(offset=0):
 def VariableFivePrimeMapFactory(offset_dict):
     """Returns a mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a specified offset from the fiveprime end of the alignment,
-    which can vary with the length of the read according to offset[readlen]
+    which can vary with the length of the read according to `offset_dict[readlen]`
      
     Parameters
     ----------
     offset_dict : dict
         Dictionary mapping read lengths to offsets that should be applied
-        to reads of that length when mapping. A special key, *default* may be supplied
-        to provide a default value for lengths not specifically enumerated
-        in the dict
+        to reads of that length when mapping. A special key, `'default'` may
+        be supplied to provide a default value for lengths not specifically
+        enumerated in `offset_dict`
     
     Returns
     -------
@@ -374,25 +356,25 @@ def VariableFivePrimeMapFactory(offset_dict):
     # docstring of function we will return.
     docstring = """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at possibly varying
-        offsets from the 5' end of each read.
+        offsets from the 5\' end of each read.
  
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
-        reads : list<:py:class:`pysam.AlignedSegment`>
+        reads : list of :py:class:`pysam.AlignedSegment`
             Reads to map
             
         Returns
         -------
         :py:class:`numpy.ndarray`
-            Vector of counts at each position in ``iv``
+            Vector of counts at each position in `seg`
         """
          
-    def map_func(reads,iv):
+    def map_func(reads,seg):
         reads_out = []         
-        count_array = numpy.zeros(len(iv))
+        count_array = numpy.zeros(len(seg))
         for read in reads:
             # Get offset from dict. If not present, ask for default offset
             # If no default, this will throw a KeyError, which users can
@@ -403,14 +385,14 @@ def VariableFivePrimeMapFactory(offset_dict):
             else:
                 offset = offset_dict[read_length]
                  
-            if iv.strand == "+":
+            if seg.strand == "+":
                 p_site = read.positions[offset] # read.pos + self.offset
             else:
                 p_site = read.positions[-offset - 1] #read.pos + read.rlen - self.offset - 1
              
-            if p_site >= iv.start and p_site < iv.end:
+            if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
-                count_array[p_site - iv.start] += 1
+                count_array[p_site - seg.start] += 1
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -418,11 +400,8 @@ def VariableFivePrimeMapFactory(offset_dict):
     return map_func
  
  
- 
- 
- 
 # Default mapping option: map entire read
-map_entire = NibbleMapFactory()
+map_entire = CenterMapFactory()
 
 
 #===============================================================================
@@ -435,10 +414,10 @@ def SizeFilterFactory(min=1,max=numpy.inf):
     
     Parameters
     ----------
-    min : int
-        Minimum read length to pass filter (Default: *1*)
+    min : int, optional
+        Minimum read length to pass filter (Default: `1`)
     
-    max : int or numpy.inf
+    max : int or numpy.inf, optional
         Maximum read length to pass filter (Default: infinity)
     
     Returns
@@ -465,7 +444,7 @@ def SizeFilterFactory(min=1,max=numpy.inf):
 
 def five_prime_variable_map(feature,**kwargs):
     """Transformation used by :py:meth:`GenomeArray.add_from_bowtie`
-    to map 5' positions of reads with variable offset
+    to map 5\' positions of reads with variable offset
     dependent upon read length
     
     Parameters
@@ -473,15 +452,16 @@ def five_prime_variable_map(feature,**kwargs):
     feature : |SegmentChain|
         Ungapped genomic alignment
         
-    kwargs['value'] : float or int
-        Value to apportion (Default: *1*)
-        
-    kwargs['offset'] : dict<int,int>
+    kwargs['offset'] : dict, required
         Dictionary mapping read lengths to offsets
+
+    kwargs['value'] : float or int, optional
+        Value to apportion (Default: `1`)
     
     Returns
     -------
-    list<tuple<|GenomicSegment|,float>>
+    list
+        tuples of *(GenomicSegment,float value over segment)*
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -491,26 +471,28 @@ def five_prime_variable_map(feature,**kwargs):
         start = feature.spanning_segment.start + offset
     else:
         start = feature.spanning_segment.end - 1 - offset
-    iv = GenomicSegment(chrom,start,start+1,strand)
-    return [(iv,value)]    
+    seg = GenomicSegment(chrom,start,start+1,strand)
+    return [(seg,value)]    
 
 def five_prime_map(feature,**kwargs):
-    """Transformation used by :py:meth:`GenomeArray.add_from_bowtie` to map reads to 5' positions
+    """Transformation used by :py:meth:`GenomeArray.add_from_bowtie`
+    to map reads to 5\' positions
     
     Parameters
     ----------
     feature : |SegmentChain|
         Ungapped genomic alignment
         
-    kwargs['value'] : float or int
-        Value to apportion Ddefault: *1*)
+    kwargs['value'] : float or int, optional
+        Value to apportion (Default: `1`)
         
-    kwargs['offset'] : int
-        Mapping offset, if any, from 5' toward 3' end of read
+    kwargs['offset'] : int, optional
+        Mapping offset, if any, from 5\' toward 3\' end of read
     
     Returns
     -------
-    list<tuple<|GenomicSegment|,float>>
+    list
+        tuples of *(GenomicSegment,float value over segment)*
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -520,26 +502,28 @@ def five_prime_map(feature,**kwargs):
         start = feature.spanning_segment.start + offset
     else:
         start = feature.spanning_segment.end - 1 - offset
-    iv = GenomicSegment(chrom,start,start+1,strand)
-    return [(iv,value)]
+    seg = GenomicSegment(chrom,start,start+1,strand)
+    return [(seg,value)]
 
 def three_prime_map(feature,**kwargs):
-    """Transformation used by :py:meth:`GenomeArray.add_from_bowtie` to map reads to 3' positions
+    """Transformation used by :py:meth:`GenomeArray.add_from_bowtie`
+    to map reads to 3\' positions
     
     Parameters
     ----------
     feature : |SegmentChain|
         Ungapped genomic alignment
         
-    kwargs['value'] : float or int
-        Value to apportion (Default: *1*)
+    kwargs['value'] : float or int, optional
+        Value to apportion (Default: `1`)
         
-    kwargs['offset'] : int
-        Mapping offset, if any, from 3' toward 5' end of read.
+    kwargs['offset'] : int, optional
+        Mapping offset, if any, from 3\' toward 5\' end of read.
     
     Returns
     -------
-    list<tuple<|GenomicSegment|,float>>
+    list
+        tuples of *(GenomicSegment,float value over segment)*
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -549,8 +533,8 @@ def three_prime_map(feature,**kwargs):
         start = feature.spanning_segment.end - 1 - offset
     else:
         start = feature.spanning_segment.start + offset
-    iv = GenomicSegment(chrom,start,start+1,strand)
-    return [(iv,value)]
+    seg = GenomicSegment(chrom,start,start+1,strand)
+    return [(seg,value)]
 
 def center_map(feature,**kwargs):
     """Transformation used by :py:meth:`GenomeArray.add_from_bowtie` to trim 5' and 3' ends of reads
@@ -561,19 +545,19 @@ def center_map(feature,**kwargs):
     feature : |SegmentChain|
         Ungapped genomic alignment
         
-    kwargs['value'] : float
-        Total value to divide over aligning positions (Default: *1.0*)
+    kwargs['value'] : float, optional
+        Total value to divide over aligning positions (Default: `1.0`)
         
-    kwargs['nibble'] : int
-        Positions to remove from each end before mapping
+    kwargs['nibble'] : int, optional
+        Positions to remove from each end before mapping (Default: `0`)
         
-    kwargs['offset'] : int
-        Mapping offset, if any, from 5' end of read
+    kwargs['offset'] : int, optional
+        Mapping offset, if any, from 5\' end of read (Default: `0`)
     
     Returns
     -------
-    list<tuple<|GenomicSegment|,float>> : offset
-        = kwargs.get("value",0)
+    list
+        tuples of *(GenomicSegment,float value over segment)*
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -582,9 +566,9 @@ def center_map(feature,**kwargs):
     sign   = -1 if strand == "-" else 1
     start  = feature.spanning_segment.start + kwargs['nibble'] + sign*offset
     end    = feature.spanning_segment.end   - kwargs['nibble'] + sign*offset
-    iv = GenomicSegment(chrom,start,end,strand)
-    frac = value/len(iv)
-    return [(iv,frac)]
+    seg = GenomicSegment(chrom,start,end,strand)
+    frac = value/len(seg)
+    return [(seg,frac)]
     
 def entire_map(feature,**kwargs):
     """Transformation used by :py:meth:`GenomeArray.add_from_bowtie` to plot an entire read.
@@ -615,8 +599,8 @@ def entire_map(feature,**kwargs):
 #===============================================================================
 
 class AbstractGenomeArray(object):
-    """Base class for all |GenomeArray|-like objects
-    """
+    """Base class for all |GenomeArray|-like objects"""
+    
     def __init__(self,chr_lengths=None,strands=("+","-")):
         """
         Parameters
@@ -629,8 +613,8 @@ class AbstractGenomeArray(object):
             a minimum chromosome size will be guessed, and
             chromosomes re-sized as needed.
         
-        strands : list<str>
-            Sequence<strands> for the |AbstractGenomeArray|
+        strands : list, optional
+            Strands for the |AbstractGenomeArray|. (Default: `["+","-"]`)
         """
         self._chroms       = {}
         self._strands      = strands
@@ -661,21 +645,27 @@ class AbstractGenomeArray(object):
         return len(self._strands)*sum(self.lengths().values())
     
     @abstractmethod
-    def __getitem__(self,genomic_interval):
+    def __getitem__(self,seg):
         """Retrieve array of counts from a region of interest. Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
-        are NOT reversed for negative strand features.
+        are **NOT** reversed for negative strand features.
         
         Parameters
         ----------
-        genomic_interval : |GenomicSegment| 
+        seg : |GenomicSegment| 
             Region of interest in genome
         
         Returns
         -------
-        list<Number>
+        list
             vector of numbers, each position corresponding to a position in the
             region of interest 
+        
+        See also
+        --------
+        :meth:`SegmentChain.get_counts`
+            Get a spliced count vector covering a |SegmentChain|, in the 5'
+            to 3' direction of the chain (rather than leftmost-first)
         """
         pass
     
@@ -699,7 +689,7 @@ class AbstractGenomeArray(object):
         """Returns the total number of aligned reads in the |GenomeArray|
         
         The true (i.e. unnormalized) sum is always reported, even if 
-        set_normalize() is set to True
+        :meth:`set_normalize` is set to True
         
         Returns
         -------
@@ -717,8 +707,8 @@ class AbstractGenomeArray(object):
         Parameters
         ----------
         value : bool
-            If True, all values fetched will be normalized to reads
-            per million. If false, all values will not be normalized.
+            If `True`, all values fetched will be normalized to reads
+            per million. If `False`, all values will not be normalized.
         """
         assert value in (True,False)
         self._normalize = value
@@ -728,7 +718,8 @@ class AbstractGenomeArray(object):
         
         Returns
         -------
-        list<string>
+        list
+            Chromosome names as strings
         """
         return self._chroms.keys()
     
@@ -737,7 +728,8 @@ class AbstractGenomeArray(object):
         
         Returns
         -------
-        tuple<string>
+        tuple
+            Chromosome strands as strings
         """
         return self._strands
 
@@ -749,6 +741,7 @@ class AbstractGenomeArray(object):
         Returns
         -------
         dict
+            Dictionary mapping chromosome names to chromosome lengths
         """
         d_out = {}.fromkeys(self.keys())
         for key in d_out:
@@ -758,7 +751,7 @@ class AbstractGenomeArray(object):
 
 class MutableAbstractGenomeArray(AbstractGenomeArray):
     """Abstract base class for |GenomeArray|-like objects whose values can be
-    changed at runtime (for example by mathematical operations) 
+    changed
     """
     @abstractmethod
     def __setitem__(self,genomic_interval,val):
@@ -776,18 +769,17 @@ class MutableAbstractGenomeArray(AbstractGenomeArray):
 
 
 class BAMGenomeArray(AbstractGenomeArray):
-    """Immutable data structure mapping read counts to specific nucleotide
-    positions in chromosomes and strands, given a BAM file of alignments.
+    """Fetch :term:`counts` at genomic positions from a `BAM`_ file of
+    :term:`read alignments`, applying a :term:`mapping rule` to convert the
+    latter to the former.
+            
+    Mapping rules are changeable at runtime.
     
-    Provides convenience methods for retrieving reads that map to
-    regions of interest in the genomes, as well as reduced arrays of
-    counts (e.g. for mapping ribosomal P-sites, RNA-seq reads, et c)
-    corresponding to the reads in those regions.
-    
-    Mapping rules are changeable at runtime, as is normalization.
-    
-    If mutability is required, the |BAMGenomeArray| can be converted
-    to a |GenomeArray| or |SparseGenomeArray|.
+    Notes
+    -----
+    |BAMGenomeArray| objects are immutable. If you need to change the data
+    in-place, the |BAMGenomeArray| can be converted to a |GenomeArray| or
+    |SparseGenomeArray| via :meth:`~BAMGenomeArray.to_genome_array`
     """
     
     def __init__(self,bamfiles,mapping=map_entire):
@@ -809,21 +801,21 @@ class BAMGenomeArray(AbstractGenomeArray):
         Notes
         -----
         BAM files must be first sorted and indexed via ``samtools``. Otherwise,
-        ValueErros will be raised when reads or counts are fetched.
+        ValueErrors will be raised when reads or counts are fetched.
         
             
         See Also
         --------
         FivePrimeMapFactory
-            map reads to 5' ends, with or without offset
+            map reads to 5\' ends, with or without applying an offset
         
         VariableFivePrimeMapFactory
-            map reads to 5' ends, chosing an offset determined by read length
+            map reads to 5\' ends, choosing an offset determined by read length
         
         ThreePrimeMapFactory
-            map reads to 3' ends, with or without offset
+            map reads to 3\' ends, with or without applying an offset
         
-        NibbleMapFactory
+        CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.bamfiles     = bamfiles
@@ -859,7 +851,7 @@ class BAMGenomeArray(AbstractGenomeArray):
 
     def add_filter(self,name,func):
         """Apply a function to filter reads retrieved from regions before they
-        are counted (e.g. a size filter returned by BAMGenomeNDarray.SizeFilter)
+        are counted
         
         Parameters
         ----------
@@ -869,7 +861,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         func : func
             Filter function. Function must take a
-            pysam.AlignedSegment as a single parameter, and return
+            :class:`pysam.AlignedSegment` as a single parameter, and return
             True if that read should be included in output.
         
         Notes
@@ -906,8 +898,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Returns
         -------
-        list<string>
-            chromosome names
+        list
+            chromosome names as strings
         """
         return self._chr_lengths.keys()
 
@@ -921,47 +913,48 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         return self._chr_lengths
         
-    def get_reads_and_counts(self,iv):
+    def get_reads_and_counts(self,seg):
         """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region, following rules specified by 
-        self.mapping, self.offset, and self.nibble. To obtain unstranded reads,
-        set the value of iv.strand to "."
+        to specific positions in the region, following the rule specified by 
+        ``self.mapping``. Reads are strand-matched to `seg` by default. 
+        To obtain unstranded reads, set the value of `seg.strand` to "."
         
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
 
         
         Returns
         -------
-        list<pysam.AlignedSegment>
-            List of reads covering region of interest
+        list
+            List of reads (as :class:`pysam.AlignedSegment`)
+            covering region of interest
 
         numpy.ndarray
-            Counts at each position of ``iv``, under whatever mapping rules
+            Counts at each position of `seg`, under whatever mapping rules
             were set by :py:meth:`~BAMGenomeArray.set_mapping`
 
 
         Raises
         ------
         ValueError
-            if bamfile not sorted or not indexed
+            if bamfiles not sorted or not indexed
         """
         # fetch reads
-        if iv.chrom not in self.chroms():
-            return [], numpy.zeros(len(iv))
+        if seg.chrom not in self.chroms():
+            return [], numpy.zeros(len(seg))
 
-        reads = itertools.chain.from_iterable((X.fetch(reference=iv.chrom,
-                                          start=iv.start,
-                                          end=iv.end,
+        reads = itertools.chain.from_iterable((X.fetch(reference=seg.chrom,
+                                          start=seg.start,
+                                          end=seg.end,
                                          # until_eof=True, # this could speed things up. need to test/investigate
                                           ) for X in self.bamfiles))
             
         # filter by strand
-        if iv.strand == "+":
+        if seg.strand == "+":
             reads = ifilter(lambda x: x.is_reverse is False,reads)
-        elif iv.strand == "-":
+        elif seg.strand == "-":
             reads = ifilter(lambda x: x.is_reverse is True,reads)
         
         # Pass through additional filters (e.g. size filters, if they have
@@ -970,7 +963,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             reads = ifilter(my_filter,reads)
         
         # retrieve selected parts of regions
-        reads,count_array = self.map_fn(reads,iv)
+        reads,count_array = self.map_fn(reads,seg)
         
         # normalize to reads per million if normalization flag is set
         if self._normalize is True:
@@ -978,42 +971,46 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         return reads, count_array
 
-    def get_reads(self,iv):
-        """Returns reads covering a  |GenomicSegment|. To obtain unstranded reads,
-        set the value of iv.strand to "."
+    def get_reads(self,seg):
+        """Returns reads covering a |GenomicSegment|. Reads are strand-matched
+        to `seg` by default. To obtain unstranded reads, set the value of
+        `seg.strand` to "."
         
         Parameters
         ----------
-        iv
-            |GenomicSegment| specifying region of interest
+        seg : |GenomicSegment|
+            Region of interest
 
         
         Returns
         -------
-        reads
-            list<pysam.AlignedSegment>
+        list
+            List of reads (as :class:`pysam.AlignedSegment`)
+            covering region of interest
 
 
         Raises
         ------
         ValueError
-            if bamfile not sorted or not indexed
+            if bamfiles not sorted or not indexed
         """
-        reads, _ = self.get_reads_and_counts(iv)
+        reads, _ = self.get_reads_and_counts(seg)
         return reads
 
-    def __getitem__(self,iv):
+    def __getitem__(self,seg):
         """Returns a count array mapping reads to specific positions
         in the a region of interest, following rules specified by 
         self.map_fn.  Coordinates in the returned array are in the order
         of the chromosome (leftmost-first), and are NOT reversed
-        for negative strand features. To obtain unstranded reads, set the 
-        value of iv.strand to "."
+        for negative strand features.
+        
+        Also, by default, reads are strand-matched to `seg`. To obtain
+        unstranded reads, set the value of seg.strand to "."
         
         Parameters
         ----------
-        iv
-            |GenomicSegment| specifying region of interest
+        seg : |GenomicSegment|
+            Region of interest
         
         
         Returns
@@ -1029,9 +1026,16 @@ class BAMGenomeArray(AbstractGenomeArray):
         Raises
         ------
         ValueError
-            if bamfile not sorted or not indexed
+            if bamfiles not sorted or not indexed
+            
+            
+        See also
+        --------
+        :meth:`SegmentChain.get_counts`
+            Get a spliced count vector covering a |SegmentChain|, in the 5'
+            to 3' direction of the chain (rather than leftmost-first)            
         """
-        _, count_array = self.get_reads_and_counts(iv)
+        _, count_array = self.get_reads_and_counts(seg)
         return count_array
 
     def get_mapping(self):
@@ -1050,21 +1054,21 @@ class BAMGenomeArray(AbstractGenomeArray):
             count at a position in the |BAMGenomeArray|. Examples include
             mapping reads to their fiveprime or threeprime ends, with or
             without offsets. Factories to produce such functions are provided.
-            See references below. Default: map reads along entire length
+            See references below.
 
             
         See Also
         --------
         FivePrimeMapFactory
-            map reads to 5' ends, with or without offset
+            map reads to 5' ends, with or without applying an offset
         
         VariableFivePrimeMapFactory
-            map reads to 5' ends, chosing an offset determined by read length
+            map reads to 5' ends, choosing an offset determined by read length
         
         ThreePrimeMapFactory
-            map reads to 3' ends, with or without offset
+            map reads to 3' ends, with or without applying an offset
         
-        NibbleMapFactory
+        CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.map_fn = mapping_function
@@ -1085,19 +1089,19 @@ class BAMGenomeArray(AbstractGenomeArray):
         if array_type is None:
             array_type = GenomeArray
             
-        gnd = array_type(chr_lengths=self.lengths(),strands=self.strands())
+        ga = array_type(chr_lengths=self.lengths(),strands=self.strands())
         for chrom in self.chroms():
             for strand in self.strands():
-                iv = GenomicSegment(chrom,0,self.lengths()[chrom]-1,strand)
-                gnd[iv] = self[iv]
+                seg = GenomicSegment(chrom,0,self.lengths()[chrom]-1,strand)
+                ga[seg] = self[seg]
 
-        return gnd
+        return ga
 
     def to_variable_step(self,fh,trackname,strand,window_size=100000,**kwargs):
-        """Write the contents of the |BAMGenomeArray| to a variableStep wiggle file.
+        """Write the contents of the |BAMGenomeArray| to a variableStep `Wiggle`_ file.
         These contain 1-based coordinates.
         
-        See http://genome.ucsc.edu/goldenpath/help/wiggle.html
+        See http://genome.ucsc.edu/goldenpath/help/wiggle.html for format details.
         
         Parameters
         ----------
@@ -1108,7 +1112,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             Name of browser track
           
         strand : str
-            Strand of |BAMGenomeArray| to export. "+", "-", or "."
+            Strand of |BAMGenomeArray| to export. `"+"`, `"-"`, or `"."`
         
         window_size : int
             Size of chromosome/contig to process at a time.
@@ -1140,11 +1144,11 @@ class BAMGenomeArray(AbstractGenomeArray):
             
         
     def to_bedgraph(self,fh,trackname,strand,window_size=100000,**kwargs):
-        """Write the contents of the |BAMGenomeArray| to a bedgraph file.
+        """Write the contents of the |BAMGenomeArray| to a `bedGraph`_ file.
         
         These contain 0-based, half-open coordinates
         
-        See https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html
+        See https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html for format details.
             
         Parameters
         ----------
@@ -1155,7 +1159,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             Name of browser track
           
         strand : str
-            Strand of |BAMGenomeArray| to export. "+", "-", or "."
+            Strand of |BAMGenomeArray| to export. `"+"`, `"-"`, or `"."`
         
         window_size : int
             Size of chromosome/contig to process at a time.
@@ -1202,12 +1206,12 @@ class BAMGenomeArray(AbstractGenomeArray):
 
 
 class GenomeArray(MutableAbstractGenomeArray):
-    """Mutable data structure mapping read counts to specific nucleotide
-    positions in chromosomes and strands.
+    """Dictionary-like data structure mapping quantitative data or read counts
+    to specific nucleotide positions in a genome.
     
     Supports basic mathematical operations elementwise, where elements are
     nucleotide positions. Can read from and write to several formats,
-    including Wiggle, BedGraph, and bowtie alignments.
+    including `Wiggle`_, `BedGraph`_, and `bowtie`_ alignments.
     """
     
     def __init__(self,chr_lengths=None,strands=("+","-"),
@@ -1225,14 +1229,14 @@ class GenomeArray(MutableAbstractGenomeArray):
             chromosomes re-sized as needed.
         
         min_chr_size : int
-            If chr_lengths is not supplied, min_chr_size is 
+            If chr_lengths is not supplied, `min_chr_size` is 
             the default first guess of a chromosome size. If
             your genome has large chromosomes, it is much
-            much better, speed-wise, to provide a chr_lengths
+            much better, speed-wise, to provide a `chr_lengths`
             dict than to provide a guess here that is too small.
         
-        strands : list<str>
-            Sequence of strands for the |GenomeArray|
+        strands : list
+            Sequence of strand names for the |GenomeArray|. (Default: '["+","_"]`)
         """
         self._chroms       = {}
         self._strands      = strands
@@ -1300,13 +1304,13 @@ class GenomeArray(MutableAbstractGenomeArray):
                 
                 # values of nonzero positions must be same
                 if len(self_nonzero_vec) > 0:
-                    test_iv = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
-                    if not (self[test_iv] - other[test_iv] <= tol).all():
+                    test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
+                    if not (self[test_seg] - other[test_seg] <= tol).all():
                         return False
 
         return True
         
-    def __getitem__(self,iv):
+    def __getitem__(self,seg):
         """Retrieve array of counts from a region of interest. Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
         are NOT reversed for negative strand features.
@@ -1317,45 +1321,51 @@ class GenomeArray(MutableAbstractGenomeArray):
         automatically expanded to fit that size. This is useful in circumstances
         where chromosome sizes aren't known ahead of time (for example, when
         reading wiggle files when users don't explicitly specify chromosome sizes
-        at runtime). This behavior is different from what an IndexError or
-        KeyError that some users might expect.
+        at runtime). This behavior is different from what an `IndexError` or
+        `KeyError` that some users might expect.
         
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg: |GenomicSegment|
             Region of interest
         
         Returns
         -------
         numpy.array
             vector of counts at each position in region of interest
+            
+        See also
+        --------
+        :meth:`SegmentChain.get_counts`
+            Get a spliced count vector covering a |SegmentChain|, in the 5'
+            to 3' direction of the chain (rather than leftmost-first)            
         """
-        assert isinstance(iv,GenomicSegment)
-        assert iv.start >= 0
-        assert iv.end >= iv.start
+        assert isinstance(seg,GenomicSegment)
+        assert seg.start >= 0
+        assert seg.end >= seg.start
         try:
-            assert iv.end < len(self._chroms[iv.chrom][iv.strand])
+            assert seg.end < len(self._chroms[seg.chrom][seg.strand])
         except AssertionError:
-            my_len = len(self._chroms[iv.chrom][iv.strand])
-            new_size = max(my_len + 10000,iv.end + 10000)
+            my_len = len(self._chroms[seg.chrom][seg.strand])
+            new_size = max(my_len + 10000,seg.end + 10000)
             for strand in self.strands():
-                new_strand = copy.deepcopy(self._chroms[iv.chrom][strand])
+                new_strand = copy.deepcopy(self._chroms[seg.chrom][strand])
                 new_strand.resize(new_size)
-                self._chroms[iv.chrom][strand] = new_strand
+                self._chroms[seg.chrom][strand] = new_strand
         except KeyError:
-            assert iv.strand in self.strands()
-            if iv.chrom not in self.keys():
-                self._chroms[iv.chrom] = {}
+            assert seg.strand in self.strands()
+            if seg.chrom not in self.keys():
+                self._chroms[seg.chrom] = {}
                 for strand in self.strands():
-                    self._chroms[iv.chrom][strand] = numpy.zeros(self.min_chr_size)
+                    self._chroms[seg.chrom][strand] = numpy.zeros(self.min_chr_size)
         
-        vals = self._chroms[iv.chrom][iv.strand][iv.start:iv.end]
+        vals = self._chroms[seg.chrom][seg.strand][seg.start:seg.end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
         return vals
     
-    def __setitem__(self,iv,val):
+    def __setitem__(self,seg,val):
         """Set values in |GenomeArray| over a region of interest (ROI).
         If the ROI is on a valid chromosome and strand but outside the
         bounds of the current |GenomeArray| (e.g. on on coordinates that exceed
@@ -1368,7 +1378,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
         val : int, float, or :py:class:`numpy.ndarray`
@@ -1377,19 +1387,19 @@ class GenomeArray(MutableAbstractGenomeArray):
         
         Notes
         -----
-        If :meth:`set_normalize` is set to *True*, it is temporarily set to *False*
-        while values are being set. It is then returned to *True*.
+        If :meth:`set_normalize` is set to `True`, it is temporarily set to `False`
+        while values are being set. It is then returned to `True`.
         
         
         Raises
         ------
         AssertionError
-            if ``self._normalize`` is True, or if ``iv`` is invalid
+            if `seg` is invalid
         """
         self._sum = None
-        assert isinstance(iv,GenomicSegment)
-        assert iv.start >= 0
-        assert iv.end >= iv.start
+        assert isinstance(seg,GenomicSegment)
+        assert seg.start >= 0
+        assert seg.end >= seg.start
 
         old_normalize = self._normalize
         if old_normalize == True:
@@ -1397,29 +1407,29 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         self.set_normalize(False)
         try:
-            assert iv.end < len(self._chroms[iv.chrom][iv.strand])
+            assert seg.end < len(self._chroms[seg.chrom][seg.strand])
         except AssertionError:
-            my_len = len(self._chroms[iv.chrom][iv.strand])
-            new_size = max(my_len + 10000,iv.end + 10000)
+            my_len = len(self._chroms[seg.chrom][seg.strand])
+            new_size = max(my_len + 10000,seg.end + 10000)
             for strand in self.strands():
-                new_strand = copy.deepcopy(self._chroms[iv.chrom][strand])
+                new_strand = copy.deepcopy(self._chroms[seg.chrom][strand])
                 new_strand.resize(new_size)
-                self._chroms[iv.chrom][strand] = new_strand
+                self._chroms[seg.chrom][strand] = new_strand
         except KeyError:
-            assert iv.strand in self.strands()
-            if iv.chrom not in self.keys():
-                self._chroms[iv.chrom] = {}
+            assert seg.strand in self.strands()
+            if seg.chrom not in self.keys():
+                self._chroms[seg.chrom] = {}
                 for strand in self.strands():
-                    self._chroms[iv.chrom][strand] = numpy.zeros(self.min_chr_size) 
+                    self._chroms[seg.chrom][strand] = numpy.zeros(self.min_chr_size) 
             
-        self._chroms[iv.chrom][iv.strand][iv.start:iv.end] = val
+        self._chroms[seg.chrom][seg.strand][seg.start:seg.end] = val
         self.set_normalize(old_normalize)
 
     def keys(self):
         return self.chroms()
     
     def iterchroms(self):
-        """Returns an iterator, by strand, over each chromosome
+        """Returns an iterator, by strand, over each chromosome array
         
         Yields
         ------
@@ -1495,42 +1505,45 @@ class GenomeArray(MutableAbstractGenomeArray):
         return d_out
     
     def apply_operation(self,other,func,mode="same"):
-        """Applies a binary operator either to two |GenomeArray| s, elementwise,
-        or to some other quantity and this |GenomeArray|. In both cases, a new
-        |GenomeArray| is returned. If :meth:`set_normalize` is set to *True*,
-        it is disabled during the operation.
+        """Applies a binary operator to a copy of `self` and to `other` elementwise.
+        `other` may be a scalar quantity or another |GenomeArray|. In both cases,
+        a new |GenomeArray| is returned, and `self` is left unmodified.
+        If :meth:`set_normalize` is set to `True`, it is disabled during the
+        operation.
         
         Parameters
         ----------
         other : float, int, or |MutableAbstractGenomeArray|
+            Second argument to `func`
         
         func : func
             Function to perform. This must take two arguments.
             a :py:class:`numpy.ndarray` (chromosome-strand) from the
-            |GenomeArray| will be supplied as the first argument, and ``other``
-            as the second.
+            |GenomeArray| will be supplied as the first argument, and the
+            corresponding chromosome-strand from `other` as the second.
+            This operation will be applied over all chromosomes and strands.
             
-            If mode is set to "all", and a chromosome or strand is not
+            If mode is set to `all`, and a chromosome or strand is not
             present in one of self or other, zero will be supplied
             as the missing argument to func. func must handle this
             gracefully.
         
-        mode : str
-            Only relevant if ``other`` is a |MutableAbstractGenomeArray|
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
         
-            If "same" each set of corresponding chromosomes must
+            If '`same`' each set of corresponding chromosomes must
             have the same dimensions in both parent |GenomeArray| s.
             In addition, both |GenomeArray| s must have the same
             chromosomes, and the same strands.
 
-            If "all", corresponding chromosomes in the parent
+            If '`all`', corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
-            If "truncate",corresponding chromosomes in the parent
+            If `'truncate'`,corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
@@ -1552,8 +1565,8 @@ class GenomeArray(MutableAbstractGenomeArray):
                 self._has_same_dimensions(other)
                 for chrom in self.keys():
                     for strand in self.strands():
-                        iv = GenomicSegment(chrom,0,len(self._chroms[chrom][strand]),strand)
-                        new_array[iv] = func(self[iv],other[iv])               
+                        seg = GenomicSegment(chrom,0,len(self._chroms[chrom][strand]),strand)
+                        new_array[seg] = func(self[seg],other[seg])               
             elif mode == "all":
                 chroms    = {}.fromkeys(set(self.keys()) | set(other.keys()))
                 strands   = set(self.strands()) | set(other.strands())
@@ -1602,29 +1615,30 @@ class GenomeArray(MutableAbstractGenomeArray):
         return new_array
         
     def __add__(self,other,mode="all"):
-        """Adds a scalar or another another |GenomeArray| to |GenomeArray|,
-        elementwise.
+        """Adds `other` to `self`, returning a new |GenomeArray|
+        and leaving `self` unchanged. `other` may be a scalar quantity or
+        another |GenomeArray|. In the latter case, addition is elementwise.
         
         Parameters
         ----------
         other : float, int, or |MutableAbstractGenomeArray|
         
-        mode : str
-            Only relevant if ``other`` is a |MutableAbstractGenomeArray|
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
         
-            If "same" each set of corresponding chromosomes must
+            If '`same`' each set of corresponding chromosomes must
             have the same dimensions in both parent |GenomeArray| s.
             In addition, both |GenomeArray| s must have the same
             chromosomes, and the same strands.
 
-            If "all", corresponding chromosomes in the parent
+            If '`all`', corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
-            If "truncate",corresponding chromosomes in the parent
+            If `'truncate'`,corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
@@ -1638,34 +1652,35 @@ class GenomeArray(MutableAbstractGenomeArray):
         return self.apply_operation(other, operator.add, mode=mode)
         
     def __mul__(self,other,mode="all"):
-        """Multiplies |GenomeArray| by a scalar or by another |GenomeArray|,
-        elementwise.
+        """Multiplies `other` by `self`, returning a new |GenomeArray|
+        and leaving `self` unchanged. `other` may be a scalar quantity or
+        another |GenomeArray|. In the latter case, multiplication is elementwise.
         
         Parameters
         ----------
         other : float, int, or |MutableAbstractGenomeArray|
         
-        mode : str
-            Only relevant if ``other`` is a |MutableAbstractGenomeArray|
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
         
-            If "same" each set of corresponding chromosomes must
+            If '`same`' each set of corresponding chromosomes must
             have the same dimensions in both parent |GenomeArray| s.
             In addition, both |GenomeArray| s must have the same
             chromosomes, and the same strands.
 
-            If "all", corresponding chromosomes in the parent
+            If '`all`', corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
-            If "truncate",corresponding chromosomes in the parent
+            If `'truncate'`,corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
-            to both parents will be ignored.               
+            to both parents will be ignored.                 
         
         Returns
         -------
@@ -1674,34 +1689,35 @@ class GenomeArray(MutableAbstractGenomeArray):
         return self.apply_operation(other, operator.mul, mode=mode)
         
     def __sub__(self,other,mode="all"):
-        """Subtracts a scalar or another another |GenomeArray| from |GenomeArray|,
-        elementwise.
+        """Subtracts `other` from `self`, returning a new |GenomeArray|
+        and leaving `self` unchanged. `other` may be a scalar quantity or
+        another |GenomeArray|. In the latter case, subtraction is elementwise.
         
         Parameters
         ----------
         other : float, int, or |MutableAbstractGenomeArray|
         
-        mode : str
-            Only relevant if ``other`` is a |MutableAbstractGenomeArray|
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
         
-            If "same" each set of corresponding chromosomes must
+            If '`same`' each set of corresponding chromosomes must
             have the same dimensions in both parent |GenomeArray| s.
             In addition, both |GenomeArray| s must have the same
             chromosomes, and the same strands.
 
-            If "all", corresponding chromosomes in the parent
+            If '`all`', corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
-            If "truncate",corresponding chromosomes in the parent
+            If `'truncate'`,corresponding chromosomes in the parent
             |GenomeArray| s will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
-            to both parents will be ignored.            
+            to both parents will be ignored.         
         
         Returns
         -------
@@ -1711,41 +1727,56 @@ class GenomeArray(MutableAbstractGenomeArray):
     
     def add_from_bowtie(self,fh,transformation,min_length=25,
                           max_length=numpy.inf,**trans_args):
-        """Adds data from a bowtie alignment to current |GenomeArray|
+        """Adds data from a `bowtie`_ alignment to current |GenomeArray|
         
         Parameters
         ----------
         fh : file-like
-            filehandle pointing to bowtie file
-        
-        min_length : int
-            minimum length for read to be counted
-            (default: 25)
-        
-        max_length : int or numpy.inf
-            maximum length for read to be counted
-            (default: infinity)
+            filehandle pointing to `bowtie`_ file
         
         transformation : func
-            a function that transforms alignment
-            coordinates into a sequence of
-            (|GenomicSegment|,value) pairs
+            a :term:`mapping function` that transforms alignment
+            coordinates into a sequence of (|GenomicSegment|,value) pairs
+
+        min_length : int, optional
+            minimum length for read to be counted
+            (Default: 25)
         
-        trans_args
+        max_length : int or numpy.inf, optional
+            maximum length for read to be counted
+            (Default: infinity)
+        
+        trans_args : dict, optional
             Keyword arguments to pass to transformation
-            function  
+            function
+
+            
+        See also
+        --------
+        five_prime_map
+            map reads to 5\' ends, with or without applying an offset
+        
+        five_prime_variable_map
+            map reads to 5\' ends, choosing an offset determined by read length
+        
+        three_prime_map
+            map reads to 3\' ends, with or without applying an offset
+        
+        center_map
+            map each read fractionally to every position in the read, optionally
+            trimming positions from the ends first            
         """
         for feature in BowtieReader(fh):
             if len(feature.spanning_segment) >= min_length and len(feature.spanning_segment) <= max_length:
-                iv = feature.spanning_segment
+                seg = feature.spanning_segment
                 tuples = transformation(feature,**trans_args)
-                for iv, val in tuples:
-                    self[iv] += val
+                for seg, val in tuples:
+                    self[seg] += val
         
         self._sum = None
 
     def add_from_wiggle(self,fh,strand):
-        """Adds data from a wiggle file or bedGraph file to current |GenomeArray|
+        """Adds data from a `Wiggle`_ or `bedGraph`_ file to current |GenomeArray|
         
         Parameters
         ----------
@@ -1757,17 +1788,17 @@ class GenomeArray(MutableAbstractGenomeArray):
         """
         assert strand in self.strands()
         for chrom,start,stop,val in WiggleReader(fh):
-            iv = GenomicSegment(chrom,start,stop,strand)
-            self[iv] += val
+            seg = GenomicSegment(chrom,start,stop,strand)
+            self[seg] += val
 
         self._sum = None
         
     def to_variable_step(self,fh,trackname,strand,**kwargs):
         """Write the contents of the |GenomeArray| to a variable step
-        wiggle file. Note for most purposes, bedgraph is a more
+        `Wiggle`_ file. Note for sparse data, `bedGraph`_ is a more
         efficient format.
         
-        See http://genome.ucsc.edu/goldenpath/help/wiggle.html
+        See http://genome.ucsc.edu/goldenpath/help/wiggle.html for format details
         
         Parameters
         ----------
@@ -1778,7 +1809,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Name of browser track
         
         strand : str
-            Strand of |GenomeArray| to export. "+", "-", or "."
+            Strand of |GenomeArray| to export. `"+"`, `"-"`, or `"."`
         
         **kwargs
             Any other key-value pairs to include in track definition line
@@ -1798,10 +1829,10 @@ class GenomeArray(MutableAbstractGenomeArray):
                 fh.write("%s\t%s\n" % (idx+1, val))
                 
     def to_bedgraph(self,fh,trackname,strand,**kwargs):
-        """Write the contents of the |GenomeArray| to a bedGraph file
+        """Write the contents of the |GenomeArray| to a `bedGraph`_ file
         These contain 0-based, half-open coordinates
         
-        See https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html
+        See https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html for format details
             
         Parameters
         ----------
@@ -1812,7 +1843,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Name of browser track
         
         strand : str
-            Strand of |GenomeArray| to export. "+", "-", or "."
+            Strand of |GenomeArray| to export. `"+"`, `"-"`, or `"."`
         
         **kwargs
             Any other key-value pairs to include in track definition line
@@ -1853,19 +1884,20 @@ class GenomeArray(MutableAbstractGenomeArray):
         Returns
         -------
         GenomeArray
-            empty |GenomeArray| of same size as ``other``
+            empty |GenomeArray| of same size as `other`
         """
         return GenomeArray(other.lengths(),strands=other.strands())
 
     def _slicewrap(self,x):
-        """Helper function to wrap coordinates for VariableStep/Bedgraph export"""
+        """Helper function to wrap coordinates for VariableStep/`bedGraph`_ export"""
         return x
 
 
 class SparseGenomeArray(GenomeArray):
-    """A memory-efficient, |MutableAbstractGenomeArray| using sparse internal representation.
-    Note, savings in memory may come at a cost in performance when setting/getting values
-    from a |SparseGenomeArray| relative to a |GenomeArray|.
+    """A memory-efficient, |MutableAbstractGenomeArray| using sparse internal
+    representation. Note, savings in memory may come at a cost in performance
+    when repeatedly getting/setting values from a |SparseGenomeArray| relative
+    to a |GenomeArray|.
     """
     def __init__(self,chr_lengths=None,strands=("+","-"),min_chr_size=MIN_CHR_SIZE):
         """Create a |SparseGenomeArray|
@@ -1878,18 +1910,18 @@ class SparseGenomeArray(GenomeArray):
             speed improvements, as memory can be pre-allocated
             for each chromosomal position. If not provided,
             a minimum chromosome size will be guessed, and
-            chromosomes re-sized as needed (Default: *{}* )
+            chromosomes re-sized as needed (Default: `{}` )
         
         min_chr_size : int,optional
-            If ``chr_lengths`` is not supplied, ``min_chr_size`` is 
+            If `chr_lengths` is not supplied, `min_chr_size` is 
             the default first guess of a chromosome size. If
             your genome has large chromosomes, it is much
             much better, speed-wise, to provide a chr_lengths
             dict than to provide a guess here that is too small.
             (Default: %s)
         
-        strands : list<str>
-            Sequence of strands for the |GenomeArray| (Default *['+','-']*)
+        strands : list
+            Sequence of strands for the |SparseGenomeArray| (Default `['+','-']`)
         """ % MIN_CHR_SIZE
         self._chroms       = {}
         self._strands      = strands
@@ -1919,40 +1951,46 @@ class SparseGenomeArray(GenomeArray):
         
         return d_out
 
-    def __getitem__(self,iv):
+    def __getitem__(self,seg):
         """Retrieve array of counts from a region of interest. Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
-        are NOT reversed for negative strand features.
+        are *NOT* reversed for negative strand features.
         
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg : |GenomicSegment|
             Region of interest
         
         Returns
         -------
         numpy.ndarray
             counts at each position in region of interest
-        """
-        assert isinstance(iv,GenomicSegment)
-        assert iv.start >= 0
-        assert iv.end >= iv.start
 
-        if iv.chrom not in self:
-            self._chroms[iv.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
+        See also
+        --------
+        :meth:`SegmentChain.get_counts`
+            Get a spliced count vector covering a |SegmentChain|, in the 5'
+            to 3' direction of the chain (rather than leftmost-first)            
+        """
+        assert isinstance(seg,GenomicSegment)
+        assert seg.start >= 0
+        assert seg.end >= seg.start
+
+        if seg.chrom not in self:
+            self._chroms[seg.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
                                        for K in self.strands()
                                       }
-        if iv.end > self._chroms[iv.chrom][iv.strand].shape[1]:
+        if seg.end > self._chroms[seg.chrom][seg.strand].shape[1]:
             for strand in self.strands():
-                self._chroms[iv.chrom][strand].resize((1,iv.end+10000))
+                self._chroms[seg.chrom][strand].resize((1,seg.end+10000))
 
-        vals = self._chroms[iv.chrom][iv.strand][0,iv.start:iv.end]
+        vals = self._chroms[seg.chrom][seg.strand][0,seg.start:seg.end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
         return vals.toarray().reshape(vals.shape[1],)
 
-    def __setitem__(self,iv,val):
+    def __setitem__(self,seg,val):
         """Set values in |SparseGenomeArray| over a region of interest (ROI).
         If the ROI is on a valid chromosome and strand but outside the
         bounds of the current |SparseGenomeArray| (e.g. on on coordinates that exceed
@@ -1965,48 +2003,79 @@ class SparseGenomeArray(GenomeArray):
 
         Parameters
         ----------
-        iv : |GenomicSegment|
+        seg: |GenomicSegment|
             Region of interest
         
-        val : int, float, or :py:class:`numpy.ndarray` of same length as ``iv``
-            Value(s) to set in region specifed by interval ``iv``
+        val : int, float, or :py:class:`numpy.ndarray` of same length as `seg`
+            Value(s) to set in region specifed by interval `seg`
 
 
         Notes
         -----
-        If :meth:`set_normalize` is set to *True*, it is temporarily set to *False*
-        while values are being set. It is then returned to *True*.
+        If :meth:`set_normalize` is set to `True`, it is temporarily set to `False`
+        while values are being set. It is then returned to `True`.
        
         
         Raises
         ------
         AssertionError
-            if iv is invalid
+            if `seg` is invalid
         """
         self._sum = None
-        assert isinstance(iv,GenomicSegment)
-        assert iv.start >= 0
-        assert iv.end >= iv.start
+        assert isinstance(seg,GenomicSegment)
+        assert seg.start >= 0
+        assert seg.end >= seg.start
         
         old_normalize = self._normalize
         if old_normalize == True:
             warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
         self.set_normalize(False)
 
-        if iv.chrom not in self:
-            self._chroms[iv.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
+        if seg.chrom not in self:
+            self._chroms[seg.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
                                        for K in self.strands()
                                       }
-        if iv.end > self._chroms[iv.chrom][iv.strand].shape[1]:
+        if seg.end > self._chroms[seg.chrom][seg.strand].shape[1]:
             for strand in self.strands():
-                self._chroms[iv.chrom][strand].resize((1,iv.end+10000))
+                self._chroms[seg.chrom][strand].resize((1,seg.end+10000))
         
-        self._chroms[iv.chrom][iv.strand][0,iv.start:iv.end] = val
+        self._chroms[seg.chrom][seg.strand][0,seg.start:seg.end] = val
         self.set_normalize(old_normalize)
 
     def __mul__(self,other,mode=None):
-        """Multiplies |SparseGenomeArray| by a scalar or by another |SparseGenomeArray|,
-        elementwise.
+        """Multiplies `other` by `self`, returning a new |SparseGenomeArray|
+        and leaving `self` unchanged. `other` may be a scalar quantity or
+        another |SparseGenomeArray|. In the latter case, multiplication is elementwise.
+        
+        Parameters
+        ----------
+        other : float, int, or |MutableAbstractGenomeArray|
+        
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
+        
+            If '`same`' each set of corresponding chromosomes must
+            have the same dimensions in both parent |SparseGenomeArray| s.
+            In addition, both |SparseGenomeArray| s must have the same
+            chromosomes, and the same strands.
+
+            If '`all`', corresponding chromosomes in the parent
+            |SparseGenomeArray| s will be resized to the dimensions of
+            the larger chromosome before the operation is applied.
+            Parents are not required to have the same chromosomes
+            or strands; all chromosomes and strands will be
+            included in output. 
+                    
+            If `'truncate'`,corresponding chromosomes in the parent
+            |SparseGenomeArray| s will be resized to the dimensions of
+            the smaller chromosome before the operation is applied.
+            Parents are not required to have the same chromosomes
+            or strands; chromosomes or strands not common
+            to both parents will be ignored.                 
+        
+        Returns
+        -------
+        |GenomeArray|
         """
         if isinstance(other,GenomeArray):
             new_array = SparseGenomeArray.like(self)
@@ -2021,50 +2090,56 @@ class SparseGenomeArray(GenomeArray):
             return self.apply_operation(other,operator.mul,mode=mode)
         
     def apply_operation(self,other,func,mode=None):
-        """Applies a binary operator either to two |MutableAbstractGenomeArray| s, elementwise,
-        or to some other quantity and this |MutableAbstractGenomeArray|. In both cases, a new
-        |MutableAbstractGenomeArray| is returned.
+        """Applies a binary operator to a copy of `self` and to `other` elementwise.
+        `other` may be a scalar quantity or another |GenomeArray|. In both cases,
+        a new |SparseGenomeArray| is returned, and `self` is left unmodified.
+        If :meth:`set_normalize` is set to `True`, it is disabled during the
+        operation.
         
         Parameters
         ----------
-        other : scalar or |MutableAbstractGenomeArray|
+        other : float, int, or |MutableAbstractGenomeArray|
+            Second argument to `func`
         
         func : func
             Function to perform. This must take two arguments.
-            a numpy.array (chromosome-strand) from self will be
-            supplied as the first argument, and a numpy.array
-            (chromosome-strand) other as the second. If mode
-            is set to "all", and a chromosome or strand is not
+            a :py:class:`numpy.ndarray` (chromosome-strand) from the
+            |SparseGenomeArray| will be supplied as the first argument, and the
+            corresponding chromosome-strand from `other` as the second.
+            This operation will be applied over all chromosomes and strands.
+            
+            If mode is set to `all`, and a chromosome or strand is not
             present in one of self or other, zero will be supplied
             as the missing argument to func. func must handle this
             gracefully.
         
-        mode : str
-            Only relevant if ``other`` is a |MutableAbstractGenomeArray|
+        mode : str, choice of `'same'`, `'all'`, or `'truncate'`
+            Only relevant if `other` is a |MutableAbstractGenomeArray|
         
-            If "same" each set of corresponding chromosomes must
-            have the same dimensions in both parent |GenomeArray| s.
-            In addition, both |GenomeArray| s must have the same
+            If '`same`' each set of corresponding chromosomes must
+            have the same dimensions in both parent |SparseGenomeArray| s.
+            In addition, both |SparseGenomeArray| s must have the same
             chromosomes, and the same strands.
 
-            If "all", corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            If '`all`', corresponding chromosomes in the parent
+            |SparseGenomeArray| s will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
-            If "truncate",corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            If `'truncate'`,corresponding chromosomes in the parent
+            |SparseGenomeArray| s will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
-            to both parents will be ignored.     
+            to both parents will be ignored.    
         
         Returns
         -------
-        |GenomeArray|
-        """        
+        |SparseGenomeArray|
+            new |SparseGenomeArray| after the operation is applied
+        """
         new_array = SparseGenomeArray.like(self)
 
         old_normalize = self._normalize
@@ -2119,7 +2194,7 @@ class SparseGenomeArray(GenomeArray):
         return d_out
 
     def _slicewrap(self,x):
-        """Helper function to wrap coordinates for VariableStep/Bedgraph export"""
+        """Helper function to wrap coordinates for VariableStep/`bedGraph`_ export"""
         return (0,x)
 
     @staticmethod

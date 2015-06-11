@@ -20,7 +20,7 @@ import yeti
 
 # -- General configuration ------------------------------------------------
 
-#JGD - set up substitutions file for automated crossreferences
+# set up substitutions file for automated crossreferences
 rst_prolog = """
 .. include:: /class_substitutions.txt
 .. include:: /script_substitutions.txt

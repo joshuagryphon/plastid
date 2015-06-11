@@ -32,7 +32,7 @@ from yeti.genomics.genome_array import GenomeArray,\
                                        BAMGenomeArray,\
                                        ThreePrimeMapFactory,\
                                        FivePrimeMapFactory,\
-                                       NibbleMapFactory,\
+                                       CenterMapFactory,\
                                        five_prime_map,\
                                        three_prime_map,\
                                        center_map
@@ -88,10 +88,10 @@ _GA_MAP_FUNCTIONS = { "fiveprime"  : five_prime_map,
 
 _BAM_MAP_RULES = { "fiveprime_0"   : FivePrimeMapFactory(),
                    "threeprime_0"  : ThreePrimeMapFactory(),
-                   "center_0"      : NibbleMapFactory(),
+                   "center_0"      : CenterMapFactory(),
                    "fiveprime_15"  : FivePrimeMapFactory(15),
                    "threeprime_15" : ThreePrimeMapFactory(15),
-                   "center_12"     : NibbleMapFactory(12),
+                   "center_12"     : CenterMapFactory(12),
                   }
 
 # constants/names of files in test datasets, to use in test cases 

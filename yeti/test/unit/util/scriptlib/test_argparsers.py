@@ -9,7 +9,7 @@ import itertools
 from pkg_resources import cleanup_resources
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true
-from yeti.test.ref_files import MINI, REF_FILES, RPATH
+from yeti.test.ref_files import MINI, REF_FILES
 from yeti.util.io.filters import CommentReader
 from yeti.readers.bed import BED_to_SegmentChain
 from yeti.util.services.exceptions import MalformedFileError

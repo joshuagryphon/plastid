@@ -100,7 +100,7 @@ from collections import OrderedDict
 from yeti.util.services.exceptions import MalformedFileError
 from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
                                            BAMGenomeArray,\
-                                           SizeFilterFactory, NibbleMapFactory,\
+                                           SizeFilterFactory, CenterMapFactory,\
                                            FivePrimeMapFactory, ThreePrimeMapFactory,\
                                            VariableFivePrimeMapFactory,\
                                            five_prime_map,  \
@@ -349,7 +349,7 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
         elif args.mapping == "threeprime":
             map_function = ThreePrimeMapFactory(int(args.offset))
         elif args.mapping == "center":
-            map_function = NibbleMapFactory(args.nibble)
+            map_function = CenterMapFactory(args.nibble)
         elif args.mapping == "fiveprime_variable":
             if str(args.offset) == "0":
                 printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
