@@ -130,7 +130,7 @@ from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
 
 _MAPPING_RULE_DESCRIPTION = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
 (`fiveprime_variable`, `fiveprime`, `threeprime`, or `center`) is required.
-Offsets, nibbles, minimum and maximum lengths are optional."""
+`'--offset`, `--nibble`, `--min_length` and `--max_length` are optional."""
 
 _DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = "Open alignment or count files and optionally set mapping rules"
 _DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "alignment mapping rules (for BAM & bowtie files)"
@@ -210,47 +210,47 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                             ("fiveprime_variable" , dict(action="store_const",
                                                         const="fiveprime_variable",
                                                         dest="%smapping" % prefix,
-                                                        help="Plot variable offset from 5' position of read, "+
-                                                             "depending on read length. Requires --offset below")),
+                                                        help="Map read alignment to a variable offset from 5' position of read, "+
+                                                             "with offset determined by read length. Requires `--offset` below")),
                             ("fiveprime"        , dict(action="store_const",
                                                         const="fiveprime",
                                                         dest="%smapping" % prefix,
-                                                        help="Plot 5' position of read 1 count to 5' position.")),
+                                                        help="Map read alignment to 5' position.")),
                             ("threeprime"       , dict(action="store_const",
                                                         const="threeprime",
                                                         dest="%smapping" % prefix,
-                                                        help="Plot 3' position of read 1 count to 3' position")),
+                                                        help="Map read alignment to 3' position")),
                             ("center"           , dict(action="store_const",
                                                         const="center",
                                                         dest="%smapping" % prefix,
                                                         help="Subtract N positions from each end of read, "+
                                                              "and add 1/(length-N), to each remaining position, "+
-                                                             "where N is specified by --nibble")),
+                                                             "where N is specified by `--nibble`")),
                             ("offset"           , dict(default=0,
                                                         metavar="OFFSET",
-                                                        help="For --fiveprime or --threeprime, provide an integer "+
+                                                        help="For `--fiveprime` or `--threeprime`, provide an integer "+
                                                           "representing the offset into the read, "+
-                                                          "starting from either the 5' or 3' end, at which data "+
-                                                          "should be plotted. For --fiveprime_variable, "+
+                                                          "starting from either the 5\' or 3\' end, at which data "+
+                                                          "should be plotted. For `--fiveprime_variable`, "+
                                                           "provide the filename of a two-column tab-delimited text "+
                                                           "file, in which first column represents read length or the "+
-                                                          "special keyword 'default', and the second column represents "+
+                                                          "special keyword `'default'`, and the second column represents "+
                                                           "the offset from the five prime end of that read length at which the read should be mapped.")),
                             ("nibble"           , dict(type=int,
                                                         default=0,
                                                         metavar="N",
-                                                        help="For center plotting only, nt to remove from each "+
-                                                             "end of read (default: 0)")),
+                                                        help="For use with `--center` only. nt to remove from each "+
+                                                             "end of read before mapping (Default: 0)")),
                             ("min_length"       , dict(type=int,
                                                        default=25,
                                                        metavar="N",
                                                        help="Minimum read length required to be included"+
-                                                            " (default: 25)")),
+                                                            " (Default: 25)")),
                             ("max_length"       , dict(type=int,
                                                        default=100,
                                                        metavar="N",
                                                        help="Maximum read length permitted to be included"+
-                                                            " (default: 100)")),
+                                                            " (Default: 100)")),
                             ])
 
         for k,v in filter(lambda x: x[0] not in disabled,map_option_dict.items()):
@@ -474,7 +474,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                                   help="Format of %sannotation_files (default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file." % prefix)),    
                     ("add_three"           , dict(default=False,
                                                   action="store_true",
-                                                  help="If supplied, coding regions will be extended by 3 nucleotides at their 3' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS.")),
+                                                  help="If supplied, coding regions will be extended by 3 nucleotides at their 3\' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS.")),
                     ("tabix"               , dict(default=False,
                                                   action="store_true",
                                                   help="%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files." % prefix)),
