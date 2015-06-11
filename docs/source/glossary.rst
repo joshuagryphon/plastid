@@ -109,13 +109,13 @@ Glossary of terms
         P-site offsets may be estimated from ribosome profiling data
         using the :py:mod:`~yeti.bin.psite` script.
 
-    Start codon peak
+    start codon peak
         Large peaks of :term:`ribosome-protected footprint` visible over initiator codons
         in ribosome profiling data. These arise because the kinetics of
         translation initiation are slow compared to the kinetics of
         elongation, causing a build-up over the initiator codon.
 
-    Stop codon peak
+    stop codon peak
         Large peaks of :term:`ribosome-protected footprint` visible
         over stop codons in some ribosome profiling datasets. These
         arise because the kinetics of translation termination are 

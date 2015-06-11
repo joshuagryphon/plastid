@@ -2,7 +2,7 @@
 """Regression-testing script designed to test equality between a newly-generated
 file and a reference file that is intended to contain the same data. Rows and 
 columns are not expected to be in the same order. Float values are only required
-to be equal within a user-specified tolerance. NaN values evaluate as equal
+to be equal within a user-specified tolerance. `NaN` values evaluate as equal
 if and only if they occur in the same cell after sorting rows and columns.
 Finally, specific columns may be excluded by name (or number, if there is no
 header row).
@@ -24,7 +24,7 @@ NUMERIC_DTYPES = "biufc"
 
 def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(),print_verbose=False,return_verbose=False):
     """Test equality of dataframes over multiple columns, with verbose output.
-    If NaNs or Infs are present, these must be present in corresponding cells
+    If `NaNs` or `Infs` are present, these must be present in corresponding cells
     in both dataframes for the dataframes to evaluate as equal.
     
     Parameters
@@ -55,11 +55,11 @@ def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(
     Returns
     -------
     bool
-        *True* if dataframes are equal, *False* otherwise
+        `True` if dataframes are equal, `False` otherwise
     
     list
-        A list of strings explaining how ``df1`` and ``df2`` differ. Only
-        returned if ``return_verbose`` is *True*
+        A list of strings explaining how `df1` and `df2` differ. Only
+        returned if `return_verbose` is `True`
     """
     failures = []
     keys1 = set(df1.keys())
@@ -127,19 +127,20 @@ def main(argv=sys.argv[1:],verbose=False):
         as if the script were called from the command line if
         :py:func:`main` is called directly.
 
-        Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     
     verbose : bool, optional
-        If ``True``, return 
+        If `True`, return 
     
     
     Returns
     -------
     int
-        0 if files are identical, 1 otherwise
+        `0` if files are identical, `1` otherwise
     
     str
-        Only returned if ``verbose`` is selected. String describing how
+        Only returned if `verbose` is selected. String describing how
         tables are unequal (e.g. which columns failed, et c).
     """
     parser = argparse.ArgumentParser(description=__doc__,

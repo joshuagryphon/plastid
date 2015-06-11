@@ -1,30 +1,32 @@
 #!/usr/bin/env python
-"""Corrects splice junctions that are misplaced by several nucleotides
-due to sequence ambiguities.
+"""Compare splice junctions discovered in a dataset to those in an annotation
+of known splice junctions, amending misplaced junctions, and identifying 
+junctions that fall within repetitive areas of the genome.
 
-This can occur, for example, when intronic sequence immediately downstream
-of the fiveprime splice site exactly matches the exonic sequence immediately
-downstream of the threeprime splice site. The junction point could appear
-anywhere in this locally-repeated region with identical sequence support,
-resulting in a mis-called junction.
+Known splice junctions can be misidentified as novel or non-canonical junctions
+when intronic sequence immediately downstream of the fiveprime splice site
+exactly matches the exonic sequence immediately downstream of the threeprime
+splice site. In fact, the junction point could appear anywhere in this
+locally-repeated region with equal support from sequencing data.
 
-The following operations are performed on each query junction:
+To identify this and other causes of false positive splice junction calls,
+the following operations are performed on each query junction:
 
     1.  If a mask file from crossmap (see :py:mod:`~yeti.bin.crossmap`)
-        is provided, junctions in which one or more of the splice sites appear
-        in a repetitive region of the genome are flagged as non-informative and
-        written to a separate file. 
+        is provided, junctions in which one or more of the 5\' and 3\' splice
+        sites appear in a repetitive region of the genome are flagged as
+        non-informative and written to a separate file. 
 
-    2.  For remaining splice junctions, the extent of locally repeated base
+    2.  For remaining splice junctions, the extent of locally repeated nucleotide
         sequence, if any, surrounding the query junction's splice donor and
-        acceptor sites, are determined in both the fiveprime and threeprime
-        directions.
+        acceptor sites, are determined in both the 5\' and 3\' directions.
         
-        This is the maximum window (*equal-support region*) over which the actual
-        splice junction could be present without losing sequence support.
+        This is the maximum window (*equal-support region*) across which the
+        actual splice junction could be moved without reducing sequence support.
     
-    3.  If there is one or more known splice junctions in this region, these
-        known junctions are reported rather than the query junction. 
+    3.  If there is one or more known splice junctions in this region, the
+        query junction is assumed to match these, and the known junctions are
+        reported rather than the query. 
     
     4.  If (3) is not satisfied, and the query junction is a canonical splice
         junction, it is reported as is.
@@ -32,30 +34,31 @@ The following operations are performed on each query junction:
     5.  If (3) is not satisfied, and the query junction represents a non-canonical
         splice junction, the program determines if one or more canonical splice
         junctions is present in the equal-support region. If so, these canonical
-        splice junction are reported.
+        splice junction are reported rather than the query junction.
         
     6.  If (5) is not satisfied, the non-canonical query junction is reported as-is.
 
-
-The following files are written, where *${OUTBASE}* is a string supplied by the
+Output files
+------------
+The following files are written, where `OUTBASE` is a string supplied by the
 user. Scores of splice junctions, if present in the input, are ignored.
-Each record in each BED file represents a single exon-exon junction, rather than
-a transcript:
+Each record in each `BED`_ file represents a single exon-exon junction, rather
+than a transcript:
 
-    *${OUTBASE}_repetitive.bed*
+    OUTBASE_repetitive.bed
         Splice junctions in which one or more of the splice sites lands
         in a repetitive/degenerate region of the genome, which gives rise to
         mapping ambiguities (step 1 above)
     
-    *${OUTBASE}_shifted_known.bed*
+    OUTBASE_shifted_known.bed
         The result of shifting query splice junctions to known splice junctions
         with equal sequence support (step 3 above)
     
-    *${OUTBASE}_shifted_canonical.bed*
+    OUTBASE_shifted_canonical.bed
         The result of shifting non-canonical query splice junctions to canonical
         splice junctions with equal sequence support (step 5 above)
     
-    *${OUTBASE}_untouched.bed*
+    OUTBASE_untouched.bed
         Query junctions reported without changes (steps 4 and 6 above)
     
 """
@@ -83,37 +86,38 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 # INDEX : helper functions that classify/manipulate splice junctions 
 #===============================================================================
 
-def find_match_range(ivc,genome,maxslide):
-    """Finds maximum length over which sequence flanking intron boundaries
-    match exon sequences at the other side of the boundary.
+def find_match_range(seg,genome,maxslide):
+    """Find maximum distance over which a splice junction can be moved up-
+    or down-stream without reducing sequencing support for that junction.
     
-    In other words, finds locally repeated sequence that can cause
-    splice junction mapping to be ambiguous, or to fail
+    In other words, find locally repeated sequences surrounding exon-intron
+    or intron-exon boundaries that can cause splice junction mapping to be
+    ambiguous, due to identical and repeated sequence.
 
     Parameters
     ----------
-    ivc : |SegmentChain|
+    seg : |SegmentChain|
          A two-exon fragment representing a query splice junction
          
     genome : dict
         dict mapping chromosome names to :py:class:`Bio.SeqRecord.SeqRecord` s
         
     maxslide : int
-        Maximum number of nucleoties from the boundary over which to check
-        for mismatches
+        Maximum number of nucleotides from the boundary over which to check
+        for extent of repeated sequence
     
     Returns
     -------
     minus_range : int
         Maximum number of nucleotides splice junction point could be moved 
-        to the left without changing sequence support for the junction
+        to the left without reducing sequence support for the junction
         
     plus_range : int
         Maximum number of nucleotides splice junction point could be moved 
-        to the right without changing sequence support for the junction
+        to the right without reducing sequence support for the junction
     """
-    iv1,iv2 = ivc[0],ivc[1]
-    chrom = ivc.chrom
+    iv1,iv2 = seg[0],seg[1]
+    chrom = seg.chrom
     
     plus_range  = 0
     minus_range = 0
@@ -162,34 +166,35 @@ def find_match_range(ivc,genome,maxslide):
                 check_minus = False
     return minus_range, plus_range            
 
-def find_known_in_range(query_ivc,minus_range,plus_range,knownjunctions):
-    """Finds any known splice junctions in a given range surrounding
-    the splice junction specified by iv1 and iv2
+def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
+    """Find any known splice junctions within in `minus_range...plus_range`
+    of `query_junc`
     
     To be classified as within the range, the boundaries of a known
-    junction must be within minus_range...plus_range of the boundaries
-    of the the discovered junction. In addition, the intervals of the
-    known junction must be separated by an interval equal to that
-    separating the junction specified by iv1 and iv2. The junctions must
-    also be on the same chromosome and strand.
+    junction must be:
+        1.  within `minus_range...plus_range` of the boundaries
+            of the the discovered junction.
+            
+        2.  separated by a nucleotide distance equal to the distance 
+            separating the junction in `query_junc`.
+        
+        3.  On the same chromosome and strand.
     
-    Returns a list of known junctions falling within the specified range,
-    as a list of tuples of 2 known intervals 
     
     Parameters
     ----------
-    query_ivc : |SegmentChain|
+    query_junc : |SegmentChain|
          A two-exon fragment representing a query splice junction
          
     minus_range : int <= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the left without changing sequence support for the junction
-        see :py:meth:`find_match_range`
+        Maximum number of nucleotides splice junction could be moved 
+        to the left without reducing sequence support for the junction
+        see :py:func:`find_match_range`
         
     plus_range : int >= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the right without changing sequence support for the junction
-        see :py:meth:`find_match_range`
+        Maximum number of nucleotides splice junction could be moved 
+        to the right without reducing sequence support for the junction
+        see :py:func:`find_match_range`
     
     knownjunctions : list<|SegmentChain|>
         known splice junctions
@@ -197,18 +202,18 @@ def find_known_in_range(query_ivc,minus_range,plus_range,knownjunctions):
     Returns
     -------
     list<|SegmentChain|>
-        known splice junctions in range of ``query_ivc``
+        known splice junctions in `minus_range...plus_range` of `query_junc`
     """
     exact_match = None
     ltmp = []
-    iv1,iv2 = query_ivc[0], query_ivc[1]
+    iv1,iv2 = query_junc[0], query_junc[1]
     for ivc in knownjunctions:
-        if query_ivc.strand != ivc.strand:
+        if query_junc.strand != ivc.strand:
             continue
-        elif query_ivc.chrom != ivc.chrom:
+        elif query_junc.chrom != ivc.chrom:
             continue
-        elif query_ivc == ivc:
-            exact_match = query_ivc
+        elif query_junc == ivc:
+            exact_match = query_junc
             break
         kiv1, kiv2 = ivc[0],ivc[1]
         if  kiv1.end   in set(range(iv1.end+minus_range,  iv1.end  +plus_range+1))\
@@ -217,49 +222,54 @@ def find_known_in_range(query_ivc,minus_range,plus_range,knownjunctions):
                 ltmp.append(ivc)
     return [exact_match] if exact_match is not None else ltmp
         
-def find_canonicals_in_range(query_ivc,minus_range,plus_range,genome,canonicals):
-    """Finds any canonical splice junctions in a given range surrounding
-    the splice junction specified by iv1 and iv2
+def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals):
+    """Find any canonical splice junctions within in `minus_range...plus_range`
+    of `query_junc`
     
     To be classified as within the range, the boundaries of the canonical
-    junction must be within minus_range...plus_range of the boundaries
-    of the the discovered junction. In addition, the intervals of the
-    canonical junction must be separated by an interval equal to that
-    separating the junction specified by iv1 and iv2
+    junction must be:
     
-    Returns a list of canonical junctions falling within the specified range,
-    as a list of tuples of 2 known intervals 
+        1.  within `minus_range...plus_range` of the boundaries
+            of the the discovered junction.
+            
+        2.  separated by a nucleotide distance equal to the distance 
+            separating the junction in `query_junc`.
+        
+        3.  On the same chromosome and strand.
+        
     
     Parameters
     ----------
-    query_ivc : |SegmentChain|
+    query_junc : |SegmentChain|
          A two-exon fragment representing a query splice junction
          
     minus_range : int <= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the left without changing sequence support for the junction
-        see :py:meth:`find_match_range`
+        Maximum number of nucleotides splice junction could be moved 
+        to the left without reducing sequence support for the junction
+        see :py:func:`find_match_range`
         
     plus_range : int >= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the right without changing sequence support for the junction
-        see :py:meth:`find_match_range`
+        Maximum number of nucleotides splice junction could be moved 
+        to the right without reducing sequence support for the junction
+        see :py:func:`find_match_range`
         
     genome : dict
         dict mapping chromosome names to :py:class:`Bio.SeqRecord.SeqRecord` s
         
     canonicals : list<tuple<str,str>
-        canonical splice site dinucleotide sequences up- and down-stream of junctions
+        dinucleotide sequences to consider as canonical splice sites,
+        as a list of tuples. e.g. `[("GT","AG"), ("GC","AG")]`
+
         
     Returns
     -------
     list<|SegmentChain|>
-        canonical splice junctions with equal sequence support to ``query_ivc``
+        canonical splice junctions in `minus_range...plus_range` of `query_junc`
     """    
     ltmp = []
-    chrom  = query_ivc.chrom
-    strand = query_ivc.strand
-    iv1,iv2 = query_ivc[0], query_ivc[1]
+    chrom  = query_junc.chrom
+    strand = query_junc.strand
+    iv1,iv2 = query_junc[0], query_junc[1]
     for i in range(minus_range,plus_range+1):
         for pair in canonicals:
             if str(genome[chrom][iv1.end + i:iv1.end + i + 2].seq) == pair[0]\
@@ -276,27 +286,24 @@ def find_canonicals_in_range(query_ivc,minus_range,plus_range,genome,canonicals)
     
     return ltmp            
 
-def covered_by_repetitive(query_ivc,minus_range,plus_range,cross_hash):
+def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
     """Determine whether one or both ends of a splice site overlap with
-    a repetitive area of the genome. Specifically, if any of the positions
-    within ``minus_range`` ... ``plus_range`` of the fiveprime or threeprime
-    splice site overlap a repetitive area of the genome, return True.
-    Otherwise, False
+    a repetitive area of the genome.
     
     Parameters
     ----------
-    query_ivc : |SegmentChain|
+    query_junc : |SegmentChain|
          A two-exon fragment representing a query splice junction
     
-    minus_range : int >= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the left without changing sequence support for the junction
-        see :py:meth:`find_match_range`
-
+    minus_range : int <= 0
+        Maximum number of nucleotides splice junction could be moved 
+        to the left without reducing sequence support for the junction
+        see :py:func:`find_match_range`
+        
     plus_range : int >= 0
-        Maximum number of nucleotides splice junction point could be moved 
-        to the right without changing sequence support for the junction
-        see :py:meth:`find_match_range`
+        Maximum number of nucleotides splice junction could be moved 
+        to the right without reducing sequence support for the junction
+        see :py:func:`find_match_range`
     
     cross_hash : |GenomeHash|
         |GenomeHash| of 1-length features denoting repetitive regions of the genome
@@ -305,20 +312,19 @@ def covered_by_repetitive(query_ivc,minus_range,plus_range,cross_hash):
     Returns
     -------
     bool
-        True if any of the genomic positions within ``minus_range`` ... ``plus_range``
-        of the fiveprime or threeprime splice sites of ``query_ivc`` overlap
-        a repetitive region of the genome as annotated by ``cross_hash``.
-        Otherwise, False
-        
+        `True` if any of the genomic positions within `minus_range...plus_range`
+        of the 5\' or 3\' splice sites of `query_junc` overlap a repetitive
+        region of the genome as annotated by ``cross_hash``.
+        Otherwise, `False`
     """
-    fiveprime_splice_area = GenomicSegment(query_ivc.spanning_segment.chrom,
-                                            query_ivc[0].end + minus_range,
-                                            query_ivc[0].end + plus_range + 1,
-                                            query_ivc.spanning_segment.strand)
-    threeprime_splice_area = GenomicSegment(query_ivc.spanning_segment.chrom,
-                                             query_ivc[1].start + minus_range,
-                                             query_ivc[1].start + plus_range + 1,
-                                             query_ivc.spanning_segment.strand)
+    fiveprime_splice_area = GenomicSegment(query_junc.spanning_segment.chrom,
+                                           query_junc[0].end + minus_range,
+                                           query_junc[0].end + plus_range + 1,
+                                           query_junc.spanning_segment.strand)
+    threeprime_splice_area = GenomicSegment(query_junc.spanning_segment.chrom,
+                                            query_junc[1].start + minus_range,
+                                            query_junc[1].start + plus_range + 1,
+                                            query_junc.spanning_segment.strand)
     support_region = SegmentChain(fiveprime_splice_area,threeprime_splice_area)
     return len(cross_hash.get_overlapping_features(support_region)) > 0
 
@@ -336,19 +342,20 @@ def main(argv=sys.argv[1:]):
         as if the script were called from the command line if
         :py:func:`main` is called directly.
 
-        Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[get_mask_file_parser()],
                                      )
     parser.add_argument("--maxslide",type=int,default=10,
-                        help="Maximum number of nt to search 5' and 3' of intron"+
+                        help="Maximum number of nt to search 5\' and 3\' of intron"+
                              " boundaries (Default: 10)")
     parser.add_argument("--ref",type=str,metavar="ref.bed",default=None,
                         help="Reference file describing known splice junctions")
     parser.add_argument("--slide_canonical",action="store_true",default=False,
-                        help="Slide junctions to canonical junctions in range")
+                        help="Slide junctions to canonical junctions if present within equal support region")
     parser.add_argument("genome",type=str,metavar="genome.fa",
                         help="Genome sequence in fasta format")
     parser.add_argument("infile",type=str,metavar="input.bed",
