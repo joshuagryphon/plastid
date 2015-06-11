@@ -103,6 +103,9 @@ exclude_if_no_redoc = {
     "__getitem__",
     "__setitem__",
     "__str__",
+    "next",
+    "__next__",
+    "close",
 }
 exclude_if_no_redoc |= set(dir(unittest.TestCase))
 
