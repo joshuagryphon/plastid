@@ -1,12 +1,29 @@
 #!/usr/bin/env python
-"""Convert transcripts in BED, BigBed, GTF2, GFF3, or PSL format to BED or GTF2 format"""
+"""Convert transcripts from `BED`_, `BigBed`_, `GTF2`_, `GFF3`_, or `PSL`_ format
+to `BED`_ or `GTF2`_ format.
+
+Notes
+-----
+GFF3 schemas vary
+    Different GFF3s have different schemas of hierarchy. We deal with that here
+    by allowing users to supply `transcript_types` and `exon_types`, to indicate
+    which sorts of features should be included.
+
+Identity relationships between elements vary between GFF3 files
+    Also, different GFF3s specify discontiguous features differently. For example,
+    in Flybase, different exons of a transcript will have unique IDs, but will share
+    the same "Parent" attribute in column 9 of the GFF. In Wormbase, however, different
+    exons of the same transcript will share the same ID. Here, we treat GFFs as if
+    they are written in the Flybase style. We may support alternate formats in the future.    
+
+"""
 import argparse
 import inspect
 import sys
 
 from yeti.util.scriptlib.argparsers import get_transcripts_from_args,\
                                                       get_annotation_file_parser
-from yeti.util.io.openers import opener, argsopener, get_short_name
+from yeti.util.io.openers import argsopener, get_short_name
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 

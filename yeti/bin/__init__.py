@@ -29,23 +29,30 @@ a genome :term:`annotation` file and/or a file containing :term:`read alignments
                              or :term:`counts` over one or more regions of interest,
                              optionally applying a :term:`mapping rule`
                              
-    |phase_by_size|          Compute sub-codon periodicity for ribosome profiling data
-    |psite|                  Estimate position of ribosomal P-site within ribosome
-                             profiling reads, as a function of read length
+    |phase_by_size|          Estimate :term:`sub-codon phasing` in
+                             :term:`ribosome profiling` data
+    
+    |psite|                  Estimate position of ribosomal P-site within
+                             :term:`ribosome profiling` :term:`read alignments`
+                             as a function of read length
     ----------------------   ----------------------------------------------------------
     **Generating or modifying genome annotations**    
     -----------------------------------------------------------------------------------
     |crossmap|               Determine which regions of the genome fail to produce
                              uniquely mapping reads under various alignment
-                             criteria, so that these regions may be excluded
-                             from downstream analyses
-    |gff_parent_types|       Determine parent-child relationships for features
-                             in a GFF3 file
+                             criteria, and save these in a :term:`mask file`
+                             so that they may be excluded from future analyses
+                             
+    |gff_parent_types|       Examine parent-child relationships of features
+                             in a `GFF3`_ file
+                             
     |reformat_transcripts|   Convert transcripts between `BED`_, `BigBed`_,
                              `GTF2`_, `GFF3`_, and `PSL`_ formats
+                             
     |findjuncs|              Find all unique splice junctions in one or more
                              transcript annotations, and optionally export these
                              in `Tophat`_'s ``.juncs`` format
+                             
     |slidejuncs|             Compare splice junctions discovered in data to those
                              in an annotation of known splice junctions, and,
                              if possible with equal sequence support, slide

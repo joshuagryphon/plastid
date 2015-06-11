@@ -1,51 +1,132 @@
 #!/usr/bin/env python
-"""Performs metagene analyses separated into the following subprograms:
+"""Performs :term:`metagene` analyses. The workflow is separated into the
+following subprograms:
 
 Generate
-    Generates aligned regions of interest (ROIs) surrounding a landmark (e.g.
-    a CDS start or a CDS end) for a set of transcripts.
+    A :term:`metagene` profile is a position-wise average over all genes
+    in the vicinity of an interesting landmark (e.g. a start codon). Because
+    genes can have multiple transcript isoforms that may cover different
+    genomic positions, which transcript positions (and therefore which
+    genomic positions) to include in the average can be ambiguous.
     
-    For all transcripts derived from the same gene and sharing the same
-    genomic coordinate for the landmark, a maximal ROI is created such
-    that all transcripts cover all positions in the ROI. If the transcript
-    group does not contain the landmark (e.g. lacks a start or stop codon),
-    it will be ignored.
+    To avoid this problem, we define for each gene a *maximum spanning window*
+    of unambiguous positions surrounding the landmark of interest, and save
+    these windows into an ROI file. The windows are defined by the following
+    algorithm: 
     
-    **Note**: if annotations are supplied as BED files, transcripts are not
-    grouped by gene, because BED files don't contain this information.
+    1.  Transcripts are grouped by gene. If all transcripts share the same
+        genomic coordinate for the landmark of interest (e.g. if all 
+        transcripts share the same start codon), then all transcripts are
+        included in the analysis. If not, all transcripts and their associated
+        gene are excluded from further processing.
+    
+    2.  For each set of transcripts that pass step (1), the maximal spanning
+        window is created by aligning the set of transcripts at the landmark, and
+        adding nucleotide positions in transcript coordinates to the growing
+        window in both 5\' and 3\' directions until either:
+        
+            - the next nucleotide position added is no longer corresponds to 
+              the same genomic position in all transcripts
+            
+            - the window reaches the maximum user-specified size
+
+    **Note**: if annotations are supplied as `BED`_ files, transcripts cannot be
+    grouped by gene, because `BED`_ files don't contain this information.
     In this case one ROI is generated per transcript. This may or may not
     be what you want. You can filter later and decide.
     
-    Output is saved as a tab-delimited text file indicating the gene name,
-    a string representation of ROI, and an offset to align the ROI to all other
-    ROIs in the file, if the ROI happens to be shorter than the specified region
-    which occurs if any of the transcripts do not fully cover the desired ROI
-    size.
     
+    .. Rubric :: Output files
+    
+    OUTBASE_rois.txt
+        A tab-delimited text file describing the maximal spanning window for
+        each gene, with columns as follows:
+        
+        ================   ==================================================
+        **Column**         **Contains**
+        ----------------   --------------------------------------------------
 
+        alignment_offset   Offset to align window to all other windows in the
+                           file, if the window happens to be shorter on the 5\'
+                           end than specified in ``--flank_upstream``. Typically
+                           this is `0`.
+
+        gene_id            ID of gene
+        
+        region             maximal spanning window, formatted as
+                           `chromosome:start-end:(strand)`
+        
+        window_size        with of window
+        
+        zero_point         distance from 5\' end of window to landmark
+        ================   ==================================================
+        
+    
+    OUTBASE_rois.bed
+        Maximal spanning windows in `BED`_ format for visualization in
+        a :term:`genome browser`. The thickly-rendered portion of a window
+        indicates its landmark
+
+    where `OUTBASE` is supplied by the user.
+    
+    
 Count
-    This program generate metagene profiles, taking the following steps.
+    This program generate :term:`metagene` profiles from :term:`counts` or
+    :term:`alignments`, taking the following steps:
     
-    1.  The **raw counts** at each position in each ROI (from the ``generate`` subprogram)
-        are totaled to create a raw count vector.
+    1.  The **raw counts** at each position in each window (from the ``generate``
+        subprogram) are totaled to create a raw count vector for the window.
 
-    2.  A **normalized count vector** is generated from each raw count vector, by
-        dividing the total number of counts occurring in a user-defined
-        normalization sub-region of the ROI.
+    2.  A **normalized count vector** is created for each window by dividing
+        its raw count vector by the total number of counts occurring within a
+        user-defined normalization window within the window.
     
-    3.  A **metagene average** is created by taking the median value at each position
-        of each normalized count vector for which the ROI covers that position,
-        and for which the corresponding raw-count vector contains at least a 
-        minimum number of raw counts.
+    3.  A **metagene average** is created by taking aligning all of the
+        normalized count vectors, and taking the median normalized counts
+        over all vectors at each nucleotide position. Count vectors deriving
+        from windows that don't meet a minimum count threshold (set via the
+        ``--norm_region`` option) are excluded.
     
+    
+    .. Rubric :: Output files
+
     Raw count vectors, normalized count vectors, and metagene profiles are all
-    saved as tab-delimited text files, enabling subsequent plotting, filtering,
+    saved as tab-delimited text files, for subsequent plotting, filtering,
     or reanalysis.
     
+    OUTBASE_metagene_profile.txt
+        Tab-delimited table of metagene profile, containing the following
+        columns:
+
+        ================   ==================================================
+        **Column**         **Contains**
+        ----------------   --------------------------------------------------
+        x                  Distance in nucleotides from the landmark
+        
+        metagene_average   Value of metagene average at that position
+        
+        regions_counted    Number of maximal spanning windows included at
+                           that position in the average. i.e. windows that
+                           both met the threshold set by ``--min_counts`` and
+                           were not masked at that position by a :term:`mask file`
+        ================   ==================================================        
+        
+    OUTBASE_rawcounts.txt
+        Table of raw counts. Each row is a maximal spanning window for a gene,
+        and each column a nucleotide position in that window. All windows
+        are aligned at the landmark.
+    
+    OUTBASE_normcounts.txt
+        Table of normalized counts, produced by dividing each row in the
+        raw count table by the of counts in that row within the columns
+        specified by ``--norm_region``.
+    
+    where `OUTBASE` is supplied by the user.
+
     
 Chart
-    One or more metagene profiles generated by the ``count`` subprogram are plotted
-    against each other. 
+    One or more metagene profiles generated by the ``count`` subprogram,
+    for example, on different datasets, are plotted against each other. 
 
 
 See command-line help for each subprogram for details on parameters for each 
@@ -56,7 +137,6 @@ __author__ = "joshua"
 
 import sys
 import argparse
-import functools
 import numpy
 from yeti.genomics.roitools import SegmentChain
 from yeti.util.array_table import ArrayTable
@@ -75,32 +155,29 @@ import inspect
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 #===============================================================================
-# helper functions to generate/handle ROIs
+# helper functions to generate/handle maximum spanning windows / ROIs
 #===============================================================================
 
-def window_landmark(transcript,flank_upstream,flank_downstream,ref_delta=0,landmark=0):
-    """Returns a region of interest (ROI) relative to a reference point specified
-    in nucleotide distance from a landmark coordinate on a transcript.
+def window_landmark(transcript,flank_upstream=50,flank_downstream=50,ref_delta=0,landmark=0):
+    """Returns a region of interest (ROI) relative to a landmark on a transcript.
     
     Parameters
     ----------
     transcript : |Transcript|
         Transcript on which to generate region of interest
     
+    landmark : int
+        Position of the landmark within `transcript`
+
     flank_upstream : int
-        Nucleotide length upstream to include in region
-        of interest, if ``transcript`` includes it
+        Nucleotides upstream of `landmark` to include in region of interest
     
     flank_downstream : int
-        Nucleotide length downstream to include in region
-        of interest, if ``transcript`` includes it
+        Nucleotides downstream of `landmark` to include in region of interest
     
     ref_delta : int
-        Offset from the landmark to the reference point. If 0, the landmark
+        Offset from `landmark` to the reference point. If 0, the landmark
         is the reference point. Default: 0
-    
-    landmark : int
-        Position of the landmark on ``transcript``, in transcript-centric coordinates
     
     
     Returns
@@ -109,11 +186,12 @@ def window_landmark(transcript,flank_upstream,flank_downstream,ref_delta=0,landm
         ROI surrounding landmark
     
     int
-        offset to ROI to ``flank_upstream``, if ``transcript`` itself
-        wasn't long enough to include the entire flank
+        offset to align ROI with all other ROIs, if `transcript` itself
+        wasn't long enough in the 5\' direction to include the entire
+        distance specified by `flank_upstream`
 
-    int
-        Genomic coordinate of reference point
+    (str, int, str)
+        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
     """
     if landmark + ref_delta >= flank_upstream:
         fiveprime_offset   = 0
@@ -137,10 +215,7 @@ def window_landmark(transcript,flank_upstream,flank_downstream,ref_delta=0,landm
     
     
 def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
-    """Returns a region of interest (ROI) relative to a reference point specified
-    in nucleotide distance from the start of a coding region on a transcript.
-    Returns an empty |SegmentChain| with a zero offset if the |Transcript| has
-    no cds_start (i.e. is annotated as non-coding)
+    """Returns a maximal spanning window surrounding a start codon.
     
     Parameters
     ----------
@@ -149,27 +224,29 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
     
     flank_upstream : int
         Nucleotide length upstream of cds_start to include in region
-        of interest, if ``transcript`` includes it
+        of interest, if `transcript` includes it
     
     flank_downstream : int
         Nucleotide length downstream of  cds_start to include in region
-        of interest, if ``transcript`` includes it
+        of interest, if `transcript` includes it
     
-    ref_delta : int
-        Offset from  cds_start to the reference point. If 0, the landmark
-        is the reference point. Default: 0
+    ref_delta : int, optional
+        Offset from  cds_start to the reference point. If `0`, the landmark
+        is the reference point. (Default: `0`)
     
     Returns
     -------
     |SegmentChain|
-        ROI surrounding cds start
+        ROI surrounding start codon if `transcript` is coding. Otherwise,
+        zero-length |SegmentChain| 
     
     int
-        offset to ROI to ``flank_upstream``, if ``transcript`` itself
-        wasn't long enough to include the entire flank
+        offset to align ROI with all other ROIs, if `transcript` itself
+        wasn't long enough in the 5\' direction to include the entire
+        distance specified by `flank_upstream`
 
-    int
-        Genomic coordinate of reference point
+    (str, int, str)
+        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
     """
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
@@ -180,11 +257,8 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
 
 
 def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
-    """Returns a region of interest (ROI) relative to a reference point specified
-    in nucleotide distance from the first position of the stop codon on a transcript.
-    Returns an empty |SegmentChain| with a zero offset if the |Transcript| has
-    no cds_start (i.e. is annotated as non-coding)
-    
+    """Returns a maximal spanning window surrounding a stop codon.
+
     Parameters
     ----------
     transcript : |Transcript|
@@ -192,27 +266,29 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
     
     flank_upstream : int
         Nucleotide length upstream of cds_stop to include in region
-        of interest, if ``transcript`` includes it
+        of interest, if `transcript` includes it
     
     flank_downstream : int
         Nucleotide length downstream of cds_stop to include in region
-        of interest, if ``transcript`` includes it
+        of interest, if `transcript` includes it
     
-    ref_delta : int
-        Offset from  cds_start to the reference point. If 0, the landmark
-        is the reference point. Default: 0
+    ref_delta : int, optional
+        Offset from  cds_start to the reference point. If `0`, the landmark
+        is the reference point. (Default: `0`)
     
     Returns
     -------
     |SegmentChain|
-        ROI surrounding cds stop
+        ROI surrounding stop codon if transcript is coding. Otherwise,
+        zero-length |SegmentChain| 
     
     int
-        offset to ROI to ``flank_upstream``, if ``transcript`` itself
-        wasn't long enough to include the entire flank
+        offset to align ROI with all other ROIs, if `transcript` itself
+        wasn't long enough in the 5\' direction to include the entire
+        distance specified by `flank_upstream`
 
-    int
-        Genomic coordinate of reference point
+    (str, int, str)
+        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
     """
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
@@ -222,42 +298,42 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
                            landmark=transcript.cds_end-3)
 
 
-def StartWindowFactory(ref_delta=0):
-    """Function factory to create alignment window functions that choose
-    nucleotide windows centered around a coordinate specified relative to the
-    CDS start of a transcript. Functions returned may be passed to do_generate()
-    as the parameter reference_point_func
-    
-    Parameters
-    ----------
-    ref_delta : int
-        Desired reference point on transcript, specified in
-        nucleotides from the annotated start codon
-    
-    Returns
-    -------
-    Function
-    """
-    return functools.partial(window_cds_start,ref_delta=ref_delta)
-
-
-def StopWindowFactory(ref_delta=0):
-    """Function factory to create alignment window functions that choose
-    nucleotide windows centered around a coordinate specified relative to the
-    CDS end of a transcript. Functions returned may be passed to do_generate()
-    as the parameter reference_point_func
-    
-    Parameters
-    ----------
-    ref_delta : int
-        Desired reference point on transcript, specified in
-        nucleotides from the annotated stop codon
-    
-    Returns
-    -------
-    Function 
-    """
-    return functools.partial(window_cds_stop,ref_delta=ref_delta)
+# def StartWindowFactory(ref_delta=0):
+#     """Function factory to create alignment window functions that choose
+#     nucleotide windows centered around a coordinate specified relative to the
+#     CDS start of a transcript. Functions returned may be passed to do_generate()
+#     as the parameter reference_point_func
+#     
+#     Parameters
+#     ----------
+#     ref_delta : int
+#         Desired reference point on transcript, specified in
+#         nucleotides from the annotated start codon
+#     
+#     Returns
+#     -------
+#     Function
+#     """
+#     return functools.partial(window_cds_start,ref_delta=ref_delta)
+# 
+# 
+# def StopWindowFactory(ref_delta=0):
+#     """Function factory to create alignment window functions that choose
+#     nucleotide windows centered around a coordinate specified relative to the
+#     CDS end of a transcript. Functions returned may be passed to do_generate()
+#     as the parameter reference_point_func
+#     
+#     Parameters
+#     ----------
+#     ref_delta : int
+#         Desired reference point on transcript, specified in
+#         nucleotides from the annotated stop codon
+#     
+#     Returns
+#     -------
+#     Function 
+#     """
+#     return functools.partial(window_cds_stop,ref_delta=ref_delta)
 
 
 #===============================================================================
@@ -266,62 +342,96 @@ def StopWindowFactory(ref_delta=0):
 
 # worked for yeast. need to test for Drosophila, which has >1 transcript/gene
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
-                  reference_point_func=window_cds_start,
+                  landmark_func=window_cds_start,
                   printer=NullWriter()):
-    """Generate a file of regions of interest (ROIs) for use in `'count`' subprogram
+    """Generate a file of maximal spanning windows surrounding a landmark,
+    for use in ``count`` subprogram. Windows are generated by the following 
+    algorithm:
+
+        1.  Transcripts are grouped by gene. If all transcripts share the same
+            genomic coordinate for the landmark of interest (e.g. if all 
+            transcripts share the same start codon), then all transcripts are
+            included in the analysis. If not, all transcripts and their associated
+            gene are excluded from further processing.
+        
+        2.  For each set of transcripts that pass step (1), the maximal spanning
+            window is created by aligning the set of transcripts at the landmark, and
+            adding nucleotide positions in transcript coordinates to the growing
+            window in both 5\' and 3\' directions until either:
+            
+                - the next nucleotide position added is no longer corresponds to 
+                  the same genomic position in all transcripts
+                
+                - the window reaches the maximum user-specified size
     
     Parameters
     ----------
-    transcripts : list<|Transcript|>
-        A list of |Transcript| s, preferably with gene_id and
-        transcript_id (e.g. from a GTF2 or GFF3), so that
-        the each genomic position will only be counted once,
-        even if represented in multiple transcripts. If
-        these attributes are not present, every position 
-        will be included
+    transcripts : list
+        A list of |Transcript| objects, preferably with `gene_id` and
+        `transcript_id` (e.g. transcripts assembled from a `GTF2`_ or `GFF3`_
+        file), so that transcripts can be grouped by gene when making maximal
+        spanning windows.
     
     mask_hash : |GenomeHash|
         |GenomeHash| containing regions to exclude from analysis
     
     flank_upstream : int
-        Number of nucleotides upstream of reference point
-        to include in ROI (in transcript coordinates)
+        Number of nucleotides upstream of landmark to include in windows
+        (in transcript coordinates)
 
     flank_downstream: int
-        Number of nucleotides downstream of reference point
-        to include in ROI (in transcript coordinates)
+        Number of nucleotides downstream of landmark to include in windows
+        (in transcript coordinates)
     
-    reference_point_func : func
-        Function yielding reference point in transcript.
+    landmark_func : func, optional
+        Function yielding coordinate of landmark in transcript. As examples,
         :py:func:`window_cds_start` and :py:func:`window_cds_stop` are provided,
         though any function that meets the following criteria can be used:
         
-            1. It must take the same parameters as :py:func:`window_cds_stop`
+            1. It must take the same parameters as :func:`window_cds_start`
             
-            2. It must return the same types as :py:func:`window_cds_stop`
+            2. It must return the same types as :func:`window_cds_start`
 
-        Such functions could, for example, build reference points around
+        Such functions could choose arbitrary features as landmarks, such as
         peaks in ribosome density, nucleic acid sequence features, transcript
-        start or end sites, or any property that can be deduced from a |Transcript|.
+        start or end sites, or any property that can be deduced from a
+        |Transcript|. (Default: :func:`window_cds_start`)
     
-    printer : file-like
-        filehandle to write logging info to
+    printer : file-like, optional
+        filehandle to write logging info to (Default: :func:`NullWriter`)
     
     Returns
     -------
     |ArrayTable|
-        An |ArrayTable| containing a column of windows,
-        and a column of offsets to align in those windows at their fiveprime ends,
-        and a column indicating the overall window size, even if redundant
+        An |ArrayTable| containing the following columns describing the
+        maximal spanning windows:
+
+            ================   ==================================================
+            *Column*           *Contains*
+            ----------------   --------------------------------------------------
+    
+            alignment_offset   Offset to align window to all other windows in the
+                               file, if the window happens to be shorter on the 5\'
+                               end than specified in ``--flank_upstream``
+    
+            gene_id            ID of gene
+            
+            region             maximal spanning window, formatted as
+                               `chromosome:start-end:(strand)`
+            
+            window_size        with of window
+            
+            zero_point         distance from 5\' end of window to landmark
+            ================   ==================================================        
     
     list
-        List of |SegmentChain| representing each ROI. These data are also
+        List of |SegmentChain| representing each window. These data are also
         represented as strings in the |ArrayTable|
     
     Notes
     -----         
     Not all genes will be included in the output if, for example, there isn't a
-    position set common to all transcripts surrounding the given start codon
+    position set common to all transcripts surrounding the landmark
     """
     window_size = flank_upstream + flank_downstream
         
@@ -367,7 +477,7 @@ def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
         # find common positions
         for tx in txlist:
             try:
-                my_roi, my_offset, genomic_refpoint = reference_point_func(tx,flank_upstream,flank_downstream)
+                my_roi, my_offset, genomic_refpoint = landmark_func(tx,flank_upstream,flank_downstream)
                 shared_position_set &= my_roi.get_position_set()
                 refpoints.append(genomic_refpoint)
             except IndexError:
@@ -432,45 +542,58 @@ def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
     return dtmp, export_rois
 
 @catch_warnings("ignore")
-def do_count(roi_table,gnd,norm_start,norm_end,min_counts,printer=NullWriter()):
-    """Counts the number of reads at each position in each ROI, and normalizes
-    each resulting vector by the total number of counts in a normalization
-    region specified by norm_start and norm_end
+def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
+    """Calculate a metagene average over maximal spanning windows specified in 
+    `roi_table`, taking the following steps:
     
+        1.  The **raw counts** at each position in each window (from the ``generate``
+            subprogram) are totaled to create a raw count vector for the ROI.
+    
+        2.  A **normalized count vector** is created fore each window by dividing
+            its raw count vector by the total number of counts occurring within a
+            user-defined normalization window within the window.
+        
+        3.  A **metagene average** is created by taking aligning all of the
+            normalized count vectors, and taking the median normalized counts
+            over all vectors at each nucleotide position. Count vectors deriving
+            from ROIs that don't meet a minimum count threshold (set via the
+            ``--norm_region`` option) are excluded.
+            
     Parameters
     ----------
     roi_table : |ArrayTable|
-        |ArrayTable| specifying regions of interest, generated
+        |ArrayTable| specifying maximal spanning windows, generated
         by :py:meth:`do_generate`
     
-    gnd : instance of subclass of |AbstractGenomeArray|
-        Count data
+    ga : instance of subclass of |AbstractGenomeArray|
+        Count or alignment data
     
     norm_start : int
-        Coordinate in ROI specifying normalization region start
+        Coordinate in window specifying normalization region start
     
     norm_end : int
-        Coordinate in ROI specifying normalization region end
+        Coordinate in window specifying normalization region end
     
     min_counts : float
-        Minimum number of counts in ROI to be included in metagene profile
+        Minimum number of counts in `window[norm_start:norm_end]`
+        required for inclusion in metagene profile
 
-    printer : file-like
-        filehandle to write logging info to
+    printer : file-like, optional
+        filehandle to write logging info to (Default: :func:`NullWriter`)
 
         
     Returns
     -------
     :py:class:`numpy.ndarray`
-        raw counts at each position (column) for each ROI (row)
+        raw counts at each position (column) in each window (row)
     
     :py:class:`numpy.ndarray`
-        counts at each position (column) for each ROI (row), normalized by
-        the total number of counts in that row from norm_start to norm_end
+        counts at each position (column) in each window (row), normalized by
+        the total number of counts in that row from `norm_start` to `norm_end`
     
     |ArrayTable|
         Metagene profile of median normalized counts at each position across
-        all ROIs, and the number of genes included in the calculation of each
+        all windows, and the number of windows included in the calculation of each
         median
     """
     window_size    = roi_table["window_size"][0]
@@ -486,7 +609,7 @@ def do_count(roi_table,gnd,norm_start,norm_end,min_counts,printer=NullWriter()):
         roi.add_masks(*mask)
         offset = int(round((roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
-        counts[i,offset:offset+roi.get_length()] = roi.get_valid_counts(gnd)
+        counts[i,offset:offset+roi.get_length()] = roi.get_valid_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
         
@@ -515,10 +638,11 @@ def do_chart(sample_dict,landmark="landmark",title=None):
         profile information from ``count`` subprogram
     
     landmark : str, optional
-        Name of landmark at zero point (used for labeling X-axis)
+        Name of landmark at zero point, used for labeling X-axis. e.g.
+        `'Start codon'` (Default: `'landmark'`)
         
     title : str or None, optional
-        If not None, chart title
+        Chart title (Default: `None`)
     
     Returns
     -------
@@ -564,7 +688,8 @@ def main(argv=sys.argv[1:]):
         as if the script were called from the command line if
         :py:func:`main` is called directly.
 
-        Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
@@ -600,38 +725,36 @@ def main(argv=sys.argv[1:]):
     # generate subprogram options
     gparser.add_argument("--landmark",type=str,choices=("cds_start","cds_stop"),
                          default="cds_start",
-                         help="Landmark from which reference point is specified (Default: cds_start)")
-    gparser.add_argument("--reference_delta",type=int,default=0,
-                         help="Distance in transcript nucleotides between reference point and landmark (Default: 0)")
+                         help="Landmark around which to build metagene profile (Default: cds_start)")
     gparser.add_argument("--upstream",type=int,default=50,
-                         help="Nucleotides to include upstream of reference point (Default: 50)")
+                         help="Nucleotides to include upstream of landmark (Default: 50)")
     gparser.add_argument("--downstream",type=int,default=50,
-                         help="Nucleotides to include downstream of reference point (Default: 50)")
+                         help="Nucleotides to include downstream of landmark (Default: 50)")
     gparser.add_argument("outbase",type=str,
                          help="Basename for output files")
     
     # count subprogram options
     cparser.add_argument("roi_file",type=str,
-                         help="Text file containing regions of interest and offsets, "+
-                              "generated by the 'generate' subprogram.")
+                         help="Text file containing maximal spanning windows and offsets, "+
+                              "generated by the ``generate`` subprogram.")
     cparser.add_argument("--min_counts",type=int,default=10,metavar="N",
                          help="Minimum counts required in normalization region "+
                               "to be included in metagene average (Default: 10)")
     cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
                          default=(70,100),
-                         help="Portion of ROI against which each individual profile"+
+                         help="Portion of each window against which its individual raw count profile"+
                               " will be normalized. Specify two integers, in nucleotide"+
-                              " distance, from 5' end of ROI. (Default: 70 100)")
+                              " distance, from 5\' end of window. (Default: 70 100)")
     cparser.add_argument("outbase",type=str,
                          help="Basename for output files")
 
     # chart subprogram arguments
     pparser.add_argument("outfile",type=str,
                          help="Name of output file. Format will be auto-detected"+
-                         " from the extension. Valid options are png, svg, pdf, eps, et c.")
+                         " from the extension. Valid options are `png`, `svg`, `pdf`, `eps`, et c.")
     pparser.add_argument("infiles",type=str,nargs="+",
                          help="One or more metagene profiles, generated by the"+
-                              " count subprogram, which will be plotted together."
+                              " ``count`` subprogram, which will be plotted together."
                          )
     pparser.add_argument("--labels",type=str,nargs="+",default=[],
                          help="Sample names for each metagene profile (optional).")
@@ -647,9 +770,9 @@ def main(argv=sys.argv[1:]):
     if args.program == "generate":
         printer.write("Generating ROI file...")
         if args.landmark == "cds_start":
-            map_function = StartWindowFactory(args.reference_delta)
+            map_function = window_cds_start
         elif args.landmark == "cds_stop":
-            map_function = StopWindowFactory(args.reference_delta)
+            map_function = window_cds_stop
             
         # open annotations
         printer.write("Opening annotation files: %s..." % ", ".join(args.annotation_files))
@@ -663,7 +786,7 @@ def main(argv=sys.argv[1:]):
                                              mask_hash,
                                              args.upstream,
                                              args.downstream,
-                                             reference_point_func=map_function,
+                                             landmark_func=map_function,
                                              printer=printer)
         roi_file = "%s_rois.txt" % args.outbase
         bed_file = "%s_rois.bed" % args.outbase

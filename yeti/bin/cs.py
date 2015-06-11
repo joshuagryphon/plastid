@@ -3,14 +3,14 @@
 read densities (in :term:`RPKM`) specifically covering genes.
 
 :term:`Counts <counts>` and densities are calculated separately per gene for
-exons, 5' UTRs, coding regions, and 3' UTRs. In addition, positions overlapped
+exons, 5\' UTRs, coding regions, and 3\' UTRs. In addition, positions overlapped
 by multiple genes are excluded, as are positions annotated in
 :term:`mask annotation files<crossmap>`, if one is provided.
 
 To avoid unnecessarily repeating calculations of gene overlap, the script's
-operation is divided into three modes:
+operation is divided into three subprograms:
 
-Generate mode
+Generate
     The :func:`generate <do_generate>` mode first takes a gene annotation file,
     finds all genes that share exons, and maps these to a "merged" genes that
     represent their groups. The reason to do this is that in some genome
@@ -32,11 +32,11 @@ Generate mode
             transcript mapping to the merged gene
         
         *UTR5*
-            positions which are annotated only as *fiveprime UTR* in all
+            positions which are annotated only as *5\' UTR* in all
             transcript isoforms mapping to the merged gene
             
         *UTR3*
-            positions which are annotated only as *threeprime UTR* in all
+            positions which are annotated only as *3 UTR* in all
             transcript isoforms mapping to the merged gene
         
         *masked*
@@ -44,6 +44,7 @@ Generate mode
             :term:`mask file`
 
     .. Rubric :: Output files
+    
     The following files are output, where `OUTBASE` is a name supplied 
     by the user:
     
@@ -65,7 +66,7 @@ Generate mode
              :term:`genome browser` 
 
 
-Count mode    
+Count    
     A :func:`count <do_count>` mode, in which the number of reads mapping to
     each type of position (e.g. *exon*, *CDS*, *UTR5*, and *UTR3*) is tabulated
     for each merged gene. Output is given in a tab-delimited text file that gives
@@ -73,7 +74,7 @@ Count mode
     feature.
 
 
-Chart mode
+Chart
     A :func:`chart <do_chart>` mode, which takes output from the ``count`` mode
     and generates several tables and charts that provide broad overviews
     of the data.
@@ -83,7 +84,7 @@ See command-line help for each subprogram for details on each mode
 See also
 --------
 :mod:`~yeti.bin.counts_in_region` script
-    Count the number of :term:`read alignments<alignment>` covering arbitrary
+    Count the number of :term:`read alignments <alignment>` covering arbitrary
     regions of interest -- rather than merged genes, as are counted here in
     :mod:`~yeti.bin.cs` -- in the genome, and calculate read densities
     (in reads per nucleotide and in :term:`RPKM`) over these regions.
@@ -255,9 +256,9 @@ def do_generate(args):
         
     2.  Within merged genes, all positions are classified. All positions are
         included in a set called *exon*. All positions that appear as coding
-        regions in all transcripts (i.e. are never part of a 5'UTR or 3'UTR)
+        regions in all transcripts (i.e. are never part of a 5\'UTR or 3\'UTR)
         included in a set called *CDS*. Similarly, all positions that appear
-        as 5' UTR or 3' UTR in all transcripts are included in sets called
+        as 5\' UTR or 3\' UTR in all transcripts are included in sets called
         *UTR5* or *UTR3*, respectively.
     
     3.  Genomic positions that are overlapped by multiple merged genes are
@@ -1032,6 +1033,7 @@ def get_parser():
     gparser    = subparsers.add_parser("generate",
                                        help=generator_help,
                                        description=generator_desc,
+                                       formatter_class=argparse.RawDescriptionHelpFormatter,
                                        parents=[annotation_file_parser,
                                                 mask_file_parser],
                                        )

@@ -30,9 +30,9 @@ Glossary of terms
     crossmap
     mask file
     mask annotation file
-        A genomic annotation that identifies regions of the genome that
+        A genomic :term:`annotation` that identifies regions of the genome that
         cannot give rise to uniquely-mapping reads due to repetitive sequence.
-        Crossmaps are functions of genome sequence, read length, and alignment
+        :term:`mask files <mask file>` are functions of genome sequence, read length, and alignment
         parameters (e.g. the number of mismatches allowed). These may be
         generated from genome sequence using the included
         :py:mod:`~yeti.bin.crossmap` script.
@@ -79,6 +79,11 @@ Glossary of terms
         A fragment of mRNA protected from nuclease digestion by a ribosome
         during ribosome profiling or other molecular biology assays.
 
+    ribosome profiling
+        A high-throughput sequencing technique that captures the positions
+        of all ribosomes on all RNAs at a snapshot in time. See :cite:`Ingolia2009`
+        for more details
+
     roi
     region of interest
         A region of the genome or of a transcript that contains an interesting
@@ -119,3 +124,14 @@ Glossary of terms
         from datasets if tissues are pre-treated with elongation
         inhibitors (e.g. cycloheximide) before lysis and sample prep.
 
+    sub-codon phasing
+    triplet periodicity
+        A feature of :term:`ribosome profiling` data. Because ribosomes
+        step three nucleotides in each cycle of translation elongation,
+        in many :term:`ribosome profiling` datasets a triplet periodicity
+        is observable in the distribution of
+        :term:`ribosome-protected footprints <footprint>`, in which 70-90%
+        of the reads on a codon fall within the first of the three codon
+        positions. This allows deduction of translation reading frames,
+        if the reading frame is not known *a priori.* See :cite:`Ingolia2009`
+        for more details

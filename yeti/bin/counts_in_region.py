@@ -6,7 +6,7 @@ per nucleotide and in :term:`RPKM`) over these regions.
 Results are output as a table with the following columns:
 
     ========================  ==================================================
-    Name                      Definition
+    **Name**                  **Definition**
     ------------------------  --------------------------------------------------
     `region_name`             Name or ID of region of interest
     

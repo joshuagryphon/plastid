@@ -1,10 +1,11 @@
 #!/usr/bin/env python 
 """Identify all the unique splice junctions in one or more transcript annotations,
-and output these as a BED file  and, optionally, as a Tophat ``.juncs`` file.
+and output these as a `BED`_ file with one splice junction per line. Optionally,
+also export junctions as a `Tophat`_ ``.juncs`` file.
 
 If a splice junction is multiply annotated (e.g. used by more than one transcript),
 only the first occurrence of the junction will be reported. Scores, if present,
-are exported unaltered in BED output. Examples::
+are exported unaltered in `BED`_ output. Examples::
 
 
     # identify splice junctions from a transcript annotation supplied in GTF2
@@ -48,8 +49,8 @@ import argparse
 import inspect
 from yeti.genomics.roitools import SegmentChain
 from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_segmentchains_from_args
-from yeti.util.io.filters import CommentReader, NameDateWriter
-from yeti.util.io.openers import opener, argsopener, get_short_name, guess_opener
+from yeti.util.io.filters import NameDateWriter
+from yeti.util.io.openers import argsopener, get_short_name
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

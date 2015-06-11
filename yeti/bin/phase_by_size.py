@@ -1,18 +1,29 @@
 #!/usr/bin/env python
-"""Estimate sub-codon phasing in a ribosome profiling dataset, stratified by read length.
-NOTE: to avoid double-counting of codons, users should supply an annotation file
-that includes only one transcript isoform per gene.
+"""Estimate :term:`sub-codon phasing` in a :term:`ribosome profiling` dataset,
+stratified by read length.
 
+Because ribosomes step three nucleotides in each cycle of translation elongation,
+in many :term:`ribosome profiling` datasets a triplet periodicity is observable
+in the distribution of :term:`ribosome-protected footprints <footprint>`,
+in which 70-90% of the reads on a codon fall within the first of the three codon
+positions. This allows deduction of translation reading frames, if the reading
+frame is not known *a priori.* See :cite:`Ingolia2009` for more details
 
 Output files
 ------------
-    ${OUTBASE}_phasing.txt
+    OUTBASE_phasing.txt
         Read phasing for each read length
 
-    ${OUTBASE}_phasing.svg
+    OUTBASE_phasing.svg
         Plot of phasing by read length
 
 where ${OUTBASE} is supplied by the user.
+
+Notes
+-----
+To avoid double-counting of codons, users should supply an :term:`annotation`
+file that includes only one transcript isoform per gene.
+
 """
 import sys
 import matplotlib
@@ -24,7 +35,6 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
 from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
-from yeti.genomics.genome_array import SizeFilterFactory
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
 import numpy
@@ -46,7 +56,8 @@ def main(argv=sys.argv[1:]):
 		as if the script were called from the command line if
 		:py:func:`main` is called directly.
 
-		Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     alignment_file_parser = get_alignment_file_parser(disabled=["normalize",
                                                                 "big_genome",

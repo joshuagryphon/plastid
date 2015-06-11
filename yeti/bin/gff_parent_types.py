@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """Exports a table of parent-child feature relationships for all feature types
-found in a GFF3 file. Features with multiple parents are dumped into a category
-called "Multiple" and the feature types of their individual parents ignored.
+found in a `GFF3`_ file. Features with multiple parents are dumped into a category
+called `Multiple` and the feature types of their individual parents ignored.
 """
 from yeti.readers.gff import GFF3_Reader
-from yeti.util.io.filters import NameDateWriter, CommentReader
+from yeti.util.io.filters import NameDateWriter
 from yeti.util.io.openers import get_short_name, opener, argsopener
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from collections import Counter
@@ -24,7 +24,8 @@ def main(argv=sys.argv[1:]):
 		as if the script were called from the command line if
 		:py:func:`main` is called directly.
 
-		Default: sys.argv[1:] (actually command-line arguments)
+		Default: `sys.argv[1:]`. The command-line arguments, if the script is
+		invoked from the command line
 	"""
 	parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
 									 formatter_class=argparse.RawDescriptionHelpFormatter)

@@ -1,43 +1,46 @@
 #!/usr/bin/env python
-"""This script estimates P-site offsets, stratified by read length,
-in a ribosome profiling dataset by calculating metagene averages for each
+"""This script estimates :term:`P-site offsets <P-site offset>`, stratified by read length,
+in a ribosome profiling dataset. To do so, :term:`metagene averages` are calculated for each
 read length surrounding the start codon, mapping the reads to their fiveprime
 ends. The start codon peak for each read length is heuristically identified
 as the largest peak upstream of the start codon. The distance between that
-peak and the start codon itself is taken to be the P-site offset for that
+peak and the start codon itself is taken to be the :term:`P-site offset` for that
 read length.
 
-Note, users should examine output files to make sure these estimates are reasonable.
-For this reason, in addition to the P-site offsets, full metagene profiles are
-exported as tables and graphics.
-
-This script will fail if run on a dataset that lacks distinct start codon peaks.
+Notes
+------
+Users should carefully examine output files to make sure these estimates are
+reasonable, because if clear start codon peaks are not present in the data,
+the algorithm described above will fail.  For this reason, in addition to the
+:term:`P-site offsets <P-site offset>`, full metagene profiles are
+exported as both tables and graphics.
 
 Output files
 ------------
-    ${OUTBASE}_p_offsets.txt
+    OUTBASE_p_offsets.txt
         Tab-delimited text file with two columns. The first is read length,
         and the second the offset from the fiveprime end of that read length
-        to the ribosomal P-site. Can be used with --fiveprime_variable mapping
-        for other scripts in this dataset.
+        to the ribosomal P-site. This table can be supplied as the argument 
+        for ``--offset`` when using ``--fiveprime_variable`` mapping in any
+        of the other scripts in :obj:`yeti.bin`
 
-    ${OUTBASE}_p_offsets.svg
-        Plot of metagene profiles for each read length, mapped to their 
-        fiveprime ends. 
+    OUTBASE_p_offsets.svg
+        Plot of metagene profiles for each read length, when reads are mapped
+        to their 5\' ends, :term:`P-site offsets <P-site offset>` are applied.
 
-    ${OUTBASE}_metagene_profiles.txt
-        Metagene profiles, stratified by read length, before P-site offsets
-        are applied
+    OUTBASE_metagene_profiles.txt
+        Metagene profiles, stratified by read length, before :term:`P-site offsets <P-site offset>`
+        are applied.
 
-    ${OUTBASE}_${K}_rawcounts.txt
-        Raw count vectors for each metagene window specified in input ROI file,
-        without P-site mapping rules applied, for reads of length K
+    OUTBASE_K_rawcounts.txt
+        Raw count vectors for each :term:`metagene` window specified in input ROI file,
+        without P-site mapping rules applied, for reads of length `K`
 
-    ${OUTBASE}_${K}_normcounts.txt
+    OUTBASE_K_normcounts.txt
         Normalized count vectors for each metagene window specified in input ROI file,
-        without P-site mapping rules applied, for reads of length K
+        without P-site mapping rules applied, for reads of length `K`
 
-where ${OUTBASE} is supplied by the user.
+where `OUTBASE` is supplied by the user.
 """
 import sys
 import matplotlib
@@ -55,7 +58,6 @@ from yeti.genomics.roitools import SegmentChain
 from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from yeti.util.io.filters import NameDateWriter
-from yeti.genomics.genome_array import SizeFilterFactory
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.services.decorators import catch_warnings
 
@@ -72,28 +74,27 @@ disabled_args = ["normalize",
                  "center"]
 
 @catch_warnings("ignore")
-def do_count(roi_table,gnd,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
-    """Counts the number of reads at each position in each ROI, and normalizes
-    each resulting vector by the total number of counts in a normalization
-    region specified by norm_start and norm_end
+def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
+    """Calculate a :term:`metagene profile` for each read length in the dataset
     
     Parameters
     ----------
     roi_table : |ArrayTable|
         |ArrayTable| specifying regions of interest, generated
-        by :py:meth:`do_generate`
+        by :py:func:`yeti.bin.metagene.do_generate`
     
-    gnd : |BAMGenomeArray|
+    ga : |BAMGenomeArray|
         Count data
     
     norm_start : int
-        Coordinate in ROI specifying normalization region start
+        Coordinate in window specifying normalization region start
     
     norm_end : int
-        Coordinate in ROI specifying normalization region end
+        Coordinate in window specifying normalization region end
     
     min_counts : float
-        Minimum number of counts in ROI to be included in metagene profile
+        Minimum number of counts in `window[norm_start:norm_end]`
+        required for inclusion in metagene profile
 
     min_len : int
         Minimum read length to include
@@ -101,21 +102,23 @@ def do_count(roi_table,gnd,norm_start,norm_end,min_counts,min_len,max_len,printe
     max_len : int
         Maximum read length to include
 
-        
+    printer : file-like, optional
+        filehandle to write logging info to (Default: :func:`NullWriter`)
+               
     Returns
     -------
     dict
-        Dictionary of ``numpy.ndarray`` s of raw counts at each position (column)
-        for each ROI (row)
+        Dictionary of :class:`numpy.ndarray` s of raw counts at each position (column)
+        for each window (row)
     
     dict
-        Dictionary of ``numpy.ndarray`` s of raw counts at each position (column)
-        for each ROI (row), normalized by the total number of counts in that row
-        from norm_start to norm_end
+        Dictionary of :class:`numpy.ndarray` s of normalized counts at each position (column)
+        for each window (row), normalized by the total number of counts in that row
+        from `norm_start` to `norm_end`
     
     |ArrayTable|
         Metagene profile of median normalized counts at each position across
-        all ROIs, and the number of genes included in the calculation of each
+        all windows, and the number of windows included in the calculation of each
         median, stratified by read length
     """
     window_size    = roi_table["window_size"][0]
@@ -134,7 +137,7 @@ def do_count(roi_table,gnd,norm_start,norm_end,min_counts,min_len,max_len,printe
         roi    = SegmentChain.from_str(roi_table["region"][i])
         mask   = SegmentChain.from_str(roi_table["masked"][i])
         roi.add_masks(*mask)
-        valid_mask = roi.get_valid_counts(gnd).mask
+        valid_mask = roi.get_valid_counts(ga).mask
         
         offset = int(round((roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
@@ -144,7 +147,7 @@ def do_count(roi_table,gnd,norm_start,norm_end,min_counts,min_len,max_len,printe
             count_vectors[k] = []
 
         for iv in roi:
-            reads = gnd.get_reads(iv)
+            reads = ga.get_reads(iv)
             read_dict = {}
             for k in raw_count_dict:
                 read_dict[k] = []
@@ -153,7 +156,7 @@ def do_count(roi_table,gnd,norm_start,norm_end,min_counts,min_len,max_len,printe
                 read_dict[len(read.positions)].append(read)
             
             for read_length in read_dict:
-                count_vector = list(gnd.map_fn(read_dict[read_length],iv)[1])
+                count_vector = list(ga.map_fn(read_dict[read_length],iv)[1])
                 count_vectors[read_length].extend(count_vector)
                 
         for read_length in raw_count_dict:
@@ -194,7 +197,8 @@ def main(argv=sys.argv[1:]):
 		as if the script were called from the command line if
 		:py:func:`main` is called directrly.
 
-		Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     alignment_file_parser = get_alignment_file_parser(disabled=disabled_args,
                                                       input_choices=["BAM"])
@@ -210,20 +214,20 @@ def main(argv=sys.argv[1:]):
                          default=(70,100),
                          help="Portion of ROI against which each individual profile"+
                               " will be normalized. Specify two integers, in nucleotide"+
-                              " distance, from 5' end of ROI. (Default: 70 100)")
+                              " distance, from 5\' end of ROI. (Default: 70 100)")
     parser.add_argument("--require_upstream",default=False,action="store_true",
                         help="If supplied, the P-site offset is taken to be the distance "+
                              "between the largest peak upstream of the start codon and "+
-                             "the start codon itself. Otehrwise, the P-site offset is taken "+
+                             "the start codon itself. Otherwise, the P-site offset is taken "+
                              "to be the distance between the largest peak in the entire ROI "+
                              "and the start codon."
                         )
 
     parser.add_argument("--default",type=int,default=13,
-                        help="Default fiveprime P-site offset for read lengths that are not present or evaluated in the dataset (Default: 13)")
+                        help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset (Default: 13)")
 
     parser.add_argument("roi_file",type=str,
-                        help="ROI file surrounding start codons, from metagene `generate` subprogram")
+                        help="ROI file surrounding start codons, from ``metagene generate`` subprogram")
     
     parser.add_argument("outbase",type=str,help="Basename for output files")
     

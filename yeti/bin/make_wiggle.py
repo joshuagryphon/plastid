@@ -53,22 +53,22 @@ def main(argv=sys.argv[1:]):
                                      parents=[get_alignment_file_parser()])
     parser.add_argument("-o","--out",dest="output_file",type=str,required=True,
                         metavar="FILENAME",
-                        help="Name stub for output files")
+                        help="Base name for output files")
     parser.add_argument("--window_size",default=100000,metavar="N",type=int,
                         help="Size of nucleotides to fetch at once for export. "+\
                              "Large values are faster but require more memory "+\
-                             "(default: 100000)")
+                             "(Default: 100000)")
 
     track_opts = parser.add_argument_group(title="Browser track options")
     track_opts.add_argument("--color",type=str,default=None,
-                        help="An RGB hex string (#NNNNNN, N in [0-9,A-F]) specifying \
+                        help="An RGB hex string (`'#NNNNNN'`, `N` in `[0-9,A-F]`) specifying \
                               the track color.")
     track_opts.add_argument("-t","--track_name",dest="track_name",type=str,
                         help="Name to give browser track",
                         default=None)
     track_opts.add_argument("--output_format",choices=("bedgraph","variable_step"),
                         default="bedgraph",
-                        help="Format of output file (default: bedgraph)")
+                        help="Format of output file (Default: bedgraph)")
 
     args = parser.parse_args(argv)
     gnd  = get_genome_array_from_args(args,printer=printer)

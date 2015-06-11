@@ -1,30 +1,31 @@
 #!/usr/bin/env python
 """Empirically determine which positions in a genome cannot give rise to uniquely-
-mapping short reads. These positions may then be excluded as from further analyses
-that expect uniquely mapped reads.
+mapping sequencing reads. These positions are then saved in a :term:`mask file`,
+so that they may be excluded as from further analyses.
 
-To identify such positions, a genome sequence is diced into *k*-mers, and the *k*-mers
-aligned back to the genome. *k*-mers that align more than once arise from repetitive
-regions of the genome. These regions are exported in a BED file.
+To identify such positions, a genome sequence is diced into :term:`k-mers <k-mer>`
+aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
+one genomic location are then marked as deriving from repetitive regions of
+the genome. These regions are exported in a `BED`_ file.
 
-*k* is specified by the user, as is the number of mismatches permitted during alignment.
+`k` is specified by the user, as are the alignment parameters.
 
 
 Output files
 ------------
     ${OUTBASE}_crossmap.bed
-        Final crossmap annotation
+        Final :term:`mask file` annotation, in `BED`_ format
     
     ${OUTBASE}_kmers.fa
-        K-mers derived from genome. This file can be used to make subsequent crossmaps,
-        allowing, for example, different numbers of mismatches to the genome, using
+        :term:`K-mers <k-mer>` derived from genome. This file can be used to make subsequent
+        :term:`mask files <mask file>` under different alignment parameters, using the
         the ``--have_kmers`` option
 
 
 Notes
 -----
-For large genomes, it is highly recommended to convert the BED-format output
-to a BigBed file, using Jim Kent's bedToBigBed utility as follows
+For large genomes, it is highly recommended to convert the `BED`_-format output
+to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
 (from the terminal)::
 
     $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence | cut -f2,3 >OUTFILE.sizes
@@ -75,9 +76,9 @@ BigBedMessage = """Crossmap complete and saved as 'OUTFILE.bed'.
 """
 
 def simulate_reads(seq_record,fh=sys.stdout,k=30):
-    """Chops a DNA sequence into *k*-mers mimicking a sequencing run.
-    Output is delivered in FastA format. Sequences are named for position of
-    origin using 0-based indices. Note, Bowtie uses 0-based indices
+    """Chops a DNA sequence into :term:`k-mers <k-mer>`, mimicking a sequencing run.
+    Output is delivered in fasta format. Sequences are named for position of
+    origin using 0-based indices.
     
     Parameters
     ----------
@@ -85,10 +86,10 @@ def simulate_reads(seq_record,fh=sys.stdout,k=30):
         DNA sequence
     
     fh : file-like
-        filehandle to write output
+        filehandle to write output 
         
-    k : int
-        length of k-mers to generate
+    k : int, optional
+        length of k-mers to generate (Default: 30)
     """
     for x in xrange(0,len(seq_record)-k+1):
         fh.write(">%s:%s(+)\n" % (seq_record.name,x))
@@ -96,128 +97,11 @@ def simulate_reads(seq_record,fh=sys.stdout,k=30):
 
     return None
 
-@deprecated
-@notused
-def parse_read_name(inp):
-    """Parse read names from :py:meth:`simulate_reads` back to chromosomal positions of origin
-    
-    Parameters
-    ----------
-    inp : str
-        A read name, formatted as *chrom:position(+)*, where *position*
-        is 0-based
-    
-    Returns
-    -------
-    str
-        chromosome name for read
-    
-    str
-        fiveprime position of read
-    """
-    return namepat.match(inp).groups()
-
-@deprecated
-@notused
-def bowtie_to_score(bowtie_inp,offset=0):
-    """Count how many times every read aligns to the genome in bowtie output.
-    This function assigns to each genomic position a score, equal to 1 less
-    than the number of times a read deriving from that position aligns to 
-    the genome under the specified parameters.
-    
-    Parameters
-    ----------
-    bowtie_inp : file-like
-        Bowtie input, assumed to be sorted by input read name (first column)
-    
-    offset : int
-        Offset from 5' end of each read position at which to attribute number
-        of alignments (Default: 0)
-       
-    Yields
-    ------
-    str
-        chromosome name
-
-    int
-        position
-
-    int
-        number of times read aligns to genome
-    """
-#        Bowtie file columns are:
-#        0 read name
-#        1 strand
-#        2 name of aligning seq
-#        3 coord (0-based index)
-#        4 sequence
-#        5 quality
-#        6 weird number
-#        7 mismatch list (e.g. 5:A>T,6:G>C)
-    last_name     = None
-    score = 0 
-    
-    for line in bowtie_inp:
-        items = line.strip("\n").split("\t")
-        read_name = items[0]
-        if read_name == last_name:
-            score += 1
-        else:
-            if last_name is not None: # release only if we are not on a new chrom
-                origin_chrom,origin_pos = parse_read_name(last_name) 
-                origin_score = score
-                score = 0
-                last_name = read_name
-                yield origin_chrom, int(origin_pos), origin_score
-            else:
-                last_name = read_name
-
-@deprecated
-@notused
-def bowtie_to_bed(score_inp):
-    """Assemble adjacent repetitive genomic positions into continguous blocks
-    and report these to a BED file 
-    
-    Parameters
-    ----------
-    score_inp : tuple<str,int,int>
-        Chromosome name, chromosome position, and number of alignments to genome for read
-        
-    Yields
-    ------
-    |SegmentChain|
-        yields |SegmentChain| s representing contiguous repetitive regions
-    """
-    last_score = 0
-    last_chrom = None
-    last_pos   = -numpy.inf
-    start_pos  = -numpy.inf
-    for chrom, pos, score in score_inp:
-        if chrom != last_chrom:
-            if last_chrom is not None:
-                my_range = set(range(start_pos,last_pos+1))
-                ivc = SegmentChain(*positionlist_to_segments(last_chrom,"+",my_range))
-                last_chrom = chrom
-                start_pos  = 0
-                last_pos   = 0
-                yield ivc
-            else:
-                last_chrom = chrom
-        else:
-            if pos-last_pos > 1:
-                my_range = set(range(start_pos,last_pos+1))
-                last_score = score
-                last_pos   = pos
-                start_pos  = pos
-                yield SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
-            else:
-                last_pos = pos
-
 class FastaNameReader(AbstractReader):
-    """Returns names of sequences in a FASTA file"""
+    """Returns names of sequences in a fasta file"""
 
     def filter(self,line):
-        """Return next sequence name in a FASTA file
+        """Return next sequence name in a fasta file
 
         Parameters
         ----------
@@ -234,25 +118,27 @@ class FastaNameReader(AbstractReader):
         else:
             return self.__next__()
 
-def revcomp_mask_ivc(ivc,k,offset=0):
-    """Reverse-complement a single-interval mask, correcting for offset.
+def revcomp_mask_ivc(seg,k,offset=0):
+    """Reverse-complement a single-interval mask, correcting for `offset`.
     
     Parameters
     ----------
-    ivc : |SegmentChain|
-        Plus-strand mask, including offset
+    seg : |SegmentChain|
+        Plus-strand mask, including `offset`
 
     k : int
         Length of k-mers
 
     offset : int, optional
-        Offset from 5' end of read at which to map mask (Default: 0)
+        Offset from 5\' end of read at which to map mask (Default: 0)
 
     Returns
     -------
     |SegmentChain|
-        Mask on minus strand corresponding to ``ivc``
+        Mask on minus strand corresponding to ``seg``
     """
+# Algorithm note:
+#
 #     Let
 #         FW = plus-strand coordinate
 #         RC = minus-strand coordinate
@@ -264,33 +150,33 @@ def revcomp_mask_ivc(ivc,k,offset=0):
 #     
 #         RC + offset = (FW + offset) + k - 1 - offset
 #         RC = (FW + offset) + k - 1 - 2*offset    
-    ivminus = GenomicSegment(ivc.spanning_segment.chrom,
-                             ivc.spanning_segment.start + k - 1 - 2*offset,
-                             ivc.spanning_segment.end + k - 1 - 2*offset,
+    ivminus = GenomicSegment(seg.spanning_segment.chrom,
+                             seg.spanning_segment.start + k - 1 - 2*offset,
+                             seg.spanning_segment.end + k - 1 - 2*offset,
                              "-")
     return SegmentChain(ivminus)
 
 def fa_to_bed(toomany_fh,k,offset=0):
-    """Create a BED file indicating genomic origins of reads in a ``bowtie`` ``toomany`` file
+    """Create a `BED`_ file indicating genomic origins of reads in a `bowtie`_ ``toomany`` file
     
     Parameters
     ----------
     toomany_fh : file-like
-        Open filehandle to FASTA-formatted ``toomany`` file from ``bowtie``
+        Open filehandle to fasta-formatted ``toomany`` file from `bowtie`_
 
     k : int
         Length of k-mers
 
     offset : int, optional
-        Offset from 5' end of read at which to map read, if any (Default: 0)
+        Offset from 5\' end of read at which to map read, if any (Default: 0)
 
     Yields
     ------
     |SegmentChain|
-        Plus-strand |SegmentChain| s representing contiguous repetitive regions
+        Plus-strand |SegmentChain| representing a repetitive region
 
     |SegmentChain|
-        Minus-strand |SegmentChain| s representing contiguous repetitive regions
+        Minus-strand |SegmentChain| representing a repetitive region
     """
     last_chrom = None
     last_pos   = None
@@ -343,7 +229,8 @@ def main(argv=sys.argv[1:]):
 		as if the script were called from the command line if
 		:py:func:`main` is called directly.
 
-		Default: sys.argv[1:] (actually command-line arguments)
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
     """
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -352,7 +239,7 @@ def main(argv=sys.argv[1:]):
                         help="K-mer length to generate from input file. "+
                              "(Default: 29)")
     parser.add_argument("--offset",type=int,default=14,
-                        help="Offset from 5' end of plus-strand read at which to attribute score (Default: 14)")
+                        help="Offset from 5\' end of plus-strand read at which to attribute score (Default: 14)")
     parser.add_argument("--mismatches",metavar="N",
                         type=int,default=0,
                         help="Number of mismatches tolerated in alignment. "+
@@ -362,13 +249,13 @@ def main(argv=sys.argv[1:]):
                         help="Format of input file (fasta, genbank, embl; Default: fasta)")
     parser.add_argument("--bowtie",dest="bowtie",default="/usr/local/bin/bowtie",
                         type=str,
-                        help="Location of bowtie binary (Default: /usr/local/bin/bowtie)")
+                        help="Location of bowtie binary (Default: ``/usr/local/bin/bowtie``)")
     parser.add_argument("--have_kmers",default=False,action="store_true",
-                        help="seqfile contains k-mers from a previous crossmap run, instead of a genome sequence to be diced.")
+                        help="seqfile contains k-mers from a previous `crossmap` run, instead of a genome sequence to be diced.")
     parser.add_argument("seqfile",type=str,
-                        help="Sequences of chromosomes or contigs (not transcripts) that will be crossmapped, or, a file of kmers from a previous run of `crossmap` (if `--have_kmers` is specified)")
+                        help="Sequences of chromosomes or contigs (not transcripts) that will be crossmapped, or, a file of k-mers from a previous run of `crossmap` (if ``--have_kmers`` is specified)")
     parser.add_argument("ebwt",type=str,
-                        help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in seqfile.")
+                        help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `seqfile`.")
     parser.add_argument("outbase",type=str,
                         help="Basename for output files")
     args = parser.parse_args(argv)
