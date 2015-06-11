@@ -22,6 +22,7 @@ def shorten_help(inp):
     """
     inp = pyrst_pattern.sub(r"\g<spacing>\g<argument>",inp)
     inp = subst_pattern.sub(r"\g<1>",inp)
+    inp = link_pattern.sub(r"\g<1>",inp)
     
     tokens = ["Parameters",
               "Returns",
@@ -56,9 +57,7 @@ def format_module_docstring(inp):
     """
     return _separator + shorten_help(inp) + _separator
 
-#TODO: add support for :domain:role:`Text <argument>`
-#TODO: add support for links `Link`_
-pyrst_pattern = re.compile(r"(?P<spacing>^|\s+)(?::(?P<domain>py))?:(?P<role>[^:]*):`(?P<argument>[^`]*)`")
+pyrst_pattern = re.compile(r"(?P<spacing>^|\s+)(?::(?P<domain>[^:`<>]+))?:(?P<role>[^:`]*):`(?P<argument>[^`<>]+)(?: +<(?P<pointer>[^`]+)>)?`")
 """RegEx pattern that detects reStructuredText markup of python tokens
 of the form ``:domain:role:`argument``` or simply ``:role:`argument```,
 if the token is preceded by whitespace or begins a line.
@@ -74,6 +73,7 @@ re
 
 subst_pattern = re.compile(r"\|([^|]*)\|")
 """RegEx pattern that matches reStructuredText substitution tokens
+of form |substitution|
 
 See Also
 --------
@@ -81,5 +81,14 @@ re
     Python regular expressions module
 """
 
+link_pattern = re.compile(r"`([^`<>]+)( <[^`]+>)?`_")
+"""RegEx pattern that matches reStructuredText link references of forms `Link`_
+and `Link text <link>`_
+
+See Also
+--------
+re
+    Python regular expressions module
+"""
 _separator = "\n" + (78*"-") + "\n"
 """78-dash long text separator for separating help sections in command-line environments"""

@@ -1,47 +1,71 @@
 #!/usr/bin/env python
 """Test suite for :py:mod:`yeti.util.scriptlib.help_formatters`"""
-import unittest
+from nose.tools import assert_equal, assert_not_equal, assert_true
 from nose.plugins.attrib import attr
 from yeti.util.scriptlib.help_formatters import shorten_help,\
                                                            format_module_docstring,\
                                                            pyrst_pattern,\
                                                            subst_pattern,\
+                                                           link_pattern,\
                                                            _separator
 @attr(test="unit")
-class TestHelpFormatters(unittest.TestCase):
+class TestHelpFormatters():
     
     def test_pyrst_pattern_matches(self):
         tests = [(":py:class:`yeti.genomics.genome_array.GenomeArray`",
                   "py",
                   "class",
-                  "yeti.genomics.genome_array.GenomeArray"),
+                  "yeti.genomics.genome_array.GenomeArray",
+                  None),
                  (":py:mod:`yeti.genomics.genome_array`",
                   "py",
                   "mod",
-                  "yeti.genomics.genome_array"),
+                  "yeti.genomics.genome_array",
+                  None),
                 (":py:obj:`some_obj`",
                   "py",
                  "obj",
-                 "some_obj"),
+                 "some_obj",
+                  None),
                  (":class:`yeti.genomics.genome_array.GenomeArray`",
                   None,
                   "class",
-                  "yeti.genomics.genome_array.GenomeArray"),
+                  "yeti.genomics.genome_array.GenomeArray",
+                  None),
                  (":mod:`yeti.genomics.genome_array`",
                   None,
                   "mod",
-                  "yeti.genomics.genome_array"),
+                  "yeti.genomics.genome_array",
+                  None),
                 (":obj:`some_obj`",
                  None,
                  "obj",
-                 "some_obj"),
+                 "some_obj",
+                  None),
+                (":obj:`some_obj <with pointer>`",
+                 None,
+                 "obj",
+                 "some_obj",
+                 "with pointer"),
+                (":domain:role:`some_arg <with pointer>`",
+                 "domain",
+                 "role",
+                 "some_arg",
+                 "with pointer"),
                  ]
-        for test, domain, role, argument in tests:
+        for test, domain, role, argument, pointer in tests:
             groupdict = pyrst_pattern.search(test).groupdict()
-            self.assertEquals(domain,groupdict["domain"])
-            self.assertEquals(role,groupdict["role"])
-            self.assertEquals(argument,groupdict["argument"])
+            yield self.check_pyrst_pattern,domain,groupdict["domain"]
+            yield self.check_pyrst_pattern,role,groupdict["role"]
+            yield self.check_pyrst_pattern,argument,groupdict["argument"]
+            yield self.check_pyrst_pattern,pointer,groupdict["pointer"]
     
+    @staticmethod
+    def check_pyrst_pattern(expected,found,message=""):
+        if len(message) == 0:
+            message = "Expected %s, found %s." % (expected,found)
+        assert_equal(expected,found,message)
+        
     def test_pyrst_pattern_nonmatches(self):
         tests = [(":py:"),
                  (":py:class:"),
@@ -54,27 +78,40 @@ class TestHelpFormatters(unittest.TestCase):
                  ("py:class:`yeti.genomics.genome_array.GenomeArray`"),
                  ]
         for test in tests:
-            self.assertTrue(pyrst_pattern.search(test) is None,
-                            "rst pattern matches %s" % test)
-    
+            yield self.check_pyrst_pattern, pyrst_pattern.search(test), None, "rst pattern matches %s" % test
+                
     def test_subst_pattern_matches(self):
-        self.assertEquals(subst_pattern.search("|test_replacement|").groups()[0],"test_replacement")
+        assert_equal(subst_pattern.search("|test_replacement|").groups()[0],"test_replacement")
     
     def test_subst_pattern_nonmatches(self):
         tests = ["|bad_test",
                  "bad_test|"]
         for test in tests:
-            self.assertTrue(subst_pattern.search(test) is None,
+            assert_true(subst_pattern.search(test) is None,
                             "substitution pattern matches %s" % test)
 
+    def test_link_pattern_matches(self):
+        assert_equal(link_pattern.search("`My link`_").groups()[0],"My link")
+        assert_equal(link_pattern.search("`Mylink`_").groups()[0],"Mylink")
+        assert_equal(link_pattern.search("`Mylink (with parentheses)`_").groups()[0],"Mylink (with parentheses)")
+        assert_equal(link_pattern.search("`Mylink <with_subs>`_").groups()[0],"Mylink")
+    
+    def test_link_pattern_nonmatches(self):
+        tests = ["|bad_test",
+                 "bad_test|"]
+        for test in tests:
+            assert_true(link_pattern.search(test) is None,
+                            "substitution pattern matches %s" % test)
+
+
     def test_shorten_help(self):
-        self.assertNotEqual(raw_help1,shortened_help1)
-        self.assertEqual(shorten_help(raw_help1),shortened_help1)
+        assert_not_equal, raw_help1,shortened_help1
+        assert_equal(shorten_help(raw_help1), shortened_help1)
     
     def test_format_module_docstring(self):
         expected = _separator + shortened_help1 + _separator
-        self.assertEqual(format_module_docstring(raw_help1),expected)
-        self.assertEqual(format_module_docstring(shortened_help1),expected)
+        assert_equal(format_module_docstring(raw_help1), expected)
+        assert_equal(format_module_docstring(shortened_help1),expected)
 
 #===============================================================================
 # INDEX: test data
