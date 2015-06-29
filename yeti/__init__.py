@@ -9,23 +9,22 @@ data, with an emphasis on simplicity for users. To this end, this package provid
   
   #. Readers that abstract data from various file formats into a minimal set of
      object types. These object types define APIs that easily interface with
-     existing scientific tools, such as the `SciPy`_ stack
-     (see |readers|), facilitating analysis.
+     existing scientific tools, such as the `SciPy`_ stack (see |genomics| and
+     |readers|)
 
-  #. Tools for quickly writing command-line scripts that leverage the object
-     types defined in this package.
+  #. Tools to facilitate writing command-line scripts
 
 
 Package overview
 ----------------
-yeti is divided into the following sub-packages:
+yeti is divided into the following subpackages:
 
     ==============    =========================================================
     Package           Contents
     --------------    ---------------------------------------------------------
     |bin|             Command-line scripts
-    |genomics|        Object types that model genome annotations and quantitative data
-    |readers|         Parsers for various file formats that yield objects of the types found in |genomics|
+    |genomics|        APIs and object types to model genome annotations, alignments, and quantitative data
+    |readers|         Parsers for various file formats
     |util|            Utilities (e.g. function decorators, exceptions, argument parsers)
     |test|            Unit and functional tests
     ==============    =========================================================

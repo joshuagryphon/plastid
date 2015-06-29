@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-"""Command-line scripts that implement common sequencing workflows, provided
-a genome :term:`annotation` file and/or a file containing :term:`read alignments`
+"""Command-line scripts that implement common sequencing workflows
 
     ======================   ==========================================================
     **Sequencing analysis**                   
     -----------------------------------------------------------------------------------
-    |counts_in_region|       Count the number of :term:`read alignment` s covering
+    |counts_in_region|       Count the number of :term:`read alignments <alignment>` covering
                              arbitrary regions of interest in the genome, and calculate
                              read densities (in reads per nucleotide and in :term:`RPKM`)
                              over these regions

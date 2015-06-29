@@ -1,23 +1,21 @@
 #!/usr/bin/env python
-"""Miscellaneous utilities
+"""Miscellaneous, general utilities useful for scripting
+
+Package overview
+================
 
     =================================   ======================================================================================================================
-    Sub-package                         Contents
+    **Subpackages**                     **Contents**
     ---------------------------------   ----------------------------------------------------------------------------------------------------------------------
     :py:obj:`~yeti.util.io`             Wrappers for various file I/O operations
-    :py:obj:`~yeti.util.services`       Functions that operate on miscellaneous basic data types (e.g. sets, lists, et c), function decorators, and exceptions
-    =================================   ======================================================================================================================
-
-
-    =================================   ======================================================================================================================
-    Module                              Contents
+    :py:obj:`~yeti.util.scriptlib`      Tools for writing command-line scripts that use :data:`yeti`
+    :py:obj:`~yeti.util.services`       Function decorators, exceptions, and a grab bag of functions that operate on miscellaneous basic data types (e.g. sets, lists, et c)
     ---------------------------------   ----------------------------------------------------------------------------------------------------------------------
-    :py:mod:`~yeti.util.array_table`    DataFrame-like object (deprecated)
-    :py:mod:`~yeti.util.unique_fifo`    FIFO that maintains a unique collection of members. If a member already present in the FIFO as added to the FIFO,
-                                        it is moved from its original position to the end FIFO, instead of retaining its original position and being added
-                                        again at the end.
+    **Package modules**                 **Contents**
+    ---------------------------------   ----------------------------------------------------------------------------------------------------------------------
+    :py:mod:`~yeti.util.array_table`    :class:`~pandas.DataFrame` -like object (deprecated)
+    :py:mod:`~yeti.util.unique_fifo`    FIFO that maintains a unique collection of members (i.e. no duplicates)
     =================================   ======================================================================================================================
-
 
 
 """

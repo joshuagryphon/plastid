@@ -115,9 +115,9 @@ def catch_warnings(simple_filter="ignore"):
     simple_filter : str
         Warnings filter action, as defined in :py:mod:`warnings`:
         
-            ==============    =====================
+            ==============    ==================================================
             Value             Disposition
-            --------------    ---------------------
+            --------------    --------------------------------------------------
             *error*           Turn warnings into exceptions
             *ignore*          Ignore all warnings
             *always*          Always print warnings
@@ -127,7 +127,7 @@ def catch_warnings(simple_filter="ignore"):
                               for each module where warning is issued
             *once*            Print first occurrence of matching warnings,
                               regardless of location
-            ==============    =====================
+            ==============    ==================================================
 
         (source: :py:mod:`warnings`:)
 

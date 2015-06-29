@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-"""Readers for various file types, such as:
+"""
+Package overview
+================
+
+This package contains parsers for various file types, such as:
 
     =========================    ==============================================
     **Annotation files**
