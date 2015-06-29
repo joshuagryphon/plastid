@@ -46,9 +46,7 @@ import os
 import subprocess
 import re
 import inspect
-import numpy
 from Bio import SeqIO
-from yeti.util.services.decorators import deprecated, notused
 from yeti.util.io.filters import NameDateWriter, AbstractReader
 from yeti.util.io.openers import get_short_name, argsopener, opener
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment

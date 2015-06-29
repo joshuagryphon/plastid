@@ -8889,37 +8889,37 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
 
 
 
-@attr(test="unit")
-class TestGTF2_to_Transcripts(AbstractTest_to_Transcripts):
-    
-    @classmethod
-    def setUpClass(cls):
-        cls.expected_ivcs      = EXPECTED_IVCS
-        cls.rejected_ivc_names = REJECTED_NAMES
-        cls.sorted_input       = GTF2_TO_TRANSCRIPTS_SORTED
-        cls.stop_feature_input = GTF2_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
-        cls.unsorted_input     = GTF2_TO_TRANSCRIPTS_UNSORTED
-        cls.test_method = staticmethod(GTF2_to_Transcripts)
-
-        # by default, GTF2s do not include stop codon in CDS
-        # so we have an offset here
-        cls.default_stop_offset = -3
-
-    def test_with_stop_features(self):
-        transcripts, _ = self.test_method(cStringIO.StringIO(self.stop_feature_input),is_sorted=False)
-        self.check_output_against_reference(transcripts,stop_offset=0)
-
-@attr(test="unit")
-class TestGFF3_to_Transcripts(AbstractTest_to_Transcripts):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.expected_ivcs      = EXPECTED_IVCS
-        cls.rejected_ivc_names = REJECTED_NAMES
-        cls.sorted_input   = GFF3_TO_TRANSCRIPTS_SORTED
-        cls.unsorted_input = GFF3_TO_TRANSCRIPTS_UNSORTED
-        cls.stop_feature_input = GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
-        cls.test_method    = staticmethod(GFF3_to_Transcripts)
+# @attr(test="unit")
+# class TestGTF2_to_Transcripts(AbstractTest_to_Transcripts):
+#     
+#     @classmethod
+#     def setUpClass(cls):
+#         cls.expected_ivcs      = EXPECTED_IVCS
+#         cls.rejected_ivc_names = REJECTED_NAMES
+#         cls.sorted_input       = GTF2_TO_TRANSCRIPTS_SORTED
+#         cls.stop_feature_input = GTF2_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
+#         cls.unsorted_input     = GTF2_TO_TRANSCRIPTS_UNSORTED
+#         cls.test_method = staticmethod(GTF2_to_Transcripts)
+# 
+#         # by default, GTF2s do not include stop codon in CDS
+#         # so we have an offset here
+#         cls.default_stop_offset = -3
+# 
+#     def test_with_stop_features(self):
+#         transcripts, _ = self.test_method(cStringIO.StringIO(self.stop_feature_input),is_sorted=False)
+#         self.check_output_against_reference(transcripts,stop_offset=0)
+# 
+# @attr(test="unit")
+# class TestGFF3_to_Transcripts(AbstractTest_to_Transcripts):
+# 
+#     @classmethod
+#     def setUpClass(cls):
+#         cls.expected_ivcs      = EXPECTED_IVCS
+#         cls.rejected_ivc_names = REJECTED_NAMES
+#         cls.sorted_input   = GFF3_TO_TRANSCRIPTS_SORTED
+#         cls.unsorted_input = GFF3_TO_TRANSCRIPTS_UNSORTED
+#         cls.stop_feature_input = GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
+#         cls.test_method    = staticmethod(GFF3_to_Transcripts)
 
 
 class AbstractTestAssembler(AbstractTest_to_Transcripts):

@@ -6,7 +6,6 @@ for information on BLAT output
 __date__ = "2011-09-01"
 __author__ = "joshua"
 from yeti.readers.common import AssembledFeatureReader
-from yeti.util.io.filters import AbstractReader, SkipBlankReader
 from yeti.genomics.roitools import SegmentChain
 import itertools
 

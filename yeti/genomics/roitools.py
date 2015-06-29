@@ -41,11 +41,8 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
-from yeti.readers.gff_tokens import _make_generic_tokens, \
-                                    make_GFF3_tokens, \
-                                    make_GTF2_tokens, \
-                                    parse_GFF3_tokens, \
-                                    parse_GTF2_tokens
+from yeti.readers.gff_tokens import make_GFF3_tokens, \
+                                    make_GTF2_tokens
 
 
 

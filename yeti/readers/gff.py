@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 """Tools for reading, writing, analyzing, and manipulating GFFs and features.
 
-Convenience functions
----------------------
-:py:func:`GTF2_to_Transcripts`
-    Convenience method to assemble entries in GTF2 files into |Transcript|
-
-:py:func:`GFF3_to_Transcripts`
-    Convenience method to assemble entries in GFF3 files into |Transcript|
-
-
 Important classes
 -----------------
 |GTF2_Reader|
@@ -38,12 +29,11 @@ See Also
 """
 __author__="joshua"
 __date__ ="$Dec 1, 2010 11:00:55 AM$"
-import datetime
 import itertools
 import gc
 import copy
 from abc import abstractmethod
-from yeti.util.io.filters import AbstractWriter, AbstractReader, SkipBlankReader
+from yeti.util.io.filters import AbstractReader, SkipBlankReader
 from yeti.util.io.openers import NullWriter
 from yeti.readers.common import add_three_for_stop_codon, \
                                                 get_identical_attributes, \
@@ -51,12 +41,7 @@ from yeti.readers.common import add_three_for_stop_codon, \
 from yeti.genomics.roitools import Transcript, SegmentChain, \
                                          GenomicSegment, \
                                          sort_segmentchains_lexically
-from yeti.util.services.decorators import deprecated
-from yeti.readers.gff_tokens import _make_generic_tokens, \
-                                                    make_GFF3_tokens, \
-                                                    make_GTF2_tokens, \
-                                                    parse_GFF3_tokens, \
-                                                    parse_GTF2_tokens
+from yeti.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
 
 
 #===============================================================================
@@ -1153,215 +1138,215 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 #===============================================================================
 # INDEX: convenience functions
 #===============================================================================
-@deprecated
-def GFF3_to_Transcripts(stream,end_included=True,
-                        transcript_types=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
-                        exon_types=_DEFAULT_GFF3_EXON_TYPES,
-                        add_three_for_stop=False,
-                        printer=None):
-    """Parses a GFF3 stream into a list of assembled |Transcript|
-    
-    Parameters
-    ----------
-    stream : file-like
-        Input stream pointing to GFF3 information
-    
-    end_included : bool, optional
-        Boolean, whether the end coordinate is
-        included in the feature (closed or 'end-included' intervals)
-        or not (half-open intervals). (Default: *True*)
-    
-    printer : file-like, optional
-        Filehandle or sys.stderr-like for logging
-            
-    transcript_types : list<str>, optional
-        Types of feature to include as transcripts, even if no exons
-        or CDS.
-
-    exon_types : list<str>, optional
-        Types of feature to include as exons
-        (e.g. *["exon","noncoding_exon"]*, et c; Default: *["exon"]*)
-    
-
-    add_three_for_stop : bool, optional
-        Some GFF3 files exclude the stop codon from CDS annotations. If set to
-        True, three nucleotides will be added to the threeprime end of each
-        CDS annotation. Default: *False*
-        
-    Returns
-    -------
-    list<|Transcript|>
-        Assembled transcripts
-        
-    list<transcript>
-        Transcripts that were malformed in annotaiton file or otherwise rejected by parser
-    
-    
-    Notes
-    -----
-    GFF3 schemas vary
-        Different GFF3s have different schemas of hierarchy. We deal with that here
-        by allowing users to supply `transcript_types` and `exon_types`, to indicate
-        which sorts of features should be included.
-
-    Identity relationships vary
-        Also, different GFF3s specify discontiguous features differently. For example,
-        in Flybase, different exons of a transcript will have unique IDs, but will share
-        the same "Parent" attribute in column 9 of the GFF. In Wormbase, however, different
-        exons of the same transcript will share the same ID. Here, we treat GFFs as if
-        they are written in the Flybase style. We may support alternate formats in the future.
-    """
-    tx_components = set(exon_types) | set(["CDS"])
-    tx_features = {}
-    dtmp = { "exon" : {}, "CDS" : {} }
-    transcripts_out = {}
-    rejected_transcripts = []
-    tx_features_counted  = []
-    for feature in GFF3_Reader(stream,end_included=end_included):
-        if feature.attr["type"] in tx_components: #dtmp.keys():
-            
-            if feature.attr["type"] in exon_types:
-                feature.attr["type"] = "exon"
-                
-            tnames = feature.attr.get("Parent",[])
-            for tname in tnames:
-                try:
-                    dtmp[feature.attr["type"]][tname].append(feature)
-                except KeyError:
-                    dtmp[feature.attr["type"]][tname] = [feature]
-        elif feature.attr["type"] in transcript_types:
-            try:
-                tx_features[feature.get_name()].append(feature)
-            except KeyError:
-                tx_features[feature.get_name()] = [feature]
-                
-    for tname in dtmp["exon"].keys():
-        tx_features_counted.append(tname)
-        exons = dtmp["exon"].get(tname,[])
-        cds = dtmp["CDS"].get(tname,[])
-        gene_id = tx_features[tname][0].attr.get("Parent",tname) # use transcript name as gene if no Parent
-        gene_id = ",".join(sorted(gene_id))
-        attr    = tx_features[tname][0].attr #get attr from transcript object
-        attr["ID"] = tname
-        attr["transcript_id"] = tname
-        attr["gene_id"] = gene_id
-        exon_segments = [X.spanning_segment for X in exons]
-        if len(cds) > 0:
-            cds   = sorted(cds,key = lambda x: x.spanning_segment.start)
-            attr["cds_genome_start"] = cds[0].spanning_segment.start
-            attr["cds_genome_end"] = cds[-1].spanning_segment.end
-
-            exons = sorted(exons,key = lambda x: x.spanning_segment.start)
-            # correct exon boundaries that don't include entire CDS
-            if cds[0].spanning_segment.start < exons[0].spanning_segment.start:
-                exons[0].spanning_segment.start = cds[0].spanning_segment.start
-            if cds[-1].spanning_segment.end > exons[-1].spanning_segment.end:
-                exons[-1].spanning_segment.end = cds[-1].spanning_segment.end
-        try:    
-            my_tx = Transcript(*tuple(exon_segments),**attr)
-            if add_three_for_stop == True:
-                my_tx = add_three_for_stop_codon(my_tx)
-            transcripts_out[tname] = my_tx
-        except AssertionError:
-            if printer is not None:
-                printer.write("Rejecting %s because it contains exons on multiple strands." % tname)
-            # transcripts with exons on two strands
-            rejected_transcripts.append(tname)
-        except KeyError:
-            # transcripts where CDS ends outside bounds of transcript
-            # there are 25 of these in flybase r5.43
-            rejected_transcripts.append(tname)
-            if printer is not None:
-                printer.write("Rejecting %s because start or stop codons are outside exon boundaries." % tname)
-    
-    # which transcripts did not have exons or CDS? 
-    # this occurs in GFFs where exons are not explicitly annotated (e.g. yeast pseudogenes, et c)
-    # n.b. these will not be double-counted, because we're ignoring those we have already taken
-    tx_features_not_counted = set(tx_features.keys()) - set(tx_features_counted)
-    for txid in tx_features_not_counted:
-        attr = tx_features[txid][0].attr
-        attr["ID"] = txid
-        attr["transcript_id"] = txid
-        segments  = [X.spanning_segment for X in tx_features[txid]]
-        my_txmodel = Transcript(*tuple(segments),**attr)
-        transcripts_out[txid] = my_txmodel
-            
-    return sorted(transcripts_out.values(),key=sort_segmentchains_lexically), list(set(rejected_transcripts))
-
-@deprecated
-def GTF2_to_Transcripts(stream,end_included=True,printer=NullWriter(),add_three_for_stop=False,is_sorted=False):
-    """Parses a GTF2 stream into a list of assembled |Transcript|
-    
-    Parameters
-    ----------
-    stream : file-like
-        Input stream pointing to GTF2 information
-    
-    end_included : bool
-        Boolean, whether the end coordinate is
-        included in the feature (closed or 'end-included' intervals)
-        or not (half-open intervals). (Default: True)
-    
-    printer : file-like
-        Filehandle or sys.stderr-like for logging
-        
-    add_three_for_stop : bool, optional
-        Some annotation files exclude the stop codon from CDS annotations. If set to
-        *True*, three nucleotides will be added to the threeprime end of each
-        CDS annotation, UNLESS the annotated transcript contains explicit stop_codon 
-        feature. (Default: False)
-    
-    is_sorted : bool, optional
-        If True, assume GTF2 is sorted by chromosome. In this case, transcripts
-        will be assembled from component objects, and memory emptied every
-        time the chromosome name changes.
-
-    Returns
-    -------
-    list<|Transcript|>
-        Assembled transcripts
-        
-    list<transcript>
-        Transcripts that were malformed in annotaiton file or otherwise rejected by parser
-    """
-    # transcripts can be represented as collections of exons + cds
-    # or cds + UTRs, et c. We consider all UTR and exons as exons
-    # and CDS, and start & stop codons as CDS areas
-    feature_map = { "exon"  : ["exon_like"],
-                     "5UTR"  : ["exon_like"],
-                     "3UTR"  : ["exon_like"],
-                     "CDS"   : ["CDS_like","exon_like"],
-                     "start_codon" : ["CDS_like","exon_like"],
-                     "stop_codon"  : ["CDS_like","exon_like"],
-                   }
-    dtmp = { "exon_like" : {}, "CDS_like" : {} }
-    transcripts = []
-    rejected_transcripts = []
-    for n,feature in enumerate(GTF2_Reader(stream,end_included=end_included,is_sorted=is_sorted)):
-        if feature == StopFeature:
-            printer.write("Assembling next batch of %s features..." % n)
-            tr, rej = _assemble_transcripts_from_gtf2_dicts(dtmp,printer=printer,add_three_for_stop=add_three_for_stop)
-            transcripts.extend(tr)
-            rejected_transcripts.extend(rej)
-            del dtmp
-            gc.collect()
-            del gc.garbage[:]
-            dtmp = { "exon_like" : {}, "CDS_like" : {} }
-        else:
-            feature_classes = feature_map.get(feature.attr["type"],None)
-            if feature_classes is not None:
-                tname = feature.attr.get("transcript_id")
-                for feature_class in feature_classes:
-                    try:
-                        dtmp[feature_class][tname].append(feature)
-                    except KeyError:
-                        dtmp[feature_class][tname] = [feature]
-
-    tr, rej = _assemble_transcripts_from_gtf2_dicts(dtmp,printer=printer,add_three_for_stop=add_three_for_stop)
-    transcripts.extend(tr)
-    rejected_transcripts.extend(rej)
-            
-    return sorted(transcripts,key=sort_segmentchains_lexically), list(set(rejected_transcripts))
+# @deprecated
+# def GFF3_to_Transcripts(stream,end_included=True,
+#                         transcript_types=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
+#                         exon_types=_DEFAULT_GFF3_EXON_TYPES,
+#                         add_three_for_stop=False,
+#                         printer=None):
+#     """Parses a GFF3 stream into a list of assembled |Transcript|
+#     
+#     Parameters
+#     ----------
+#     stream : file-like
+#         Input stream pointing to GFF3 information
+#     
+#     end_included : bool, optional
+#         Boolean, whether the end coordinate is
+#         included in the feature (closed or 'end-included' intervals)
+#         or not (half-open intervals). (Default: *True*)
+#     
+#     printer : file-like, optional
+#         Filehandle or sys.stderr-like for logging
+#             
+#     transcript_types : list<str>, optional
+#         Types of feature to include as transcripts, even if no exons
+#         or CDS.
+# 
+#     exon_types : list<str>, optional
+#         Types of feature to include as exons
+#         (e.g. *["exon","noncoding_exon"]*, et c; Default: *["exon"]*)
+#     
+# 
+#     add_three_for_stop : bool, optional
+#         Some GFF3 files exclude the stop codon from CDS annotations. If set to
+#         True, three nucleotides will be added to the threeprime end of each
+#         CDS annotation. Default: *False*
+#         
+#     Returns
+#     -------
+#     list<|Transcript|>
+#         Assembled transcripts
+#         
+#     list<transcript>
+#         Transcripts that were malformed in annotaiton file or otherwise rejected by parser
+#     
+#     
+#     Notes
+#     -----
+#     GFF3 schemas vary
+#         Different GFF3s have different schemas of hierarchy. We deal with that here
+#         by allowing users to supply `transcript_types` and `exon_types`, to indicate
+#         which sorts of features should be included.
+# 
+#     Identity relationships vary
+#         Also, different GFF3s specify discontiguous features differently. For example,
+#         in Flybase, different exons of a transcript will have unique IDs, but will share
+#         the same "Parent" attribute in column 9 of the GFF. In Wormbase, however, different
+#         exons of the same transcript will share the same ID. Here, we treat GFFs as if
+#         they are written in the Flybase style. We may support alternate formats in the future.
+#     """
+#     tx_components = set(exon_types) | set(["CDS"])
+#     tx_features = {}
+#     dtmp = { "exon" : {}, "CDS" : {} }
+#     transcripts_out = {}
+#     rejected_transcripts = []
+#     tx_features_counted  = []
+#     for feature in GFF3_Reader(stream,end_included=end_included):
+#         if feature.attr["type"] in tx_components: #dtmp.keys():
+#             
+#             if feature.attr["type"] in exon_types:
+#                 feature.attr["type"] = "exon"
+#                 
+#             tnames = feature.attr.get("Parent",[])
+#             for tname in tnames:
+#                 try:
+#                     dtmp[feature.attr["type"]][tname].append(feature)
+#                 except KeyError:
+#                     dtmp[feature.attr["type"]][tname] = [feature]
+#         elif feature.attr["type"] in transcript_types:
+#             try:
+#                 tx_features[feature.get_name()].append(feature)
+#             except KeyError:
+#                 tx_features[feature.get_name()] = [feature]
+#                 
+#     for tname in dtmp["exon"].keys():
+#         tx_features_counted.append(tname)
+#         exons = dtmp["exon"].get(tname,[])
+#         cds = dtmp["CDS"].get(tname,[])
+#         gene_id = tx_features[tname][0].attr.get("Parent",tname) # use transcript name as gene if no Parent
+#         gene_id = ",".join(sorted(gene_id))
+#         attr    = tx_features[tname][0].attr #get attr from transcript object
+#         attr["ID"] = tname
+#         attr["transcript_id"] = tname
+#         attr["gene_id"] = gene_id
+#         exon_segments = [X.spanning_segment for X in exons]
+#         if len(cds) > 0:
+#             cds   = sorted(cds,key = lambda x: x.spanning_segment.start)
+#             attr["cds_genome_start"] = cds[0].spanning_segment.start
+#             attr["cds_genome_end"] = cds[-1].spanning_segment.end
+# 
+#             exons = sorted(exons,key = lambda x: x.spanning_segment.start)
+#             # correct exon boundaries that don't include entire CDS
+#             if cds[0].spanning_segment.start < exons[0].spanning_segment.start:
+#                 exons[0].spanning_segment.start = cds[0].spanning_segment.start
+#             if cds[-1].spanning_segment.end > exons[-1].spanning_segment.end:
+#                 exons[-1].spanning_segment.end = cds[-1].spanning_segment.end
+#         try:    
+#             my_tx = Transcript(*tuple(exon_segments),**attr)
+#             if add_three_for_stop == True:
+#                 my_tx = add_three_for_stop_codon(my_tx)
+#             transcripts_out[tname] = my_tx
+#         except AssertionError:
+#             if printer is not None:
+#                 printer.write("Rejecting %s because it contains exons on multiple strands." % tname)
+#             # transcripts with exons on two strands
+#             rejected_transcripts.append(tname)
+#         except KeyError:
+#             # transcripts where CDS ends outside bounds of transcript
+#             # there are 25 of these in flybase r5.43
+#             rejected_transcripts.append(tname)
+#             if printer is not None:
+#                 printer.write("Rejecting %s because start or stop codons are outside exon boundaries." % tname)
+#     
+#     # which transcripts did not have exons or CDS? 
+#     # this occurs in GFFs where exons are not explicitly annotated (e.g. yeast pseudogenes, et c)
+#     # n.b. these will not be double-counted, because we're ignoring those we have already taken
+#     tx_features_not_counted = set(tx_features.keys()) - set(tx_features_counted)
+#     for txid in tx_features_not_counted:
+#         attr = tx_features[txid][0].attr
+#         attr["ID"] = txid
+#         attr["transcript_id"] = txid
+#         segments  = [X.spanning_segment for X in tx_features[txid]]
+#         my_txmodel = Transcript(*tuple(segments),**attr)
+#         transcripts_out[txid] = my_txmodel
+#             
+#     return sorted(transcripts_out.values(),key=sort_segmentchains_lexically), list(set(rejected_transcripts))
+# 
+# @deprecated
+# def GTF2_to_Transcripts(stream,end_included=True,printer=NullWriter(),add_three_for_stop=False,is_sorted=False):
+#     """Parses a GTF2 stream into a list of assembled |Transcript|
+#     
+#     Parameters
+#     ----------
+#     stream : file-like
+#         Input stream pointing to GTF2 information
+#     
+#     end_included : bool
+#         Boolean, whether the end coordinate is
+#         included in the feature (closed or 'end-included' intervals)
+#         or not (half-open intervals). (Default: True)
+#     
+#     printer : file-like
+#         Filehandle or sys.stderr-like for logging
+#         
+#     add_three_for_stop : bool, optional
+#         Some annotation files exclude the stop codon from CDS annotations. If set to
+#         *True*, three nucleotides will be added to the threeprime end of each
+#         CDS annotation, UNLESS the annotated transcript contains explicit stop_codon 
+#         feature. (Default: False)
+#     
+#     is_sorted : bool, optional
+#         If True, assume GTF2 is sorted by chromosome. In this case, transcripts
+#         will be assembled from component objects, and memory emptied every
+#         time the chromosome name changes.
+# 
+#     Returns
+#     -------
+#     list<|Transcript|>
+#         Assembled transcripts
+#         
+#     list<transcript>
+#         Transcripts that were malformed in annotaiton file or otherwise rejected by parser
+#     """
+#     # transcripts can be represented as collections of exons + cds
+#     # or cds + UTRs, et c. We consider all UTR and exons as exons
+#     # and CDS, and start & stop codons as CDS areas
+#     feature_map = { "exon"  : ["exon_like"],
+#                      "5UTR"  : ["exon_like"],
+#                      "3UTR"  : ["exon_like"],
+#                      "CDS"   : ["CDS_like","exon_like"],
+#                      "start_codon" : ["CDS_like","exon_like"],
+#                      "stop_codon"  : ["CDS_like","exon_like"],
+#                    }
+#     dtmp = { "exon_like" : {}, "CDS_like" : {} }
+#     transcripts = []
+#     rejected_transcripts = []
+#     for n,feature in enumerate(GTF2_Reader(stream,end_included=end_included,is_sorted=is_sorted)):
+#         if feature == StopFeature:
+#             printer.write("Assembling next batch of %s features..." % n)
+#             tr, rej = _assemble_transcripts_from_gtf2_dicts(dtmp,printer=printer,add_three_for_stop=add_three_for_stop)
+#             transcripts.extend(tr)
+#             rejected_transcripts.extend(rej)
+#             del dtmp
+#             gc.collect()
+#             del gc.garbage[:]
+#             dtmp = { "exon_like" : {}, "CDS_like" : {} }
+#         else:
+#             feature_classes = feature_map.get(feature.attr["type"],None)
+#             if feature_classes is not None:
+#                 tname = feature.attr.get("transcript_id")
+#                 for feature_class in feature_classes:
+#                     try:
+#                         dtmp[feature_class][tname].append(feature)
+#                     except KeyError:
+#                         dtmp[feature_class][tname] = [feature]
+# 
+#     tr, rej = _assemble_transcripts_from_gtf2_dicts(dtmp,printer=printer,add_three_for_stop=add_three_for_stop)
+#     transcripts.extend(tr)
+#     rejected_transcripts.extend(rej)
+#             
+#     return sorted(transcripts,key=sort_segmentchains_lexically), list(set(rejected_transcripts))
 
 def _assemble_transcripts_from_gtf2_dicts(cds_exon,add_three_for_stop=False,printer=NullWriter()):
     """Assemble |Transcript| objects from a dictionary of features
