@@ -14,8 +14,6 @@ from random import shuffle
 from yeti.genomics.roitools import GenomicSegment, Transcript, SegmentChain
 from yeti.readers.gff import GTF2_Reader,\
                              GFF3_Reader,\
-                             GTF2_to_Transcripts,\
-                             GFF3_to_Transcripts,\
                              GTF2_TranscriptAssembler,\
                              GFF3_TranscriptAssembler,\
                              StopFeature
