@@ -83,7 +83,7 @@ class BED_Reader(AssembledFeatureReader):
         A list of transcript IDs that failed to assemble properly
     
     metadata : dict
-        Attributes declared in track line, if any    
+        Attributes declared in track line, if any
     """
 
     def _parse_track_line(self,inp):

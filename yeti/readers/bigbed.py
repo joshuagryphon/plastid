@@ -158,6 +158,7 @@ class BigBedReader(object):
                  base_record_format="III",
                  return_type=SegmentChain,
                  memorize_r_tree=False,
+                 add_three_for_stop=False,
                  cache_depth=5,
                  printer=NullWriter()
                  ):
@@ -174,7 +175,14 @@ class BigBedReader(object):
         
         return_type : class implementing a :py:meth:`from_bed` method
             Class of object to return (Default: |SegmentChain|)
-            
+        
+        add_three_for_stop : bool, optional
+            Some annotation files exclude the stop codon from CDS annotations. If set to
+            *True*, and the BED file annotates transcripts, three nucleotides
+            will be added to the threeprime end of each CDS annotation, UNLESS
+            the annotated transcript contains explicit stop_codon feature.
+            (Default: False)
+                        
         cache_depth : int, optional
             Number of previously-fetched data blocks to keep in memory.
             Decrease this number to reduce memory usage. Increase it to speed up
@@ -191,6 +199,7 @@ class BigBedReader(object):
         self.fh = open(filename,"rb")
         self.return_type = return_type
         self.base_record_format = base_record_format
+        self.add_three_for_stop = add_three_for_stop
 
         # whether or not file is byteswapped
         # this is re-detected below when the file in _parse_header
@@ -384,6 +393,9 @@ class BigBedReader(object):
                     if self._num_custom_fields > 0:
                         return_obj.attr.update(list(self.autosql_parser(whole_bedplus_line).items())[-self._num_custom_fields:])
                     
+                    if self.add_three_for_stop == True:
+                        return_obj = add_three_for_stop_codon(return_obj)
+                    
                     self.fifo_dict[data_offset].append(return_obj)
                     yield return_obj
             else:
@@ -398,6 +410,8 @@ class BigBedReader(object):
                     return_obj = self.return_type.from_bed(bed_line)
                     last_index = last_index+calcsize
                     
+                    # don't need to add three for stop when field count < 3,
+                    # because no stop codon
                     yield return_obj
             
     def __getitem__(self,iv,stranded=True):
