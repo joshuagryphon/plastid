@@ -21,14 +21,12 @@ analyze genomics data interactively. Our design goals are to:
 
       - read alignments in `BAM`_ (via `Pysam`_) or `bowtie's native format <bowtie>`_
 
-  - easily integrate into the Python ecosystem, especially the
+  - easily integrate into the `Python`_ ecosystem, especially the
     `SciPy stack <http://www.scipy.org/stackspec.html>`_
 
-  - provide a set of tools to data nucleotide-by-nucleotide over a region of
+  - provide a set of tools to examine data nucleotide-by-nucleotide over a region of
     interest, instead of just, for example, counting the number of bulk read
     alignments that cross a region
-
-  - do all of this as simply as possible
 
 
 
@@ -52,9 +50,9 @@ Where to go next
 
 **Those new to sequencing**, and those who are :term:`ribosome profiling`
 should start with :doc:`quickstart`, and then continue to the :ref:`cookbook`
-and/or :ref:`scripts`.
+and/or :ref:`scripts`. The :doc:`concepts <concepts>` section may also be helpful.
 
-**Advanced users** might be more interested in a quick :ref:`oveview <overview>`, 
+**Advanced users** might be more interested in a quick :ref:`overview <overview>`, 
 and the `technical documentation <generated/yeti>`_
 
 
