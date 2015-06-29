@@ -27,9 +27,8 @@ docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
 	$(MAKE) html -C docs
 
 docs/source/generated :
-	sphinx-apidoc -e -o docs/source/generated yeti
-	rm docs/source/generated/yeti.test*rst
-	fix_package_template -e test yeti docs/source/generated
+	sphinx-apidoc -M -e -o docs/source/generated yeti
+	#rm docs/source/generated/yeti.test*rst
 
 docs : | docs/build/html docs/source/generated
 

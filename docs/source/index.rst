@@ -35,10 +35,10 @@ Package contents
 
 :data:`yeti` includes:
 
-  - a number of :ref:`scripts <scripts>` that implement common sequencing analyses
+  - :ref:`scripts <scripts>` that implement common sequencing analyses
 
   - a `code library <generated/yeti>`_ of :doc:`data structures <overview>` for
-    interactive analysis and `scripting components </generated/yeti/util/scriptlib>`_
+    interactive analysis and :doc:`scripting components <generated/yeti.util.scriptlib>`
     to simplify writing new scripts
 
   - a comprehensive test suite, to keep bugs to a minimum
