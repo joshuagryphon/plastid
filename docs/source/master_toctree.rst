@@ -6,10 +6,10 @@
     quickstart
     usage
     concepts
-    citing
     FAQ
     glossary
     zreferences
     contributing
+    citing
     license
     Technical documentation <generated/yeti>
