@@ -21,9 +21,10 @@ def get_scripts():
 
 
 
-config_info = { "version"      : yeti.__version__,
-                "entry_points" : dict(console_scripts=get_scripts()),
-                "packages"     : find_packages(),
+config_info = { "version"          : yeti.__version__,
+                "entry_points"     : dict(console_scripts=get_scripts()),
+                "packages"         : find_packages(),
+                "long_description" : long_description,
               }
 
 
@@ -46,18 +47,16 @@ setup(
 
     zip_safe = True,
 
-    # metadata for upload to PyPI
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
     maintainer_email = "Joshua Griffin Dunn",
     
     description = "Convert genomic datatypes into Pythonic objects useful to the SciPy stack",
-    long_description = long_description,
     license   = "BSD 3-Clause",
     keywords  = "ribosome profiling riboseq rna-seq sequencing genomics biology",
-    url       = "",   # project home page, if any
-    platforms = "POSIX", # windows, 
+    url       = "",   # github page? readthedocs page?
+    platforms = "OS Independent",
     
     tests_require=["nose>=1.0"],
     test_suite = "nose.collector",
@@ -70,20 +69,19 @@ setup(
          'Programming Language :: Python :: 3.3',
          'Programming Language :: Python :: 3.4',
 
-         'Topic :: Bioinformatics',
-         'Topic :: Sequencing',
-         'Topic :: Genomics'
+         'Topic :: Scientific/Engineering :: Bio-Informatics',
+         'Topic :: Software Development :: Libraries',
 
-         'Intended Audience :: End Users',
-         'Intended Audience :: Biologists',
-         'Intended Audience :: Computational Biologists',
+         'Intended Audience :: Intended Audience :: Science/Research',
          'Intended Audience :: Developers',
 
-         'License :: BSD 3-Clause',
-         
+         'License :: OSI Approved :: BSD License',
+         #'Operating System :: OS Independent',
          'Operating System :: POSIX',
          #'Operating System :: MacOS :: MacOS X',
          #'Operating System :: Microsoft :: Windows',
+         
+         'Natural Language :: English',
         ],
     
     **config_info
