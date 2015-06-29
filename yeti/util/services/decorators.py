@@ -43,6 +43,7 @@ import os
 import sys
 import warnings
 import types
+import tempfile
 from yeti.util.services.mini2to3 import get_func_code
 
 class NotImplementedException(Exception):
@@ -368,6 +369,10 @@ def catch_stdout(buf=None):
         func : function
             Function whose standard error will be captured
         
+        buf : file-like, optional
+            Open stream, which **must** have a `fileno()` method. ``StringIO``
+            objects will not work! (Default: os.devnull)
+        
         Returns
         -------
         function
@@ -378,17 +383,20 @@ def catch_stdout(buf=None):
             
         @functools.wraps(func)
         def new_func(*args,**kwargs):
-            old_out = sys.stdout
-            sys.stdout = buf
+            stdout_fd = os.dup(sys.stdout.fileno())
+            tmpfile = tempfile.TemporaryFile()
+            new_fd  = tmpfile.fileno()
+            os.dup2(new_fd,sys.stdout.fileno())
             try:
                 result = func(*args,**kwargs)
             except Exception as e:
-                buf.flush()
-                sys.stdout = old_out
+                tmpfile.flush()
+                tmpfile.close()
+                os.dup2(stdout_fd,sys.stdout.fileno())
                 raise(e)
 
-            buf.flush()
-            sys.stdout = old_out
+            tmpfile.flush()
+            os.dup2(stdout_fd,sys.stdout.fileno())
             return result
 
         return new_func

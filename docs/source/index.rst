@@ -1,49 +1,71 @@
-.. yeti documentation master file, created by
-   sphinx-quickstart on Fri Dec  5 11:55:54 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-yeti v0.5 welcome!
+:data:`yeti` v0.5 welcome!
 ==========================
 
 Introduction
 ------------
 
-:py:data:`yeti` is a lightweight library designed to facilitate analysis
-of high throughput sequencing data, especially, but not limited to, ribosome profiling.
+:py:data:`yeti` is a lightweight Python library for analysis of 
+:term:`high-throughput sequencing` data. Its intended audience
+includes computational as well as traditional biologists, even those
+who may be new to sequencing analysis.
 
-The primary design goal is to convert genomic data into Pythonic objects that can be
-manipulated by preexisting tools in the `SciPy stack <http://www.scipy.org/stackspec.html>`_,
-introducing the smallest possible number of new classes or data types.
+To this end, :data:`yeti` seeks to flatten the learning curve required to
+analyze genomics data interactively. Our design goals are to:
 
-To this end, :py:data:`yeti` provides:
+  - simplify access to data, regardless of its underlying format. To do so,
+    :data:`yeti` provides a unified and intuitive set of interfaces to:
 
-	* :doc:`command-line scripts </cli_howto>` that implement common sequencing workflows,
-	  as well as several analyses specific to ribosome profiling
-	
-	* A library of :ref:`data structures and methods <overview-of-data-structures>`
-	  for interactive or ad-hoc analyses, 
-	  as well as :doc:`readers for various file formats </generated/yeti.readers>`
-	  (`Wiggle`_, `bedGraph`_, `bowtie`_, `BED`_, `BigBed`_, `GTF2`_, `GFF3`_, `PSL`_; `BAM`_ supported via `Pysam`_).
-	 
-	* Components to simplify :doc:`writing your own command-line scripts </generated/yeti.util.scriptlib>` 
-	  
-	  
-For more info, see:
+      - annotation data in `BED`_, `BigBED`_, `GTF2`_, `GFF3`_, or `PSL`_ format
 
-	* :doc:`Getting started </tour>` for an overview of some of the most useful data structures
-	
-	* :doc:`Walk-throughs </interactive_howto>` that guide you through several interactive analyses
-	
-	* Brief descriptions of the :doc:`command-line scripts </cli_howto>` that are included
+      - quantitative data in `Wiggle`_ or `bedGraph`_ format
 
-	* Complete :ref:`API documentation <modindex>` for developers
+      - read alignments in `BAM`_ (via `Pysam`_) or `bowtie's native format <bowtie>`_
+
+  - easily integrate into the Python ecosystem, especially the
+    `SciPy stack <http://www.scipy.org/stackspec.html>`_
+
+  - provide a set of tools to data nucleotide-by-nucleotide over a region of
+    interest, instead of just, for example, counting the number of bulk read
+    alignments that cross a region
+
+  - do all of this as simply as possible
+
+
+
+Package contents
+----------------
+
+:data:`yeti` includes:
+
+  - a number of :ref:`scripts <scripts>` that implement common sequencing analyses
+
+  - a `code library <generated/yeti>`_ of :doc:`data structures <overview>` for
+    interactive analysis and `scripting components </generated/yeti/util/scriptlib>`_
+    to simplify writing new scripts
+
+  - a comprehensive test suite, to keep bugs to a minimum
+
+
+
+Where to go next
+----------------
+
+**Those new to sequencing**, and those who are :term:`ribosome profiling`
+should start with :doc:`quickstart`, and then continue to the :ref:`cookbook`
+and/or :ref:`scripts`.
+
+**Advanced users** might be more interested in a quick :ref:`oveview <overview>`, 
+and the `technical documentation <generated/yeti>`_
+
 
    
-Indices and tables
-------------------
+.. Indices and tables
+.. ------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 
+
+ .. toctree::
+    :maxdepth: 2

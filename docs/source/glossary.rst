@@ -50,6 +50,11 @@ Glossary of terms
         (e.g. nucleotide-wise sequence conservation). Popular genome browsers
         include `IGV`_ and the `UCSC genome browser`_. 
 
+    deep sequencing
+    high-throughput sequencing
+        A group of experimental techniques that produce as output millions of
+        reads (strings) of short DNA sequences.
+
     k-mer
         A sequence *k* nucleotides long.
 
@@ -80,7 +85,7 @@ Glossary of terms
         during ribosome profiling or other molecular biology assays.
 
     ribosome profiling
-        A high-throughput sequencing technique that captures the positions
+        A :term:`high-throughput sequencing` technique that captures the positions
         of all ribosomes on all RNAs at a snapshot in time. See :cite:`Ingolia2009`
         for more details
 

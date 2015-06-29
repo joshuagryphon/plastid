@@ -3,13 +3,13 @@
     :includehidden:
 
     index
-    tour
-    install
-    cli_howto
-    interactive_howto
+    quickstart
+    usage
+    concepts
     citing
-    contributing
-    license
     FAQ
     glossary
     zreferences
+    contributing
+    license
+    Technical documentation <generated/yeti>

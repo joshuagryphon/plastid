@@ -86,3 +86,5 @@ How do I prepare output for `DESeq`_?
 pass
 
 
+ .. toctree::
+    :maxdepth: 2

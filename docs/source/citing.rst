@@ -1,7 +1,5 @@
-.. _how-to-cite :
-
-Citing yeti
-==================
+Citing ``yeti``
+===============
 One day, we hope to write this up. Until then, mention our author names
-and cite our website (which also is not up). Please see the :doc:`/license` page.
+and cite our website (which also is not up). Please see the :doc:`license </license>` page.
 
