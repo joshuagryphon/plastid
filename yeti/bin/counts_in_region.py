@@ -34,26 +34,23 @@ See also
 :mod:`~yeti.bin.cs` script
     Count the number of :term:`read alignments<alignment>` and calculate
     read densities (in :term:`RPKM`) specifically for genes and sub-regions
-    (5' UTR, CDS, 3' UTR), excluding positions covered by multiple genes
+    (5\' UTR, CDS, 3\' UTR), excluding positions covered by multiple genes
 """
 import argparse
-import warnings
 import inspect
 import sys
 import itertools
 import numpy
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from yeti.util.io.filters import NameDateWriter
-    from yeti.util.io.openers import argsopener, get_short_name
-    from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                               get_segmentchains_from_args,\
-                                               get_genome_hash_from_mask_args,\
-                                               get_alignment_file_parser,\
-                                               get_segmentchain_file_parser,\
-                                               get_mask_file_parser
-    from yeti.util.scriptlib.help_formatters import format_module_docstring
+from yeti.util.io.filters import NameDateWriter
+from yeti.util.io.openers import argsopener, get_short_name
+from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+                                           get_segmentchains_from_args,\
+                                           get_genome_hash_from_mask_args,\
+                                           get_alignment_file_parser,\
+                                           get_segmentchain_file_parser,\
+                                           get_mask_file_parser
+from yeti.util.scriptlib.help_formatters import format_module_docstring
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -75,14 +72,14 @@ def main(argv=sys.argv[1:]):
     alignment_file_parser  = get_alignment_file_parser(disabled=_DISABLED)
     mask_file_parser       = get_mask_file_parser()
     
-    parser = argparse.ArgumentParser(format_module_docstring(__doc__),
+    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[alignment_file_parser,
                                               annotation_file_parser,
                                               mask_file_parser],
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
-    args = parser.parse_args(argv)
+    args = parser.parse_args() #argv)
     gnd = get_genome_array_from_args(args,printer=printer,disabled=_DISABLED)
     
     transcripts = get_segmentchains_from_args(args,printer=printer)
