@@ -7,8 +7,8 @@ Package overview
     ===============================================    =========================
     **Package module**                                 **Contents**
     -----------------------------------------------    -------------------------
-    :py:mod:`~yeti.genomics.argparsers`                :py:class:`~argparse.ArgumentParser` objects that supply relevant arguments for reading various file types, and functions that return objects or parsers from those arguments. 
-    :py:mod:`~yeti.genomics.help_formatters`           Formatters for command-line help text that makes help text generated from module docstrings legible in the command-line while still useful for documentatation in Sphinx
-    :py:mod:`~yeti.genomics.template`                  Template for writing a command-line script using yeti
+    :py:mod:`~yeti.util.scriptlib.argparsers`          class:`~argparse.ArgumentParser` objects for reading and processing various file types 
+    :py:mod:`~yeti.util.scriptlib.help_formatters`     Remove `Sphinx`_ tokens from help text when shown on command line.
+    :py:mod:`~yeti.util.scriptlib.template`            Template for writing a command-line script using :data:`yeti`
     ===============================================    =========================    
 """

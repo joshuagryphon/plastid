@@ -25,6 +25,7 @@
 .. _Biopython: http://biopython.org
 .. _Virtualenv: https://virtualenv.pypa.io/en/latest/
 .. _nose: https://nose.readthedocs.org/en/latest/
+.. _Sphinx: http://sphinx-doc.org/
 
 .. Genome browsers
 
