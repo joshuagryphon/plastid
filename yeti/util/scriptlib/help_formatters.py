@@ -69,7 +69,7 @@ def format_module_docstring(inp):
     str
         Formatted docstring
     """
-    return _separator + shorten_help(inp) + _separator
+    return _separator + "\n" + shorten_help(inp) + "\n" + _separator
 
 pyrst_pattern = re.compile(r"(?P<spacing>^|\s+)(?::(?P<domain>[^:`<>]+))?:(?P<role>[^:`]*):`(?P<argument>[^`<>]+)(?: +<(?P<pointer>[^`]+)>)?`")
 """RegEx pattern that detects `reStructuredText`_ markup of python tokens
