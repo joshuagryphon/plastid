@@ -12,7 +12,7 @@ data, with an emphasis on simplicity for users. To this end, this package provid
      existing scientific tools, such as the `SciPy`_ stack (see |genomics| and
      |readers|)
 
-  #. Tools to facilitate writing command-line scripts
+  #. Tools to facilitate writing command-line scripts (see |scriptlib|)
 
 
 Package overview

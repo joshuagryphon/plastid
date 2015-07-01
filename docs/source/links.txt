@@ -11,6 +11,7 @@
 .. _autoSql: http://genomewiki.ucsc.edu/index.php/AutoSql
 .. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml 
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html
 
 .. Python links
 
@@ -26,6 +27,7 @@
 .. _Virtualenv: https://virtualenv.pypa.io/en/latest/
 .. _nose: https://nose.readthedocs.org/en/latest/
 .. _Sphinx: http://sphinx-doc.org/
+.. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
 .. Genome browsers
 

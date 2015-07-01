@@ -105,9 +105,8 @@ from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
                                            VariableFivePrimeMapFactory,\
                                            five_prime_map,  \
                                            three_prime_map, \
-                                           entire_map,      \
                                            center_map,      \
-                                           five_prime_variable_map
+                                           variable_five_prime_map
 
 from yeti.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
 from yeti.readers.bed import BED_Reader
@@ -375,7 +374,7 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
         else:
             trans_args = { "nibble" : int(args.nibble) }
             if args.mapping == "fiveprime_variable":
-                transformation = five_prime_variable_map
+                transformation = variable_five_prime_map
                 if str(args.offset) == "0":
                     printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
                     sys.exit(1)
@@ -389,11 +388,11 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
                 elif args.mapping == "threeprime":
                     transformation = three_prime_map
                 elif args.mapping == "entire":
-                    transformation = entire_map
+                    transformation = center_map
                 elif args.mapping == "center":
                     transformation = center_map
                 else:
-                    transformation = entire_map
+                    transformation = center_map
         
             for infile in args.count_files:
                 with opener(infile) as my_file:

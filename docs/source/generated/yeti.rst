@@ -1,5 +1,5 @@
 yeti package
-===================
+============
 
 Package contents
 ----------------
@@ -14,13 +14,9 @@ Subpackages
 -----------
 
  .. toctree::
-    :maxdepth: 2
-    :hidden:
 
-    yeti/bin
-    yeti/readers
-    yeti/genomics
-    yeti/util
-    yeti/util/services
-    yeti/util/io
-    yeti/util/scriptlib
+    yeti.bin
+    yeti.genomics
+    yeti.readers
+    yeti.util
+    yeti.test

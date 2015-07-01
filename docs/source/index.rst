@@ -4,57 +4,50 @@
 Introduction
 ------------
 
-:py:data:`yeti` is a lightweight Python library for analysis of 
-:term:`high-throughput sequencing` data. Its intended audience
-includes computational as well as traditional biologists, even those
-who may be new to sequencing analysis.
+:py:data:`yeti` is a `Python`_ library for genomic analysis -- in particular,
+:term:`high-throughput sequencing` data -- with an emphasis on simplicity
+for users.
 
-To this end, :data:`yeti` seeks to flatten the learning curve required to
-analyze genomics data interactively. Our design goals are to:
+Its intended audience includes computational biologists, traditional biologists,
+software developers, and even those who may be new to sequencing analysis.
 
-  - simplify access to data, regardless of its underlying format. To do so,
-    :data:`yeti` provides a unified and intuitive set of interfaces to:
+This package provides:
+
+  #. :mod:`Command-line scripts <yeti.bin>` that implement common sequencing
+     workflows
+  
+  #. APIs that simplify access to genomics data -- regardless of the underlying formats -- 
+     and readily interface with scientific tools like the `SciPy`_ stack.
+     These include a unified and intuitive set of interfaces to:
 
       - annotation data in `BED`_, `BigBED`_, `GTF2`_, `GFF3`_, or `PSL`_ format
 
       - quantitative data in `Wiggle`_ or `bedGraph`_ format
 
       - read alignments in `BAM`_ (via `Pysam`_) or `bowtie's native format <bowtie>`_
+     
+     Readers for these file formats may be found in the |readers| subpackage.
+     The API documentation for the objects they create may be found in the
+     |genomics| subpackage.
 
-  - easily integrate into the `Python`_ ecosystem, especially the
-    `SciPy stack <http://www.scipy.org/stackspec.html>`_
+  #. :mod:`Script writing tools <yeti.util.scriptlib>` that make it easy to implement
+     new workflows as command-line scripts.
 
-  - provide a set of tools to examine data nucleotide-by-nucleotide over a region of
-    interest, instead of just, for example, counting the number of bulk read
-    alignments that cross a region
-
-
-
-Package contents
-----------------
-
-:data:`yeti` includes:
-
-  - :ref:`scripts <scripts>` that implement common sequencing analyses
-
-  - a `code library <generated/yeti>`_ of :doc:`data structures <overview>` for
-    interactive analysis and :doc:`scripting components <generated/yeti.util.scriptlib>`
-    to simplify writing new scripts
-
-  - a comprehensive test suite, to keep bugs to a minimum
-
+  #. A comprehensive :mod:`test suite <yeti.test>`, to keep bugs to a minimum
 
 
 Where to go next
 ----------------
 
-**Those new to sequencing**, and those who are :term:`ribosome profiling`
-should start with :doc:`quickstart`, and then continue to the :ref:`cookbook`
-and/or :ref:`scripts`. The :doc:`concepts <concepts>` section may also be helpful.
+Documentation & help are written for users at multiple levels of experience.
 
-**Advanced users** might be more interested in a quick :ref:`overview <overview>`, 
-and the `technical documentation <generated/yeti>`_
+  * **Those new to sequencing and/or bioinformatics**, and those who are
+    :term:`ribosome profiling` should start with :doc:`quickstart`, and then
+    continue to the :ref:`cookbook` and/or :ref:`scripts`. The :doc:`concepts
+    <concepts>` section may also be helpful.
 
+  * **Advanced users** might be more interested in a quick :ref:`overview <overview>`
+    of the relevant data structures and the `technical documentation <generated/yeti>`_.
 
    
 .. Indices and tables
