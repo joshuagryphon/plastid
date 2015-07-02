@@ -2,8 +2,8 @@
 """GenomeArrays are randomly-accessible array-like structures that map quantitative data
 or :term:`read alignments` to genomic positions. In this way, they function like
 `numpy`_ arrays, except over coordinates specified by
-*(chromosome name, start coordinate, end coordinate, strand)* rather than
-*(start,end)*.
+`(chromosome name, start coordinate, end coordinate, strand)` rather than
+`(start,end)`.
 
 
 GenomeArrays
@@ -495,7 +495,7 @@ def five_prime_map(feature,**kwargs):
     Returns
     -------
     list
-        tuples of *(GenomicSegment,float value over segment)*
+        tuples of `(GenomicSegment,float value over segment)`
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -526,7 +526,7 @@ def three_prime_map(feature,**kwargs):
     Returns
     -------
     list
-        tuples of *(GenomicSegment,float value over segment)*
+        tuples of `(GenomicSegment,float value over segment)`
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -558,7 +558,7 @@ def variable_five_prime_map(feature,**kwargs):
     Returns
     -------
     list
-        tuples of *(GenomicSegment,float value over segment)*
+        tuples of `(GenomicSegment,float value over segment)`
     """
     chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
@@ -592,7 +592,7 @@ class AbstractGenomeArray(object):
             as needed.
         
         strands : sequence, optional
-            Strands for the |AbstractGenomeArray|. (Default: *("+","-")*)
+            Strands for the |AbstractGenomeArray|. (Default: `("+","-")`)
         """
         self._chroms       = {}
         self._strands      = strands
@@ -610,7 +610,7 @@ class AbstractGenomeArray(object):
         return stmp
 
     def __contains__(self,chrom):
-        """Returns *True* if *chrom* is defined in the array, otherwise False
+        """Returns `True` if `chrom` is defined in the array, otherwise False
         
         Returns
         -------
@@ -649,8 +649,8 @@ class AbstractGenomeArray(object):
         See also
         --------
         SegmentChain.get_counts
-            Get a spliced count vector covering a |SegmentChain|, in the 5'
-            to 3' direction of the chain (i.e. coordinates are reversed
+            Get a spliced count vector covering a |SegmentChain|, in the 5\'
+            to 3\' direction of the chain (i.e. coordinates are reversed
             for minus-strand SegmentChains)
         """
         pass
@@ -693,8 +693,8 @@ class AbstractGenomeArray(object):
         Parameters
         ----------
         value : bool
-            If *True*, all values fetched will be normalized to reads
-            per million. If *False*, all values will not be normalized.
+            If `True`, all values fetched will be normalized to reads
+            per million. If `False`, all values will not be normalized.
         """
         assert value in (True,False)
         self._normalize = value
@@ -833,7 +833,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Notes
         -----
-        Filters are not applied in this summation
+        Filters are not applied in this summation. See :meth:`BAMGenomeArray.set_sum`
+        to manually set a sum, which e.g. could correspond to a total number of filtered
+        reads.
         """
         self._sum = sum([X.mapped for X in self.bamfiles])
         
@@ -854,7 +856,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         func : func
             Filter function. Function must take a
             :class:`pysam.AlignedSegment` as a single parameter, and return
-            *True* if that read should be included in output, or *False* otherwise
+            `True` if that read should be included in output, or `False` otherwise
         
         Notes
         -----
@@ -908,8 +910,8 @@ class BAMGenomeArray(AbstractGenomeArray):
     def get_reads_and_counts(self,seg):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, following the rule specified by 
-        :meth:`~BAMGenomeArray.set_mapping`. Reads are strand-matched to *seg* by default. 
-        To obtain unstranded reads, set the value of *seg.strand* to *`.`*
+        :meth:`~BAMGenomeArray.set_mapping`. Reads are strand-matched to `seg` by default. 
+        To obtain unstranded reads, set the value of `seg.strand` to ``.``
         
         Parameters
         ----------
@@ -924,7 +926,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             covering region of interest
 
         numpy.ndarray
-            Counts at each position of *seg*, under whatever mapping rule
+            Counts at each position of `seg`, under whatever mapping rule
             was set by :py:meth:`~BAMGenomeArray.set_mapping`
 
 
@@ -967,7 +969,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         """Returns reads covering a |GenomicSegment|. Reads are strand-matched
         to `seg` by default, and are included or excluded depending upon the
         rule specified by :meth:`~BAMGenomeArray.set_mapping`. To obtain unstranded
-        reads, set the value of *seg.strand* to *'.'*
+        reads, set the value of `seg.strand` to `'.'`
         
         Parameters
         ----------
@@ -996,8 +998,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         array are in the order of the chromosome (leftmost-first), and are NOT reversed
         for negative strand features.
         
-        By default, reads are strand-matched to *seg*. To obtain unstranded reads,
-        set the value of seg.strand to *'.'*
+        By default, reads are strand-matched to `seg`. To obtain unstranded reads,
+        set the value of seg.strand to `'.'`
         
         Parameters
         ----------
@@ -1025,8 +1027,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         See also
         --------
         :meth:`SegmentChain.get_counts`
-            Get a spliced count vector covering a |SegmentChain|, in the 5'
-            to 3' direction of the chain (rather than leftmost-first)            
+            Get a spliced count vector covering a |SegmentChain|, in the 5\'
+            to 3\' direction of the chain (rather than leftmost-first)            
         """
         _, count_array = self.get_reads_and_counts(seg)
         return count_array
@@ -1052,13 +1054,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         See Also
         --------
         FivePrimeMapFactory
-            map reads to 5' ends, with or without applying an offset
+            map reads to 5\' ends, with or without applying an offset
         
         VariableFivePrimeMapFactory
-            map reads to 5' ends, choosing an offset determined by read length
+            map reads to 5\' ends, choosing an offset determined by read length
         
         ThreePrimeMapFactory
-            map reads to 3' ends, with or without applying an offset
+            map reads to 3\' ends, with or without applying an offset
         
         CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
@@ -1106,7 +1108,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             Name of browser track
           
         strand : str
-            Strand of |BAMGenomeArray| to export. *'+'*, *'-'*, or *'.'*
+            Strand of |BAMGenomeArray| to export. `'+'`, `'-'`, or `'.'`
         
         window_size : int
             Size of chromosome/contig to process at a time.
@@ -1153,7 +1155,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             Name of browser track
           
         strand : str
-            Strand of |BAMGenomeArray| to export. *'+'*, *'-'*, or *'.'*
+            Strand of |BAMGenomeArray| to export. `'+'`, `'-'`, or `'.'`
         
         window_size : int
             Size of chromosome/contig to process at a time.
@@ -1216,7 +1218,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         
         Parameters
         ----------
-        chr_lengths : dict or *None*, optional
+        chr_lengths : dict or `None`, optional
             Dictionary mapping chromosome names to lengths.
             Suppyling this in advance yields considerable
             speed improvements, as memory can be pre-allocated
@@ -1225,14 +1227,14 @@ class GenomeArray(MutableAbstractGenomeArray):
             chromosomes re-sized as needed.
         
         min_chr_size : int
-            If chr_lengths is not supplied, *min_chr_size* is 
+            If chr_lengths is not supplied, `min_chr_size` is 
             the default first guess of a chromosome size. If
             the genome has large chromosomes, it is much
-            much better, speed-wise, to provide *chr_lengths*
+            much better, speed-wise, to provide `chr_lengths`
             than to provide a guess here that is too small.
         
         strands : sequence
-            Sequence of strand names for the |GenomeArray|. (Default: *('+','-')*)
+            Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """
         self._chroms       = {}
         self._strands      = strands
@@ -1252,7 +1254,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         self._sum = sum([X.sum() for X in self.iterchroms()])
         
     def _has_same_dimensions(self,other):
-        """Determines whether *self* & *other* have the chromosomes, strands, and chromosome lengths
+        """Determines whether `self` and `other` have the chromosomes, strands, and chromosome lengths
         
         Parameters
         ----------
@@ -1268,7 +1270,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         assert self.lengths() == other.lengths()
 
     def __eq__(self,other,tol=1e-10):
-        """Tests for equality between *self* and *other*.
+        """Tests for equality between `self` and `other`.
         
         To be equal, both |GenomeArray| s must have identical values at all
         nonzero positions in either array. Chromosome lengths need not be equal. 
@@ -1335,8 +1337,8 @@ class GenomeArray(MutableAbstractGenomeArray):
         See also
         --------
         :meth:`SegmentChain.get_counts`
-            Get a spliced count vector covering a |SegmentChain|, in the 5'
-            to 3' direction of the chain (rather than leftmost-first)            
+            Get a spliced count vector covering a |SegmentChain|, in the 5\'
+            to 3\' direction of the chain (rather than leftmost-first)            
         """
         assert isinstance(seg,GenomicSegment)
         assert seg.start >= 0
@@ -1484,11 +1486,15 @@ class GenomeArray(MutableAbstractGenomeArray):
         return f
     
     def nonzero(self):
-        """Return the indices of each chromosome/strand pair that are non-zero.
+        """Return the indices of chromosomal positions with non-zero values
+        at each chromosome/strand pair. Results are returned as a hierarchical
+        dictionary mapping chromosome names, to a dictionary of strands,
+        which in turn map to  to arrays of non-zero indices on that chromosome-strand.
         
         Returns
         -------
-        dict[chrom][strand] = :py:class:`numpy.ndarray` of nonzero positions
+        dict
+            `dict[chrom][strand]` = numpy.ndarray of indices
         """
         d_out = {}
         for key in self.keys():
@@ -1777,7 +1783,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             filehandle pointing to wiggle file
         
         strand : str
-            Strand to which data should be added. "+", "-", or "."
+            Strand to which data should be added. `'+'`, `'-'`, or `'.'`
         """
         assert strand in self.strands()
         for chrom,start,stop,val in WiggleReader(fh):
@@ -1802,7 +1808,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Name of browser track
         
         strand : str
-            Strand to export. *'+'*, *'-'*, or *'.'*
+            Strand to export. `'+'`, `'-'`, or `'.'`
         
         **kwargs
             Any other key-value pairs to include in track definition line
@@ -1836,7 +1842,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Name of browser track
         
         strand : str
-            Strand to export. *'+'*, *'-'*, or *'.'*
+            Strand to export. `'+'`, `'-'`, or `'.'`
         
         **kwargs
             Any other key-value pairs to include in track definition line
@@ -1913,7 +1919,7 @@ class SparseGenomeArray(GenomeArray):
             (Default: %s)
         
         strands : sequence
-            Sequence of strand names for the |GenomeArray|. (Default: *('+','-')*)
+            Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """ % MIN_CHR_SIZE
         self._chroms       = {}
         self._strands      = strands
@@ -2156,12 +2162,15 @@ class SparseGenomeArray(GenomeArray):
         return new_array    
     
     def nonzero(self):
-        """Return the indices of each chromosome/strand pair that are non-zero.
+        """Return the indices of chromosomal positions with non-zero values
+        at each chromosome/strand pair. Results are returned as a hierarchical
+        dictionary mapping chromosome names, to a dictionary of strands,
+        which in turn map to  to arrays of non-zero indices on that chromosome-strand.
         
         Returns
         -------
         dict
-            dict[chrom][strand] = numpy.ndarray of indices
+            `dict[chrom][strand]` = numpy.ndarray of indices
         """
         d_out = {}
         for key in self.keys():

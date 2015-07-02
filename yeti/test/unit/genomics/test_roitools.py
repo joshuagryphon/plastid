@@ -105,7 +105,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
     """Test suite for :py:class:`yeti.genomics.roitools.SegmentChain`"""
 
     @staticmethod
-    def _to_ivc(transcript_list):
+    def _to_segmentchain(transcript_list):
         """Convert a list of Transcript objects to SegmentChains"""
         ltmp = []
         for tx in transcript_list:
@@ -182,7 +182,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
 
         # Test equality of re-imported exported transcripts
         for txid, tx in self.bed_dict.items():
-            err_msg = "Reimported IVC %s does not evaluate identically to reference." % txid
+            err_msg = "Reimported SegmentChain %s does not evaluate identically to reference." % txid
             self.assertTrue(self.is_identical(tx,bed_transcripts[txid]),err_msg)
             self.assertTrue(self.is_identical(tx,gtf_transcripts[txid]),err_msg)
 
@@ -690,7 +690,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             self.assertEqual(ivc.get_masks(),[mask_a,mask_b])
     
     @skip_if_abstract    
-    def test_get_masks_as_IVC(self):
+    def test_get_masks_as_segmentchain(self):
         for strand in ("+", "-"):
             ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                    GenomicSegment("chrA",250,300,strand))
@@ -698,15 +698,15 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            self.assertEquals(len(ivc.get_masks_as_IVC()),0)
-            self.assertTrue(isinstance(ivc.get_masks_as_IVC(),SegmentChain))
+            self.assertEquals(len(ivc.get_masks_as_segmentchain()),0)
+            self.assertTrue(isinstance(ivc.get_masks_as_segmentchain(),SegmentChain))
             
             ivc.add_masks(mask_a)
-            self.assertEqual(ivc.get_masks_as_IVC(),SegmentChain(mask_a))
+            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a))
             
             ivc._mask_segments = []
             ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks_as_IVC(),SegmentChain(mask_a,mask_b))
+            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
     
     @skip_if_abstract    
     def test_reset_masks(self):
@@ -726,22 +726,22 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     @skip_if_abstract    
     def test_get_junctions(self):
         """Test `get_junctions()`"""
-        # Make sure we get nothing from a single-interval IVC
+        # Make sure we get nothing from a single-interval segmentchain
         self.assertEquals(self.ivcs["aIp"].get_junctions(),[])
         
-        # Make sure we get the right answer for a plus-strand IVC
+        # Make sure we get the right answer for a plus-strand segmentchain
         expected = [GenomicSegment("chrA",200,250,"+")]
         self.assertEquals(expected,self.ivcs["aBp"].get_junctions())
 
-        # Make sure we get the right answer for a minus-strand IVC
+        # Make sure we get the right answer for a minus-strand segmentchain
         expected = [GenomicSegment("chrA",200,250,"-")]
         self.assertEquals(expected,self.ivcs["aBm"].get_junctions())
 
-        # Make sure we get the right answer for a plus-strand IVC
+        # Make sure we get the right answer for a plus-strand segmentchain
         expected = [GenomicSegment("chrA",200,250,"+"),GenomicSegment("chrA",350,500,"+")]
         self.assertEquals(expected,self.ivcs["aAp"].get_junctions())
         
-        # Make sure we get the right answer for a minus-strand IVC
+        # Make sure we get the right answer for a minus-strand segmentchain
         expected = [GenomicSegment("chrA",200,250,"-"),GenomicSegment("chrA",350,500,"-")]
         self.assertEquals(expected,self.ivcs["aAm"].get_junctions())
         
@@ -757,10 +757,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         for iv in ivc:
             for x in range(iv.start,iv.end):
                 ivc_coordinate = ivc.get_segmentchain_coordinate("chrA",x,"+",stranded=True)
-                err_msg = "Plus-stranded IVC coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
+                err_msg = "Plus-stranded segmentchain coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
                 self.assertEquals(c,ivc_coordinate,err_msg)
                 ivc_coordinate = ivc.get_segmentchain_coordinate("chrA",x,"+",stranded=False)
-                err_msg = "Plus-unstranded IVC coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
+                err_msg = "Plus-unstranded segmentchain coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
                 self.assertEquals(c,ivc_coordinate,err_msg)
                 c += 1
 
@@ -774,11 +774,11 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             for x in range(iv.start,iv.end):
                 ivc_coordinate = ivc.get_segmentchain_coordinate("chrA",x,"-",stranded=True)
                 expected = ivc.get_length()-1-c
-                err_msg = "Minus-stranded IVC coordinate incorrect (expected %s, found %s)." % (expected,ivc_coordinate)
+                err_msg = "Minus-stranded segmentchain coordinate incorrect (expected %s, found %s)." % (expected,ivc_coordinate)
                 self.assertEquals(expected,ivc_coordinate,err_msg)
 
                 ivc_coordinate = ivc.get_segmentchain_coordinate("chrA",x,"-",stranded=False)
-                err_msg = "Minus-unstranded IVC coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
+                err_msg = "Minus-unstranded segmentchain coordinate incorrect (expected %s, found %s)." % (c,ivc_coordinate)
                 self.assertEquals(c,ivc_coordinate,err_msg)
                 c += 1    
                     
@@ -1145,8 +1145,8 @@ class TestSegmentChain(AbstractSegmentChainHelper):
                                                    return_type=SegmentChain,
                                                    add_three_for_stop=False))      
         
-        cls.gff_list = cls._to_ivc(cls.gff_list)
-        cls.gtf_list = cls._to_ivc(cls.gff_list)
+        cls.gff_list = cls._to_segmentchain(cls.gff_list)
+        cls.gtf_list = cls._to_segmentchain(cls.gff_list)
         
         cls.bed_dict = { X.get_name() : X for X in cls.bed_list }
         cls.gff_dict = { X.get_name() : X for X in cls.gff_list }

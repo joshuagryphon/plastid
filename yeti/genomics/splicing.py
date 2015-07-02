@@ -20,6 +20,6 @@ def get_junction_tuple(ivc):
     Returns
     -------
     tuple
-        *(chromosome name, half-open end of fiveprime exon, first position of threeprime exon, strand)*
+        `(chromosome name, half-open end of fiveprime exon, first position of threeprime exon, strand)`
     """
     return (ivc.spanning_segment.chrom,ivc[0].end,ivc[1].start,ivc.spanning_segment.strand)

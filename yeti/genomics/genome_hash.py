@@ -6,13 +6,14 @@ another. However, it would be inefficient to compare features that are
 too far apart in the genome to overlap in the first place. 
 
 |GenomeHash|, |BigBedGenomeHash|, and |TabixGenomeHash| index annotations
-by genomic location to avoid making unnecessary comparisons. A |GenomeHash|
-may be created from a list or dictionary of features (e.g. |SegmentChain| s or
+by genomic location to avoid making unnecessary comparisons.
+
+A |GenomeHash| may be created from a list or dictionary of features (e.g. |SegmentChain| s or
 |Transcript| s), or directly loaded from a genome annotation (in `BED`_, `GTF2`_,
 `GFF3`_, or `PSL`_ format).
 
-|BigBedGenomeHash| and |TabixGenomeHash| objects are more memory efficient,
-and take advantage of the indices already present in `BigBed`_ or 
+|BigBedGenomeHash| and |TabixGenomeHash| objects are more memory efficient
+than |GenomeHash|, and take advantage of the indices already present in `BigBed`_ or 
 `Tabix <http://samtools.sourceforge.net/tabix.shtml>`_-compressed files, to avoid
 loading annotations into memory before they are used (if they even are at all).
 
@@ -75,7 +76,7 @@ class AbstractGenomeHash(object):
     """
     @abstractmethod
     def get_overlapping_features(self,feature,stranded=True):
-        """Return list of features that overlap *feature*
+        """Return list of features that overlap `feature`
         
         Parameters
         ----------
@@ -83,8 +84,8 @@ class AbstractGenomeHash(object):
             Query feature
 
         stranded : bool
-            if *True*, retrieve only features on same strand as query feature.
-            Otherwise, retrieve features on both strands (Default: *True*)
+            if `True`, retrieve only features on same strand as query feature.
+            Otherwise, retrieve features on both strands (Default: `True`)
                              
                              
         Returns
@@ -102,7 +103,7 @@ class AbstractGenomeHash(object):
 
     @abstractmethod
     def __getitem__(self,roi):
-        """Return list of features that overlap a region of interest (*roi*)
+        """Return list of features that overlap a region of interest (`roi`)
         on the same strand
         
         Parameters
@@ -146,11 +147,11 @@ class GenomeHash(AbstractGenomeHash):
              size of *neighborhood* for hash.
             
          do_copy : bool
-             If *True* (default), features will be copied before being stored
+             If `True` (default), features will be copied before being stored
              in the hash. This comes at a speed cost, but will prevent unexpected
              side effects if the features are being changed outside the hash. 
              
-             If *False*, creation of the |GenomeHash| will be much faster.
+             If `False`, creation of the |GenomeHash| will be much faster.
         """
         self.copy = do_copy
         self.feature_dict = {}
@@ -207,7 +208,7 @@ class GenomeHash(AbstractGenomeHash):
         Returns
         -------
         dict
-            Hierarchichal dictionary: *dict[chrom][strand] = list<str>*
+            Hierarchichal dictionary: `dict[chrom][strand] = list<str>`
         """
         my_hash = {}
         for feature_id, feature in self.feature_dict.items():
@@ -237,13 +238,13 @@ class GenomeHash(AbstractGenomeHash):
         Returns
         -------
         list<int>
-            List of hash bins that *roi* covers
+            List of hash bins that `roi` covers
                
            
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
             iv = roi
@@ -256,7 +257,7 @@ class GenomeHash(AbstractGenomeHash):
         return list(range(bin_start,bin_end+1))
     
     def _get_nearby_feature_ids(self,roi,stranded=True):
-        """Return unique IDs of |SegmentChain| s in all the bins occupied by *roi*
+        """Return unique IDs of |SegmentChain| s in all the bins occupied by `roi`
         
         Parameters
         ----------
@@ -264,20 +265,20 @@ class GenomeHash(AbstractGenomeHash):
            Query feature
            
         stranded : bool
-            If *True*, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
            
                              
         Returns
         -------
         list<str>
-           Unique IDs of features near (within *self.binsize* distance from) *roi*
+           Unique IDs of features near (within *self.binsize* distance from) `roi`
            
            
         Raises
         ------
         TypeError
-            if *roi* is not |GenomicSegment| or |SegmentChain|
+            if `roi` is not |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
             iv = roi
@@ -315,7 +316,7 @@ class GenomeHash(AbstractGenomeHash):
         return nearby_feature_ids
 
     def get_nearby_features(self,roi,stranded=True):
-        """Return list of features in all the bins occupied by *roi*
+        """Return list of features in all the bins occupied by `roi`
         
         Parameters
         ----------
@@ -323,26 +324,26 @@ class GenomeHash(AbstractGenomeHash):
             Query feature
 
         stranded : bool
-            if *True*, retrieve only features on same strand as query feature.
+            if `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list<str>
-           Features near (within *self.binsize* distance from) *roi*
+           Features near (within `self.binsize` distance from) `roi`
                
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         nearby_feature_ids = self._get_nearby_feature_ids(roi,stranded=stranded)
         return [self.feature_dict[X] for X in nearby_feature_ids]
 
     def get_nearby_feature_names(self,roi,stranded=True):
-        """Return list of the names of features in all the bins occupied by *roi*
+        """Return list of the names of features in all the bins occupied by `roi`
         
         Parameters
         ----------
@@ -350,25 +351,25 @@ class GenomeHash(AbstractGenomeHash):
             Query feature
 
         stranded : bool
-            if *True*, retrieve only features on same strand as query feature.
+            if `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-           Names of features near (within *self.binsize* distance from) *roi*
+           Names of features near (within `self.binsize` distance from) `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         nearby_feature_ids = self._get_nearby_feature_ids(roi,stranded=stranded)
         return [self._id_to_names[X] for X in nearby_feature_ids]
 
     def get_overlapping_features(self,roi,stranded=True):
-        """Return list of features in all the bins occupied by *roi*
+        """Return list of features in all the bins occupied by `roi`
         
         Parameters
         ----------
@@ -376,19 +377,19 @@ class GenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            if *True*, retrieve only features on same strand as query feature.
+            if `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-           Features overlapping *roi*
+           Features overlapping `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         nearby_features = self.get_nearby_features(roi, stranded=stranded)
         if stranded == False:
@@ -399,7 +400,7 @@ class GenomeHash(AbstractGenomeHash):
     
     def __getitem__(self,roi):
         """Return list of features that overlap the region of interest (roi),
-        minding the strand.
+        on same strand.
         
         Parameters
         ----------
@@ -407,20 +408,20 @@ class GenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            if *True*, retrieve only features on same strand as query feature.
+            if `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-           Features overlapping *roi*
+           Features overlapping `roi`
 
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| |SegmentChain|
+            if `roi` is not a |GenomicSegment| |SegmentChain|
         """
         return self.get_overlapping_features(roi,stranded=True)
                 
@@ -470,7 +471,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
         self.bigbedreader.close()
             
     def get_overlapping_features(self,roi,stranded=True):
-        """Return list of features overlapping *roi*
+        """Return list of features overlapping `roi`
         
         Parameters
         ----------
@@ -478,19 +479,19 @@ class BigBedGenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            If *True*, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-            Features that overlap *roi*
+            Features that overlap `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         return list(self.bigbedreader.__getitem__(roi,stranded=stranded))
 
@@ -503,19 +504,19 @@ class BigBedGenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            If *True*, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-            Features that overlap *roi*
+            Features that overlap `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         return list(self.bigbedreader[roi])
     
@@ -553,7 +554,7 @@ class TabixGenomeHash(AbstractGenomeHash):
 
         data : str
             Format of tabix-compressed file(s). Choices are:
-            *'GTF2'*,*'GFF3'*,*'BED'*,*'PSL'*
+            `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'`
         """
         self.filenames = filenames
         self.printer = printer
@@ -577,7 +578,7 @@ class TabixGenomeHash(AbstractGenomeHash):
             pass
             
     def get_overlapping_features(self,roi,stranded=True):
-        """Return list of features overlapping *roi*
+        """Return list of features overlapping `roi`
         
         Parameters
         ----------
@@ -585,18 +586,18 @@ class TabixGenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            If *True*, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
         Returns
         -------
         list
-           Features that overlap *roi*
+           Features that overlap `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         return list(self.__getitem__(roi,stranded=stranded))
 
@@ -609,19 +610,19 @@ class TabixGenomeHash(AbstractGenomeHash):
             Query feature indicating region of interest
 
         stranded : bool
-            If *True*, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands
                              
                              
         Returns
         -------
         list
-            Features that overlap *roi*
+            Features that overlap `roi`
 
         Raises
         ------
         TypeError
-            if *roi* is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
             roi_ivc = SegmentChain(roi)

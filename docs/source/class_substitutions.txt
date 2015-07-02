@@ -9,8 +9,11 @@
  .. |GenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.GenomeHash`
  .. |TabixGenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.TabixGenomeHash`
  .. |GenomicSegment| replace:: :py:class:`~yeti.genomics.roitools.GenomicSegment`
+ .. |GenomicSegments| replace:: :py:class:`GenomicSegments <yeti.genomics.roitools.GenomicSegment>`
  .. |SegmentChain| replace:: :py:class:`~yeti.genomics.roitools.SegmentChain`
+ .. |SegmentChains| replace:: :py:class:`SegmentChains <yeti.genomics.roitools.SegmentChain>`
  .. |Transcript| replace:: :py:class:`~yeti.genomics.roitools.Transcript`
+ .. |Transcripts| replace:: :py:class:`Transcripts <yeti.genomics.roitools.Transcript>`
  .. |AbstractAutoSqlElement| replace:: :py:class:`~yeti.readers.autosql.AbstractAutoSqlElement`
  .. |AutoSqlDeclaration| replace:: :py:class:`~yeti.readers.autosql.AutoSqlDeclaration`
  .. |AutoSqlField| replace:: :py:class:`~yeti.readers.autosql.AutoSqlField`

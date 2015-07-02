@@ -898,26 +898,28 @@ class SegmentChain(object):
         return SegmentChain(*tuple(new_segments))
 
     def get_position_list(self):
-        """Retrieve a sorted list of genomic coordinates included in this |SegmentChain|
+        """Retrieve a sorted end-inclusive list of genomic coordinates included in this |SegmentChain|
         
         Returns
         -------
-        list<int>
+        list
+            List of genomic coordinates, as integers
         """
         return sorted(list(self.get_position_set()))
     
     def get_position_set(self):
-        """Retrieve a set of genomic coordinates included in this |SegmentChain|
+        """Retrieve an end-inclusive set of genomic coordinates included in this |SegmentChain|
         
         Returns
         -------
-        set<int>
+        set
+            Set of genomic coordinates, as integers
         """
         positions = set(self._position_hash.keys())
         return positions
         
     def _get_position_hash(self):
-        """Creates a hash mapping relevant genomic positions to |SegmentChain| coordinates
+        """Create a dictionary that maps genomic positions to |SegmentChain| positions
         
         Returns
         -------
@@ -935,11 +937,13 @@ class SegmentChain(object):
         return my_hash
     
     def get_valid_position_set(self):
-        """Returns a set of genomic coordinates which are not covered by any masks
+        """Returns a set of genomic coordinates corresponding to positions in 
+        `self` that have not been masked using :meth:`SegmentChain.add_masks`
 
         Returns
         -------
-        set<int>
+        set
+            Set of genomic coordinates, as integers
         """
         position_set = self.get_position_set()
         masked = []
@@ -951,15 +955,14 @@ class SegmentChain(object):
     
     def get_name(self):
         """Returns the name of this |SegmentChain|, first searching through
-        ``self.attr`` for the keys ``ID``, ``Name``, and ``name``.
-        If one is not found, a name is generated one from the locations in the
-        collection.
+        `self.attr` for the keys `ID`, `Name`, and `name`. If no value is found
+        for any of those keys, a name is generated using :meth:`SegmentChain.__str__`
         
         Returns
         -------
         str
-            Returns in order of preference, ID from ``self.attr``, 'Name' from
-            ``self.attr``, "name" from ``self.attr`` or str(self) 
+            In order of preference, `ID` from `self.attr`, `Name` from
+            `self.attr`, `name` from `self.attr` or ``str(self)`` 
         """
         name = self.attr.get("ID",
                self.attr.get("Name",
@@ -969,15 +972,15 @@ class SegmentChain(object):
     
     def get_gene(self):
         """Return name of gene associated with |SegmentChain|, if any, 
-        by searching through ``self.attr`` for the keys ``gene_id`` and ``Parent``.
+        by searching through `self.attr` for the keys `gene_id` and `Parent`.
         If one is not found, a generated gene name for the SegmentChain is 
         made from :py:meth:`get_name`.
 
         Returns
         -------
         str
-            Returns in order of preference, 'gene_id' from ``self.attr``, 
-            'Parent' from ``self.attr`` or ``"gene_%s" % self.get_name()``
+            Returns in order of preference, `gene_id` from `self.attr`, 
+            `Parent` from `self.attr` or ``'gene_%s' % self.get_name()``
         """
         gene = self.attr.get("gene_id",
                self.attr.get("Parent",
@@ -988,7 +991,7 @@ class SegmentChain(object):
         return gene
     
     def get_length(self):
-        """Return total length, in nucleotides, of this |SegmentChain|
+        """Return total length, in nucleotides, of `self`
         
         Returns
         -------
@@ -997,30 +1000,18 @@ class SegmentChain(object):
         return sum([len(X) for X in self])
 
     def get_valid_length(self):
-        """Return the total length, in nucleotides, of all unmasked
-        positions in this |SegmentChain|
+        """Return the total length, in nucleotides, of positions in `self`
+        that have not been masked using :meth:`SegmentChain.add_masks`
         
         Returns
         -------
         int
         """
         return len(self.get_valid_position_set())
-
-    def add_segment(self,segment):
-        """Add a |GenomicSegment| to the |SegmentChain|. If there are
-        already intervals in the collection, the incoming segments must be 
-        on the same strand and chromosome as all others present.
-        
-        Parameters
-        ----------
-        segment : GenomicSegment
-            Interval to add to |SegmentChain|
-        """
-        self.add_segments(segment)
         
     def add_segments(self,*segments):
-        """Add 1 or more |GenomicSegment| to the |SegmentChain|. If there are
-        already intervals in the collection, the incoming segments must be 
+        """Add 1 or more |GenomicSegments| to the |SegmentChain|. If there are
+        already segments in the chain, the incoming segments must be 
         on the same strand and chromosome as all others present.
 
         Parameters
@@ -1050,15 +1041,14 @@ class SegmentChain(object):
         
     def add_masks(self,*mask_segments):
         """Adds one or more |GenomicSegment| to the collection of masks. If there are
-        already segments in the collection, the incoming segments must be 
+        already segments in the chain, the incoming segments must be 
         on the same strand and chromosome as all others present.
 
         Parameters
         ----------
         mask_segments : |GenomicSegment|
-            One or more segments, in genomic coordinates, covering positions to exclude
-			from return values of :py:meth:`get_valid_position_set()`,
-			:py:meth:`get_valid_counts()`, or :py:meth:`get_valid_length()`
+            One or more segments, in genomic coordinates, covering positions to
+            exclude from return values of :meth:`get_valid_position_set`, :meth:`get_valid_counts`, or :meth:`get_valid_length`
 		
 		See also
 		--------
@@ -1091,23 +1081,25 @@ class SegmentChain(object):
         self._update()
     
     def get_masks(self):
-        """Return masked positions as a list of |GenomicSegment|
+        """Return masked positions as a list of |GenomicSegments|
         
         Returns
         -------
         list
-            list of |GenomicSegment| s representing masked positions
+            list of |GenomicSegments| representing masked positions
         
         See also
         --------
+        SegmentChain.get_masks_as_segmentchain
+        
         SegmentChain.add_masks
         
         SegmentChain.reset_masks
         """
         return self._mask_segments
     
-    def get_masks_as_IVC(self):
-        """Return masked positions as an |SegmentChain|
+    def get_masks_as_segmentchain(self):
+        """Return masked positions as a |SegmentChain|
         
         Returns
         -------
@@ -1116,7 +1108,9 @@ class SegmentChain(object):
         
         See also
         --------
-        SegmentChain.add_masks"thickend",
+        SegmentChain.get_masks
+        
+        SegmentChain.add_masks
 
         SegmentChain.reset_masks
         """        
@@ -1132,15 +1126,15 @@ class SegmentChain(object):
         self._mask_segments = []
             
     def get_junctions(self):
-        """Returns a list of |GenomicSegment| representing spaces
-        between the |GenomicSegment| in self._segments. In the case of a transcript,
+        """Returns a list of |GenomicSegments| representing spaces
+        between the |GenomicSegments| in `self` In the case of a transcript,
         these would represent introns. In the case of an alignment, these
         would represent gaps in the query compared to the reference.
         
         Returns
         -------
-        list<|GenomicSegment|>
-            List of |GenomicSegment| covering spaces between the intervals in ``self``
+        list
+            List of |GenomicSegments| covering spaces between the intervals in `self`
             (e.g. introns in the case of a transcript, or gaps in the case of
             an alignment)
         """
@@ -1164,40 +1158,19 @@ class SegmentChain(object):
         multi-interval |SegmentChain| was constructed, or construct features
         for them, setting *ID*, *Parent*, and *type* attributes following
         their own conventions.
-        
-        
-        Columns of `GFF3`_ are as follows:
-        
-        ======== =========
-        Column   Contains
-        ======== =========
-            1     Contig or chromosome 
-            2     Source of annotation 
-            3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
-            4     Start (1-indexed)  
-            5     End (fully-closed)
-            6     Score  
-            7     Strand  
-            8     Frame. Number of bases within feature before first in-frame codon (if coding) 
-            9     Attributes                       
-        ======== =========
-        
-        More info can be found at:
-            - `GFF3 file format specification <http://www.sequenceontology.org/gff3.shtml>`_
-            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
 
          
         Parameters
         ----------
         feature_type : str
-            If not None, overrides the *type* attribute of ``self.attr``
+            If not None, overrides the `type` attribute of `self.attr`
         
         escape : bool, optional
-            Escape tokens in column 9 of `GFF3`_ output (Default: *True*)
+            Escape tokens in column 9 of `GFF3`_ output (Default: `True*)
         
         excludes : list, optional
             List of attribute key names to exclude from column 9
-            (Default: *[]*)
+            (Default: `[]`)
         
         Returns
         -------
@@ -1208,7 +1181,30 @@ class SegmentChain(object):
         Raises
         -----
         AttributeError
-            if the SegmentChain has multiple intervals
+            if the |SegmentChain| has multiple intervals
+            
+        Notes
+        -----
+        Columns of `GFF3`_ are as follows
+            ======== =========
+            Column   Contains
+            ======== =========
+                1     Contig or chromosome 
+                2     Source of annotation 
+                3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
+                4     Start (1-indexed)  
+                5     End (fully-closed)
+                6     Score  
+                7     Strand  
+                8     Frame. Number of bases within feature before first in-frame codon (if coding) 
+                9     Attributes                       
+            ======== =========
+
+        For futher information, see
+            - `GFF3 file format specification <http://www.sequenceontology.org/gff3.shtml>`_
+            - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`
+            - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
+            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
         """ 
         if len(self) == 0: # empty SegmentChain
             return ""
@@ -1237,38 +1233,17 @@ class SegmentChain(object):
         
     
     def as_gtf(self,feature_type=None,escape=True,excludes=[]):
-        """Format |SegmentChain| as a block of GTF2 output.
+        """Format |SegmentChain| as a block of `GTF2`_ output.
         
-        The ``frame`` or ``phase`` attribute (GTF2 column 8) is valid only for "CDS"
-        features, and, if not present in ``self.attr``, is calculated assuming
+        The `frame` or `phase` attribute (`GTF2`_ column 8) is valid only for `'CDS'`
+        features, and, if not present in `self.attr`, is calculated assuming
         the |SegmentChain| contains the entire coding region. If the |SegmentChain|
-        contains multiple intervals, the ``frame`` or ``phase`` attribute will
+        contains multiple intervals, the `frame` or `phase` attribute will
         *always* be recalculated.
         
-        All attributes in ``self.attr``, except those created upon import,
+        All attributes in `self.attr`, except those created upon import,
         will be propagated to all of the features that are generated.
         
-        Columns of `GTF2`_ are as follows:
-        
-        ======== =========
-        Column   Contains
-        ======== =========
-            1     Contig or chromosome 
-            2     Source of annotation 
-            3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
-            4     Start (1-indexed)  
-            5     End (fully-closed)
-            6     Score  
-            7     Strand  
-            8     Frame. Number of bases within feature before first in-frame codon (if coding) 
-            9     Attributes. "gene_id" and "transcript_id" are required                        
-        ======== =========
-        
-        More info can be found at:
-            - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
-            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-
-         
         Parameters
         ----------
         feature_type : str
@@ -1286,23 +1261,44 @@ class SegmentChain(object):
         str
             Block of GTF2-formatted text
         
-            
+        
         Notes
         -----
-        The `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_ requires
-        that attributes ``gene_id`` and ``transcript_id`` be defined. If these
-        are not present in ``self.attr``, their values will be guessed 
-        following the rules in :py:meth:`SegmentChain.get_gene` and 
-        :py:meth:`SegmentChain.get_name`, respectively.
+        `gene_id` and `transcript_id` are required
+            The `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_ requires
+            that attributes `gene_id` and `transcript_id` be defined. If these
+            are not present in `self.attr`, their values will be guessed 
+            following the rules in :py:meth:`SegmentChain.get_gene` and 
+            :py:meth:`SegmentChain.get_name`, respectively.
         
-        To save memory, only the attributes shared by all of the individual
-        sub-features (e.g. exons) that were used to assemble this |SegmentChain|
-        have been stored in ``self.attr``. This means that upon re-export to GTF,
-        these sub-features will be lacking any attributes that were specific
-        to them individually. Formally, this is compliant with the 
-        `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_, which states
-        explicitly that only the attributes ``gene_id`` and ``transcript_id``
-        are supported.
+        Beware of attribute loss
+            To save memory, only the attributes shared by all of the individual
+            sub-features (e.g. exons) that were used to assemble this |Transcript|
+            have been stored in `self.attr`. This means that upon re-export to `GTF2`_,
+            these sub-features will be lacking any attributes that were specific
+            to them individually. Formally, this is compliant with the 
+            `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_, which states
+            explicitly that only the attributes `gene_id` and `transcript_id`
+            are supported.
+            
+        Columns of `GTF2`_ are as follows
+            ======== =========
+            Column   Contains
+            ======== =========
+                1     Contig or chromosome 
+                2     Source of annotation 
+                3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
+                4     Start (1-indexed)  
+                5     End (fully-closed)
+                6     Score  
+                7     Strand  
+                8     Frame. Number of bases within feature before first in-frame codon (if coding) 
+                9     Attributes. "gene_id" and "transcript_id" are required                        
+            ======== =========
+        
+        For more info
+            - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
+            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_           
         """
         if len(self) == 0:
             return ""
@@ -1336,23 +1332,33 @@ class SegmentChain(object):
         return "\n".join(ltmp1) + "\n"
     
     def _get_8_gff_columns(self,segment,feature_type):
-        """Format columns 1-8 of GFF/GTF2/GFF3 files. 
+        """Format columns 1-8 of GFF/GTF2/GFF3 files.
         
+        Parameters
+        ----------
+        segment : |GenomicSegment|
+            Segment to export
+        
+        feature_type : str
+            Type of feature (for column 3 of output)
+        
+        
+        Notes
+        ------
         Columns of GFF files are as follows:
-        
-        ======== =========
-        Column   Contains
-        ======== =========
-            1     Contig or chromosome 
-            2     Source of annotation 
-            3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
-            4     Start (1-indexed)  
-            5     End (fully-closed)
-            6     Score  
-            7     Strand  
-            8     Frame. Number of bases within feature before first in-frame codon (if CDS) 
-            9     Attributes. Formatting depends on flavor of GFF                      
-        ======== =========        
+            ======== =========
+            Column   Contains
+            ======== =========
+                1     Contig or chromosome 
+                2     Source of annotation 
+                3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
+                4     Start (1-indexed)  
+                5     End (fully-closed)
+                6     Score  
+                7     Strand  
+                8     Frame. Number of bases within feature before first in-frame codon (if CDS) 
+                9     Attributes. Formatting depends on flavor of GFF                      
+            ======== =========        
         """
         phase = "."
         if feature_type == "CDS":
@@ -1381,50 +1387,52 @@ class SegmentChain(object):
     def as_bed(self,thickstart=None,thickend=None,as_int=True,color=None):
         """Format |SegmentChain| as a string of BED12 output.
 
-        BED12 columns are as follows (see
-        the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-        for more details).
-
-        ======== =========
-        Column   Contains
-        ======== =========
-           1     Contig or chromosome
-           2     Start of first block in feature (0-indexed)
-           3     End of last block in feature (half-open)
-           4     Feature name
-           5     Feature score
-           6     Strand
-           7     thickstart (in chromosomal coordinates)
-           8     thickend (in chromosomal coordinates)
-           9     Feature color as RGB tuple
-           10    Number of blocks in feature
-           11    Block lengths
-           12    Block starts, relative to start of first block
-        ======== =========
-
-
         Parameters
         ----------
         as_int : bool, optional
-            Force "score" to integer (Default: True)
+            Force `score` to integer (Default: True)
     
-        thickstart : int or None, optional
-            If not None, overrides the genome coordinate to start
-            plotting as thick in genome browser found in ``self.attr["thickstart"]``
+        thickstart : int or `None`, optional
+            If not `None`, overrides the genome coordinate that starts thick
+            plotting in genome browser found in `self.attr['thickstart']`
     
         thickend : int or None, optional
-            If not None, overrides the genome coordinate to stop
-            plotting as thick in genome browser found in ``self.attr["thickend"]``
+            If not None, overrides the genome coordinate that stops
+            thick plotting in genome browser found in `self.attr['thickend']`
     
         color : str or None, optional
             Color represented as RGB hex string.
-            If not none, overrides the color in ``self.attr["color"]``
+            If not none, overrides the color in `self.attr['color']`
     
     
         Returns
         -------
         str
             Line of BED12-formatted text
+
+
+        Notes
+        -----
+        BED12 columns are as follows:
+            ======== =========
+            Column   Contains
+            ======== =========
+               1     Contig or chromosome
+               2     Start of first block in feature (0-indexed)
+               3     End of last block in feature (half-open)
+               4     Feature name
+               5     Feature score
+               6     Strand
+               7     thickstart (in chromosomal coordinates)
+               8     thickend (in chromosomal coordinates)
+               9     Feature color as RGB tuple
+               10    Number of blocks in feature
+               11    Block lengths
+               12    Block starts, relative to start of first block
+            ======== =========
+
+        For more details
+            See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
         """
         if len(self) > 0:
             score = self.attr.get("score",0)
@@ -1465,13 +1473,13 @@ class SegmentChain(object):
             return ""
     
     def as_psl(self):
-        """Formats |SegmentChain| as PSL (blat) output.
+        """Formats |SegmentChain| as `PSL`_ (blat) output.
         
         Notes
         -----
         This will raise an :py:class:`AttributeError` unless the following
-        keys are present and defined in ``self.attr``, corresponding to the
-        columns of a PSL file:
+        keys are present and defined in `self.attr`, corresponding to the
+        columns of a `PSL`_ file:
         
             ======  ===================================
             Column  Key
@@ -1501,6 +1509,7 @@ class SegmentChain(object):
         :py:meth:`SegmentChain.from_psl`, or if the user has defined them.
         
         See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
+        for more information.
         
         
         Returns
@@ -1555,14 +1564,16 @@ class SegmentChain(object):
             Chromosome name
             
         genomic_x : int
-            x coordinate, in genomic space
+            coordinate, in genomic space
             
         strand : str
-            Chromosome strand ('+', '-', or '.')
+            Chromosome strand (`'+'`, `'-'`, or `'.'`)
             
         stranded : bool, optional
-            if ``True``, coordinates are given in stranded space
-            (what you'd expect for a transcript)
+            If `True`, coordinates are given in stranded space
+            (i.e. from 5' end of chain, as one might expect for a transcript).
+            If `False`, coordinates are given from the left end of `self`,
+            regardless of strand. (Default: `True`)
         
         
         Returns
@@ -1572,7 +1583,8 @@ class SegmentChain(object):
             
         Raises
         ------
-        KeyError : if position outside bounds of |SegmentChain|
+        KeyError
+            if position outside bounds of |SegmentChain|
         """
         assert chrom  == self.chrom
         assert strand == self.strand
@@ -1584,17 +1596,18 @@ class SegmentChain(object):
             return self._position_hash[genomic_x]
     
     def get_genomic_coordinate(self,x,stranded=True):
-        """Finds genomic coordinate corresponding to position ``x`` in this |SegmentChain|
+        """Finds genomic coordinate corresponding to position `x` in `self`
         
         Parameters
         ----------
         x : int
             position of interest, relative to |SegmentChain|
             
-        stranded : bool
-            If true and the |SegmentChain| is on the minus strand,
-            ``x`` will be given relative to the end coordinate of the 
-            |SegmentChain| rather than the start (default: True)
+        stranded : bool, optional
+            If `True`, `x` is assumed to be in stranded space (i.e. counted from
+            5' end of chain, as one might expect for a transcript). If `False`,
+            coordinates assumed to be counted the left end of the `self`,
+            regardless of the strand of `self`. (Default: `True`)
         
                              
         Returns
@@ -1603,16 +1616,16 @@ class SegmentChain(object):
             Chromosome name
         
         int
-            Genomic cordinate corresponding to ``x``
+            Genomic cordinate corresponding to `x`
         
         str
-            Chromosome strand ('+', '-', or '.')
+            Chromosome strand (`'+'`, `'-'`, or `'.'`)
         
         
         Raises
         ------
         IndexError
-            if ``x`` is outside the bounds of the |SegmentChain|
+            if `x` is outside the bounds of the |SegmentChain|
         """
         positions = self.get_position_list()
         if stranded is True and self.strand == "-":
@@ -1621,8 +1634,8 @@ class SegmentChain(object):
     
     def get_subchain(self,start,end,stranded=True):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions
-        specified in coordinates relative this |SegmentChain|. ``self.attr`` is
-        copied to the child SegmentChain.
+        specified in coordinates relative this |SegmentChain|. Attributes in
+        `self.attr` are copied to the child SegmentChain.
         
         Parameters
         ----------
@@ -1634,15 +1647,16 @@ class SegmentChain(object):
             and half-open
             
         stranded : bool
-            If ``True`` and the SegmentChain is on the minus strand,
-            `x` will be given relative to the end coordinate of the 
-            SegmentChain rather than the start (default: ``True``)
-            
+            If `True`, `start` and `end` are assumed to be in stranded space (i.e. counted from
+            5' end of chain, as one might expect for a transcript). If `False`,
+            they assumed to be counted the left end of the `self`,
+            regardless of the strand of `self`. (Default: `True`)
+
                           
         Returns
         -------
         |SegmentChain|
-            covering positions `start` to `end` of parent |SegmentChain|
+            covering positions `start` to `end` of `self`
         
         
         Raises
@@ -1660,44 +1674,48 @@ class SegmentChain(object):
         return SegmentChain(*tuple(ivs),**copy.deepcopy(self.attr))
 
     def get_counts(self,gnd,stranded=True):
-        """Returns list of counts or values at each position in SegmentChain
-        
-        Parameters
-        ----------
-        gnd : Subclass of AbstractGenomeArray
-            GenomeArray from which to fetch counts
-            
-        stranded : bool
-            If true and the SegmentChain is on the minus strand,
-            count order will be reversed relative to genome
-            (default: ``True``)
-            
-            
-        Returns
-        -------
-        list<Number> 
-        """
-        ltmp = []
-        for iv in self:
-            ltmp.extend(gnd[iv])
-        if self.strand == "-" and stranded is True:
-            ltmp = ltmp[::-1]
-        return ltmp
-    
-    def get_valid_counts(self,gnd,stranded=True):
-        """Returns counts of |SegmentChain| as a masked array, in transcript
-		coordinates. Positions masked by :py:meth:`SegmentChain.add_mask`
-		will be masked
+        """Return list of counts or values at each position in `self`
         
         Parameters
         ----------
         gnd : non-abstract subclass of |AbstractGenomeArray|
             GenomeArray from which to fetch counts
             
-        stranded : bool
+        stranded : bool, optional
+            If `True` and the SegmentChain is on the minus strand,
+            count order will be reversed relative to genome so that the
+            array positions march from the 5' to 3' end of the chain.
+            (Default: `True`)
+            
+            
+        Returns
+        -------
+        numpy.ndarray
+            Array of counts from `gnd` covering `self`
+        """
+        ltmp = []
+        for iv in self:
+            ltmp.extend(gnd[iv])
+        if self.strand == "-" and stranded is True:
+            ltmp = ltmp[::-1]
+            
+        return numpy.array(ltmp)
+    
+    def get_valid_counts(self,gnd,stranded=True):
+        """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
+        coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
+        will be masked in the array
+        
+        Parameters
+        ----------
+        gnd : non-abstract subclass of |AbstractGenomeArray|
+            GenomeArray from which to fetch counts
+            
+        stranded : bool, optional
             If true and the |SegmentChain| is on the minus strand,
-            count order will be reversed relative to genome
-            (default: ``True``)
+            count order will be reversed relative to genome so that the
+            array positions march from the 5' to 3' end of the chain.
+            (Default: `True`)
             
             
         Returns
@@ -1721,7 +1739,7 @@ class SegmentChain(object):
         return atmp
     
     def get_sequence(self,genome,stranded=True):
-        """Returns spliced genomic sequence of |SegmentChain| as a string
+        """Return spliced genomic sequence of |SegmentChain| as a string
         
         Parameters
         ----------
@@ -1730,14 +1748,14 @@ class SegmentChain(object):
             Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
        
         stranded : bool
-            If true and the |SegmentChain| is on the minus strand,
-            sequence will be reverse-complemented (default: True)
+            If `True` and the |SegmentChain| is on the minus strand,
+            sequence will be reverse-complemented (Default: True)
             
             
         Returns
         -------
         str
-            Nucleotide sequence of the |SegmentChain| evaluated over ``genome``
+            Nucleotide sequence of the |SegmentChain| extracted from `genome`
         """
         chromseq = genome[self.spanning_segment.chrom]
         if not isinstance(chromseq,SeqRecord):
@@ -1760,27 +1778,26 @@ class SegmentChain(object):
             Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
        
         stranded : bool
-            If true and the |SegmentChain| is on the minus strand,
-            sequence will be reverse-complemented (default: True)
+            If `True` and the |SegmentChain| is on the minus strand,
+            sequence will be reverse-complemented (Default: True)
 
             
         Returns
         -------
         str
-            FASTA-formatted seuqence of |SegmentChain| evaluated over ``genome``
+            FASTA-formatted seuqence of |SegmentChain| extracted from `genome`
         """
         return ">%s\n%s\n" % (self.get_name(),self.get_sequence(genome,stranded=stranded))
 
     @staticmethod
     def from_str(inp):
-        """Factory method to create an SegmentChains from a lines from a string
-		formatted as by :py:meth:`SegmentChain.str`:
+        """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.str`:
            
-            chrom:start-end^start-end(strand)
+            `chrom:start-end^start-end(strand)`
            
         where '^' indicates a splice junction between regions specified
         by `start` and `end` and `strand` is '+', '-', or '.'. Coordinates are
-        0-indexed and half-open
+        0-indexed and half-open.
 
 
         Parameters
@@ -1807,7 +1824,9 @@ class SegmentChain(object):
         
     @staticmethod
     def from_bed(line):
-        """Create |SegmentChain| from a line from a BED file.
+        """Create a |SegmentChain| from a line from a `BED`_ file.
+        The `BED`_ line may contain 4 to 12 columns, per the specification.
+        These will be auto-detected and parsed appropriately.
         
         See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
         for more details.
@@ -1815,7 +1834,7 @@ class SegmentChain(object):
         Parameters
         ----------
         line
-            Line from a BED file, containing 4 or more columns
+            Line from a `BED`_ file, containing 4 or more columns
 
 
         Returns
@@ -1891,12 +1910,12 @@ class SegmentChain(object):
     
     @staticmethod
     def from_psl(psl_line):
-        """Create an |SegmentChain| from a line from a PSL (BLAT) file
+        """Create a |SegmentChain| from a line from a `PSL`_ (BLAT) file
         
         Parameters
         ----------
         psl_line : str
-            Line from a PSL file
+            Line from a `PSL`_ file
         
         See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
         
@@ -1945,17 +1964,11 @@ class SegmentChain(object):
         return SegmentChain(*ivs,**attr)        
     
 class Transcript(SegmentChain):
-    """Subclass of |SegmentChain| specifically modeling transcripts.
+    """Subclass of |SegmentChain| specifically for transcripts.
     In addition to coordinate-conversion, count fetching, sequence fetching,
     and various other methods inherited from |SegmentChain|, |Transcript|
-    provides convenience methods for fetching sub-regions containing only
+    provides convenience methods for fetching sub-chains corresponding to 
     CDS features, 5' UTRs, and 3' UTRs.
-
-    Intervals are sorted from lowest to greatest starting coordinate on their
-    reference sequence, regardless of strand. Iteration over the SegmentChain
-    will yield intervals from left-to-right in the genome.
-    
-    Tests for equality, inequality, containment, and overlapping  are provided.
 
     Attributes
     ----------
@@ -1990,18 +2003,15 @@ class Transcript(SegmentChain):
     """
     
     def __init__(self,*ivs,**attr):
-        """Create a Transcript
+        """Create a |Transcript|
         
         Parameters
         ----------
-        attr : dict
-            dictionary of attributes
+        *ivs : |GenomicSegment|
+            0 or more |GenomicSegments| (exons)
 
-        ivs : |GenomicSegment|
-            Any number >=0 of |GenomicSegment|
-        
-        attr : dict
-            Any relevant metadata
+        **attr : dict
+            keyword attributes
 
         attr["cds_genome_start"] : int or None
             genome coordinate of CDS start, if any
@@ -2018,11 +2028,11 @@ class Transcript(SegmentChain):
             Otherwise, generated from genomic coordinates
         
         attr["transcript_id"] : str
-            If provided, a transcript_id used for GTF2 export.
+            If provided, a transcript_id used for `GTF2`_ export.
             Otherwise, generated from genomic coordinates.
         
         attr["gene_id"] : str
-            If provided, a gene_id used for GTF2 export
+            If provided, a gene_id used for `GTF2`_ export
             Otherwise, generated from genomic coordinates.
         """
         self._segments   = []
@@ -2061,16 +2071,15 @@ class Transcript(SegmentChain):
             self.cds_end   = None
 
     def get_name(self):
-        """Returns the name of this |SegmentChain|, first searching through
-        ``self.attr`` for the keys ``transcript_id``, ``ID``, ``Name``, and ``name``.
-        If one is not found, a name is generated one from the locations in the
-        collection.
+        """Return the name of `self`, first searching through
+        `self.attr` for the keys `transcript_id`, `ID`, `Name`, and `name`.
+        If no value is found, :meth:`Transcript.__str__` is used.
         
         Returns
         -------
         str
-            Returns in order of preference, ID from ``self.attr``, 'Name' from
-            ``self.attr``, "name" from ``self.attr`` or str(self) 
+            Returns in order of preference, `transcript_id`, `ID`, `Name`,
+            or `name` from `self.attr`. If not found, returns ``str(self)``
         """
         name = self.attr.get("transcript_id",
                self.attr.get("ID",
@@ -2080,10 +2089,10 @@ class Transcript(SegmentChain):
         return name
     
     def get_cds(self):
-        """Retrieve sub-SegmentChain covering CDS, including the stop codon.
-        If no coding region, returns an empty |SegmentChain|.
+        """Retrieve |SegmentChain| covering the coding region of `self`, including the stop codon.
+        If no coding region is present, returns an empty |SegmentChain|.
         
-        The following attributes are passed from ``self.attr`` to the new |SegmentChain|
+        The following attributes are passed from `self.attr` to the new |SegmentChain|
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
@@ -2091,7 +2100,7 @@ class Transcript(SegmentChain):
         Returns
         -------
         |SegmentChain|
-            CDS region of |Transcript| if present, otherwise empty |SegmentChain|
+            CDS region of `self` if present, otherwise empty |SegmentChain|
         """
         my_segmentchain = SegmentChain()
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
@@ -2104,10 +2113,10 @@ class Transcript(SegmentChain):
         return my_segmentchain   
     
     def get_utr5(self):
-        """Retrieve sub-|SegmentChain| covering 5'UTR of |Transcript|
+        """Retrieve sub-|SegmentChain| covering 5'UTR of `self`.
         If no coding region, returns an empty |SegmentChain|
 
-        The following attributes are passed from ``self.attr`` to the new |SegmentChain|
+        The following attributes are passed from `self.attr` to the new |SegmentChain|
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
@@ -2115,7 +2124,7 @@ class Transcript(SegmentChain):
         Returns
         -------
         |SegmentChain|
-            5' UTR region of |Transcript| if present, otherwise empty |SegmentChain|
+            5' UTR region of `self` if present, otherwise empty |SegmentChain|
         """
         my_segmentchain = SegmentChain()
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
@@ -2127,7 +2136,7 @@ class Transcript(SegmentChain):
         return my_segmentchain   
     
     def get_utr3(self):
-        """Retrieve sub-SegmentChain covering 3'UTR of |Transcript|, excluding
+        """Retrieve sub-|SegmentChain| covering 3'UTR of `self`, excluding
         the stop codon. If no coding region, returns an empty |SegmentChain|
         
         The following attributes are passed from ``self.attr`` to the new |SegmentChain|
@@ -2138,7 +2147,7 @@ class Transcript(SegmentChain):
         Returns
         -------
         |SegmentChain|
-            3' UTR region of |Transcript| if present, otherwise empty |SegmentChain|
+            3' UTR region of `self` if present, otherwise empty |SegmentChain|
         """
         my_segmentchain = SegmentChain()
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
@@ -2151,42 +2160,22 @@ class Transcript(SegmentChain):
         return my_segmentchain   
 
     def as_gtf(self,feature_type="exon",escape=True):
-        """Format Transcript as a GTF2 block. |GenomicSegment| are formatted
-        as GTF2 "exon" features. Coding regions, if peresent, are formatted
-        as GTF2 "CDS" features. Stop codons are excluded in the "CDS" features,
-        per the GTF2 specification, and exported separately.
+        """Format `self` as a `GTF2`_ block. |GenomicSegments| are formatted
+        as `GTF2`_ `'exon'` features. Coding regions, if peresent, are formatted
+        as `GTF2`_ `'CDS'` features. Stop codons are excluded in the `'CDS'` features,
+        per the `GTF2`_ specification, and exported separately.
 
-        All attributes from ``self.attr`` are propagated to the exon and CDS
+        All attributes from `self.attr` are propagated to the exon and CDS
         features that are generated.
 
-        Columns of GTF2 are as follows:
-        
-        ======== =========
-        Column   Contains
-        ======== =========
-            1     Contig or chromosome 
-            2     Source of annotation 
-            3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
-            4     Start (1-indexed)  
-            5     End (fully-closed)
-            6     Score  
-            7     Strand  
-            8     Frame. Number of bases within feature before first in-frame codon (if coding) 
-            9     Attributes. "gene_id" and "transcript_id" are required                        
-        ======== =========
-        
-        More info can be found at:
-            - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
-            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-         
          
         Parameters
         ----------
         feature_type : str
-            If not None, overrides the "type" attribute of self.attr
+            If not None, overrides the `'type'` attribute of `self.attr`
         
         escape : bool, optional
-            URL escape tokens in column 9 of GTF output (Default: True)
+            URL escape tokens in column 9 of `GTF`_ output (Default: `True`)
         
         
         Returns
@@ -2197,20 +2186,41 @@ class Transcript(SegmentChain):
 
         Notes
         -----
-        The `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_ requires
-        that attributes ``gene_id`` and ``transcript_id`` be defined. If these
-        are not present in ``self.attr``, their values will be guessed 
-        following the rules in :py:meth:`SegmentChain.get_gene` and 
-        :py:meth:`SegmentChain.get_name`, respectively.
+        `gene_id` and `transcript_id` are required
+            The `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_ requires
+            that attributes `gene_id` and `transcript_id` be defined. If these
+            are not present in `self.attr`, their values will be guessed 
+            following the rules in :py:meth:`SegmentChain.get_gene` and 
+            :py:meth:`SegmentChain.get_name`, respectively.
         
-        To save memory, only the attributes shared by all of the individual
-        sub-features (e.g. exons) that were used to assemble this |SegmentChain|
-        have been stored in ``self.attr``. This means that upon re-export to GTF,
-        these sub-features will be lacking any attributes that were specific
-        to them individually. Formally, this is compliant with the 
-        `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_, which states
-        explicitly that only the attributes ``gene_id`` and ``transcript_id``
-        are supported.
+        Beware of attribute loss
+            To save memory, only the attributes shared by all of the individual
+            sub-features (e.g. exons) that were used to assemble this |Transcript|
+            have been stored in `self.attr`. This means that upon re-export to `GTF2`_,
+            these sub-features will be lacking any attributes that were specific
+            to them individually. Formally, this is compliant with the 
+            `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_, which states
+            explicitly that only the attributes `gene_id` and `transcript_id`
+            are supported.
+            
+        Columns of `GTF2`_ are as follows
+            ======== =========
+            Column   Contains
+            ======== =========
+                1     Contig or chromosome 
+                2     Source of annotation 
+                3     Type of feature ("exon", "CDS", "start_codon", "stop_codon") 
+                4     Start (1-indexed)  
+                5     End (fully-closed)
+                6     Score  
+                7     Strand  
+                8     Frame. Number of bases within feature before first in-frame codon (if coding) 
+                9     Attributes. "gene_id" and "transcript_id" are required                        
+            ======== =========
+        
+        For more info
+            - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
+            - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_        
         """
         stmp  = SegmentChain.as_gtf(self,feature_type=feature_type,escape=escape)
         cds_ivc_temp = self.get_cds()
@@ -2242,38 +2252,38 @@ class Transcript(SegmentChain):
 
     def as_gff3(self,escape=True,excludes=[],rna_type="mRNA"):
         """Format a |Transcript| as a block of `GFF3`_ output, following
-        the schema set out in the `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`
+        the schema set out in the `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
         
         The |Transcript| will be formatted according to the following rules:
         
-          1. A feature of type ``rna_type`` will be created, with *Parent* attribute
-             set to the value of :meth:`Transcript.get_gene`, and *ID* attribute
-             set to :meth:`Transcript.get_name`
+          1. A feature of type `rna_type` will be created, with `Parent` attribute
+             set to the value of ``self.get_gene()``, and `ID` attribute
+             set to ``self.get_name()``
         
-          2. For each |GenomicSegment| in the |Transcript|, a child feature of type
-             *exon* will be created. The *Parent* attribute of these features
-             will be set to the value of :meth:`Transcript.get_name`. These will
-             have unique IDs generated from :meth:`Transcript.get_name`.
+          2. For each |GenomicSegment| in `self`, a child feature of type
+             `exon` will be created. The `Parent` attribute of these features
+             will be set to the value of ``self.get_name()``. These will
+             have unique IDs generated from ``self.get_name()``.
 
-          3. If the |Transcript| is coding (i.e. has none-*None* value for
-             ``self.cds_genome_start`` and ``self.cds_genome_end``), child features
-             of type *five_prime_UTR*, *CDS*, and *three_prime_UTR* will be created,
-             with *Parent* attributes set to :meth:`Transcript.get_name`. These will
-             have unique IDs generated from :meth:`Transcript.get_name`.
+          3. If `self` is coding (i.e. has none-`None` value for
+             `self.cds_genome_start` and `self.cds_genome_end`), child features
+             of type `'five_prime_UTR'`, `'CDS'`, and `'three_prime_UTR'` will be created,
+             with `Parent` attributes set to ``self.get_name()``. These will
+             have unique IDs generated from ``self.get_name()``.
         
         
         Parameters
         ----------
         escape : bool, optional
-            Escape tokens in column 9 of `GFF3`_ output (Default: *True*)
+            Escape tokens in column 9 of `GFF3`_ output (Default: `True`)
         
         excludes : list, optional
             List of attribute key names to exclude from column 9
-            (Default: *[]*)
+            (Default: `[]`)
         
         rna_type : str, optional
-            Feature type to export RNA as (e.g. *"tRNA"*, *"noncoding_RNA"*,
-            et c. Default: *"mRNA"*)
+            Feature type to export RNA as (e.g. `'tRNA'`, `'noncoding_RNA'`,
+            et c. Default: `'mRNA'`)
 
         
         Returns
@@ -2296,7 +2306,7 @@ class Transcript(SegmentChain):
         GFF3 schemas vary
             Different GFF3s have different schemas (parent-child relationships
             between features). Here we adopt the commonly-used schema set by
-            `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`,
+            `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_,
             which may or may not match your schema.
 
         Columns of `GFF3`_ are as follows
@@ -2363,29 +2373,8 @@ class Transcript(SegmentChain):
         return "".join(ltmp)
     
     def as_bed(self,as_int=True,color=None):
-        """Formats |Transcript| as a BED12 line, assigning CDS boundaries 
-        to the thickstart and thickend columns from ``self.attr``
-
-        BED12 columns are as follows (see
-        the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-        for more details).
-
-        ======== =========
-        Column   Contains
-        ======== =========
-           0     Contig or chromosome
-           1     Start of first block in feature (0-indexed)
-           2     End of last block in feature (half-open)
-           3     Feature name
-           4     Feature score
-           5     Strand
-           6     thickstart
-           7     thickend
-           8     Feature color as RGB tuple
-           9     Number of blocks in feature
-           10    Block lengths
-           11    Block starts, relative to start of first block
-        ======== =========
+        """Format `self` as a BED12 line, assigning CDS boundaries 
+        to the thickstart and thickend columns from `self.attr`
 
 
         Parameters
@@ -2402,6 +2391,30 @@ class Transcript(SegmentChain):
         -------
         str
             Line of BED12-formatted text
+            
+        
+        Notes
+        -----
+        BED12 columns are as follows
+            ======== =========
+            Column   Contains
+            ======== =========
+               0     Contig or chromosome
+               1     Start of first block in feature (0-indexed)
+               2     End of last block in feature (half-open)
+               3     Feature name
+               4     Feature score
+               5     Strand
+               6     thickstart
+               7     thickend
+               8     Feature color as RGB tuple
+               9     Number of blocks in feature
+               10    Block lengths
+               11    Block starts, relative to start of first block
+            ======== =========
+
+        Fore more information
+            See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
         """
         return SegmentChain.as_bed(self,
                                    thickstart=self.cds_genome_start,
@@ -2411,8 +2424,10 @@ class Transcript(SegmentChain):
 
     @staticmethod
     def from_bed(line):
-        """Factory method to create a |Transcript| from a BED line,
-        assuming that the thickstart and thickend columns specify CDS boundaries
+        """Create a |Transcript| from a BED line with 4 or more columns.
+        `thickstart` and `thickend` columns, if present, are assumed to specify
+        CDS boundaries, a convention that, while common, is formally outside the
+        `BED`_ specification.
     
     	See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
     	for more details.
