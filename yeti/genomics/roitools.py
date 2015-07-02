@@ -15,8 +15,8 @@ Important classes
     objects.
 
 |SegmentChain|
-    Base class for genomic features with annotation data. :class:`SegmentChains <SegmentChain>`
-    can contain zero or more :class:`GenomicSegments <GenomicSegment>`, and therefore can model
+    Base class for genomic features with annotation data. |SegmentChains|
+    can contain zero or more |GenomicSegments|, and therefore can model
     discontinuous features -- such as multi-exon transcripts or gapped alignments --
     in addition to continuous features.  
     
@@ -260,8 +260,7 @@ class GenomicSegment(object):
     See also
     --------
     SegmentChain
-        Base class for genomic features, built from multiple
-        :class:`GenomicSegments <GenomicSegment>`
+        Base class for genomic features, built from multiple |GenomicSegments|
     """
     
     __slots__ = ("chrom","start","end","strand")
@@ -442,9 +441,9 @@ class GenomicSegment(object):
 #===============================================================================
 
 class SegmentChain(object):
-    """Base class for genomic features.  SegmentChains can contain zero or more
-    :class:`GenomicSegments <GenomicSegment>`, and therefore can model discontinuous,
-    features -- such as multi-exon transcripts or gapped alignments -- in addition,
+    """Base class for genomic features. |SegmentChains| can contain zero or more
+    |GenomicSegments|, and therefore can model discontinuous, features -- such
+    as multi-exon transcripts or gapped alignments -- in addition,
     to continuous features.
     
     Numerous convenience functions are supplied for:
@@ -536,8 +535,8 @@ class SegmentChain(object):
         self.add_segments(*segments)
 
     def _update(self):
-        """Sort component :class:`GenomicSegments <GenomicSegment>` within
-        the |SegmentChain|, and maintain synchrony of position hashes
+        """Sort component |GenomicSegments| within the |SegmentChain|,
+        and maintain synchrony of position hashes
         """
         self.sort()
         self._position_hash = self._get_position_hash()
@@ -613,7 +612,7 @@ class SegmentChain(object):
         return self.__next__()
     
     def __len__(self):
-        """Return the number of :class:`GenomicSegments <GenomicSegment>` in the |SegmentChain|"""
+        """Return the number of |GenomicSegments| in the |SegmentChain|"""
         return len(self._segments)
     
     def __contains__(self,other):
@@ -688,9 +687,9 @@ class SegmentChain(object):
         return False
     
     def __eq__(self,other):
-        """Checks if `self` and `other` are equal. Both chains must contain
-        identical positions, chromosomes, and strains to be equal.
-        Two |SegmentChain| with no intervals, by convention, are not equal.
+        """Test whether `self` and `other` are equal. Equality is defined as
+        identity of positions, chromosomes, and strands. Two |SegmentChain| with
+        zero intervals, by convention, are not equal.
            
         Parameters
         ----------
@@ -747,7 +746,8 @@ class SegmentChain(object):
         
         Returns
         -------
-        list<|GenomicSegment|>
+        list
+            List of |GenomicSegments| common to `self` and `other`
         
         Raises
         ------
@@ -770,8 +770,8 @@ class SegmentChain(object):
             raise TypeError("Other is not a GenomicSegment or SegmentChain")
     
     def unstranded_overlaps(self,other):
-        """Helper function. Returns true if self and other share genomic positions
-        on the same chromosome, regardless of strand
+        """Return `True` if `self` and `other` share genomic positions
+        on the same chromosome, regardless of their strands
         
         Parameters
         ----------
@@ -781,11 +781,14 @@ class SegmentChain(object):
         Returns
         -------
         bool
-        
+            `True` if `self` and `other` share genomic positions on the same
+            chromosome, False otherwise. Strands of `self` and `other` need
+            not match
+            
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
             tmp = SegmentChain(other)
@@ -801,7 +804,7 @@ class SegmentChain(object):
             raise TypeError("Other is not a GenomicSegment or SegmentChain")
         
     def overlaps(self,other):
-        """Returns True if self and other share genomic positions on the same strand
+        """Return `True` if `self` and `other` share genomic positions on the same strand
         
         Parameters
         ----------
@@ -811,11 +814,13 @@ class SegmentChain(object):
         Returns
         -------
         bool
+            `True` if `self` and `other` share genomic positions on the same
+            chromosome and strand; False otherwise.
         
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
             tmp = SegmentChain(other)
@@ -823,7 +828,7 @@ class SegmentChain(object):
         return self.strand == other.strand and self.unstranded_overlaps(other) 
     
     def antisense_overlaps(self,other):
-        """Returns True if self and other share genomic positions on opposite strands
+        """Returns `True` if `self` and `other` share genomic positions on opposite strands
         
         Parameters
         ----------
@@ -833,11 +838,13 @@ class SegmentChain(object):
         Returns
         -------
         bool
-        
+            `True` if `self` and `other` share genomic positions on the same
+            chromosome but opposite strand; False otherwise.
+                    
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
             tmp = SegmentChain(other)
@@ -845,21 +852,10 @@ class SegmentChain(object):
         return self.strand != other.strand and self.unstranded_overlaps(other) 
 
     def covers(self,other):
-        """Determines whether a GenomicSegment or SegmentChain
-        is covered by this SegmentChain. Coverage is defined as follows for 
-        each type of `other`:
-        
-        +--------------------+----------------------------------------------------+
-        |Type of `other`     |  ``True`` if                                       |
-        +====================+====================================================+
-        ||SegmentChain|    |  All genomic positions in other must also be       |
-        |                    |  present in self. The intron chain of other        |
-        |                    |  must also be contained, unbroken, in the intron   |
-        |                    |  chain of self                                     |
-        +--------------------+----------------------------------------------------+
-        | |GenomicSegment| | All genomic positions in other must be present     |
-        |                    | in self                                            |
-        +--------------------+----------------------------------------------------+
+        """Return `True` if `self` and `other` share a chromosome and strand,
+        and all genomic positions in `other` are present in `self`.
+        By convention, zero-length |SegmentChains| are not covered by other
+        chains.
         
         
         Parameters
@@ -870,39 +866,32 @@ class SegmentChain(object):
         Returns
         -------
         bool
+            `True` if `self` and `other` share a chromosome and strand, and all
+            genomic positions in `other` are present in `self`. Otherwise `False`
         
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
             return self.covers(SegmentChain(other))
+        elif len(self) == 0 or len(other) == 0:
+            return False
         elif isinstance(other,SegmentChain):
-            if self.chrom != other.chrom:
-                return False
-            if self.strand != other.strand:
-                return False
-            # test junction sets
-            if other not in self:
-                return False;
-            else:            
-                self_positions  = self.get_position_set()
-                other_positions = other.get_position_set()            
-                if (other_positions | self_positions) == self_positions:
-                    return True
-                else:
-                    return False
+            return self.strand == other.strand and\
+                   self.chrom  == other.chrom and\
+                   other.get_position_set() & self.get_position_set() == other.get_position_set()
         else:
             raise TypeError("Other is not a GenomicSegment or SegmentChain")
     
     def get_antisense(self):
-        """Returns an |SegmentChain| antisense to self. Attributes are not preserved.
+        """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
         Returns
         -------
         SegmentChain
-            Identical |SegmentChain|, but on opposite strand
+            |SegmentChain| antisense to `self`
         """
         new_strand = "+" if self.strand == "-" else "-" if self.strand == "+" else "."
         new_segments = [GenomicSegment(X.chrom,X.start,X.end,new_strand) for X in self]
