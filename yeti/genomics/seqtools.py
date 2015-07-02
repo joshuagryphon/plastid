@@ -25,7 +25,7 @@ they represent (e.g. R -> (A, G) )
 
 def seq_to_regex(inp,flags=0):
     """Convert a nucleotide sequence of IUPAC nucleotide characters as a regular expression.
-    Ambiguous IUPAC characters are converted to groups (e.g. "Y" to "[CTU]"),
+    Ambiguous IUPAC characters are converted to groups (e.g. *'Y'* to *'[CTU]'*),
     and T and U are considered equivalent.
     
     Parameters
@@ -35,11 +35,19 @@ def seq_to_regex(inp,flags=0):
     
     flags : int, optional
         Flags to pass to :py:func:`re.compile` (Default: 0 / no flags)
+        
+    Examples
+    --------
+    Convert a sequence to a regex::
+    
+        >>> seq_to_regex("CARYYA").pattern
+        'CA[AG][CTU][CTU]A'
+    
     
     Returns
     -------
     :py:class:`re.RegexObject`
-        Regular expression pattern corresponding to IUPAC sequence in ``inp``
+        Regular expression pattern corresponding to IUPAC sequence in *inp*
     """
     out = []
     for ch in inp:
@@ -51,7 +59,7 @@ def seq_to_regex(inp,flags=0):
     return re.compile("".join(out),flags=flags)
 
 def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
-    """Generate all sequences within ``mutations`` mutations from a reference sequence
+    """Generate all sequences within *mutations* distance from a reference sequence
     
     Parameters
     ----------
@@ -59,17 +67,17 @@ def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
         Single reference sequence (a string) or a group of strings
                         
     nucleotides : list of char, optional
-        Permitted nucleotide substitutions (Default: "NACTG")
+        Permitted nucleotide substitutions (Default: *'NACTG'*)
     
     mutations : int, optional
-        Number of substitutions to make (Default: 1)
+        Number of substitutions to make (Default: *1*)
     
     
     Returns
     -------
     set
-        all sequences within ``mutations`` substitutions from the sequence(s)
-        specified in `seqs`
+        all sequences within *mutations* substitutions from the sequence(s)
+        specified in *seqs*
     """
     if isinstance(seqs,str):
         seqs = [seqs]
@@ -88,7 +96,7 @@ def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
 
 
 def random_seq(size,nucleotides="ACTG"):
-    """Generate a random nucleotide sequence of length ``size`` and composition ``nucleotides``
+    """Generate a random nucleotide sequence of length *size* and composition *nucleotides*
     
     Parameters
     ----------
@@ -97,8 +105,8 @@ def random_seq(size,nucleotides="ACTG"):
         
     nucleotides : str, optional
         string of nucleotides to use in sequence, in desired base composition
-        (i.e. need not be unique; can supply "AATCG" to increase "A" bias.
-        Default: "ACTG")
+        (i.e. need not be unique; can supply *'AATCG'* to increase *'A'* bias.
+        Default: *'ACTG'*)
         
     Returns
     -------
