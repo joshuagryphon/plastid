@@ -109,7 +109,7 @@ class TestHelpFormatters():
         assert_equal(shorten_help(raw_help1), shortened_help1)
     
     def test_format_module_docstring(self):
-        expected = _separator + shortened_help1 + _separator
+        expected = _separator + "\n" + shortened_help1 + "\n" + _separator
         assert_equal(format_module_docstring(raw_help1), expected)
         assert_equal(format_module_docstring(shortened_help1),expected)
 
