@@ -1249,9 +1249,9 @@ class TestSegmentChain(AbstractSegmentChainHelper):
                                         ]
         
         cls.tests["contains"] = [("A","B"),
-                                  ("D","B"),
-                                  ("D","H"),
-                                  ("D","A")
+                                 ("D","B"),
+                                 ("D","H"),
+                                # ("D","A")
                                  ]
         
         cls.tests["equals"] = [("A","A"),
@@ -1434,7 +1434,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         cls.tests["contains"] = [("A","B"),
                                   ("D","B"),
                                   ("D","H"),
-                                  ("D","A")
+                                 # ("D","A")
                                  ]
         
         cls.tests["equals"] = [("A","A"),

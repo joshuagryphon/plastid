@@ -1,35 +1,50 @@
 #!/usr/bin/env python
-"""Interfaces describing features spanning a genome, contig, or transcriptome.
+"""This module defines object types that describe features or regions of interest in a genome or contig.
+
 
 Important classes
 -----------------
 |GenomicSegment|
-    Similar to :py:class:`HTSeq.GenomicInterval`.
-    A single continuous region of a genome, specified by a chromosome,
-    a start coordinate, end coordinate, and strand. Implements various
-    tests of equality, overlap, and containment of other |GenomicSegment| objects.
+    A fundamental unit of a feature, similar to :py:class:`HTSeq.GenomicInterval`.
+    |GenomicSegment| describes a single region of a genome, and is specified by
+    by a chromosome name, a start coordinate, an end coordinate, and a strand.
+    |GenomicSegment| contain provide no feature annotation data, and are used
+    primarily to construct |SegmentChain| or |Transcript| objects, which do
+    provide feature annotation data. |GenomicSegment| implements various methods
+    to test equality to, overlap with, and containment of other |GenomicSegment|
+    objects.
 
 |SegmentChain|
-    Base class for genomic features that contain one or more segments, such as
-    transcripts containing one or more exons; splice junctions; or gapped alignments.
-    Numerous convenience functions are supplied for:
+    Base class for genomic features with annotation data. :class:`SegmentChains <SegmentChain>`
+    can contain zero or more :class:`GenomicSegments <GenomicSegment>`, and therefore can model
+    discontinuous features -- such as multi-exon transcripts or gapped alignments --
+    in addition to continuous features.  
+    
+    |SegmentChain| implements numerous convenience methods, e.g. for:
 
-        - Converting coordinates between the genome and the |SegmentChain|
+        - Converting coordinates between the genome and the spliced space of the
+          |SegmentChain|
+        
         - Fetching genomic sequence, read alignments, or count data over
-          the |SegmentChain|, accounting for splicing of the segments
+          the |SegmentChain|, accounting for splicing of the segments and, for
+          reverse-strand features, reverse-complementing of sequence
+
+        - Slicing or fetching sub-regions of a |SegmentChain|
+          
         - Testing for equality, inequality, overlap, containment, or coverage
           of other |SegmentChain| or |GenomicSegment| objects, in stranded 
           or unstranded manners
+          
         - Exporting to `BED`_, `GTF2`_, or `GFF3`_ formats, for use with other
           software packages or within a genome browser.
 
-    In addition, |SegmentChain| object may have dictionaries of attributes, e.g.
-    containing arbitrary annotation information (e.g. gene IDs, GO terms, database
+    In addition, |SegmentChain| objects have attribute dictionaries that allow
+    sotrage of arbitrary annotation information (e.g. gene IDs, GO terms, database
     cross-references, or miscellaneous notes).
 
 |Transcript|
      Subclass of |SegmentChain| that adds convenience methods for fetching CDS,
-     5' UTRs, and 3' UTRs, if present.        
+     5' UTRs, and 3' UTRs, if the transcript is coding.        
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
@@ -40,6 +55,8 @@ import copy
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
+
+from yeti.util.services.decorators import skipdoc
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
@@ -55,6 +72,7 @@ ivcpat = re.compile(r"([^:]*):([^(]+)\(([+-.])\)")
 # io functions
 #===============================================================================
 
+@skipdoc
 def _get_attr(dtmp):
     ltmp=[]
     for k,v in sorted(dtmp.items()):
@@ -62,35 +80,36 @@ def _get_attr(dtmp):
     
     return ",".join(ltmp)
 
-def _format_segmentchain(tx):
-    """Formats a Transcript as a string, which when ``eval``ed, should reconstruct the transcript.
+@skipdoc
+def _format_segmentchain(segchain):
+    """Formats a |SegmentChain| as a string, which when ``eval`` ed, should reconstruct the |SegmentChain|.
     Used for creating test datasets.
     
     Parameters
     ----------
-    tx : |Trancript|
+    segchain : |SegmentChain|
     
     Returns
     -------
     str
     """
     iv_ltmp = []
-    for iv in tx:
+    for iv in segchain:
         iv_ltmp.append("GenomicSegment('%s',%s,%s,'%s')" % (iv.chrom,iv.start,iv.end,iv.strand))
     
     stmp = "SegmentChain(%s,%s)" % (",".join(iv_ltmp),
-                                    _get_attr(tx.attr)
+                                    _get_attr(segchain.attr)
                                                           )
     return stmp
 
-
+@skipdoc
 def _format_transcript(tx):
-    """Formats a Transcript as a string, which when ``eval``ed, should reconstruct the transcript.
+    """Formats a |Transcript| as a string, which when ``eval`` ed, should reconstruct the |Transcript|.
     Used for creating test datasets.
     
     Parameters
     ----------
-    tx : |Trancript|
+    tx : |Transcript|
     
     Returns
     -------
@@ -108,7 +127,7 @@ def _format_transcript(tx):
     return stmp
 
 def positionlist_to_segments(chrom,strand,positions):
-    """Construct |GenomicSegment| from a numerical list of chromosomal positions
+    """Construct |GenomicSegment| from a chromosome name, a strand, and a list of chromosomal positions
 
     Parameters
     ----------
@@ -116,16 +135,16 @@ def positionlist_to_segments(chrom,strand,positions):
         Chromosome name
        
     strand : str
-        Chromosome strand ("+", "-", or ".") 
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
        
-    positions : list<int>
-        END-INCLUSIVE list, tuple, or set of positions to include
+    positions : list of integers
+        **End-inclusive** list, tuple, or set of positions to include
         in final |GenomicSegment|
            
     Returns
     -------
-    list<|GenomicSegment|>
-        Intervals covering positions
+    list
+        List of |GenomicSegment| objects covering `positions`
     """
     positions = sorted(list(set(positions)))
     intervals = []
@@ -147,24 +166,24 @@ def positionlist_to_segments(chrom,strand,positions):
 # sorting functions
 #===============================================================================
 
-def sort_segments_lexically(segment):
+def sort_segments_lexically(seg):
     """Key function to sort a list of |GenomicSegment| lexically
     by genomic position, by (in order of precedence): chromosome, start, end, strand
 
     Parameters
     ----------
-    iv : |GenomicSegment|
+    seg : |GenomicSegment|
 
     Returns
     -------
     str : Chromosome name
     int : Leftmost coordinate of |GenomicSegment|
     int : Rightmost coordinate of |GenomicSegment|
-    str : Chromosome strand ('+",'-', or '.')
+    str : Chromosome strand (`'+'`, `'-'`, or `'.'`)
     """
-    return (segment.chrom,segment.start,segment.end,segment.strand)
+    return (seg.chrom,seg.start,seg.end,seg.strand)
 
-def sort_segmentchains_lexically(feature):
+def sort_segmentchains_lexically(segchain):
     """Key function to sort a list of features lexically by genomic
     position, by (in order of precedence): chromosome, start, end, strand,
     then by length (in nucleotides) and name should any of the other
@@ -181,29 +200,38 @@ def sort_segmentchains_lexically(feature):
         Chromosome name
         
     int
-        Leftmost coordinate of |GenomicSegment|
+        Leftmost coordinate of `segchain`
         
     int
-        Rightmost coordinate of |GenomicSegment|
+        Rightmost coordinate of `segchain`
         
     str
-        Chromosome strand ('+','-', or '.')
+        Chromosome strand (`'+'`,`'-'`, or `'.'`)
+    
+    int
+        Length (nt) of segment chain
+    
+    str
+        Name of `segchain`
+    
+    dict
+        Attributes of `segchain`
     """
-    if isinstance(feature,SegmentChain):
-        length = feature.get_length()
+    if isinstance(segchain,SegmentChain):
+        length = segchain.get_length()
         
-    return (feature.spanning_segment.chrom,
-            feature.spanning_segment.start,
-            feature.spanning_segment.end,
-            feature.spanning_segment.strand,
+    return (segchain.spanning_segment.chrom,
+            segchain.spanning_segment.start,
+            segchain.spanning_segment.end,
+            segchain.spanning_segment.strand,
             length,
-            feature.get_name(),
-            feature.attr
+            segchain.get_name(),
+            segchain.attr
            )
 
-def sort_segmentchains_by_name(ivc):
+def sort_segmentchains_by_name(segchain):
     """Key function to sort |SegmentChain| by name"""
-    return ivc.get_name()
+    return segchain.get_name()
 
 
 #===============================================================================
@@ -211,8 +239,8 @@ def sort_segmentchains_by_name(ivc):
 #===============================================================================
 
 class GenomicSegment(object):
-    """Models an interval on the genome. Tests for equality, inequality,
-    overlapping, and containment are provided.
+    """A continuous segment of the genome, defined by a chromosome name,
+    a start coordinate, and end coordinate, and a strand.
 
     Attributes
     ----------
@@ -220,18 +248,20 @@ class GenomicSegment(object):
         Name of chromosome
 
     start : int
-        0-indexed, left most position of interval
+        0-indexed, left most position of segment
 
     end : int
-        0-indexed, half-open right most position of interval
+        0-indexed, half-open right most position of segment
 
     strand : str
-        Chromosome strand ('+', '-', or '.')
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
     
-    Notes
-    -----
-   	**NEVER** hash on |GenomicSegment|. Instead, hash on a tuple of
-        ``(iv.chrom, iv.start, iv.end, iv.strand)``
+    
+    See also
+    --------
+    SegmentChain
+        Base class for genomic features, built from multiple
+        :class:`GenomicSegments <GenomicSegment>`
     """
     
     __slots__ = ("chrom","start","end","strand")
@@ -252,7 +282,7 @@ class GenomicSegment(object):
             Must be >= `start`
         
         strand : str
-            Chromosome strand ('+",'-', or '.')
+            Chromosome strand (`'+'`, `'-'`, or `'.'`)
         """
         assert strand in ("+","-",".")
         assert end >= start
@@ -278,7 +308,7 @@ class GenomicSegment(object):
         Parameters
         ----------
         inp : str
-            String representation of |GenomicSegment| as *chrom:start-end(strand)*
+            String representation of |GenomicSegment| as `chrom:start-end(strand)`
             where `start` and `end` are in 0-indexed, half-open coordinates
         
         Returns
@@ -295,12 +325,13 @@ class GenomicSegment(object):
         return self.end - self.start
     
     def __eq__(self,other):
-        """Tests whether two |GenomicSegment| cover the exact same set of positions
+        """Test whether `self` and `other` cover the exact same set of positions,
+        on the same chromosome and strand.
         
         Parameters
         ----------
         other : |GenomicSegment|
-            Query interval
+            Query segment
         
         Returns
         -------
@@ -316,13 +347,14 @@ class GenomicSegment(object):
         return False if self == other else True
     
     def __contains__(self,other):
-        """Tests whether this interval contains another. Intervals must be 
-        on same strand and chromosome to do so.
+        """Test whether this segment contains `other`, where containment is
+        defined as all positions in `other` being present in self, when both
+        `self` and `other` share the same chromosome and strand.
            
         Parameters
         ----------
         other : |GenomicSegment|
-            Query interval
+            Query segment
         
         Returns
         -------
@@ -335,13 +367,14 @@ class GenomicSegment(object):
                other.end in my_range
     
     def contains(self,other):
-        """Tests whether this interval contains another. Intervals must be 
-        on same strand and chromosome to do so.
+        """Test whether this segment contains `other`, where containment is
+        defined as all positions in `other` being present in self, when both
+        `self` and `other` share the same chromosome and strand.
            
         Parameters
         ----------
         other : |GenomicSegment|
-            Query interval
+            Query segment
         
         Returns
         -------
@@ -350,13 +383,13 @@ class GenomicSegment(object):
         return other in self
         
     def overlaps(self,other):
-        """Tests whether this interval overlaps another. Intervals must be 
-        on same strand and chromosome to do so.
+        """Test whether this segment overlaps `other`, where overlap is defined
+        as sharing: a chromosome, a strand, and a subset of coordinates.
            
         Parameters
         ----------
         other : |GenomicSegment|
-            Query interval
+            Query segment
         
         Returns
         -------
@@ -373,21 +406,21 @@ class GenomicSegment(object):
             return False
     
     def as_igv_str(self):
-        """Format |GenomicSegment| as an IGV location string, which are 1-based and half-open-"""
+        """Format as an IGV location string"""
         return "%s:%s-%s" % (self.chrom, self.start+1, self.end+1)
     
     @staticmethod
     def from_igv_str(loc_str,strand="."):
-        """Build `|GenomicSegment| from IGV location string
+        """Construct |GenomicSegment| from IGV location string
         
         Parameters
         ----------
         igvloc : str
-            IGV location string, in format 'chromosome:start-end',
-            where *start* and *end* are 1-indexed and half-open
+            IGV location string, in format `'chromosome:start-end'`,
+            where `start` and `end` are 1-indexed and half-open
             
         strand : str
-            Chromosome strand ("+","-", or ".")
+            The chromosome strand (`'+'`, `'-'`, or `'.'`)
             
         Returns
         -------
@@ -399,7 +432,7 @@ class GenomicSegment(object):
         return GenomicSegment(chrom,start,end,strand)
     
     def get_name(self):
-        """Alias for str(self)"""
+        """Alias for :meth:`GenomicSegment.__str__`"""
         return str(self)
 
 
@@ -409,14 +442,27 @@ class GenomicSegment(object):
 #===============================================================================
 
 class SegmentChain(object):
-    """Represents continuous or discontinuous (multi-region) genomic features,
-    such as multi-exon transcripts or gapped sequence alignments.
+    """Base class for genomic features.  SegmentChains can contain zero or more
+    :class:`GenomicSegments <GenomicSegment>`, and therefore can model discontinuous,
+    features -- such as multi-exon transcripts or gapped alignments -- in addition,
+    to continuous features.
     
-    Numerous convenience functions are supplied for converting between coordinates
-    relative to the genome and relative to the internal coordinates of a spliced
-    |SegmentChain|, for fetching genomic sequence or count data in either
-    coordinate system, and for testing equality, inequality, overlap, containment,
-    or coverage of other |SegmentChain| or |GenomicSegment|.
+    Numerous convenience functions are supplied for:
+    
+      - converting between coordinates relative to the genome and relative
+        to the internal coordinates of a spliced |SegmentChain|
+        
+      - fetching genomic sequence, read alignments, or count data, accounting
+        for splicing of the segments, and, in the case of reverse-strand features,
+        reverse-complementing
+      
+      - slicing or fetching sub-regions of a |SegmentChain|
+      
+      - testing equality, inequality, overlap, containment, coverage of, or
+        sharing of segments with other |SegmentChain| or |GenomicSegment| objects
+    
+      - import/export to `BED`_, `PSL`_, `GTF2`_, and `GFF3`_ formats,
+        for use in other software packages or in a genome browser.
     
     Intervals are sorted from lowest to greatest starting coordinate on their
     reference sequence, regardless of strand. Iteration over the SegmentChain
@@ -426,67 +472,55 @@ class SegmentChain(object):
     Attributes
     ----------
     spanning_segment : |GenomicSegment|
-        A GenomicSegment spanning the endpoints of the SegmentChain
+        A |GenomicSegment| spanning the endpoints of the |SegmentChain|
 
     strand : str
-        The chromosome strand ('+', '-', or '.')
+        The chromosome strand (`'+'`, `'-'`, or `'.'`)
 
     chrom : str
-        The chromosome name
+        Name of the chromosome on which the |SegmentChain| resides
 
     attr : dict
-        Any miscellaneous attributes, e.g.
-        
-        ==============     =======================================
-        Attribute          Definition
-        --------------     ---------------------------------------
-        ``type``           Type of feature (e.g. *exon*, *mRNA*, et c), required. Default: *exon*
-        
-        ``ID``             A unique ID (optional)
-        
-        ``color``          Color for rendering in a genome browser (e.g. *'#007ADF'*)
-        
-        ``thickstart``     Genomic position at which genome browsers should start (optional)
-                           rendering the item with thick instead of thin boxes (optional)
-                           
-        ``thickend``       Genomic position at which genome browsers should stop
-                           rendering the item with thick instead of thin boxes (optional)
-        ==============     =======================================
+        Any miscellaneous attributes or annotation data
 
 
     See Also
     --------
 	Transcript
-        Transcript subclass, additionally providing richer GTF2, GFF3,
-        and BED export, as well as methods for fetching coding regions
+        Transcript subclass, additionally providing richer `GTF2`_, `GFF3`_,
+        and `BED`_ export, as well as methods for fetching coding regions
         and UTRs as subsegments
     """
     def __init__(self,*segments,**attr):
-        """Creates an |SegmentChain| from zero or more |GenomicSegment|
+        """Create an |SegmentChain| from zero or more |GenomicSegment| objects
+        
+        Example::
+        
+            >>> seg1 = GenomicSegment("chrI",2000,2500,"+")
+            >>> seg2 = GenomicSegment("chrI",10000,11000,"+")
+            >>> chain = SegmentChain(seg1,seg2,ID="example_chain",type="mRNA")
+            
         
         Parameters
         ----------
-        segments : |GenomicSegment|
+        *segments : |GenomicSegment|
             0 or more GenomicSegments on the same strand
         
-        attr : dict
-            Arbitrary attributes
+        **attr : dict
+            Arbitrary attributes, including, for example:
         
-        attr["type"] : str
-            If provided, a feature type used for GTF2/GFF3 export
-            of each interval in the |SegmentChain|. Default: "exon"
-        
-        attr["ID"] : str
-            If provided, a unique ID for the SegmentChain.
-            Otherwise, generated from genomic coordinates
-        
-        attr["transcript_id"] : str
-            If provided, a transcript_id used for GTF2 export.
-            Otherwise, generated from genomic coordinates.
-        
-        attr["gene_id"] : str
-            If provided, a gene_id used for GTF2 export
-            Otherwise, generated from genomic coordinates.
+            ====================    ============================================
+            **Attribute**           **Description**
+            ====================    ============================================
+            ``type``                A feature type used for `GTF2`_/`GFF3`_ export
+                                    of each interval in the |SegmentChain|. (Default: `'exon'`)
+            
+            ``ID``                  A unique ID for the |SegmentChain|.
+
+            ``transcript_id``       A transcript ID used for `GTF2`_ export
+
+            ``gene_id``             A gene ID used for `GTF2`_ export
+            ====================    ============================================
        """
         self.spanning_segment = None  #interval spanning entire SegmentChain
         self._segments      = []
@@ -502,8 +536,8 @@ class SegmentChain(object):
         self.add_segments(*segments)
 
     def _update(self):
-        """Sorts GenomicSegments that are members of the SegmentChain,
-        and keeps all internal hashes in sync
+        """Sort component :class:`GenomicSegments <GenomicSegment>` within
+        the |SegmentChain|, and maintain synchrony of position hashes
         """
         self.sort()
         self._position_hash = self._get_position_hash()
@@ -514,7 +548,7 @@ class SegmentChain(object):
                                       self.strand)
 
     def sort(self):
-        """Sorts component intervals by ascending 5' chromosomal coordinate"""
+        """Sort component segments by ascending 5' chromosomal coordinate"""
         self._segments.sort(key=sort_segments_lexically)
         self._mask_segments.sort(key=sort_segments_lexically)
 
@@ -530,7 +564,14 @@ class SegmentChain(object):
         return sout
 
     def __str__(self):
-        """String representation of |SegmentChain|. Inverse of :py:meth:`.from_str`""" 
+        """String representation of |SegmentChain|. Inverse of :py:meth:`.from_str`
+        Chains are represented as:
+        
+            `'chrom_name:segment1_start-segment1_end^segment2_start-segment2_end^...^(strand)'`
+        
+        Where all coordinates are zero-indexed and half-open. Masked segments
+        are not saved in this representation; nor are attributes in `self.attr`
+        """ 
         if len(self) > 0:
             ltmp = ["%s-%s" % (segment.start, segment.end) for segment in self]
             stmp = "^".join(ltmp)
@@ -557,37 +598,41 @@ class SegmentChain(object):
         self._segments[key] = val
             
     def __iter__(self):
-        """Enable interation over |GenomicSegment| in the |SegmentChain|"""
+        """Interation over each |GenomicSegment| in the |SegmentChain|,
+        from left to right on the chromsome"""
         return iter(self._segments)
     
     def __next__(self):
-        """Iterate over |GenomicSegment| s in the |SegmentChain|"""
+        """Return next |GenomicSegment| in the |SegmentChain|,
+        from left to right on the chromsome"""
         return next(self._segments)
     
     def next(self):
-        """Iterate over |GenomicSegment| s in the |SegmentChain|"""
+        """Return next |GenomicSegment| in the |SegmentChain|,
+        from left to right on the chromsome"""
         return self.__next__()
     
     def __len__(self):
-        """Returns the number of |GenomicSegment| s in the |SegmentChain|"""
+        """Return the number of :class:`GenomicSegments <GenomicSegment>` in the |SegmentChain|"""
         return len(self._segments)
     
     def __contains__(self,other):
         """Tests whether |SegmentChain| contains another |SegmentChain|
         or |GenomicSegment|. Containment is defined for each type as follows:
         
-        +-----------------+--------------------------------------------------------+
-        | Type of `other` |  ``True`` if                                           |
-        +-----------------+--------------------------------------------------------+
-        | |SegmentChain|    | If self and other both contain more than one interval, |
-        |                 | all interval-interval junctions in other must be       |
-        |                 | represented in self, in consecutive order. If other    |
-        |                 | contains one interval, it must be fully contained by   |
-        |                 | one interval in self.                                  |
-        +-----------------+--------------------------------------------------------+
-        | |GenomicSegment| | The GenomicSegment must be completely contained       | 
-        |                 | within a GenomicSegment in self                       |
-        +-----------------+--------------------------------------------------------+
+        =====================   =======================================================
+        **Type of `other`**     **True if**
+        ---------------------   -------------------------------------------------------
+        |SegmentChain|          If `self` and `other` both contain more than one segment,
+                                all segment-segment junctions in `other` must be       
+                                represented in `self`, in identical order, and all
+                                positions covered by `other` must be present in `self`.
+                                If `other` contains one segment, it must be fully
+                                contained by one segment in `self`.                                  
+
+        |GenomicSegment|        `other` must be completely contained        
+                                within one of the segments in `self`                       
+        =====================   =======================================================
         
         
         Parameters
@@ -618,15 +663,21 @@ class SegmentChain(object):
                         return True
                 return False            
             else:
-                myjuncs = self.get_junctions()
-                ojuncs  = other.get_junctions()
-    
-                found = False
-                for i, myjunc in enumerate(myjuncs):
-                    if ojuncs[0] == myjunc:
-                        mystart = i
-                        found   = True
-                        break
+                selfpos = self.get_position_set()
+                opos    = other.get_position_set()
+                
+                if opos & selfpos == opos:
+                    myjuncs = self.get_junctions()
+                    ojuncs  = other.get_junctions()
+        
+                    found = False
+                    for i, myjunc in enumerate(myjuncs):
+                        if ojuncs[0] == myjunc:
+                            mystart = i
+                            found   = True
+                            break
+                else:
+                    return False
                 
                 if found is True:
                     return ojuncs == myjuncs[mystart:mystart+len(ojuncs)]
@@ -637,12 +688,9 @@ class SegmentChain(object):
         return False
     
     def __eq__(self,other):
-        """Checks if two |SegmentChain| are equal. Both collections must contain
-        the same number of intervals. |SegmentChain| with more than one interval
-        are equal if their junction chains are compatible. |SegmentChain| with
-        one interval are equal if the start and endpoints of the their intervals
-        are equal. Two |SegmentChain| with no intervals, for convention, are
-        not equal.
+        """Checks if `self` and `other` are equal. Both chains must contain
+        identical positions, chromosomes, and strains to be equal.
+        Two |SegmentChain| with no intervals, by convention, are not equal.
            
         Parameters
         ----------
@@ -653,20 +701,30 @@ class SegmentChain(object):
         -------
         bool
         """
-        if len(self) != len(other):
+        if isinstance(other,GenomicSegment):
+            other = SegmentChain(GenomicSegment)
+            
+        if len(self) == 0 or len(other) == 0:
             return False
-        elif len(self) == 0:
-            return False
-        elif len(self) > 1:
-            return self in other and other in self
         else:
-            return self[0].start == other[0].start and\
-                   self[0].end == other[0].end and\
+            return self.chrom == other.chrom and\
                    self.strand == other.strand and\
-                   self.chrom == other.chrom
+                   self.get_position_set() == other.get_position_set()
+        
+#         if len(self) != len(other):
+#             return False
+#         elif len(self) == 0:
+#             return False
+#         elif len(self) > 1:
+#             return self in other and other in self
+#         else:
+#             return self[0].start == other[0].start and\
+#                    self[0].end == other[0].end and\
+#                    self.strand == other.strand and\
+#                    self.chrom == other.chrom
                    
     def __ne__(self,other):
-        """Defines inequality for two SegmentChains as complement of __eq__
+        """Defines inequality for two SegmentChains as complement of :meth:`SegmentChain.__eq__`
 
         Parameters
         ----------
@@ -680,8 +738,7 @@ class SegmentChain(object):
         return False if self == other else True
 
     def shares_segments_with(self,other):
-        """Returns a list of |GenomicSegment| that are shared with another
-        |SegmentChain| or |GenomicSegment|
+        """Returns a list of |GenomicSegment| that are shared between `self` and `other`
            
         Parameters
         ----------
@@ -695,7 +752,7 @@ class SegmentChain(object):
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
             tmp = SegmentChain(other)
