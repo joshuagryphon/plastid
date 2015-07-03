@@ -83,7 +83,7 @@ def add_three_for_stop_codon(tx):
 
 
 def get_identical_attributes(features,exclude=set()):
-    """Return a dictionary of all key-value pairs that are identical for all features in ``features``
+    """Return a dictionary of all key-value pairs that are identical for all features in `features`
     
     Parameters
     ----------
@@ -94,7 +94,7 @@ def get_identical_attributes(features,exclude=set()):
     -------
     dict
         Dictionary of all key-value pairs that have identical values in all
-        features in ``features``
+        features in `features`
     """
     common_keys = set(features[0].attr.keys())
     for feature in features:
@@ -116,7 +116,7 @@ class AssembledFeatureReader(AbstractReader):
     as transcripts or gapped alignments. For memory efficiency, all readers
     function as iterators over their respective streams. Choosing when to
     process sub-features, and how many to hold in memory, is up to implementation
-    in subclasses, which should additionally define ``self._assemble``.
+    in subclasses, which should additionally define `self._assemble`.
     
     Attributes
     ----------
@@ -141,8 +141,7 @@ class AssembledFeatureReader(AbstractReader):
     """
     
     def __init__(self,*streams,**kwargs):
-        """Create an |AssembledFeatureReader|
-        
+        """
         Parameters
         ----------
         streams : file-like
@@ -152,22 +151,22 @@ class AssembledFeatureReader(AbstractReader):
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
         add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations. If set to
-            True, three nucleotides will be added to the threeprime end of each
-            CDS annotation. Default: False
+            Some annotation files exclude the stop codon from CDS annotations.
+            If set to `True`, three nucleotides will be added to the threeprime
+            end of each CDS annotation. (Default: `False`)
         
         printer : file-like, optional
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
         tabix : boolean, optional
-            Set to *True* if incoming streams are tabix-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: False)
+            Set to *True* if incoming streams are `tabix`_-compressed, and
+            using the parser :py:class:`pysam.asTuple` (Default: `False`)
 
         add_three_for_stop : bool, optional
             Some annotation files exclude the stop codon from CDS annotations. If set to
             *True*, three nucleotides will be added to the threeprime end of each
-            CDS annotation, UNLESS the annotated transcript contains explicit stop_codon 
-            feature. (Default: False)
+            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+            feature. (Default: `False`)
                         
         **kwargs
             Other keyword arguments used by specific parsers
@@ -196,15 +195,15 @@ class AssembledFeatureReader(AbstractReader):
         Returns
         -------
         |SegmentChain| or subclass
-            Next feature assembled from ``self.stream``, specified by ``self.return_type``
+            Next feature assembled from `self.stream`, specified by `self.return_type`
         """
     
     def filter(self,data):
-        """Return next assembled feature from ``self.stream``
+        """Return next assembled feature from `self.stream`
         
         Returns
         -------
         |SegmentChain| or subclass
-            Next feature assembled from ``self.stream``, specified by ``self.return_type``
+            Next feature assembled from `self.stream`, specified by `self.return_type`
         """
         return self._finalize(self._assemble(data))

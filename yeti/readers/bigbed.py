@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 """|BigBedReader|, a parser for `BigBed`_ files. In contrast to `BED`_, `GTF2`_,
 and `GFF3`_ files, `BigBed`_ files are binary, indexed, and randomly-accessible.
+This has several interesting implications:
 
-As such, they don't need to be loaded into memory to be parsed, which results
-in substantial memory savings for large genomes. The memory savings come at a
-cost in speed, however, as `BigBed`_ files are highly compressed.
+    - |BigBedReader| can be used to iterate over records, like a reader, **or**
+      to fetch records that cover a region of interest, in the manner of a |GenomeHash|
+    
+    - Because `BigBed`_ files are randomly accessible, their records don't need
+      to be loaded into memory to be parsed, which results in substantial memory
+      savings for large genomes. This, however, comes at a cost in speed, 
+      as `BigBed`_ files are highly compressed.
 
 
 Examples
@@ -16,16 +21,16 @@ Iterate over all features in a BigBed file::
             pass # do something with each feature
 
 
-Instead, find features overlapping a specific region of interest ``roi``,
-on the same strand as the ``roi``::
+Instead, find features overlapping a specific feature or region of interest `roi`,
+on the same strand as the `roi`::
 
     >>> roi = GenomicSegment("chrI",0,100000,"+")
     >>> for feature in my_reader[roi]:
             pass # do something with that feature
             ...
 
-
-Find features overlapping a genomic region of interest ``roi``,
+    
+Find features overlapping a genomic region of interest `roi`,
 on either strand::
 
     >>> for feature in my_reader.__getitem__(roi,stranded=False):
@@ -33,10 +38,10 @@ on either strand::
 
 
 
-Further reading / See Also
---------------------------
+See also
+--------
 |BigBedReader|
-    Full documentation for reader
+    Class documentation for |BigBedReader|
 
 `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
     Description of BigBed and BigWig formats. Especially see supplemental data.
@@ -57,11 +62,14 @@ from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
 from yeti.util.io.openers import NullWriter
 from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
+from yeti.util.services.decorators import skipdoc, deprecated
 
 #===============================================================================
 # INDEX: Convenience function for opening
 #===============================================================================
 
+@skipdoc
+@deprecated
 def BigBed_to_Transcripts(filename,add_three_for_stop=False,printer=NullWriter()):
     """Iterate over entire BigBed files, one transcript at at time, in chromosomal order
     
@@ -95,11 +103,9 @@ def BigBed_to_Transcripts(filename,add_three_for_stop=False,printer=NullWriter()
 #===============================================================================
 
 class BigBedReader(object):
-    """Reader for `BigBed`_ files.
-    
-    See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for 
-    detailed description of the structures of the BigBed format, B+ Tree,
-    and R trees. 
+    """Reader for `BigBed`_ files. This class is useful for both iteration
+    over genomic features one-by-one (like a reader), as well as random access to
+    genomic features that overlap a region of interest (like a |GenomeHash|).  
     
     
     Examples
@@ -111,16 +117,14 @@ class BigBedReader(object):
                 pass # do something with each feature
 
 
-    Instead, find features overlapping a specific region of interest ``roi``,
-    on the same strand as the ``roi``::
+    Instead, find features overlapping a specific region of interest `roi`,
+    on the same strand as the `roi`, and save these as a list::
     
         >>> roi = GenomicSegment("chrI",0,100000,"+")
-        >>> for feature in my_reader[roi]:
-                pass # do something with that feature
-                ...
+        >>> overlapping_features = list(my_reader[roi])
     
 
-    Find features overlapping a genomic region of interest ``roi``,
+    Find features overlapping a genomic region of interest `roi`,
     on either strand::
     
         >>> for feature in my_reader.__getitem__(roi,stranded=False):
@@ -151,6 +155,13 @@ class BigBedReader(object):
     
     return_type : class implementing a :py:meth:`from_bed` method
         Class of object to return (Default: |SegmentChain|)
+
+
+    Notes
+    -----
+    See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for 
+    detailed description of the structures of the BigBed format, B+ Tree,
+    and R trees. 
     """
     
     def __init__(self,
@@ -170,7 +181,7 @@ class BigBedReader(object):
             String indicating path to `BigBed`_ file (*not* open filehandle)
         
         base_record_format : str, optional
-            Format string for :py:func:'struct.unpack`, excluding endian-ness prefix
+            Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
             and any notion of a null-terminated string (Default: "III")
         
         return_type : class implementing a :py:meth:`from_bed` method
@@ -178,22 +189,21 @@ class BigBedReader(object):
         
         add_three_for_stop : bool, optional
             Some annotation files exclude the stop codon from CDS annotations. If set to
-            *True*, and the BED file annotates transcripts, three nucleotides
-            will be added to the threeprime end of each CDS annotation, UNLESS
-            the annotated transcript contains explicit stop_codon feature.
-            (Default: False)
+            `True`, and the `BigBed`_ file annotates transcripts, three nucleotides
+            will be added to the threeprime end of each CDS annotation.
+            (Default: `False`)
                         
         cache_depth : int, optional
             Number of previously-fetched data blocks to keep in memory.
             Decrease this number to reduce memory usage. Increase it to speed up
-            repeated fetches to nearby genomic regions. (Default: 5)
+            repeated fetches to nearby genomic regions. (Default: `5`)
 
         memorize_r_tree : bool, optional
             If *True*, cache entire |RTree| index into memory for faster lookup
-            (faster for small files, use big memory for large files. Default: False)
+            (faster for small files, use big memory for large files. Default: `False`)
             
         printer : file-like, optional
-            Filehandle or sys.stderr-like for logging (Default: NullWriter())            
+            Filehandle or sys.stderr-like for logging (Default: |NullWriter|)            
         """
         self.filename = filename
         self.fh = open(filename,"rb")
@@ -239,7 +249,7 @@ class BigBedReader(object):
         assert self.header["magic"] == 0x8789F2EB
 
     def close(self):
-        """Close all open pointers to BigBed file"""
+        """Close all open pointers to `BigBed`_ file"""
         self.fh.close()
         self.r_tree.fh.close()
         self.bplus_tree.fh.close()
@@ -254,7 +264,7 @@ class BigBedReader(object):
         return str(self)
 
     def _get_autosql_str(self):
-        """Fetch `autoSql`_ field definition string, if present
+        """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
         
         Returns
         -------
@@ -285,7 +295,7 @@ class BigBedReader(object):
         """Parse first 64 bytes of `BigBed`_ file, and determine indices
         of file metadata. 
         
-        Header table information from Kent2010, Supplemental table 5:
+        Header table information from :cite:`Kent2010`, Supplemental table 5:
         
         =========================  ==== ====  =================================================
         Field                      Size Type   Summary
@@ -333,12 +343,12 @@ class BigBedReader(object):
             End of compressed record block in `BigBed`_ file
         
         null : str, optional
-            Null character. Default: *\x00*
+            Null character. Default: `'\\x00'`
         
         Yields
         ------
         object
-            Object of ``self.return_type``, usually |SegmentChain| or one of its subclasses
+            Object of `self.return_type`, usually |SegmentChain| or one of its subclasses
         """
         base_size = struct.calcsize(self._byte_order+self.base_record_format)
         
@@ -414,34 +424,34 @@ class BigBedReader(object):
                     # because no stop codon
                     yield return_obj
             
-    def __getitem__(self,iv,stranded=True):
+    def __getitem__(self,roi,stranded=True):
         """Iterate over features that overlap a region of interest
         
         Parameters
         ----------
-        iv : |SegmentChain| or |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Query feature representing region of interest
         
         stranded : bool, optional
-            if *True*, retrieve only features on same strand as query feature.
-            Otherwise, retrieve features on both strands. (Default: True)
+            if `True`, retrieve only features on same strand as query feature.
+            Otherwise, retrieve features on both strands. (Default: `True`)
             
         
         Yields
         ------
         object
-            Object of ``self.return_type``, |SegmentChain| or one of its subclasses
+            Object of `self.return_type`, |SegmentChain| or one of its subclasses
         
         
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
-        if isinstance(iv,SegmentChain):
-            ivc = iv
-        elif isinstance(iv,GenomicSegment):
-            ivc = SegmentChain(iv)
+        if isinstance(roi,SegmentChain):
+            segchain = roi
+        elif isinstance(roi,GenomicSegment):
+            segchain = SegmentChain(roi)
         else:
             raise TypeError("Query interval must be a GenomicSegment or SegmentChain")
         
@@ -450,10 +460,10 @@ class BigBedReader(object):
         else:
             overlap_fn = SegmentChain.unstranded_overlaps
             
-        return ifilter(lambda x: overlap_fn(ivc,x),
+        return ifilter(lambda x: overlap_fn(segchain,x),
                                  itertools.chain.from_iterable((self._iterate_over_chunk(file_offset,byte_length) \
                                                                 for (file_offset,byte_length) \
-                                                                in self.r_tree[ivc.spanning_segment])))
+                                                                in self.r_tree[segchain.spanning_segment])))
     
     def __iter__(self):
         """Generator that iterates over all features in `BigBed`_ file
@@ -470,8 +480,8 @@ class BigBedReader(object):
 #===============================================================================
 
 class BPlusTree(object):
-    """Decode B+ Trees, which describe chromosomes and contigs in `BigBed`_ and
-    BigWig files.
+    """Decode B+ Trees, which are used to describe chromosomes and contigs
+    in `BigBed`_ and BigWig files.
 
     See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for 
     detailed description of the structures of the `BigBed`_ format, B+ Tree,
@@ -512,7 +522,7 @@ class BPlusTree(object):
     """
     
     def __init__(self,filename,start_offset,byte_order="<"):
-        """Create a BPlusTree
+        """Create a |BPlusTree|
         
         Parameters
         ----------
@@ -523,7 +533,7 @@ class BPlusTree(object):
             Offset, in bytes, to BPlus Tree Header
         
         byte_order : str
-            Character indicating endian-ness of data (default: "<" for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for little-endian)
         """
         self._byte_order = byte_order
         self.filename = filename
@@ -556,7 +566,7 @@ class BPlusTree(object):
     def _parse_header(self):
         """Parses BPlus Tree Header in `BigBed`_ file
         
-        Header table information from Kent2010, Supplemental table 8:
+        Header table information from :cite:`Kent2010`, Supplemental table 8:
         
         =====================  =====  =====  ========================================
         Field                  Size   Type   Summary
@@ -585,13 +595,13 @@ class BPlusTree(object):
         
         Populates the following:
         
-        ``self.chrom_id_name``
+        `self.chrom_id_name`
             Maps chromosome IDs to names
         
-        ``self.chrom_name_id``
+        `self.chrom_name_id`
             Maps chromosome names to IDs
         
-        ``self.chrom_sizes``
+        `self.chrom_sizes`
             Maps chromosome names to sizes in basepairs
         """
         for chrom_id,chrom_name,chrom_size in self._walk_tree():
@@ -600,7 +610,7 @@ class BPlusTree(object):
             self.chrom_sizes[chrom_name]   = chrom_size
         
     def _walk_tree(self,start_offset=None):
-        """Exhaustively traverses BPlus tree, starting at the node specified by ``start_offset``
+        """Exhaustively traverses BPlus tree, starting at the node starting at `start_offset`
         
         Parameters
         ----------
@@ -610,7 +620,7 @@ class BPlusTree(object):
         Returns
         -------
         list
-            List of tuples of *(chrom_id,chrom_name,chrom_size)*, in order
+            List of tuples of `(chrom_id,chrom_name,chrom_size)`, in order
             of traversal depth-first, left-to-right
         """
         if start_offset is None:
@@ -657,7 +667,7 @@ class RTree(object):
 
     leaf_data : dict
         Dictionary mapping record offsets of leaf nodes to tuples of their
-        *(data_offset,data_size)*. This dictionary is populated via lazy
+        `(data_offset,data_size)`. This dictionary is populated via lazy
         evaluation
         
     header_offset : int
@@ -687,11 +697,11 @@ class RTree(object):
             Offset, in bytes, to |RTree| header
         
         byte_order : str
-            Character indicating endian-ness of data (default: "<" for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for little-endian)
             
         memorize : bool
-            If *True*, cache entire tree topology into memory for faster lookup
-            (faster for small files, uses big memory for large files. Default: False)
+            If `True`, cache entire tree topology into memory for faster lookup
+            (faster for small files, uses big memory for large files. Default: `False`)
         """     
         self.filename      = filename
         self.bplus_tree    = bplus_tree
@@ -716,7 +726,7 @@ class RTree(object):
     def _parse_header(self):
         """Parses |RTree| Header in `BigBed`_ file
         
-        Header table information from Kent2010, Supplemental table 8:
+        Header table information from :cite:`Kent2010`, Supplemental table 8:
         
         ===================  ======  ======  =================================================
         Field                Size    Type    Summary
@@ -755,14 +765,14 @@ class RTree(object):
         Returns
         -------
         list
-            List of tuples of *(file_offset, bytes_to_read)*  in `BigBed` file
+            List of tuples of `(file_offset, bytes_to_read)`  in `BigBed` file
             specifying data blocks of find records that should be checked for overlap
-            with ``roi``
+            with `roi`
          
         Raises
         ------
         TypeError
-            if ``other`` is not a |GenomicSegment| or |SegmentChain|
+            if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,SegmentChain):
             iv = roi.iv
@@ -806,7 +816,7 @@ class RTree(object):
         
         Parameters
         ----------
-        node : |RTreeLeaf| or |RTreeNonLeaf|
+        node : RTreeLeaf or RTreeNonLeaf
             Query node
         
         roi_chrom_id: int
@@ -821,7 +831,7 @@ class RTree(object):
         Returns
         -------
         bool
-            *True* if ``node`` overlaps the ROI. *False* otherwise
+            `True` if `node` overlaps the ROI. `False` otherwise
         """
         if node["start_chrom_id"] > roi_chrom_id:
             return False
@@ -859,24 +869,24 @@ class RTree(object):
         """Search |RTree| exhaustively and return addresses of data blocks of all
         leaves. Leaf data is stored in:
         
-            ``self.leaf_data``
+            `self.leaf_data`
                 Dictionary mapping leaf node offsets to tuples of
-                *(data_offset,data_block_size)*
+                `(data_offset,data_block_size)`
  
         
-        In addition, if ``memorize`` is set to *True,* the following dictionaries
+        In addition, if `memorize` is set to `True,` the following dictionaries
         are additionally populated to speed subsequent searches:
  
-            ``self.node_genome_boundaries``
+            `self.node_genome_boundaries`
                 Dictionary all node offsets to tuples of
-                *(start_chromosome_id,start_genomic_base,end_chromosome_id,end_genomic_base)*
+                `(start_chromosome_id,start_genomic_base,end_chromosome_id,end_genomic_base)`
     
             
-            ``self.node_child_offsets``
+            `self.node_child_offsets`
                 Dictionary mapping non-leaf node offsets to lists of offsets 
                 of their child nodes
             
-            ``self.node_parent_offsets``
+            `self.node_parent_offsets`
                 Dictionary mapping all node offsets to the offset of the parent node
                 for reverse tree traversal
         
@@ -945,13 +955,13 @@ HeaderFactory = BinaryParserFactory("BigBedHeader","IHH3QHHQQIQ",["magic",
                                                                   "uncompressed_buffer_size",
                                                                   "reserved"
                                                                   ])
-"""Reads headers for BigWig and BegBed files"""
+"""Parse headers for BigWig and `BigBed`_ files"""
 
 ZoomHeaderFactory = BinaryParserFactory("ZoomHeader","2H2Q",["reduction_level",
                                                              "reserved",
                                                              "data_offset",
                                                              "index_offset"])
-"""Parses Zoomlevel headers in BigWig files"""
+"""Parse Zoomlevel headers in BigWig files"""
 
 
 TotalSummaryFactory = BinaryParserFactory("TotalSummary","5Q",["bases_covered",
@@ -959,7 +969,7 @@ TotalSummaryFactory = BinaryParserFactory("TotalSummary","5Q",["bases_covered",
                                                                "max_val",
                                                                "sum_data",
                                                                "sum_squares"])
-"""Parses 'Total Summary' tables in BigWig and BigBed files"""
+"""Parse 'Total Summary' tables in BigWig and `BigBed`_ files"""
 
 BPlusTreeHeaderFactory = BinaryParserFactory("BPlusTreeHeader",
                                             "4I2Q",
@@ -969,14 +979,14 @@ BPlusTreeHeaderFactory = BinaryParserFactory("BPlusTreeHeader",
                                              "val_size",
                                              "num_chroms",
                                              "reserved"])
-"""Parses headers of BPlus trees"""
+"""Parse headers of |BPlusTree|"""
 
 BPlusTreeNodeFormatFactory  = BinaryParserFactory("BPlusTreeNodeFormat",
                                                   "?BH",
                                                   ["is_leaf",
                                                    "reserved",
                                                    "child_count"])
-"""Determines format of BPlus Tree nodes in a datablock of a BigBed or BigWig file"""
+"""Determine format of BPlus Tree nodes in a datablock of a `BigBed`_ or BigWig file"""
 
 RTreeHeaderFactory = BinaryParserFactory("RTreeHeader",
                                          "IIQ4IQII",
@@ -990,13 +1000,13 @@ RTreeHeaderFactory = BinaryParserFactory("RTreeHeader",
                                          "end_file_offset",
                                          "items_per_leaf",
                                          "reserved"])
-"""Parses headers of R Trees"""
+"""Parse headers of |RTree|"""
 
 RTreeNodeFormatFactory = BinaryParserFactory("RTreeNodeFormat",
                                             "BBH",
                                             ["is_leaf","reserved","count"]
                                             )
-"""Determines format of R Tree nodes in a data block of a BigBed or BigWig file"""
+"""Determine format of R Tree nodes in a data block of a `BigBed`_ or BigWig file"""
 
 
 RTreeLeafFactory = BinaryParserFactory("RTreeLeaf",
@@ -1008,7 +1018,7 @@ RTreeLeafFactory = BinaryParserFactory("RTreeLeaf",
                                        "data_offset",
                                        "data_size"
                                        ])
-"""Parses leaves of R Trees"""
+"""Parse leaves of |RTree|"""
 
 RTreeNonLeafFactory = BinaryParserFactory("RTreeNonLeaf",
                                           "4IQ",
@@ -1017,6 +1027,6 @@ RTreeNonLeafFactory = BinaryParserFactory("RTreeNonLeaf",
                                            "end_chrom_id",
                                            "end_base",
                                            "child_data_offset"])
-"""Parses non-leaf nodes of R Trees"""
+"""Parse non-leaf nodes of |RTree|"""
 
 

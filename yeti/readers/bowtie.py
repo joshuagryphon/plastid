@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-"""Contains utility functions for reading and writing alignment information
-from bowtie's proprietary legacy output format, as well as functions that 
-map read alignments to specific positions. Functions defined in this class
-are are seldom used on their own, and rather are accessed internally by |GenomeArray|
-when importing from bowtie or TagAlign files.
+"""This module contains a parser for `bowtie`_'s legacy output format.
+Functions in this module are are seldom used on their own, and rather are
+accessed by |GenomeArray| or |SparseGenomeArray| when importing from
+`bowtie`_ files.
 
 See also
 --------
@@ -18,6 +17,7 @@ __date__ = "2011-03-18"
 
 from yeti.genomics.roitools import SegmentChain, GenomicSegment
 from yeti.util.io.filters  import AbstractReader
+from yeti.util.services.decorators import deprecated, skipdoc
 
 
 #===============================================================================
@@ -26,7 +26,7 @@ from yeti.util.io.filters  import AbstractReader
 
 
 class BowtieReader(AbstractReader):
-    """Reads bowtie files into |SegmentChain| objects corresponding to alignments.
+    """Read alignments from `bowtie`_ files line-by-line into |SegmentChains|.
     Attributes defined for the feature are:
     
     `seq_as_aligned`
@@ -41,9 +41,10 @@ class BowtieReader(AbstractReader):
     
     See description of format at http://bowtie-bio.sourceforge.net/manual.shtml
     
-    Returns
+    Yields
     -------
     |SegmentChain|
+        A read alignment
     """
     def filter(self,line):
         items = line.strip("\n").split("\t")
@@ -62,7 +63,8 @@ class BowtieReader(AbstractReader):
         feature = SegmentChain(iv,**attr)
         return feature
 
-
+@deprecated
+@skipdoc
 class TagalignReader(AbstractReader):
     """Reads alignments from Nick Ingolia's TagAlign utility to |SegmentChain|
     Attributes defined for this feature are:

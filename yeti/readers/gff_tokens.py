@@ -1,26 +1,19 @@
 #!/usr/bin/env python
-"""GTF2/GFF3 token parsers and writers which are imported by both
-:py:mod:`yeti.readers.gff` and :py:mod:`yeti.genomics.roitools`
-
-Unit tests for these are in :py:mod:`yeti.test.unit.genomics.readers.test_gff`
+"""This module contains `GTF2`_/`GFF3`_ token parsers and writers
 
 Important methods
 -----------------
-:py:func:`add_three_for_stop`
-    Shifts end of CDS 3 nucleotides to the threeprime direction on a |Transcript|,
-    to include stop codons if the stop codon is not already included in the CDS
-
 :py:func:`make_GTF2_tokens`
-    Format a dictionary of attributes as GTF2 tokens
+    Format a dictionary of attributes as `GTF2`_ column 9 attributes
 
 :py:func:`make_GFF3_tokens`
-    Format a dictionary of attributes as GFF3 tokens
+    Format a dictionary of attributes as `GFF3`_ column 9 attributes
 
 :py:func:`parse_GTF2_tokens`
-    Parse GTF2 tokens into a dictionary of key-value pairs
+    Parse `GTF2`_ column 9 tokens into a dictionary of key-value pairs
 
 :py:func:`parse_GFF3_tokens`
-    Parse GTF2 tokens into a dictionary of key-value pairs
+    Parse `GFF3`_ column 9 tokens into a dictionary of key-value pairs
 
 See also
 --------
@@ -28,6 +21,11 @@ See also
 
 `The Brent lab GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
 """
+
+# Unit tests for these are in :py:mod:`yeti.test.unit.genomics.readers.test_gff`
+
+
+
 import re
 import shlex
 import copy
@@ -120,17 +118,17 @@ _GFF3_escape_sequences = [
  ('\x9e', '%9E'),
  ('\x9f', '%9F')
  ]
-"""List mapping characters to their escape sequences, per the GFF3 specification"""
+"""List mapping characters to their escape sequences, per the `GFF3`_ specification"""
 
 _GTF2_escape_sequences = copy.deepcopy(_GFF3_escape_sequences)
 _GTF2_escape_sequences.append(("\"","%22"))
-"""List mapping characters to their escape sequences for GTF2. These are undefined,
-but we are using GFF3 characters plus double quotation marks as a convention.
+"""List mapping characters to their escape sequences for `GTF2`_. These are undefined,
+but we are using `GFF3`_ characters plus double quotation marks as a convention.
 """
 
 
 def escape(inp,char_pairs):
-    """Escape reserved characters specified in the list of tuples *char_pairs*
+    """Escape reserved characters specified in the list of tuples `char_pairs`
     
     Parameters
     ----------
@@ -157,7 +155,7 @@ def escape(inp,char_pairs):
     return inp
 
 def unescape(inp,char_pairs):
-    """Unescape reserved characters specified in the list of tuples *char_pairs*
+    """Unescape reserved characters specified in the list of tuples `char_pairs`
     
     Parameters
     ----------
@@ -184,11 +182,17 @@ def escape_GFF3(inp):
     """Escape reserved characters in `GFF3`_ tokens using percentage notation.
     
     In the `GFF3`_ spec, reserved characters include:
+    
         - control characters (ASCII 0-32, 127, and 128-159)
+        
         - tab, newline, & carriage return
+        
         - semicolons & commas
+        
         - the percent sign
+        
         - the equals sign
+        
         - the ampersand  
     
     Parameters
@@ -216,11 +220,17 @@ def unescape_GFF3(inp):
     """Unescape reserved characters in `GFF3`_ tokens using percentage notation.
     
     In the `GFF3`_ spec, reserved characters include:
+    
         - control characters (ASCII 0-32, 127, and 128-159)
+        
         - tab, newline, & carriage return
+        
         - semicolons & commas
+        
         - the percent sign
+        
         - the equals sign
+        
         - the ampersand  
     
     Parameters
@@ -247,12 +257,18 @@ def escape_GTF2(inp):
     extra attributes to files. As a convention, we escape the characters
     specified in the `GFF3`_ spec, as well as double quotation marks.
     
-    In the `GFF3`_ spec, reserved characters include:
+    In the `GTF2`_ spec, reserved characters include:
+    
         - control characters (ASCII 0-32, 127, and 128-159)
+        
         - tab, newline, & carriage return
+        
         - semicolons & commas
+        
         - the percent sign
+        
         - the equals sign
+        
         - the ampersand  
     
     Parameters
@@ -283,11 +299,17 @@ def unescape_GTF2(inp):
     specified in the `GFF3`_ spec, as well as single quotation marks.
         
     In the `GFF3`_ spec, reserved characters include:
+    
         - control characters (ASCII 0-32, 127, and 128-159)
+        
         - tab, newline, & carriage return
+        
         - semicolons & commas
+        
         - the percent sign
+        
         - the equals sign
+        
         - the ampersand  
     
     Parameters
@@ -313,9 +335,9 @@ def unescape_GTF2(inp):
 #===============================================================================
 
 def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
-    """Helper function to convert the *attr* ``dict`` of a genomic feature
+    """Helper function to convert the `attr` dict of a |SegmentChain|
     into the string representation used in GFF files. This includes
-    URL escaping of keys and values, and catenating ``list``s with ","
+    URL escaping of keys and values, and catenating lists with `','`
     before string conversion
     
     Parameters
@@ -331,7 +353,7 @@ def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
     
     escape : None or func, optional
         If None, no special characters are escaped. If a function, that
-        funciton will be used to perform the escaping. (Default: False)
+        funciton will be used to perform the escaping. (Default: `False`)
         
     Returns
     -------
@@ -353,9 +375,9 @@ def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
     return ''.join(ltmp)
 
 def make_GFF3_tokens(attr,excludes=[],escape=True):
-    """Helper function to convert the *attr* ``dict`` of a genomic feature
+    """Helper function to convert the `attr` dict of a |SegmentChain|
     into the string representation used in `GFF3`_ files. This includes
-    URL escaping of special characters, and catenating ``list``s with ","
+    URL escaping of special characters, and catenating lists with '`,`'
     before string conversion
 
     Examples
@@ -382,12 +404,12 @@ def make_GFF3_tokens(attr,excludes=[],escape=True):
         List of keys to exclude from string
         
     escape : bool
-        If True, special characters in output are GFF3-escaped (Default: True)
+        If True, special characters in output are `GFF3`_-escaped (Default: `True`)
         
     Returns
     -------
     str
-        Data formatted for *attributes* column of GFF3 (column 9)
+        Data formatted for *attributes* column of `GFF3`_ (column 9)
     """
     if escape == True:
         escape = escape_GFF3
@@ -397,9 +419,9 @@ def make_GFF3_tokens(attr,excludes=[],escape=True):
     return _make_generic_tokens(attr,excludes=excludes,join_pat="%s=%s;",escape=escape)
 
 def make_GTF2_tokens(attr,excludes=[],escape=True):
-    """Helper function to convert the *attr* ``dict``  of a genomic feature
+    """Helper function to convert the `attr` dict  of a |SegmentChain|
     into the string representation used in `GTF2`_ files. By default, special
-    characters defined in the 'GFF3'_ spec will be URL-escaped.
+    characters defined in the `GFF3`_ spec will be URL-escaped.
 
     Examples
     --------
@@ -422,12 +444,12 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
         List of keys to exclude from string
         
     escape : bool
-        If True, special characters in output are GTF2-escaped (Default: True)
+        If True, special characters in output are `GTF2`_-escaped (Default: `True`)
         
     Returns
     -------
     str
-        Data formatted for *attributes* column of GTF2 (column 9)
+        Data formatted for *attributes* column of `GTF2`_ (column 9)
     """
     excludes.extend(["transcript_id","gene_id"])    
     stmp = 'gene_id "%s"; transcript_id "%s"; ' % (attr.get("gene_id"),
@@ -442,16 +464,16 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
 
 @catch_warnings(simple_filter="always")
 def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
-    """Helper function to parse tokens in the final column of a GFF3 file
+    """Helper function to parse tokens in the final column of a `GFF3`_ file
     into a dictionary of attributes. Because, the following attributes are
-    permitted to have multiple values in the GFF3 spec, their values, if present
+    permitted to have multiple values in the `GFF3`_ spec, their values, if present
     are returned as lists in the dictionary rather than strings:
     
-        - *Parent*
-        - *Alias*
-        - *Note*
-        - *Dbxref*
-        - *Ontology_term*
+        - `Parent`
+        - `Alias`
+        - `Note`
+        - `Dbxref`
+        - `Ontology_term`
  
     All values are unescaped folowing the `GFF3`_ specification.
  

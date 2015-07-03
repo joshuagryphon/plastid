@@ -103,7 +103,6 @@ class TestHelpFormatters():
             assert_true(link_pattern.search(test) is None,
                             "substitution pattern matches %s" % test)
 
-
     def test_shorten_help(self):
         assert_not_equal, raw_help1,shortened_help1
         assert_equal(shorten_help(raw_help1), shortened_help1)
