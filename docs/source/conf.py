@@ -39,15 +39,13 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'argdoc.ext',
     #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    #'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'numpydoc', 
-    #'sphinx.ext.inheritance_diagram'
     'sphinx.ext.extlinks',
-    'sphinxcontrib.bibtex'
+    'sphinxcontrib.bibtex',
+    'sphinxcontrib.argdoc',
     ]
 
 
