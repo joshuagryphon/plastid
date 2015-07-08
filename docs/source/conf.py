@@ -15,8 +15,21 @@
 import os
 import unittest
 import datetime
+import mock
 import yeti
 
+
+class Mock(MagicMock):
+    """Proxy class to stand in for modules/packages that can't be built
+    or installed on readthedocs.org .
+    
+    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html"""
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['numpy','scipy','matplotlib','pandas','pysam','biopython']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- General configuration ------------------------------------------------
 
