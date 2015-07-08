@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Readers for fixedStep wiggle, variableStep wiggle, and bedGraph files.
+"""Readers for fixedStep `wiggle`_, variableStep `wiggle`_, and `bedGraph`_ files.
 
 See Also
 --------
@@ -8,20 +8,19 @@ See Also
 """
 
 class WiggleReader(object):
-    """Reads wiggle and bedGraph files entry-by-entry, returning tuples
-    of (chromosome, start position, stop position, value), where all positions
-    are zero-indexed and half-open (as opposed to fixedStep or variableStep
-    wiggles, which are 1-indexed).
+    """Reads `wiggle`_ and `bedGraph`_ files entry-by-entry, returning tuples
+    of (chromosome, start position, stop position, value), where all returned
+    positions are zero-indexed and half-open.
 
     See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
     """
     def __init__(self,fh):
         self.fh = fh
         self.data_format = "bedGraph"
-        self._reset()
+        self._reset() 
     
-    def _reset(self):
-        """Used internally. Resets positional counters"""
+    def _reset(self): 
+        """Reset positional counters"""
         self.chrom   = None
         self.step    = 1
         self.span    = 1 #default span is 1 (e.g. things span 1 base)
@@ -31,24 +30,23 @@ class WiggleReader(object):
         return self
     
     def _get_lineinfo(self,line):
-        """Determines line type & returns a dictionary
-        containing key-value pairs of any parameters
-        defined in the line (valid for header lines only)
+        """Determine line type and return a dictionary containing key-value
+        pairs of any parameters defined in the line
 
-        Line type is returned under the key "line_step"
+        Line type is returned under the key `'line_step'`
         
         Parameters
         ----------
         line : str
-            A line of Wiggle or bedGraph file
+            A line of `Wiggle`_ or `bedGraph`_ file
         
         Returns
         -------
         dict
-            line-type key describes the type of line
+            `'line-type'` key describes the type of line
 
-            If a header line, key-value pairs are returned for parsing 
-            ``stepsize`` and ``span``.
+            If a header line, also contains values for the current
+            `'stepsize'` and `'span'`
         """
         dReturn   = {}
         items     = line.split()
@@ -155,7 +153,7 @@ class UnbufferedWiggleReader(WiggleReader):
     This means slower disk access, but allows use of `fh.seek()`
     and `fh.tell()` to randomly-access sections of wiggles.
     
-    Reads wiggle and bedGraph files entry-by-entry, returning tuples
+    Read wiggle and bedGraph files entry-by-entry, returning tuples
     of (chromosome, start position, stop position, value), where all positions
     are zero-indexed and half-open (as opposed to fixedStep or variableStep
     wiggles, which are 1-indexed).

@@ -50,13 +50,14 @@ Documentation & help are written for users at multiple levels of experience.
     of the relevant data structures and the `technical documentation <generated/yeti>`_.
 
    
-.. Indices and tables
-.. ------------------
+Indices, tables, and links
+--------------------------
 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+  * `our github link`_
+  * `pypi link`_
+  * :ref:`genindex`
+  * :ref:`modindex`
+  * :ref:`search`
 
 
  .. toctree::
-    :maxdepth: 2

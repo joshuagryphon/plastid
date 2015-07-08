@@ -1,7 +1,19 @@
 #!/usr/bin/env python
-"""Contains tools for reading PSL alignment output from BLAT.
-See http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html
-for information on BLAT output 
+"""Contains tools for reading alignments from `PSL`_ files (e.g. made by `BLAT`_).
+
+Examples
+--------
+
+Read individual entries from a `PSL`_ file into |SegmentChain| objects::
+
+    >>>
+
+
+Group multiple entries from a `PSL`_ file by query sequence::
+
+    >>>
+
+
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
@@ -9,10 +21,8 @@ from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain
 import itertools
 
-class PSL_Reader(AssembledFeatureReader):
-    """Reads BED files into |SegmentChain| or |Transcript|, saving metadata
-    from track declarations et c. Malformed lines are stored in ``self.rejected``
-
+class PSL_Reader(AssembledFeatureReader): 
+    """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
     
     Attributes
     ----------
@@ -27,13 +37,13 @@ class PSL_Reader(AssembledFeatureReader):
         Cumulative line number counter over all streams
     
     rejected : list
-        A list of transcript IDs that failed to assemble properly
+        A list of lines from `PSL`_ file that did not assemble properly
     
     metadata : dict
         Various attributes gleaned from the stream, if any    
     """
     def _assemble(self,line):
-        """Read PSL files line-by-line into types specified by ``self.return_type``"""
+        """Read `PSL`_ files line-by-line into types specified by ``self.return_type``"""
         self.counter += 1
         if line.strip() == "":
             return self.__next()
@@ -55,23 +65,24 @@ class PSL_Reader(AssembledFeatureReader):
 
 
 class BundledPSL_Reader(PSL_Reader):
-    """Read PSL files, returning bundles of |SegmentChain| s grouped by query sequence.
-    Use this when a given query sequence has multiple hits in your PSL file.
+    """Read `PSL`_ files, returning list of |SegmentChain| s grouped by query sequence.
+    Use this when a given query sequence has multiple hits in your `PSL`_ file,
+    and you want the output to be grouped.
     """
 
     def filter(self,line):
-        """Processes lines of BLAT input into |SegmentChain|, and groups
+        """Process lines of `PSL`_ files input into |SegmentChain|, and group
         these by query sequence.
          
         Parameters
         ----------
         line : str
-            line of BLAT input to start parsing
+            line of `PSL`_ input
          
         Returns
         -------
         list
-            list of |SegmentChain| s for a particular query sequence
+            list of |SegmentChain| objects sharing a query sequence 
         """
         ltmp = []
         aln = SegmentChain.from_psl(line)

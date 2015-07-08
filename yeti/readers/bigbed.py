@@ -14,7 +14,7 @@ This has several interesting implications:
 
 Examples
 --------
-Iterate over all features in a BigBed file::
+Iterate over all features in a `BigBed`_ file::
 
     >>> my_reader = BigBedReader("some_file.bb")
     >>> for feature in my_reader:

@@ -6,6 +6,9 @@ accessed by |GenomeArray| or |SparseGenomeArray| when importing from
 
 See also
 --------
+:class:`GenomeArray` and :class:`SparseGenomeArray`
+    Array-like objects that store quantitative data over genomes
+
 http://bowtie-bio.sourceforge.net/manual.shtml#default-bowtie-output
     for detailed description of bowtie output format
 
