@@ -79,7 +79,7 @@ def main(argv=sys.argv[1:]):
                                               mask_file_parser],
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
-    args = parser.parse_args() #argv)
+    args = parser.parse_args(argv)
     gnd = get_genome_array_from_args(args,printer=printer,disabled=_DISABLED)
     
     transcripts = get_segmentchains_from_args(args,printer=printer)

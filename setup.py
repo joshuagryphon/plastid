@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 import os
 import yeti
 
-with open("README.md") as f:
+with open("README.rst") as f:
     long_description = f.read()
 
 
@@ -55,7 +55,8 @@ setup(
     description = "Convert genomic datatypes into Pythonic objects useful to the SciPy stack",
     license   = "BSD 3-Clause",
     keywords  = "ribosome profiling riboseq rna-seq sequencing genomics biology",
-    url       = "",   # github page? readthedocs page?
+    url          = "", # github link
+    download_url = "", # PyPI link
     platforms = "OS Independent",
     
     tests_require=["nose>=1.0"],
@@ -64,7 +65,6 @@ setup(
     classifiers=[
          'Development Status :: 4 - Beta',
 
-         'Programming Language :: Python',
          'Programming Language :: Python :: 2.7',
          'Programming Language :: Python :: 3.3',
          'Programming Language :: Python :: 3.4',
@@ -78,9 +78,6 @@ setup(
          'License :: OSI Approved :: BSD License',
          #'Operating System :: OS Independent',
          'Operating System :: POSIX',
-         #'Operating System :: MacOS :: MacOS X',
-         #'Operating System :: Microsoft :: Windows',
-         
          'Natural Language :: English',
         ],
     

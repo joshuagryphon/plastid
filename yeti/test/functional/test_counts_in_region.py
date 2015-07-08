@@ -27,9 +27,9 @@ test_info = {
 # 4. A list of strings specifying how equality should be evaluated
 _mask_outfile    = os.path.join(test_info["temp_file_path"],"test_counts_in_region_mask.txt")
 _no_mask_outfile = os.path.join(test_info["temp_file_path"],"test_counts_in_region_no_mask.txt")
-_annotation_options = "--annotation_format BED --annotation_file %s" % REF_FILES["yeast_mini_bed"]
+_annotation_options = "--annotation_format BED --annotation_files %s" % REF_FILES["yeast_mini_bed"]
 counts_in_region_tests = [
-    # test without crossmap mask
+    # test with crossmap mask
     ("%s %s %s %s" % (_mask_outfile,
                       COUNT_OPTIONS,
                       MASK_OPTIONS,
@@ -38,7 +38,7 @@ counts_in_region_tests = [
      [REF_FILES["yeast_counts_in_region_mask"]],
      [_mask_outfile],
      ["--sort_keys region_name"]),
-    # test with crossmap mask
+    # test without crossmap mask
     ("%s %s %s" % (_no_mask_outfile,
                       COUNT_OPTIONS,
                       _annotation_options
