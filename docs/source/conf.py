@@ -13,13 +13,14 @@
 # serve to show the default.
 
 import os
+import sys
 import unittest
 import datetime
 import mock
 import yeti
 
 
-class Mock(MagicMock):
+class Mock(mock.Mock):
     """Proxy class to stand in for modules/packages that can't be built
     or installed on readthedocs.org .
     
