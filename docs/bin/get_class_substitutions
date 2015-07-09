@@ -1,0 +1,78 @@
+#!/bin/bash
+function usage {
+cat << __EOU
+usage: $(basename $0) [-e prefix_folder] source_folder outbase
+
+Extract all class names from a python source folder and defines
+appropriate RST substitutions for them, so that these may be used in 
+docstrings or rst documents without having to type fully-qualified
+module paths everywhere to obtain cross-references. The substitution
+file may then be included in RST files.
+
+	Output files
+	------------
+	outbase_subsitutions.txt
+		RestructuredText file of substitutions, mapping
+		'|ClassName|' to ':py:class:\`package.module.ClassName\`'
+	
+	outbase_classnames.txt
+		Names of discovered classes
+
+
+	Arguments
+	---------
+	source_folder
+		Folder of python source code
+	
+	outbase
+		Basename for output files
+
+
+    Options
+    -------
+    -e prefix_folder
+        Optional. Remove 'prefix_folder' from apparent module path
+
+    -h 
+        Print this help and exit
+__EOU
+}
+
+MIN_ARGS=2
+OPTIONS="he:"
+remove_prefix='thisisveryunlikelytoappearbychance123412830523768912746918'
+
+while getopts $OPTIONS option; do
+    case $option in
+        h ) usage
+            exit 0;;
+        e ) remove_prefix="$(echo ${OPTARG}/ | sed -e 's/\//./g')";;
+        *) usage
+            exit 1;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+if [ $# -lt $MIN_ARGS ]; then
+    echo "At least $MIN_ARGS arguments required. Exiting."
+    echo ""
+    usage
+    exit 1
+fi
+
+source_folder=$1
+outbase=$2
+
+grep -r '^ *class .*(' "$source_folder" |\
+     grep -v ".svn" | grep -v "Binary file " |\
+     sed -e 's/(.*): *$//g' \
+         -e 's/class //g' \
+         -e 's/\//./g' \
+         -e 's/\.py:/:/g' \
+         -e "s/$remove_prefix//g" |\
+		 sort | uniq | tee >(awk 'BEGIN { FS=":" }
+                             { printf(" .. |%s| replace:: :py:class:`~%s.%s`\n",$2,$1,$2) # single
+                               printf(" .. |%ss| replace:: :py:class:`~%s.%s`\n",$2,$1,$2) # plural
+                             }' >${outbase}_substitutions.txt) |\
+                           awk 'BEGIN { FS=":" }
+                           	    { print $2 }' >${outbase}_classnames.txt

@@ -11,7 +11,7 @@ help:
 	@echo "    docs        to make HTML documentation"
 	@echo "    python27    to make Python 2.7 egg distribution"
 	@echo "    python33    to make Python 3.3 egg distribution"
-	@echo "	python34	to make Python 3.4 egg distribution"
+	@echo "	   python34    to make Python 3.4 egg distribution"
 	@echo "    eggs        to make all egg distributions"
 	@echo "    dev_egg     to make development release"
 	@echo "    cleandoc    to remove previous generated documentation components"
@@ -20,7 +20,7 @@ help:
 
 docs/source/class_substitutions.txt :
 	mkdir -p docs/source
-	get_class_substitutions yeti yeti
+	docs/bin/get_class_substitutions yeti yeti
 	mv yeti_substitutions.txt docs/source/class_substitutions.txt
 
 docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
