@@ -47,17 +47,16 @@ Documentation & help are written for users at multiple levels of experience.
     <concepts>` section may also be helpful.
 
   * **Advanced users** might be more interested in a quick :ref:`overview <overview>`
-    of the relevant data structures and the `technical documentation <generated/yeti>`_.
+    of the relevant data structures and the `module documentation <generated/yeti>`_.
 
    
 Indices, tables, and links
 --------------------------
 
-  * `our github link`_
-  * `pypi link`_
   * :ref:`genindex`
   * :ref:`modindex`
-  * :ref:`search`
+  * `Source code in github <our github link>`_
+  * `Package home PyPI <pypi link>`_
 
 
  .. toctree::

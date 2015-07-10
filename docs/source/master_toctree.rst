@@ -11,4 +11,4 @@
     contributing
     citing
     license
-    Technical documentation <generated/yeti>
+    Module documentation <generated/yeti>
