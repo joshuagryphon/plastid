@@ -1053,10 +1053,12 @@ def main(argv=sys.argv[1:]):
                                        help=counter_help,
                                        description=counter_desc,
                                        parents=[alignment_file_parser],
+                                       formatter_class=argparse.RawDescriptionHelpFormatter,
                                        )
     pparser    = subparsers.add_parser("chart",
                                        help=chart_help,
-                                       description=chart_desc)
+                                       description=chart_desc,
+                                       formatter_class=argparse.RawDescriptionHelpFormatter)
 
     gparser.add_argument("outbase",metavar="outbase",type=str,
                          help="Basename for output files")
