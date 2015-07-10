@@ -5,9 +5,11 @@
 .. _BAM: http://genome.ucsc.edu/goldenpath/help/bam.html
 .. _BED: http://genome.ucsc.edu/FAQ/FAQformat.html#format1
 .. _BigBed: http://genome.ucsc.edu/goldenPath/help/bigBed.html
+.. _BigWig: http://genome.ucsc.edu/goldenPath/help/bigWig.html
 .. _GTF2: http://mblab.wustl.edu/GTF22.html
 .. _GFF3: http://www.sequenceontology.org/gff3.shtml
 .. _PSL: http://genome.ucsc.edu/FAQ/FAQformat.html#format2
+.. _VCF: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40
 .. _autoSql: http://genomewiki.ucsc.edu/index.php/AutoSql
 .. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml 
@@ -41,6 +43,7 @@
 .. _Tophat: http://tophat.cbcb.umd.edu/
 .. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
 .. _BWA: http://bio-bwa.sourceforge.net
+.. _blat: http://genome.cshlp.org/content/12/4/656.full
 
 .. Our links
 

@@ -72,7 +72,7 @@ grep -r '^ *class .*(' "$source_folder" |\
          -e "s/$remove_prefix//g" |\
 		 sort | uniq | tee >(awk 'BEGIN { FS=":" }
                              { printf(" .. |%s| replace:: :py:class:`~%s.%s`\n",$2,$1,$2) # single
-                               printf(" .. |%ss| replace:: :py:class:`~%s.%s`\n",$2,$1,$2) # plural
+                               printf(" .. |%ss| replace:: :py:class:`%ss <%s.%s>`\n",$2,$2,$1,$2) # plural
                              }' >${outbase}_substitutions.txt) |\
                            awk 'BEGIN { FS=":" }
                            	    { print $2 }' >${outbase}_classnames.txt

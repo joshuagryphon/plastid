@@ -30,7 +30,7 @@ class Mock(mock.Mock):
             return Mock()
 
 MOCK_MODULES = ['numpy','scipy','matplotlib','pandas','pysam','biopython']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- General configuration ------------------------------------------------
 

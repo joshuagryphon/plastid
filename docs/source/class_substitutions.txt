@@ -1,210 +1,210 @@
  .. |FastaNameReader| replace:: :py:class:`~yeti.bin.crossmap.FastaNameReader`
- .. |FastaNameReaders| replace:: :py:class:`~yeti.bin.crossmap.FastaNameReader`
+ .. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <yeti.bin.crossmap.FastaNameReader>`
  .. |AbstractGenomeArray| replace:: :py:class:`~yeti.genomics.genome_array.AbstractGenomeArray`
- .. |AbstractGenomeArrays| replace:: :py:class:`~yeti.genomics.genome_array.AbstractGenomeArray`
+ .. |AbstractGenomeArrays| replace:: :py:class:`AbstractGenomeArrays <yeti.genomics.genome_array.AbstractGenomeArray>`
  .. |BAMGenomeArray| replace:: :py:class:`~yeti.genomics.genome_array.BAMGenomeArray`
- .. |BAMGenomeArrays| replace:: :py:class:`~yeti.genomics.genome_array.BAMGenomeArray`
+ .. |BAMGenomeArrays| replace:: :py:class:`BAMGenomeArrays <yeti.genomics.genome_array.BAMGenomeArray>`
  .. |GenomeArray| replace:: :py:class:`~yeti.genomics.genome_array.GenomeArray`
- .. |GenomeArrays| replace:: :py:class:`~yeti.genomics.genome_array.GenomeArray`
+ .. |GenomeArrays| replace:: :py:class:`GenomeArrays <yeti.genomics.genome_array.GenomeArray>`
  .. |MutableAbstractGenomeArray| replace:: :py:class:`~yeti.genomics.genome_array.MutableAbstractGenomeArray`
- .. |MutableAbstractGenomeArrays| replace:: :py:class:`~yeti.genomics.genome_array.MutableAbstractGenomeArray`
+ .. |MutableAbstractGenomeArrays| replace:: :py:class:`MutableAbstractGenomeArrays <yeti.genomics.genome_array.MutableAbstractGenomeArray>`
  .. |SparseGenomeArray| replace:: :py:class:`~yeti.genomics.genome_array.SparseGenomeArray`
- .. |SparseGenomeArrays| replace:: :py:class:`~yeti.genomics.genome_array.SparseGenomeArray`
+ .. |SparseGenomeArrays| replace:: :py:class:`SparseGenomeArrays <yeti.genomics.genome_array.SparseGenomeArray>`
  .. |AbstractGenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.AbstractGenomeHash`
- .. |AbstractGenomeHashs| replace:: :py:class:`~yeti.genomics.genome_hash.AbstractGenomeHash`
+ .. |AbstractGenomeHashs| replace:: :py:class:`AbstractGenomeHashs <yeti.genomics.genome_hash.AbstractGenomeHash>`
  .. |BigBedGenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.BigBedGenomeHash`
- .. |BigBedGenomeHashs| replace:: :py:class:`~yeti.genomics.genome_hash.BigBedGenomeHash`
+ .. |BigBedGenomeHashs| replace:: :py:class:`BigBedGenomeHashs <yeti.genomics.genome_hash.BigBedGenomeHash>`
  .. |GenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.GenomeHash`
- .. |GenomeHashs| replace:: :py:class:`~yeti.genomics.genome_hash.GenomeHash`
+ .. |GenomeHashs| replace:: :py:class:`GenomeHashs <yeti.genomics.genome_hash.GenomeHash>`
  .. |TabixGenomeHash| replace:: :py:class:`~yeti.genomics.genome_hash.TabixGenomeHash`
- .. |TabixGenomeHashs| replace:: :py:class:`~yeti.genomics.genome_hash.TabixGenomeHash`
+ .. |TabixGenomeHashs| replace:: :py:class:`TabixGenomeHashs <yeti.genomics.genome_hash.TabixGenomeHash>`
  .. |GenomicSegment| replace:: :py:class:`~yeti.genomics.roitools.GenomicSegment`
- .. |GenomicSegments| replace:: :py:class:`~yeti.genomics.roitools.GenomicSegment`
+ .. |GenomicSegments| replace:: :py:class:`GenomicSegments <yeti.genomics.roitools.GenomicSegment>`
  .. |SegmentChain| replace:: :py:class:`~yeti.genomics.roitools.SegmentChain`
- .. |SegmentChains| replace:: :py:class:`~yeti.genomics.roitools.SegmentChain`
+ .. |SegmentChains| replace:: :py:class:`SegmentChains <yeti.genomics.roitools.SegmentChain>`
  .. |Transcript| replace:: :py:class:`~yeti.genomics.roitools.Transcript`
- .. |Transcripts| replace:: :py:class:`~yeti.genomics.roitools.Transcript`
+ .. |Transcripts| replace:: :py:class:`Transcripts <yeti.genomics.roitools.Transcript>`
  .. |AbstractAutoSqlElement| replace:: :py:class:`~yeti.readers.autosql.AbstractAutoSqlElement`
- .. |AbstractAutoSqlElements| replace:: :py:class:`~yeti.readers.autosql.AbstractAutoSqlElement`
+ .. |AbstractAutoSqlElements| replace:: :py:class:`AbstractAutoSqlElements <yeti.readers.autosql.AbstractAutoSqlElement>`
  .. |AutoSqlDeclaration| replace:: :py:class:`~yeti.readers.autosql.AutoSqlDeclaration`
- .. |AutoSqlDeclarations| replace:: :py:class:`~yeti.readers.autosql.AutoSqlDeclaration`
+ .. |AutoSqlDeclarations| replace:: :py:class:`AutoSqlDeclarations <yeti.readers.autosql.AutoSqlDeclaration>`
  .. |AutoSqlField| replace:: :py:class:`~yeti.readers.autosql.AutoSqlField`
- .. |AutoSqlFields| replace:: :py:class:`~yeti.readers.autosql.AutoSqlField`
+ .. |AutoSqlFields| replace:: :py:class:`AutoSqlFields <yeti.readers.autosql.AutoSqlField>`
  .. |SizedAutoSqlField| replace:: :py:class:`~yeti.readers.autosql.SizedAutoSqlField`
- .. |SizedAutoSqlFields| replace:: :py:class:`~yeti.readers.autosql.SizedAutoSqlField`
+ .. |SizedAutoSqlFields| replace:: :py:class:`SizedAutoSqlFields <yeti.readers.autosql.SizedAutoSqlField>`
  .. |ValuesAutoSqlField| replace:: :py:class:`~yeti.readers.autosql.ValuesAutoSqlField`
- .. |ValuesAutoSqlFields| replace:: :py:class:`~yeti.readers.autosql.ValuesAutoSqlField`
+ .. |ValuesAutoSqlFields| replace:: :py:class:`ValuesAutoSqlFields <yeti.readers.autosql.ValuesAutoSqlField>`
  .. |BED_Reader| replace:: :py:class:`~yeti.readers.bed.BED_Reader`
- .. |BED_Readers| replace:: :py:class:`~yeti.readers.bed.BED_Reader`
+ .. |BED_Readers| replace:: :py:class:`BED_Readers <yeti.readers.bed.BED_Reader>`
  .. |BigBedReader| replace:: :py:class:`~yeti.readers.bigbed.BigBedReader`
- .. |BigBedReaders| replace:: :py:class:`~yeti.readers.bigbed.BigBedReader`
+ .. |BigBedReaders| replace:: :py:class:`BigBedReaders <yeti.readers.bigbed.BigBedReader>`
  .. |BPlusTree| replace:: :py:class:`~yeti.readers.bigbed.BPlusTree`
- .. |BPlusTrees| replace:: :py:class:`~yeti.readers.bigbed.BPlusTree`
+ .. |BPlusTrees| replace:: :py:class:`BPlusTrees <yeti.readers.bigbed.BPlusTree>`
  .. |RTree| replace:: :py:class:`~yeti.readers.bigbed.RTree`
- .. |RTrees| replace:: :py:class:`~yeti.readers.bigbed.RTree`
+ .. |RTrees| replace:: :py:class:`RTrees <yeti.readers.bigbed.RTree>`
  .. |BowtieReader| replace:: :py:class:`~yeti.readers.bowtie.BowtieReader`
- .. |BowtieReaders| replace:: :py:class:`~yeti.readers.bowtie.BowtieReader`
+ .. |BowtieReaders| replace:: :py:class:`BowtieReaders <yeti.readers.bowtie.BowtieReader>`
  .. |TagalignReader| replace:: :py:class:`~yeti.readers.bowtie.TagalignReader`
- .. |TagalignReaders| replace:: :py:class:`~yeti.readers.bowtie.TagalignReader`
+ .. |TagalignReaders| replace:: :py:class:`TagalignReaders <yeti.readers.bowtie.TagalignReader>`
  .. |AssembledFeatureReader| replace:: :py:class:`~yeti.readers.common.AssembledFeatureReader`
- .. |AssembledFeatureReaders| replace:: :py:class:`~yeti.readers.common.AssembledFeatureReader`
+ .. |AssembledFeatureReaders| replace:: :py:class:`AssembledFeatureReaders <yeti.readers.common.AssembledFeatureReader>`
  .. |AbstractGFF_Assembler| replace:: :py:class:`~yeti.readers.gff.AbstractGFF_Assembler`
- .. |AbstractGFF_Assemblers| replace:: :py:class:`~yeti.readers.gff.AbstractGFF_Assembler`
+ .. |AbstractGFF_Assemblers| replace:: :py:class:`AbstractGFF_Assemblers <yeti.readers.gff.AbstractGFF_Assembler>`
  .. |AbstractGFF_Reader| replace:: :py:class:`~yeti.readers.gff.AbstractGFF_Reader`
- .. |AbstractGFF_Readers| replace:: :py:class:`~yeti.readers.gff.AbstractGFF_Reader`
+ .. |AbstractGFF_Readers| replace:: :py:class:`AbstractGFF_Readers <yeti.readers.gff.AbstractGFF_Reader>`
  .. |GFF3_Reader| replace:: :py:class:`~yeti.readers.gff.GFF3_Reader`
- .. |GFF3_Readers| replace:: :py:class:`~yeti.readers.gff.GFF3_Reader`
+ .. |GFF3_Readers| replace:: :py:class:`GFF3_Readers <yeti.readers.gff.GFF3_Reader>`
  .. |GFF3_TranscriptAssembler| replace:: :py:class:`~yeti.readers.gff.GFF3_TranscriptAssembler`
- .. |GFF3_TranscriptAssemblers| replace:: :py:class:`~yeti.readers.gff.GFF3_TranscriptAssembler`
+ .. |GFF3_TranscriptAssemblers| replace:: :py:class:`GFF3_TranscriptAssemblers <yeti.readers.gff.GFF3_TranscriptAssembler>`
  .. |GTF2_Reader| replace:: :py:class:`~yeti.readers.gff.GTF2_Reader`
- .. |GTF2_Readers| replace:: :py:class:`~yeti.readers.gff.GTF2_Reader`
+ .. |GTF2_Readers| replace:: :py:class:`GTF2_Readers <yeti.readers.gff.GTF2_Reader>`
  .. |GTF2_TranscriptAssembler| replace:: :py:class:`~yeti.readers.gff.GTF2_TranscriptAssembler`
- .. |GTF2_TranscriptAssemblers| replace:: :py:class:`~yeti.readers.gff.GTF2_TranscriptAssembler`
+ .. |GTF2_TranscriptAssemblers| replace:: :py:class:`GTF2_TranscriptAssemblers <yeti.readers.gff.GTF2_TranscriptAssembler>`
  .. |BundledPSL_Reader| replace:: :py:class:`~yeti.readers.psl.BundledPSL_Reader`
- .. |BundledPSL_Readers| replace:: :py:class:`~yeti.readers.psl.BundledPSL_Reader`
+ .. |BundledPSL_Readers| replace:: :py:class:`BundledPSL_Readers <yeti.readers.psl.BundledPSL_Reader>`
  .. |PSL_Reader| replace:: :py:class:`~yeti.readers.psl.PSL_Reader`
- .. |PSL_Readers| replace:: :py:class:`~yeti.readers.psl.PSL_Reader`
+ .. |PSL_Readers| replace:: :py:class:`PSL_Readers <yeti.readers.psl.PSL_Reader>`
  .. |UnbufferedWiggleReader| replace:: :py:class:`~yeti.readers.wiggle.UnbufferedWiggleReader`
- .. |UnbufferedWiggleReaders| replace:: :py:class:`~yeti.readers.wiggle.UnbufferedWiggleReader`
+ .. |UnbufferedWiggleReaders| replace:: :py:class:`UnbufferedWiggleReaders <yeti.readers.wiggle.UnbufferedWiggleReader>`
  .. |WiggleReader| replace:: :py:class:`~yeti.readers.wiggle.WiggleReader`
- .. |WiggleReaders| replace:: :py:class:`~yeti.readers.wiggle.WiggleReader`
+ .. |WiggleReaders| replace:: :py:class:`WiggleReaders <yeti.readers.wiggle.WiggleReader>`
  .. |TestCrossmap| replace:: :py:class:`~yeti.test.unit.bin.test_crossmap.TestCrossmap`
- .. |TestCrossmaps| replace:: :py:class:`~yeti.test.unit.bin.test_crossmap.TestCrossmap`
+ .. |TestCrossmaps| replace:: :py:class:`TestCrossmaps <yeti.test.unit.bin.test_crossmap.TestCrossmap>`
  .. |TestTestDataframeEquality| replace:: :py:class:`~yeti.test.unit.bin.test_test_table_equality.TestTestDataframeEquality`
- .. |TestTestDataframeEqualitys| replace:: :py:class:`~yeti.test.unit.bin.test_test_table_equality.TestTestDataframeEquality`
+ .. |TestTestDataframeEqualitys| replace:: :py:class:`TestTestDataframeEqualitys <yeti.test.unit.bin.test_test_table_equality.TestTestDataframeEquality>`
  .. |AbstractGenomeArrayHelper| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.AbstractGenomeArrayHelper`
- .. |AbstractGenomeArrayHelpers| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.AbstractGenomeArrayHelper`
+ .. |AbstractGenomeArrayHelpers| replace:: :py:class:`AbstractGenomeArrayHelpers <yeti.test.unit.genomics.test_genome_array.AbstractGenomeArrayHelper>`
  .. |FakeDict| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.FakeDict`
- .. |FakeDicts| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.FakeDict`
+ .. |FakeDicts| replace:: :py:class:`FakeDicts <yeti.test.unit.genomics.test_genome_array.FakeDict>`
  .. |TestBAMGenomeArray| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestBAMGenomeArray`
- .. |TestBAMGenomeArrays| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestBAMGenomeArray`
+ .. |TestBAMGenomeArrays| replace:: :py:class:`TestBAMGenomeArrays <yeti.test.unit.genomics.test_genome_array.TestBAMGenomeArray>`
  .. |TestGenomeArray| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestGenomeArray`
- .. |TestGenomeArrays| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestGenomeArray`
+ .. |TestGenomeArrays| replace:: :py:class:`TestGenomeArrays <yeti.test.unit.genomics.test_genome_array.TestGenomeArray>`
  .. |TestSparseGenomeArray| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestSparseGenomeArray`
- .. |TestSparseGenomeArrays| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_array.TestSparseGenomeArray`
+ .. |TestSparseGenomeArrays| replace:: :py:class:`TestSparseGenomeArrays <yeti.test.unit.genomics.test_genome_array.TestSparseGenomeArray>`
  .. |AbstractGenomeHashHelper| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper`
- .. |AbstractGenomeHashHelpers| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper`
+ .. |AbstractGenomeHashHelpers| replace:: :py:class:`AbstractGenomeHashHelpers <yeti.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper>`
  .. |TestBigBedGenomeHash| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash`
- .. |TestBigBedGenomeHashs| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash`
+ .. |TestBigBedGenomeHashs| replace:: :py:class:`TestBigBedGenomeHashs <yeti.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash>`
  .. |TestGenomeHash| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestGenomeHash`
- .. |TestGenomeHashs| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestGenomeHash`
+ .. |TestGenomeHashs| replace:: :py:class:`TestGenomeHashs <yeti.test.unit.genomics.test_genome_hash.TestGenomeHash>`
  .. |TestTabixGenomeHash| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestTabixGenomeHash`
- .. |TestTabixGenomeHashs| replace:: :py:class:`~yeti.test.unit.genomics.test_genome_hash.TestTabixGenomeHash`
+ .. |TestTabixGenomeHashs| replace:: :py:class:`TestTabixGenomeHashs <yeti.test.unit.genomics.test_genome_hash.TestTabixGenomeHash>`
  .. |AbstractSegmentChainHelper| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.AbstractSegmentChainHelper`
- .. |AbstractSegmentChainHelpers| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.AbstractSegmentChainHelper`
+ .. |AbstractSegmentChainHelpers| replace:: :py:class:`AbstractSegmentChainHelpers <yeti.test.unit.genomics.test_roitools.AbstractSegmentChainHelper>`
  .. |TestGenomicSegment| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestGenomicSegment`
- .. |TestGenomicSegments| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestGenomicSegment`
+ .. |TestGenomicSegments| replace:: :py:class:`TestGenomicSegments <yeti.test.unit.genomics.test_roitools.TestGenomicSegment>`
  .. |TestMiscellaneous| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestMiscellaneous`
- .. |TestMiscellaneouss| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestMiscellaneous`
+ .. |TestMiscellaneouss| replace:: :py:class:`TestMiscellaneouss <yeti.test.unit.genomics.test_roitools.TestMiscellaneous>`
  .. |TestSegmentChain| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestSegmentChain`
- .. |TestSegmentChains| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestSegmentChain`
+ .. |TestSegmentChains| replace:: :py:class:`TestSegmentChains <yeti.test.unit.genomics.test_roitools.TestSegmentChain>`
  .. |TestTranscript| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestTranscript`
- .. |TestTranscripts| replace:: :py:class:`~yeti.test.unit.genomics.test_roitools.TestTranscript`
+ .. |TestTranscripts| replace:: :py:class:`TestTranscripts <yeti.test.unit.genomics.test_roitools.TestTranscript>`
  .. |TestAbstractAutoSqlElement| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAbstractAutoSqlElement`
- .. |TestAbstractAutoSqlElements| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAbstractAutoSqlElement`
+ .. |TestAbstractAutoSqlElements| replace:: :py:class:`TestAbstractAutoSqlElements <yeti.test.unit.readers.test_autosql.TestAbstractAutoSqlElement>`
  .. |TestAutoSqlDeclaration| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAutoSqlDeclaration`
- .. |TestAutoSqlDeclarations| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAutoSqlDeclaration`
+ .. |TestAutoSqlDeclarations| replace:: :py:class:`TestAutoSqlDeclarations <yeti.test.unit.readers.test_autosql.TestAutoSqlDeclaration>`
  .. |TestAutoSqlField| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAutoSqlField`
- .. |TestAutoSqlFields| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestAutoSqlField`
+ .. |TestAutoSqlFields| replace:: :py:class:`TestAutoSqlFields <yeti.test.unit.readers.test_autosql.TestAutoSqlField>`
  .. |TestSizedAutoSqlField| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestSizedAutoSqlField`
- .. |TestSizedAutoSqlFields| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestSizedAutoSqlField`
+ .. |TestSizedAutoSqlFields| replace:: :py:class:`TestSizedAutoSqlFields <yeti.test.unit.readers.test_autosql.TestSizedAutoSqlField>`
  .. |TestValuesAutoSqlField| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestValuesAutoSqlField`
- .. |TestValuesAutoSqlFields| replace:: :py:class:`~yeti.test.unit.readers.test_autosql.TestValuesAutoSqlField`
+ .. |TestValuesAutoSqlFields| replace:: :py:class:`TestValuesAutoSqlFields <yeti.test.unit.readers.test_autosql.TestValuesAutoSqlField>`
  .. |TestBED| replace:: :py:class:`~yeti.test.unit.readers.test_bed.TestBED`
- .. |TestBEDs| replace:: :py:class:`~yeti.test.unit.readers.test_bed.TestBED`
+ .. |TestBEDs| replace:: :py:class:`TestBEDs <yeti.test.unit.readers.test_bed.TestBED>`
  .. |test_BigBedReader| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_BigBedReader`
- .. |test_BigBedReaders| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_BigBedReader`
+ .. |test_BigBedReaders| replace:: :py:class:`test_BigBedReaders <yeti.test.unit.readers.test_bigbed.test_BigBedReader>`
  .. |test_BPlusTree| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_BPlusTree`
- .. |test_BPlusTrees| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_BPlusTree`
+ .. |test_BPlusTrees| replace:: :py:class:`test_BPlusTrees <yeti.test.unit.readers.test_bigbed.test_BPlusTree>`
  .. |test_RTree| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_RTree`
- .. |test_RTrees| replace:: :py:class:`~yeti.test.unit.readers.test_bigbed.test_RTree`
+ .. |test_RTrees| replace:: :py:class:`test_RTrees <yeti.test.unit.readers.test_bigbed.test_RTree>`
  .. |TestAddThreeForStopCodon| replace:: :py:class:`~yeti.test.unit.readers.test_common.TestAddThreeForStopCodon`
- .. |TestAddThreeForStopCodons| replace:: :py:class:`~yeti.test.unit.readers.test_common.TestAddThreeForStopCodon`
+ .. |TestAddThreeForStopCodons| replace:: :py:class:`TestAddThreeForStopCodons <yeti.test.unit.readers.test_common.TestAddThreeForStopCodon>`
  .. |TestGetIdenticalAttributes| replace:: :py:class:`~yeti.test.unit.readers.test_common.TestGetIdenticalAttributes`
- .. |TestGetIdenticalAttributess| replace:: :py:class:`~yeti.test.unit.readers.test_common.TestGetIdenticalAttributes`
+ .. |TestGetIdenticalAttributess| replace:: :py:class:`TestGetIdenticalAttributess <yeti.test.unit.readers.test_common.TestGetIdenticalAttributes>`
  .. |AbstractTestAssembler| replace:: :py:class:`~yeti.test.unit.readers.test_gff.AbstractTestAssembler`
- .. |AbstractTestAssemblers| replace:: :py:class:`~yeti.test.unit.readers.test_gff.AbstractTestAssembler`
+ .. |AbstractTestAssemblers| replace:: :py:class:`AbstractTestAssemblers <yeti.test.unit.readers.test_gff.AbstractTestAssembler>`
  .. |AbstractTest_to_Transcripts| replace:: :py:class:`~yeti.test.unit.readers.test_gff.AbstractTest_to_Transcripts`
- .. |AbstractTest_to_Transcriptss| replace:: :py:class:`~yeti.test.unit.readers.test_gff.AbstractTest_to_Transcripts`
+ .. |AbstractTest_to_Transcriptss| replace:: :py:class:`AbstractTest_to_Transcriptss <yeti.test.unit.readers.test_gff.AbstractTest_to_Transcripts>`
  .. |TestGFF3| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGFF3`
- .. |TestGFF3s| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGFF3`
+ .. |TestGFF3s| replace:: :py:class:`TestGFF3s <yeti.test.unit.readers.test_gff.TestGFF3>`
  .. |TestGFF3_Assembler| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGFF3_Assembler`
- .. |TestGFF3_Assemblers| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGFF3_Assembler`
+ .. |TestGFF3_Assemblers| replace:: :py:class:`TestGFF3_Assemblers <yeti.test.unit.readers.test_gff.TestGFF3_Assembler>`
  .. |TestGTF2| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGTF2`
- .. |TestGTF2s| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGTF2`
+ .. |TestGTF2s| replace:: :py:class:`TestGTF2s <yeti.test.unit.readers.test_gff.TestGTF2>`
  .. |TestGTF2_Assembler| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGTF2_Assembler`
- .. |TestGTF2_Assemblers| replace:: :py:class:`~yeti.test.unit.readers.test_gff.TestGTF2_Assembler`
+ .. |TestGTF2_Assemblers| replace:: :py:class:`TestGTF2_Assemblers <yeti.test.unit.readers.test_gff.TestGTF2_Assembler>`
  .. |TestGFF3_TokenParsing| replace:: :py:class:`~yeti.test.unit.readers.test_gff_tokens.TestGFF3_TokenParsing`
- .. |TestGFF3_TokenParsings| replace:: :py:class:`~yeti.test.unit.readers.test_gff_tokens.TestGFF3_TokenParsing`
+ .. |TestGFF3_TokenParsings| replace:: :py:class:`TestGFF3_TokenParsings <yeti.test.unit.readers.test_gff_tokens.TestGFF3_TokenParsing>`
  .. |TestGTF2_TokenParsing| replace:: :py:class:`~yeti.test.unit.readers.test_gff_tokens.TestGTF2_TokenParsing`
- .. |TestGTF2_TokenParsings| replace:: :py:class:`~yeti.test.unit.readers.test_gff_tokens.TestGTF2_TokenParsing`
+ .. |TestGTF2_TokenParsings| replace:: :py:class:`TestGTF2_TokenParsings <yeti.test.unit.readers.test_gff_tokens.TestGTF2_TokenParsing>`
  .. |TestBundledPSL_Reader| replace:: :py:class:`~yeti.test.unit.readers.test_psl.TestBundledPSL_Reader`
- .. |TestBundledPSL_Readers| replace:: :py:class:`~yeti.test.unit.readers.test_psl.TestBundledPSL_Reader`
+ .. |TestBundledPSL_Readers| replace:: :py:class:`TestBundledPSL_Readers <yeti.test.unit.readers.test_psl.TestBundledPSL_Reader>`
  .. |TestPSL_Reader| replace:: :py:class:`~yeti.test.unit.readers.test_psl.TestPSL_Reader`
- .. |TestPSL_Readers| replace:: :py:class:`~yeti.test.unit.readers.test_psl.TestPSL_Reader`
+ .. |TestPSL_Readers| replace:: :py:class:`TestPSL_Readers <yeti.test.unit.readers.test_psl.TestPSL_Reader>`
  .. |TestUnBufferedWiggleReader| replace:: :py:class:`~yeti.test.unit.readers.test_wiggle.TestUnBufferedWiggleReader`
- .. |TestUnBufferedWiggleReaders| replace:: :py:class:`~yeti.test.unit.readers.test_wiggle.TestUnBufferedWiggleReader`
+ .. |TestUnBufferedWiggleReaders| replace:: :py:class:`TestUnBufferedWiggleReaders <yeti.test.unit.readers.test_wiggle.TestUnBufferedWiggleReader>`
  .. |TestWiggleReader| replace:: :py:class:`~yeti.test.unit.readers.test_wiggle.TestWiggleReader`
- .. |TestWiggleReaders| replace:: :py:class:`~yeti.test.unit.readers.test_wiggle.TestWiggleReader`
+ .. |TestWiggleReaders| replace:: :py:class:`TestWiggleReaders <yeti.test.unit.readers.test_wiggle.TestWiggleReader>`
  .. |TestBinaryParserFactory| replace:: :py:class:`~yeti.test.unit.util.io.test_binary.TestBinaryParserFactory`
- .. |TestBinaryParserFactorys| replace:: :py:class:`~yeti.test.unit.util.io.test_binary.TestBinaryParserFactory`
+ .. |TestBinaryParserFactorys| replace:: :py:class:`TestBinaryParserFactorys <yeti.test.unit.util.io.test_binary.TestBinaryParserFactory>`
  .. |TestCommentReader| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestCommentReader`
- .. |TestCommentReaders| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestCommentReader`
+ .. |TestCommentReaders| replace:: :py:class:`TestCommentReaders <yeti.test.unit.util.io.test_filters.TestCommentReader>`
  .. |TestFunctionReader| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestFunctionReader`
- .. |TestFunctionReaders| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestFunctionReader`
+ .. |TestFunctionReaders| replace:: :py:class:`TestFunctionReaders <yeti.test.unit.util.io.test_filters.TestFunctionReader>`
  .. |TestSkipBlankReader| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestSkipBlankReader`
- .. |TestSkipBlankReaders| replace:: :py:class:`~yeti.test.unit.util.io.test_filters.TestSkipBlankReader`
+ .. |TestSkipBlankReaders| replace:: :py:class:`TestSkipBlankReaders <yeti.test.unit.util.io.test_filters.TestSkipBlankReader>`
  .. |TestParseVariableOffsetFile| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_argparsers.TestParseVariableOffsetFile`
- .. |TestParseVariableOffsetFiles| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_argparsers.TestParseVariableOffsetFile`
+ .. |TestParseVariableOffsetFiles| replace:: :py:class:`TestParseVariableOffsetFiles <yeti.test.unit.util.scriptlib.test_argparsers.TestParseVariableOffsetFile>`
  .. |TestPrefixNamespaceWrapper| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_argparsers.TestPrefixNamespaceWrapper`
- .. |TestPrefixNamespaceWrappers| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_argparsers.TestPrefixNamespaceWrapper`
+ .. |TestPrefixNamespaceWrappers| replace:: :py:class:`TestPrefixNamespaceWrappers <yeti.test.unit.util.scriptlib.test_argparsers.TestPrefixNamespaceWrapper>`
  .. |TestHelpFormatters| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_help_formatters.TestHelpFormatters`
- .. |TestHelpFormatterss| replace:: :py:class:`~yeti.test.unit.util.scriptlib.test_help_formatters.TestHelpFormatters`
+ .. |TestHelpFormatterss| replace:: :py:class:`TestHelpFormatterss <yeti.test.unit.util.scriptlib.test_help_formatters.TestHelpFormatters>`
  .. |TestColors| replace:: :py:class:`~yeti.test.unit.util.services.test_colors.TestColors`
- .. |TestColorss| replace:: :py:class:`~yeti.test.unit.util.services.test_colors.TestColors`
+ .. |TestColorss| replace:: :py:class:`TestColorss <yeti.test.unit.util.services.test_colors.TestColors>`
  .. |UtilClass| replace:: :py:class:`~yeti.test.unit.util.services.test_decorators.UtilClass`
- .. |UtilClasss| replace:: :py:class:`~yeti.test.unit.util.services.test_decorators.UtilClass`
+ .. |UtilClasss| replace:: :py:class:`UtilClasss <yeti.test.unit.util.services.test_decorators.UtilClass>`
  .. |TestLists| replace:: :py:class:`~yeti.test.unit.util.services.test_lists.TestLists`
- .. |TestListss| replace:: :py:class:`~yeti.test.unit.util.services.test_lists.TestLists`
+ .. |TestListss| replace:: :py:class:`TestListss <yeti.test.unit.util.services.test_lists.TestLists>`
  .. |TestMisc| replace:: :py:class:`~yeti.test.unit.util.services.test_misc.TestMisc`
- .. |TestMiscs| replace:: :py:class:`~yeti.test.unit.util.services.test_misc.TestMisc`
+ .. |TestMiscs| replace:: :py:class:`TestMiscs <yeti.test.unit.util.services.test_misc.TestMisc>`
  .. |TestArrayTable| replace:: :py:class:`~yeti.test.unit.util.test_arraytable.TestArrayTable`
- .. |TestArrayTables| replace:: :py:class:`~yeti.test.unit.util.test_arraytable.TestArrayTable`
+ .. |TestArrayTables| replace:: :py:class:`TestArrayTables <yeti.test.unit.util.test_arraytable.TestArrayTable>`
  .. |TestUniqueFIFO| replace:: :py:class:`~yeti.test.unit.util.test_uniquefifo.TestUniqueFIFO`
- .. |TestUniqueFIFOs| replace:: :py:class:`~yeti.test.unit.util.test_uniquefifo.TestUniqueFIFO`
+ .. |TestUniqueFIFOs| replace:: :py:class:`TestUniqueFIFOs <yeti.test.unit.util.test_uniquefifo.TestUniqueFIFO>`
  .. |ArrayTable| replace:: :py:class:`~yeti.util.array_table.ArrayTable`
- .. |ArrayTables| replace:: :py:class:`~yeti.util.array_table.ArrayTable`
+ .. |ArrayTables| replace:: :py:class:`ArrayTables <yeti.util.array_table.ArrayTable>`
  .. |BinaryParserFactory| replace:: :py:class:`~yeti.util.io.binary.BinaryParserFactory`
- .. |BinaryParserFactorys| replace:: :py:class:`~yeti.util.io.binary.BinaryParserFactory`
+ .. |BinaryParserFactorys| replace:: :py:class:`BinaryParserFactorys <yeti.util.io.binary.BinaryParserFactory>`
  .. |AbstractReader| replace:: :py:class:`~yeti.util.io.filters.AbstractReader`
- .. |AbstractReaders| replace:: :py:class:`~yeti.util.io.filters.AbstractReader`
+ .. |AbstractReaders| replace:: :py:class:`AbstractReaders <yeti.util.io.filters.AbstractReader>`
  .. |AbstractWriter| replace:: :py:class:`~yeti.util.io.filters.AbstractWriter`
- .. |AbstractWriters| replace:: :py:class:`~yeti.util.io.filters.AbstractWriter`
+ .. |AbstractWriters| replace:: :py:class:`AbstractWriters <yeti.util.io.filters.AbstractWriter>`
  .. |BackwardReader| replace:: :py:class:`~yeti.util.io.filters.BackwardReader`
- .. |BackwardReaders| replace:: :py:class:`~yeti.util.io.filters.BackwardReader`
+ .. |BackwardReaders| replace:: :py:class:`BackwardReaders <yeti.util.io.filters.BackwardReader>`
  .. |CommentReader| replace:: :py:class:`~yeti.util.io.filters.CommentReader`
- .. |CommentReaders| replace:: :py:class:`~yeti.util.io.filters.CommentReader`
+ .. |CommentReaders| replace:: :py:class:`CommentReaders <yeti.util.io.filters.CommentReader>`
  .. |CommentWriter| replace:: :py:class:`~yeti.util.io.filters.CommentWriter`
- .. |CommentWriters| replace:: :py:class:`~yeti.util.io.filters.CommentWriter`
+ .. |CommentWriters| replace:: :py:class:`CommentWriters <yeti.util.io.filters.CommentWriter>`
  .. |FunctionReader| replace:: :py:class:`~yeti.util.io.filters.FunctionReader`
- .. |FunctionReaders| replace:: :py:class:`~yeti.util.io.filters.FunctionReader`
+ .. |FunctionReaders| replace:: :py:class:`FunctionReaders <yeti.util.io.filters.FunctionReader>`
  .. |NameDateWriter| replace:: :py:class:`~yeti.util.io.filters.NameDateWriter`
- .. |NameDateWriters| replace:: :py:class:`~yeti.util.io.filters.NameDateWriter`
+ .. |NameDateWriters| replace:: :py:class:`NameDateWriters <yeti.util.io.filters.NameDateWriter>`
  .. |SkipBlankReader| replace:: :py:class:`~yeti.util.io.filters.SkipBlankReader`
- .. |SkipBlankReaders| replace:: :py:class:`~yeti.util.io.filters.SkipBlankReader`
+ .. |SkipBlankReaders| replace:: :py:class:`SkipBlankReaders <yeti.util.io.filters.SkipBlankReader>`
  .. |TeeListener| replace:: :py:class:`~yeti.util.io.filters.TeeListener`
- .. |TeeListeners| replace:: :py:class:`~yeti.util.io.filters.TeeListener`
+ .. |TeeListeners| replace:: :py:class:`TeeListeners <yeti.util.io.filters.TeeListener>`
  .. |TeeReader| replace:: :py:class:`~yeti.util.io.filters.TeeReader`
- .. |TeeReaders| replace:: :py:class:`~yeti.util.io.filters.TeeReader`
+ .. |TeeReaders| replace:: :py:class:`TeeReaders <yeti.util.io.filters.TeeReader>`
  .. |TestTeeListener| replace:: :py:class:`~yeti.util.io.filters.TestTeeListener`
- .. |TestTeeListeners| replace:: :py:class:`~yeti.util.io.filters.TestTeeListener`
+ .. |TestTeeListeners| replace:: :py:class:`TestTeeListeners <yeti.util.io.filters.TestTeeListener>`
  .. |NullWriter| replace:: :py:class:`~yeti.util.io.openers.NullWriter`
- .. |NullWriters| replace:: :py:class:`~yeti.util.io.openers.NullWriter`
+ .. |NullWriters| replace:: :py:class:`NullWriters <yeti.util.io.openers.NullWriter>`
  .. |PrefixNamespaceWrapper| replace:: :py:class:`~yeti.util.scriptlib.argparsers.PrefixNamespaceWrapper`
- .. |PrefixNamespaceWrappers| replace:: :py:class:`~yeti.util.scriptlib.argparsers.PrefixNamespaceWrapper`
+ .. |PrefixNamespaceWrappers| replace:: :py:class:`PrefixNamespaceWrappers <yeti.util.scriptlib.argparsers.PrefixNamespaceWrapper>`
  .. |NotImplementedException| replace:: :py:class:`~yeti.util.services.decorators.NotImplementedException`
- .. |NotImplementedExceptions| replace:: :py:class:`~yeti.util.services.decorators.NotImplementedException`
+ .. |NotImplementedExceptions| replace:: :py:class:`NotImplementedExceptions <yeti.util.services.decorators.NotImplementedException>`
  .. |MalformedFileError| replace:: :py:class:`~yeti.util.services.exceptions.MalformedFileError`
- .. |MalformedFileErrors| replace:: :py:class:`~yeti.util.services.exceptions.MalformedFileError`
+ .. |MalformedFileErrors| replace:: :py:class:`MalformedFileErrors <yeti.util.services.exceptions.MalformedFileError>`
  .. |UniqueFIFO| replace:: :py:class:`~yeti.util.unique_fifo.UniqueFIFO`
- .. |UniqueFIFOs| replace:: :py:class:`~yeti.util.unique_fifo.UniqueFIFO`
+ .. |UniqueFIFOs| replace:: :py:class:`UniqueFIFOs <yeti.util.unique_fifo.UniqueFIFO>`
