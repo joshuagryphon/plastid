@@ -213,7 +213,6 @@ def window_landmark(transcript,flank_upstream=50,flank_downstream=50,ref_delta=0
 
     return ivc, fiveprime_offset, ref_point
     
-    
 def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
     """Returns a maximal spanning window surrounding a start codon.
     
@@ -254,7 +253,6 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
     return window_landmark(transcript,flank_upstream,flank_downstream,
                            ref_delta=ref_delta,
                            landmark=transcript.cds_start)
-
 
 def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
     """Returns a maximal spanning window surrounding a stop codon.
@@ -298,49 +296,10 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
                            landmark=transcript.cds_end-3)
 
 
-# def StartWindowFactory(ref_delta=0):
-#     """Function factory to create alignment window functions that choose
-#     nucleotide windows centered around a coordinate specified relative to the
-#     CDS start of a transcript. Functions returned may be passed to do_generate()
-#     as the parameter reference_point_func
-#     
-#     Parameters
-#     ----------
-#     ref_delta : int
-#         Desired reference point on transcript, specified in
-#         nucleotides from the annotated start codon
-#     
-#     Returns
-#     -------
-#     Function
-#     """
-#     return functools.partial(window_cds_start,ref_delta=ref_delta)
-# 
-# 
-# def StopWindowFactory(ref_delta=0):
-#     """Function factory to create alignment window functions that choose
-#     nucleotide windows centered around a coordinate specified relative to the
-#     CDS end of a transcript. Functions returned may be passed to do_generate()
-#     as the parameter reference_point_func
-#     
-#     Parameters
-#     ----------
-#     ref_delta : int
-#         Desired reference point on transcript, specified in
-#         nucleotides from the annotated stop codon
-#     
-#     Returns
-#     -------
-#     Function 
-#     """
-#     return functools.partial(window_cds_stop,ref_delta=ref_delta)
-
-
 #===============================================================================
 # Subprograms
 #===============================================================================
 
-# worked for yeast. need to test for Drosophila, which has >1 transcript/gene
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
                   landmark_func=window_cds_start,
                   printer=NullWriter()):
