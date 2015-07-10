@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-"""This is a template for a command-line script. Make changes below as necessary,
-and, when finished, update this docstring.
+"""This is a template for a command-line script. To write a script, edit this file,
+making changes as necessary, Make changes below as necessary, and, when finished,
+update this docstring.
 """
 import inspect
 import sys

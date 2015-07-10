@@ -37,10 +37,15 @@ Helper code can be found in the following modules:
                                       `GTF2`_ and `GFF3`_ files
     ==============================    ==========================================
 
-In addition:
+Notes
+-----
   
-  - All of the annotation file readers (except BigBed) are compatible with `tabix`_
-    compression, also supported via `Pysam`_. To use one of these with
+  - All readers return objects whose genome coordinates are *0-indexed and
+    half-open,* in keeping with Python conventions, *regardless* of the representation
+    in the underlying file.
+    
+  - All of the annotation file readers (except `BigBed`_) are compatible with `tabix`_
+    compression (supported via `Pysam`_). To use one of these with
     a `tabix`_-compressed file, pass the keyword argument `tabix=True`,
     wrap the open filehandle with :py:obj:`pysam.tabix_iterator`::
 

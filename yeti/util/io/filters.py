@@ -6,11 +6,11 @@ These filters may be composed by wrapping one around another, to perform
 multiple operations in line on, for example, a text stream, before finally
 coverting it to another type of data.
 
-Included are various readers:
+Various readers are included:
 
     - :py:class:`AbstractReader`
         the base class for all reader functions. To create a functional subclass,
-        you should only need to override the :py:meth:`~AbstractReader.filter` method,,
+        you should only need to override the :py:meth:`~AbstractReader.filter` method,
         which is called on each unit of data (usually a line of an input file).
     
     - :py:class:`CommentReader`
@@ -36,27 +36,30 @@ And various writers:
     - :py:class:`NameDateWriter`
         Prepend timestamps to each line of string input before writing
 
+    - :py:class:`CommentWriter`
+        Filter out commented lines from text stream before writing
+
 
 Examples
 --------
 Open a file, skipping comments and blank lines::
 
-    my_reader = CommentReader(SkipBlankReader(open("some_file.txt")))
-    for line in my_reader:
-        ...
+    >>> my_reader = CommentReader(SkipBlankReader(open("some_file.txt")))
+    >>> for line in my_reader:
+    >>>     pass # do something with each line, now that comments are removed
 
 Open a file, applying a function ``foo_func`` to each line of input (*note,*
 ``foo_func`` can return any data type, not just a string)::
 
-    my_reader = FunctionReader(open("some_file.txt"),foo_func)
-    for data_unit in my_reader:
-        ...
+    >>> my_reader = FunctionReader(open("some_file.txt"),foo_func)
+    >>> for data_unit in my_reader:
+    >>>     pass # do something with each `foo`ed data unit
 
 Write to stdout, prepending name and date::
 
-    import sys
-    my_writer = NameDateWriter(stream=sys.stdout)
-    my_writer.write(some_text)
+    >>> import sys
+    >>> my_writer = NameDateWriter(stream=sys.stdout)
+    >>> my_writer.write(some_text)
 
 """
 from __future__ import print_function
@@ -123,7 +126,8 @@ class AbstractReader(object):
         
         Returns
         -------
-        object : a unit of procssed data
+        object
+            a unit of processed data
         """
         return self.filter(self.stream.readline())
 
@@ -132,7 +136,8 @@ class AbstractReader(object):
         
         Returns
         -------
-        list<object> : processed data
+        list
+            processed data
         """
         lreturn = []
         for line in self:
@@ -156,7 +161,8 @@ class AbstractReader(object):
         
         Returns
         -------
-        object : formatted data. Often string, but not necessary
+        object
+            formatted data. Often string, but not necessarily
         """
         pass
 
@@ -201,7 +207,7 @@ class SkipBlankReader(AbstractReader):
         
         
 class CommentReader(AbstractReader):
-    """Ignore lines beginning with '#', optionally preceded by whitespace
+    """Ignore lines beginning with `'#'`, optionally preceded by whitespace
     from a text stream. Comments beginning mid line are left in-place
     """
 
@@ -222,7 +228,7 @@ class CommentReader(AbstractReader):
 
         Returns
         -------
-        list<str>
+        list
             Comments found in text
         """
         return self.comments
@@ -328,7 +334,7 @@ class TeeReader(AbstractReader):
     
 class TeeListener(object):
     """Listener class for TeeFilter. Listeners if registered with a |TeeReader|
-    will receive and process each unit of input via its `alert()` method"""
+    will receive and process each unit of input via its ``alert()`` method"""
     
     @abstractmethod
     def alert(self,data):
@@ -380,7 +386,7 @@ class AbstractWriter(object):
             pass
             
     def write(self,data):
-        """Write to stream
+        """Write data to `self.stream`
         
         Parameters
         ----------
@@ -390,11 +396,11 @@ class AbstractWriter(object):
         self.stream.write(self.filter(data))
     
     def flush(self):
-        """Flush ```self.stream``"""
+        """Flush `self.stream`"""
         self.stream.flush()
 
     def close(self):
-        """flush and close ``self.stream``"""
+        """flush and close `self.stream`"""
         self.flush()
         self.stream.close()
     
@@ -410,7 +416,8 @@ class AbstractWriter(object):
         
         Returns
         -------
-        object : formatted data. Often string, but not necessary
+        object
+            formatted data. Often string, but not necessary
         """ 
         pass
 
@@ -429,7 +436,7 @@ class NameDateWriter(AbstractWriter):
             Stream to write to (Default: sys.stderr)
         
         line_delimiter : str, optional
-            Delimiter, postpended to lines. (Default "\n")
+            Delimiter, postpended to lines. (Default `'\n'`)
         """
         self.name = name
         self.delimiter = line_delimiter
@@ -456,6 +463,7 @@ class NameDateWriter(AbstractWriter):
 
 
 class CommentWriter(AbstractWriter):
+    """Filter out lines beginning with `'#'` from data written to a stream"""
 
     def filter(self,line):
         if line.startswith("#"):

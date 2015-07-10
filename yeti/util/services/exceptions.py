@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Various exceptions used by command-line scripts or other methods
+"""Exceptions used by command-line scripts or other methods
 
 Exceptions
 ----------

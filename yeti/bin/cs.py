@@ -517,9 +517,9 @@ def do_generate(args):
 
 def do_count(args):
     """Count the number of reads falling within a gene (as specified in a
-    position file made using the ``generate` subcommand). Reads are reported
-    both in raw :term:`counts` and as :term:`RPKM`, and saved to a 
-    tab-delimited text file.
+position file made using the `generate` subcommand). Reads are reported
+both in raw :term:`counts` and as :term:`RPKM`, and saved to a 
+tab-delimited text file.
     
     Parameters
     ----------
@@ -722,8 +722,8 @@ def fit_gaussian(my_x,my_y):
     
 def do_chart(args):
     """Produce log-2 fold change histograms and scatter plots for :term:`count`
-    and :term:`RPKM` values between two samples, as well as a chart plotting
-    correlation coefficients as a function of summed read counts in both samples 
+and :term:`RPKM` values between two samples, as well as a chart plotting
+correlation coefficients as a function of summed read counts in both samples 
 
     Parameters
     ----------
@@ -1010,8 +1010,20 @@ def do_chart(args):
 # main program body
 #===============================================================================
 
-def get_parser():
+def main(argv=sys.argv[1:]):
+    """Command-line program
     
+    Parameters
+    ----------
+    argv : list, optional
+        A list of command-line arguments, which will be processed
+        as if the script were called from the command line if
+        :func:`main` is called directly.
+
+        Default: `sys.argv[1:]`. The command-line arguments, if the script is
+        invoked from the command line
+    """
+
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
     annotation_file_parser = get_annotation_file_parser()
     mask_file_parser = get_mask_file_parser()
@@ -1070,23 +1082,7 @@ def get_parser():
                          help="File listing regions (genes or transcripts), one per line, to include in count")
     pparser.add_argument("outbase",type=str,
                          help="Basename for output files")
-    return parser    
-    
-def main(argv=sys.argv[1:]):
-    """Command-line program
-    
-    Parameters
-    ----------
-    argv : list, optional
-        A list of command-line arguments, which will be processed
-        as if the script were called from the command line if
-        :func:`main` is called directly.
 
-        Default: `sys.argv[1:]`. The command-line arguments, if the script is
-        invoked from the command line
-    """
-
-    parser = get_parser()              
     args = parser.parse_args(argv)
 
     if args.program == "generate":

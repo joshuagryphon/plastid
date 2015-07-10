@@ -1,17 +1,10 @@
 #!/usr/bin/env python
-"""Tools for converting declarations written in Jim Kent's & Heidi Brumbaugh's
-`autoSql <http://www.linuxjournal.com/article/5949>`_ table/object specification language
-into Python objects that can parse blocks of delimited text into records that follow
-the specification of the autoSql declaration, each field in each record converted
-to its native type.
+"""This module contains parsers for data structures written in the `autoSql`_
+object specification language, used by the `UCSC genome browser`_, `BigBed`_ files
+and `BigWig`_ files.
 
-The classes here are initialized with autoSql declarations. Then, when instances
-are called on blocks of text, they parse those blocks according to the specification
-of the declaration.
-
-Examples
---------
-Create a parser for some data structure based upon an autoSql declaration::
+Parsers are constructed by initializing an |AutoSqlDeclaration| with a block of
+`autoSql`_ text::
 
     >>> declaration = '''table easy_table
     "A table with a comment on the next line" 
@@ -27,9 +20,9 @@ Create a parser for some data structure based upon an autoSql declaration::
     >>> record_parser = AutoSqlDeclaration(declaration)
 
 
-Parse text into a record using that parser::
+The parser that is created can then be called to parse text records into dictionaries::
 
-    >>> record_parser.parse("3    1,2,3    my string with spaces    5    1.1,1.2,1.3,1.4,1.5    a,b")
+    >>> record_parser("3    1,2,3    my string with spaces    5    1.1,1.2,1.3,1.4,1.5    a,b")
     OrderedDict([("number",3),
                  ("points",(1,2,3)),
                  ("my_string","my string with spaces"),
@@ -38,50 +31,48 @@ Parse text into a record using that parser::
                  ("alpha",{'a','b'}]))
 
 
-Important classes
------------------
+Classes
+-------
 |AutoSqlDeclaration|
-    Parses autoSql declarations for *table, simple,* and *object* types,
-    and delegates parsing of its own fields to appropriate parsers 
-    (e.g. |AutoSqlField|, |SizedAutoSqlField|, and others).
+    Parses `autoSql`_ declarations for `table`, `simple`, and `object`
+    declaration types. Delegates parsing of individual fields to appropriate subclasses 
+    (e.g. |AutoSqlField|, |SizedAutoSqlField|, and |ValuesAutoSqlField|).
 
-|AutoSqlField|, |SizedAutoSqlField|, |ValuesAutoSqlField|, et c
+|AutoSqlField|, |SizedAutoSqlField|, |ValuesAutoSqlField|
     Parse various sorts of fields within an autoSql declaration block
 
 
 Notes
 -----
-1. These parsers seek only to provide Python bindings for autoSql declarations,
-**NOT** to convert autoSql to C or SQL, functions which are already provided
-by `Jim Kent's utilities <https://github.com/ENCODE-DCC/kentUtils/tree/master/>`_
+  #. These parsers seek only to provide Python bindings for `autoSql`_ declarations.
+     They do **NOT** generate C or SQL code from `autoSql`_, as those functions
+     are already provided by `Jim Kent's utilities <https://github.com/ENCODE-DCC/kentUtils/tree/master/>`_
 
-2. ``set`` and ``enum`` field types are both returned as ``set`` s of strings
+  #. ``set`` and ``enum`` field types are parsed as ``sets`` of strings
 
-3. ``primary``, ``index``, and ``auto`` SQL tags are accepted in input, but ignored,
-because they are not relevant for our purposes
+  #. ``primary``, ``index``, and ``auto`` `autoSQL`_ tags are accepted in line declarations,
+      but are ignored because they are not relevant for parsing
 
-4. It is assumed, as would be the case for BigBed files, that text blocks passed
-to the ``__call__()`` methods of |AutoSqlDeclaration| objects
-are tab-delimited. This behavior can be controlled by setting the ``delim``
-attribute of the various parsers
-
-5. Although declarations are routinely nested as fields within other
-declarations in C ``struct`` s and in SQL databases, in the absence of a standard,
-it is unclear how these would be serialized within tab-delimited columns of `BigBed`_
-or BigWig files. Therefore, we do not support this. If or when such a standard is
-described, we will implement it.
+  #. The parsers assume that they will be parsing tab-delimited text blocks
+  
+  #. Although declarations are routinely nested as fields within other
+     declarations in C ``struct`` s and in SQL databases, in the absence of a standard,
+     it is unclear how these would be serialized within tab-delimited columns of `BigBed`_
+     or BigWig files. Therefore, we do not support this. If or when such a standard is
+     described, we will implement it.
 
 
 See Also
 --------
-`Kent & Brumbaugh, 2002 <http://www.linuxjournal.com/article/5949>`_
-    First publication of autoSql & autoXml 
-
 `Updated autoSql Grammar specification <https://github.com/ENCODE-DCC/kentUtils/blob/36d6274459f644d5400843b8fa097b380b8f7867/src/hg/autoSql/autoSql.doc>`_
     Explanation of autoSql grammar
 
-The ENCODE project's `tests for autoSql parsers <https://github.com/ENCODE-DCC/kentUtils/tree/master/src/hg/autoSql/tests/input>`_
+`The ENCODE project's tests for autoSql parsers <https://github.com/ENCODE-DCC/kentUtils/tree/master/src/hg/autoSql/tests/input>`_
     Official autoSql unit tests
+
+`Kent & Brumbaugh, 2002 <http://www.linuxjournal.com/article/5949>`_
+    First publication of autoSql & autoXml 
+
 """
 import re
 import warnings

@@ -6,75 +6,86 @@ Capabilities provided include:
 
     Importing read alignments or counts
         :py:func:`get_alignment_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that reads alignment
-            or count data from BAM, Bowtie, Wiggle, and BEDGraph files
+            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
+            for alignment or count data in `BAM`_, `Bowtie`_, `Wiggle`_, and `bedGraph`_ files
     
         :py:func:`get_genome_array_from_args`
-            Returns a |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|,
-            from arguments parsed by a parser from :py:func:`get_alignment_file_parser`,
-            applying read mapping transformations as appropriate
+            Return a |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|,
+            from command-line arguments parsed by a parser created with 
+            :func:`get_alignment_file_parser`,
 
     Importing transcript models
         :py:func:`get_annotation_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that reads transcript 
-            models from GTF2, GFF3, and BED  annotation files
+            Create an :py:class:`~argparse.ArgumentParser` that process arguments
+            to open transcript models from `GTF2`_, `GFF3`_, `BigBed`_, and `BED`_ format
+            annotation files
             
         :py:func:`get_transcripts_from_args`
-            Returns a list of |Transcript| objects parsed from arguments parsed
-            by a parser made by :py:func:`get_annotation_file_parser`
+            Return |Transcripts| from command-line arguments parsed
+            by a parser created with :py:func:`get_annotation_file_parser`
 
     Importing arbitrary regions of interest
         :py:func:`get_segmentchain_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that can import 
-            SegmentChains from GTF2, GFF3, BED, and PSL (blat) files
+            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
+            to import |SegmentChains| from `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, and `PSL`_
+            format files
 
         :py:func:`get_segmentchains_from_args`
-            Returns a list of |SegmentChain| objects from arguments
-            parsed by a parser made by :py:func:`get_segmentchain_file_parser`
+            Return |SegmentChains| from arguments parsed by a parser created with
+            :py:func:`get_segmentchain_file_parser`
 
     Hashing regions of the genome that should be excluded from analyses
         :py:func:`get_mask_file_parser`
-            Open an annotation file in GTF2, GFF3, BED, or PSL format
+            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
+            to open a :term:`mask annotation` file in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or
+            `PSL`_ format.
              
         :py:func:`get_genome_hash_from_mask_args`
-            Return a |GenomeHash| of genomic regions to mask from analyses
-            
-To add any these capabilities to your command line scripts, import the corresponding
-function pair above. Use the first function in each pair to create an 
-:py:class:`~argparse.ArgumentParser`, and supply this object as a *parent* to your script's
-internal :py:class:`~argparse.ArgumentParser`. Then, use the second function to
-parse the arguments.
+            Return a |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
+            of genomic regions to mask from analyses
+
+Example
+-------     
+To add any these capabilities to your command line scripts, follow the steps
+below. In this example, we create a script that can fetch |Transcripts| from
+all of the annotation file formats supported by :data:`yeti`:
+
+  #. Import one of the function pairs above::
+
+         import argparse
+         from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_transcripts_from_args
+
+
+  #. Use the first function to create an  :class:`~argparse.ArgumentParser`,
+     and supply this object as a `parent` when you build your script's
+     :py:class:`~argparse.ArgumentParser`::
+
+         # create annotation file parser
+         annotation_file_parser = get_annotation_file_parser(disabled=["some_option"])
+        
+         # create my own parser, incorporating flags from annotation_file_parser
+         my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])     
+    
+         # add script-specific arguments
+         my_own_parser.add_argument("--foo",type=int,default=5,help="Some option")
+         my_own_parser.add_argument("--bar",type=str,default="a string",help="Another option")
+
+     
+  #. Then, use the second function to parse the arguments::
+
+         # parse args
+         args = parser.parse_args()
+        
+         # get transcript objects from arguments
+         transcripts = get_transcripts_from_args(args)
+        
+         pass # rest of your script
+
 
 Your script will then be able process various sorts  of count/alignment and annotation files
 from the arguments.
 
-Examples
---------
-Write a script that can import transcript annotations from BED, BigBed, GFF3, and GTF2 files::
 
-    import argparse
-    from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_transcripts_from_args
-
-    # create annotation file parser
-    annotation_file_parser = get_annotation_file_parser(disabled=["some_option"])
-    
-    # create my own parser, incorporating flags from annotation_file_parser
-    my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])
-    
-    # add script-specific arguments
-    my_own_parser.add_argument("--foo",type=int,default=5,help="Some option")
-    my_own_parser.add_argument("--bar",type=str,default="a string",help="Another option")
-    
-    # parse args
-    args = parser.parse_args()
-    
-    # get transcript objects from arguments
-    transcripts,rejected = get_transcripts_from_args(args)
-    
-    ...
-    
-    # rest of your script
-    
 
 See Also
 --------
@@ -129,7 +140,7 @@ from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
 
 _MAPPING_RULE_DESCRIPTION = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
 (`fiveprime_variable`, `fiveprime`, `threeprime`, or `center`) is required.
-`'--offset`, `--nibble`, `--min_length` and `--max_length` are optional."""
+`--offset`, `--nibble`, `--min_length` and `--max_length` are optional."""
 
 _DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = "Open alignment or count files and optionally set mapping rules"
 _DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "alignment mapping rules (for BAM & bowtie files)"
@@ -154,10 +165,11 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                               description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
                               return_subparsers=False):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
-    alignment (BAM or bowtie) or count (Wiggle, BEDGraph) files.
+    alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
      
-    In the case of bowtie or BAM import, read mapping rules (e.g. fiveprime end mapping,
-    threeprime end mapping, et c) and read length filters may be applied.
+    In the case of `bowtie`_ or `BAM`_ import, parse arguments for mapping rules
+    (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
+    read length filters
     
     Parameters
     ----------
@@ -183,7 +195,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
             
     Returns
     -------
-    argparse.ArgumentParser
+    :class:`argparse.ArgumentParser`
     
     
     See also
@@ -420,23 +432,20 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
                                return_subparsers=False):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
-    annotation files from BED, GTF2, or GFF3 formats
+    annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
      
-    In the case of bowtie or BAM import, read mapping rules (e.g. fiveprime end mapping,
-    threeprime end mapping, et c) and read length filters may be applied.
-    
     Parameters
     ----------
     input_choices : list, optional
         list of permitted alignment file type choices.
-        (Default: ["BED","BigBed","GTF2","GFF3"]). PSL may also be added
+        (Default: '["BED","BigBed","GTF2","GFF3"]'). 'PSL'_ may also be added
         
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
-        string prefix to add to default argument options (Default: "")
+        string prefix to add to default argument options (Default: `''`)
     
     title : str, optional
         title for option group (used in command-line help screen)
@@ -446,11 +455,11 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
     
     return_subparsers : bool, optional
         if True, additionally return a dictionary of subparser option groups,
-        to which additional options may be added (Default: False)
+        to which additional options may be added (Default: `False`)
     
     Returns
     -------
-    argparse.ArgumentParser
+    :class:`argparse.ArgumentParser`
     
     
     See also
@@ -512,15 +521,15 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
     prefix : str, optional
         string prefix to add to default argument options.
         Must be same prefix that was added in call to :py:func:`get_annotation_file_parser`
-        (Default: "")
+        (Default: `''`)
         
     disabled : list, optional
         list of parameter names that were disabled when the annotation file
         parser was created by :py:func:`get_annotation_file_parser`. 
-        (Default: ``[]``)
+        (Default: `[]`)
             
     printer : file-like, optional
-        A stream to which stderr-like info can be written (default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|) 
     
     return_type : |SegmentChain| of subclass, optional
         Type of object to return (Default: |Transcript|)
@@ -528,9 +537,10 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
     Returns
     -------
     iterator
-        |Transcript| objects, either in order of appearance (if input was a BED or PSL file),
-        or sorted lexically by chromosome, start coordinate, end coordinate,
-        and then strand (if input was) GTF or GFF
+        |Transcript| objects, either in order of appearance (if input was a
+        `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by chromosome,
+        start coordinate, end coordinate, and then strand (if input was `GTF2`_
+        or `GFF3`_).
     
     
     See Also
@@ -606,20 +616,20 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
                                  prefix="",
                                  title=_DEFAULT_ANNOTATION_PARSER_TITLE,
                                  description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION):
-    """Convenience method to open annotation files as |SegmentChains|
+    """Create an :class:`~argparse.ArgumentParser` to open annotation files as |SegmentChains|
     
     Parameters
     ----------
     input_choices : list, optional
         list of permitted alignment file type choices
-        (Default: ["BED","BigBed","GTF2","GFF3", "PSL"])
+        (Default: `["BED","BigBed","GTF2","GFF3", "PSL"]`)
         
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
-        string prefix to add to default argument options (Default: "")
+        string prefix to add to default argument options (Default: `''`)
     
     title : str, optional
         title for option group (used in command-line help screen)
@@ -629,7 +639,7 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
          
     Returns
     -------
-    argparse.ArgumentParser
+    :class:`argparse.ArgumentParser`
     
     
     See Also
@@ -690,8 +700,7 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter())
                                      return_type=SegmentChain)
 
 def get_mask_file_parser(prefix="mask_",disabled=[]):
-    """Convenience method to open annotation files that describe regions
-    of the genome to mask from analyses
+    """Create an :class:`~argparse.ArgumentParser` to open annotation files that describe regions of the genome to mask from analyses
     
     Parameters
     ----------
@@ -700,7 +709,7 @@ def get_mask_file_parser(prefix="mask_",disabled=[]):
         
     disabled : list, optional
         list of parameter names to disable from the mask file parser 
-        (Default: ``[]``, ``add_three`` is always disabled.)
+        (Default: `[]`. `add_three` is always disabled.)
 
     Returns
     -------
@@ -715,7 +724,7 @@ def get_mask_file_parser(prefix="mask_",disabled=[]):
     disabled.append(prefix+"add_three")
     return get_segmentchain_file_parser(prefix=prefix,
                                         disabled=disabled,
-                                        input_choices=["BED","BigBed","PSL"],
+                                        input_choices=["BED","GTF2","GFF3","BigBed","PSL"],
                                         title=_MASK_PARSER_TITLE,
                                         description=_MASK_PARSER_DESCRIPTION)
 
@@ -790,18 +799,12 @@ class PrefixNamespaceWrapper(object):
     See Also
     --------
     get_annotation_file_parser
-        Creates `:py:class:~argparse.ArgumentParser` for genome annotation files, 
-        whose :py:class:`~argparse.Namespace` objects could be wrapped her
     
     get_alignment_file_parser
-        Creates `:py:class:~argparse.ArgumentParser` for alignment or count files
-        :py:class:`~argparse.Namespace` objects could be wrapped here
     
     get_genome_array_from_args
-        Parser function that uses this class internally
     
     get_transcripts_from_args
-        Parser function that uses this class internally
     """
     
     def __init__(self,namespace,prefix):
@@ -838,8 +841,8 @@ class PrefixNamespaceWrapper(object):
 
 def _parse_variable_offset_file(fh):
     """Read a variable-offset text file into a dictionary.
-    These text-files are two-columns and tab-delimited. The first column
-    specifies the read length, or contains the special value 'default'. The
+    These text files contain two columns and are tab-delimited. The first column
+    specifies the read length, or contains the special value `'default'`. The
     second column specifies the offset from the 5' end of that read length to 
     use.
     

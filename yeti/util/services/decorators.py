@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Contains function decorators and warnings
+"""Function decorators useful for scripts or analyses
 
 Decorators
 ----------
@@ -26,7 +26,7 @@ Decorators
     overall long-term memory usage.
 
 :py:func:`notimplemented`
-    Wrapped functions raise |NotImplementedException| s. Use if committing
+    Wrapped functions raise |NotImplementedExceptions|. Use if committing
     incomplete code.
 
 :py:func:`notused`
@@ -34,7 +34,7 @@ Decorators
 
 :py:func:`skip_if_abstract`
     Function decorator for unit tests. Wrapped methods will be skipped if
-    they are called from a :py:class:`unittest.TestCase` with 'Abstract'
+    they are called from a :py:class:`unittest.TestCase` with `'Abstract'`
     in its name, and run only in subclasses of the abstract :py:class:`unittest.TestCase`
     in which they are defined
 """
@@ -113,10 +113,10 @@ def catch_warnings(simple_filter="ignore"):
     Parameters
     ----------
     simple_filter : str
-        Warnings filter action, as defined in :py:mod:`warnings`:
+        Warnings filter action. Quoted from :py:mod:`warnings`:
         
             ==============    ==================================================
-            Value             Disposition
+            **Value**         **Disposition**
             --------------    --------------------------------------------------
             *error*           Turn warnings into exceptions
             *ignore*          Ignore all warnings
@@ -129,7 +129,7 @@ def catch_warnings(simple_filter="ignore"):
                               regardless of location
             ==============    ==================================================
 
-        (source: :py:mod:`warnings`:)
+        (source: :py:mod:`warnings`)
 
     
     Returns
@@ -173,8 +173,6 @@ def deprecated(func_or_class):
     functions or classes will raise FutureWarnings with called or instantiated,
     respectively.
     
-    Based on useful hints from http://wiki.python.org/moin/PythonDecoratorLibrary
-
     Parameters
     ----------
     func_or_class : function or class
@@ -185,6 +183,7 @@ def deprecated(func_or_class):
     object
         wrapped function or class
     """
+    # Based on useful hints from http://wiki.python.org/moin/PythonDecoratorLibrary
     if isinstance(func_or_class,types.FunctionType):
         @functools.wraps(func_or_class)
         def new_func(*args,**kwargs):
@@ -251,7 +250,7 @@ def catch_stderr(buf=None):
     ----------
     buf : file
         Buffer that will hold captured stderr output. Must import
-        ``write()`` and ``fileno()`` methods. If *None*, :py:obj:`os.devnull` will
+        ``write()`` and ``fileno()`` methods. If `None`, :py:obj:`os.devnull` will
         be used.
         
         
@@ -259,25 +258,24 @@ def catch_stderr(buf=None):
     --------
     Create a ``pipe``, and use it to catch stderr::
     
-        >> import sys
-        >> import os
-        >>
-        >> def my_func():
-               sys.stderr.write("some message")
+        >>> import sys
+        >>> import os
+        >>>
+        >>> def my_func():
+        >>>    sys.stderr.write("some message")
         
-        >> read_end, write_end = os.pipe()
-        >> buf = os.fdopen(write_end,"w")
-        >> 
-        >> wrapped = catch_stderr(buf)(my_func)
-        >> wrapped() # generates stderr
-           ......
+        >>> read_end, write_end = os.pipe()
+        >>> buf = os.fdopen(write_end,"w")
+
+        >>> wrapped = catch_stderr(buf)(my_func)
+        >>> wrapped() # generates stderr
     
-        >> buf.close()
-        >> captured = os.fdopen(read_end).read()
-        >> print(captured)
-           ... # output here
+        >>> buf.close()
+        >>> captured = os.fdopen(read_end).read()
+        >>> print(captured)
+        # output from captured stderr here
         
-        >> captured.close() # remember to close!
+        >>> captured.close() # remember to close!
     
     Returns
     -------
@@ -328,7 +326,7 @@ def catch_stdout(buf=None):
     ----------
     buf : file or None
         Buffer that will hold captured stdout output. Must import
-        ``write()`` and ``fileno()`` methods. If *None*, :py:obj:`os.devnull` will
+        ``write()`` and ``fileno()`` methods. If `None`, :py:obj:`os.devnull` will
         be used.
         
         
@@ -336,25 +334,24 @@ def catch_stdout(buf=None):
     --------
     Create a ``pipe``, and use it to catch stdout::
     
-        >> import sys
-        >> import os
-        >>
-        >> def my_func():
-               sys.stdout.write("some message")
+        >>> import sys
+        >>> import os
+        >>>
+        >>> def my_func():
+        >>>     sys.stdout.write("some message")
         
-        >> read_end, write_end = os.pipe()
-        >> buf = os.fdopen(write_end,"w")
-        >> 
-        >> wrapped = catch_stdout(buf)(my_func)
-        >> wrapped() # generates stdout
-           ......
+        >>> read_end, write_end = os.pipe()
+        >>> buf = os.fdopen(write_end,"w")
+        >>> 
+        >>> wrapped = catch_stdout(buf)(my_func)
+        >>> wrapped() # generates stdout
     
-        >> buf.close()
-        >> captured = os.fdopen(read_end).read()
-        >> print(captured)
-           ... # output here
+        >>> buf.close()
+        >>> captured = os.fdopen(read_end).read()
+        >>> print(captured)
+        # output here
         
-        >> captured.close() # remember to close!
+        >>> captured.close() # remember to close!
     
     Returns
     -------
@@ -371,7 +368,7 @@ def catch_stdout(buf=None):
         
         buf : file-like, optional
             Open stream, which **must** have a `fileno()` method. ``StringIO``
-            objects will not work! (Default: os.devnull)
+            objects will not work! (Default: `os.devnull`)
         
         Returns
         -------
@@ -453,7 +450,7 @@ def parallelize(func):
         must be declared in global scope.
      
     processes : int, optional
-        Number of processes to use (Default: 4)
+        Number of processes to use (Default: `4`)
      
     Returns
     -------

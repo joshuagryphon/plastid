@@ -6,14 +6,14 @@ accessed by |GenomeArray| or |SparseGenomeArray| when importing from
 
 See also
 --------
-:class:`GenomeArray` and :class:`SparseGenomeArray`
-    Array-like objects that store quantitative data over genomes
+|GenomeArray| and |SparseGenomeArray|
+    Array-like objects that store and index quantitative data over genomes
 
 http://bowtie-bio.sourceforge.net/manual.shtml#default-bowtie-output
-    for detailed description of bowtie output format
+    Detailed description of `bowtie`_ output format
 
 :py:mod:`yeti.test.unit.genomics.test_genome_array`
-    for integrative tests of theese functions
+    for integrative tests of these functions
 """
 __author__ = "joshua"
 __date__ = "2011-03-18"
@@ -30,7 +30,8 @@ from yeti.util.services.decorators import deprecated, skipdoc
 
 class BowtieReader(AbstractReader):
     """Read alignments from `bowtie`_ files line-by-line into |SegmentChains|.
-    Attributes defined for the feature are:
+    The following attributes are defined and stored in the `attr` dict of
+    each returned |SegmentChain|
     
     `seq_as_aligned`
         the sequence in the direction it aligns, NOT necessarily
@@ -42,7 +43,8 @@ class BowtieReader(AbstractReader):
     `total_alignments`
         the number of total alignments found
     
-    See description of format at http://bowtie-bio.sourceforge.net/manual.shtml
+    See description of `bowtie`_ legacy format at
+    http://bowtie-bio.sourceforge.net/manual.shtml
     
     Yields
     -------
@@ -50,6 +52,7 @@ class BowtieReader(AbstractReader):
         A read alignment
     """
     def filter(self,line):
+        """Parse a read alignment as |SegmentChain| from a line of `bowtie`_ output"""
         items = line.strip("\n").split("\t")
         read_name      = items[0]
         strand         = items[1]
@@ -63,48 +66,5 @@ class BowtieReader(AbstractReader):
                }
         
         iv = GenomicSegment(ref_seq,coord,coord+len(attr['seq_as_aligned']),strand)
-        feature = SegmentChain(iv,**attr)
-        return feature
-
-@deprecated
-@skipdoc
-class TagalignReader(AbstractReader):
-    """Reads alignments from Nick Ingolia's TagAlign utility to |SegmentChain|
-    Attributes defined for this feature are:
-
-    `seq_as_aligned`
-        the sequence in the direction it aligns, NOT necessarily
-        the read in the direction it was sequenced
-    
-    `qualstr_phred`
-        a quality string, phred encoded
-    
-    `total_alignments`
-        the number of total alignments found
-
-    Returns
-    -------
-    |SegmentChain|
-    """
-    def filter(self,line):
-        items = line.strip("\n").split("\t")
-        read_name      = items[0]
-        strand         = items[8]
-        chrom          = items[6]
-        attr = { 'seq_as_aligned' : items[1],
-                 'qualstr'        : items[2],
-                 'total_alignments' : int(items[3]),
-                 'type'           : "alignment",
-                 'ID'             : read_name,
-               }
-        fiveprime_align  = int(items[7])
-        max_align_length = int(items[5])
-        if strand == "+":
-            start = fiveprime_align
-            end   = fiveprime_align + max_align_length
-        elif strand == "-":
-            end   = fiveprime_align + 1
-            start = end - max_align_length
-        iv = GenomicSegment(chrom,start,end,strand)
         feature = SegmentChain(iv,**attr)
         return feature

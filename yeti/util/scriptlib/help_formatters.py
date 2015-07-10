@@ -20,9 +20,9 @@ See also
 import re
 
 def shorten_help(inp):
-    """Pretty prints `numpydoc`_-formatted docstrings for use in command-line help,
-    by removing some `reStructuredText`_ markup, and truncating the docstring
-    at the appropriate numpydoc tokens.
+    """Pretty prints `numpydoc`_-formatted module, class, or function docstrings
+    for use in command-line help, by removing some `reStructuredText`_ markup,
+    and truncating the docstring at the appropriate `numpydoc`_ tokens.
     
     Parameters
     ----------

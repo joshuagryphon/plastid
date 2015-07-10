@@ -14,6 +14,7 @@ Package overview
     :py:mod:`~yeti.util.services.lists`              Miscellaneous list operations
     :py:mod:`~yeti.util.services.sets`               Miscellaneous set operations
     :py:mod:`~yeti.util.services.misc`               Other miscellaneous functions
+    :py:mod:`~yeti.util.services.mini2to3`           Python 2.x/3.x compatability layer
     ===============================================  ==============================================
  
 """

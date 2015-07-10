@@ -5,8 +5,9 @@ also export junctions as a `Tophat`_ ``.juncs`` file.
 
 If a splice junction is multiply annotated (e.g. used by more than one transcript),
 only the first occurrence of the junction will be reported. Scores, if present,
-are exported unaltered in `BED`_ output. Examples::
+are exported unaltered in `BED`_ output. Examples:
 
+ .. code-block:: shell
 
     # identify splice junctions from a transcript annotation supplied in GTF2
     # creates output file 'annotation.bed'

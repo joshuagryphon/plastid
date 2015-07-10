@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""This module contains |BED_Reader|, a parser that reads `BED`_ files
-line-by-line into |SegmentChain|, |Transcript|, or similar objects. 
+"""This module contains |BED_Reader|, a parser that reads each line of a `BED`_
+file into a |SegmentChain|, |Transcript|, or similar object. 
 
 Examples
 --------
@@ -31,7 +31,7 @@ they were one stream::
 See Also
 --------
 `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_.
-    BED specification at UCSC
+    BED format specification at UCSC
 """
 __date__ =  "Aug 23, 2011"
 __author__ = "joshua"

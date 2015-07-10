@@ -87,7 +87,7 @@ def simulate_reads(seq_record,fh=sys.stdout,k=30):
         filehandle to write output 
         
     k : int, optional
-        length of k-mers to generate (Default: 30)
+        length of k-mers to generate (Default: `30`)
     """
     for x in xrange(0,len(seq_record)-k+1):
         fh.write(">%s:%s(+)\n" % (seq_record.name,x))
@@ -109,7 +109,7 @@ class FastaNameReader(AbstractReader):
         Returns
         -------
         str
-            Name of next sequence, excluding prefix ">" and line terminator
+            Name of next sequence, excluding prefix `'>'` and line terminator
         """
         if line.startswith(">"):
             return line[1:].rstrip()
@@ -128,12 +128,12 @@ def revcomp_mask_ivc(seg,k,offset=0):
         Length of k-mers
 
     offset : int, optional
-        Offset from 5\' end of read at which to map mask (Default: 0)
+        Offset from 5\' end of read at which to map mask (Default: `0`)
 
     Returns
     -------
     |SegmentChain|
-        Mask on minus strand corresponding to ``seg``
+        Mask on minus strand corresponding to `seg`
     """
 # Algorithm note:
 #
@@ -166,7 +166,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
         Length of k-mers
 
     offset : int, optional
-        Offset from 5\' end of read at which to map read, if any (Default: 0)
+        Offset from 5\' end of read at which to map read, if any (Default: `0`)
 
     Yields
     ------

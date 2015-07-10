@@ -2,16 +2,18 @@
 """Miscellaneous functions that don't seem to fit elsewhere
 
 :py:func:`guess_formatter`
-    Convert string into primitive data type it probably encoded before ```str`` conversion
+    Convert string into primitive data type it probably encoded before `str`
+    was called on it
 
 :py:func:`number`
-    Convert string into numerical data type, prefering py:obj:`int` over py:obj:`float`
+    Convert string into numerical data type, trying `bool`, `int`, `float`,
+    then `str`
 """
 import numpy
 
 def guess_formatter(inp):
-    """Guesses the format of input, preferring bools, ints, floats then strings
-    Correctly parses nans and Infs. Converts None to nan
+    """Guesses the format of input, trying `bool`, `int`, `float`, then `str`.
+    Correctly parses `nan`s and `Inf`s. Converts `None` to `nan`
 
 
     Parameters
@@ -36,7 +38,7 @@ def guess_formatter(inp):
     
 def number(inp):
     """Parses numbers from strings, preferring int over float.
-    Parses "nan", "Nan", "None", "none", "inf", and "-inf"
+    Parses `nan`, `Nan`, `None`, `none`, `inf`, and `-inf`
 
 
     Parameters
@@ -52,7 +54,8 @@ def number(inp):
 
     Raises
     ------
-    ValueError : if type is non-numeric
+    ValueError
+        if `inp` cannot be converted to a number
     """
     if inp in ("nan","NaN","na","None","none"):
         return numpy.nan

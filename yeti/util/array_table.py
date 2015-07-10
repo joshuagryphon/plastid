@@ -19,7 +19,7 @@ _NUMERIC_DTYPES = "iufc"
 class ArrayTable(object):
     """A representation of a spreadsheet, in which each column has a single
     data type. Multiple data types are allowed within single sheets. Internally,
-    the spreadsheet is represented as a dictionary of :py:class:`numpy.ndarray`s. For
+    the spreadsheet is represented as a dictionary of :py:class:`numpy.ndarray` s. For
     convenience, access to this dictionary is exposed. Note: the length of
     the |ArrayTable| is defined as the number of rows in the table, NOT the number
     of columns (as is the case with a dictionary).
@@ -28,9 +28,10 @@ class ArrayTable(object):
     header key. Rows may be accessed using get_rows() in combination with a 
     selection mask.
     
-    While this class can be instantiated directly from a dictionary of :py:class:`numpy.ndarray`s,
-    it is more convenient to use it to parse tab-delimited files via 
-    :py:meth:`ArrayTable.from_file`, and to write such files using :py:meth:`ArrayTable.to_file`
+    While this class can be instantiated directly from a dictionary of
+    :py:class:`numpy.ndarray` objects, it is more convenient to use it to parse
+    tab-delimited files using :meth:`ArrayTable.from_file`,
+    and to write such files using :meth:`ArrayTable.to_file`
     """
     def __init__(self,my_dict):
         """Create an |ArrayTable| from a dictionary of sequences
@@ -72,8 +73,8 @@ class ArrayTable(object):
         return (len(self),len(self.keys()))
     
     def __eq__(self,other):
-        """Tests equality with another |ArrayTable|, defined as equality of keys,
-        equalty of lengths, identity of all non-numerical values, and equality
+        """Test equality with another |ArrayTable|, defined as equality of keys,
+        equality of lengths, identity of all non-numerical values, and equality
         of all numerical values within a tolerance
         
         Parameters
@@ -149,14 +150,15 @@ class ArrayTable(object):
         
         Raises
         ------
-        ValueError if len(val) != len(self)
+        ValueError
+            if `len(val) != len(self)`
         """
         if len(val) != len(self):
             raise ValueError("Length of incoming array (%s) is unequal length of destination table (%s)" % (len(val),len(self)))
         self._dict[key] = numpy.array(val)
     
     def get_rows(self,keyorder=None,mask=None):
-        """Returns a section of the |ArrayTable| as a set of rows
+        """Return a section of the |ArrayTable| as a set of rows
         
         Parameters
         ----------
@@ -177,9 +179,9 @@ class ArrayTable(object):
         return zip(*tuple([self[K][mask] for K in keyorder]))
     
     def merge(self,source,host_match_key,source_match_key,keys_to_copy=None):
-        """Merges columns from a source ArrayDict into an existing |ArrayTable| in-place.
-        The source ArrayDict is not required to have the same length as this one.
-        Missing data are treated as numpy.nan for numerical types, or None 
+        """Merge columns from `source` into an existing |ArrayTable| in-place.
+        `source` is not required to have the same length as `SELF`.
+        Missing data are treated as `numpy.nan` for numerical types, or `None` 
         for non-numerical types.
         
         Parameters
@@ -193,9 +195,9 @@ class ArrayTable(object):
         source_match_key : str
             Key in source |ArrayTable| on which to perform join
             
-        keys_to_copy : list<str> or None
+        keys_to_copy : list<str> or `None`
             Sequence of keys indicating which columns to copy
-            from source to host. If None, all keys in source,
+            from source to host. If `None`, all keys in source,
             save the match key, are copied.
         """
         if keys_to_copy is None:
@@ -214,17 +216,17 @@ class ArrayTable(object):
                 self[k][match_mask] = source[k][i]
     
     def as_array(self,keyorder=None,mask=None):
-        """Returns a portion of the |ArrayTable| as an MxN numpy array.
+        """Return a portion of the |ArrayTable| as an MxN ``numpy`` array.
         Note, all keys specified in keyorder must be numerical types. Otherwise,
-        numpy will throw an error.
+        ``numpy`` will throw an error.
         
         Parameters
         ----------
-        keyorder : list<str>
+        keyorder : list<str>, optional
             sequence of keys reflecting desired column order in output file.
-            If None, keys are sorted alphabetically
+            If `None`, keys are sorted alphabetically
                          
-        mask : array-like
+        mask : array-like, optionals
             logical mask or sequence of indices specifying rows from which to draw values
 
         Returns
@@ -245,15 +247,15 @@ class ArrayTable(object):
         
         keyorder : list<str>, optional
             sequence of keys reflecting desired column order in
-            output file. if None, keys are sorted alphabetically
+            output file. if `None`, keys are sorted alphabetically
                          
         mask : array-like, optional
             logical mask or sequence of indices specifying rows from which to draw values
         
         formatters : dict, optional
             Override default formatting of an object. Supply the object class
-            as a key, and a string formatter as a value. For example ``str``
-            or ``'{:d}'.format``
+            as a key, and a string formatter as a value. For example `str`
+            or `'{:d}'.format`
         """
 
         format_dict = { numpy.float128  : '{:.128e}'.format,
@@ -297,7 +299,7 @@ class ArrayTable(object):
     @staticmethod
     def from_file_to_data_frame(fh):
         """Transitional convenience method to read a file from :py:meth:`ArrayTable.to_file`
-        into a pandas.DataFrame
+        into a :class:`pandas.DataFrame`
         
         Parameters
         ----------
@@ -313,13 +315,12 @@ class ArrayTable(object):
         
     @staticmethod
     def concat(*arraytables):
-        """Concatenates multiple |ArrayTable| s into a single |ArrayTable|,
-        in the order in which they are passed here.
+        """Concatenate multiple |ArrayTables| into a single |ArrayTable| in order.
         
         Parameters
         ----------
-        *arraytables : one or more |ArrayTable|
-            sequence of |ArrayTable| s to merge
+        arraytables : one or more |ArrayTables|
+            sequence of |ArrayTables| to merge
             
         Returns
         -------
@@ -328,7 +329,7 @@ class ArrayTable(object):
             
         Raises
         ------
-        ValueError : if input |ArrayTable| s have mismatched columns
+        ValueError : if input |ArrayTables| have mismatched columns
         """
         keys = set()
         for at in arraytables:
@@ -349,10 +350,10 @@ class ArrayTable(object):
     
     @staticmethod
     def from_file(fh,formatters=guess_formatter):
-        """Reads a tab-delimited file into an |ArrayTable|.
+        """Read a tab-delimited file into an |ArrayTable|.
         The first line that begins with a single pound sign is taken to be a
         header row; these headers will be the keys in the returned dictionary.
-        Any line beginning with two pound signs ("##") is assumed to contain
+        Any line beginning with two pound signs (`'##'`) is assumed to contain
         metadata, which is discarded. 
         
         Parameters
@@ -361,10 +362,9 @@ class ArrayTable(object):
             filehandle pointing to data
         
         formatters
-            a sequence of formatters (e.g. 'str', 'int', 'float')
-            used to parse each column, or a single formatter to
-            apply to all columns (default: guess which formatter
-            to use)
+            a sequence of formatters (e.g. `str`, `int`, `float`) used to parse
+            each column, or a single formatter to apply to all columns
+            (Default: guess which formatter to use)
                             
         Returns
         -------
@@ -396,12 +396,12 @@ class ArrayTable(object):
 
 
 def equal_enough(col1,col2,tol=1e-10,printer=NullWriter()):
-        """Test that all values in *col1* and *col2* are both numeric, test that
-        all their values are within tol of each other. NaNs, if present, must be
-        in the same place in each column. Ditto Infs.
+        """If `col1` and `col2` are both numeric, test that
+        all their values are within `tol` of each other. `NaN`s, if present, must be
+        in the same place in each column. Ditto `Inf`s.
         
-        If *col1* and *col2* are not numeric, return true if they have the same
-        dtype and the same values in all cells.
+        If `col1` and `col2` are not numeric, return true if they have the same
+        `dtype` and the same values in all cells.
         
         Parameters
         ----------
@@ -420,9 +420,9 @@ def equal_enough(col1,col2,tol=1e-10,printer=NullWriter()):
         Returns
         -------
         bool
-            *True* if col1 == col2 for non-numeric data;
-            *True* if abs(col1 - col2) <= tol for numeric data;
-            *False* otherwise
+            `True` if `col1 == col2` for non-numeric data;
+            `True` if `abs(col1 - col2) <= tol` for numeric data;
+            `False` otherwise
         """
         dtype_test  = col1.dtype.kind in _NUMERIC_DTYPES
         dtype_test &= col2.dtype.kind in _NUMERIC_DTYPES

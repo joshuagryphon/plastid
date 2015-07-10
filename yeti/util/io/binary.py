@@ -30,22 +30,23 @@ class BinaryParserFactory(object):
         List of strings specifying variable names to bind to data
         when unpacked from a binary file, in same order as items in ``fmt``
     
-    nt : :py:class:`namedtuple`
-        A :py:class:`namedtuple` instance that will wrap the unpacked data
+    nt : :class:`~collections.namedtuple`
+        A :class:`~collections.namedtuple` instance that will provide names
+        to the unpacked data
 
     
     Examples
     --------
     A binary RGB color parser::
     
-        >> ColorParser = BinaryParserFactory("ColorParser","3Q",["r","g","b"])
-        >> fh = open("some_binary_file_containing_colors.bin","rb") # 'b' is important in mode flag!!
-        >> fh.seek(byte_location_of_an_rgb_color)
-        >> rgb_dict = ColorParser(fh) # read and parse 3 8-bit integers from file
-        >> rgb_dict
-           { "r" : 255,
-             "g" : 0,
-             "b" : 52 }
+        >>> ColorParser = BinaryParserFactory("ColorParser","3Q",["r","g","b"])
+        >>> fh = open("some_binary_file_containing_colors.bin","rb") # 'b' is important in mode flag!!
+        >>> fh.seek(byte_location_of_an_rgb_color)
+        >>> rgb_dict = ColorParser(fh) # read and parse 3 8-bit integers from file
+        >>> rgb_dict
+            { "r" : 255,
+              "g" : 0,
+              "b" : 52 }
 
 
     See Also
@@ -80,7 +81,7 @@ class BinaryParserFactory(object):
         return str(self)
 
     def __call__(self,fh,byte_order="<"):
-        """Produce a dictionary mapping field names to their values in ``fh``
+        """Parse data from `fh` into a dictionary mapping field names to their values
         
         Parameters
         ----------
@@ -89,12 +90,12 @@ class BinaryParserFactory(object):
             aligned with start of record.
         
         byte_order : str
-            Character indicating endian-ness of data (default: "<" for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for little-endian)
         
         Returns
         -------
         :py:class:`~collections.OrderedDict`
-            Dictionary mapping field names from ``self.fields`` to their values
+            Dictionary mapping field names from `self.fields` to their values
         """
         tmp_dict = self.nt._make(struct.unpack(byte_order+self.fmt,
                                                fh.read(self.calcsize(byte_order))))._asdict()
@@ -116,7 +117,7 @@ class BinaryParserFactory(object):
         Parameters
         ----------
         byte_order : str
-            Character indicating endian-ness of data (default: "<" for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for little-endian)
 
         Returns
         -------

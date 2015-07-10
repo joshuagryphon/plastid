@@ -1,39 +1,39 @@
-"""Tools for quickly locating features of interest in a sub-region of a genome.
+"""Tools for looking up features in a region of interest within the a genome.
 
 It is frequently useful to retrieve features that overlap specific regions 
 of interest in the genome, for example, to find transcripts that overlap one
 another. However, it would be inefficient to compare features that are
-too far apart in the genome to overlap in the first place. 
+too far apart in the genome to overlap in the first place, or to scan through
+a large annotation every time.
 
 |GenomeHash|, |BigBedGenomeHash|, and |TabixGenomeHash| index annotations
-by genomic location to avoid making unnecessary comparisons.
+by genomic location to avoid making unnecessary computations.
 
-A |GenomeHash| may be created from a list or dictionary of features (e.g. |SegmentChain| s or
-|Transcript| s), or directly loaded from a genome annotation (in `BED`_, `GTF2`_,
+A |GenomeHash| may be created from a list or dictionary of features (e.g. |SegmentChains| or
+|Transcripts|), or directly loaded from a genome annotation (in `BED`_, `GTF2`_,
 `GFF3`_, or `PSL`_ format).
 
-|BigBedGenomeHash| and |TabixGenomeHash| objects are more memory efficient
+|BigBedGenomeHash| and |TabixGenomeHash| are more memory efficient
 than |GenomeHash|, and take advantage of the indices already present in `BigBed`_ or 
-`Tabix <http://samtools.sourceforge.net/tabix.shtml>`_-compressed files, to avoid
-loading annotations into memory before they are used (if they even are at all).
+`Tabix <http://samtools.sourceforge.net/tabix.shtml>`_-compressed files. They
+thus avoid loading annotations into memory unless they are used.
 
 
-Important classes
------------------
+Types of GenomeHash
+-------------------
 |GenomeHash|
     GenomeHash that can be created from memory-resident objects, such as a
-    list or dict of |SegmentChain| s, or an annotation file in `BED`_, `GTF2`_, `GFF3`_,
+    list or dict of |SegmentChains|, or an annotation file in `BED`_, `GTF2`_, `GFF3`_,
     or `PSL`_ format. Features are indexed by position in genome, allowing
     efficient lookup when, for example, comparing two genome annotations or
     comparing transcript isoforms.
 
 |BigBedGenomeHash|
-    A more memory-efficient implementation of |GenomeHash| for use with `BigBed`_ files.
+    A memory-efficient GenomeHash for use with `BigBed`_ files.
 
 |TabixGenomeHash|
-    A more memory-efficient implementation of |GenomeHash| for use with 
-    `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ files that have been compressed and
-    indexed with `Tabix <http://samtools.sourceforge.net/tabix.shtml>`_.
+    A memory-efficient GenomeHash for use with  `BED`_, `GTF2`_, `GFF3`_, or `PSL`_
+    files that have been compressed and indexed with `Tabix <http://samtools.sourceforge.net/tabix.shtml>`_.
 
 
 Examples
@@ -70,13 +70,12 @@ DEFAULT_BIN_SIZE=20000
 
 
 class AbstractGenomeHash(object):
-    """Abstract base class for hashes that map |SegmentChain| objects to
-    neighborhoods, allowing quick lookup for comparisons of overlap
-    or other behavior
+    """Abstract base class for objects that index |SegmentChains| by genomic position,
+    allowing quick lookup for comparisons of overlap or other behavior
     """
     @abstractmethod
-    def get_overlapping_features(self,feature,stranded=True):
-        """Return list of features that overlap `feature`
+    def get_overlapping_features(self,roi,stranded=True):
+        """Return list of features that overlap `roi`
         
         Parameters
         ----------
@@ -97,7 +96,7 @@ class AbstractGenomeHash(object):
         Raises
         ------
         TypeError
-            if feature is not a |GenomicSegment| or |SegmentChain|
+            if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         pass
 
@@ -127,8 +126,7 @@ class AbstractGenomeHash(object):
 
 
 class GenomeHash(AbstractGenomeHash):
-    """Index memory-resident features (as |SegmentChain| objects or subclasses) by genomic position,
-    for quick lookup later.
+    """Index memory-resident features (e.g. |SegmentChains| or |Transcripts|) by genomic position for quick lookup later.
     
     Notes
     -----
@@ -369,7 +367,7 @@ class GenomeHash(AbstractGenomeHash):
         return [self._id_to_names[X] for X in nearby_feature_ids]
 
     def get_overlapping_features(self,roi,stranded=True):
-        """Return list of features in all the bins occupied by `roi`
+        """Return list of features overlapping `roi`.
         
         Parameters
         ----------
@@ -399,7 +397,7 @@ class GenomeHash(AbstractGenomeHash):
         return [X for X in nearby_features if fn(X) == True]
     
     def __getitem__(self,roi):
-        """Return list of features that overlap the region of interest (roi),
+        """Return list of features that overlap a region of interest (roi),
         on same strand.
         
         Parameters
@@ -449,8 +447,8 @@ class BigBedGenomeHash(AbstractGenomeHash):
             Path to `BigBed`_ file (NOT open filehandle)
 
         base_record_format : str
-            Format string for :py:func:'struct.unpack`, excluding endian-ness prefix
-            and any notion of a null-terminated string. (Default: *III*)
+            Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
+            and any notion of a null-terminated string. (Default: `III`)
 
         return_type : class implementing a :py:meth:`from_bed` method
             Class of object to return (Default: |SegmentChain|)
@@ -459,7 +457,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
             Number of previously-fetched datablocks from `BigBed`_ file to keep
             resident in memory, to save time over repeated fetches to the same
             genomic regions. Increasing this number increases speed at the
-            cost of increased memory use. (Default: *5*)
+            cost of increased memory use. (Default: `5`)
         """
         self.filename = filename
         self.bigbedreader = BigBedReader(filename,
@@ -522,7 +520,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
     
 
 class TabixGenomeHash(AbstractGenomeHash):
-    """A GenomeHash for a tabix-indexed files
+    """A GenomeHash for a `tabix`_-indexed files
     
     Notes
     -----
@@ -534,8 +532,8 @@ class TabixGenomeHash(AbstractGenomeHash):
     filenames : list
         List of files used by |TabixGenomeHash|
         
-    tabix_readers : list of :py:class:`Tabixfile`
-       Pysam interfaces to underlying data files 
+    tabix_readers : list of :py:class:`pysam.Tabixfile`
+       `Pysam`_ interfaces to underlying data files 
     """
     
     _READERS = { "GTF2" : GTF2_Reader,
@@ -550,7 +548,7 @@ class TabixGenomeHash(AbstractGenomeHash):
         Parameters
         ----------
         filenames : list of str
-            One or more paths to Tabix files (NOT open filehandle)
+            One or more paths to `Tabix`_-compressed files (NOT open filehandle)
 
         data : str
             Format of tabix-compressed file(s). Choices are:

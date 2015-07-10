@@ -103,7 +103,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         Maximum read length to include
 
     printer : file-like, optional
-        filehandle to write logging info to (Default: :func:`NullWriter`)
+        filehandle to write logging info to (Default: :func:`~yeti.util.io.openers.NullWriter`)
                
     Returns
     -------

@@ -1,22 +1,23 @@
 #!/usr/bin/env python
-"""This module defines object types that describe features or regions of interest in a genome or contig.
+"""This module defines object types that describe features in a genome or contig.
 
 
 Important classes
 -----------------
 |GenomicSegment|
     A fundamental unit of a feature, similar to :py:class:`HTSeq.GenomicInterval`.
-    |GenomicSegment| describes a single region of a genome, and is specified by
+    |GenomicSegment| describes a single region of a genome, and is fully specified
     by a chromosome name, a start coordinate, an end coordinate, and a strand.
-    |GenomicSegment| contain provide no feature annotation data, and are used
-    primarily to construct |SegmentChain| or |Transcript| objects, which do
+    
+    |GenomicSegments| provide no feature annotation data, and are used
+    primarily to construct |SegmentChains| or |Transcripts|, which do
     provide feature annotation data. |GenomicSegment| implements various methods
     to test equality to, overlap with, and containment of other |GenomicSegment|
     objects.
 
 |SegmentChain|
-    Base class for genomic features with annotation data. |SegmentChains|
-    can contain zero or more |GenomicSegments|, and therefore can model
+    Base class for genomic features with rich annotation data. |SegmentChains|
+    can contain zero or more |GenomicSegments|, and can therefore model
     discontinuous features -- such as multi-exon transcripts or gapped alignments --
     in addition to continuous features.  
     
@@ -44,7 +45,35 @@ Important classes
 
 |Transcript|
      Subclass of |SegmentChain| that adds convenience methods for fetching CDS,
-     5' UTRs, and 3' UTRs, if the transcript is coding.        
+     5' UTRs, and 3' UTRs, if the transcript is coding.
+
+
+Examples
+--------
+Construct a |SegmentChain| from |GenomicSegments|::
+
+    >>>
+    >>>
+    
+
+Fetch a vector of spliced counts covering a |SegmentChain| from a |GenomeHash|::
+
+    >>>
+    >>>
+
+
+Fetch a sub-region of a chain::
+
+    >>>
+    >>>
+
+
+Find genomic coordinate of position 53 in a chain::
+
+    >>>
+    >>>
+
+
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
@@ -127,7 +156,7 @@ def _format_transcript(tx):
     return stmp
 
 def positionlist_to_segments(chrom,strand,positions):
-    """Construct |GenomicSegment| from a chromosome name, a strand, and a list of chromosomal positions
+    """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
 
     Parameters
     ----------
@@ -144,7 +173,7 @@ def positionlist_to_segments(chrom,strand,positions):
     Returns
     -------
     list
-        List of |GenomicSegment| objects covering `positions`
+        List of |GenomicSegments| covering `positions`
     """
     positions = sorted(list(set(positions)))
     intervals = []
@@ -167,8 +196,8 @@ def positionlist_to_segments(chrom,strand,positions):
 #===============================================================================
 
 def sort_segments_lexically(seg):
-    """Key function to sort a list of |GenomicSegment| lexically
-    by genomic position, by (in order of precedence): chromosome, start, end, strand
+    """Key function to sort |GenomicSegments| lexically by genomic position,
+    by (in order of precedence): chromosome, start, end, strand
 
     Parameters
     ----------
@@ -176,18 +205,24 @@ def sort_segments_lexically(seg):
 
     Returns
     -------
-    str : Chromosome name
-    int : Leftmost coordinate of |GenomicSegment|
-    int : Rightmost coordinate of |GenomicSegment|
-    str : Chromosome strand (`'+'`, `'-'`, or `'.'`)
+    str
+        Chromosome name
+        
+    int
+        Leftmost coordinate of |GenomicSegment|
+        
+    int
+        Rightmost coordinate of |GenomicSegment|
+        
+    str
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
     """
     return (seg.chrom,seg.start,seg.end,seg.strand)
 
 def sort_segmentchains_lexically(segchain):
-    """Key function to sort a list of features lexically by genomic
-    position, by (in order of precedence): chromosome, start, end, strand,
-    then by length (in nucleotides) and name should any of the other
-    criteria fail
+    """Key function to sort a list of |SegmentChains| lexically by genomic position,
+    by (in order of precedence): chromosome, start, end, strand, length (in nucleotides)
+    and name.
 
     Parameters
     ----------
@@ -230,7 +265,7 @@ def sort_segmentchains_lexically(segchain):
            )
 
 def sort_segmentchains_by_name(segchain):
-    """Key function to sort |SegmentChain| by name"""
+    """Key function to sort |SegmentChains| by name"""
     return segchain.get_name()
 
 

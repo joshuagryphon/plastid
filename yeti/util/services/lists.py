@@ -10,14 +10,15 @@ Methods
     Flatten nested lists, from left-to-right and top-to-bottom, into a list
 
 :py:func:`parse_list`
-    Inverse function of :py:meth:`list.__str__`
+    Parse string representation of list into a list of parsed data (e.g.
+    a list of numbers, a list of strings, et c)
 """
 
 from yeti.util.services.misc import guess_formatter
 
 def parse_list(inp):
-    """Restore non-nested lists of python primitives from string representation of list
-    Additionally parses numpy.nan, numpy.inf, and -numpy.inf to correct values
+    """Restore non-nested lists of Python primitives from string representation of list
+    Additionally parses `numpy.nan`, `numpy.inf`, and `-numpy.inf` to correct values
     
     Parameters
     ----------
@@ -30,7 +31,8 @@ def parse_list(inp):
 
     Raises
     ------
-    AssertionError if String does not represent a list
+    AssertionError
+        if String does not represent a list
 
     Notes
     -----
@@ -40,11 +42,10 @@ def parse_list(inp):
     assert inp[0] == '[' and inp[-1] == ']'
     return [guess_formatter(X.strip().strip("'")) for X in inp[1:-1].split(",")]
 
+# Adapted from http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
 def flatten_nested_lists_to_generator(l):
-    """Flatten a tree of nested lists into a generator, from left-to-right
-    and top-to-bottom.
+    """Flatten a tree of nested lists into a generator, from left-to-right and top-to-bottom.
         
-    Adapted from http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
     
     Parameters
     ----------
@@ -65,8 +66,7 @@ def flatten_nested_lists_to_generator(l):
             yield el
 
 def flatten_nested_lists_to_list(inp):
-    """Flatten a tree of lists into a single list of items, from left-to-right
-    and top-to-bottom.
+    """Flatten a tree of lists into a single list of items, from left-to-right and top-to-bottom.
     
     Parameters
     ----------
@@ -80,6 +80,7 @@ def flatten_nested_lists_to_list(inp):
 
     Notes
     -----
-    Tuples will not be flattened. They will remain as tuples
+    Tuples and other sequences will not be flattened. They will remain in
+    their native types
     """
     return list(flatten_nested_lists_to_generator(inp))

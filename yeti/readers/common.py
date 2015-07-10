@@ -1,8 +1,18 @@
 #!/usr/bin/env python
-"""Constants, functions, and classes used by readers of multiple file types
+"""Constants, functions, and classes used by multiple readers in this subpackage
 
-Important methods & classes
----------------------------
+
+Important functions & classes
+-----------------------------
+:func:`add_three_for_stop_codon`
+    Extend an annotated CDS region, if present, by three nucleotides.
+
+:func:`get_identical_attributes`
+    Return a dictionary of all key-value pairs that are common to all `attr`
+    dictionaries in a set of |SegmentChains|
+    
+    
+    
 |AssembledFeatureReader|
     Base class for readers that assemble high-level features (e.g. gapped
     alignments or transcripts) from one or more sub-features in an annotation file
@@ -83,18 +93,18 @@ def add_three_for_stop_codon(tx):
 
 
 def get_identical_attributes(features,exclude=set()):
-    """Return a dictionary of all key-value pairs that are identical for all features in `features`
+    """Return a dictionary of all key-value pairs that are identical for all |SegmentChains| in `features`
     
     Parameters
     ----------
     features : list 
-        list of |SegmentChain| objects representing features to consider
+        list of |SegmentChains|
     
     Returns
     -------
     dict
-        Dictionary of all key-value pairs that have identical values in all
-        features in `features`
+        Dictionary of all key-value pairs that have identical values in all the
+        `attr` dictionaries of all the features in `features`
     """
     common_keys = set(features[0].attr.keys())
     for feature in features:
@@ -111,17 +121,23 @@ def get_identical_attributes(features,exclude=set()):
 #===============================================================================
 
 class AssembledFeatureReader(AbstractReader):
-    """Abstract base class for readers that assemble features in various
-    annotation file formats into complex or discontinuous features, such
-    as transcripts or gapped alignments. For memory efficiency, all readers
-    function as iterators over their respective streams. Choosing when to
-    process sub-features, and how many to hold in memory, is up to implementation
-    in subclasses, which should additionally define `self._assemble`.
+    """Abstract base class for readers that yield complex or discontinuous features
+    such as transcripts or gapped alignments.
+    
+    For memory efficiency, all readers function as iterators. Readers built
+    by subclassing |AssembledFeatureReader| are responsible for:
+    
+      - choosing when to yield assembled features
+      
+      - deciding how many subfeatures to hold in memory
+      
+      - defining ``self._assemble``
+      
     
     Attributes
     ----------
-    stream : file-like
-        Input stream, usually constructed from or more open filehandles
+    streams : file-like
+        Input streams, usually constructed from or more open filehandles
     
     metadata : dict
         Various attributes gleaned from the stream, if any
@@ -159,12 +175,12 @@ class AssembledFeatureReader(AbstractReader):
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
         tabix : boolean, optional
-            Set to *True* if incoming streams are `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)
+            `streams` are `tabix`_-compressed, and using the parser
+            :py:class:`pysam.asTuple` (Default: `False`)
 
         add_three_for_stop : bool, optional
             Some annotation files exclude the stop codon from CDS annotations. If set to
-            *True*, three nucleotides will be added to the threeprime end of each
+            `True`, three nucleotides will be added to the threeprime end of each
             CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
             feature. (Default: `False`)
                         
@@ -195,7 +211,7 @@ class AssembledFeatureReader(AbstractReader):
         Returns
         -------
         |SegmentChain| or subclass
-            Next feature assembled from `self.stream`, specified by `self.return_type`
+            Next feature assembled from `self.streams`, type specified by `self.return_type`
         """
     
     def filter(self,data):
@@ -204,6 +220,6 @@ class AssembledFeatureReader(AbstractReader):
         Returns
         -------
         |SegmentChain| or subclass
-            Next feature assembled from `self.stream`, specified by `self.return_type`
+            Next feature assembled from `self.streams`, type specified by `self.return_type`
         """
         return self._finalize(self._assemble(data))

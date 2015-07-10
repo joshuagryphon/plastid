@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""This module contains `GTF2`_/`GFF3`_ token parsers and writers
+"""This module contains functions for escaping, unescaping, and parsing 
+tokens from the ninth column of `GTF2`_ and `GFF3`_ files.
 
 Important methods
 -----------------
@@ -17,9 +18,8 @@ Important methods
 
 See also
 --------
-`The Sequence Ontology GFF3 specification <http://www.sequenceontology.org/gff3.shtml>`_
-
-`The Brent lab GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
+  - `The Sequence Ontology GFF3 specification <http://www.sequenceontology.org/gff3.shtml>`_
+  - `The Brent lab GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
 """
 
 # Unit tests for these are in :py:mod:`yeti.test.unit.genomics.readers.test_gff`

@@ -201,8 +201,9 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
         
     Returns
     -------
-    list<|SegmentChain|>
-        known splice junctions in `minus_range...plus_range` of `query_junc`
+    list
+        List of |SegmentChains| representing known splice junctions in
+        `minus_range...plus_range` of `query_junc`
     """
     exact_match = None
     ltmp = []
@@ -256,15 +257,16 @@ def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals
     genome : dict
         dict mapping chromosome names to :py:class:`Bio.SeqRecord.SeqRecord` s
         
-    canonicals : list<tuple<str,str>
+    canonicals : list
         dinucleotide sequences to consider as canonical splice sites,
         as a list of tuples. e.g. `[("GT","AG"), ("GC","AG")]`
 
         
     Returns
     -------
-    list<|SegmentChain|>
-        canonical splice junctions in `minus_range...plus_range` of `query_junc`
+    list
+        List of |SegmentChains| representing canonical splice junctions in
+        `minus_range...plus_range` of `query_junc`
     """    
     ltmp = []
     chrom  = query_junc.chrom

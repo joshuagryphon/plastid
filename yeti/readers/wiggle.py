@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 """Readers for fixedStep `wiggle`_, variableStep `wiggle`_, and `bedGraph`_ files.
+These are seldom called directly; rather, they are internally called by
+|GenomeArray| and |SparseGenomeArray|, when their
+:meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle` methods
+are called.
 
-See Also
+See also
 --------
-`UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_.
+`UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
     UCSC Wiggle and bedGraph file specification
+
+|GenomeArray| and |SparseGenomeArray|
+    Array-like objects that store and index quantitative data over genomes
 """
 
 class WiggleReader(object):
-    """Reads `wiggle`_ and `bedGraph`_ files entry-by-entry, returning tuples
-    of (chromosome, start position, stop position, value), where all returned
-    positions are zero-indexed and half-open.
+    """Read `wiggle`_ and `bedGraph`_ files line-by-line, returning tuples
+    of `(chromosome, start position, stop position, value)`. Tuple 
+    coordinates are zero-indexed and half-open, regardless of whether
+    the file is a `wiggle`_ or `bedGraph`_.
 
     See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
     """
@@ -31,9 +39,11 @@ class WiggleReader(object):
     
     def _get_lineinfo(self,line):
         """Determine line type and return a dictionary containing key-value
-        pairs of any parameters defined in the line
+        pairs of any parameters defined in the line.
 
-        Line type is returned under the key `'line_step'`
+        For data type declarations, the file format is returned under the key
+        `'line_type'`. For track declaration lines, whatever key-value pairs
+        are found are returned. 
         
         Parameters
         ----------
@@ -80,7 +90,7 @@ class WiggleReader(object):
         return self.next()
     
     def next(self):
-        """Yields a tuple of (chromosome, start, stop, value)  for each data line.
+        """Yield a tuple of `(chromosome, start, stop, value)`  for each data line.
         Header lines are processed internally and not exposed to the user.
         
         All coordinates are returned as 0-based, half-open intervals,
@@ -147,18 +157,17 @@ class WiggleReader(object):
                     self.counter += self.step
                     return (self.chrom, start, stop, val)
 
-
-class UnbufferedWiggleReader(WiggleReader):
-    """Similar to |WiggleReader| but uses an unbuffered iterator.
-    This means slower disk access, but allows use of `fh.seek()`
-    and `fh.tell()` to randomly-access sections of wiggles.
-    
-    Read wiggle and bedGraph files entry-by-entry, returning tuples
-    of (chromosome, start position, stop position, value), where all positions
-    are zero-indexed and half-open (as opposed to fixedStep or variableStep
-    wiggles, which are 1-indexed).
-    
-    See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
-    """
-    def _next_line(self):
-        return self.fh.readline().strip("\n")
+# class UnbufferedWiggleReader(WiggleReader):
+#     """Similar to |WiggleReader| but uses an unbuffered iterator.
+#     This means slower disk access, but allows use of `fh.seek()`
+#     and `fh.tell()` to randomly-access sections of wiggles.
+#     
+#     Read wiggle and bedGraph files entry-by-entry, returning tuples
+#     of (chromosome, start position, stop position, value), where all positions
+#     are zero-indexed and half-open (as opposed to fixedStep or variableStep
+#     wiggles, which are 1-indexed).
+#     
+#     See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
+#     """
+#     def _next_line(self):
+#         return self.fh.readline().strip("\n")

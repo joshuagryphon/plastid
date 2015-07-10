@@ -1,35 +1,59 @@
 #!/usr/bin/env python
 """GenomeArrays are randomly-accessible array-like structures that map quantitative data
 or :term:`read alignments` to genomic positions. In this way, they function like
-`numpy`_ arrays, except over coordinates specified by
-`(chromosome name, start coordinate, end coordinate, strand)` rather than
-`(start,end)`.
+`numpy`_ arrays, except over coordinates specified by |GenomicSegments|
+rather than slices of `start:end`. For example, to fetch data covering nucleotdies
+2000-2500 on the plus strand of chromosome `'chrA'`::
+
+    >>> genome_array = GenomeArray()
+    >>> genome_array.add_from_wiggle(open("some_file_fw.wig"),"+")
+    >>> genome_array.add_from_wiggle(open("some_file_rc.wig"),"-") 
+    >>> segment = GenomicSegment('chrA',2000,2500,'+')
+    >>> my_data = some_genome_array[segment]
+        # some numpy array
 
 
-GenomeArrays
-------------
+More commonly, GenomeArrays are used with |SegmentChains| and |Transcripts|, which
+via their :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` methods
+can fetch arrays of data in which each array position corresponds to a position,
+moving from 5' to 3', in the spliced |SegmentChain| or |Transcript|:: 
 
-Several subclasses are provided, depending on how the alignment and/or count
-data is stored. All GenomeArrays present the same interface for:
+    >>> seg1 = GenomicSegment('chrA',2000,2500,'-')
+    >>> seg2 = GenomicSegment('chrA',3000,3250','-')
+    >>> seg3 = GenomicSegment('chrA',4000,4200,'-')
+    >>> segment_chain = SegmentChain(seg1,seg2,seg3,ID="my_chain")
+    >>> my_data = segment_chain.get_counts(some_genome_array)
+        # some numpy array
+        
 
-    - retrieving vectors (as :py:class:`numpy.ndarray` s) of counts or
-      quantitative data at each position of a |GenomicSegment|
+Types of GenomeArrays
+---------------------
+
+Several subclasses are provided, depending on how the :term:`read alignments`
+or quantitative data is stored. All GenomeArrays present the same interfaces for:
+
+    - retrieving vectors (as :py:class:`numpy.ndarray` s) of data at each position
+      of a |GenomicSegment|
       
-    - getting the sum of read alignments in a dataset
+    - tabulating the sum of the :term:`read alignments` or :term:`counts`
+      in a dataset via their :meth:`~AbstractGenomeArray.sum` methods
     
-    - toggling normalization of fetched counts to reads-per-million
+    - toggling normalization of fetched :term:`counts` to reads-per-million
+      via their :meth:`~AbstractGenomeArray.set_normalize` methods
 
-    - export to `Wiggle`_ and `bedGraph`_ formats
+    - export of data to variableStep `Wiggle`_ and `bedGraph`_ formats via their
+      methods :meth:`~GenomeArray.to_variable_step` and
+      :meth:`~GenomeArray.to_bedgraph`, respectively
     
 
-In addition, the following subclasses of GenomeArrays add their own features:
+The following subclasses of GenomeArrays provide their own features in addition 
+to those above:
 
     |GenomeArray|
-        A mutable GenomeArray that additionally provides convenience functions
-        for:
+        The most basic GenomeArray. It allows:
         
             - setting values within the array
-
+    
             - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
             
             - import of :term:`read alignments` from native `bowtie`_ alignments,
@@ -64,13 +88,18 @@ In addition, the following subclasses of GenomeArrays add their own features:
               preserved in `BAM`_ files (e.g. alignment mismatches, read lengths,
               et c) are accessible, and may be used by :term:`mapping rules <mapping rule>`
               or filter functions. 
+              
+            - If necessary, a |BAMGenomeArray| can be converted to a |GenomeArray|
         
         
         However, because a |BAMGenomeArray| is a view of the data in an
-        underlying `BAM`_ file (rather than a collection of counts imported from
-        one or more `Wiggle`_ or `bowtie`_ files), |BAMGenomeArray| s do not support
-        "setter" operations. Instead, mathematical operations, if desired, must be
-        applied to vectors of counts, once fetched.
+        underlying `BAM`_ file, |BAMGenomeArrays| do not support
+        *setter* operations. Instead, mathematical operations, if desired, may be:
+        
+            - applied to vectors of counts, once fetched from the |BAMGenomeArray|
+            
+            - performed on a |GenomeArray| or |SparseGenomeArray| created from
+              a |BAMGenomeArray| via :meth:`BAMGenomeArray.to_genome_array`
 
 
 Mapping rules
@@ -409,8 +438,8 @@ def VariableFivePrimeMapFactory(offset_dict):
 #===============================================================================
 
 def SizeFilterFactory(min=1,max=numpy.inf):
-    """Factory to filter reads based on length, which can be applied at runtime 
-    to the :py:meth:`BAMGenomeArray.add_filter`
+    """Return a function to filter reads based on length, which can be applied
+    at runtime to a |BAMGenomeArray| using :py:meth:`BAMGenomeArray.add_filter`
     
     Parameters
     ----------
@@ -610,7 +639,7 @@ class AbstractGenomeArray(object):
         return stmp
 
     def __contains__(self,chrom):
-        """Returns `True` if `chrom` is defined in the array, otherwise False
+        """Return `True` if `chrom` is defined in the array, otherwise False
         
         Returns
         -------
@@ -619,7 +648,7 @@ class AbstractGenomeArray(object):
         return chrom in self._chroms
 
     def __len__(self):
-        """Returns size of GenomeArray in nucleotide positions (not base pairs).
+        """Return size of GenomeArray in nucleotide positions (not base pairs).
         To obtain size in base pairs, divide length by two.
         
         Returns
@@ -631,8 +660,9 @@ class AbstractGenomeArray(object):
     @abstractmethod
     def __getitem__(self,seg):
         """Retrieve array of counts from a region of interest. The values in
-        the returned array in the order of the chromosome (leftmost-first), and
-        are **NOT** reversed for negative strand features. For that, see
+        the returned array in the order of the chromosome (leftmost-first, i.e.
+        from lower coordinate to higher coordinate), and are **NOT** reversed
+        for negative strand features. For that, see 
         :py:meth:`yeti.genomics.roitools.SegmentChain.get_counts`
         
         Parameters
@@ -649,15 +679,15 @@ class AbstractGenomeArray(object):
         See also
         --------
         SegmentChain.get_counts
-            Get a spliced count vector covering a |SegmentChain|, in the 5\'
-            to 3\' direction of the chain (i.e. coordinates are reversed
-            for minus-strand SegmentChains)
+            Fetch from the GenomeArray a spliced vector of data covering a
+            |SegmentChain|, in the 5\' to 3\' direction of the chain
+            (rather than the genome).
         """
         pass
     
     @abstractmethod    
     def reset_sum(self):
-        """Resets sum to total mapped reads in the GenomeArray"""
+        """Reset sum to total mapped reads in the GenomeArray"""
 
     def set_sum(self,val):
         """Set sum used for normalization to an arbitrary value (e.g. from another dataset)
@@ -670,7 +700,8 @@ class AbstractGenomeArray(object):
         self._sum = val
         
     def sum(self):
-        """Returns the total number of aligned reads in the GenomeArray
+        """Return the total number of aligned reads or the sum of the 
+        quantitative data across all positions in the GenomeArray
         
         Notes
         -----
@@ -687,8 +718,7 @@ class AbstractGenomeArray(object):
         return self._sum
 
     def set_normalize(self,value=True):
-        """Toggle normalization of reported values to reads per million mapped
-        in the dataset.
+        """Toggle normalization of reported values to reads per million mapped in the dataset
         
         Parameters
         ----------
@@ -700,7 +730,7 @@ class AbstractGenomeArray(object):
         self._normalize = value
 
     def chroms(self):
-        """Returns a list of chromosomes in the GenomeArray
+        """Return a list of chromosomes in the GenomeArray
         
         Returns
         -------
@@ -710,7 +740,7 @@ class AbstractGenomeArray(object):
         return self._chroms.keys()
     
     def strands(self):
-        """Returns a tuple of strands in the GenomeArray
+        """Return a tuple of strands in the GenomeArray
         
         Returns
         -------
@@ -720,8 +750,8 @@ class AbstractGenomeArray(object):
         return self._strands
 
     def lengths(self):
-        """Returns a dictionary mapping chromosome names to lengths. In the
-        case where two strands report different lengths for a chromosome, the
+        """Return a dictionary mapping chromosome names to lengths.
+        When two strands report different lengths for a chromosome, the
         max length is taken.
         
         Returns
@@ -860,7 +890,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Notes
         -----
-        In Python lambda functions do NOT have their own scope! We strongly
+        In Python, `lambda` functions do NOT have their own scope! We strongly
         recomend defining filter functions using the ``def`` syntax to avoid
         namespace collisions.
         
@@ -908,10 +938,11 @@ class BAMGenomeArray(AbstractGenomeArray):
         return self._chr_lengths
         
     def get_reads_and_counts(self,seg):
-        """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region, following the rule specified by 
-        :meth:`~BAMGenomeArray.set_mapping`. Reads are strand-matched to `seg` by default. 
-        To obtain unstranded reads, set the value of `seg.strand` to ``.``
+        """Return :term:`read alignments` covering a |GenomicSegment|, and a
+        count vector mapping reads to each positions in the |GenomicSegment|,
+        following the rule specified by :meth:`~BAMGenomeArray.set_mapping`.
+        Reads are strand-matched to `seg` by default. To obtain unstranded reads,
+        set the value of `seg.strand` to ``.``
         
         Parameters
         ----------
@@ -992,14 +1023,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         reads, _ = self.get_reads_and_counts(seg)
         return reads
 
-    def __getitem__(self,seg):
-        """Returns a count array mapping reads to specific positions in the a region of interest,
-        following rules set by :meth:`~BAMGenomeArray.set_mapping`.  Coordinates in the returned
-        array are in the order of the chromosome (leftmost-first), and are NOT reversed
-        for negative strand features.
-        
-        By default, reads are strand-matched to `seg`. To obtain unstranded reads,
-        set the value of seg.strand to `'.'`
+    def __getitem__(self,seg): 
+        """Return an array mapping reads to specific positions in a |GenomicSegment|
+        following rules set by :meth:`~BAMGenomeArray.set_mapping`. The values in
+        the returned array in the order of the chromosome (leftmost-first, i.e.
+        from lower coordinate to higher coordinate), and are **NOT** reversed
+        for negative strand features. For that, see 
+        :py:meth:`yeti.genomics.roitools.SegmentChain.get_counts`
         
         Parameters
         ----------
@@ -1026,15 +1056,16 @@ class BAMGenomeArray(AbstractGenomeArray):
             
         See also
         --------
-        :meth:`SegmentChain.get_counts`
-            Get a spliced count vector covering a |SegmentChain|, in the 5\'
-            to 3\' direction of the chain (rather than leftmost-first)            
+        SegmentChain.get_counts
+            Fetch from the GenomeArray a spliced vector of data covering a
+            |SegmentChain|, in the 5\' to 3\' direction of the chain
+            (rather than the genome).      
         """
         _, count_array = self.get_reads_and_counts(seg)
         return count_array
 
     def get_mapping(self):
-        """Returns the docstring of the mapping function, in case you forgot
+        """Return the docstring of the current mapping function
         """
         return self.map_fn.__doc__
     
@@ -1069,7 +1100,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         self._update()
     
     def to_genome_array(self,array_type=None):
-        """Converts |BAMGenomeArray| into a |MutableAbstractGenomeArray|
+        """Converts |BAMGenomeArray| to a |GenomeArray| or |SparseGenomeArray|
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`
 
         Parameters
@@ -1254,7 +1285,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         self._sum = sum([X.sum() for X in self.iterchroms()])
         
     def _has_same_dimensions(self,other):
-        """Determines whether `self` and `other` have the chromosomes, strands, and chromosome lengths
+        """Return `True` if `self` and `other` have the chromosomes, strands, and chromosome lengths
         
         Parameters
         ----------
@@ -1270,9 +1301,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         assert self.lengths() == other.lengths()
 
     def __eq__(self,other,tol=1e-10):
-        """Tests for equality between `self` and `other`.
+        """Test equality between `self` and `other`.
         
-        To be equal, both |GenomeArray| s must have identical values at all
+        To be equal, both |GenomeArrays| must have identical values at all
         nonzero positions in either array. Chromosome lengths need not be equal. 
         
         Parameters
@@ -1336,9 +1367,10 @@ class GenomeArray(MutableAbstractGenomeArray):
             
         See also
         --------
-        :meth:`SegmentChain.get_counts`
-            Get a spliced count vector covering a |SegmentChain|, in the 5\'
-            to 3\' direction of the chain (rather than leftmost-first)            
+        SegmentChain.get_counts
+            Fetch from the GenomeArray a spliced vector of data covering a
+            |SegmentChain|, in the 5\' to 3\' direction of the chain
+            (rather than the genome).                       
         """
         assert isinstance(seg,GenomicSegment)
         assert seg.start >= 0
@@ -1375,6 +1407,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         This is useful in circumstances where chromosome sizes aren't known ahead
         of time (for example, when reading wiggle files when users don't explicitly
         specify chromosome sizes).
+        
+        Values in `val` are assumed to be in genome order (i.e. from left-to-right
+        / lower to higher coordinates, **NOT** reversed if `seg` is on the negative-strand).  
 
         Parameters
         ----------
@@ -1382,7 +1417,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Region of interest
         
         val : int, float, or :py:class:`numpy.ndarray`
-            Values to set over region of interest
+            Values to set over region of interest, in genomic order
         
         
         Raises
@@ -1437,14 +1472,14 @@ class GenomeArray(MutableAbstractGenomeArray):
     
     # no unit test for this
     def plot(self,chroms=None,strands=None,**plot_kw):
-        """Creates a plot of coverage along tracks or chromosomes
+        """Create a plot of coverage along tracks or chromosomes
         
         Parameters
         ----------
-        chroms : list<str>
+        chroms : list
             Chromosomes to plot (default: all)
             
-        strands : list<str>
+        strands : list
             Strands to plot (default: all)
             
         plot_kw
@@ -1614,7 +1649,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         return new_array
         
     def __add__(self,other,mode="all"):
-        """Adds `other` to `self`, returning a new |GenomeArray|
+        """Add `other` to `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, addition is elementwise.
         
@@ -1626,19 +1661,19 @@ class GenomeArray(MutableAbstractGenomeArray):
             Only relevant if `other` is a |MutableAbstractGenomeArray|
         
             If '`same`' each set of corresponding chromosomes must
-            have the same dimensions in both parent |GenomeArray| s.
-            In addition, both |GenomeArray| s must have the same
+            have the same dimensions in both parent |GenomeArrays|.
+            In addition, both |GenomeArrays| must have the same
             chromosomes, and the same strands.
 
             If '`all`', corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
             If `'truncate'`,corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
@@ -1651,7 +1686,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         return self.apply_operation(other, operator.add, mode=mode)
         
     def __mul__(self,other,mode="all"):
-        """Multiplies `other` by `self`, returning a new |GenomeArray|
+        """Multiply `other` by `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, multiplication is elementwise.
         
@@ -1663,19 +1698,19 @@ class GenomeArray(MutableAbstractGenomeArray):
             Only relevant if `other` is a |MutableAbstractGenomeArray|
         
             If '`same`' each set of corresponding chromosomes must
-            have the same dimensions in both parent |GenomeArray| s.
-            In addition, both |GenomeArray| s must have the same
+            have the same dimensions in both parent |GenomeArrays|.
+            In addition, both |GenomeArrays| s must have the same
             chromosomes, and the same strands.
 
             If '`all`', corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
             If `'truncate'`,corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
@@ -1688,7 +1723,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         return self.apply_operation(other, operator.mul, mode=mode)
         
     def __sub__(self,other,mode="all"):
-        """Subtracts `other` from `self`, returning a new |GenomeArray|
+        """Subtract `other` from `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, subtraction is elementwise.
         
@@ -1700,23 +1735,23 @@ class GenomeArray(MutableAbstractGenomeArray):
             Only relevant if `other` is a |MutableAbstractGenomeArray|
         
             If '`same`' each set of corresponding chromosomes must
-            have the same dimensions in both parent |GenomeArray| s.
-            In addition, both |GenomeArray| s must have the same
+            have the same dimensions in both parent |GenomeArrays|.
+            In addition, both |GenomeArrays| s must have the same
             chromosomes, and the same strands.
 
             If '`all`', corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
             If `'truncate'`,corresponding chromosomes in the parent
-            |GenomeArray| s will be resized to the dimensions of
+            |GenomeArrays| will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
-            to both parents will be ignored.         
+            to both parents will be ignored.                 
         
         Returns
         -------
@@ -1830,7 +1865,7 @@ class GenomeArray(MutableAbstractGenomeArray):
     def to_bedgraph(self,fh,trackname,strand,**kwargs):
         """Write the contents of the GenomeArray to a `bedGraph`_ file
         
-        See the `bedGraph spec <https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html>`
+        See the `bedGraph spec <https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html>`_
         for format details
             
         Parameters
@@ -1874,7 +1909,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         
     @staticmethod
     def like(other):
-        """Returns a |GenomeArray| of same dimension as the input array
+        """Return a |GenomeArray| of same dimension as the input array
         
         Parameters
         ----------
@@ -1893,7 +1928,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
 
 class SparseGenomeArray(GenomeArray):
-    """A memory-efficient GenomeArray using sparse internal representation.
+    """A memory-efficient sublcass of |GenomeArray| using sparse internal representation.
     Note, savings in memory may come at a cost in performance when repeatedly
     getting/setting values, compared to a |GenomeArray|.
     """
@@ -1934,7 +1969,7 @@ class SparseGenomeArray(GenomeArray):
                     self._chroms[chrom][strand] = scipy.sparse.dok_matrix((1,l))
 
     def lengths(self):
-        """Returns a dictionary mapping chromosome names to lengths. In the
+        """Return a dictionary mapping chromosome names to lengths. In the
         case where two strands report different lengths for a chromosome, the
         max length is taken.
         
@@ -1967,9 +2002,10 @@ class SparseGenomeArray(GenomeArray):
 
         See also
         --------
-        :meth:`SegmentChain.get_counts`
-            Get a spliced count vector covering a |SegmentChain|, in the 5'
-            to 3' direction of the chain (rather than leftmost-first)            
+        SegmentChain.get_counts
+            Fetch from the GenomeArray a spliced vector of data covering a
+            |SegmentChain|, in the 5\' to 3\' direction of the chain
+            (rather than the genome).         
         """
         assert isinstance(seg,GenomicSegment)
         assert seg.start >= 0
@@ -1991,6 +2027,17 @@ class SparseGenomeArray(GenomeArray):
 
     def __setitem__(self,seg,val):
         """Set values in |SparseGenomeArray| over a region of interest (ROI).
+        If the ROI is on a valid chromosome and strand but outside the
+        bounds of the current |SparseGenomeArray| (e.g. on on coordinates that exceed
+        the existing length of a chromosome), the |SparseGenomeArray| will be
+        automatically expanded to fit that size.
+        
+        This is useful in circumstances where chromosome sizes aren't known ahead
+        of time (for example, when reading wiggle files when users don't explicitly
+        specify chromosome sizes).
+        
+        Values in `val` are assumed to be in genome order (i.e. from left-to-right
+        / lower to higher coordinates, **NOT** reversed if `seg` is on the negative-strand).  
 
         Parameters
         ----------
@@ -1998,7 +2045,8 @@ class SparseGenomeArray(GenomeArray):
             Region of interest
         
         val : int, float, or :py:class:`numpy.ndarray` of same length as `seg`
-            Value(s) to set in region specifed by interval `seg`
+            Value(s) to set in region specifed by interval `seg`, in order
+            from left-to-right relative to the chromosome
        
         
         Raises
@@ -2028,7 +2076,7 @@ class SparseGenomeArray(GenomeArray):
         self.set_normalize(old_normalize)
 
     def __mul__(self,other,mode=None):
-        """Multiplies `other` by `self`, returning a new |SparseGenomeArray|
+        """Multiply `other` by `self`, returning a new |SparseGenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |SparseGenomeArray|. In the latter case, multiplication is elementwise.
         
@@ -2040,19 +2088,19 @@ class SparseGenomeArray(GenomeArray):
             Only relevant if `other` is a |MutableAbstractGenomeArray|
         
             If '`same`' each set of corresponding chromosomes must
-            have the same dimensions in both parent |SparseGenomeArray| s.
-            In addition, both |SparseGenomeArray| s must have the same
+            have the same dimensions in both parent |SparseGenomeArrays|.
+            In addition, both |SparseGenomeArrays| must have the same
             chromosomes, and the same strands.
 
             If '`all`', corresponding chromosomes in the parent
-            |SparseGenomeArray| s will be resized to the dimensions of
+            |SparseGenomeArrays| will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
             If `'truncate'`,corresponding chromosomes in the parent
-            |SparseGenomeArray| s will be resized to the dimensions of
+            |SparseGenomeArrays| will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
@@ -2060,7 +2108,7 @@ class SparseGenomeArray(GenomeArray):
         
         Returns
         -------
-        |GenomeArray|
+        |SparseGenomeArray|
         """
         if isinstance(other,GenomeArray):
             new_array = SparseGenomeArray.like(self)
@@ -2075,7 +2123,7 @@ class SparseGenomeArray(GenomeArray):
             return self.apply_operation(other,operator.mul,mode=mode)
         
     def apply_operation(self,other,func,mode=None):
-        """Applies a binary operator to a copy of `self` and to `other` elementwise.
+        """Apply a binary operator to a copy of `self` and to `other` elementwise.
         `other` may be a scalar quantity or another |GenomeArray|. In both cases,
         a new |SparseGenomeArray| is returned, and `self` is left unmodified.
         If :meth:`set_normalize` is set to `True`, it is disabled during the
@@ -2102,23 +2150,23 @@ class SparseGenomeArray(GenomeArray):
             Only relevant if `other` is a |MutableAbstractGenomeArray|
         
             If '`same`' each set of corresponding chromosomes must
-            have the same dimensions in both parent |SparseGenomeArray| s.
-            In addition, both |SparseGenomeArray| s must have the same
+            have the same dimensions in both parent |SparseGenomeArrays|.
+            In addition, both |SparseGenomeArrays| must have the same
             chromosomes, and the same strands.
 
             If '`all`', corresponding chromosomes in the parent
-            |SparseGenomeArray| s will be resized to the dimensions of
+            |SparseGenomeArrays| will be resized to the dimensions of
             the larger chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; all chromosomes and strands will be
             included in output. 
                     
             If `'truncate'`,corresponding chromosomes in the parent
-            |SparseGenomeArray| s will be resized to the dimensions of
+            |SparseGenomeArrays| will be resized to the dimensions of
             the smaller chromosome before the operation is applied.
             Parents are not required to have the same chromosomes
             or strands; chromosomes or strands not common
-            to both parents will be ignored.    
+            to both parents will be ignored.   
         
         Returns
         -------
@@ -2187,7 +2235,7 @@ class SparseGenomeArray(GenomeArray):
 
     @staticmethod
     def like(other):
-        """Returns a |SparseGenomeArray| of same dimension as the input array
+        """Return a |SparseGenomeArray| of same dimension as the input array
         
         Parameters
         ----------

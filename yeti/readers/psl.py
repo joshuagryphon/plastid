@@ -1,5 +1,15 @@
 #!/usr/bin/env python
-"""Contains tools for reading alignments from `PSL`_ files (e.g. made by `BLAT`_).
+"""This module defines a two classes for reading `PSL`_ files (made by, for example,
+`blat`_):
+
+
+|PSL_Reader|
+    Read a `PSL`_ file line-by-line, converting each line into a |SegmentChain|
+    or |Transcript|
+
+|BundledPSL_Reader|
+    Read `PSL`_ files, returning lists of |SegmentChains| grouped by query sequence.
+
 
 Examples
 --------
@@ -65,7 +75,7 @@ class PSL_Reader(AssembledFeatureReader):
 
 
 class BundledPSL_Reader(PSL_Reader):
-    """Read `PSL`_ files, returning list of |SegmentChain| s grouped by query sequence.
+    """Read `PSL`_ files, returning lists of |SegmentChains| grouped by query sequence.
     Use this when a given query sequence has multiple hits in your `PSL`_ file,
     and you want the output to be grouped.
     """

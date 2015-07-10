@@ -4,10 +4,10 @@
 Important methods
 -----------------
 :py:func:`argsopener`
-    Opens a file for writing from within a command-line script. Prepends at the
-    top of the file as comment metadata a pretty-printed dictionary of the 
-    command-line arguments and the date, so that each file doesn't get divorced
-    from its own metadata.
+    Opens a file for writing within a command-line script and writes to it
+    all command-line arguments as a pretty-printed dictionary of metadata,
+    commented out. The open file handle is then returned for subsequent
+    writing
 
 :py:func:`opener`
     Guesses whether a file is bzipped, gzipped, zipped, or uncompressed based upon 
@@ -41,48 +41,10 @@ class NullWriter(AbstractWriter):
     
     def __str__(self):
         return self.__repr__()
-    
-    
-def guess_opener(namestub):
-    """Guesses compression of potentially compressed files, based upon base 
-    filename, by testing different extensions, and seeing which file is present
-    and/or open. Files are sought by extension, in the following order, and the
-    first one found is opened:
-    
-       +----------------+------------------+
-       | File ends with | Presumed to be   |
-       +================+==================+
-       | gz             |    gzipped       |
-       +----------------+------------------+
-       | bz2            |    bzipped       |
-       +----------------+------------------+
-       | zip            |    zipped        |
-       +----------------+------------------+
-       | anything else  |    uncompressed  |
-       +----------------+------------------+
-    
-    Parameters
-    ----------
-    namestub : str
-        Name of file, without extension
-    
-    Returns
-    -------
-    filehandle pointing to open file, if found
-    """
-    fin = None
-    suffixes = ("",".bz2",".gz",".zip")
-    for suffix in suffixes:
-        try:
-            fin = opener("%s%s" % (namestub,suffix))
-            break
-        except IOError:
-            continue
-    return fin
 
 def opener(filename,mode="r",**kwargs):
-    """Wrapper to open compressed or uncompressed files, based upon filename, 
-    as follows:
+    """Open a file, detecting whether it is compressed or not, based upon
+    its file extension. Extensions are tested in the following order:
     
        +----------------+------------------+
        | File ends with | Presumed to be   |
@@ -177,20 +139,20 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     return re.sub("%s$" % terminator,"",stmp)
 
 def argsopener(filename,namespace,mode="w",**kwargs):
-    """Opens a file for writing, formatting arguments passed in a :py:class:`argparse.Namespace`
-    object as a comment quoted in the header of the file
+    """Open a file for writing, and write to it command-line arguments
+    formatted as a pretty-printed dictionary in comment metadata.
     
     Parameters
     ----------
     filename : str
-        Name of file to open. If it terminates in ".gz" or ".bz2"
+        Name of file to open. If it terminates in `'.gz'` or `'.bz2'`
         the filehandle will write to a gzipped or bzipped file
                           
     namespace : :py:class:`argparse.Namespace`
         Namespace object from argparse.ArgumentParser
     
     mode : str
-        Mode of writing ('w' or 'wb')
+        Mode of writing (`'w'` or `'wb'`)
     
     **kwargs
         Other keyword arguments to pass to file opener
@@ -206,7 +168,7 @@ def argsopener(filename,namespace,mode="w",**kwargs):
     return fout
 
 def args_to_comment(namespace):
-    """Formats a Namespace from an argparse.ArgumentParser into a comment block
+    """Formats a :class:`argparse.Namespace` into a comment block
     useful for printing in headers of output files
     
     Parameters
@@ -236,7 +198,8 @@ def pretty_print_dict(dtmp):
     
     Returns
     -------
-    str : pretty-printed dictionary, with colons aligned
+    str
+        pretty-printed dictionary
     """
     ltmp = []
     keys = dtmp.keys()

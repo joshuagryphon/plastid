@@ -5,7 +5,7 @@ class UniqueFIFO(object):
     in the FIFO is appended to the FIFO, it is moved to the right end and 
     no element is removed from the FIFO. Elements are only removed when a 
     element not present in the FIFO is appended to the right end, and when
-    the number of elements in the FIFO exceeds ``self.max_size``.
+    the number of elements in the FIFO exceeds `self.max_size`.
     
     Attributes
     ----------
@@ -43,7 +43,7 @@ class UniqueFIFO(object):
         Returns
         -------
         bool
-            ``True`` if ``el`` is in the |UniqueFIFO|, ``False`` otherwise
+            `True` if `el` is in the |UniqueFIFO|, `False` otherwise
         """
         return el in self._elements
     
@@ -58,7 +58,7 @@ class UniqueFIFO(object):
         -------
         int
             Number of elements presently in the |UniqueFIFO|, must be less than
-            or equal to ``self.max_size``
+            or equal to `self.max_size`
         """
         return len(self._elements)
     
@@ -67,7 +67,7 @@ class UniqueFIFO(object):
         in the |UniqueFIFO|, it is moved to the right end of the FIFO, and the
         length of the |UniqueFIFO| is unchanged. Otherwise, the element is
         appended to the right end. If the length of the |UniqueFIFO| then 
-        exceeds ``self.max_size``, the fist element is popped.
+        exceeds `self.max_size`, the fist element is popped.
         
         Parameters
         ----------

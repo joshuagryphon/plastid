@@ -1,19 +1,23 @@
 #!/usr/bin/env python
-"""Tools for reading, writing, analyzing, and manipulating GFFs and features.
+"""Tools for reading, writing, analyzing, and manipulating GFF file subtypes
+(e.g. `GTF2`_ and `GFF3`_).
 
-Important classes
------------------
-|GTF2_Reader|
-    Read single |SegmentChain| objects line-by-line from `GTF2`_ files
-    
-|GFF3_Reader|
-    Read single |SegmentChain| objects line-by-line from `GFF3`_ files
+Because `GTF2`_/`GFF3`_ files are hierarchically structured -- i.e. a complex 
+feature can be assembled from several component features; each component
+feature having its own record on its own line -- two interfaces for reading
+`GTF2`_/`GFF3`_ files are included:
 
-|GTF2_TranscriptAssembler|
-    Assembles |Transcript| objects from one or more features in one or more `GTF2`_ files
+ #. |GTF2_Reader| and |GFF3_Reader| provide a low-level interface. 
+    They read `GTF2`_/`GFF3`_ files line-by-line, and yield a |SegmentChain|
+    for each line. These |SegmentChains| will represent things like individual
+    exons, stop codons, SNPs, genes, et c. Complex features (e.g. multi-exon
+    transcripts) may be assembled from these individual |SegmentChains| by the user.  
 
-|GFF3_TranscriptAssembler|
-    Assembles |Transcript| objects from one or more features in one or more `GFF3`_ files
+ #. In contrast, |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler|
+    collect individual exon and CDS features, and assemble these into 
+    |Transcripts|. They do this by reading `GTF2`_/`GFF3`_ files, and only
+    yield a |Transcript| when they know they have parsed a sufficient number
+    of lines of the  `GTF2`_/`GFF3`_ to assemble it.
 
 
 Examples
@@ -31,9 +35,6 @@ Assemble |Transcript| objects from features in a `GFF3`_ file::
 Assemble |Transcript| objects from features in a `GTF2`_ file::
 
     >>> pass
-
-
-
 
 
 

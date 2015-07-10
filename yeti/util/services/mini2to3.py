@@ -1,29 +1,27 @@
 #!/usr/bin/env python
-"""This module provides a compatibility layer between Python 2.7 and 3.x
-by aliasing various commands and modules as follows:
+"""This module provides a thin compatibility layer between Python 2.7 and 3.x.
+Various objects are aliased as follows:
 
-    ================    ===========================   =======================
-    Exported object     Points to in 2.x              Points to 3.x
-    ----------------    ---------------------------   -----------------------
-    ``cStringIO``       :mod:`StringIO`               :mod:`io`
-    ``StringIO``        :mod:`cStringIO`              :mod:`io`
-    ``xrange``          :func:`xrange`                :func:`range`
-    ``quote``           :func:`urllib.quote`          :func:`urllib.parse.quote`
-    ``unquote``         :func:`urllib.quote`          :func:`urllib.parse.unquote`
-    ``quote_plus``      :func:`urllib.quote_plus`     :func:`urllib.parse.quote_plus`
-    ``unquote_plus``    :func:`urllib.unquote_plus`   :func:`urllib.parse.unquote_plus`
-    ``ifilter``         :func:`itertools.ifilter`     :func:`filter`
-    ================    ===========================   =======================
+    ===================    ===========================   =======================
+    **Exported object**     **Points to in 2.x**         **Points to 3.x**
+    -------------------    ---------------------------   -----------------------
+    ``cStringIO``          :mod:`StringIO`               :mod:`io`
+    ``StringIO``           :mod:`cStringIO`              :mod:`io`
+    ``xrange``             :func:`xrange`                :func:`range`
+    ``quote``              :func:`urllib.quote`          :func:`urllib.parse.quote`
+    ``unquote``            :func:`urllib.quote`          :func:`urllib.parse.unquote`
+    ``quote_plus``         :func:`urllib.quote_plus`     :func:`urllib.parse.quote_plus`
+    ``unquote_plus``       :func:`urllib.unquote_plus`   :func:`urllib.parse.unquote_plus`
+    ``ifilter``            :func:`itertools.ifilter`     :func:`filter`
+    ===================    ===========================   =======================
 
 
-
-Also, one functions is defined:
+Also, one function is defined:
 
     ========================    ================================================
-    Function                    Purpose
+    **Function**                **Action**
     ------------------------    ------------------------------------------------
-    :func:`get_func_code`       Retrieves ``function.func_code`` in 2.x,
-                                          ``function.__code__`` in 3.x
+    :func:`get_func_code`       Retrieves ``function.func_code`` in 2.x, ``function.__code__`` in 3.x
     ========================    ================================================
 
 """
