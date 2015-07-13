@@ -29,8 +29,27 @@ class Mock(mock.Mock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['numpy','scipy','matplotlib','pandas','pysam','biopython']
-#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+mock_modules = [
+    'matplotlib',
+    'matplotlib.cm',
+    'matplotlib.pyplot',
+    'numpy',
+    'numpy.ma',
+    'numpy.random',
+    'pandas',
+    'scipy',
+    'scipy.misc',
+    'scipy.optimize',
+    'scipy.stats',
+    'scipy.sparse',
+    'Bio',
+    'Bio.Alphabet',
+    'Bio.Seq',
+    'Bio.SeqRecord',
+    'pysam',
+]
+
+sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
 # -- General configuration ------------------------------------------------
 
