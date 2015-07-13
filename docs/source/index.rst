@@ -1,5 +1,5 @@
-:data:`yeti` v0.5 welcome!
-==========================
+:data:`yeti` |version| welcome!
+================================
 
 Introduction
 ------------
@@ -47,7 +47,7 @@ Documentation & help are written for users at multiple levels of experience.
     <concepts>` section may also be helpful.
 
   * **Advanced users** might be more interested in a quick :ref:`overview <overview>`
-    of the relevant data structures and the :doc:`module documentation <generated/yeti>`_.
+    of the relevant data structures and the :doc:`module documentation <generated/yeti>`.
 
    
 Indices, tables, and links
