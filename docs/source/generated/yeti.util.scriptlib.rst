@@ -18,4 +18,3 @@ Submodules
    yeti.util.scriptlib.argparsers
    yeti.util.scriptlib.help_formatters
    yeti.util.scriptlib.template
-

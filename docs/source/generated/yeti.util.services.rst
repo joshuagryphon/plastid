@@ -22,4 +22,3 @@ Submodules
    yeti.util.services.mini2to3
    yeti.util.services.misc
    yeti.util.services.sets
-

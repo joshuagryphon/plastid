@@ -20,4 +20,3 @@ Submodules
    yeti.genomics.roitools
    yeti.genomics.seqtools
    yeti.genomics.splicing
-

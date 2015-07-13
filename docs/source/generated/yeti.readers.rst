@@ -24,4 +24,3 @@ Submodules
    yeti.readers.gff_tokens
    yeti.readers.psl
    yeti.readers.wiggle
-

@@ -19,10 +19,6 @@ Subpackages
     yeti.util.scriptlib
     yeti.util.services
 
-   yeti/util/services
-   yeti/util/scriptlib
-   yeti/util/io
-
 
 Submodules
 ----------
@@ -31,4 +27,3 @@ Submodules
 
    yeti.util.array_table
    yeti.util.unique_fifo
-

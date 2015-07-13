@@ -18,4 +18,3 @@ Submodules
    yeti.util.io.binary
    yeti.util.io.filters
    yeti.util.io.openers
-

@@ -28,4 +28,3 @@ Submodules
    yeti.bin.reformat_transcripts
    yeti.bin.slidejuncs
    yeti.bin.test_table_equality
-
