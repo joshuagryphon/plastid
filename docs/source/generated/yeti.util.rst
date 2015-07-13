@@ -19,6 +19,10 @@ Subpackages
     yeti.util.scriptlib
     yeti.util.services
 
+   yeti/util/services
+   yeti/util/scriptlib
+   yeti/util/io
+
 
 Submodules
 ----------
