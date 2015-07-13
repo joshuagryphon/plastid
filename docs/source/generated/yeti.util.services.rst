@@ -1,10 +1,14 @@
 yeti.util.services package
 ==========================
 
+Package contents
+----------------
+
 .. automodule:: yeti.util.services
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Submodules
 ----------

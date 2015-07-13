@@ -1,10 +1,14 @@
 yeti.genomics package
 =====================
 
+Package contents
+----------------
+
 .. automodule:: yeti.genomics
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Submodules
 ----------

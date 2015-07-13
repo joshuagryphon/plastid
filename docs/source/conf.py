@@ -63,7 +63,6 @@ extensions = [
     ]
 
 
-
 # theming, compatibility both for local and builds on readthedocs -------------
 
 # code from http://read-the-docs.readthedocs.org/en/latest/theme.html
@@ -183,10 +182,10 @@ def setup(app):
 
 # intersphinx config ------------------------------------------------------------
 intersphinx_mapping = { "python" : ("http://docs.python.org",None),
-                        #"numpy"  : ("http://docs.scipy.org/numpy/doc",None), # 404 error
-                        #"scipy"  : ("http://docs.scipy.org/scipy/reference",None), # 404 error
+                        "numpy"  : ("http://docs.scipy.org/doc/numpy/",None),
+                        "scipy"  : ("http://docs.scipy.org/doc/scipy/reference/",None),
                         "pysam"  : ("http://pysam.readthedocs.org/en/latest",None),
-                        "pandas" : ("http://pandas.pydata.org/pandas-docs/dev",None),
+                        "pandas" : ("http://pandas-docs.github.io/pandas-docs-travis/",None),
                         "HTSeq"  : ("http://www-huber.embl.de/users/anders/HTSeq/doc",None),
                         }
 

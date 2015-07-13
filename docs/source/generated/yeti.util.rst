@@ -1,10 +1,14 @@
 yeti.util package
 =================
 
+Package contents
+----------------
+
 .. automodule:: yeti.util
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Subpackages
 -----------
@@ -14,6 +18,7 @@ Subpackages
     yeti.util.io
     yeti.util.scriptlib
     yeti.util.services
+
 
 Submodules
 ----------

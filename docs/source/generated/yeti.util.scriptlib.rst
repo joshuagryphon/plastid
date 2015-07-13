@@ -1,10 +1,14 @@
 yeti.util.scriptlib package
 ===========================
 
+Package contents
+----------------
+
 .. automodule:: yeti.util.scriptlib
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Submodules
 ----------

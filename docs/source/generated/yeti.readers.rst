@@ -1,10 +1,14 @@
 yeti.readers package
 ====================
 
+Package contents
+----------------
+
 .. automodule:: yeti.readers
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Submodules
 ----------
