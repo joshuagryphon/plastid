@@ -3,16 +3,34 @@ Getting started
 
 To get started with genomic analysis, a few elements are important:
 
-  - Some :ref:`data` to analyze
+  - Some :ref:`data` to analyze. We go into detail about that here,
+    providing further reading where appropriate.
   
-  - Familiarity with a number of :ref:`concepts-and-conventions`
+  - Familiarity with a handful of :doc:`concepts and conventions <concepts>`.
+    Those are explained next.
   
-  - Some scientific software for data analysis.
+  - Some scientific software for data analysis. See :doc:`installation`
+    for instructions on how to get :data:`yeti`.
   
 
-In this document, we will introduce each of these briefly, and provide further
-references where appropriate. Those who are familiar with sequencing data might prefer
-to skip ahead to :doc:`overview`, and the :doc:`module documentation <generated/yeti>`.
+Those who are familiar with sequencing data might prefer to skip ahead
+to :doc:`tour`, and the :doc:`module documentation <generated/yeti>`.
+
+
+Preparing data for use with :data:`yeti`
+----------------------------------------
+
+The starting point for analysis with yeti is typically a genome :term:`annotation`.
+(which you can download; see below), and a set of :term:`read alignments`,
+preferably in `BAM`_ format.
+
+Because good alignment tools -- `bowtie`_, `Tophat`_, et c -- already exist,
+:data:`yeti` does not perform this step for you. For help on performing alignments,
+and a discussion of the issues involved, see the documentation for the read
+alignment program you use.
+
+If any of these terms seem confusing, please continue reading below.
+
 
 
 .. _data:
@@ -23,8 +41,7 @@ Data
 Types of data
 .............
 
-What you need depends on your goals. However, generally speaking, genomics data
-comes in only a few flavors:
+Generally speaking, genomics data comes in only a few flavors:
 
     Sequence
         The nucleotide sequence of a chromosome, contig, transcript,
@@ -182,116 +199,12 @@ to save some time by following several practices:
  #. Work from alignments in `BAM`_ format.
 
 
-Preparing data for use with :data:`yeti`
-........................................
-
-The entry point for analysis with yeti is typically a genome :term:`annotation`.
-(which you can download; see above), and a set of :term:`read alignments`,
-preferably in `BAM`_ format.
-
-Because good alignment tools -- `bowtie`_, `Tophat`_, et c -- already exist,
-:data:`yeti` does not perform this step for you. For help on performing alignments,
-and a discussion of the issues involved, see the documentation for the read
-alignment program you use.
-
-
-  
-.. _concepts-and-conventions:
-
-Concepts & conventions
-----------------------
-
-If you are new to sequencing analysis, there are a number of important concepts.
-These are described briefly here, and more fully in :doc:`concepts`.
-
-Coordinate systems
-..................
-Typically, coordinates for features are specified as a set of:
-  
-  - a chromosome name
-  - a start position
-  - an end position
-  - a chromosome strand ('+' for the forward strand, '-' for the reverse
-    strand, or '.' for a feature on both/no strands).
-
-This seems clear enough, but tere are several non-obvious considerations:
-
-`start <= end`
-    In the vast majority of :term:`annotation` formats, `start <= end`,
-    even for reverse-strand features.
-
-Starting at 0 vs 1
-    Some coordinate systems count the first nucleotide as 0, others as 1.
-    Some :term:`annotation` formats use one convention, others use the other.
-    In keeping with typical `Python`_ conventions, :data:`yeti` exposes all
-    features to the user using coordinates that start at 0 (e.g. are *0-indexed*).
-
-Half-open vs fully closed
-    Let us suppose we have a feature that is nine nucleotides long, and begins
-    on chromosome I, at base 12. This means the feature in includes bases
-    12,13,14, 15,16,17, 18,19,20. 
-    
-    We can describe its coordinates in two ways:
-    
-     #. In a fully-closed coordinate system, positions are inclusive. So,
-        we would say:
-          - `start = 12`
-          - `end = 20`
-        
-        And, the length of the feature equals:
-        
-            `end - start + 1 = 20 - 12 + 1 = 9`
-     
-     #. In a half-open coordinate system, `end` is defined as the first position
-        *NOT* included in the feature. Therefore, we would write:
-        
-          - `start = 12`
-          - `end = 21`
-        
-        And the length of the feature is simply:
-        
-            `end - start = 21 - 12 = 9`
-
-    Some files (e.g. `GTF2`_, `GFF3`_) use fully-closed coordinates; while others
-    (`BED`_, `BigBED`_, `PSL`_) use half-open coordinates. :data:`yeti` takes
-    care of this for you, and converts all coordinates to half-open, in keeping
-    with `Python`_ conventions, regardless of whether the file format uses a
-    half-open or fully-closed system.
-    
-
-Multimapping
-............
-Some :term:`read alignments` can align equally well to multiple parts
-of the genome. This can occur when a read derives from a duplicated gene,
-or a repetitive sequence like heterochromatin. In the absence of other
-information, multimapping reads cannot be unambiguously assigned to
-a single position of origin in a genome or transcriptome. Various
-approaches have been developed to handle this, such as:
-
-  - ignoring multimappers altogether, along with the genomic positions
-    that give rise to them
- 
-  - randomly assigning multimappers to all possible places from which
-    they could arise
-   
-  - using uniquely mapping reads from duplicate genes to determine
-    the proportions of multimapping reads that should be assigned
-    to each duplicate
-   
-:data:`yeti` is compatible with any of these approaches, but provides
-tools specifically for determining which regions of the genome cannot
-give rise to uniquely mapping reads (see the |crossmap|) script, and
-masking these out of subsequent analyses
-(see, for example :meth:`~yeti.genomics.roitools.SegmentChain.add_masks`). 
-          
-
 
 
 Next
 ----
-
  .. toctree::
 
-    installation
     concepts
+    installation
     

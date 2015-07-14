@@ -46,7 +46,7 @@ Documentation & help are written for users at multiple levels of experience.
     continue to the :ref:`cookbook` and/or :ref:`scripts`. The :doc:`concepts
     <concepts>` section may also be helpful.
 
-  * **Advanced users** might be more interested in a quick :ref:`overview <overview>`
+  * **Advanced users** might be more interested in a quick :ref:`tour <tour>`
     of the primary data structures and the :doc:`module documentation <generated/yeti>`.
 
    

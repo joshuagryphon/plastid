@@ -1,14 +1,27 @@
-Concepts
-========
+Sequencing concepts
+===================
 
-This document will contain discussions of various issues regarding analysis
-of :term:`high throughput sequencing` and :term:`ribosome profiling` data.
-
-
+The links below discuss various issues regarding analysis of genomics
+data, :term:`high throughput sequencing`, and :term:`ribosome profiling`.
 
 
+In general
+----------
+  - :doc:`concepts/coordinates`
 
+Sequencing
+----------
+  - :doc:`concepts/multimappers`
+  - :doc:`concepts/mapping_rules`
+
+Ribosome profiling
+------------------
+  - :doc:`concepts/psite`
 
 
  .. toctree::
-    :maxdepth: 2
+
+    concepts/coordinates.rst
+    concepts/mapping_rules
+    concepts/multimappers.rst
+    concepts/psite

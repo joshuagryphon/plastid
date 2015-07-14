@@ -3,8 +3,7 @@
 
     index
     quickstart
-    usage
-    concepts
+    tour
     FAQ
     glossary
     zreferences
