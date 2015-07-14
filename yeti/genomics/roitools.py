@@ -1075,9 +1075,7 @@ class SegmentChain(object):
         self._update()
         
     def add_masks(self,*mask_segments):
-        """Adds one or more |GenomicSegment| to the collection of masks. If there are
-        already segments in the chain, the incoming segments must be 
-        on the same strand and chromosome as all others present.
+        """Adds one or more |GenomicSegment| to the collection of masks. 
 
         Parameters
         ----------
@@ -1088,7 +1086,7 @@ class SegmentChain(object):
 		See also
 		--------
 		SegmentChain.get_masks
-		
+		SegmentChain.get_masks_as_segmentchain
         SegmentChain.reset_masks
         """
         if len(mask_segments) > 0:

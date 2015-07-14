@@ -6,15 +6,23 @@ Glossary of terms
 
     alignment
     read alignments
-        A record matching a sequencing read to the genomic coordinates from
-        which it presumably derived. These are produced by running sequencing
+        A record matching a short sequence of DNA or RNA to a region of identical or similar
+        sequence in a genome. In a :term:`high-throughput sequencing` experiment,
+        alignment of short reads identifies the genomic coordinates from which
+        each read presumably derived.
+        
+        These are produced by running sequencing
         data through alignment programs, such as `Bowtie`_, `Tophat`_, or `BWA`_.
         The most common format for short read alignments is `BAM`_.
 
     annotation
-        A file that describes locations of features (e.g. genes, mRNAs)
-        in a genome. These come in various formats, e.g.  `BED`_, `BigBed`_,
-        `GTF2`_, `GFF3`_, and `PSL`_, among others.
+        A file that describes locations and properties of :term:`features <feature>`
+        (e.g. genes, mRNAs, SNPs, start codons) in a genome. Annotation files
+        come in various formats, such as `BED`_, `BigBed`_, `GTF2`_, `GFF3`_,
+        and `PSL`_, among others. In a :term:`high-throughput sequencing`
+        experiment, it is essential to make sure that the coordinates in the
+        :term:`annotation` correspond to the :term:`genome build` used
+        to generate the alignments.
 
     counts
         Colloquially, the number of :term:`read alignments` overlapping a region
@@ -43,6 +51,13 @@ Glossary of terms
     feature
         A region of the genome with interesting or specific properties, such
         as a gene, an mRNA, an exon, a centromere, et c.
+
+    genome assembly
+    genome build
+        A specific edition of a genome sequence for a given organism. These
+        are updated over time as sequence data is added and/or corrected.
+        When an assembly is updated, frequently the lengths of the chromosomes or
+        contigs change as sequences are corrected. 
 
     genome browser
         Software used for visualizing genomic sequence, :term:`feature`

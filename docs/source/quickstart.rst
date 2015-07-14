@@ -1,90 +1,297 @@
 Getting started
 ===============
 
+To get started with genomic analysis, a few elements are important:
 
-Background information
+  - Some :ref:`data` to analyze
+  
+  - Familiarity with a number of :ref:`concepts-and-conventions`
+  
+  - Some scientific software for data analysis.
+  
+
+In this document, we will introduce each of these briefly, and provide further
+references where appropriate. Those who are familiar with sequencing data might prefer
+to skip ahead to :doc:`overview`, and the :doc:`module documentation <generated/yeti>`.
+
+
+.. _data:
+ 
+Data
+----
+
+Types of data
+.............
+
+What you need depends on your goals. However, generally speaking, genomics data
+comes in only a few flavors:
+
+    Sequence
+        The nucleotide sequence of a chromosome, contig, transcript,
+        or a set of these. These are typically maintained by public databases,
+        such as `UCSC <UCSC genome browser>`_, `Ensembl`_, and `RefSeq`_. The
+        genome sequence for a given organism frequently is available in several
+        editions, called :term:`builds <genome build>` or :term:`assemblies <genome build>`.
+    
+    :term:`Annotations <annotation>`
+        Descriptions of features -- e.g. genes, transcripts, SNPs, start codons
+        -- that appear in genomes or transcripts. Annotations typically include
+        coordinates (chromosome name, chromosome positions, and a chromosome
+        strand), as well as properties (gene name, function, GO terms, et c) of
+        a given feature.
+        
+        :term:`Annotations <annotation>` are maintained by the same public
+        databases that maintain sequence information, because the coordinates
+        in each annotation are specific to the :term:`genome build` upon which
+        it is based. In other words, annotations and sequences must be matched!
+        Pay particular attention to this when downloading annotations as 
+        supplemental data from a journal article.
+        
+    Quantitative data
+        Any kind of numerical value associated with a chromosomal
+        position. For example, the degree of phylogenetic conservation between a 
+        set of organisms, at each position in the genome. Or, the strength of 
+        transcription factor binding to a chromosomal position in a ChIP-seq dataset.
+        
+        Because quantitative data associates values with chromosomal coordinates,
+        it can be considered an :term:`annotation` of sorts. It is therefore
+        important again to make sure that the coordinates in your data file
+        match the :term:`genome build` used by your feature :term:`annotation`
+        and/or :term:`read alignments`.
+        
+    :term:`Read alignments <read alignments>`
+        A record matching a short sequence of DNA to a region of identical or similar
+        sequence in a genome. In a :term:`high-throughput sequencing` experiment,
+        alignment of short reads identifies the genomic coordinates from which
+        each read presumably derived.
+        
+        :term:`Read alignments <read alignments>` are produced by running
+        sequencing data through alignment programs,
+        such as `Bowtie`_, `Tophat`_, or `BWA`_. 
+        
+        Finally, :term:`Read alignments <read alignments>`
+        can be converted to quantitative data by applying a :term:`mapping rule`,
+        to convert the read to a count. For example, one could count the number
+        of 5' ends of reads that align to each position in a genome.
+
+
+Formats of data
+...............
+One of the design goals of :data:`yeti` is to insulate users from the esoterica
+of the various file formats used in genomics. But, two points are relevant:
+
+  #. It is important for users to recognize the file types names in order to 
+     identify the files they have or need to download.
+     
+  #. Some file formats are *indexed* and others are not. Indexed files are
+     memory-efficient, because computer programs don't need to read the entire
+     file to find the data of interest; instead, they can read the index and
+     just fetch the desired portion of the data.
+     
+     However, indexed files are frequently compressed, which can make reading them 
+     slower to parse. For small genomes that don't use much memory in the first
+     place (e.g. yeast, *E. coli*), the meagre memory savings aren't worth this
+     speed cost. The exception is for short :term:`read alignments`, where indexed
+     `BAM`_ files are universally recommended. 
+
+Here is a table of commonly used file formats. At present, :data:`yeti` supports
+all of them except `BigWig`_ and `2bit`_ (don't worry; these are on our radar).
+
+    =====================   ===================================   ===================
+    **Data type**           **Unindexed formats**                 **Indexed formats**
+    ---------------------   -----------------------------------   -------------------
+    Sequence                `FASTA`_                              `2bit <twobit>`_
+    
+    Annotations             `BED`_, `GTF2`_, `GFF3`_, `PSL`_      `BigBed`_ 
+    
+    Quantitative data       `bedGraph`_, `wiggle`_                `BigWig`_
+    
+    Read alignments         `bowtie`_, `PSL`_                     `BAM`_ 
+    =====================   ===================================   ===================
+ 
+ 
+Finally, for large genomes, `BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be
+indexed via `tabix`_. :data:`yeti` supports (via `pysam`_) reading of
+`tabix`_-compressed files too.
+
+
+Why are there so many formats?
+..............................
+
+There are a number of answers to this:
+
+ #. Genomics is a young science, and for a long time there was no consensus
+    on how best to store data. This dialogue is, in fact, still ongoing.
+     
+ #. It became apparent that file formats that work well with small genomes
+    become very onerous for mammalian-sized genomes. This is why, for example,
+    the `2bit <twobit>`_, `BigBed`_, and `BigWig`_ formats were created. 
+
+ #. The various file formats have their own strengths and weaknesses. For example,
+    we'll compare transcript annotations in `BED`_ and `GFF3`_ format:
+     
+      - `BED`_ files can contain one multi-exon transcript in a single line.
+        This means that if you are, for example, tabulating gene expression 
+        values, you can read one line of a file, process the transcript, 
+        count the reads covering it, and then forget that transcript before
+        moving on to the next record.
+      
+        In contrast, `GFF3`_ files are hierarchical. Each exon in a multi-exon
+        transcript would have its own line. Therefore, in order to
+        assemble a transcript from a `GFF3`_ file, many records need to be
+        held in memory until the `GFF3`_ reader is confidant it has read all of
+        the records that are members of the transcript of interest. Frequently,
+        a `GFF3`_ reader has know way of knowing that *a priori*, so many readers
+        end up holding all records in memory before processing any individual
+        transcript. This costs a tremendous amount of memory, and time, compared
+        to processing a `BED`_ file.
+
+      - However, `BED`_ files contain no feature annotation information beyond
+        a feature name. So, using only a `BED`_ file, one cannot, for example,
+        group transcripts by gene without some external source of information.
+        `GFF3`_ files, in contrast, offer the ability to include arbitrarily
+        complex information (parent-child relationships, paragraphs desribing
+        gene function, citations, GO terms, et c) for any given feature.
+
+For more info, see:
+
+  - the `UCSC file format FAQ <http:/genome.ucsc.edu/FAQ/FAQformat.html>`_,
+    which discusses various formats in detail
+    
+  - the `GFF3`_ specification
+  
+  - the `GTF2`_ specification
+  
+
+
+Getting the most out of your time & data
+........................................
+
+Starting a new type of analysis is rarely straightfoward. But, it is possible 
+to save some time by following several practices:
+
+ #. Make sure your :term:`annotation` matches your :term:`genome build`. e.g.
+    do not use the *mm9* mouse genome annotation with the *mm10* sequence
+    assembly. Do not mix `Ensembl`_'s human genome build *GRCh38* and
+    `UCSC`_'s similar-but-still-different *hg38*.
+
+ #. If using a large genome (e.g. *Drosophila* or larger), consider using
+    non-hierarchal (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_ ) file
+    types instead of non-indexed formats.
+
+ #. Work from alignments in `BAM`_ format.
+
+
+Preparing data for use with :data:`yeti`
+........................................
+
+The entry point for analysis with yeti is typically a genome :term:`annotation`.
+(which you can download; see above), and a set of :term:`read alignments`,
+preferably in `BAM`_ format.
+
+Because good alignment tools -- `bowtie`_, `Tophat`_, et c -- already exist,
+:data:`yeti` does not perform this step for you. For help on performing alignments,
+and a discussion of the issues involved, see the documentation for the read
+alignment program you use.
+
+
+  
+.. _concepts-and-conventions:
+
+Concepts & conventions
 ----------------------
-**TODO**
 
+If you are new to sequencing analysis, there are a number of important concepts.
+These are described briefly here, and more fully in :doc:`concepts`.
 
+Coordinate systems
+..................
+Typically, coordinates for features are specified as a set of:
+  
+  - a chromosome name
+  - a start position
+  - an end position
+  - a chromosome strand ('+' for the forward strand, '-' for the reverse
+    strand, or '.' for a feature on both/no strands).
 
-Installation
-------------
+This seems clear enough, but tere are several non-obvious considerations:
 
-From PyPi
-.........
+`start <= end`
+    In the vast majority of :term:`annotation` formats, `start <= end`,
+    even for reverse-strand features.
 
-Stable versions of :py:data:`yeti` can be fetched from `PyPi`_ using `Pip`_.
+Starting at 0 vs 1
+    Some coordinate systems count the first nucleotide as 0, others as 1.
+    Some :term:`annotation` formats use one convention, others use the other.
+    In keeping with typical `Python`_ conventions, :data:`yeti` exposes all
+    features to the user using coordinates that start at 0 (e.g. are *0-indexed*).
 
-Simply type from the terminal:
+Half-open vs fully closed
+    Let us suppose we have a feature that is nine nucleotides long, and begins
+    on chromosome I, at base 12. This means the feature in includes bases
+    12,13,14, 15,16,17, 18,19,20. 
+    
+    We can describe its coordinates in two ways:
+    
+     #. In a fully-closed coordinate system, positions are inclusive. So,
+        we would say:
+          - `start = 12`
+          - `end = 20`
+        
+        And, the length of the feature equals:
+        
+            `end - start + 1 = 20 - 12 + 1 = 9`
+     
+     #. In a half-open coordinate system, `end` is defined as the first position
+        *NOT* included in the feature. Therefore, we would write:
+        
+          - `start = 12`
+          - `end = 21`
+        
+        And the length of the feature is simply:
+        
+            `end - start = 21 - 12 = 9`
 
- .. code-block:: shell
+    Some files (e.g. `GTF2`_, `GFF3`_) use fully-closed coordinates; while others
+    (`BED`_, `BigBED`_, `PSL`_) use half-open coordinates. :data:`yeti` takes
+    care of this for you, and converts all coordinates to half-open, in keeping
+    with `Python`_ conventions, regardless of whether the file format uses a
+    half-open or fully-closed system.
+    
 
-    $ sudo pip install yeti
-
-
-or, for a single-user install:
-
- .. code-block:: shell
-
-    $ pip install --user yeti
-
-
-Command-line scripts will be installed wherever your system configuration dictates.
-Typically the install path for command line scripts for users appears in
-``~/bin`` or ``~/.local/bin``. For system-wide installs, they would be
-in ``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
-adding to your ``.bashrc``, or ``.profile``:
-
- .. code-block:: shell
-
-	export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
-
-
-From PyPi in a `virtualenv`_
-............................
-Due to `peculiarities in the setup requirements <https://github.com/numpy/numpy/issues/2434>`_
-for `numpy`_ and `scipy`_, you must manually install these in your `virtualenv`_
-**before** installing :data:`yeti`. See :ref:`install_fails_virtualenv` for instructions.
-
-
-Development versions
-....................
-
-Development versions can be fetched from `our github link`_:
-
- .. code-block:: shell
-
-    $ git clone git://`our github link`_
-
-
-
-Dependencies
+Multimapping
 ............
-The following packages and their dependencies are required:
+Some :term:`read alignments` can align equally well to multiple parts
+of the genome. This can occur when a read derives from a duplicated gene,
+or a repetitive sequence like heterochromatin. In the absence of other
+information, multimapping reads cannot be unambiguously assigned to
+a single position of origin in a genome or transcriptome. Various
+approaches have been developed to handle this, such as:
 
-- Python
-    - `Python`_     >= 2.7
-    - `NumPy`_      >= 1.5
-    - `SciPy`_      >= 0.12
-    - `matplotlib`_ >= 1.3
-    - `Pandas`_     >= 0.14.1
-    - `Pysam`_      >= 0.7.7
-    - `Biopython`_  >= 1.5
-- Non-Python
-    - `SAMtools`_   >= 0.1.19
-
-
-The following are required or recommended for specific functions:
-
-- Python
-	- `nose`_ for running the test suite in :py:mod:`yeti.test`
-- Non-Python
-	- `bowtie`_ (not Bowtie 2), for :py:mod:`~yeti.bin.crossmap`
-	- `Jim Kent's utilities`_ for converting BED to BigBed files
+  - ignoring multimappers altogether, along with the genomic positions
+    that give rise to them
+ 
+  - randomly assigning multimappers to all possible places from which
+    they could arise
+   
+  - using uniquely mapping reads from duplicate genes to determine
+    the proportions of multimapping reads that should be assigned
+    to each duplicate
+   
+:data:`yeti` is compatible with any of these approaches, but provides
+tools specifically for determining which regions of the genome cannot
+give rise to uniquely mapping reads (see the |crossmap|) script, and
+masking these out of subsequent analyses
+(see, for example :meth:`~yeti.genomics.roitools.SegmentChain.add_masks`). 
+          
 
 
 
+Next
+----
 
  .. toctree::
-    :maxdepth: 2
+
+    installation
+    concepts
+    

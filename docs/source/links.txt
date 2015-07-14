@@ -14,6 +14,8 @@
 .. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
+.. _fasta: https://en.wikipedia.org/wiki/FASTA_format
+.. _twobit: http://genome.ucsc.edu/FAQ/FAQformat.html#format7
 
 .. Python links
 
@@ -31,10 +33,15 @@
 .. _Sphinx: http://sphinx-doc.org/
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
-.. Genome browsers
+.. Genome browsers & data sources
 
 .. _IGV: https://www.broadinstitute.org/igv/
 .. _UCSC genome browser: https://genome.ucsc.edu
+.. _Ensembl: http://www.ensembl.org
+.. _RefSeq: http://www.ncbi.nlm.nih.gov/refseq/ 
+.. _SGD: http://www.yeastgenome.org
+.. _Flybase: http://flybase.org
+
 
 .. Non-Python software links
 
