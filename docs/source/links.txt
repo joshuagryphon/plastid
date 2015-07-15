@@ -32,6 +32,7 @@
 .. _nose: https://nose.readthedocs.org/en/latest/
 .. _Sphinx: http://sphinx-doc.org/
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _2bitreader: https://pythonhosted.org/twobitreader/ 
 
 .. Genome browsers & data sources
 
@@ -53,6 +54,8 @@
 .. _blat: http://genome.cshlp.org/content/12/4/656.full
 
 .. Our links
+
+.. TODO update test dataset name when package is renamed
 
 .. _our github link: https://github.com 
 .. _test dataset: _static/demo.tar.bz2

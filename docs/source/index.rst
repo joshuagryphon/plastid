@@ -17,9 +17,9 @@ This package provides:
   #. A set of :mod:`scripts <yeti.bin>` that implement common sequencing
      analyses
   
-  #. A set of objects that create a simple and intuitive interface
-     to various types of data used in genomics. These objects
-     readily interace with existing scientific tools, like the
+  #. A :ref:`set of objects <tour-data-structures>` that create a simple and intuitive interface
+     to various types of :ref:`data used in genomics <quickstart-data>`. These
+     objects readily interace with existing scientific tools, like the
      `SciPy`_ stack. At present, :data:`yeti` can read:
 
       - annotation data in `BED`_, `BigBED`_, `GTF2`_, `GFF3`_, or `PSL`_ format,
@@ -27,14 +27,15 @@ This package provides:
 
       - quantitative data in `Wiggle`_ or `bedGraph`_ format
 
-      - read alignments in `BAM`_ (via `Pysam`_) or `bowtie's native format <bowtie>`_
+      - :term:`read alignments` in `BAM`_ (via `Pysam`_) or
+        `bowtie's native format <bowtie>`_
      
      Readers for these file formats may be found in the |readers| subpackage.
-     The API documentation for the objects they create may be found in the
-     |genomics| subpackage.
+     The API documentation for the objects they create may be found in
+     submodules of the |genomics| subpackage.
 
   #. :mod:`Script writing tools <yeti.util.scriptlib>` that make it easy to implement
-     new workflows as command-line scripts.
+     new workflows as command-line scripts. These are in the |scriptlib| subpackage.
 
 
 Where to go next
@@ -44,9 +45,9 @@ Documentation & help are written for users at multiple levels of experience.
 
   * **Those new to sequencing and/or bioinformatics**, and those who are
     :term:`ribosome profiling` should start with :doc:`quickstart`, and then
-    continue to the :doc:`examples` and/or
-    :mod:`description of command-line scripts <yeti.bin>`. :doc:`concepts`
-    section may also be helpful.
+    continue to the :doc:`tour` and :doc:`examples`.
+    The :mod:`description of command-line scripts <yeti.bin>` and :doc:`concepts`
+    may also be helpful.
 
   * **Advanced users** might be more interested in a quick :doc:`tour <tour>`
     of the primary data structures and the :doc:`module documentation <generated/yeti>`.

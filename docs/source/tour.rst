@@ -361,7 +361,7 @@ For more information, see the module documentation for :mod:`~yeti.genomics.geno
 
 See also
 --------
-For an in-depth discussion of these data structures, see
+For an in-depth discussion of these data structures, see:
 	
   - :doc:`Example <examples>` analyses
 
@@ -373,4 +373,4 @@ For an in-depth discussion of these data structures, see
 
       - :mod:`yeti.genomics.genome_hash`
 
-      - :mod:`yeti.genomics.readers`
+      - :mod:`yeti.readers`

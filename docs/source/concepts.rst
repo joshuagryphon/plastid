@@ -22,10 +22,4 @@ Ribosome profiling
 
 
 
- .. toctree::
-    :hidden:
 
-    concepts/coordinates.rst
-    concepts/mapping_rules
-    concepts/multimappers.rst
-    concepts/psite

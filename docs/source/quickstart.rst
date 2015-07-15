@@ -117,10 +117,11 @@ of the various file formats used in genomics. But, two points are relevant:
      speed cost. The exception is for short :term:`read alignments`, where indexed
      `BAM`_ files are universally recommended. 
 
-.. TODO: update when 2bit support is done
+.. TODO: update when format support changes
 
-Here is a table of commonly used file formats. At present, :data:`yeti` supports
-all of them except `BigWig`_ and `2bit`_ (don't worry; these are on our radar).
+Below is a table of commonly used file formats. At present, :data:`yeti` handles
+all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
+`Biopython`_ (`FASTA`_), or `2bitreader`_ (`2bit <twobit>`_).
 
     =====================   ===================================   ===================
     **Data type**           **Unindexed formats**                 **Indexed formats**

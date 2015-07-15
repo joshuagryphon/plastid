@@ -4,12 +4,12 @@ Frequently-asked questions
 
 -------------------------------------------------------------------------------
 
- .. _faq-run:
+.. _faq-run:
 
 Installation and runtime
 ------------------------
 
- .. _faq-install-fails-virtualenv:
+.. _faq-install-fails-virtualenv:
 
 Install fails in a Python `Virtualenv`_
 .......................................
@@ -19,7 +19,7 @@ with `NumPy`_, `SciPy`_, and `matplotlib`_ installation under setuptools. There 
 however, a workaround. Enter your `Virtualenv`_ and manually install the SciPy
 stack via `Pip`_:
 
- .. code-block:: shell
+.. code-block:: shell
 
     (venv)$ pip install numpy scipy matplotlib pandas
     (venv)$ easy_install yeti.egg --reinstall
@@ -48,35 +48,37 @@ Then repeat the installation:
     (venv)$ pip install yeti
 
 
- .. _distribution-error: 
+.. _distribution-error: 
 
-I get an ``ImportError`` and/or ``DistributionError`` when using :data:`yeti`
-............................................................................
+I get an ``ImportError`` or ``DistributionError`` when using :data:`yeti`
+.........................................................................
 
 If you get an error like the following::
 
-   Traceback (most recent call last):
-      File "/home/user/Rib_prof/venv/bin/crossmap", line 5, in <module>
-        from pkg_resources import load_entry_point
-      File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 2970, in <module>
-        working_set = WorkingSet._build_master()
-      File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 567, in _build_master
-        ws.require(__requires__)
-      File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 876, in require
-        needed = self.resolve(parse_requirements(requirements))
-      File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 761, in resolve
-        raise DistributionNotFound(req)
-    pkg_resources.DistributionNotFound: scipy>=0.12.0 
+ .. code-block:: shell
+
+    Traceback (most recent call last):
+       File "/home/user/Rib_prof/venv/bin/crossmap", line 5, in <module>
+         from pkg_resources import load_entry_point
+       File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 2970, in <module>
+         working_set = WorkingSet._build_master()
+       File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 567, in _build_master
+         ws.require(__requires__)
+       File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 876, in require
+         needed = self.resolve(parse_requirements(requirements))
+       File "/home/user/Rib_prof/venv/lib/python2.7/site-packages/pkg_resources/__init__.py", line 761, in resolve
+         raise DistributionNotFound(req)
+     pkg_resources.DistributionNotFound: scipy>=0.12.0 
 
 
-One or more dependencies (in this case, `scipy`_ is not installed). If
+One or more dependencies (in this example, `scipy`_ is not installed). If
 installing in a `virtualenv`_, please see
 :ref:`this workaround <faq-install-fails-virtualenv>`.
 
 
 -------------------------------------------------------------------------------
 
- .. _faq-analysis:
+.. _faq-analysis:
  
 Analysis
 --------
@@ -125,6 +127,7 @@ heuristic corrections to regions before tabulating their :term:`counts` and :ter
     from counts that cover positions in the gene area that are annotated as CDS in
     **all** transcripts in the merged gene. Ditto for 5' and 3' UTRs
 
+Either one is an appropriate starting place for a pipeline, depending upon your needs.
 
 
 .. _faq-analysis-deseq:
