@@ -8,8 +8,8 @@ Examples on this page serve two purposes:
  #. To use those examples as opportunities to describe how the library works
 
 
-Examples are grouped by topic, and move from simple to progressively more
-complex.
+If you wish to reproduce these examples or demo other analyses, we encourage
+you to download the :doc:`test_dataset` that we use.
 
 
 

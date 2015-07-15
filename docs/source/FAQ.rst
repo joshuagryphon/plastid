@@ -95,6 +95,40 @@ discussion of :doc:`concepts/mapping_rules`, where these are
 discussed in depth.
 
 
+.. _faq-cs-vs-counts-in-region:
+
+What is the difference between :mod:`~yeti.bin.counts_in_region` and :mod:`~yeti.bin.cs`?
+.........................................................................................
+:mod:`~yeti.bin.counts_in_region` very simply counts read coverage (or any data) over
+regions of interest, and reports those numbers in terms of :term:`counts` and :term:`RPKM`. It can 
+optionally take a :term:`mask file`, if there are genomic positions in the regions
+of interest which should be excluded from analysis. Otherwise, it makes no corrections.
+
+:mod:`~yeti.bin.cs` is more complex, and is principally designed to make rough estimates
+of gene expression at the gene, rather than transcript, level. In so doing, it makes several
+heuristic corrections to regions before tabulating their :term:`counts` and :term:`RPKM`. Specifically:
+
+ #. Genes that have transcripts that share exons are merged into single entities
+
+ #. Gene areas are defined for each merged geen by including all positions occupied
+    by all transcripts from that merged gene
+
+ #. Regions occupied by two or more merged genes on the same strand are excluded from
+    the calculation of expression values for both genes
+ 
+ #. Optionally, a :term:`mask file` can be used to exclude any other positions from
+    analysis.
+
+ #. Expression values (in :term:`counts` and :term:`RPKM`) are tabulated for the entire
+    gene area (reported as *exon_counts* and *exon_rpkm*) as well as for sub regions,
+    if the gene is coding. Specifically, *cds_counts* and *cds_rpkm* are calculated
+    from counts that cover positions in the gene area that are annotated as CDS in
+    **all** transcripts in the merged gene. Ditto for 5' and 3' UTRs
+
+
+
+.. _faq-analysis-deseq:
+
 How do I prepare output for `DESeq`_?
 .....................................
 

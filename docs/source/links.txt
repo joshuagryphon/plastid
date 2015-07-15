@@ -55,3 +55,4 @@
 .. Our links
 
 .. _our github link: https://github.com 
+.. _test dataset: _static/demo.tar.bz2

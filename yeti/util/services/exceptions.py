@@ -12,7 +12,7 @@ class MalformedFileError(Exception):
     """
     
     def __init__(self,filename,message,line_num=None):
-        """Create a |MalformedFileException|
+        """Create a |MalformedFileError|
         
         Parameters
         ----------
