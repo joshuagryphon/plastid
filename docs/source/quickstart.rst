@@ -3,26 +3,29 @@ Getting started
 
 To get started with genomic analysis, a few elements are important:
 
-  - Some :ref:`data` to analyze. We go into detail about that here,
-    providing further reading where appropriate.
+  - Some :ref:`data <quickstart-data>` to analyze. This is the focus of this document.
   
-  - Familiarity with a handful of :doc:`concepts and conventions <concepts>`.
-    Those are explained next.
+  - Familiarity with a handful of concepts and conventions.
+    We encourage new users to check :doc:`concepts` and browse as needed.
   
   - Some scientific software for data analysis. See :doc:`installation`
-    for instructions on how to get :data:`yeti`.
+    for instructions on how to get :data:`yeti` and its dependencies.
   
 
-Those who are familiar with sequencing data might prefer to skip ahead
-to :doc:`tour`, and the :doc:`module documentation <generated/yeti>`.
+Advanced users might prefer to skip ahead to :doc:`tour`, and the
+:doc:`module documentation <generated/yeti>`.
 
+-------------------------------------------------------------------------------
 
 Preparing data for use with :data:`yeti`
 ----------------------------------------
 
-The starting point for analysis with yeti is typically a genome :term:`annotation`.
-(which you can download; see below), and a set of :term:`read alignments`,
-preferably in `BAM`_ format.
+The starting point for analysis with yeti is typically:
+
+ #. a genome :term:`annotation` (which you can download; see below)
+     
+ #. and a set of :term:`read alignments`, preferably in `BAM`_ format.
+
 
 Because good alignment tools -- `bowtie`_, `Tophat`_, et c -- already exist,
 :data:`yeti` does not perform this step for you. For help on performing alignments,
@@ -32,16 +35,18 @@ alignment program you use.
 If any of these terms seem confusing, please continue reading below.
 
 
+-------------------------------------------------------------------------------
 
-.. _data:
+
+.. _quickstart-data:
  
-Data
-----
+Data in genomics
+----------------
 
 Types of data
 .............
 
-Generally speaking, genomics data comes in only a few flavors:
+Generally speaking, genomics data comes in a few flavors:
 
     Sequence
         The nucleotide sequence of a chromosome, contig, transcript,
@@ -82,14 +87,15 @@ Generally speaking, genomics data comes in only a few flavors:
         alignment of short reads identifies the genomic coordinates from which
         each read presumably derived.
         
-        :term:`Read alignments <read alignments>` are produced by running
+        :term:`Read alignments <read alignments>` can be produced by running
         sequencing data through alignment programs,
         such as `Bowtie`_, `Tophat`_, or `BWA`_. 
         
         Finally, :term:`Read alignments <read alignments>`
         can be converted to quantitative data by applying a :term:`mapping rule`,
         to convert the read to a count. For example, one could count the number
-        of 5' ends of reads that align to each position in a genome.
+        of 5' ends of reads that align to each position in a genome. For
+        an in-depth discussion of this, see :doc:`concepts/mapping_rules`.
 
 
 Formats of data
@@ -110,6 +116,8 @@ of the various file formats used in genomics. But, two points are relevant:
      place (e.g. yeast, *E. coli*), the meagre memory savings aren't worth this
      speed cost. The exception is for short :term:`read alignments`, where indexed
      `BAM`_ files are universally recommended. 
+
+.. TODO: update when 2bit support is done
 
 Here is a table of commonly used file formats. At present, :data:`yeti` supports
 all of them except `BigWig`_ and `2bit`_ (don't worry; these are on our radar).
@@ -193,16 +201,17 @@ to save some time by following several practices:
     `UCSC`_'s similar-but-still-different *hg38*.
 
  #. If using a large genome (e.g. *Drosophila* or larger), consider using
-    non-hierarchal (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_ ) file
+    non-hierarchical (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_ ) file
     types instead of non-indexed formats.
 
- #. Work from alignments in `BAM`_ format.
+ #. Work from alignments in `BAM`_, rather than `bowtie`_, format.
 
 
+-------------------------------------------------------------------------------
 
 
-Next
-----
+Next steps
+----------
  .. toctree::
 
     concepts

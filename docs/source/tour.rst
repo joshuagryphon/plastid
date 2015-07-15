@@ -1,61 +1,62 @@
 Tour
 ====
 
-This document contains a brief overview of the :ref:`script-description` and
-:ref:`overview-of-data-structures` that comprise :data:`yeti`. More detail
+This document contains a brief overview of the :ref:`tour-scripts` and
+:ref:`object types <tour-data-structures>` included in :data:`yeti`. More detail
 on all of these may be found in the :doc:`module documentation <generated/yeti>`.
 
 
-.. _script-description:
+.. _tour-scripts:
 
 Command-line scripts
 --------------------
 
 Although :data:`yeti` is primarily a library for analysis of sequencing data,
-it includes a handful of scripts that perform common
+it includes a handful of :mod:`scripts <yeti.bin>` that perform common
 :term:`high-throughput sequencing` and :term:`ribosome profiling` analyses.
 These include:
 
-    * :doc:`Measuring read density </generated/yeti.bin.cs>` in regions
-      of interest (for example, to obtain gene expression values)
-    
-    * :doc:`Determining P-site offsets </generated/yeti.bin.psite>` for
-      :term:`ribosome profiling` experiments
-    
-    * :doc:`Performing metagene analyses </generated/yeti.bin.metagene>` for
-      any sort of :term:`high-throughput sequencing` experiment
-    
-    * :doc:`Creating browser tracks </generated/yeti.bin.make_wiggle>` 
-      from `BAM`_ or `bowtie`_ files, after applying optional read :term:`mapping rules`
-      (e.g. for P-site assignment, in the case of ribosome profiling data) 
+  - :doc:`Measuring read density </generated/yeti.bin.cs>` in regions
+    of interest (for example, to obtain gene expression values)
 
+  - :doc:`Determining P-site offsets </generated/yeti.bin.psite>` for
+    :term:`ribosome profiling` experiments
+
+  - :doc:`Performing metagene analyses </generated/yeti.bin.metagene>` for
+    any sort of :term:`high-throughput sequencing` experiment
+
+  - :doc:`Creating browser tracks </generated/yeti.bin.make_wiggle>` 
+    from `BAM`_ or `bowtie`_ files, after applying optional read :term:`mapping rules`
+    (e.g. for P-site assignment, in the case of ribosome profiling data) 
+
+  - and others!
 
 For a complete list, as well as examples, see the :mod:`command-line script documentation <yeti.bin>`
 
 
 
-.. _overview-of-data-structures:
+.. _tour-data-structures:
 
-Overview of data structures
----------------------------
+Classes & data structures
+-------------------------
 
-:data:`yeti` defines a number of data structures that facilitate sequencing
+:data:`yeti` defines a number of classes that facilitate sequencing
 analyses. These are:
 
-    ============================================     =========================================
-    **Data structure**                               **Function**
-    --------------------------------------------     -----------------------------------------
-    :ref:`genomic-segment`, :ref:`segment-chain`     Represent genomic features in Python
+    ======================================================     =========================================
+    **Class**                                                  **Purpose**
+    ------------------------------------------------------     -----------------------------------------
+    :ref:`tour-genomic-segment`, :ref:`tour-segment-chain`     Represent genomic features (e.g. mRNAs, genes, SNPs, stop codons) as Python objects
 
-    :ref:`genome-array` & subclasses                 Map quantitive datasets or read alignments
-                                                     to their genomic coordinates
+    :ref:`GenomeArray <tour-genome-array>` & subclasses        Array-like object that maps quantitative values (e.g. read counts, phylogenetic conservation)
+                                                               to corresponding genomic coordinates.
 
-    :ref:`genome-hash` & subclasses                  Index genomic features by position, 
-                                                     for quick lookup later
-    ============================================     =========================================
+    :ref:`GenomeHash <tour-genome-hash>` & subclasses          Array-like object that indexes genomic features by genomic coordinates, 
+                                                               for quick lookup of features that overlap or cover a region.
+    ======================================================     =========================================
 
  
-.. _genomic-segment:
+.. _tour-genomic-segment:
 
 |GenomicSegment|
 ................
@@ -65,7 +66,7 @@ and a strand. On their own, they are not that interesting. However, they
 can be used to build :ref:`segment-chain`, which are interesting.
 
 
-.. _segment-chain:
+.. _tour-segment-chain:
 
 |SegmentChains| & |Transcripts|
 ...............................
@@ -77,24 +78,31 @@ in addition to continuous features (e.g. single exons).
 	
 |SegmentChain| and its subclasses provide methods for:
 	
-    - converting between coordinates relative to a spliced |SegmentChain|
-      the underlying and genome
+  - converting coordinates between the genome and the spliced space of the
+    |SegmentChain|
 
-    - fetching vectors of values (e.g. high-throughput sequencing counts or 
-      conservation data) at each position in the chain, moving from the 5'
-      end toward the 3' end (relative to the |SegmentChain|, rather than 
-      the genome), and accounting for splicing if the |SegmentChain| is
-      discontinuous
+  - fetching genomic sequence, read alignments, or count data over
+    the |SegmentChain|, in its own 5' to 3' direction, automatically
+    accounting for splicing of the segments and, for reverse-strand
+    features, reverse-complementing the sequence
 
-    - testing equality to, overlap with, or containment of other
-      |SegmentChains| or |GenomicSegments|
+  - slicing or fetching sub-regions of a |SegmentChain|
+      
+  - testing for equality, inequality, overlap, containment, or coverage
+    of other |SegmentChain| or |GenomicSegment| objects
 
-    - importing/exporting to/from various annotation formats 
-      (e.g. BED, BigBed, GTF, GFF, or PSL), using appropriate
-      :mod:`readers <yeti.readers>`.
-     
-     
-For example, to load transcripts from a BED file::
+  - exporting to `BED`_, `GTF2`_, or `GFF3`_ formats, for use with other
+    software packages or within a genome browser
+
+ .. TODO: example
+|SegmentChains| and |Transcripts| can be constructed manually::
+
+    >>>
+    >>>
+    >>>
+
+or loaded from a `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ files (see
+the module documentation for :mod:`yeti.readers`)::
  
     >>> from yeti.readers.bed import BED_to_Transcripts
     >>> my_transcripts = BED_to_Transcripts(open("some_file.bed"))
@@ -126,7 +134,7 @@ the |SegmentChain| has several exons or sub-regions, and reverse-complemented
 as necessary::
 
     >>> my_transcript.get_sequence(dict_of_chrom_sequences)
-        "tcgataccatacgtgcactgaagarta"
+        "tcgataccatacgtgcactgaagata"
 
 
 They can also fetch vectors of sequencing counts from objects called |GenomeArrays|,
@@ -142,55 +150,62 @@ Fore more information, see the documentation for |SegmentChain|,
 |Transcript|, and the :py:mod:`~yeti.genomics.roitools` module.
     
  
-|GenomeArray|, |BAMGenomeArray|, & related subclasses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |GenomeArray| s store count data at each position in the genome. Data can be
-    imported from count files (e.g. `Wiggle`_, `bedGraph`_) as well as alignment files
-    (in `bowtie`_ or `BAM`_ format). For very large genomes a sparse implementation
-    is provided by |SparseGenomeArray|. 
-    
-    When importing alignment files, users can specify arbitrary :doc:`mapping functions </mapping_functions>`
-    that determine how reads should be converted into counts (e.g., to their
-    fiveprime ends, threeprime ends, or, somewhere in between, optionally
-    as a function of read length). ``yeti`` already includes mapping
-    functions to map read alignments:
-    
-        * to their fiveprime or threeprime ends, with or without offsets from
-          the end of the read. These offests can be constant, or a function of 
-          read length (as is typical for ribosome profiling data). 
-         
-        * fractionally over their entire lengths (e.g. for RNA-seq)
-        
-        * fractionally to all positions covered by a central portion of the read
-          alignment, after excluding a user-defined number of positions on each
-          send of the read (as in ribosome profiling data from *E. coli* or *D. melanogaster)*.
+.. _tour-genome-array:
+
+|GenomeArray| & its subclasses
+..............................
+|GenomeArrays| store count data at each position in the genome. Data can be
+imported from count files (e.g. `Wiggle`_, `bedGraph`_) as well as alignment files
+(in `bowtie`_ or `BAM`_ format). For very large genomes a sparse implementation
+is provided by |SparseGenomeArray|. A |BAMGenomeArray| is provided for
+:term:`read alignments` in `BAM`_ format.
+
+When importing alignment files, users can specify arbitrary :term:`mapping functions <mapping function>`
+that determine how reads should be converted into counts (e.g., to their
+fiveprime ends, threeprime ends, or, something more complex).
+:data:`yeti` already includes mapping functions to map read alignments:
+
+  - to their fiveprime or threeprime ends, with or without offsets from
+    the end of the read. These offests can be constant, or a function of 
+    read length (e.g. for :term:`P-site mapping` for :term:`ribosome profiling data`). 
+     
+  - fractionally over their entire lengths (e.g. for RNA-seq)
+   
+  - fractionally to all positions covered by a central portion of the read
+    alignment, after excluding a user-defined number of positions on each
+    send of the read (as in ribosome profiling data from *E. coli*
+    :cite:`Oh2011` or *D. melanogaster* :cite:`Dunn2013`).
 
 
-    For further information, see:
-    
-		* The discussion of :doc:`mapping functions </mapping_functions>`
-    	* The module documentation for :py:mod:`~yeti.genomics.genome_array`
-    	* Class documentation for |GenomeArray|, |BAMGenomeArray|, and |SparseGenomeArray|
+For further information, see:
+
+  - The module documentation for :py:mod:`~yeti.genomics.genome_array`
+
+  - In-depth discussion of :doc:`mapping rules <concepts/mapping_rules>`
 
 
-|GenomeHash| and |BigBedGenomeHash|
-...................................
+.. _tour-genome-hash:
+
+|GenomeHash|, |BigBedGenomeHash|, and |TabixGenomeHash|
+.......................................................
 
 It is frequently useful to retrieve features that overlap specific regions 
 of interest in the genome, for example, to find transcripts that overlap one
-another. However, it would be inefficient to compare features that are
-too far apart in the genome to overlap in the first place. 
+another. However, it would be inefficient to have to scan an entire file
+to find those features, or to test features that are too far apart in
+the genome to overlap in the first place. 
 
 |GenomeHash| and |BigBedGenomeHash| index genomic annotations by location
 to avoid making unnecessary comparisons. A |GenomeHash| may be created  
-from a list or dictionary of features (e.g. |SegmentChains| or |Transcripts|),
-or directly loaded from a genome annotation (in `BED`_, `GTF2`_, `GFF3`_,
+from a list or dictionary of features (e.g. |SegmentChains| or |Transcripts|)
+in memory, or directly loaded from a genome annotation (in `BED`_, `GTF2`_, `GFF3`_,
 or `PSL`_ format).
 
-A |BigBedGenomeHash| may be created from a BigBed file, and takes advantage
-of the indices already present in the BigBed file to avoid loaded annotations
-into memory before they are used (if they even are at all).
- 
+A |BigBedGenomeHash| may be created from a `BigBed`_ file, and takes advantage
+of the indices already present in the `BigBed`_ file to avoid loaded annotations
+into memory before they are used (if they even are at all). Similarly,
+a |TabixGenomeHash| makes use of the indices in `tabix`_-compressed `BED`_, `GTF2`_,
+or `GFF3`_ files.
  
 For example, to find all features between bases 10000-20000 on the plus strand of
 chromosome *chrI*::
@@ -200,22 +215,20 @@ chromosome *chrI*::
     >>> features_overlapping_my_roi = my_hash[roi]
 
 
-Or, to find features that overlap a |Transcript| or |SegmentChain|::
+Or, to find features that overlap one or more exons of a |Transcript| or |SegmentChain|::
 
     >>> overlapping_transcripts = my_hash[my_transcript]
 
 
-For more information, see the module documentation for 
-:mod:`~yeti.genomics.genome_hash`.
-
+For more information, see the module documentation for :mod:`~yeti.genomics.genome_hash`.
 
 
 See also
 --------
-For more documentation, please see:
+For more documentation, see:
 
-	* :ref:`API documentation <modindex>`
+  - Complete list of :mod:`command-line scripts <yeti.bin>`
 	
-	* :doc:`Complete list of command-line scripts </cli_howto>`
-	
-	* :doc:`How-tos </how_to_list>`
+  - :doc:`Examples <examples>`
+
+  - Detailed :ref:`module documentation <modindex>`

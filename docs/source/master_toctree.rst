@@ -4,10 +4,8 @@
     index
     quickstart
     tour
-    FAQ
-    glossary
-    zreferences
-    contributing
+    examples
+    help
     citing
-    license
+    appendix
     Module documentation <generated/yeti>

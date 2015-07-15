@@ -1,6 +1,6 @@
 License
 =======
-yeti is published under the BSD 3-Clause license, which is as follows:
+:data:`yeti` is published under the BSD 3-Clause license:
 
 
 The BSD 3-Clause License

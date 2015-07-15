@@ -34,7 +34,7 @@ From PyPi in a `virtualenv`_
 ----------------------------
 Due to `peculiarities in the setup requirements <https://github.com/numpy/numpy/issues/2434>`_
 for `numpy`_ and `scipy`_, you must manually install these in your `virtualenv`_
-**before** installing :data:`yeti`. See :ref:`install_fails_virtualenv` for instructions.
+**before** installing :data:`yeti`. See :ref:`faq-install-fails-virtualenv` for instructions.
 
 
 Development versions
