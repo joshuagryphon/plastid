@@ -153,16 +153,12 @@ In interactive sessions, we first need to load the offset file::
     >>> with open("SRR1562907_p_offsets.txt") as fin:
     >>>     for line in fin: 
     >>>         if not line.startswith("#"): # ignore comments & metadata
-    >>>             items = line.strip("\n").split("\t")
-    >>>             if items[0] != "default":
-    >>>                 length = int(items[0])
-    >>>             else:
-    >>>                 length = items[0]
-    >>>             offset = int(items[1])
-    >>>             offset_dict[length] = offset
+    >>>             length, offset = line.strip("\n").split("\t")
+    >>>             offset_dict[length] = int(offset)
 
 
-And then pass it to the appropriate mapping rule. For |BAMGenomeArray|::
+And then pass it to the appropriate mapping rule. For alignments in `BAM`_
+format, use |BAMGenomeArray|::
 
     >>> import pysam
     >>> from yeti.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
@@ -173,7 +169,7 @@ And then pass it to the appropriate mapping rule. For |BAMGenomeArray|::
 
 .. TODO : create bowtie file?
 
-While, for |GenomeArray|::
+For alignments in `bowtie`_-format use |GenomeArray|::
 
     >>> from yeti.genomics.genome_array import GenomeArray, variable_five_prime_map
 

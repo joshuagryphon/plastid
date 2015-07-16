@@ -118,9 +118,9 @@ in addition to continuous features (e.g. single exons).
      'type': 'mRNA'}
 
 
-More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation` files
-(see :mod:`yeti.readers`, which parsers the :term:`annotation` files). To assemble
-transcripts from exons and coding regions in a `GTF2`_ file::
+More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation`
+files (see :mod:`yeti.readers`). To assemble transcripts from exons and coding
+regions in a `GTF2`_ file::
  
     >>> from yeti.readers.gff import GTF2_TranscriptAssembler
 
@@ -133,6 +133,7 @@ transcripts from exons and coding regions in a `GTF2`_ file::
     YAL069W_mRNA:	{'cds_genome_end': 646, 'name': 'YAL069W', 'gene_id': 'YAL069W', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL069W_mRNA', 'cds_genome_start': 334, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL069W', 'score': '.', 'type': 'mRNA', 'ID': 'YAL069W_mRNA'}
     YAL068W-A_mRNA:	{'cds_genome_end': 789, 'name': 'YAL068W-A', 'gene_id': 'YAL068W-A', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068W-A_mRNA', 'cds_genome_start': 537, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL068W-A', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068W-A_mRNA'}
     YAL068C_mRNA:	{'cds_genome_end': 2169, 'name': 'PAU8', 'gene_id': 'YAL068C', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068C_mRNA', 'cds_genome_start': 1809, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'PAU8,seripauperin PAU8', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068C_mRNA'}
+    [rest of output omitted]
 
 
 |SegmentChains| and |Transcripts| can convert coordinates between the transcript
@@ -163,9 +164,9 @@ and the genome::
 .. _tour-get-counts:
 
 One of the most convenient things |SegmentChains| can do is to fetch vectors of
-data covering each position in the chain from the 5' to 3' end (data is held
-in |GenomeArrays| which are explained :ref:`below <tour-genome-array>`). 
-In this example, we count how many 5' ends of sequencing reads appear at each
+data covering each position in the chain from the 5' to 3' end from 
+|GenomeArrays| (themselves explained :ref:`below <tour-genome-array>`). 
+For example, to count how many 5' ends of sequencing reads appear at each
 position in the chain::
 
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
@@ -279,7 +280,7 @@ too. For example, :term:`mapping functions <mapping function>` for
 
     >>> # export minus strand as a bedgraph file
     >>> with open("alignments_rc.wig","w") as fout:
-            alignments.to_bedgraph(fout,"my_trackname","-")
+    >>>     alignments.to_bedgraph(fout,"my_trackname","-")
 
 
 And `wiggle`_ or `bedGraph`_ files can be reimported. Both use the
