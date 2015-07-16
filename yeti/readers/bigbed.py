@@ -62,7 +62,6 @@ from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
 from yeti.util.io.openers import NullWriter
 from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
-from yeti.util.services.decorators import skipdoc, deprecated
 
 
 #===============================================================================

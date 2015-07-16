@@ -20,7 +20,6 @@ __date__ = "2011-03-18"
 
 from yeti.genomics.roitools import SegmentChain, GenomicSegment
 from yeti.util.io.filters  import AbstractReader
-from yeti.util.services.decorators import deprecated, skipdoc
 
 
 #===============================================================================
