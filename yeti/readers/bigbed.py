@@ -64,39 +64,6 @@ from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
 from yeti.util.services.decorators import skipdoc, deprecated
 
-#===============================================================================
-# INDEX: Convenience function for opening
-#===============================================================================
-
-@skipdoc
-@deprecated
-def BigBed_to_Transcripts(filename,add_three_for_stop=False,printer=NullWriter()):
-    """Iterate over entire BigBed files, one transcript at at time, in chromosomal order
-    
-    Parameters
-    ----------
-    filename : str
-        Path to BigBed file (*not* open filehandle)
-
-
-    add_three_for_stop : bool, optional
-        Some transcript annotations exclude the stop codon from the CDS. If set to
-        True, three nucleotides will be added to the threeprime end of each
-        CDS annotation. Default: False
-
-    printer : file-like, optional
-        Filehandle or sys.stderr-like for logging (Default: NullWriter())   
-    
-    
-    Yields
-    ------
-    |Transcript|
-    """
-    reader = BigBedReader(filename,return_type=Transcript,cache_depth=1,printer=printer)
-    my_fn = add_three_for_stop_codon if add_three_for_stop == True else lambda x: x
-    for txivc in reader:
-        yield my_fn(txivc)
-
 
 #===============================================================================
 # INDEX: BigBedReader
