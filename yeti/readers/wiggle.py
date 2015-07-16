@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Readers for fixedStep `wiggle`_, variableStep `wiggle`_, and `bedGraph`_ files.
-These are seldom called directly; rather, they are internally called by
+"""A single reader for fixedStep `wiggle`_, variableStep `wiggle`_, and `bedGraph`_ files.
+|WiggleReader| seldom called directly; rather, it is internally called by
 |GenomeArray| and |SparseGenomeArray|, when their
 :meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle` methods
 are called.
@@ -156,18 +156,3 @@ class WiggleReader(object):
                     val   = float(line.strip())
                     self.counter += self.step
                     return (self.chrom, start, stop, val)
-
-# class UnbufferedWiggleReader(WiggleReader):
-#     """Similar to |WiggleReader| but uses an unbuffered iterator.
-#     This means slower disk access, but allows use of `fh.seek()`
-#     and `fh.tell()` to randomly-access sections of wiggles.
-#     
-#     Read wiggle and bedGraph files entry-by-entry, returning tuples
-#     of (chromosome, start position, stop position, value), where all positions
-#     are zero-indexed and half-open (as opposed to fixedStep or variableStep
-#     wiggles, which are 1-indexed).
-#     
-#     See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
-#     """
-#     def _next_line(self):
-#         return self.fh.readline().strip("\n")

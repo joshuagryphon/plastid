@@ -3,7 +3,7 @@
 import unittest
 from yeti.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
-from yeti.readers.wiggle import WiggleReader, UnbufferedWiggleReader
+from yeti.readers.wiggle import WiggleReader
 
 #===============================================================================
 # INDEX: test suites
@@ -39,27 +39,6 @@ class TestWiggleReader(unittest.TestCase):
 
     def test_read_multispan_multistep_bedgraph(self):
         self._do(_MULTISPAN_BEDGRAPH,"bedGraph",_MULTISPAN_TUPLES)
-
-
-@attr(test="unit")
-class TestUnBufferedWiggleReader(TestWiggleReader):
-
-    def _do(self,data_str,data_format,expected_results):
-        """Execute tests on various formats
-
-        Parameters
-        ----------
-        data_str : str
-            wiggle file data
-
-        data_format : str
-            name of expected data format
-        """
-        reader = UnbufferedWiggleReader(cStringIO.StringIO(data_str))
-        for tup1, tup2 in zip(expected_results,reader):
-            self.assertEquals(tup1,tup2)
-
-        self.assertEquals(reader.data_format,data_format)
 
 
 #===============================================================================
