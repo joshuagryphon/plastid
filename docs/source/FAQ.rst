@@ -99,8 +99,8 @@ discussed in depth.
 
 .. _faq-cs-vs-counts-in-region:
 
-What is the difference between :mod:`~yeti.bin.counts_in_region` and :mod:`~yeti.bin.cs`?
-.........................................................................................
+What are the differences between :mod:`~yeti.bin.counts_in_region` and :mod:`~yeti.bin.cs`?
+...........................................................................................
 :mod:`~yeti.bin.counts_in_region` very simply counts read coverage (or any data) over
 regions of interest, and reports those numbers in terms of :term:`counts` and :term:`RPKM`. It can 
 optionally take a :term:`mask file`, if there are genomic positions in the regions
@@ -132,10 +132,10 @@ Either one is an appropriate starting place for a pipeline, depending upon your 
 
 .. _faq-analysis-deseq:
 
-How do I prepare output for `DESeq`_?
-.....................................
+How do I prepare data for differential gene expression analysis in `DESeq`_?
+............................................................................
 
-TODO: write this
+See :doc:`examples/gene_expression` in the :doc:`examples` section.
 
 
  .. toctree::
