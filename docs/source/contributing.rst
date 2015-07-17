@@ -4,33 +4,40 @@ Contributing
 We welcome contributions! But we are new at this, so please be patient. Right
 now, we follow these conventions:
 
-1.  *Testing:* We require test-driven development. Feature additions will not
-    be accepted without companion tests, and, where appropriate, test datasets.
-    
-2.  *Branching:* We follow `Vincent Driessen's git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_.
-    `git-flow <https://github.com/nvie/gitflow/wiki/Installation>`_
-    provides tools useful for this.
-       
-3.  *Code formatting:* Code should be formatted as described
-    in `PEP8 <https://www.python.org/dev/peps/pep-0008>`_, especially noting
-    that we use four spaces for indentation.
+Workflow
+--------
+Before submitting a patch, please open a ticket. This will allow public discussion
+of the best way to solve an issue or design a feature, and allows us to keep
+logical records of everything.
 
-4.  *Docstring and documentation:* These should be formatted for
-    `Sphinx <http://sphinx-doc.org/>`_, as described in the
-    `numpy documentation guide <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
-    with guidance from `PEP257 <https://www.python.org/dev/peps/pep-0257>`_.
-    This means that docstrings are formatted in
-    `reStructuredText <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_.
+Testing
+-------
+We advocate test-driven development. Feature additions will not be accepted without
+companion tests, and, where appropriate, test datasets.
 
-   Beyond that:
-   
-      1. Refer to classes in docstrings using the shortcut `\|ClassName\|`
-         rather than as `:py:class:\`package.module.ClassName\``, because the
-         former is easier to read and handled in post-processing
+Document formatting
+-------------------
+
+  - Code should be formatted as described in `PEP8 <https://www.python.org/dev/peps/pep-0008>`_,
+    especially noting that we use four spaces for indentation.
+
+  - Docstrings & documentation should be formatted in `reStructuredText`_ using
+    the most human-readable raw form possible. This means:
+
+      - Format docstrings for `numpydoc`_,  as described in the
+        `numpy documentation guide <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
+
+      - Follow `PEP257 <https://www.python.org/dev/peps/pep-0257>`_. for docstring style
+
+      - Refer to classes defined in :data:`yeti` in docstrings using the shortcut `\|ClassName\|`
+        rather than as `:py:class:\`package.module.ClassName\``, because the shortcuts are 
+        easier to read.
       
+
+
       2. If you use technical terms, please check if a synonym of your term
          is already defined in the :doc:`glossary <glossary>`, and then use that.
-         If no synonym is present, please add yours to the
+         If no synonym is present, please add the
          :doc:`glossary <glossary>`, and refer to it using the ``:term:``
          directive.
          
