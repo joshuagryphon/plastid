@@ -84,15 +84,18 @@ Glossary of terms
         to their :term:`P-site offset` by using a 15 nucleotide offset 
         from the threeprime end of the fragment.
 
+        See :doc:`/concepts/mapping_rules` for more information.
+
     metagene
     metagene average
         An average of some sort of quantitative information over genes aligned at some
         internal feature. For example, an average of ribosome density across
         all genes, aligned at their start codons. Or, perhaps, an average
         across all genes of nucleotide sequence conservation across the 12
-        fly genomes surrounding 5' splice sites of first introns. See the
-        documentation for the :py:mod:`~yeti.bin.metagene` script for more
-        explanation.
+        fly genomes surrounding 5' splice sites of first introns.
+        
+        See :doc:`/examples/metagene` and/or the module documentation for the
+        :py:mod:`~yeti.bin.metagene` script for more explanation.
 
     footprint
     ribosome-protected footprint
