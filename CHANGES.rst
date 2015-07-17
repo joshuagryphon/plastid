@@ -14,15 +14,16 @@ repository to git.
 
 
 
-Unreleased
-----------
+yeti - Unreleased
+-----------------
 
 Added
 .....
   - Created & backpopulated changelog
   - Docstrings re-written for user rather than developer focus
   - AssembledFeatureReader
- 
+  - Complete first draft of user manual documentation
+
 Changed
 .......
   - import of scientific packages now simulated using 'mock' during documentation
@@ -39,8 +40,8 @@ Removed
       - TagAlignReader
 
 
-[0.1.0] = [2015-06-06]
-----------------------
+yeti [0.1.0] = [2015-06-06]
+---------------------------
 First internal release of project under new codename, ``yeti``. Reset version 
 number.
 
@@ -102,8 +103,8 @@ Deprecated
 - GenomicFeature
 
 
-[0.8.3]
--------
+genometools [0.8.3] - 2015-05-19
+--------------------------------
 
 Added
 .....

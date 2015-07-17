@@ -117,18 +117,9 @@ The script will make many files, two of which are of interest:
         [TODO: include updated graphic]
 
 
-Manually determining :term:`P-site offsets <P-site offset>`
------------------------------------------------------------
-Those interested in manually performing P-site offset analysis should refer to 
-the source code, first for the |metagene| ``count`` subprogram, and then for |psite|.
-
 
 Using the P-site offset in analyses
 -----------------------------------
-
-The goal of this analysis is to determine a :term:`P-site offset` for use
-as a :term:`mapping rule` in subsequent analysis of a dataset.
-
 
 In command-line scripts
 .......................
@@ -166,8 +157,6 @@ format, use |BAMGenomeArray|::
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907.bam","rb")])
     >>> alignments.set_mapping(VariableFivePrimeMapFactory(offset_dict))
 
-
-.. TODO : create bowtie file?
 
 For alignments in `bowtie`_-format use |GenomeArray|::
 

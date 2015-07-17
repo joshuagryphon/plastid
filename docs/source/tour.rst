@@ -2,8 +2,8 @@ Tour
 ====
 
 This document contains a brief overview of the :ref:`tour-scripts` and
-:ref:`object types <tour-data-structures>` included in :data:`yeti`. More detail
-on all of these may be found in the :doc:`module documentation <generated/yeti>`.
+:ref:`object types <tour-data-structures>` included in :data:`yeti`. Complete
+documentation may be found in :doc:`module documentation <generated/yeti>`.
 
 
 .. _tour-scripts:
@@ -13,7 +13,7 @@ Command-line scripts
 
 :data:`yeti` includes a handful of :mod:`scripts <yeti.bin>` that perform common
 :term:`high-throughput sequencing` and :term:`ribosome profiling` analyses.
-These include:
+These include, among others:
 
   - :doc:`Measuring read density </generated/yeti.bin.cs>` in regions
     of interest (for example, to obtain gene expression values)
@@ -27,8 +27,6 @@ These include:
   - :doc:`Creating browser tracks </generated/yeti.bin.make_wiggle>` 
     from `BAM`_ or `bowtie`_ files, after applying optional read :term:`mapping rules`
     (e.g. for P-site assignment, in the case of ribosome profiling data) 
-
-  - and others!
 
 For a complete list, as well as examples, see the :mod:`command-line script documentation <yeti.bin>`
 
@@ -119,8 +117,7 @@ in addition to continuous features (e.g. single exons).
 
 
 More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation`
-files (see :mod:`yeti.readers`). To assemble transcripts from exons and coding
-regions in a `GTF2`_ file::
+files (see :mod:`yeti.readers`)::
  
     >>> from yeti.readers.gff import GTF2_TranscriptAssembler
 
@@ -163,11 +160,10 @@ and the genome::
 
 .. _tour-get-counts:
 
-One of the most convenient things |SegmentChains| can do is to fetch vectors of
-data covering each position in the chain from the 5' to 3' end from 
-|GenomeArrays| (themselves explained :ref:`below <tour-genome-array>`). 
-For example, to count how many 5' ends of sequencing reads appear at each
-position in the chain::
+|SegmentChains| can fetch vectors of data covering each position in the chain
+from the 5' to 3' end (relative to the chain) from |GenomeArrays| (themselves
+explained :ref:`below <tour-genome-array>`). To count how many 5' ends of
+sequencing reads appear at each position in the chain::
 
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
     >>> import pysam
@@ -211,9 +207,8 @@ automatically be spliced and reverse-complemented, as necessary::
     # rest of output omitted
 
 
-|SegmentChains| and |Transcripts| can do a lot more. For a complete description
-of their functions, attributes, et c, see the documentation for |SegmentChain|
-and |Transcript| in the :py:mod:`~yeti.genomics.roitools` module.
+|SegmentChains| and |Transcripts| can do a lot more. For complete documentation
+see |SegmentChain| and |Transcript| in :py:mod:`yeti.genomics.roitools`.
     
 -------------------------------------------------------------------------------
 
@@ -222,33 +217,35 @@ and |Transcript| in the :py:mod:`~yeti.genomics.roitools` module.
 |GenomeArray| & its subclasses
 ..............................
 |GenomeArrays| store count data at each position in the genome. Data can be
-imported from count files (e.g. `Wiggle`_, `bedGraph`_) as well as alignment files
+imported from count files (e.g. `Wiggle`_, `bedGraph`_) or alignment files
 (in `bowtie`_ or `BAM`_ format). For very large genomes a sparse implementation
 is provided by |SparseGenomeArray|. A |BAMGenomeArray| is provided for
 :term:`read alignments` in `BAM`_ format.
 
-When importing :term:`read alignment`, users can specify a :term:`mapping functions <mapping function>`
-to determine how the alignments should be converted into counts (e.g., to their
-fiveprime ends, threeprime ends, or, something more complex). :data:`yeti` already
-includes a number of mapping functions to map read alignments:
+When importing :term:`read alignments`, users can specify a :term:`mapping function`
+to determine the genomic position(s) at which each alignment should be counted
+(e.g., at their fiveprime ends, threeprime ends, or, something more complex).
+:data:`yeti` already includes mapping functions to map :term:`read alignments`:
 
   - to their fiveprime or threeprime ends, with or without offsets from
-    the end of the read. These offests can be constant, or a function of 
-    read length (e.g. for :term:`P-site mapping` for :term:`ribosome profiling data`). 
+    that end (e.g. for :term:`P-site mapping` for :term:`ribosome profiling data`)
      
   - fractionally over their entire lengths (e.g. for RNA-seq)
    
   - fractionally to all positions covered by a central portion of the read
     alignment, after excluding a user-defined number of positions on each
     send of the read (as in ribosome profiling data from *E. coli*
-    :cite:`Oh2011` or *D. melanogaster* :cite:`Dunn2013`).
+    :cite:`Oh2011` or *D. melanogaster* :cite:`Dunn2013`)
 
 
-As we saw :ref:`above <tour-get-counts>`, |GenomeArrays| are most often
-called  using the :meth:`~yeti.genomics.roitools.SegmentChain.get_counts`
-method of |SegmentChains| or |Transcripts|. But, they have a few other abilities,
-too. For example, :term:`mapping functions <mapping function>` for 
-|BAMGenomeArrays| can be changed at runtime::
+As in the example :ref:`above <tour-get-counts>`
+|GenomeArrays| are most often called using the
+:meth:`~yeti.genomics.roitools.SegmentChain.get_counts` method of |SegmentChains|
+or |Transcripts|. A number of other capabilities are worth noting:
+
+
+:term:`mapping functions <mapping function>` for |BAMGenomeArrays| can be changed
+at runtime::
 
     >>> from yeti.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
     
@@ -276,22 +273,21 @@ too. For example, :term:`mapping functions <mapping function>` for
             0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
 
 
-|GenomeArrays| can be exported to `wiggle`_ or `bedGraph`_ files::
+|GenomeArrays| and subclasses can be exported to `wiggle`_ or `bedGraph`_
+files for use in a :term:`genome browser`::
 
     >>> # export minus strand as a bedgraph file
     >>> with open("alignments_rc.wig","w") as fout:
     >>>     alignments.to_bedgraph(fout,"my_trackname","-")
 
 
-And `wiggle`_ or `bedGraph`_ files can be reimported. Both use the
-:meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle` method::
+And `wiggle`_ or `bedGraph`_ files can be imported into a |GenomeArray|
+using the :meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle`
+method::
 
-    >>> # reimport plus strand data
     >>> new_data = GenomeArray()
     >>> new_data.add_from_wiggle(open("alignments_rc.wig"),"-")
     
-    >>> # should be the same as using 3' mapping, because this was
-    >>> # the mapping rule used during export
     >>> tfc3.get_cds().get_counts(new_data)[:50]
     array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
             0.,  0.,  8.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
@@ -366,7 +362,7 @@ For an in-depth discussion of these data structures, see:
 	
   - :doc:`Example <examples>` analyses
 
-  - Detailed :ref:`module documentation <modindex>`, especially:
+  - Detailed :ref:`module documentation <modindex>`:
 
       - :mod:`yeti.genomics.roitools`
 
