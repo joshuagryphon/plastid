@@ -214,7 +214,7 @@ def deprecated(func_or_class):
         func_or_class.__init__ = new_func
         return func_or_class
     else:
-        raise AttributeError("Attempt to deprecate non-function non-class element")
+        raise TypeError("Attempt to deprecate non-function non-class element")
 
 def skip_if_abstract(func):
     """Decorator function to keep :py:mod:`unittest` from running methods

@@ -52,6 +52,8 @@ from yeti.util.io.openers import get_short_name, argsopener, opener
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.services.mini2to3 import xrange
+from yeti.util.services.exceptions import MalformedFileError
+
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -181,7 +183,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
     start_pos  = None
     reader = FastaNameReader(toomany_fh)
 
-    for read_name in reader:
+    for n,read_name in enumerate(reader):
         chrom,pos = namepat.search(read_name).groups()
         pos = int(pos) + offset
         if chrom != last_chrom:
@@ -209,7 +211,8 @@ def fa_to_bed(toomany_fh,k,offset=0):
             elif delta == 1:
                 last_pos = pos
             else: # delta < 0:
-                raise AssertionError("K-mers are not sorted at read %s! Aborting." % read_name)
+                msg = "K-mers are not sorted at read %s! Aborting." % read_name
+                raise MalformedFileError(toomany_fh,msg,line_num=n)
     
     # export final feature
     my_range = set(range(start_pos,last_pos+1))

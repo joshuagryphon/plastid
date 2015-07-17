@@ -1696,9 +1696,14 @@ class SegmentChain(object):
         ------
         IndexError
             if `start` or `end` is outside the bounds of the |SegmentChain|
+
+        TypeError
+            if `start` or `end` is None
         """
-        if start is None or end is None:
-            raise IndexError()
+        if start is None:
+            raise TypeError('start is None. Expected int')
+        elif end is None:
+            raise TypeError('end is None. Expected int')
         positions = self.get_position_list()
         if stranded is True and self.strand == "-":
             positions = positions[::-1]

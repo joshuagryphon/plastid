@@ -558,10 +558,10 @@ class TabixGenomeHash(AbstractGenomeHash):
         self.printer = printer
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
-        except KeyError:
+        except ValueError:
             msg = "Supported formats for TabixGenomeHash are: %s" % ", ".join(sorted(TabixGenomeHash._READERS.keys()))
             printer.write(msg)
-            raise KeyError(msg)
+            raise ValueError(msg)
         
         self.tabix_readers = [Tabixfile(X) for X in self.filenames]
     

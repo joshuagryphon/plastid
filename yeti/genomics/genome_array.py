@@ -1639,7 +1639,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                             oc.resize(len(sc),refcheck=False)
                         new_array._chroms[chrom][strand] = func(sc,oc)
             else:
-                raise KeyError("Mode not understood")
+                raise ValueError("Mode not understood. Must be 'same', 'all', or 'truncate.'")
         else:
             for chrom in self.keys():
                 for strand in self.strands():
