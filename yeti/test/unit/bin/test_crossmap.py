@@ -6,6 +6,7 @@ from yeti.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
 from Bio import SeqIO
 from yeti.genomics.roitools import GenomicSegment, SegmentChain
+from yeti.util.services.exceptions import MalformedFileError
 from yeti.bin.crossmap import simulate_reads, \
                                      FastaNameReader, \
                                      revcomp_mask_ivc, \
@@ -100,12 +101,12 @@ class TestCrossmap(unittest.TestCase):
         # it a list for it to actually raise the error
         tfunc = lambda x,y,z: list(fa_to_bed(x,y,offset=z))
          
-        self.assertRaises(AssertionError,tfunc,reader,25,0)
+        self.assertRaises(MalformedFileError,tfunc,reader,25,0)
 
         reader = cStringIO.StringIO(reads)
-        self.assertRaises(AssertionError,tfunc,reader,25,1000)
+        self.assertRaises(MalformedFileError,tfunc,reader,25,1000)
         reader  = cStringIO.StringIO(reads)
-        self.assertRaises(AssertionError,tfunc,reader,15,0)
+        self.assertRaises(MalformedFileError,tfunc,reader,15,0)
 
 
 #===============================================================================
