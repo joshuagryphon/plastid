@@ -3,117 +3,171 @@ Performing metagene analyses
 
 Definition
 ----------
-A :term:`metagene` analysis is a position-wise average of quantitative data
-over one or more genomic loci (often genes or transcripts). The purpose
-is to determine whether, when data is pooled, any interesting pattern emerges.
-This is similar to the concept of a spike-triggered average in neuroscience.
+A :term:`metagene` analysis is an average of quantitative data over one or more
+genomic regions (often genes or transcripts) aligned at some internal feature.
+For example, a :term:`metagene` profile could be built around:
 
-For example, in a :term:`ribosome profiling` data set, one might fetch
-vectors of ribosome densities at each position of each transcript,
-and align these vectors at their start codons. A :term:`metagene average`
-is computed by normalizing these vectors to the same scale, and then
-taking an average value (e.g. a median, mean, or percentile) of the
-aligned, normalized vectors at each position:
+  - the average of ribosome density surrounding the start codons of all 
+    transcripts in a :term:`ribosome profiling` dataset
+  
+  - an average phylogenetic conservation score surounding the 5' splice site of
+    the first introns of all transcripts
 
-    [TODO: graphics]
-
-.. TODO : make graphical image. vectors -> alignment -> normalization -> average
-
-
-.. TODO : poach graphic from Ingolia et al
+Often, this sort of analysis reveals patterns across regions that may not be
+obvious when looking at any individual region.
 
 
 Scope of this tutorial
 ----------------------
 In this tutorial, we:
 
-  - Use the |metagene| script to perform a :term:`metagene` analysis
-    of ribosome density surrounding start codons in a :term:`ribosome profiling`
-    dataset
+  - :ref:`Use the metagene script <metagene-script>` to perform a :term:`metagene`
+    analysis of ribosome density surrounding start codons in a
+    :term:`ribosome profiling` dataset
 
-  - Discuss with examples how to write functions to perform custom metagene
-    analyses surrounding arbitary features of interest in a genome or
-    transcriptome, for example:
-
-      - A nucleotide sequence occuring in a transcript
-
-      - A peak in read density from a :term:`high-throughput sequencing`
-        experiment (:term:`RNA-Seq`, :term:`ClIP-Seq`, :term:`DMS-Seq`)
-
+  - Discuss how to write functions to 
+    :ref:`perform custom metagene analyses surrounding arbitary features <concepts-metagene-roll-your-own>`
+    of interest. As an example, we make a metagene average of ribosome density
+    :ref:`surrounding the highest peak <metagene-big-spike>` of ribosome density
+    in coding regions.
 
 This tutorial uses the :doc:`/test_dataset` we have prepared.
 
 
+Computation
+-----------
+
+A metagene average is computed by:
+
+ #. Fetching vectors of *quantitative data* -- in this example,
+    :term:`ribosome-protected footprints` -- surrounding each occurrence
+    of the *feature of interset* -- in this case, a start codon -- in each
+    region:
+
+     .. image:: /_static/images/metagene_unnormalized_vectors.png
+        :alt: Unnormalized vectors of ribosome counts
+
+
+ #. Normalizing each vector to the same scale:
+
+     .. image:: /_static/images/normalized_vectors.png
+        :alt: Normalized vectors of ribosome counts
+
+ 
+ #. Aligning each vector at the feature of interest (start codon):
+ 
+     .. image:: /_static/images/metagene_aligned_vectors.png
+        :alt: Aligned vectors of ribosome counts
+ 
+ 
+ #. Taking an average (e.g. a median, mean, or percentile) over all of the
+    normalized vectors at each aligned nucleotide position:
+
+     .. image:: /_static/images/metagene_average_profile.png
+        :alt: Creation of metagene profile
+     
+
+ .. _metagene-script:
+ 
 Using the |metagene| script
 ---------------------------
-|metagene| automates metagene analysis. By default, it performs analyses
-surrounding start and stop codons of coding transcripts. However, the 
-script is easily extended to perform arbitrary analyses (described
-:ref:`below <concepts-metagene-roll-your-own>`). Here, we will stick
-to start codons.
+When called from the command-line, |metagene| divides the analysis into 
+two subprograms:
+
+ - :ref:`metagene-generate` processes a genome annotation into a set 
+   of aligned windows surrounding a feature of interest (e.g. a start codon)
+ 
+ - :ref:`metagene-count` takes the revised annotation from :ref:`generate <metagene-generate>`
+   and a dataset of :term:`read alignments` or other quantitative data,
+   and produces the metagene average
+  
+For convenience, a :ref:`chart <metagene-chart>` subprogram is also provided to
+plot the outcome of one or more runs of the :ref:`count <metagene-count>`
+subprogram.
+ 
+ .. _metagene-generate:
 
 The ``generate`` subprogram
 ...........................
-The first step in this |metagene| analysis is to examine a genome annotation,
-find all of the features of interest (transcripts), and align them at some
-interesting sub-feature (a start codon). This is handled by the |metagene|
-``generate`` subprogram. Specifically, |metagene| ``generate``:
+The first step in a |metagene| analysis is to examine all of the regions of
+interest -- in this example, transcripts -- in a genome annotation, detect an
+interesting sub-feature -- here, a start codon -- and build a sub-window within
+the transcript that surrounds the sub-feature. To do so, the |metagene|
+:ref:`generate <metagene-generate>` subprogram performs the following steps:
 
- #. Groups transcripts by gene, so each start codon is counted once
+ #. Group transcripts by gene, so each start codon is only counted once.
 
- #. If a gene has multiple start codons, that gene is excluded.
+ #. If a gene has multiple start codons, exclude that gene.
     
-    If a gene has a single start codon, then |metagene| finds the *maximal
+    If a gene has a single start codon, then find the *maximal
     spanning window* of the gene, defined as the largest possible
-    window surrounding the start codon in which all transcripts from
-    that gene map to identical genomic positions. This prevents any
-    positional ambiguity from entering the average.
+    window surrounding the start codon in which **all** transcripts from
+    that gene map to **identical** genomic positions. This prevents any
+    positional ambiguity from entering the average:
 
-    .. TODO : make image for this
+    .. image:: /_static/images/metagene_maximal_spanning_window.png
+       :alt: Metagene - maximal spanning window
 
- #. Once maximal spanning windows are defined for each gene, |metagene|
-    determines the location of the start codon relative to the new window
+ #. Once a maximal spanning window is defined for a gene, determine the location
+    of the start codon relative to the window, so that the maximal spanning
+    windows for all genes may be aligned at the start codon during the 
+    :ref:`count <metagene-count>` step.
  
- #. Saves this info to a `BED`_ file for genome browsing, and a text file
-    (called an *ROI file*) for further processing.
+ #. Save the maximal spanning windows to a `BED`_ file for inspection in a
+    :term:`genome browser` or other analysis pipeline, and to a
+    text file (called an *ROI file*) for use in the :ref:`count <metagene-count>`
+    subprogram.
 
-The ``generate`` program only needs to be run once per landmark of interest
+The :ref:`generate <metagene-generate>` program only needs to be run once per landmark of interest
 (i.e. once for stop codons, once for start codons), and only needs to be 
 re-run if the genome :term:`annotation` changes (e.g. due to revisions,
 additions, or deletions of gene/transcript models).
 
-The ``generate`` program may be called from the terminal:
+We will run the :ref:`generate <metagene-generate>` program using the following arguments:
+
+  - ``yeast_cds_start`` : name all output files with the prefix `yeast_cds_start` 
+  - ``--landmark cds_start`` : calculate a metagene average surrounding start codons
+  - ``--annotation_files sgd_plus_utrs_chrI.gtf`` : use transcript models from this annotation file
+  - ``--downstream 200`` : include up to 200 nucleotides downstream of the start codon in the average
+
+The program is called from the terminal: 
 
  .. code-block:: shell
 
-    $ metagene generate yeast_cds_start --landmark cds_start --annotation_files sgd_plus_utrs_chrI.gtf
+    $ metagene generate yeast_cds_start --landmark cds_start --annotation_files sgd_plus_utrs_chrI.gtf --downstream 200
+
+For a detailed description of these and other command-line arguments, see the
+:mod:`metagene script documentation <yeti.bin.metagene>`
 
 
+ .. _metagene-count:
+ 
 The ``count`` subprogram
 ........................
-Once ``generate`` has made an ROI file, |metagene|'s ``count`` subprogram can be 
-used to make metagene averages. Specifically, ``count`` takes the following
-steps:
+Once :ref:`generate <metagene-generate>` has made an ROI file, |metagene|'s
+:ref:`count <metagene-count>` subprogram can be used to tabulate metagene averages.
+Specifically, :ref:`count <metagene-count>` performs the following steps:
 
- #. For each ROI in the ROI file:
+ #. For each maximal spanning window in the ROI file:
 
      #. fetch a vector of counts at each position from the sample dataset
+        (in this case, :term:`ribosome profiling` alignments).
 
-     #. If the vector of counts has enough counts within a user-specified
-        *normalization region*, include it. Otherwise, exclude the vector
+     #. If the vector of counts has a sufficient number of alignments within
+        a user-specified *normalization region*, include it. Otherwise, exclude
+        the vector.
      
-     #. Normalize the vector by the number of counts in the *normalization region*
+     #. Normalize the vector by the number of counts in the *normalization region.*
 
- #. Construct a metagene average by taking the median over all
-    normalized vectors at each position, excluding at any specific position
-    all vectors that do not cover that position (because the maximal spanning
-    window for that gene was too small).
+ #. Construct a metagene average by taking the median over all normalized vectors
+    at each position, excluding any vectors that happen not cover that position
+    (e.g. because the maximal spanning window for that gene was too small).
 
- #. Save the metagene average and the number of genes counted at each position
-    to a tab-delimited text file.
+ #. For each position, save the metagene average and the number of genes included
+    in the average to a tab-delimited text file.
 
-To call the ``count`` program, type into a terminal window. In this example
-``--threeprime --offset 15`` specify our :term:`mapping rule` for the
+To call the :ref:`count <metagene-count>` program, type into a terminal window.
+In this example ``--threeprime --offset 15`` specify our :term:`mapping rule` for the
 :term:`P-site offset`. 
 
  .. code-block:: shell
@@ -121,8 +175,9 @@ To call the ``count`` program, type into a terminal window. In this example
     $ metagene count yeast_cds_start_rois.txt SRR1562907 --count_files SRR1562907_chrI.bam --threeprime --offset 15
 
 
-A number of files are created. ``SRR1562907_metagene_profile.txt`` is the
-final product. It contains three columns:
+A number of files are created and may be used for further processing. In our
+example, ``SRR1562907_metagene_profile.txt`` contains the final, reduced data.
+This file contains three columns:
 
   #. *x:* an X-coordinate indicating the distance in nucleotides from
      the start codon
@@ -132,19 +187,23 @@ final product. It contains three columns:
   #. *regions_counted:* the number of regions included in the average at *x*
 
 
+ .. _metagene-chart:
+
 The ``chart`` subprogram
 ........................
-For convenience, a chart subprogram is included. It can plot multiple
-metagene profiles (each from a run of the ``count`` subprogram) in
+For convenience, a :ref:`chart <metagene-chart>` subprogram is included. It can plot multiple
+metagene profiles (each from a run of the :ref:`count <metagene-count>` subprogram) in
 a single plot:
 
  .. code-block:: shell
  
-    $ metagene chart SRR1562907_cds_start.png SRR1562907_metagene_profile.txt --landmark "Start codon" --title "Metagene chart title"
+    $ metagene chart SRR1562907_cds_start.png SRR1562907_metagene_profile.txt --landmark "start codon" --title "Metagene demo"
 
 This produces the image:
 
-    [TODO]: insert image
+ .. figure:: /_static/images/demo_metagene_cds_start.png
+    :align: center
+    :alt: metagene profile surrounding start codon
 
 
 
@@ -154,17 +213,21 @@ Beyond start and stop codons: defining your own window functions
 ----------------------------------------------------------------
 
 :term:`Metagene averages <metagene average>` can be useful for other questions,
-regions, and experimental data types. For this reason, |metagene| offers tools
+types of regions, and experimental data. For this reason, |metagene| offers tools
 to create maximal spanning windows surrounding any feature of interest.
 
-To do so,
-it requires a *window function* that can identify and build a window around
-the feature of interest in each individual region (for example, a transcript).
-If regions define a `"gene_id"` attribute in their `attr` dictionaries,
-then their windows grouped by shared values for `"gene_id"` when their maximal
-spanning windows are made.
+Window functions
+................
+To make maximal spanning windows around a feature, |metagene| requires a
+*window function*. The *window function* must identify and build a window around
+the feature of interest (e.g. a start codon) in each individual region examined
+(for example, each transcript).
 
-|metagene| comes with two window functions, which its command-line program uses:
+Regions that define a `"gene_id"` attribute in their `attr` dictionaries,
+will be grouped by shared `"gene_id"` to make a single maximal spanning window
+for each group.
+
+|metagene| comes with two window functions:
 
   - :func:`~yeti.bin.metagene.window_cds_start`, for defining windows
     surrounding start codons
@@ -172,32 +235,18 @@ spanning windows are made.
   - :func:`~yeti.bin.metagene.window_cds_stop`, for defining windows
     surrounding stop codons
 
-However, it is possible to design window functions that focus on any arbitrary 
-feature of interest, such as:
+Once you have defined a window function, :func:`yeti.bin.metagene.do_generate`
+can use it to generate maximal spanning windows.
 
-  - a specific nucleic acid sequence
-
-  - features (e.g. spikes, valleys, step changes in density) in
-    :term:`high-throughput sequencing` data or other quantitative 
-    data
-
-  - SNPs or other mutations
-
-To perform a metagene analysis around such a feature, you need
-to write a window function that identifies that *feature* within your
-*regions of interest* (in the start codon example, a *start codon* within
-each *transcript*).
-
-Then, the function :func:`yeti.bin.metagene.do_generate` can use your
-window function to generate maximal spanning windows.
-
+Parameters
+..........
 Window functions must take the following parameters, in order:
 
     `roi` : |SegmentChain|
-        Input ROI for which to generate a window.
-        If `"gene_id"` is defined in `roi.attr`, then the 
-        all windows from all ROIs sharing the same `"gene_id"`
-        as this one will be used to generate a single
+        Input ROI for which a window will be generated.
+        If `"gene_id"` is defined in `roi.attr`, then
+        all `roi`s sharing the same `"gene_id"` will
+        be used to generate a single
         maximal spanning window covering all of them.
 
     `flank_upstream` : ``int``
@@ -211,113 +260,192 @@ Window functions must take the following parameters, in order:
         such a feature
     
     `ref_delta` : ``int``, optional
-        Offset in nucleotides from the feature of interest to 
-        the reference point at which all maximal spanning window
+        Offset in nucleotides from the *feature of interest* to 
+        the *reference point* at which all maximal spanning window
         count vectors will be aligned when the metagene average
         is calculated. If `0`, the feature of interest is the
         reference point. (Default: `0`)
 
-
+Return values
+.............
 Window functions must return the following values, in order:
 
     |SegmentChain|
         Window surrounding feature of interest if `roi` has such a feature.
-        Otherwise, return a zero-length |SegmentChain| 
+        Otherwise, return a zero-length |SegmentChain|. :func:`yeti.bin.metagene.do_generate`
+        will use these to generate maximal spanning windows.
+        
     
     ``int``
-        offset to align window with all other windows, if `roi` itself
-        wasn't long enough in the 5\' direction to include the entire
-        distance specified by `flank_upstream`. Otherwise `0`. 
+        offset to align window with all other windows, calculated as
+        :samp:`max(0,{flank_upstream} - {distance to reference point from 5' end of window})`,
+        or :obj:`numpy.nan` if `roi` does not contain a feature of interest 
 
     (``str``, ``int``, ``str``)
         Genomic coordinate of reference point as `(chromosome name, coordinate, strand)`
-
+        or :obj:`numpy.nan` if `roi` does not contain a feature of interest
 
 Here is a window function that produces windows surrounding transcription
 start sites::
 
     >>> def window_transcript_start(roi,flank_upstream,flank_downstream,ref_delta=0):
-    >>> """Window function for metagenes surrounding roiion start sites
-    >>>
-    >>> Returns
-    >>> -------
-    >>> SegmentChain
-    >>>     Window surrounding transcript start site
-    >>>
-    >>> int
-    >>>     Offset to align window with all other windows
-    >>>
-    >>> (str,int,str)
-    >>>     Genomic coordinate of transcription start site as *(chromosome name, coordinate, strand)*
-    >>> """
-    >>> ref_point = roi.get_genomic_coordinate(0)
-    >>> segs = roi.get_subchain(0,flank_downstream)
-    >>>
-    >>> if ref_point[2] == "+":
-    >>>     new_segment_start = ref_point[1] - flank_upstream
-    >>>     new_segment_end = roi.get_genomic_coordinate(flank_downstream)
-    >>>     offset = 0
-    >>> else:
-    >>>     new_segment_start = roi.get_genomic_coordinate(flank_downstream)
-    >>>     new_segment_end = ref_point[1] + flank_upstream
-    >>>     if roi.get_length() < flank_downstream:
-    >>>         offset = flank_downstream - roi.get_length()
-    >>>
-    >>> outside_segment = GenomicSegment(ref_point[0],
-    >>>                                  new_segment_start,
-    >>>                                  new_segment_end,
-    >>>                                  ref_point[2])
-    >>> segs.append(outside_segment)
-    >>> new_chain = SegmentChain(*tuple(segs))
-    >>>
-    >>> return new_chain, offset, ref_point
+    >>>     """Window function for metagenes surrounding transcription start sites
+    >>> 
+    >>>     Returns
+    >>>     -------
+    >>>     SegmentChain
+    >>>         Window surrounding transcript start site
+    >>> 
+    >>>     int
+    >>>         Offset to align window with all other windows
+    >>> 
+    >>>     (str,int,str)
+    >>>         Genomic coordinate of transcription start site as *(chromosome name, coordinate, strand)*
+    >>>     """
+    >>>     chrom,tx_start_genome,strand = roi.get_genomic_coordinate(0)
+    >>>     segs = roi.get_subchain(0,flank_downstream)
+    >>> 
+    >>>     if strand == "+":
+    >>>         new_segment_start = tx_start_genome - flank_upstream
+    >>>         # need to add one for half-open coordinate end positions
+    >>>         new_segment_end = roi.get_genomic_coordinate(flank_downstream)[1] + 1
+    >>>         offset = 0
+    >>>     else:
+    >>>         new_segment_start = roi.get_genomic_coordinate(flank_downstream)[1]
+    >>>         # need to add one for half-open coordinate end positions
+    >>>         new_segment_end = tx_start_genome + flank_upstream + 1
+    >>>         if roi.get_length() < flank_downstream:
+    >>>             offset = flank_downstream - roi.get_length()
+    >>>         else:
+    >>>             offset = 0
+    >>> 
+    >>>     outside_segment = GenomicSegment(chrom,
+    >>>                                      new_segment_start,
+    >>>                                      new_segment_end,
+    >>>                                      strand)
+    >>>     segs.add_segments(outside_segment)
+    >>>     new_chain = SegmentChain(*tuple(segs))
+    >>> 
+    >>>     # ref point is always `flank_upstream` from window in this case
+    >>>     return new_chain, offset, new_chain.get_genomic_coordinate(flank_upstream)
 
-.. TODO : test this window function
 
 Here is a window function that produces windows surrounding the highest spike
 in read density in a transcript. Note, it uses data structures in the global
 scope::
 
-    >>> TODO
+    >>> import numpy
+    
+    >>> def window_biggest_spike(roi,flank_upstream,flank_downstream,ref_delta=0):
+    >>>     """Window function for metagenes surrounding peaks of read density
+    >>>     
+    >>>     ALIGNMENTS must be defined in global scope as a GenomeArray
+    >>>     
+    >>>     
+    >>>     Returns
+    >>>     -------
+    >>>     SegmentChain
+    >>>         Window surrounding transcript start site
+    >>> 
+    >>>     int
+    >>>         Offset to align window with all other windows
+    >>> 
+    >>>     (str,int,str)
+    >>>         Genomic coordinate of transcription start site as *(chromosome name, coordinate, strand)*
+    >>>     """
+    >>>     counts      = roi.get_counts(ALIGNMENTS)
+    >>>     if len(counts) > 0:
+    >>>         # ignore first 5 and last 5 codons, which will have big
+    >>>         # initiation/termination peaks that we want to skip
+    >>>         max_val_pos = 15 + counts[15:-15].argmax()
+    >>>         ref_point_genome = roi.get_genomic_coordinate(max_val_pos)
+    >>> 
+    >>>         new_chain_start = max_val_pos - flank_upstream
+    >>>         new_chain_end   = max_val_pos + flank_downstream
+    >>> 
+    >>>         offset    = 0
+    >>> 
+    >>>         # if new start is outside region, set it to zero and memorize offset
+    >>>         if new_chain_start < 0:
+    >>>             offset = -new_chain_start
+    >>>             new_chain_start = 0
+    >>> 
+    >>>         # if new end is outside region, set it to end of region
+    >>>         if new_chain_end > roi.get_length():
+    >>>             new_chain_end = roi.get_length()
+    >>> 
+    >>>         new_chain = roi.get_subchain(new_chain_start,new_chain_end)
+    >>>     else:
+    >>>         new_chain = SegmentChain()
+    >>>         offset = ref_point_genome = numpy.nan
+    >>>         
+    >>>     return new_chain, offset, ref_point_genome
 
-
-Once your window function is written, you can generate maximal spanning windows::
-
+ .. _metagene-big-spike:
+ 
+Once your window function is written, you can generate maximal spanning windows.
+Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> from yeti.bin.metagene import do_generate
+    >>> from yeti.genomics.genome_hash import GenomeHash
+    >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+
+    >>> import pysam
+    >>> import numpy
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, ThreePrimeMapFactory
+   
+    >>> # window_biggest_spike() needs read alignments stored in a variable
+    >>> # called ALIGNMENTS. so let's load some
+    >>> ALIGNMENTS = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam")])
+    >>> ALIGNMENTS.set_mapping(ThreePrimeMapFactory(15))
+    
+    >>> # skip masking out any repetitive regions for purpose of demo
+    >>> dummy_mask_hash = GenomeHash([])
+
+    >>> #load features, in our case, transcripts
+    >>> transcripts = list(GTF2_TranscriptAssembler(open("sgd_plus_utrs_chrI.gtf")))
 
     >>> # include 100 nucleotides up- and downstream of feature
     >>> flank_upstream = flank_downstream = 100
 
-    >>> data_table, segment_chains = do_generate(transcripts,mask_hash,
+    >>> data_table, segment_chains = do_generate(transcripts,dummy_mask_hash,
     >>>                                          flank_upstream,flank_downstream,
-    >>>                                          landmark_func=window_largest_spike)
+    >>>                                          landmark_func=window_biggest_spike)
 
 :meth:`~yeti.bin.metagene.do_generate` returns an |ArrayTable| (similar to a :class:`pandas.DataFrame`)
 of data and a list of |SegmentChains| corresponding to the maximal spanning windows for each row
-in the |ArrayTable|. It is useful to save these in the same formats that the |metagene| ``generate``
-program uses::
+in the |ArrayTable|. It is useful to save these in the same formats that the 
+:ref:`generate <metagene-generate>` program uses::
 
-    >>> with open("my_roi_file.txt","w") as roi_fh:
+    >>> with open("SRR1562907_big_spike_roi_file.txt","w") as roi_fh:
     >>>     data_table.to_file(roi_fh)
     >>>     data_fh.close()
     >>>     
-    >>> with open("my_rois.bed","w") as bed_fh:
+    >>> with open("SRR1562907_big_spike_rois.bed","w") as bed_fh:
     >>>     for roi in segment_chains:
     >>>         bed_fh.write(roi.as_bed())
     >>> 
     >>>     bed_fh.close()
  
-Then, you can use the |metagene| ``count`` subprogram to do your counting:
+Then, you can use the ROI file you just made with |metagene|
+:ref:`count <metagene-count>` and :ref:`chart <metagene-chart>` as previously:
 
  .. code-block:: shell
 
-     $ metagene count my_roi_file.txt SRR1562907_custom_metagene --count_files SRR1562907_chrI.bam --threeprime --offset 15
+     $ metagene count SRR1562907_big_spike_roi_file.txt SRR1562907_big_spike --count_files SRR1562907_chrI.bam --threeprime --offset 15
+     $ metagene chart SRR1562907_big_spike_metagene.png SRR1562907_big_spike_metagene_profile.txt --landmark "highest ribosome peak" --title "Custom metagene demo"
 
+Which yields:
 
+ .. figure:: /_static/images/metagene_big_spike_demo.png
+    :align: center
+    :alt: metagene profile surrounding biggest peak
+    
+    
 
 See also
 --------
-  - Module documentation for |metagene| program
+  - Module documentation for |metagene| program for detailed description
+    of command-line arguments and output files of the three subprograms
 
     

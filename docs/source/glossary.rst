@@ -88,12 +88,16 @@ Glossary of terms
 
     metagene
     metagene average
-        An average of some sort of quantitative information over genes aligned at some
-        internal feature. For example, an average of ribosome density across
-        all genes, aligned at their start codons. Or, perhaps, an average
-        across all genes of nucleotide sequence conservation across the 12
-        fly genomes surrounding 5' splice sites of first introns.
+        An average of quantitative data over one or more
+        genomic regions (often genes or transcripts) aligned at some internal feature.
+        For example, a :term:`metagene` profile could be built around:
+      
+          - the average of ribosome density surrounding the start codons of all 
+            transcripts in a :term:`ribosome profiling` dataset
         
+          - an average phylogenetic conservation score surounding the 5' splice
+            site of the first introns of all transcripts
+      
         See :doc:`/examples/metagene` and/or the module documentation for the
         :py:mod:`~yeti.bin.metagene` script for more explanation.
 
@@ -128,7 +132,12 @@ Glossary of terms
 
     P-site offset
         Distance from the 5' or 3' end of a ribosome-protected footprint
-        to the P-site of the ribosome that generated the footprint.
+        to the P-site of the ribosome that generated the footprint (see
+        :cite:`Ingolia2009`, fig. 2B). Because the P-site is the site where
+        peptidyl elongation occurs, read alignments from :term:`ribosome profiling`
+        are frequently mappped to their P-site offsets, as opposed to their 5'
+        or 3' ends.
+        
         P-site offsets may be estimated from ribosome profiling data
         using the :py:mod:`~yeti.bin.psite` script.
 

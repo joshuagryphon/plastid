@@ -6,8 +6,10 @@ Genomic coordinates are typically specified as a set of:
   - a chromosome name
   - a start position
   - an end position
-  - a chromosome strand ('+' for the forward strand, '-' for the reverse
-    strand, or '.' for a feature on both/no strands).
+  - a chromosome strand: ('+' for the forward strand, '-' for the reverse
+      - '+' for the forward strand
+      - '-' for the reverse stranded
+      - '.' for both strands / unstranded features
 
 This gives rise to several non-obvious considerations:
 
@@ -27,75 +29,67 @@ coordinate denotes the 5' end.
 Counting from 0 vs 1
 --------------------
 Coordinate systems can start counting from 0 (i.e. are *0-indexed*) or
-from 1 (*1-indexed*). In the context of genomics, both systems are used,
-depending upon file format.
+from 1 (*1-indexed*). Suppose we have an XbaI restriction site on chromosome `chrI`::
 
-:data:`yeti` knows which formats use which system, and therefore converts
-all coordinates to a 0-indexed system, as is common practice in `Python`_.
+                               XbaI
+                              ______ 
+    ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
+                  |          |^^^^^^     |          |          |
+    0-index:      0          10          20         30         40 
+    1-index:      1          11          21         31         41
+
+In 0-indexed representation, the restriction site begins at position 11. In 
+1-indexed representation, it begins at position 12.
+
+
+In the context of genomics, both 0- and 1-indexed systems are used, depending
+upon file format. :data:`yeti` knows which file formats use which representation,
+and automatically converts all coordinates to a 0-indexed system, as is common
+practice in `Python`_.
 
 
   .. _coordinates-half-open-fully-closed:
 
 Half-open vs fully-closed coordinates
 -------------------------------------
-Let us suppose we have a feature that is nine nucleotides long, and begins
-on chromosome I, at base 12. This means the feature includes bases
-12,13,14, 15,16,17, 18,19, and 20.
 
-We can describe its coordinates in two ways:
-
- #. In a *fully-closed* coordinate system, positions are inclusive. So,
-    the end coordinate corresponds to the last position **IN** the feature.
-    Therefore:
-      - `start = 12`
-      - `end = 20`
-    
-    And, the length of the feature equals:
-    
-        `end - start + 1 = 20 - 12 + 1 = 9`
+Similarly, coordinate systems can represent end coordinates in two ways:
  
- #. In a *half-open* coordinate system, `end` is defined as the first position
-    **NOT** included in the feature. Therefore, we would write:
-    
-      - `start = 12`
-      - `end = 21`
-    
-    And the length of the feature is simply:
-    
-        `end - start = 21 - 12 = 9`
+ #. In a *fully-closed* coordinate system, positions are inclusive:
+    the end coordinate corresponds to the last position **IN** the feature.
+    So, in 0-indexed, fully-closed representation, the XbaI site would start at
+    position 11, and end at position 16::
 
-Some :term:`annotation` formats use fully-closed coordinates, others
-half-open. Again, :data:`yeti` takes care of this for you, and converts
-all coordinates to half-open space, in keeping with `Python`_ conventions.
+                                  XbaI
+                                 ______ 
+       ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
+                     |           ^^^^^^     |          |          |
+       0-index:      0           |    |     20         30         40 
+                                 |    |
+       Start & end:              11   16
+                                 
+    And the length of the feature equals:
 
+     .. math::
+     
+         \ell = end - start + 1 = 16 - 11 + 1 = 6
 
-.. TODO: make graphic
+ #. In contrast, in  a *half-open* coordinate system, the end coordinate is defined as the
+    first position **NOT** included in the feature. In a 0-indexed, half-open
+    representation, the XbaI site woudl start at position 11, and end at 
+    position 17. In this case, the length of the feature equals:
 
-Example: a restriction site
----------------------------
-
-Suppose we have a very short genome with the following sequence. It contains
-an XbaI (*TCTAGA*) restriction site, which have highlighted below::
-
-                               XbaI
-                              ______ 
-    Sequence:     ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
-                              ^^^^^^
-
-As mentioned :ref:`above <coordinates-index-0-vs-1>`, coordinates for this
-sequence can be *0-indexed*, or *1-indexed*, which means that our restriction
-site starts either at base 11 or 12, respectively::
+     .. math::
+     
+         \ell = end - start = 17 - 11 = 6
 
 
-                               XbaI
-                              ______ 
-    Sequence:     ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
-                  |          |^^^^^^     |          |          |
-    0-index:      0          10          20         30         40 
-    1-index:      1          11          21         31         41
-
-Coordinate systems can also be :ref:`half-open or fully-closed <coordinates-half-open-fully-closed>`.
-Therefore, the restriction site can be described in four possible ways:
+Four possible coordinate representations
+----------------------------------------
+Because coordinate systems can be :ref:`0-indexed or 1-indexed <coordinates-index-0-vs-1>`,
+and :ref:`half-open or fully-closed <coordinates-half-open-fully-closed>`,
+genomic features can be can be represented in four possible ways. For the XbaI
+site in this example:
 
     =============   =============    ==================
          \          **Half-open**    **Fully-closed**
@@ -108,10 +102,12 @@ Therefore, the restriction site can be described in four possible ways:
     =============   =============    ==================
 
 
-:data:`yeti` is 0-indexed and half-open, and would therefore report the coordinates
-as::
+Following `Python`_ conventions, :data:`yeti` reports all coordinates in
+0-indexed and half-open representations. In this case, the coordinate would be::
 
-    chromosome/contig:  'sequence'
+    chromosome/contig:  'ChrI'
     start:              11
     end:                17
     strand:             '.' 
+
+    
