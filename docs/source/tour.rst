@@ -126,7 +126,7 @@ files (see :mod:`yeti.readers`)::
 
     >>> # do something with transcripts. here we just look at their names & attribute dictionaries
     >>> for transcript in reader:
-            print(transcript.get_name() + ":\t" + str(transcript.attr))
+    >>>     print(transcript.get_name() + ":\t" + str(transcript.attr))
     YAL069W_mRNA:	{'cds_genome_end': 646, 'name': 'YAL069W', 'gene_id': 'YAL069W', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL069W_mRNA', 'cds_genome_start': 334, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL069W', 'score': '.', 'type': 'mRNA', 'ID': 'YAL069W_mRNA'}
     YAL068W-A_mRNA:	{'cds_genome_end': 789, 'name': 'YAL068W-A', 'gene_id': 'YAL068W-A', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068W-A_mRNA', 'cds_genome_start': 537, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL068W-A', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068W-A_mRNA'}
     YAL068C_mRNA:	{'cds_genome_end': 2169, 'name': 'PAU8', 'gene_id': 'YAL068C', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068C_mRNA', 'cds_genome_start': 1809, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'PAU8,seripauperin PAU8', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068C_mRNA'}

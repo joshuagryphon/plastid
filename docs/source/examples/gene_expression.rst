@@ -64,7 +64,7 @@ in an interactive Python session, and it is illustrative to do so. In addition
 to caclulating gene expression over entire transcripts, we will also calculate
 expression separately over 5' UTRs, coding regions, and 3' UTRs.
 
-First, we need to import a few things, and create a holder for our data::
+First, we need to import a few things::
 
     >>> import copy
     >>> import pysam
@@ -75,7 +75,7 @@ First, we need to import a few things, and create a holder for our data::
 
 .. TODO find an RNA-seq dataset
 
-Then, we'll open our data. We'll keep the data as a dictionary of |BAMGenomeArrays|::
+Then, we'll open our data, storing each dataset in a |BAMGenomeArray|::
 
     >>> my_datasets = { "ribosome_profiling" : "SRR1562907_chrI.bam",
     >>>                 "RNA-seq"            : "",
@@ -92,15 +92,15 @@ as 15 nucleotides from the 3' end of each read::
 
 We will map the RNA-seq data along the entire length of each read alignment.
 Each position in each alignment will be attributed :math:`1.0 / \ell`, where 
-:math:`\ell` is the length of the read alignment::
+:math:`\ell` is the length of the read alignment.
+:func:`~yeti.genomics.genome_array.CenterMapFactory` can do this for us::
 
     >>> my_datasets["RNA-seq"].set_mapping(CenterMapFactory())
 
-Now, we need to create a place to hold our data. We'll make a dictionary of lists
-to do this. We use another dictionary comprehension for brevity the call to
-:func:`copy.deepcopy` on the empty list is necessary to prevent all of these
-dictionary keys from pointing to the same list, which is a weird side effect
-of the order in which things are evaluated inside comprehensions::
+Now, we need to create a place to hold our data. We'll use dictionary of lists.
+The call to :func:`copy.deepcopy` on the empty list is necessary to prevent all
+of these dictionary keys from pointing to the same list, which is a weird side
+effect of the order in which things are evaluated inside comprehensions::
 
     >>> # we will count gene sub-regions in addition to entire genes
     >>> regions = ("exon","UTR5","CDS","UTR3")
@@ -126,10 +126,8 @@ of the order in which things are evaluated inside comprehensions::
 
 
 Now that we have an empty dictionary of lists to hold our data, we're ready to start
-making measuremnts. We'll do this with a bunch of nested for loops.
-
-The first loop iterates through transcripts in a `GTF2`_ file, generating a
-:class:`~yeti.genomics.roitools.Transcript` for each transcript::
+making measurements. We'll use nested for loops to count expression in the 5' UTR, 
+CDS, 3'UTR and total region (exon) of each transcript::
 
     >>> for c, transcript in enumerate(GTF2_TranscriptAssembler(open("sgd_plus_utrs_chrI.gtf"))):
     >>> 
@@ -165,7 +163,7 @@ The first loop iterates through transcripts in a `GTF2`_ file, generating a
     >>>             my_data["%s_%s_counts" % (sample_name,region)].append(counts)
     >>>             my_data["%s_%s_rpkm"   % (sample_name,region)].append(rpkm)
 
-Finally, we can save the data to a file. It is easiest to do this by creating 
+Finally, we can save the data to a file. It is easiest to do this by converting 
 our dictionary of lists into a :class:`pandas.DataFrame`::
 
     >>> # convert to DataFrame, then save as tab-delimited text file

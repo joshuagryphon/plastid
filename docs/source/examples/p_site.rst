@@ -36,17 +36,22 @@ This yields the following strategy:
 
  #. For each length:
 
-      #. Perform a :term:`metagene analysis` around the start codon,
+      #. Perform a :term:`metagene analysis <metagene>` at the start codon,
          in which the :term:`footprints <footprint>` are mapped to their 5' ends.
 
       #. Measure the distance between the highest peak 5' of the start codon
          and the start codon. Assuming this peak is the initiation peak, this
          distance is the offset to use for reads of this length.
+         
+         .. TODO: graphic here
 
  #. Manually inspect offsets to make sure they seem reasonable
 
  #. Check results by perform a :term:`metagene analysis` around the start codon, 
-    this time using the :term:`P-site offsets <P-site offset>` determined above.
+    this time using the :term:`P-site offsets <P-site offset>` we determined.
+    We would expect to see the following:
+
+         .. TODO: graphic here
 
 
 Determining :term:`P-site offsets <P-site offset>` using the |psite| script
@@ -54,18 +59,14 @@ Determining :term:`P-site offsets <P-site offset>` using the |psite| script
 The strategy above is implemented by |psite|, which can be
 executed from the terminal.
 
-Because |psite| internally performs :term:`metagene analysis`, we need
+Because |psite| internally performs :term:`metagene analysis <metagene>`, we need
 to use a file produced by the |metagene| script. The command call to 
 |metagene| is included below, and explained in detal in :doc:`/examples/metagene`.
 From the terminal:
 
  .. code-block:: shell
 
-    # generate metagene `roi` file. We only need to do this once,
-    # or when we switch to a new genome annotation.
-    #
-    # this will make 'chrI_rois.txt' and 'chrI_rois.bed'. They have the same
-    # information, but the BED file can be loaded into a genome browser
+    # generate metagene `roi` file. See `metagene` documentation for details
     $ metagene generate chrI --landmark cds_start --annotation_files sgd_plus_utrs_chrI.gtf
 
     # run the psite script
@@ -74,10 +75,10 @@ From the terminal:
     # unnecessary analyses
     $ psite chrI_rois.txt SRR1562907 --min_length 25 --max_length 35 --require_upstream --count_files SRR1562907_chrI.bam
 
-The script will make many files, two of which are of interest:
+The script will make many files, two of which are of interest to most users:
 
   #. A two-column text file (``SRR1562907_p_offsets.txt``), in which the first column is a read length and the
-     second, the corresponding P-site offset from the 5' end of the read.
+     second, the corresponding :term:`P-site offset` from the 5' end of the read.
      Comments and metadata appear up top. In the example above, the file looks
      like::
 
@@ -131,7 +132,7 @@ by |psite| to the ``--offset`` parameter. For example, from the terminal:
 
  .. code-block :: shell
 
-    $ some_script --offset SRR1562907_p_offsets.txt --fiveprime_variable ... [other arguments]
+    $ some_script --offset SRR1562907_p_offsets.txt --fiveprime_variable --offset SRR1562907_p_offsets.txt [other arguments]
 
 
 In interactive sessions
@@ -169,7 +170,7 @@ For alignments in `bowtie`_-format use |GenomeArray|::
 Pitfalls
 --------
 
-This P-site mapping strategy requires pronounced initiation peaks in
+This P-site mapping strategy requires pronounced :term:`initiation peaks <start codon peak>` in
 :term:`ribosome profiling` data. If these are absent -- which can
 happen under conditions of initiation shutdown (if the sample is under
 stress before lysis) -- an alternative option is to use a
