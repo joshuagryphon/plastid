@@ -57,8 +57,8 @@ Finally, before submission
 
 Document formatting
 -------------------
-Code should be formatted as described in `PEP8 <https://www.python.org/dev/peps/pep-0008>`_,
-especially noting that we use four spaces for indentation.
+Code should be formatted as described in :pep:`8`, noting especially to use
+four spaces for indentation.
 
 
 Docstring & module documenation
@@ -69,7 +69,7 @@ the most human-readable raw form possible. This means:
   - Format docstrings for `numpydoc`_,  as described in the
     `numpy documentation guide <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
 
-  - Follow `PEP257 <https://www.python.org/dev/peps/pep-0257>`_. for docstring style
+  - Follow :pep:`257` for docstring style
 
   - Refer to classes defined in :data:`yeti` in docstrings using the shortcut `\|ClassName\|`
     rather than as `:py:class:\`package.module.ClassName\``, because the shortcuts are 

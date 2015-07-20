@@ -3,7 +3,7 @@ Demo dataset
 
  .. TODO update the demo dataset filename to include package name
 
-`Download the demo dataset here <_static/demo.tar.bz2>`_
+:download:`Download the demo dataset here <_static/demo.tar.bz2>`.
 
 We have put together a small demo dataset that is used in the :doc:`tour`
 and in :doc:`examples`. It consists of feature :term:`annotations` and 
