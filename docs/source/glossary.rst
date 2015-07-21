@@ -132,11 +132,20 @@ Glossary of terms
 
     P-site offset
         Distance from the 5' or 3' end of a ribosome-protected footprint
-        to the P-site of the ribosome that generated the footprint (see
-        :cite:`Ingolia2009`, fig. 2B). Because the P-site is the site where
-        peptidyl elongation occurs, read alignments from :term:`ribosome profiling`
-        are frequently mappped to their P-site offsets, as opposed to their 5'
-        or 3' ends.
+        to the P-site of the ribosome that generated the footprint.
+        
+         .. figure:: /_static/images/p_site_map_cartoon.png
+            :alt: Cartoon of ribosomal P-site
+            :width: 30ex
+            :align: center
+            :figclass: captionfigure
+          
+            Ribosome, :term:`footprint`, and P-site offset. After :cite:`Ingolia2009`.
+            
+        Because the P-site is the site where peptidyl elongation occurs,
+        :term:`read alignments` from :term:`ribosome profiling` are frequently
+        mappped to their P-sites, so that translation may be visualized
+        along a transcript.
         
         P-site offsets may be estimated from ribosome profiling data
         using the :py:mod:`~yeti.bin.psite` script.

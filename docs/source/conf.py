@@ -20,38 +20,13 @@ import mock
 import yeti
 
 
-class Mock(mock.Mock):
-    """Proxy class to stand in for modules/packages that can't be built
-    or installed on readthedocs.org .
-    
-    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html"""
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-mock_modules = [
-    'matplotlib',
-    'matplotlib.cm',
-    'matplotlib.pyplot',
-    'numpy',
-    'numpy.ma',
-    'numpy.random',
-    'pandas',
-    'scipy',
-    'scipy.misc',
-    'scipy.optimize',
-    'scipy.stats',
-    'scipy.sparse',
-    'Bio',
-    'Bio.Alphabet',
-    'Bio.Seq',
-    'Bio.SeqRecord',
-    'pysam',
-]
-
-sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
-
 # -- General configuration ------------------------------------------------
+
+
+project = u'yeti'
+copyright = u'2014, Joshua G. Dunn'
+version = str(yeti.__version__) # |version|
+release = "%s-r%s" % (yeti.__version__,str(datetime.date.today()).replace("-","_")) # |release|
 
 # set up substitutions file for automated crossreferences
 rst_prolog = """
@@ -90,6 +65,16 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# custom css
+# tip from https://github.com/snide/sphinx_rtd_theme/issues/117
+html_static_path = ['_static/css']
+html_context = {
+    'css_files': [
+        '_static/custom.css',  # overrides for wide tables in RTD theme
+        ],
+    }
+
 
 
 # sphinx autodoc config -------------------------------------------------------
@@ -217,18 +202,40 @@ extlinks = { 'link_github'      : ('https://some_url',None),
 for k,v in intersphinx_mapping.items():
         extlinks["%s_link"] = v
 
+# -- Mocking of imports ------------------------------------------------
+
+class Mock(mock.Mock):
+    """Proxy class to stand in for modules/packages that can't be built
+    or installed on readthedocs.org .
+    
+    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html"""
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+mock_modules = [
+    'matplotlib',
+    'matplotlib.cm',
+    'matplotlib.pyplot',
+    'numpy',
+    'numpy.ma',
+    'numpy.random',
+    'pandas',
+    'scipy',
+    'scipy.misc',
+    'scipy.optimize',
+    'scipy.stats',
+    'scipy.sparse',
+    'Bio',
+    'Bio.Alphabet',
+    'Bio.Seq',
+    'Bio.SeqRecord',
+    'pysam',
+]
+
+sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
 # other -------------------------------------------------------------------------
-
-
-# General information about the project.
-project = u'yeti'
-copyright = u'2014, Joshua G. Dunn'
-
-# Short version number, for |version|
-version = str(yeti.__version__) # JGD
-# The full version, including alpha/beta/rc tags, for |release|
-release = "%s-r%s" % (yeti.__version__,str(datetime.date.today()).replace("-","_"))
 
 
 
@@ -308,11 +315,6 @@ pygments_style = 'sphinx'
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #html_favicon = None
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

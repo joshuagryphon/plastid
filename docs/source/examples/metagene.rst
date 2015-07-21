@@ -204,7 +204,9 @@ This produces the image:
  .. figure:: /_static/images/demo_metagene_cds_start.png
     :align: center
     :alt: metagene profile surrounding start codon
-
+    :figclass: captionfigure
+    
+    Metagene profile surrounding start codon.
 
 
 .. _concepts-metagene-roll-your-own:
@@ -442,6 +444,10 @@ Which yields:
  .. figure:: /_static/images/metagene_big_spike_demo.png
     :align: center
     :alt: metagene profile surrounding biggest peak
+    :figclass: captionfigure
+    
+    Metagene analysis surrounding largest spike of ribosome density in coding
+    region, excluding start and stop codon peaks.
     
     
 
