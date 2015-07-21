@@ -9,3 +9,6 @@ Read mapping rules
 [places they pop up: GenomeArray & command-line scripts]
 
 [writing your own mapping functions]
+
+
+ .. TODO images of reads mapped under various schemes

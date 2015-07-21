@@ -332,10 +332,12 @@ start sites::
 
 Here is a window function that produces windows surrounding the highest spike
 in read density in a transcript. Note, it uses data structures in the global
-scope::
+scope:
 
+ .. code-block:: python
+ 
     >>> import numpy
-    
+
     >>> def window_biggest_spike(roi,flank_upstream,flank_downstream,ref_delta=0):
     >>>     """Window function for metagenes surrounding peaks of read density
     >>>     

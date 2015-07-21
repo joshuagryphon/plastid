@@ -18,8 +18,7 @@ Sequencing
 
 Ribosome profiling
 ------------------
-  - :doc:`concepts/psite`
-
+  - something
 
 
 

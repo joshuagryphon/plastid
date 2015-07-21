@@ -63,7 +63,7 @@ They are defined by:
   - a chromosome name
   - a start coordinate
   - an end coordinate
-  - a strand:
+  - a strand
       - '+' for forward-strand features
       - '-' for reverse-strand features
       - '.' for unstranded features
@@ -184,8 +184,8 @@ ends of sequencing reads appear at each position in a chain::
             0.,  0.,  0.,  0.,  0.,  0.,  0.])
 
 
-It is also possible to fetch sub-sections of a |Transcript| or |SegmentChain|
-as a new |SegmentChain|::
+It is also possible to fetch sub-sections of a |Transcripts| or |SegmentChains|
+as new |SegmentChains|::
 
     >>> # take first 200 nucleotides of TFC3 mRNA
     >>> subchain = tfc3.get_subchain(0,200)
@@ -222,21 +222,22 @@ see |SegmentChain| and |Transcript| in :py:mod:`yeti.genomics.roitools`.
 
 |GenomeArray| & its subclasses
 ..............................
-|GenomeArrays| store count data at each position in the genome. Data can be
-imported from count files (e.g. `Wiggle`_, `bedGraph`_) or alignment files
-(in `bowtie`_ or `BAM`_ format). For very large genomes a sparse implementation
-is provided by |SparseGenomeArray|. A |BAMGenomeArray| is provided for
-:term:`read alignments` in `BAM`_ format.
+|GenomeArrays| are :class:`numpy.ndarray`-like objects that 
+map quantitative data, :term:`counts`, or :term:`read alignments`, to genomic
+positions. Data can be imported from count files (`Wiggle`_, `bedGraph`_)
+or alignment files (`bowtie`_ or `BAM`_ formats). For very large genomes a
+sparse implementation is provided by |SparseGenomeArray|. A |BAMGenomeArray|
+is provided for :term:`read alignments` in `BAM`_ format.
 
 When importing :term:`read alignments`, users can specify a :term:`mapping function`
 to determine the genomic position(s) at which each alignment should be counted
-(e.g., at their fiveprime ends, threeprime ends, or, something more complex).
 :data:`yeti` already includes mapping functions to map :term:`read alignments`:
 
   - to their fiveprime or threeprime ends, with or without offsets from
-    that end (e.g. for :term:`P-site mapping` for :term:`ribosome profiling data`)
+    that end (e.g. for :term:`P-site mapping <P-site offset>` for
+    :term:`ribosome profiling data`)
      
-  - fractionally over their entire lengths (e.g. for RNA-seq)
+  - fractionally over their entire lengths (for visualizing transcript in RNA-seq)
    
   - fractionally to all positions covered by a central portion of the read
     alignment, after excluding a user-defined number of positions on each
@@ -317,9 +318,9 @@ For further information, see:
 Often one needs to know whether any features overlap a specific region in the
 genome, for example, to find transcripts that overlap one another.
 
-However, it would be inefficient to scan an entire file to find the
-overlapping features, or to test whether two features overlap if we already
-know they are too far apart in the genome.
+But, it is be inefficient to scan an entire file to find overlapping features,
+or to test whether two features overlap if we already know from their genomic
+coordinates that they cannot.
 
 |GenomeHash| and its subclasses avoid this problem by indexing features
 by location. A |GenomeHash| may be created from a list or dictionary of features
@@ -329,6 +330,8 @@ genome annotation (in `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ format)::
     >>> from yeti.genomics.genome_hash import GenomeHash 
     >>> my_hash = GenomeHash(transcript_dict)
 
+ .. TODO adjust GenomeHash so GenomicSegment can be used as a query
+ 
 Having made a |GenomeHash|, we can ask what is where in the genome. For
 example, to find all features between bases 10000-20000 on the plus
 strand of chromosome *chrI*::
