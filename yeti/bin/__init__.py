@@ -2,7 +2,7 @@
 """Command-line scripts that implement common sequencing workflows
 
     =========================   =============================================================================
-    **Sequencing analysis**                   
+    **Analysis of sequencing or quantitative data**                 
     ---------------------------------------------------------------------------------------------------------
     |counts_in_region|           Count the number of :term:`read alignments <alignment>` covering
                                  arbitrary regions of interest in the genome, and calculate
@@ -14,7 +14,8 @@
                                  specifically for genes and sub-regions (5' UTR,
                                  CDS, 3' UTR)
 
-    |get_count_vectors|          Fetch vectors of :term:`counts` at each nucleotide position
+    |get_count_vectors|          Fetch vectors of :term:`counts` or other quantitative data
+                                 at each nucleotide position
                                  in one or more regions of interest, saving each vector
                                  as its own line-delimited text file
                              
@@ -24,8 +25,8 @@
                                  at their :term:`P-sites <P-site offset>`), for
                                  visualization in a :term:`genome browser`
                              
-    |metagene|                   Compute a :term:`metagene` profile of :term:`read alignments`
-                                 or :term:`counts` over one or more regions of interest,
+    |metagene|                   Compute a :term:`metagene` profile of :term:`read alignments`,
+                                 :term:`counts`, or quantitative data over one or more regions of interest,
                                  optionally applying a :term:`mapping rule`
                              
     |phase_by_size|              Estimate :term:`sub-codon phasing` in
@@ -37,10 +38,10 @@
     -------------------------   -----------------------------------------------------------------------------
     **Generating or modifying genome annotations**    
     ---------------------------------------------------------------------------------------------------------
-    |crossmap|                   Determine which regions of the genome fail to produce
+    |crossmap|                   Generate a :term:`mask file` annotating regions of the genome
+                                 that fail to produce
                                  uniquely mapping reads under various alignment
-                                 criteria, and save these in a :term:`mask file`
-                                 so that they may be excluded from future analyses
+                                 criteria, so that they may be excluded from future analyses
                              
     |gff_parent_types|           Examine parent-child relationships of features
                                  in a `GFF3`_ file

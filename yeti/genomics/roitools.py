@@ -587,7 +587,7 @@ class SegmentChain(object):
         self._mask_segments.sort(key=sort_segments_lexically)
 
     def __repr__(self):
-        sout = "<%s intervals=%s" % (self.__class__.__name__, len(self))
+        sout = "<%s segments=%s" % (self.__class__.__name__, len(self))
         if len(self) > 0:
             sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
                                               self[0].start,

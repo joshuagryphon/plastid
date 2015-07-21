@@ -21,14 +21,14 @@ These include, among others:
   - :doc:`Determining P-site offsets </generated/yeti.bin.psite>` for
     :term:`ribosome profiling` experiments
 
-  - :doc:`Performing metagene analyses </generated/yeti.bin.metagene>` for
-    any sort of :term:`high-throughput sequencing` experiment
+  - Performing :doc:`metagene analyses </generated/yeti.bin.metagene>`
 
   - :doc:`Creating browser tracks </generated/yeti.bin.make_wiggle>` 
     from `BAM`_ or `bowtie`_ files, after applying optional read :term:`mapping rules`
-    (e.g. for P-site assignment, in the case of ribosome profiling data) 
+    to transform the alignments (e.g. for P-site assignment of 
+    :term:`ribosome profiling` data) 
 
-For a complete list, as well as examples, see the :mod:`command-line script documentation <yeti.bin>`
+For a complete list, see the :mod:`command-line script documentation <yeti.bin>`
 
 
 
@@ -37,22 +37,20 @@ For a complete list, as well as examples, see the :mod:`command-line script docu
 Classes & data structures
 -------------------------
 
-:data:`yeti` defines a number of classes that facilitate sequencing
-analyses. These are:
+:data:`yeti` defines a number of classes to facilitate sequencing analyses:
 
-    ======================================================     =========================================
+    =======================================================    =========================================
     **Class**                                                  **Purpose**
-    ------------------------------------------------------     -----------------------------------------
+    -------------------------------------------------------    -----------------------------------------
     :ref:`tour-genomic-segment`, :ref:`tour-segment-chain`     Represent genomic features (e.g. mRNAs, genes, SNPs, stop codons) as Python objects
 
-    :ref:`GenomeArray <tour-genome-array>` & subclasses        Array-like object that maps quantitative values (e.g. read counts, phylogenetic conservation)
-                                                               to corresponding genomic coordinates.
+    :ref:`GenomeArray <tour-genome-array>` & its subclasses    Index quantitative values or :term:`read alignments` to genomic coordinates.
 
-    :ref:`GenomeHash <tour-genome-hash>` & subclasses          Array-like object that indexes genomic features by genomic coordinates, 
+    :ref:`GenomeHash <tour-genome-hash>` & its  subclasses     Indexes genomic :term:`features <feature>` by coordinates, 
                                                                for quick lookup of features that overlap or cover a region.
-    ======================================================     =========================================
+    =======================================================    =========================================
 
-In the examples below, we'll be using a small :doc:`test_dataset` for yeast chromosome I.
+In the examples below, we'll be using a small :doc:`test_dataset` covering yeast chromosome I.
 
 -------------------------------------------------------------------------------
 
@@ -61,9 +59,17 @@ In the examples below, we'll be using a small :doc:`test_dataset` for yeast chro
 |GenomicSegment|
 ................
 |GenomicSegments| are the fundamental building block of genomic features.
-They are defined by a chromosome name, a start coordinate, and end coordinate,
-and a strand. On their own, they are not that interesting. However, they
-can be used to build :ref:`segment-chain`, which are interesting.
+They are defined by:
+  - a chromosome name
+  - a start coordinate
+  - an end coordinate
+  - a strand:
+      - '+' for forward-strand features
+      - '-' for reverse-strand features
+      - '.' for unstranded features
+      
+On their own, |GenomicSegments| are not very interesting. However, they
+can be used to build :ref:`SegmentChains <tour-segment-chain>`, which are interesting.
 
 
 .. _tour-segment-chain:
@@ -102,11 +108,11 @@ in addition to continuous features (e.g. single exons).
     >>> exon1 = GenomicSegment("chrI",129237,130487,"+")
     >>> exon2 = GenomicSegment("chrI",130531,130572,"+")
     >>> SegmentChain(exon1,exon2,ID="YAL013W",alias="DEP1")
-    <SegmentChain intervals=2 bounds=chrI:129237-130572(+) name=YAL013W>
+    <SegmentChain segments=2 bounds=chrI:129237-130572(+) name=YAL013W>
 
     >>> dep1 = Transcript(exon1,exon2,ID="YAL013W",alias="DEP1",cds_genome_start=129270,cds_genome_end=130484)
     >>> dep1
-    <Transcript intervals=2 bounds=chrI:129237-130572(+) name=YAL013W>
+    <Transcript segments=2 bounds=chrI:129237-130572(+) name=YAL013W>
     
     >>> dep1.attr
     {'ID': 'YAL013W',
@@ -142,7 +148,7 @@ and the genome::
     >>> # we'll use the two-exon, minus-strand gene TFC3 as an example
     >>> tfc3 = transcript_dict["YAL001C_mRNA"]
     >>> tfc3
-    <Transcript intervals=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>
+    <Transcript segments=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>
 
     >>> # get genomic coordinate of 89th nucleotide from 5' end of TFC3
     >>> # right before the splice junction
@@ -162,8 +168,8 @@ and the genome::
 
 |SegmentChains| can fetch vectors of data covering each position in the chain
 from the 5' to 3' end (relative to the chain) from |GenomeArrays| (themselves
-explained :ref:`below <tour-genome-array>`). To count how many 5' ends of
-sequencing reads appear at each position in the chain::
+explained :ref:`below <tour-genome-array>`). For example, to count how many 5'
+ends of sequencing reads appear at each position in a chain::
 
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
     >>> import pysam
@@ -184,16 +190,16 @@ as a new |SegmentChain|::
     >>> # take first 200 nucleotides of TFC3 mRNA
     >>> subchain = tfc3.get_subchain(0,200)
     >>> subchain
-    <SegmentChain intervals=2 bounds=chrI:150896-151186(-) name=YAL001C_mRNA>
+    <SegmentChain segments=2 bounds=chrI:150896-151186(-) name=YAL001C_mRNA>
 
 |Transcript| includes several convenience methods to fetch 5' UTRs, coding regions,
 and 3'UTRs from coding transcripts::
 
     >>> tfc3.get_utr5()
-    <SegmentChain intervals=1 bounds=chrI:151166-151186(-) name=YAL001C_mRNA>
+    <SegmentChain segments=1 bounds=chrI:151166-151186(-) name=YAL001C_mRNA>
 
     >>> tfc3.get_cds()
-    <SegmentChain intervals=2 bounds=chrI:147596-151166(-) name=YAL001C_mRNA>
+    <SegmentChain segments=2 bounds=chrI:147596-151166(-) name=YAL001C_mRNA>
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
@@ -332,23 +338,23 @@ strand of chromosome *chrI*::
     
     >>> roi = GenomicSegment("chrI",10000,20000,"+")
     >>> my_hash[roi]
-    [<Transcript intervals=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
-     <Transcript intervals=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>]
+    [<Transcript segments=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
+     <Transcript segments=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>]
 
 Or on both strands::
 
     >>> my_hash.get_overlapping_features(roi,stranded=False)
-    [<Transcript intervals=1 bounds=chrI:11423-12062(-) name=YAL065C_mRNA>,
-     <Transcript intervals=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
-     <Transcript intervals=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>,
-     <Transcript intervals=1 bounds=chrI:13221-13854(-) name=YAL064C-A_mRNA>]
+    [<Transcript segments=1 bounds=chrI:11423-12062(-) name=YAL065C_mRNA>,
+     <Transcript segments=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
+     <Transcript segments=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>,
+     <Transcript segments=1 bounds=chrI:13221-13854(-) name=YAL064C-A_mRNA>]
     
 Does anything interesting overlap *TFC3*?
 
  .. code-block:: python
 
     >>> my_hash[tfc3]
-    [<Transcript intervals=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>]
+    [<Transcript segments=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>]
     # nope, just TFC3 itself.
 
 For more information, see the module documentation for :mod:`~yeti.genomics.genome_hash`.
@@ -358,11 +364,10 @@ For more information, see the module documentation for :mod:`~yeti.genomics.geno
 
 See also
 --------
-For an in-depth discussion of these data structures, see:
-	
-  - :doc:`Example <examples>` analyses
+  - :doc:`examples` 
 
-  - Detailed :ref:`module documentation <modindex>`:
+  - Detailed :ref:`module documentation <modindex>` for complete descriptions
+    of the attributes and methods of these and other data structures
 
       - :mod:`yeti.genomics.roitools`
 
