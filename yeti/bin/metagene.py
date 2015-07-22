@@ -462,21 +462,14 @@ algorithm:
                 new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
 
             # having made sure that refpoint is same for all transcripts,
-            # we use last ROI and last offset to find genomic reference point
-            #
+            # we use last ROI and last offset to find new offset
             # this fails if ref point is at the 3' end of the roi, 
+            # due to quirks of half-open coordinate systems
             # so we test it explicitly
             if flank_upstream - my_offset == my_roi.get_length():
                 new_offset = my_offset
-                if my_roi.strand == "+":
-                    ref_point_genome = my_roi.spanning_segment.end
-                else:
-                    ref_point_genome = my_roi.spanning_segment.start - 1
             else:
-                ref_point_genome = my_roi.get_genomic_coordinate(flank_upstream - my_offset)[1]
-                zero_point_roi = new_roi.get_segmentchain_coordinate(new_roi.spanning_segment.chrom,
-                                                                     ref_point_genome,
-                                                                     new_roi.spanning_segment.strand)
+                zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
                 new_offset = flank_upstream - zero_point_roi
     
             masks = mask_hash.get_overlapping_features(new_roi)
