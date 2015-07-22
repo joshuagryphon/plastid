@@ -138,7 +138,7 @@ __author__ = "joshua"
 import sys
 import argparse
 import numpy
-from yeti.genomics.roitools import SegmentChain
+from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
 from yeti.util.array_table import ArrayTable
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter
@@ -158,22 +158,24 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 # helper functions to generate/handle maximum spanning windows / ROIs
 #===============================================================================
 
-def window_landmark(transcript,flank_upstream=50,flank_downstream=50,ref_delta=0,landmark=0):
-    """Returns a region of interest (ROI) relative to a landmark on a transcript.
+def window_landmark(region,flank_upstream=50,flank_downstream=50,ref_delta=0,landmark=0):
+    """Define a window surrounding a landmark in a region, if the region has such a landmark,
+    (e.g. a start codon in a transcript), accounting for splicing of the region,
+    if the region is discontinuous
     
     Parameters
     ----------
-    transcript : |Transcript|
-        Transcript on which to generate region of interest
+    transcript : |SegmentChain| or |Transcript|
+        Region on which to generate a window surrounding a landmark
     
     landmark : int
-        Position of the landmark within `transcript`
+        Position of the landmark within `region`
 
     flank_upstream : int
-        Nucleotides upstream of `landmark` to include in region of interest
+        Nucleotides upstream of `landmark` to include in window
     
     flank_downstream : int
-        Nucleotides downstream of `landmark` to include in region of interest
+        Nucleotides downstream of `landmark` to include in window
     
     ref_delta : int
         Offset from `landmark` to the reference point. If 0, the landmark
@@ -183,12 +185,14 @@ def window_landmark(transcript,flank_upstream=50,flank_downstream=50,ref_delta=0
     Returns
     -------
     |SegmentChain|
-        ROI surrounding landmark
+        Window of `region` surrounding landmark
     
     int
-        offset to align ROI with all other ROIs, if `transcript` itself
-        wasn't long enough in the 5\' direction to include the entire
-        distance specified by `flank_upstream`
+        alignment offset to the window start, if `region` itself wasn't long
+        enough in the 5\' direction to include the entire distance specified by
+        `flank_upstream`. Use this to align windows generated around similar
+        landmarks from different `regions` (e.g. windows surrounding start codons
+        in various transcripts).
 
     (str, int, str)
         Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
@@ -200,49 +204,50 @@ def window_landmark(transcript,flank_upstream=50,flank_downstream=50,ref_delta=0
         fiveprime_offset  = flank_upstream - landmark
         my_start = 0
     
-    my_end = min(transcript.get_length(),landmark + ref_delta + flank_downstream)
-    ivc    = transcript.get_subchain(my_start,my_end)
+    my_end = min(region.get_length(),landmark + ref_delta + flank_downstream)
+    roi    = region.get_subchain(my_start,my_end)
    
-    if landmark + ref_delta == transcript.get_length():
-        if transcript.spanning_segment.strand == "+":
-            ref_point = (transcript.spanning_segment.chrom,transcript.spanning_segment.end,transcript.spanning_segment.strand)
+    if landmark + ref_delta == region.get_length():
+        if region.spanning_segment.strand == "+":
+            ref_point = (region.spanning_segment.chrom,region.spanning_segment.end,region.spanning_segment.strand)
         else:
-            ref_point = (transcript.spanning_segment.chrom,transcript.spanning_segment.start - 1,transcript.spanning_segment.strand)
+            ref_point = (region.spanning_segment.chrom,region.spanning_segment.start - 1,region.spanning_segment.strand)
     else:
-        ref_point = transcript.get_genomic_coordinate(landmark+ref_delta)
+        ref_point = region.get_genomic_coordinate(landmark+ref_delta)
 
-    return ivc, fiveprime_offset, ref_point
+    return roi, fiveprime_offset, ref_point
     
 def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
-    """Returns a maximal spanning window surrounding a start codon.
+    """Returns a window surrounding a start codon.
     
     Parameters
     ----------
     transcript : |Transcript|
-        Transcript on which to generate region of interest
+        Transcript on which to generate window
     
     flank_upstream : int
-        Nucleotide length upstream of cds_start to include in region
-        of interest, if `transcript` includes it
+        Nucleotide length upstream of start codon to include in window,
+        if `transcript` has a start codon
     
     flank_downstream : int
-        Nucleotide length downstream of  cds_start to include in region
-        of interest, if `transcript` includes it
+        Nucleotide length downstream of start codon to include in window,
+        if `transcript` has a start codon
     
     ref_delta : int, optional
-        Offset from  cds_start to the reference point. If `0`, the landmark
+        Offset from  start codon to the reference point. If `0`, the landmark
         is the reference point. (Default: `0`)
     
     Returns
     -------
     |SegmentChain|
-        ROI surrounding start codon if `transcript` is coding. Otherwise,
+        Window surrounding start codon if `transcript` is coding. Otherwise,
         zero-length |SegmentChain| 
     
     int
-        offset to align ROI with all other ROIs, if `transcript` itself
-        wasn't long enough in the 5\' direction to include the entire
-        distance specified by `flank_upstream`
+        alignment offset to the window start, if `transcript` itself wasn't long
+        enough in the 5\' direction to include the entire distance specified by
+        `flank_upstream`. Use this to align this window to other windows generated
+        around start codons in other transcripts.
 
     (str, int, str)
         Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
@@ -255,35 +260,36 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
                            landmark=transcript.cds_start)
 
 def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
-    """Returns a maximal spanning window surrounding a stop codon.
+    """Returns a window surrounding a stop codon.
 
     Parameters
     ----------
     transcript : |Transcript|
-        Transcript on which to generate region of interest
+        Transcript on which to generate window
     
     flank_upstream : int
-        Nucleotide length upstream of cds_stop to include in region
-        of interest, if `transcript` includes it
+        Nucleotide length upstream of stop codon to include in window,
+        if `transcript` has a stop codon
     
     flank_downstream : int
-        Nucleotide length downstream of cds_stop to include in region
-        of interest, if `transcript` includes it
+        Nucleotide length downstream of stop codon to include in window,
+        if `transcript` has a stop codon
     
     ref_delta : int, optional
-        Offset from  cds_start to the reference point. If `0`, the landmark
+        Offset from  stop codon to the reference point. If `0`, the landmark
         is the reference point. (Default: `0`)
     
     Returns
     -------
     |SegmentChain|
-        ROI surrounding stop codon if transcript is coding. Otherwise,
+        Window surrounding stop codon if transcript is coding. Otherwise,
         zero-length |SegmentChain| 
     
     int
-        offset to align ROI with all other ROIs, if `transcript` itself
-        wasn't long enough in the 5\' direction to include the entire
-        distance specified by `flank_upstream`
+        alignment offset to the window start, if `transcript` itself wasn't long
+        enough in the 5\' direction to include the entire distance specified by
+        `flank_upstream`. Use this to align this window to other windows generated
+        around stop codons in other transcripts.
 
     (str, int, str)
         Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
@@ -405,12 +411,12 @@ algorithm:
     # build gene-transcript graph
     printer.write("Building gene-transcript graph...")
     gene_transcript = {}
-    for tx_ivc in transcripts:
-        gene_id = tx_ivc.get_gene()
+    for tx_chain in transcripts:
+        gene_id = tx_chain.get_gene()
         try:
-            gene_transcript[gene_id].append(tx_ivc)
+            gene_transcript[gene_id].append(tx_chain)
         except KeyError:
-            gene_transcript[gene_id] = [tx_ivc]
+            gene_transcript[gene_id] = [tx_chain]
     
     # for each gene, find maximal window in which all points
     # are represented in all transcripts. return IVC and offset
@@ -423,69 +429,82 @@ algorithm:
         my_roi    = None
         new_roi   = None
         my_offset = None
-        ref_point_genome = None
-        first_base = last_base = new_roi = zero_point_roi = None
+        new_roi = zero_point_roi = None
         new_offset = None
         refpoints = []
         
-        # initialize shared_position_set to be nonempty so we can use AND
-        # to find the intersection all position sets
-        my_tx = txlist[0]
-        shared_position_set = my_tx.get_position_set()
-
         # find common positions
-        for tx in txlist:
+        position_matrix = numpy.tile(numpy.nan,(len(txlist),window_size))
+        for n,tx in enumerate(txlist):
             try:
                 my_roi, my_offset, genomic_refpoint = landmark_func(tx,flank_upstream,flank_downstream)
-                shared_position_set &= my_roi.get_position_set()
                 refpoints.append(genomic_refpoint)
+                
+                if genomic_refpoint is not numpy.nan and len(my_roi) > 0:
+                    pos_list = my_roi.get_position_list() # ascending list of positions
+                    my_len = len(pos_list)
+                    assert my_offset + my_len <= window_size 
+                    print "offset: %s" % my_offset
+                    print "roi: %s" % my_roi
+                    if my_roi.spanning_segment.strand == "+":
+                        position_matrix[n,my_offset:my_offset+my_len] = pos_list
+                    else:
+                        my_len = len(pos_list)
+                        position_matrix[n,my_offset:my_offset+my_len] = pos_list[::-1]
+                
             except IndexError:
                 printer.write("IndexError at %s, transcript %s: " % (gene_id,tx.get_name()))
         
-        # if shared position set is non-null, define new ROI and offset
-        if len(shared_position_set) > 0 and len(set(refpoints)) == 1:
-
-            # define new ROI covering all positions common to all transcripts
-            new_ivc_coordinates = [my_tx.get_segmentchain_coordinate(my_tx.spanning_segment.chrom,
-                                                                     X,
-                                                                     my_tx.spanning_segment.strand)
-                                   for X in shared_position_set]
-
-            first_base = min(new_ivc_coordinates)
-            last_base  = max(new_ivc_coordinates) + 1 # end-inclusive to half-open
-            new_roi = my_tx.get_subchain(first_base,last_base)
-            if new_roi.spanning_segment.strand == "+":
-                new_roi.attr["thickstart"] = genomic_refpoint[1]
-                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
-            else:
-                new_roi.attr["thickstart"] = genomic_refpoint[1]
-                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
-
-            # having made sure that refpoint is same for all transcripts,
-            # we use last ROI and last offset to find new offset
-            # this fails if ref point is at the 3' end of the roi, 
-            # due to quirks of half-open coordinate systems
-            # so we test it explicitly
-            if flank_upstream - my_offset == my_roi.get_length():
-                new_offset = my_offset
-            else:
-                zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
-                new_offset = flank_upstream - zero_point_roi
+        # continue only if refpoints all match
+        if len(set(refpoints)) == 1 and numpy.nan not in refpoints:
+            new_shared_positions = []
+            if len(set(refpoints)) == 1:
+                for i in range(0,position_matrix.shape[1]):
+                    col = position_matrix[:,i]
+                    if len(set(col)) == 1 and col[0] is not numpy.nan:
+                        new_shared_positions.append(int(col[0]))
+           
+            # continue only if there exist positions shared between all regions 
+            if len(new_shared_positions) > 0 and numpy.nan not in new_shared_positions: 
+        
+                # define new ROI covering all positions common to all transcripts
+                new_roi = SegmentChain(*positionlist_to_segments(txlist[0].chrom,
+                                                                 txlist[0].strand,
+                                                                 new_shared_positions))
     
-            masks = mask_hash.get_overlapping_features(new_roi)
-            mask_ivs = []
-            for mask in masks:
-                mask_ivs.extend(mask._segments)
-            
-            mask_ivc = SegmentChain(*mask_ivs)
-            
-            dtmp["gene_id"].append(gene_id)
-            dtmp["window_size"].append(window_size)
-            dtmp["region"].append(str(new_roi)) # need to cast to string to keep numpy from converting to array
-            dtmp["masked"].append(str(mask_ivc))
-            dtmp["alignment_offset"].append(new_offset)
-            dtmp["zero_point"].append(flank_upstream)
-            export_rois.append(new_roi)
+    
+                if new_roi.spanning_segment.strand == "+":
+                    new_roi.attr["thickstart"] = genomic_refpoint[1]
+                    new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+                else:
+                    new_roi.attr["thickstart"] = genomic_refpoint[1]
+                    new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+    
+                # having made sure that refpoint is same for all transcripts,
+                # we use last ROI and last offset to find new offset
+                # this fails if ref point is at the 3' end of the roi, 
+                # due to quirks of half-open coordinate systems
+                # so we test it explicitly
+                if flank_upstream - my_offset == my_roi.get_length():
+                    new_offset = my_offset
+                else:
+                    zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
+                    new_offset = flank_upstream - zero_point_roi
+        
+                masks = mask_hash.get_overlapping_features(new_roi)
+                mask_segs = []
+                for mask in masks:
+                    mask_segs.extend(mask._segments)
+                
+                mask_chain = SegmentChain(*mask_segs)
+                
+                dtmp["gene_id"].append(gene_id)
+                dtmp["window_size"].append(window_size)
+                dtmp["region"].append(str(new_roi)) # need to cast to string to keep numpy from converting to array
+                dtmp["masked"].append(str(mask_chain))
+                dtmp["alignment_offset"].append(new_offset)
+                dtmp["zero_point"].append(flank_upstream)
+                export_rois.append(new_roi)
 
     # convert to ArrayTable
     dtmp = ArrayTable(dtmp)
