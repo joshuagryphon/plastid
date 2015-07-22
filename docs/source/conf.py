@@ -69,11 +69,17 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # custom css
 # tip from https://github.com/snide/sphinx_rtd_theme/issues/117
 html_static_path = ['_static/css']
-html_context = {
-    'css_files': [
-        '_static/custom.css',  # overrides for wide tables in RTD theme
-        ],
-    }
+
+try:
+    html_context['css_files'].append('_static/custom.css')
+except KeyError:
+    html_context['css_files'] = ['_static/custom.css']
+except NameError: 
+    html_context = {
+        'css_files': [
+            '_static/custom.css',  # overrides for wide tables in RTD theme
+            ],
+        }
 
 
 
