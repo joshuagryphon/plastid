@@ -855,7 +855,7 @@ def main(argv=sys.argv[1:]):
                                              mask_hash,
                                              args.upstream,
                                              args.downstream,
-                                             landmark_func=map_function,
+                                             window_func=map_function,
                                              printer=printer)
         roi_file = "%s_rois.txt" % args.outbase
         bed_file = "%s_rois.bed" % args.outbase
