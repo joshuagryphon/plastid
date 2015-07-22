@@ -271,14 +271,18 @@ def FivePrimeMapFactory(offset=0):
  
         Parameters
         ----------
-        seg : |GenomicSegment|
-            Region of interest
-        
         reads : list of :py:class:`pysam.AlignedSegment`
             Reads to map
             
+        seg : |GenomicSegment|
+            Region of interest
+
+            
         Returns
         -------
+        list
+            List of :py:class:`pysam.AlignedSegment` that map to region
+            
         :py:class:`numpy.ndarray`
             Vector of counts at each position in `seg`
         """ % offset

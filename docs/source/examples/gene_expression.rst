@@ -28,12 +28,12 @@ Via command-line scripts
 :data:`yeti` includes two scripts for measuring gene expression:
 
   * :mod:`~yeti.bin.cs`, which pre-processes a genome anntation and makes
-    various heuristic correction to gene boundaries
+    various heuristic corrections to gene boundaries
 
   * :mod:`~yeti.bin.counts_in_region`, which does not.
 
-Which you should use depends on your purposes. The differences between
-the scripts are further explained in :ref:`faq-cs-vs-counts-in-region`.
+The differences between the scripts are further explained in
+:ref:`faq-cs-vs-counts-in-region`.
 Here we will use :mod:`~yeti.bin.counts_in_region`.
 
 Our first dataset is :term:`ribosome profiling`, and we will map the ribosomal

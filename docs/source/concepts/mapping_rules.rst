@@ -1,17 +1,17 @@
 Read mapping rules
 ==================
 
-In this document
+In this document, we:
 
-  - We provide a :ref:`definition <mapping-rules-definition>`
+  - provide a :ref:`definition <mapping-rules-definition>`
     for :term:`mapping rule <mapping rules>` and discuss
     which :ref:`mapping rules are provided <mapping-rules-provided>`.
   
-  - We discuss how to set mapping rules in
+  - discuss how to set mapping rules in
     :ref:`command-line scripts <mapping-rules-command-line>`
     and in :ref:`interactive Python sessions <mapping-rules-interactive>`
     
-  - We describe, with examples, how to
+  - describe, with examples, how to
     :ref:`implement new mapping rules <mapping-rules-roll-your-own>`
 
  .. _mapping-rules-definition:

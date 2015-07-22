@@ -23,8 +23,8 @@ a topic branch. Build & test your changes there, merge into the master branch of
 your fork, then submit a pull request.
 
 
-Testing
-.......
+Test
+....
 We advocate test-driven development. Feature additions will not be accepted without
 companion tests, and, where appropriate, test datasets. Before submitting a change,
 please:
@@ -44,8 +44,8 @@ please:
       - If they fail otherwise, fix your submission so the old tests pass.
 
 
-Finally, before submission
-..........................
+Document
+........
  #. Document everything heavily, updating module & object docstrings where
     appropriate, as well as any :doc:`/examples` that might be affected
     by the change or addition.
@@ -53,6 +53,12 @@ Finally, before submission
  #. If you use technical terms, please check if a synonym of your term is already defined
     in the :doc:`glossary <glossary>`, and then use that. If no synonym is present, please
     add the :doc:`glossary <glossary>`, and refer to it using the ``:term:`` directive.
+
+
+Submit
+......
+Send a pull request referring to the ticket above, along with a description
+of your pathc.
 
 
 Document formatting
