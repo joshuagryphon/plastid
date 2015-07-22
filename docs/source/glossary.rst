@@ -35,6 +35,10 @@ Glossary of terms
         can also treat :term:`alignment` files in `bowtie`_ or `BAM`_ format
         as count files, if a :term:`mapping rule` is applied.
 
+    DMS-seq
+        An RNA structure probing technique using :term:`high-throughput sequencing`.
+        See :cite:`Rouskin2014` for details.
+
     crossmap
     mask file
     mask annotation file
@@ -84,7 +88,7 @@ Glossary of terms
         to their :term:`P-site offset` by using a 15 nucleotide offset 
         from the threeprime end of the fragment.
 
-        See :doc:`/concepts/mapping_rules` for more information.
+        See :doc:`/concepts/mapping_rules` for an in-depth discusion, with examples.
 
     metagene
     metagene average
@@ -148,7 +152,8 @@ Glossary of terms
         along a transcript.
         
         P-site offsets may be estimated from ribosome profiling data
-        using the :py:mod:`~yeti.bin.psite` script.
+        using the :py:mod:`~yeti.bin.psite` script. For a detailed discussion,
+        see :doc:`/examples/p_site`.
 
     start codon peak
         Large peaks of :term:`ribosome-protected footprint` visible over initiator codons

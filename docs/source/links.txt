@@ -52,6 +52,9 @@
 .. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
 .. _BWA: http://bio-bwa.sourceforge.net
 .. _blat: http://genome.cshlp.org/content/12/4/656.full
+.. _Cigar: https://samtools.github.io/hts-specs/SAMv1.pdf
+.. _SAM: https://samtools.github.io/hts-specs/SAMv1.pdf
+.. _DESeq: http://www-huber.embl.de/users/anders/DESeq/
 
 .. Our links
 

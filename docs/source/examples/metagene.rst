@@ -206,7 +206,7 @@ This produces the image:
     :alt: metagene profile surrounding start codon
     :figclass: captionfigure
     
-    Metagene profile surrounding start codon.
+    :term:`Metagene` profile surrounding start codon.
 
 
 .. _concepts-metagene-roll-your-own:
@@ -414,7 +414,7 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> data_table, segment_chains = do_generate(transcripts,dummy_mask_hash,
     >>>                                          flank_upstream,flank_downstream,
-    >>>                                          landmark_func=window_biggest_spike)
+    >>>                                          window_func=window_biggest_spike)
 
 :meth:`~yeti.bin.metagene.do_generate` returns an |ArrayTable| (similar to a :class:`pandas.DataFrame`)
 of data and a list of |SegmentChains| corresponding to the maximal spanning windows for each row
@@ -446,8 +446,9 @@ Which yields:
     :alt: metagene profile surrounding biggest peak
     :figclass: captionfigure
     
-    Metagene analysis surrounding largest spike of ribosome density in coding
-    region, excluding start and stop codon peaks.
+    :term:`Metagene` profile surrounding largest spike of ribosome density in coding
+    region, excluding :term:`start <start codon peak>` and
+    :term:`stop codon peaks <stop codon peak>`.
     
     
 
