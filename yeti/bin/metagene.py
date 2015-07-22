@@ -244,13 +244,15 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
         zero-length |SegmentChain| 
     
     int
-        alignment offset to the window start, if `transcript` itself wasn't long
+        Alignment offset to the window start, if `transcript` itself wasn't long
         enough in the 5\' direction to include the entire distance specified by
         `flank_upstream`. Use this to align this window to other windows generated
-        around start codons in other transcripts.
+        around start codons in other transcripts. If transcript is not coding,
+        returns :obj:`numpy.nan`
 
     (str, int, str)
-        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
+        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*.
+        If `transcript` has no start codon, returns :obj:`numpy.nan`
     """
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
@@ -289,10 +291,12 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
         alignment offset to the window start, if `transcript` itself wasn't long
         enough in the 5' direction to include the entire distance specified by
         `flank_upstream`. Use this to align this window to other windows generated
-        around stop codons in other transcripts.
+        around stop codons in other transcripts. If transcript is not coding,
+        returns :obj:`numpy.nan`
 
     (str, int, str)
-        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
+        Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*.
+        If `transcript` has no stop codon, returns :obj:`numpy.nan`
     """
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
@@ -301,13 +305,163 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
                            ref_delta=ref_delta,
                            landmark=transcript.cds_end-3)
 
+def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
+                            window_func=window_cds_start,name=None,
+                            printer=NullWriter()):
+    """Create a maximal spanning window over `regions` surrounding a landmark,
+    
+    The maximal spanning window is created by:
+    
+     #. Applying `window_func` to each `region` in `regions` to create a sub-window
+        of `region` that surrounds a landmark identified by `window_func`, 
+        with up to `flank_upstream` bases 5' of the landmark, and `flank_downstream`
+        bases 3` of the landmark.
+
+     #. If the landmark in all regions corresponds to the same genomic position,
+        a maximal spanning window is created by starting at the landmark,
+        and growing the window in the 5' and 3' directions along all regions
+        until either:
+        
+            - the next nucleotide position added is no longer corresponds to 
+              the same genomic position in all regions 
+            
+            - the window reaches the maximum size specified by`flank_upstream`
+              (in 5' direction) or `flank_downstream` (in 3' direction)
+        
+    
+    Parameters
+    ----------
+    regions : list
+        List of |SegmentChains| or |Transcripts|
+    
+    mask_hash : |GenomeHash|
+        |GenomeHash| containing regions to exclude from analysis
+    
+    flank_upstream : int
+        Number of nucleotides upstream of landmark to include in maximal
+        spanning window, if possible
+
+    flank_downstream: int
+        Number of nucleotides downstream of landmark to include in maximal
+        spanning window, if possible
+    
+    window_func : func, optional
+        Function that defines a landmark in an individual region, and builds
+        a window around that landmark over that region.  As examples,
+        :func:`window_cds_start` and :func:`window_cds_stop` are provided,
+        though any function that meets the following criteria can be used:
+        
+            1. It must take the same parameters as :func:`window_cds_start`
+            
+            2. It must return the same types as :func:`window_cds_start`
+
+        Such functions could choose arbitrary features as landmarks, such as
+        peaks in ribosome density, nucleic acid sequence features, transcript
+        start or end sites, or any property that can be deduced from a
+        |Transcript|. (Default: :func:`window_cds_start`)
+    
+    name : str or None, optional
+        Name for maximal spanning window, to which it's `ID` attribute will 
+        be set. If `None`, a name will be generated. 
+        
+    printer : file-like, optional
+        filehandle to write logging info to (Default: :func:`NullWriter`)
+    
+    
+    Returns
+    -------
+    SegmentChain
+        Maximal spanning window, if `regions` share the same landmark. Otherwise,
+        0-length |SegmentChain|
+    
+    int or :obj:`numpy.nan`
+        Alignment offset to the window start, if the maximal spanning window
+        itself is not long enough in the 5' direction to include the entire
+        distance specified by `flank_upstream`. Use this to align this window
+        to other maximal spanning windows.
+        
+        If `regions` do not share the same landmark, :obj:`numpy.nan`
+    """
+    refpoints = []
+    window_size = flank_upstream + flank_downstream
+    
+    # find common positions
+    position_matrix = numpy.tile(numpy.nan,(len(regions),window_size))
+    for n,region in enumerate(regions):
+        try:
+            my_roi, my_offset, genomic_refpoint = window_func(region,flank_upstream,flank_downstream)
+            refpoints.append(genomic_refpoint)
+            
+            if genomic_refpoint is not numpy.nan and len(my_roi) > 0:
+                pos_list = my_roi.get_position_list() # ascending list of positions
+                my_len = len(pos_list)
+                assert my_offset + my_len <= window_size 
+                if my_roi.spanning_segment.strand == "+":
+                    position_matrix[n,my_offset:my_offset+my_len] = pos_list
+                else:
+                    my_len = len(pos_list)
+                    position_matrix[n,my_offset:my_offset+my_len] = pos_list[::-1]
+            
+        except IndexError:
+            printer.write("IndexError at region %s: " % region.get_name())
+    
+    # continue only if refpoints all match
+    if len(set(refpoints)) == 1 and numpy.nan not in refpoints:
+        new_shared_positions = []
+        if len(set(refpoints)) == 1:
+            for i in range(0,position_matrix.shape[1]):
+                col = position_matrix[:,i]
+                if len(set(col)) == 1 and not numpy.isnan(col[0]):
+                    new_shared_positions.append(int(col[0]))
+      
+        # continue only if there exist positions shared between all regions 
+        if len(set(new_shared_positions)) > 0:
+    
+            # define new ROI covering all positions common to all transcripts
+            new_roi = SegmentChain(*positionlist_to_segments(regions[0].chrom,
+                                                             regions[0].strand,
+                                                             new_shared_positions))
+            if name is None:
+                name = new_roi.get_name()
+            
+            new_roi.attr["ID"] = name
+
+            if new_roi.spanning_segment.strand == "+":
+                new_roi.attr["thickstart"] = genomic_refpoint[1]
+                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+            else:
+                new_roi.attr["thickstart"] = genomic_refpoint[1]
+                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+
+            # having made sure that refpoint is same for all transcripts,
+            # we use last ROI and last offset to find new offset
+            # this fails if ref point is at the 3' end of the roi, 
+            # due to quirks of half-open coordinate systems
+            # so we test it explicitly
+            if flank_upstream - my_offset == my_roi.get_length():
+                new_offset = my_offset
+            else:
+                zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
+                new_offset = flank_upstream - zero_point_roi
+    
+            masks = mask_hash.get_overlapping_features(new_roi)
+            mask_segs = []
+            for mask in masks:
+                mask_segs.extend(mask._segments)
+            
+            new_roi.add_masks(*mask_segs)
+
+            return new_roi, new_offset
+            
+    return SegmentChain(), numpy.nan
+
 
 #===============================================================================
 # Subprograms
 #===============================================================================
 
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
-                landmark_func=window_cds_start,
+                window_func=window_cds_start,
                 printer=NullWriter()):
     """Generate a file of maximal spanning windows surrounding a landmark,
 for use in ``count`` subprogram. Windows are generated by the following 
@@ -348,9 +502,10 @@ algorithm:
         Number of nucleotides downstream of landmark to include in windows
         (in transcript coordinates)
     
-    landmark_func : func, optional
-        Function yielding coordinate of landmark in transcript. As examples,
-        :py:func:`window_cds_start` and :py:func:`window_cds_stop` are provided,
+    window_func : func, optional
+        Function that defines a landmark in an individual transcript, and builds
+        a window around that landmark over that region.  As examples,
+        :func:`window_cds_start` and :func:`window_cds_stop` are provided,
         though any function that meets the following criteria can be used:
         
             1. It must take the same parameters as :func:`window_cds_start`
@@ -419,95 +574,32 @@ algorithm:
             gene_transcript[gene_id] = [tx_chain]
     
     # for each gene, find maximal window in which all points
-    # are represented in all transcripts. return IVC and offset
+    # are represented in all transcripts. return window and offset
     c = -1
     export_rois = []
-    for gene_id, txlist in sorted(gene_transcript.items()):
+    for gene_id, tx_list in sorted(gene_transcript.items()):
         c += 1
         if c % 1000 == 1:
             printer.write("Processed %s transcripts, included %s..." % (c,len(list(dtmp.values())[0])))
-        my_roi    = None
-        new_roi   = None
-        my_offset = None
-        new_roi = zero_point_roi = None
-        new_offset = None
-        refpoints = []
-        
-        # find common positions
-        position_matrix = numpy.tile(numpy.nan,(len(txlist),window_size))
-        for n,tx in enumerate(txlist):
-            try:
-                my_roi, my_offset, genomic_refpoint = landmark_func(tx,flank_upstream,flank_downstream)
-                refpoints.append(genomic_refpoint)
-                
-                if genomic_refpoint is not numpy.nan and len(my_roi) > 0:
-                    pos_list = my_roi.get_position_list() # ascending list of positions
-                    my_len = len(pos_list)
-                    assert my_offset + my_len <= window_size 
-                    if my_roi.spanning_segment.strand == "+":
-                        position_matrix[n,my_offset:my_offset+my_len] = pos_list
-                    else:
-                        my_len = len(pos_list)
-                        position_matrix[n,my_offset:my_offset+my_len] = pos_list[::-1]
-                
-            except IndexError:
-                printer.write("IndexError at %s, transcript %s: " % (gene_id,tx.get_name()))
-        
-        # continue only if refpoints all match
-        if len(set(refpoints)) == 1 and numpy.nan not in refpoints:
-            new_shared_positions = []
-            if len(set(refpoints)) == 1:
-                for i in range(0,position_matrix.shape[1]):
-                    col = position_matrix[:,i]
-                    if len(set(col)) == 1 and col[0] is not numpy.nan:
-                        new_shared_positions.append(col[0])
-          
-            # continue only if there exist positions shared between all regions 
-            new_shared_positions = [int(X) for X in new_shared_positions if not numpy.isnan(X)]
-            if len(set(new_shared_positions)) > 0:
-        
-                # define new ROI covering all positions common to all transcripts
-                if len(txlist) > 1:
-                    id_ = txlist[0].get_gene()
-                else:
-                    id_ = txlist[0].get_name()
-                new_roi = SegmentChain(*positionlist_to_segments(txlist[0].chrom,
-                                                                 txlist[0].strand,
-                                                                 new_shared_positions),
-                                       ID=id_)
-    
-                if new_roi.spanning_segment.strand == "+":
-                    new_roi.attr["thickstart"] = genomic_refpoint[1]
-                    new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
-                else:
-                    new_roi.attr["thickstart"] = genomic_refpoint[1]
-                    new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
-    
-                # having made sure that refpoint is same for all transcripts,
-                # we use last ROI and last offset to find new offset
-                # this fails if ref point is at the 3' end of the roi, 
-                # due to quirks of half-open coordinate systems
-                # so we test it explicitly
-                if flank_upstream - my_offset == my_roi.get_length():
-                    new_offset = my_offset
-                else:
-                    zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
-                    new_offset = flank_upstream - zero_point_roi
-        
-                masks = mask_hash.get_overlapping_features(new_roi)
-                mask_segs = []
-                for mask in masks:
-                    mask_segs.extend(mask._segments)
-                
-                mask_chain = SegmentChain(*mask_segs)
-                
-                dtmp["gene_id"].append(gene_id)
-                dtmp["window_size"].append(window_size)
-                dtmp["region"].append(str(new_roi)) # need to cast to string to keep numpy from converting to array
-                dtmp["masked"].append(str(mask_chain))
-                dtmp["alignment_offset"].append(new_offset)
-                dtmp["zero_point"].append(flank_upstream)
-                export_rois.append(new_roi)
+
+        name = tx_list[0].get_gene() # name regions after gene id
+        max_spanning_window, offset =  maximal_spanning_window(tx_list,
+                                                               mask_hash,
+                                                               flank_upstream,
+                                                               flank_downstream,
+                                                               window_func=window_func,
+                                                               name=name,
+                                                               printer=printer)
+
+        if len(max_spanning_window) > 0:
+            mask_chain = max_spanning_window.get_masks_as_segmentchain()
+            dtmp["gene_id"].append(gene_id)
+            dtmp["window_size"].append(window_size)
+            dtmp["region"].append(str(max_spanning_window)) # need to cast to string to keep numpy from converting to array
+            dtmp["masked"].append(str(mask_chain))
+            dtmp["alignment_offset"].append(offset)
+            dtmp["zero_point"].append(flank_upstream)
+            export_rois.append(max_spanning_window)
 
     # convert to ArrayTable
     dtmp = ArrayTable(dtmp)
