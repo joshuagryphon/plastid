@@ -73,10 +73,11 @@ html_static_path = ['_static/css']
 try:
     html_context['css_files'].append('_static/custom.css')
 except KeyError:
-    html_context['css_files'] = ['_static/custom.css']
+    html_context['css_files'] = [href='_static/css/theme.css','_static/custom.css']
 except NameError: 
     html_context = {
         'css_files': [
+            '_static/css/theme.css',
             '_static/custom.css',  # overrides for wide tables in RTD theme
             ],
         }

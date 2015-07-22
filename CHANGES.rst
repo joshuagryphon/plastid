@@ -29,6 +29,12 @@ Changed
   - import of scientific packages now simulated using 'mock' during documentation
     builds by Sphinx
 
+Fixed
+.....
+  - Removed bug from :func:`yeti.bin.metagene.do_generate` that extended
+    maximal spanning windows past equivalence points in 3' directions.
+    Added extra test cases to suit it.
+
 Removed
 .......
   - Removed deprecated functions, modules, & classes:
