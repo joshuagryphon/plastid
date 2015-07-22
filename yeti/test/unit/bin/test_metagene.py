@@ -350,6 +350,23 @@ _TRANSCRIPTS_GFF = """##gff-version 3
 2L    FlyBase    CDS    7985834    7986075    .    +    2    Name=CG7231-cds;Parent=FBtr0079531_at_splice;parent_type=mRNA
 2L    FlyBase    CDS    7986139    7986705    .    +    0    Name=CG7231-cds;Parent=FBtr0079531_at_splice;parent_type=mRNA
 
+2L    FlyBase    mRNA    8997641    8998544    .    +    .    ID=FBtr0079763;Name=CG18661-RA;Parent=FBgn0040964;Alias=CG18661-RB;Dbxref=FlyBase_Annotation_IDs:CG18661-RA,REFSEQ:NM_144305;score_text=Strongly Supported;score=15
+2L    FlyBase    mRNA    8997641    8998544    .    +    .    ID=FBtr0303880;Name=CG18661-RB;Parent=FBgn0040964;Dbxref=FlyBase_Annotation_IDs:CG18661-RB,REFSEQ:NM_001201814;score_text=Strongly Supported;score=15
+2L    FlyBase    exon    8997641    8997668    .    +    .    ID=FBgn0040964:1;Name=CG18661:1;Parent=FBtr0079763,FBtr0303880;parent_type=mRNA
+2L    FlyBase    CDS    8997664    8997668    .    +    0    ID=CDS_FBgn0040964:1_866;Name=CG18661-cds;Parent=FBtr0303880;parent_type=mRNA
+2L    FlyBase    CDS    8997664    8997668    .    +    0    ID=CDS_FBgn0040964:1_867;Name=CG18661-cds;Parent=FBtr0079763;parent_type=mRNA
+2L    FlyBase    exon    8997723    8998544    .    +    .    ID=FBgn0040964:2;Name=CG18661:2;Parent=FBtr0079763;parent_type=mRNA
+2L    FlyBase    CDS    8997723    8998386    .    +    1    ID=CDS_FBgn0040964:2_867;Name=CG18661-cds;Parent=FBtr0079763;parent_type=mRNA
+2L    FlyBase    exon    8997762    8998544    .    +    .    ID=FBgn0040964:3;Name=CG18661:3;Parent=FBtr0303880;parent_type=mRNA
+2L    FlyBase    CDS    8997762    8998386    .    +    1    ID=CDS_FBgn0040964:3_866;Name=CG18661-cds;Parent=FBtr0303880;parent_type=mRNA
+
+2L    FlyBase    mRNA    9397110    9397988    .    -    .    ID=FBtr0079813;Name=CG4438-RA;Parent=FBgn0032115;
+2L    FlyBase    mRNA    9397110    9397988    .    -    .    ID=FBtr0303900;Name=CG4438-RB;Parent=FBgn0032115;
+2L    FlyBase    exon    9397110    9397772    .    -    .    ID=FBgn0032115:2;Name=CG4438:2;Parent=FBtr0079813;parent_type=mRNA
+2L    FlyBase    exon    9397110    9397764    .    -    .    ID=FBgn0032115:1;Name=CG4438:1;Parent=FBtr0303900;parent_type=mRNA
+2L    FlyBase    CDS    9397177    9397746    .    -    0    ID=CDS_FBgn0032115:1_867;Name=CG4438-cds;Parent=FBtr0303900;parent_type=mRNA
+2L    FlyBase    CDS    9397177    9397746    .    -    0    ID=CDS_FBgn0032115:2_867;Name=CG4438-cds;Parent=FBtr0079813;parent_type=mRNA
+2L    FlyBase    exon    9397833    9397988    .    -    .    ID=FBgn0032115:3;Name=CG4438:3;Parent=FBtr0079813,FBtr0303900;parent_type=mRNA
 """.replace("    ","\t")
 """GFF of transcripts used in these tests"""
 
@@ -542,6 +559,11 @@ _DO_GENERATE_MAX_WINDOW = {
     "3_same_minus_ncrna_minus" : ["FBtr0081950","FBtr0081951","FBtr0081950_short_utr","FBtr0081950_no_cds"],
     "3_diff_minus_ncrna_minus" : ["FBtr0081950","FBtr0081951_alt_start","FBtr0081951","FBtr0081950_no_cds"],
 
+
+    "stop_max_spanning_window_threeprime_plus"  : ["FBtr0079763","FBtr0303880"],
+
+    "stop_max_spanning_window_threeprime_minus" : ["FBtr0079813","FBtr0303900"],
+
 }
 
 _DO_GENERATE_MAX_WINDOW_RESULTS = {
@@ -584,7 +606,17 @@ _DO_GENERATE_MAX_WINDOW_RESULTS = {
     '3_same_start_plus_0_100': ['2L:7985674-7985768^7985833-7985839(+)', 0, 0],
     '3_same_start_plus_100_0': ['2L:7985664-7985674(+)', 90, 100],
     '3_same_start_plus_100_50': ['2L:7985664-7985724(+)', 90, 100],
-    '3_same_start_plus_50_100': ['2L:7985664-7985768^7985833-7985839(+)', 40, 50]
+    '3_same_start_plus_50_100': ['2L:7985664-7985768^7985833-7985839(+)', 40, 50],
+    
+    'stop_max_spanning_window_threeprime_minus_0_100': ['2L:9397646-9397746(-)',  0,   0],
+    'stop_max_spanning_window_threeprime_minus_100_0': ['2L:9397746-9397764(-)',  0,   100],
+    'stop_max_spanning_window_threeprime_minus_100_50': ['2L:9397696-9397764(-)', 82,  100],
+    'stop_max_spanning_window_threeprime_minus_50_100': ['2L:9397646-9397764(-)', 32,  50],
+    
+    'stop_max_spanning_window_threeprime_plus_0_100': ['2L:8997663-8997668(+)',   0,   0],
+    'stop_max_spanning_window_threeprime_plus_100_0': ['2L:8997640-8997663(+)',   77,  100],
+    'stop_max_spanning_window_threeprime_plus_100_50': ['2L:8997640-8997668(+)',  77,  100],
+    'stop_max_spanning_window_threeprime_plus_50_100': ['2L:8997640-8997668(+)',  27,  50],  
 }
 
 _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED = {
@@ -627,7 +659,18 @@ _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED = {
     '3_same_start_plus_0_100': ['2L:7985674-7985768^7985833-7985839(+)',0,0,'2L:7985694-7985744(+)'],
     '3_same_start_plus_100_0': ['2L:7985664-7985674(+)', 90, 100, 'na'],
     '3_same_start_plus_100_50': ['2L:7985664-7985724(+)',90,100,'2L:7985694-7985744(+)'],
-    '3_same_start_plus_50_100': ['2L:7985664-7985768^7985833-7985839(+)',40,50,'2L:7985694-7985744(+)']
+    '3_same_start_plus_50_100': ['2L:7985664-7985768^7985833-7985839(+)',40,50,'2L:7985694-7985744(+)'],
+    
+    
+    'stop_max_spanning_window_threeprime_minus_0_100': ['2L:9397646-9397746(-)',  0,   0],
+    'stop_max_spanning_window_threeprime_minus_100_0': ['2L:9397746-9397764(-)',  0,   100],
+    'stop_max_spanning_window_threeprime_minus_100_50': ['2L:9397696-9397764(-)', 82,  100],
+    'stop_max_spanning_window_threeprime_minus_50_100': ['2L:9397646-9397764(-)', 32,  50],
+    
+    'stop_max_spanning_window_threeprime_plus_0_100': ['2L:8997663-8997668(+)',   0,   0],
+    'stop_max_spanning_window_threeprime_plus_100_0': ['2L:8997640-8997663(+)',   77,  100],
+    'stop_max_spanning_window_threeprime_plus_100_50': ['2L:8997640-8997668(+)',  77,  100],
+    'stop_max_spanning_window_threeprime_plus_50_100': ['2L:8997640-8997668(+)',  27,  50],      
 }
 
 _DO_GENERATE_MULTI_GENE = {
