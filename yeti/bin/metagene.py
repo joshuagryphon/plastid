@@ -467,9 +467,14 @@ algorithm:
             if len(set(new_shared_positions)) > 0:
         
                 # define new ROI covering all positions common to all transcripts
+                if len(txlist) > 1:
+                    id_ = txlist[0].get_gene()
+                else:
+                    id_ = txlist[0].get_name()
                 new_roi = SegmentChain(*positionlist_to_segments(txlist[0].chrom,
                                                                  txlist[0].strand,
-                                                                 new_shared_positions))
+                                                                 new_shared_positions),
+                                       ID=id_)
     
                 if new_roi.spanning_segment.strand == "+":
                     new_roi.attr["thickstart"] = genomic_refpoint[1]
