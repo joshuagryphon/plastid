@@ -57,6 +57,8 @@ extensions = [
     ]
 
 
+html_static_path = ["_static"]
+
 # theming, compatibility both for local and builds on readthedocs -------------
 
 # code from http://read-the-docs.readthedocs.org/en/latest/theme.html
@@ -65,25 +67,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-# custom css
-# tip from https://github.com/snide/sphinx_rtd_theme/issues/117
-html_static_path = ['_static/css']
-
-try:
-    html_context['css_files'].append('_static/custom.css')
-except KeyError:
-    html_context['css_files'] = [href='_static/css/theme.css','_static/custom.css']
-except NameError: 
-    html_context = {
-        'css_files': [
-            '_static/css/theme.css',
-            '_static/custom.css',  # overrides for wide tables in RTD theme
-            ],
-        }
-
-
-
+    
 # sphinx autodoc config -------------------------------------------------------
 
 autodoc_default_flags = [
@@ -185,12 +169,6 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
                     skip |= obj.__doc__ == base_doc
     return skip
 
-
-def setup(app):
-    """Activate custom event handlers for autodoc"""
-    app.connect("autodoc-skip-member",autodoc_skip_member)
-
-
 # intersphinx config ------------------------------------------------------------
 intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         "numpy"  : ("http://docs.scipy.org/doc/numpy/",None),
@@ -242,7 +220,15 @@ mock_modules = [
 
 sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
-# other -------------------------------------------------------------------------
+# setup custom info ------------------------------------------------------------
+
+
+def setup(app):
+    """Activate custom event handlers for autodoc"""
+    app.connect("autodoc-skip-member",autodoc_skip_member)
+    #if on_rtd:
+    app.add_stylesheet('css/custom.css')
+
 
 
 
