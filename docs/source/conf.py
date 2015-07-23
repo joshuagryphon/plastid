@@ -35,10 +35,6 @@ rst_prolog = """
 .. include:: /links.txt
 """
 
-# Moving master_doc outside of index.rst allows us to keep the same sidebar
-# for all pages. It also prevents circular import errors and behaves more 
-# like a typical sidebar
-#master_doc = 'master_toctree'
 master_doc = 'index'
 
 # ignore package prefix when alphabetizing index
@@ -409,7 +405,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'yeti', u'yeti Documentation',
-     [u'Joshua G. Dunn'], 1)
+     [u'Joshua Griffin Dunn'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -423,7 +419,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'yeti', u'yeti Documentation',
-   u'Joshua G. Dunn', 'yeti', 'One line description of project.',
+   u'Joshua Griffin Dunn', 'yeti', 'One line description of project.',
    'Miscellaneous'),
 ]
 

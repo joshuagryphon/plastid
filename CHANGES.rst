@@ -2,16 +2,17 @@ Change log
 ==========
 
 All major changes to ``yeti`` are documented here. Version numbers for the project
-follow  the conventions described in
-`PEP440 <https://www.python.org/dev/peps/pep-0440/>`_ and
-`Semantic versioning <http://semver.org/>`_.
+follow the conventions described in :pep:`440`. After release 1.0, they will 
+also follow `Semantic versioning <http://semver.org/>`_.
 
-**Note**: this project was initially developed internally under the provisional
-name ``genometools``. We did not realize this name was already used by another
-genomics project. So, midway through development, we changed the name to ``yeti``
-and reset the version numbers. At this same time, we migrated from our old SVN
-repository to git. 
-
+ .. note::
+ 
+    This project was initially developed internally under the provisional
+    name ``genometools``. We did not realize this name was already used by another
+    genomics project. So, midway through development, we changed the name to ``yeti``,
+    moved some things around the package to more reasonable locations, and reset
+    the version number. At this same time, we migrated from our old SVN
+    repository to git. 
 
 
 yeti - Unreleased

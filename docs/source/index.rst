@@ -50,14 +50,15 @@ Site map
   - :ref:`modindex`
   
   
-.. _toc-overview:
+.. _toc-getting-started:
  
 .. toctree::
    :maxdepth: 2
-   :caption: Overview
+   :caption: Getting started
     
    quickstart
    tour
+   installation
 
 
 .. _toc-user-manual:
@@ -91,4 +92,6 @@ Site map
    citing
    license
    contributing
+   CHANGES
    related
+   contact

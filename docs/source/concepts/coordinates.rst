@@ -1,5 +1,5 @@
-Coordinate systems in genomics
-==============================
+Coordinate systems used in genomics
+===================================
 
 Genomic coordinates are typically specified as a set of:
   

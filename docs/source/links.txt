@@ -38,10 +38,12 @@
 
 .. _IGV: https://www.broadinstitute.org/igv/
 .. _UCSC genome browser: https://genome.ucsc.edu
+.. _UCSC: https://genome.ucsc.edu
 .. _Ensembl: http://www.ensembl.org
 .. _RefSeq: http://www.ncbi.nlm.nih.gov/refseq/ 
 .. _SGD: http://www.yeastgenome.org
 .. _Flybase: http://flybase.org
+.. _ENCODE: https://www.encodeproject.org/
 
 
 .. Non-Python software links

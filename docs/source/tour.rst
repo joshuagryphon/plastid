@@ -60,10 +60,15 @@ In the examples below, we'll be using a small :doc:`test_dataset` covering yeast
 ................
 |GenomicSegments| are the fundamental building block of genomic features.
 They are defined by:
+
   - a chromosome name
+  
   - a start coordinate
+  
   - an end coordinate
+  
   - a strand
+  
       - '+' for forward-strand features
       - '-' for reverse-strand features
       - '.' for unstranded features
@@ -71,6 +76,7 @@ They are defined by:
 On their own, |GenomicSegments| are not very interesting. However, they
 can be used to build :ref:`SegmentChains <tour-segment-chain>`, which are interesting.
 
+-------------------------------------------------------------------------------
 
 .. _tour-segment-chain:
 
