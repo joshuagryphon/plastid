@@ -6,7 +6,7 @@ To get started with genomic analysis, a few elements are important:
   - Some :ref:`data <quickstart-data>` to analyze. This is the focus of this document.
   
   - Familiarity with a handful of concepts and conventions.
-    We encourage new users to check :doc:`concepts` and browse as needed.
+    We encourage new users to check :ref:`concepts-index` and browse as needed.
   
   - Some scientific software for data analysis. See :doc:`installation`
     for instructions on how to get :data:`yeti` and its dependencies.
