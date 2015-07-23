@@ -11,13 +11,13 @@ Tutorials are divided into two sections:
   
 We suggest downloading the :doc:`test_dataset` and following along.
 
-
+ .. TODO : figure out formatting for this page
+ 
  .. _examples-cookbook:
 
 Cookbook
 --------
-The following tutorials offer step-by-step instructions for a
-
+Some blurb
 
  .. toctree::
     :hidden:
@@ -48,6 +48,7 @@ The following tutorials offer step-by-step instructions for a
  
 In-depth
 --------
+Some other blurb
    - :doc:`concepts/coordinates`
    - :doc:`concepts/multimappers`
    - :doc:`concepts/mapping_rules`

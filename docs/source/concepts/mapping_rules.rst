@@ -260,7 +260,7 @@ an optional offset::
     >>>    return reads_out, count_array
 
 But, |BAMGenomeArray| will only pass the parameters `alignments` and `segment`
-to mapping functions. To specify an offset, use a wrapper function::
+to mapping functions. To specify an offset, use a wrapper function:
 
     >>> def MyFivePrimeMapFactory(offset=0):
     >>>    def new_func(alignments,segment):
@@ -272,6 +272,8 @@ to mapping functions. To specify an offset, use a wrapper function::
     >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 
+ .. TODO: check this function below
+
 Example 2: mapping alignments to their mismatches
 .................................................
 `BAM`_ files contain rich information about read alignments, and these are 
@@ -279,7 +281,6 @@ exposed to us via :class:`pysam.AlignedSegment`. This mapping function maps
 :term:`read alignments` to sites where they mismatch a reference genome.
 Mismatch information is pulled from the `CIGAR string`_ for each alignment::
 
- .. TODO: check this function
     >>> def mismatch_mapping_function(alignments,segment):
     >>>     reads_out = []
     >>>     count_array = numpy.zeros(len(segment))

@@ -6,7 +6,8 @@ Genomic coordinates are typically specified as a set of:
   - a chromosome name
   - a start position
   - an end position
-  - a chromosome strand: ('+' for the forward strand, '-' for the reverse
+  - a chromosome strand:
+  
       - '+' for the forward strand
       - '-' for the reverse stranded
       - '.' for both strands / unstranded features
@@ -101,7 +102,8 @@ site in this example:
                     end: 18          end: 17
     =============   =============    ==================
 
-
+Conentions used in `yeti`
+-------------------------
 Following `Python`_ conventions, :data:`yeti` reports all coordinates in
 0-indexed and half-open representations. In this case, the coordinate would be::
 
