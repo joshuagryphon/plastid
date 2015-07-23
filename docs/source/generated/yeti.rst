@@ -10,11 +10,10 @@ Package contents
     :show-inheritance:
 
 
-Subpackages
------------
-
  .. toctree::
-
+    :maxdepth: 4
+    :hidden:
+    
     yeti.bin
     yeti.genomics
     yeti.readers

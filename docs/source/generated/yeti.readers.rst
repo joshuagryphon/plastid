@@ -14,6 +14,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 2
 
    yeti.readers.autosql
    yeti.readers.bed

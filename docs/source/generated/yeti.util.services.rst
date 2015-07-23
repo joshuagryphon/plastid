@@ -14,6 +14,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 2
 
    yeti.util.services.colors
    yeti.util.services.decorators

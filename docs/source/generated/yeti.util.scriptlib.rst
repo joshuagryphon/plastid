@@ -14,6 +14,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 2
 
    yeti.util.scriptlib.argparsers
    yeti.util.scriptlib.help_formatters

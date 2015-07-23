@@ -14,6 +14,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    yeti.genomics.genome_array
    yeti.genomics.genome_hash
