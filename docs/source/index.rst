@@ -8,8 +8,8 @@ Introduction
 :term:`high-throughput sequencing` data -- with an emphasis on simplicity
 for users.
 
-Its intended audience includes computational biologists, traditional biologists,
-software developers, and even those who may be new to sequencing analysis. It
+Its intended audience includes computational and traditional biologists,
+software developers, and even those who are new to sequencing analysis. It
 is released under the :doc:`BSD 3-Clause license <license>`.
 
 This package provides:
@@ -17,25 +17,15 @@ This package provides:
   #. A set of :mod:`scripts <yeti.bin>` that implement common sequencing
      analyses
   
-  #. A :ref:`set of objects <tour-data-structures>` that create a simple and intuitive interface
-     to various types of :ref:`data used in genomics <quickstart-data>`. These
+  #. A :ref:`set of objects <tour-data-structures>` that create a simple,
+     intuitive interfaces to genomic :term:`features <feature>`,
+     :term:`read alignments`, and quantitative data. These
      objects readily interace with existing scientific tools, like the
-     `SciPy`_ stack. At present, :data:`yeti` can read:
-
-      - annotation data in `BED`_, `BigBED`_, `GTF2`_, `GFF3`_, or `PSL`_ format,
-        with or without `tabix`_ compression
-
-      - quantitative data in `Wiggle`_ or `bedGraph`_ format
-
-      - :term:`read alignments` in `BAM`_ (via `Pysam`_) or
-        `bowtie's native format <bowtie>`_
+     `SciPy`_ stack.
      
-     Readers for these file formats may be found in the |readers| subpackage.
-     The API documentation for the objects they create may be found in
-     submodules of the |genomics| subpackage.
-
-  #. :mod:`Script writing tools <yeti.util.scriptlib>` that make it easy to implement
-     new workflows as command-line scripts. These are in the |scriptlib| subpackage.
+  #. :mod:`Script writing tools <yeti.util.scriptlib>` that make it easy to
+     use the :mod:`file parsers <yeti.readers>` and :ref:`objects <tour-data-structures>`
+     implemented in :data:`yeti`.
 
 
 Where to go next
@@ -46,20 +36,59 @@ Documentation & help are written for users at multiple levels of experience.
   * **Those new to sequencing and/or bioinformatics**, and those who are
     :term:`ribosome profiling` should start with :doc:`quickstart`, and then
     continue to the :doc:`tour` and :doc:`examples`.
-    The :mod:`description of command-line scripts <yeti.bin>` and :doc:`concepts`
+    The :mod:`description of command-line scripts <yeti.bin>`
     may also be helpful.
 
-  * **Advanced users** might be more interested in a quick :doc:`tour <tour>`
+  * **Advanced users** might be more interested in a quick :doc:`tour`
     of the primary data structures and the :doc:`module documentation <generated/yeti>`.
 
+--------------------------------------------------------------------------------
    
-Indices and links
------------------
+Site map
+========
+  - :ref:`genindex`
+  - :ref:`modindex`
+  
+  
+.. _toc-overview:
+ 
+.. toctree::
+   :maxdepth: 2
+   :caption: Overview
+    
+   quickstart
+   tour
 
-  - :doc:`Module documentation <generated/yeti>`
-  - :ref:`Module index <modindex>`
-  - :ref:`Alphabetical index of functions and classes <genindex>`
-  - `Package download <pypi link>`_ from `PyPI <http://pypi.python.org>`_
-  - `Source code for developers or contributors, on github <our github link>`_
 
-.. .. toctree::
+.. _toc-user-manual:
+ 
+.. toctree::
+   :maxdepth: 3
+   :caption: User manual
+    
+   examples
+   FAQ
+   glossary
+   zreferences
+
+
+.. _toc-technical-documentation:
+   
+.. toctree::
+   :includehidden:
+   :maxdepth: 4
+   :caption: Technical documentation
+   
+   Module documentation <generated/yeti>
+
+
+.. _toc-other-info:
+     
+.. toctree::
+   :maxdepth: 1
+   :caption: Other information
+    
+   citing
+   license
+   contributing
+   related

@@ -38,7 +38,8 @@ rst_prolog = """
 # Moving master_doc outside of index.rst allows us to keep the same sidebar
 # for all pages. It also prevents circular import errors and behaves more 
 # like a typical sidebar
-master_doc = 'master_toctree'
+#master_doc = 'master_toctree'
+master_doc = 'index'
 
 # ignore package prefix when alphabetizing index
 modindex_common_prefix = ["yeti."]
@@ -77,7 +78,8 @@ autodoc_default_flags = [
     "private-members",
     "inherited-members",
 ]
-autodoc_member_order = "bysource"
+autodoc_member_order = "groupwise"
+
 
 # never document these methods/attributes
 exclude_always = {
