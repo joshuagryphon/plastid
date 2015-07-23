@@ -1,9 +1,9 @@
-.. _quickstart-data:
- 
 Categories of genomics data
 ===========================
 This document contains very, very brief overviews of the types of data
 encountered in genomics, and of some common file formats.
+
+.. _quickstart-data:
 
 Types of data
 -------------

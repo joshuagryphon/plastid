@@ -17,13 +17,16 @@ We suggest downloading the :doc:`test_dataset` and following along.
 
 Cookbook
 --------
-Some blurb
+Some blurb.
 
  .. toctree::
     :hidden:
+    :maxdepth: 4
     :glob:
     
     /examples/*
+    
+    
     
 ====================================    ======================================================================================
 **Tutorial**                            **Description**
@@ -48,14 +51,17 @@ Some blurb
  
 In-depth
 --------
-Some other blurb
-   - :doc:`concepts/coordinates`
-   - :doc:`concepts/multimappers`
-   - :doc:`concepts/mapping_rules`
+Some other blurb.
+
+   - :doc:`/concepts/data`
+   - :doc:`/concepts/coordinates`
+   - :doc:`/concepts/multimappers`
+   - :doc:`/concepts/mapping_rules`
 
 
  .. toctree::
     :hidden:
+    :maxdepth: 4
     :glob:
     
     /concepts/*
