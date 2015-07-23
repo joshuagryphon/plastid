@@ -433,7 +433,7 @@ class NameDateWriter(AbstractWriter):
             Name to prepend
         
         stream : file-like
-            Stream to write to (Default: sys.stderr)
+            Stream to write to (Default: :obj:`sys.stderr`)
         
         line_delimiter : str, optional
             Delimiter, postpended to lines. (Default `'\n'`)

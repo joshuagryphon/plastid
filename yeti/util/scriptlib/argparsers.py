@@ -705,7 +705,7 @@ def get_mask_file_parser(prefix="mask_",disabled=[]):
     Parameters
     ----------
     prefix : str, optional
-        Prefix to add to default argument options (Default: "mask_")
+        Prefix to add to default argument options (Default: `'mask_'`)
         
     disabled : list, optional
         list of parameter names to disable from the mask file parser 

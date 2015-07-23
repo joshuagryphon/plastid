@@ -54,8 +54,7 @@ import zlib
 import itertools
 import sys
 from collections import OrderedDict
-from yeti.genomics.roitools import GenomicSegment,\
-                                         SegmentChain, Transcript
+from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.readers.common import add_three_for_stop_codon
 from yeti.readers.autosql import AutoSqlDeclaration
 from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
@@ -129,7 +128,6 @@ class BigBedReader(object):
     detailed description of the structures of the BigBed format, B+ Tree,
     and R trees. 
     """
-    
     def __init__(self,
                  filename,
                  base_record_format="III",

@@ -1423,7 +1423,7 @@ class SegmentChain(object):
         Parameters
         ----------
         as_int : bool, optional
-            Force `score` to integer (Default: True)
+            Force `score` to integer (Default: `True`)
     
         thickstart : int or `None`, optional
             If not `None`, overrides the genome coordinate that starts thick
@@ -1440,7 +1440,7 @@ class SegmentChain(object):
     
         Returns
         -------
-        str
+        str 
             Line of BED12-formatted text
 
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Describes an |ArrayTable| class, which is essentially a big spreadsheet
-build on top of :py:class:`numpy.ndarray`s.
+build on top of :class:`numpy.ndarray` objects.
 
 Notes
 -----
-This class is deprecated in favor of :py:class:`pandas.DataFrame`
-and will gradually be replaced by it.
+This class is deprecated in favor of :class:`pandas.DataFrame` and will gradually
+be replaced by it.
 """
 import copy
 import numpy
@@ -397,8 +397,9 @@ class ArrayTable(object):
 
 def equal_enough(col1,col2,tol=1e-10,printer=NullWriter()):
         """If `col1` and `col2` are both numeric, test that
-        all their values are within `tol` of each other. `NaN`s, if present, must be
-        in the same place in each column. Ditto `Inf`s.
+        all their values are within `tol` of each other. :obj:`numpy.nan` values,
+        if present, must be in the same place in each column. Ditto :obj:`numpy.inf`
+        values.
         
         If `col1` and `col2` are not numeric, return true if they have the same
         `dtype` and the same values in all cells.

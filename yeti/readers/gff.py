@@ -560,7 +560,7 @@ class GFF3_Reader(AbstractGFF_Reader):
             is encountered in a `GFF3`_. (Default: `False`)
 
         is_sorted : bool, optional
-            If `True` and `return_stopfeatures` is `True`_, assume the `GFF3`_ is sorted.
+            If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is sorted.
             The reader will return :obj:`StopFeature` when the chromosome name
             of a given feature differs from that of the previous feature.
             (Default: `False`)
