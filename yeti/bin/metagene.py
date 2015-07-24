@@ -736,7 +736,7 @@ def do_chart(sample_dict,landmark="landmark",title=None):
     if title is not None:
         plt.title(title)
     
-    plt.legend()
+    plt.legend(bbox_to_anchor=(1.02,1.02),loc="upper left",borderaxespad=0)
     
     return fig
         
