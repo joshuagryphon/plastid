@@ -1,7 +1,7 @@
 Read mapping rules
 ==================
 
-In this document, we:
+In this tutorial, we:
 
   - provide a :ref:`definition <mapping-rules-definition>`
     for :term:`mapping rule <mapping rules>` and discuss
@@ -19,25 +19,25 @@ In this document, we:
 Definition
 ----------
 
-:term:`mapping rules` are functions that convert :term:`read alignments` to
+:term:`Mapping rules <mapping rule>` are functions that convert :term:`read alignments` to
 genomic coordinates. They are useful when performing positional analyses of
-alignments, specifically the informative position is not the 5' or 3' end of an
-alignment. For example:
+alignments, specifically when the informative position is not the 5' or 3' end
+of an alignment. For example:
 
   - in :term:`ribosome profiling` experiments, the ribosomal P- and-A sites,
     where peptide synthesis occurs, is of interest. This location is internal
     to the read, usually 15 nucleotides from the 3' end, depending upon read
     length.
     
-    Mapping :term:`read alignments` from a :term`ribosome profiling` experiment
+    Mapping :term:`read alignments` from a :term:`ribosome profiling` experiment
     to the P-site instead of the 5' end reveals features of translation, such
     as translation initiation and termination sites, ribosome pauses, and
-    frameshifts.
+    frameshifts (:cite:`Ingolia2009`).
 
   - in :term:`DMS-seq` experiments, the goal is to detect chemically modified RNA
     bases. Given the library prepration protocol for :term:`DMS-seq`, the modified
     base is actually the first nucleotide *upstream*  of (i.e. outside) the 5'
-    end of the read alignment.
+    end of the read alignment (:cite:`Rouskin2014`).
   
   - in ClIP- or ChIP-seq experiments, where a crosslink site (in some protocols
     detectable as a mutation) within the read alignment, rather than the 5' or 3'
@@ -145,7 +145,8 @@ Setting mapping rules in interactive Python sessions
 ....................................................
 
 Mapping rules in :data:`yeti` are applied when :term:`read alignments` are imported.
-Read alignments are held in data structures called *GenomeArrays*.
+Read alignments are held in data structures called *GenomeArrays*
+(see :mod:`yeti.genomics.genome_array`).
 
 Alignments in `BAM`_ format can be imported into a |BAMGenomeArray|.
 Mapping rules are set via :meth:`~yeti.genomics.genome_array.BAMGenomeArray.set_mapping`::
@@ -260,7 +261,7 @@ an optional offset::
     >>>    return reads_out, count_array
 
 But, |BAMGenomeArray| will only pass the parameters `alignments` and `segment`
-to mapping functions. To specify an offset, use a wrapper function:
+to mapping functions. To specify an offset, use a wrapper function::
 
     >>> def MyFivePrimeMapFactory(offset=0):
     >>>    def new_func(alignments,segment):
@@ -272,34 +273,42 @@ to mapping functions. To specify an offset, use a wrapper function:
     >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 
- .. TODO: check this function below
-
 Example 2: mapping alignments to their mismatches
 .................................................
 `BAM`_ files contain rich information about read alignments, and these are 
 exposed to us via :class:`pysam.AlignedSegment`. This mapping function maps
 :term:`read alignments` to sites where they mismatch a reference genome.
-Mismatch information is pulled from the `CIGAR string`_ for each alignment::
+Mismatch information is pulled from the `CIGAR string <cigar>`_ for each alignment::
 
+    >>> import re
+    >>> nucleotides = re.compile(r"[ACTGN]")
+    >>> 
     >>> def mismatch_mapping_function(alignments,segment):
     >>>     reads_out = []
     >>>     count_array = numpy.zeros(len(segment))
     >>>     for read in alignments:
-    >>>         mismatched_positions = []
-    >>>         total_length = []
-    >>>         for op, length in read.cigartuples:
-    >>>             if op == 8: # 8 == mismatch
-    >>>                 mismatched_positions.extend([X+total_length for X in range(length)])
+    >>>         for tag,val in read.tags:
+    >>>             # we are also assuming no indels!
+    >>>             # mismatches are in MD tag in SAM alignments
+    >>>             # for see MD tag structure http://samtools.sourceforge.net/SAM1.pdf
+    >>>             # they basically look like numbers of matches separated by
+    >>>             # the letter that mismatches. e.g. 12A15C22
+    >>>             # means: 12 matches, followed by mismatch 'A', followed by 15 matches,
+    >>>             #        followed by mismatch 'C', followed by 22 matches
     >>>
-    >>>             total_length += length
-    >>>             
-    >>>         for query_pos, ref_pos in read.get_aligned_pairs():
-    >>>             if query_pos in mismatched_positions:
-    >>>                 if site >= segment.start and site < segment.end:
-    >>>                     reads_out.append(read)
-    >>>                     count_array[site] += 1
-    >>>    
+    >>>             # convert MD tag to a vector of positions that mismatch
+    >>>             if tag == "MD":
+    >>>                 mismatched_positions  = numpy.array([int(X) for X in re.split(nucleotides,val)[:-1]])
+    >>>                 mismatched_positions += numpy.arange(len(mismatched_positions))
+    >>>     
+    >>>         # figure out coordinate of mismatch with respect to genome and `segment`
+    >>>         for pos in mismatched_positions:
+    >>>             genome_position = read.positions[pos]
+    >>>             segment_position = genome_position - segment.start
+    >>>             count_array[segment_position] += 1
+    >>>     
     >>>     return reads_out, count_array
+
           
 This mapping function may then be used as above::
 

@@ -67,7 +67,7 @@ They are defined by:
   
   - an end coordinate
   
-  - a strand
+  - a strand:
   
       - '+' for forward-strand features
       - '-' for reverse-strand features
@@ -209,7 +209,7 @@ and 3'UTRs from coding transcripts::
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
-of strings or :class:`bio.SeqRecord.SeqRecord` objects. These sequences will
+of strings or :class:`Bio.SeqRecord.SeqRecord` objects. These sequences will
 automatically be spliced and reverse-complemented, as necessary::
 
     >>> from Bio import SeqIO
@@ -328,6 +328,8 @@ But, it is be inefficient to scan an entire file to find overlapping features,
 or to test whether two features overlap if we already know from their genomic
 coordinates that they cannot.
 
+ .. TODO adjust GenomeHash so GenomicSegment can be used as a query
+
 |GenomeHash| and its subclasses avoid this problem by indexing features
 by location. A |GenomeHash| may be created from a list or dictionary of features
 (e.g. |SegmentChains| or |Transcripts|) in memory, or directly loaded from a
@@ -335,8 +337,6 @@ genome annotation (in `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ format)::
 
     >>> from yeti.genomics.genome_hash import GenomeHash 
     >>> my_hash = GenomeHash(transcript_dict)
-
- .. TODO adjust GenomeHash so GenomicSegment can be used as a query
  
 Having made a |GenomeHash|, we can ask what is where in the genome. For
 example, to find all features between bases 10000-20000 on the plus
