@@ -15,8 +15,8 @@ also follow `Semantic versioning <http://semver.org/>`_.
     repository to git. 
 
 
-yeti - Unreleased
------------------
+yeti [0.1.1] = [2015-07-23]
+---------------------------
 
 Added
 .....
@@ -24,6 +24,7 @@ Added
   - Docstrings re-written for user rather than developer focus
   - AssembledFeatureReader
   - Complete first draft of user manual documentation
+  - Readthedocs support for documentation
 
 Changed
 .......

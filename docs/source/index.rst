@@ -30,7 +30,7 @@ This package provides:
 Where to go next
 ----------------
 
-Documentation & help are written for users at multiple levels of experience.
+Documentation & help are written for users at multiple levels of experience:
 
   - **Those new to sequencing and/or bioinformatics**, and those who are
     :term:`ribosome profiling` should start with :doc:`quickstart`, and then
