@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """GenomeArrays are randomly-accessible array-like structures that map quantitative data
 or :term:`read alignments` to genomic positions. In this way, they function like
 `numpy`_ arrays, except over coordinates specified by |GenomicSegments|
@@ -1223,16 +1224,19 @@ class BAMGenomeArray(AbstractGenomeArray):
                         if val != last_val:
                             genomic_end_x = 1 + x + my_start
                             #write line: chrom chromStart chromEnd dataValue. 0-based half-open
-                            fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,genomic_end_x,last_val))
+                            if last_val > 0:
+                                fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,genomic_end_x,last_val))
+                            
                             #update variables
                             last_val = val
                             genomic_start_x = genomic_end_x
                         else:
                             continue
                     # write out last values for window
-                    fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,
-                                                   my_end,
-                                                   last_val))
+                    if last_val > 0:
+                        fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,
+                                                       my_end,
+                                                       last_val))
         return
 
 

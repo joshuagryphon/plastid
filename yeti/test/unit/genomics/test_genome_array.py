@@ -265,14 +265,6 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
         cls.count_vecs = _read_count_vectors(cls.test_folder)
         
         cls.regions = fetch_regions()
-#         cls.region_classes = {
-#                                 "unique"  : filter(lambda x: "unique" in x.get_name(),cls.regions),
-#                                 "repeat"  : filter(lambda x: "entire" not in x.get_name(),
-#                                                    filter(lambda x: "repeat" in x.get_name(),cls.regions)),
-#                                 "introns" : filter(lambda x: "intron" in x.get_name(),cls.regions),
-#                                 "splice"  : filter(lambda x: "splice" in x.get_name(),cls.regions),
-#                                 "entire"  : filter(lambda x: "entire" in x.get_name(),cls.regions)
-#                                }
         cls.region_classes = {
                                 "unique"  : [X for X in cls.regions if "unique" in X.get_name()],
                                 "repeat"  : [X for X in cls.regions if "entire" not in X.get_name() and "repeat" in X.get_name()],
@@ -431,8 +423,8 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
             fw_out = tempfile.NamedTemporaryFile(mode="w",delete=False)
             rc_out = tempfile.NamedTemporaryFile(mode="w",delete=False)
             
-            export_function(v,fw_out,"test","+")
-            export_function(v,rc_out,"test","-")
+            export_function(v,fw_out,"test","+",**kwargs)
+            export_function(v,rc_out,"test","-",**kwargs)
     
             fw_out.close()
             rc_out.close()
@@ -442,10 +434,12 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
             new_gnd.add_from_wiggle(open(rc_out.name),"-")
 
             self.assertGreater(v.lengths()["chrA"],0)
+            self.assertGreater(new_gnd.lengths()["chrA"],0)
             
             ivplus  = GenomicSegment("chrA",0,v.lengths()["chrA"],"+")
             ivminus = GenomicSegment("chrA",0,v.lengths()["chrA"],"-")
 
+            # test equality of what was exported with current state of GenomeArray
             self.assertTrue(abs(new_gnd[ivplus] - v[ivplus] <= self.tol).all(),
                             "%s wiggle output on plus strand failed positionwise tolerance %s for test %s" % (wiggle_type,self.tol,k))
             self.assertGreater(new_gnd[ivplus].sum(),0,
@@ -456,6 +450,16 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
             self.assertGreater(new_gnd[ivminus].sum(),0,
                                "No counts found for %s reimport test %s" % (wiggle_type,k))
             
+            # ground-truth test against numpy arrays for unique regions
+            for region in self.region_classes["unique"]:
+                strand_key = STRAND_KEYS[region.spanning_segment.strand]
+                gnd_counts   = numpy.array(region.get_counts(new_gnd))
+                self.assertGreater(gnd_counts.sum(),0,"Reimported region is empty in sample %s" % k)
+                known_counts = _get_ivc_numpy_counts(region,self.count_vecs["%s_%s" % (k,strand_key)])
+                max_err = max(abs(gnd_counts - known_counts))
+                self.assertLessEqual(max_err,self.tol,
+                                "Positionwise count difference '%s' exceeded tolerance '%s' for %s reimport after export from class %s for sample test %s" % (self.tol,max_err,self.native_format,self.test_class,k))
+
             os.remove(fw_out.name)
             os.remove(rc_out.name)
 
