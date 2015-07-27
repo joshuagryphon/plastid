@@ -971,7 +971,7 @@ class SegmentChain(object):
                 c += 1
         return my_hash
     
-    def get_valid_position_set(self):
+    def get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
         `self` that have not been masked using :meth:`SegmentChain.add_masks`
 
@@ -1034,7 +1034,7 @@ class SegmentChain(object):
         """
         return sum([len(X) for X in self])
 
-    def get_valid_length(self):
+    def get_masked_length(self):
         """Return the total length, in nucleotides, of positions in `self`
         that have not been masked using :meth:`SegmentChain.add_masks`
         
@@ -1042,7 +1042,7 @@ class SegmentChain(object):
         -------
         int
         """
-        return len(self.get_valid_position_set())
+        return len(self.get_masked_position_set())
         
     def add_segments(self,*segments):
         """Add 1 or more |GenomicSegments| to the |SegmentChain|. If there are
@@ -1081,7 +1081,7 @@ class SegmentChain(object):
         ----------
         mask_segments : |GenomicSegment|
             One or more segments, in genomic coordinates, covering positions to
-            exclude from return values of :meth:`get_valid_position_set`, :meth:`get_valid_counts`, or :meth:`get_valid_length`
+            exclude from return values of :meth:`get_masked_position_set`, :meth:`get_masked_counts`, or :meth:`get_masked_length`
 		
 		See also
 		--------
@@ -1739,7 +1739,7 @@ class SegmentChain(object):
             
         return numpy.array(ltmp)
     
-    def get_valid_counts(self,gnd,stranded=True):
+    def get_masked_counts(self,gnd,stranded=True):
         """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
         coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
         will be masked in the array
@@ -1771,7 +1771,7 @@ class SegmentChain(object):
         
         valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
                                                             self.spanning_segment.strand) 
-                           for X in self.get_valid_position_set()]
+                           for X in self.get_masked_position_set()]
         for x in valid_positions:
             atmp.mask[x] = False
         return atmp

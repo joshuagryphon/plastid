@@ -879,7 +879,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     
     @skip_if_abstract    
     def test_get_counts(self):
-        """Test `get_counts()`, `get_valid_counts()`, and `add_masks()`"""
+        """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
         ga = GenomeArray({"chrA":2000})
         ga[GenomicSegment("chrA",100,200,"+")] = 1
         ga[GenomicSegment("chrA",250,350,"+")] = 1
@@ -895,27 +895,27 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc2 = self.test_class(iv1,iv2,iv3)
         
         pre_unmask_counts = sum(ivc1.get_counts(ga))
-        pre_mask_counts = ivc1.get_valid_counts(ga).sum()
+        pre_mask_counts = ivc1.get_masked_counts(ga).sum()
         self.assertEquals(pre_unmask_counts,200)
         self.assertEquals(pre_mask_counts,200)
 
         # add real mask
         ivc1.add_masks(mask)
         
-        post_mask_counts = ivc1.get_valid_counts(ga).sum()
+        post_mask_counts = ivc1.get_masked_counts(ga).sum()
         post_unmask_counts = sum(ivc1.get_counts(ga))
         self.assertEquals(post_mask_counts,175)
         self.assertEquals(post_unmask_counts,200)
         
         # add non-overlapping mask
         pre_unmask_counts = sum(ivc2.get_counts(ga))
-        pre_mask_counts = ivc2.get_valid_counts(ga).sum()
+        pre_mask_counts = ivc2.get_masked_counts(ga).sum()
         self.assertEquals(pre_unmask_counts,200)
         self.assertEquals(pre_mask_counts,200)
         
         ivc2.add_masks(non_overlap_mask)
         post_unmask_counts = sum(ivc2.get_counts(ga))
-        post_mask_counts   = ivc2.get_valid_counts(ga).sum()       
+        post_mask_counts   = ivc2.get_masked_counts(ga).sum()       
         self.assertEquals(post_unmask_counts,200)
         self.assertEquals(post_mask_counts,200)
 
@@ -933,7 +933,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc2 = SegmentChain(iv1,iv2,iv3)
         
         pre_unmask_length = ivc1.get_length()
-        pre_mask_length = ivc1.get_valid_length()
+        pre_mask_length = ivc1.get_masked_length()
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
 
@@ -941,25 +941,25 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc1.add_masks(mask)
         
         post_unmask_length = ivc1.get_length()
-        post_mask_length = ivc1.get_valid_length()
+        post_mask_length = ivc1.get_masked_length()
         self.assertEquals(post_mask_length,175)
         self.assertEquals(post_unmask_length,200)
         
         # add non-overlapping mask
         pre_unmask_length = ivc2.get_length()
-        pre_mask_length = ivc2.get_valid_length()
+        pre_mask_length = ivc2.get_masked_length()
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
         
         ivc2.add_masks(non_overlap_mask)
         post_unmask_length = ivc2.get_length()
-        post_mask_length   = ivc2.get_valid_length()
+        post_mask_length   = ivc2.get_masked_length()
         self.assertEquals(post_unmask_length,200)
         self.assertEquals(post_mask_length,200)
 
     @skip_if_abstract    
     def test_get_position(self):
-        """Test `get_position_set()`, `get_position_list()` and `test_get_valid_position_set()`"""
+        """Test `get_position_set()`, `get_position_list()` and `test_get_masked_position_set()`"""
         iv1 = GenomicSegment("chrA",100,150,"+")
         iv2 = GenomicSegment("chrA",150,200,"+")
         iv3 = GenomicSegment("chrA",250,350,"+")
@@ -976,7 +976,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         pre_unmask_list = ivc1.get_position_list()
         pre_unmask_set  = ivc1.get_position_set()
-        pre_unmask_valid_set = ivc1.get_valid_position_set()
+        pre_unmask_valid_set = ivc1.get_masked_position_set()
 
         self.assertEquals(pre_unmask_list,whole_position_list)
         self.assertEquals(pre_unmask_set,whole_position_set)
@@ -987,7 +987,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         
         post_unmask_list = ivc1.get_position_list()
         post_unmask_set  = ivc1.get_position_set()
-        post_unmask_valid_set = ivc1.get_valid_position_set()
+        post_unmask_valid_set = ivc1.get_masked_position_set()
 
         self.assertEquals(post_unmask_list,whole_position_list)
         self.assertEquals(post_unmask_set,whole_position_set)
@@ -996,7 +996,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # add non-overlapping mask
         pre_unmask_list = ivc2.get_position_list()
         pre_unmask_set  = ivc2.get_position_set()
-        pre_unmask_valid_set = ivc2.get_valid_position_set()
+        pre_unmask_valid_set = ivc2.get_masked_position_set()
 
         self.assertEquals(pre_unmask_list,whole_position_list)
         self.assertEquals(pre_unmask_set,whole_position_set)
@@ -1005,7 +1005,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc2.add_masks(non_overlap_mask)
         post_unmask_list = ivc2.get_position_list()
         post_unmask_set  = ivc2.get_position_set()
-        post_unmask_valid_set = ivc2.get_valid_position_set()
+        post_unmask_valid_set = ivc2.get_masked_position_set()
 
         self.assertEquals(post_unmask_list,whole_position_list)
         self.assertEquals(post_unmask_set,whole_position_set)
