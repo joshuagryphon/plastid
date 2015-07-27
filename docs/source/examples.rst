@@ -31,6 +31,8 @@ Some blurb.
 ====================================    ======================================================================================
 **Tutorial**                            **Description**
 ------------------------------------    --------------------------------------------------------------------------------------
+:doc:`/examples/count_vector`           Retrieve a vector of :term:`high-throughput sequencing` :term:`counts`
+                                        at each position in a transcript
 
 :doc:`/examples/gene_expression`        Calculate read densities for :term:`RNA-seq` & :term:`ribosome profiling`,
                                         and use these to estimate translation efficiency. Then, test for 
@@ -44,6 +46,8 @@ Some blurb.
                                         a custom landmark for use with other data types.
 
 :doc:`/examples/p_site`                 Determine a :term:`P-site offset` from :term:`ribosome profiling` data
+
+:doc:`/examples/phasing`                Determine :term:`read phasing <phasing>` of :term:`ribosome profiling` data
 ====================================    ======================================================================================
 
 
