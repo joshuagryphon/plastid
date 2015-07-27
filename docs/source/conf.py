@@ -48,7 +48,6 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc', 
-    'sphinx.ext.extlinks',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.argdoc',
     ]
@@ -175,15 +174,6 @@ intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         "pandas" : ("http://pandas-docs.github.io/pandas-docs-travis/",None),
                         "HTSeq"  : ("http://www-huber.embl.de/users/anders/HTSeq/doc",None),
                         }
-
-
-# sphinx.ext.extlinks config ----------------------------------------------------
-extlinks = { 'link_github'      : ('https://some_url',None),
-             'link_weissmanlab' : ('http://weissmanlab.ucsf.edu',None),
-           }
-
-for k,v in intersphinx_mapping.items():
-        extlinks["%s_link"] = v
 
 # -- Mocking of imports ------------------------------------------------
 

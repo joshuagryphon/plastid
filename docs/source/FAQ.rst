@@ -97,6 +97,21 @@ discussion of :doc:`concepts/mapping_rules`, where these are
 discussed in depth.
 
 
+.. _faq-igv-vs-mapped-wiggle:
+
+Why does `IGV`_ report way higher coverage at a given nucleotide than the file exported from |make_wiggle|?
+...........................................................................................................
+When `IGV`_ calculates coverage of a nucleotide, it counts the number of alignments covering that nucleotide.
+So, a 30-nucleotide read would contribute 30 :term:`counts` to a dataset.
+
+While it is possible to write any mapping rule in :mod:`yeti`, the :term:`mapping rules <mapping rule>`
+included by default count each read only once (e.g. at their 5' end, 3' end, et c). Even when using
+center / entire mapping, each position covered by a read alignment is only incremented by :math:`1.0/\ell`,
+where :math:`\ell` is the length of the read. So, in this case, a 30-nucleotide read would only 
+contribute 1 :term:`count <counts>` to a dataset. See :doc:`/concepts/mapping_rules/` for more information.
+
+
+
 .. _faq-cs-vs-counts-in-region:
 
 What are the differences between :mod:`~yeti.bin.counts_in_region` and :mod:`~yeti.bin.cs`?
@@ -127,7 +142,9 @@ heuristic corrections to regions before tabulating their :term:`counts` and :ter
     from counts that cover positions in the gene area that are annotated as CDS in
     **all** transcripts in the merged gene. Ditto for 5' and 3' UTRs
 
-Either one is an appropriate starting place for a pipeline, depending upon your needs.
+Either one can be an appropriate starting place for a pipeline, depending upon your needs.
+See the documentation and/or source code for |cs| and |counts_in_region| for further
+discussion. 
 
 
 .. _faq-analysis-deseq:

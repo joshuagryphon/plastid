@@ -126,6 +126,15 @@ Glossary of terms
         See :doc:`/examples/metagene` and/or the module documentation for the
         :py:mod:`~yeti.bin.metagene` script for more explanation.
 
+    multimapping
+        A read that aligns equally well (or nearly-equally well) to multiple
+        regions in a genome or transcriptome is said to be :term:`multimapping`
+        in that genome or transcriptome.
+        
+        :term:`Multimapping` reads arise from repeated sequence, for example
+        from duplicated genes, transposons, telomeres, tandem repeats, or
+        segmental duplications within genes. 
+
     footprint
     ribosome-protected footprint
         A fragment of mRNA protected from nuclease digestion by a ribosome
