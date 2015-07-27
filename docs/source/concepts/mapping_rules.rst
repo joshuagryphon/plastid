@@ -277,8 +277,9 @@ Example 2: mapping alignments to their mismatches
 .................................................
 `BAM`_ files contain rich information about read alignments, and these are 
 exposed to us via :class:`pysam.AlignedSegment`. This mapping function maps
-:term:`read alignments` to sites where they mismatch a reference genome.
-Mismatch information is pulled from the `CIGAR string <cigar>`_ for each alignment::
+:term:`read alignments` to sites where they mismatch a reference genome,
+assuming the alignment contains no indels. Mismatch information is pulled from
+the `MD` tag for each read alignment::
 
     >>> import re
     >>> nucleotides = re.compile(r"[ACTGN]")
@@ -288,14 +289,15 @@ Mismatch information is pulled from the `CIGAR string <cigar>`_ for each alignme
     >>>     count_array = numpy.zeros(len(segment))
     >>>     for read in alignments:
     >>>         for tag,val in read.tags:
-    >>>             # we are also assuming no indels!
-    >>>             # mismatches are in MD tag in SAM alignments
+    >>>             # we are also assuming no indels, which would make parsing MD more complicated.
+    >>>             #
+    >>>             # mismatches are in stored in `MD` tag of reach alignment in SAM/BAM files
     >>>             # for see MD tag structure http://samtools.sourceforge.net/SAM1.pdf
     >>>             # they basically look like numbers of matches separated by
     >>>             # the letter that mismatches. e.g. 12A15C22
     >>>             # means: 12 matches, followed by mismatch 'A', followed by 15 matches,
     >>>             #        followed by mismatch 'C', followed by 22 matches
-    >>>
+    >>>             #
     >>>             # convert MD tag to a vector of positions that mismatch
     >>>             if tag == "MD":
     >>>                 mismatched_positions  = numpy.array([int(X) for X in re.split(nucleotides,val)[:-1]])

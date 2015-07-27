@@ -1,26 +1,28 @@
 Gene expression analysis
 ========================
 
-This document illustrates how to measure read density over regions. As 
-an example, we look at gene expression (in :term:`counts` and :term:`RPKM`)
+This tutorial illustrates how to measure read density over regions. As 
+an example, we look at gene expression (in :term:`raw read counts <counts>` and :term:`RPKM`)
 using :term:`RNA-seq` and :term:`ribosome profiling` data. However, the
 analysis below could be applied with minimal modification to other 
-types of :term:`high-throughput sequencing` data (e.g. ClIP-SEQ, DMS-Seq,
+types of :term:`high-throughput sequencing` data (e.g. ClIP-SEQ, :term:`DMS-Seq`,
 et c).
 
 We will do this two ways:
 
- #. Using the :mod:`~yeti.bin.counts_in_region` script to count expression
-    automatically.
+ #. Using the :mod:`~yeti.bin.counts_in_region` script to
+    :ref:`count expression automatically <gene-expression-scripts>`.
 
- #. Manually calculating these values in an interactive Python session,
-    using various components of :data:`yeti`
+ #. :ref:`Manually calculating gene expression <gene-expression-interactive>`
+    in an interactive Python session
 
 The examples below use the :doc:`/test_dataset` we have assembled. 
 
 
-Tabulating counts & RPKM
-------------------------
+Tabulating :term:`read counts <counts>` & :term:`RPKM`
+------------------------------------------------------
+
+ .. _gene-expression-scripts:
 
 Via command-line scripts
 ........................
@@ -55,6 +57,8 @@ Putting this together, the script is run from the terminal as:
 ``riboprofile.txt`` containing the results. For detailed documentation of the output
 and command-line arguments, see the module documentation for :mod:`~yeti.bin.counts_in_region`.
 
+
+ .. _gene-expression-interactive:
 
 Manually
 ........
@@ -199,18 +203,6 @@ each other::
 .. TODO : make image & insert here
 
 
-Calculating translation efficiency (for :term:`ribosome profiling`)
--------------------------------------------------------------------
-
-Translation efficiency can be estimated by dividing the read density of
-:term:`ribosome protected footprints` in a coding region by the read density
-of :term:`RNA-seq` fragments in the corresponding transcript (:cite:`Ingolia2009`).
-
-We already have both of these measurements, so this is easy::
-
-    >>> df["translation_efficiency"] = df["ribosome_profiling_CDS_rpkm"]/df["RNA-seq_exon_rpkm"]
-
-
 Testing for differential expression
 -----------------------------------
 
@@ -218,19 +210,5 @@ Testing for differential expression
 
 There are many strategies for significance testing of differential gene expression
 between multiple datasets. A very generalized and statistically rigorous approach
-is taken by `DESeq` (), which takes as input the number of uncorrected :term:`counts`
+is taken by `DESeq`_, which takes as input the number of uncorrected :term:`counts`
 in an arbitrary region of interest, in multiple datasets. 
-
-.. TODO : learn DESeq or grab examples from Liz
-
-.. TODO : can DESeq do differential translation efficiency?
-
-
-in mRNA or :term:`ribosome profiling`
-.....................................
-[TODO]
-
-testing for differential translation efficiency
-...............................................
-[TODO]
-.. TODO : test examples in this document!!!
