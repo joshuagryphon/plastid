@@ -1,69 +1,72 @@
-Examples
-========
+Tutorials
+=========
+Tutorials are divided into two sections:
 
-The following examples walk through analyses with :data:`yeti` and 
-illustrate how to use the libraries. We suggest downloading the
-:doc:`test_dataset` and following along.
+  - The :ref:`examples-cookbook` contains step-by-step instructions for
+    performing common tasks, with detailed explanations of each operation
+  
+  - :ref:`examples-concepts` includes detailed discussions of issues that arise
+    in :term:`high-throughput sequencing` and genomics, and includes code
+    examples when appropriate. 
+  
+We suggest downloading the :doc:`test_dataset` and following along.
 
+ .. TODO : figure out formatting for this page
+ 
+ .. _examples-cookbook:
 
 Cookbook
 --------
-The following tutorials describe how to perform simple analyses, with minimal
-discussion:
+Some blurb.
 
  .. toctree::
     :hidden:
+    :maxdepth: 4
     :glob:
     
     /examples/*
     
+    
+    
 ====================================    ======================================================================================
 **Tutorial**                            **Description**
 ------------------------------------    --------------------------------------------------------------------------------------
+:doc:`/examples/count_vector`           Retrieve a vector of :term:`high-throughput sequencing` :term:`counts`
+                                        at each position in a transcript
 
-:doc:`/examples/gene_expression`        Calculate read densities for :term:`RNA-seq`: & :term:`ribosome profiling`,
+:doc:`/examples/gene_expression`        Calculate read densities for :term:`RNA-seq` & :term:`ribosome profiling`,
                                         and use these to estimate translation efficiency. Then, test for 
                                         differential gene expression.
 
-:doc:`/examples/genome_setup`           Set up a genome for use with :data:`yeti`. Download sequence and
-                                        :term:`annotation` files, prepare a :term:`mask file` via |crossmap|, and
-                                        discuss other considerations relevant to genomic analyses.
+:doc:`/examples/using_masks`            Annotate regions of a genome (or gene or transcript) that are difficult to analyze
+                                        due to repetitive or low-complexity sequence, and exclude these from analysis
 
 :doc:`/examples/metagene`               Perform a positional :term:`metagene analysis <metagene>`, using :term:`ribosome profiling`
                                         data at the start codon as an example. Then, develop metagene analysis around
                                         a custom landmark for use with other data types.
 
 :doc:`/examples/p_site`                 Determine a :term:`P-site offset` from :term:`ribosome profiling` data
+
+:doc:`/examples/phasing`                Determine :term:`read phasing <phasing>` of :term:`ribosome profiling` data
 ====================================    ======================================================================================
 
- .. _concepts-index:
+
+ .. _examples-concepts:
  
 In-depth
 --------
-The documents below discuss various issues and concepts in genomics and
-:term:`high-throughput sequencing` in depth.
+Some other blurb.
 
-
-  - :doc:`concepts/coordinates`
-  - :doc:`concepts/multimappers`
-  - :doc:`concepts/mapping_rules`
-
+   - :doc:`/concepts/data`
+   - :doc:`/concepts/coordinates`
+   - :doc:`/concepts/multimappers`
+   - :doc:`/concepts/mapping_rules`
 
 
  .. toctree::
     :hidden:
+    :maxdepth: 4
     :glob:
     
     /concepts/*
         
-
-See also
---------
-:doc:`/tour`
-    A brief overview of the important data structures
-
-:doc:`/concepts`
-    Concepts & conventions used in genomics
-
-
-

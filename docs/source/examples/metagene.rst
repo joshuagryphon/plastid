@@ -44,28 +44,35 @@ A metagene average is computed by:
     of the *feature of interset* -- in this case, a start codon -- in each
     region:
 
-     .. image:: /_static/images/metagene_unnormalized_vectors.png
+     .. figure:: /_static/images/metagene_unnormalized_vectors.png
         :alt: Unnormalized vectors of ribosome counts
+        :figclass: captionfigure
+        
+        Unnormalized vectors of :term:`ribosome-protected footprints <footprint>`,
+        shown above corresponding transcript models. Thick boxes: coding
+        regions. Thin boxes: 5' UTRs.
 
 
- #. Normalizing each vector to the same scale:
+ #. Normalizing each vector to the same scale by dividing by the total number
+    of counts in a normalization window (here, the last 30 nucleotides of
+    the portion of coding region shown):
 
-     .. image:: /_static/images/normalized_vectors.png
+     .. image:: /_static/images/metagene_normalized_vectors.png
         :alt: Normalized vectors of ribosome counts
 
  
- #. Aligning each vector at the feature of interest (start codon):
- 
-     .. image:: /_static/images/metagene_aligned_vectors.png
-        :alt: Aligned vectors of ribosome counts
- 
+ #. Aligning each vector at the feature of interest (the start codon)
  
  #. Taking an average (e.g. a median, mean, or percentile) over all of the
-    normalized vectors at each aligned nucleotide position:
+    normalized vectors at each aligned nucleotide position. Typically,
+    we use the median:
 
-     .. image:: /_static/images/metagene_average_profile.png
+     .. figure:: /_static/images/metagene_average_profile.png
         :alt: Creation of metagene profile
-     
+        :figclass: captionfigure
+
+        Final :term:`metagene` average over the four transcripts shown above.
+             
 
  .. _metagene-script:
  
@@ -99,16 +106,17 @@ the transcript that surrounds the sub-feature. To do so, the |metagene|
 
  #. If a gene has multiple start codons, exclude that gene.
     
-    If a gene has a single start codon, then find the *maximal
-    spanning window* of the gene, defined as the largest possible
+    If a gene has a single start codon, then find the
+    :term:`maximal spanning window` of the gene, defined as the largest possible
     window surrounding the start codon in which **all** transcripts from
     that gene map to **identical** genomic positions. This prevents any
     positional ambiguity from entering the average:
 
-    .. image:: /_static/images/metagene_maximal_spanning_window.png
+    .. figure:: /_static/images/metagene_maximal_spanning_window.png
        :alt: Metagene - maximal spanning window
+       :figclass: captionfigure
 
- #. Once a maximal spanning window is defined for a gene, determine the location
+ #. Once a :term:`maximal spanning window` is defined for a gene, determine the location
     of the start codon relative to the window, so that the maximal spanning
     windows for all genes may be aligned at the start codon during the 
     :ref:`count <metagene-count>` step.
@@ -148,7 +156,7 @@ Once :ref:`generate <metagene-generate>` has made an ROI file, |metagene|'s
 :ref:`count <metagene-count>` subprogram can be used to tabulate metagene averages.
 Specifically, :ref:`count <metagene-count>` performs the following steps:
 
- #. For each maximal spanning window in the ROI file:
+ #. For each :term:`maximal spanning window` in the ROI file:
 
      #. fetch a vector of counts at each position from the sample dataset
         (in this case, :term:`ribosome profiling` alignments).
@@ -220,14 +228,15 @@ to create maximal spanning windows surrounding any feature of interest.
 
 Window functions
 ................
-To make maximal spanning windows around a feature, |metagene| requires a
+To make :term:`maximal spanning windows <maximal spanning window>` around a
+feature, |metagene| requires a
 *window function*. The *window function* must identify and build a window around
 the feature of interest (e.g. a start codon) in each individual region examined
 (for example, each transcript).
 
 Regions that define a `"gene_id"` attribute in their `attr` dictionaries,
-will be grouped by shared `"gene_id"` to make a single maximal spanning window
-for each group.
+will be grouped by shared `"gene_id"` to make a single
+:term:`maximal spanning window` for each group.
 
 |metagene| comes with two window functions:
 
@@ -238,7 +247,7 @@ for each group.
     surrounding stop codons
 
 Once you have defined a window function, :func:`yeti.bin.metagene.do_generate`
-can use it to generate maximal spanning windows.
+can use it to generate :term:`maximal spanning windows <maximal spanning window>`.
 
 Parameters
 ..........
@@ -249,21 +258,21 @@ Window functions must take the following parameters, in order:
         If `"gene_id"` is defined in `roi.attr`, then
         all `roi`s sharing the same `"gene_id"` will
         be used to generate a single
-        maximal spanning window covering all of them.
+        :term:`maximal spanning window` covering all of them.
 
     `flank_upstream` : ``int``
         Nucleotide length upstream of the feature of interest
-        to include in the maximal spanning window , if `roi` has
+        to include in the :term:`maximal spanning window`, if `roi` has
         such a feature
 
     `flank_downstream` : ``int``
         Nucleotide length downstream of the feature of interest
-        to include in the maximal spanning window, if `roi` has
+        to include in the :term:`maximal spanning window`, if `roi` has
         such a feature
     
     `ref_delta` : ``int``, optional
         Offset in nucleotides from the *feature of interest* to 
-        the *reference point* at which all maximal spanning window
+        the *reference point* at which all :term:`maximal spanning window`
         count vectors will be aligned when the metagene average
         is calculated. If `0`, the feature of interest is the
         reference point. (Default: `0`)
@@ -417,7 +426,8 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>>                                          window_func=window_biggest_spike)
 
 :meth:`~yeti.bin.metagene.do_generate` returns an |ArrayTable| (similar to a :class:`pandas.DataFrame`)
-of data and a list of |SegmentChains| corresponding to the maximal spanning windows for each row
+of data and a list of |SegmentChains| corresponding to the
+:term:`maximal spanning windows <maximal spanning window>` for each row
 in the |ArrayTable|. It is useful to save these in the same formats that the 
 :ref:`generate <metagene-generate>` program uses::
 

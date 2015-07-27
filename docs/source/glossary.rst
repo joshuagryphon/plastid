@@ -90,6 +90,27 @@ Glossary of terms
 
         See :doc:`/concepts/mapping_rules` for an in-depth discusion, with examples.
 
+    maximal spanning window
+        The largest possible window over which a group of regions (for example,
+        transcripts) share corresponding genomic positions.
+        
+        For example,
+        if a gene has a single start codon, the :term:`maximal spanning window`
+        surrounding that start codon can be made by growing a window along the
+        transcripts in the 5' and 3' directions, starting at the start codon,
+        and stopping in each direction as soon as the next coordinate no longer
+        corresponds to the same genomic position in all transcripts:
+        
+         .. figure:: /_static/images/metagene_maximal_spanning_window.png
+            :alt: Metagene - maximal spanning window
+            :figclass: captionfigure
+           
+            :term:`Maximal spanning window` surrounding a start codon over 
+            a family of transcripts.
+         
+        :term:`Maximal spanning windows <maximal spanning window>` are often
+        used in :term:`metagene` analyses. 
+
     metagene
     metagene average
         An average of quantitative data over one or more
@@ -148,7 +169,7 @@ Glossary of terms
             
         Because the P-site is the site where peptidyl elongation occurs,
         :term:`read alignments` from :term:`ribosome profiling` are frequently
-        mappped to their P-sites, so that translation may be visualized
+        mapped to their P-sites, so that translation may be visualized
         along a transcript.
         
         P-site offsets may be estimated from ribosome profiling data
