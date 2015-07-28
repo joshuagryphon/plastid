@@ -1,6 +1,18 @@
 Coordinate systems used in genomics
 ===================================
 
+:data:`yeti` automatically handles coordinate conversions from 
+various file formats into a :term:`0-indexed` and :term:`half-open`
+coordinate space, so users don't need to worry about off-by-one
+errors in their annotations.
+
+This tutorial describes various coordinate representations used
+in genomics, and what goes on under the hood in :data:`yeti`.
+
+
+Coordinates
+-----------
+
 Genomic coordinates are typically specified as a set of:
   
   - a chromosome name
@@ -29,8 +41,8 @@ coordinate denotes the 5' end.
 
 Counting from 0 vs 1
 --------------------
-Coordinate systems can start counting from 0 (i.e. are *0-indexed*) or
-from 1 (*1-indexed*). Suppose we have an XbaI restriction site on chromosome `chrI`::
+Coordinate systems can start counting from 0 (i.e. are :term:`0-indexed`) or
+from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on chromosome `chrI`::
 
                                XbaI
                               ______ 
@@ -39,14 +51,15 @@ from 1 (*1-indexed*). Suppose we have an XbaI restriction site on chromosome `ch
     0-index:      0          10          20         30         40 
     1-index:      1          11          21         31         41
 
-In 0-indexed representation, the restriction site begins at position 11. In 
-1-indexed representation, it begins at position 12.
+  
 
+In :term:`0-indexed` representation, the restriction site begins at position 11.
+In :term:`1-indexed` representation, it begins at position 12.
 
-In the context of genomics, both 0- and 1-indexed systems are used, depending
-upon file format. :data:`yeti` knows which file formats use which representation,
-and automatically converts all coordinates to a 0-indexed system, as is common
-practice in `Python`_.
+In the context of genomics, both :term:`0- <0-indexed>` and :term:`1-indexed`
+systems are used, depending upon file format. :data:`yeti` knows which file
+formats use which representation, and automatically converts all coordinates
+to a :term:`0-indexed` representation, following Python idioms.
 
 
   .. _coordinates-half-open-fully-closed:
@@ -56,10 +69,12 @@ Half-open vs fully-closed coordinates
 
 Similarly, coordinate systems can represent end coordinates in two ways:
  
- #. In a *fully-closed* coordinate system, positions are inclusive:
-    the end coordinate corresponds to the last position **IN** the feature.
-    So, in 0-indexed, fully-closed representation, the XbaI site would start at
-    position 11, and end at position 16::
+ #. In a :term:`fully-closed` or :term:`end-inclusive` coordinate system,
+    positions are inclusive: the end coordinate corresponds to the last
+    position **IN** the feature.
+
+    So, in :term:`0-indexed`, :term:`fully-closed` representation,
+    the XbaI site would start at position 11, and end at position 16::
 
                                   XbaI
                                  ______ 
@@ -75,10 +90,11 @@ Similarly, coordinate systems can represent end coordinates in two ways:
      
          \ell = end - start + 1 = 16 - 11 + 1 = 6
 
- #. In contrast, in  a *half-open* coordinate system, the end coordinate is defined as the
-    first position **NOT** included in the feature. In a 0-indexed, half-open
-    representation, the XbaI site woudl start at position 11, and end at 
-    position 17. In this case, the length of the feature equals:
+ #. In contrast, in  a :term:`half-open` coordinate system, the end coordinate
+    is defined as the
+    first position **NOT** included in the feature. In a :term:`0-indexed`,
+    :term:`half-open` representation, the XbaI site starts at position 11, and
+    ends at position 17. In this case, the length of the feature equals:
 
      .. math::
      
@@ -102,14 +118,50 @@ site in this example:
                     end: 18          end: 17
     =============   =============    ==================
 
-Conentions used in `yeti`
--------------------------
+
+Coordinate systems of some common file formats
+----------------------------------------------
+
+    =============   =============   ====================
+    **Format**      **Index**       **End coordinates**
+    -------------   -------------   --------------------
+    `BED`_          0               Half-open
+    `BigBed`_       0               Half-open
+    `GTF2`_         1               Fully-closed
+    `GFF3`_         1               Fully closed
+    Other GFFs      Either          Either
+    `PSL`_          0               Half-open
+    -------------   -------------   --------------------
+    `SAM <BAM>`_    1               n/a
+    `BAM`_          0               n/a
+    bowtie          0               n/a
+    -------------   -------------   --------------------
+    `bedGraph`_     0               Half-open
+    `BigWig`_*      0 or 1          Half-open or n/a          
+    `Wiggle`_       1               n/a
+    =============   =============   ====================
+ 
+*The coordinate representation used in `BigWig`_ files depends upon
+the format of the data blocks inside the file. If a `BigWig`_
+file contains `Wiggle`_-formatted data blocks, it is :term:`1-indexed`.
+If it contains `bedGraph`-formatted data blocks, it is :term:`0-indexed`, 
+:term:`half-open`.
+
+Conventions used in `yeti`
+--------------------------
 Following `Python`_ conventions, :data:`yeti` reports all coordinates in
-0-indexed and half-open representations. In this case, the coordinate would be::
+:term:`0-indexed` and :term:`half-open` representation.
+In this case, the coordinate would be::
 
     chromosome/contig:  'ChrI'
     start:              11
     end:                17
     strand:             '.' 
 
-    
+
+-------------------------------------------------------------------------------
+
+See also
+--------
+  - `UCSC file format FAQ`_ for detailed descriptions of various file formats
+  - `GFF3`_ specification for details on GFF3

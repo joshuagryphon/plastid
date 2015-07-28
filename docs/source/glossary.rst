@@ -4,6 +4,42 @@ Glossary of terms
  .. glossary ::
     :sorted:
 
+
+    0-indexed
+    0-indexed coordinates
+        In :term:`0-indexed` coordinate systems, the first position or coordinate
+        is labeled `0`. :term:`0-indexed coordinates` are typical in Python, 
+        where all slicing and indexing of lists, strings, and all other sliceable
+        objects occurs in :term:`0-indexed` and :term:`half-open` coordinate
+        representation.
+        
+        In contrast, see :term:`1-indexed coordinates`. For a detailed discussion
+        with examples, see :doc:`/concepts/coordinates`.
+
+    1-indexed
+    1-indexed coordinates
+        In :term:`1-indexed` coordinate systems, the first position or coordinate
+        is labeled `1`. In contrast, see :term:`0-indexed coordinates`. For
+        a detailed discussion with examples, see :doc:`/concepts/coordinates`.
+
+    half-open
+        In :term:`half-open` coordinate systems, the end coordinate of a
+        :term:`feature` is defined as the first position **NOT** included in
+        the feature. :term:`half-open` coordinates are typical in Python,
+        where all slicing and indexing of lists, strings, or other sliceable
+        objects use :term:`0-indexed` and :term:`half-open` coordinate representation.
+
+        In contrast, see :term:`fully-closed` coordinates. For a detailed discussion
+        with examples, see :doc:`/concepts/coordinates`.
+    
+    fully-closed
+    end-inclusive
+        In :term:`fully-closed` coordinate systems, the end coordinate of a
+        :term:`feature` is defined as the last position included in the feature.
+
+        In contrast, see :term:`half-open` coordinates. For a detailed discussion,
+        with examples, see :doc:`/concepts/coordinates`.
+ 
     alignment
     read alignments
         A record matching a short sequence of DNA or RNA to a region of identical or similar
