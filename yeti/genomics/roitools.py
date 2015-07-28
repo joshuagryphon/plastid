@@ -1665,10 +1665,11 @@ class SegmentChain(object):
             positions = positions[::-1]
         return self.chrom, positions[x], self.strand
     
-    def get_subchain(self,start,end,stranded=True):
+    def get_subchain(self,start,end,stranded=True,**extra_attr):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions
         specified in coordinates relative this |SegmentChain|. Attributes in
-        `self.attr` are copied to the child SegmentChain.
+        `self.attr` are copied to the child SegmentChain, with the exception
+        of `ID`, to which the suffix `'subchain'` is appended.
         
         Parameters
         ----------
@@ -1685,6 +1686,9 @@ class SegmentChain(object):
             they assumed to be counted the left end of the `self`,
             regardless of the strand of `self`. (Default: `True`)
 
+        extra_attr : keyword arguments
+            Values that will be included in the subchain's `attr` dict.
+            These can be used to overwrite values already present.
                           
         Returns
         -------
@@ -1709,7 +1713,11 @@ class SegmentChain(object):
             positions = positions[::-1]
         positions = positions[start:end]
         ivs = positionlist_to_segments(self.chrom,self.strand,set(positions))
-        return SegmentChain(*tuple(ivs),**copy.deepcopy(self.attr))
+        attr = copy.deepcopy(self.attr)
+        attr["ID"] = "%s_subchain" % self.get_name()
+        attr.update(extra_attr)
+
+        return SegmentChain(*tuple(ivs),**attr)
 
     def get_counts(self,gnd,stranded=True):
         """Return list of counts or values at each position in `self`
@@ -2126,7 +2134,7 @@ class Transcript(SegmentChain):
                              str(self)))))
         return name
     
-    def get_cds(self):
+    def get_cds(self,**extra_attr):
         """Retrieve |SegmentChain| covering the coding region of `self`, including the stop codon.
         If no coding region is present, returns an empty |SegmentChain|.
         
@@ -2134,6 +2142,14 @@ class Transcript(SegmentChain):
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
+            #. ID, generated as `"%s_CDS % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the CDS subchain's `attr` dict.
+            These can be used to overwrite values already present.
         
         Returns
         -------
@@ -2142,15 +2158,23 @@ class Transcript(SegmentChain):
         """
         my_segmentchain = SegmentChain()
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
-            my_segmentchain = Transcript(*self.get_subchain(self.cds_start,self.cds_end,stranded=True),
-                                cds_genome_start=self.cds_genome_start,
-                                cds_genome_end=self.cds_genome_end,
-                                transcript_id=self.get_name(),
-                                type="CDS",gene_id=self.get_gene())
+            my_segmentchain = self.get_subchain(self.cds_start,
+                                                self.cds_end,
+                                                stranded=True,
+                                                thickstart=self.cds_genome_start,
+                                                thickend=self.cds_genome_end,
+                                                cds_start=self.cds_start,
+                                                cds_end=self.cds_end,
+                                                cds_genome_start=self.cds_genome_start,
+                                                cds_genome_end=self.cds_genome_end,
+                                                ID="%s_CDS" % self.get_name(),
+                                                transcript_id=self.get_name(),
+                                                type="CDS",gene_id=self.get_gene())
+            my_segmentchain.attr.update(extra_attr)
             
         return my_segmentchain   
     
-    def get_utr5(self):
+    def get_utr5(self,**extra_attr):
         """Retrieve sub-|SegmentChain| covering 5'UTR of `self`.
         If no coding region, returns an empty |SegmentChain|
 
@@ -2158,7 +2182,16 @@ class Transcript(SegmentChain):
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-        
+            #. ID, generated as `"%s_UTR5" % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the UTR5 subchain's `attr` dict.
+            These can be used to overwrite values already present.
+
+
         Returns
         -------
         |SegmentChain|
@@ -2171,9 +2204,12 @@ class Transcript(SegmentChain):
             my_segmentchain.attr["type"] = "5UTR"
             my_segmentchain.attr["gene_id"] = self.get_gene()
             my_segmentchain.attr["transcript_id"] = self.get_gene()
+            my_segmentchain.attr["ID"] = "%s_UTR5" % self.get_name()
+            my_segmentchain.attr.update(extra_attr)
+
         return my_segmentchain   
     
-    def get_utr3(self):
+    def get_utr3(self,**extra_attr):
         """Retrieve sub-|SegmentChain| covering 3'UTR of `self`, excluding
         the stop codon. If no coding region, returns an empty |SegmentChain|
         
@@ -2181,6 +2217,15 @@ class Transcript(SegmentChain):
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
+            #. ID, generated as `"%s_UTR3" % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the UTR3 subchain's `attr` dict.
+            These can be used to overwrite values already present.
+
 
         Returns
         -------
@@ -2194,6 +2239,7 @@ class Transcript(SegmentChain):
             my_segmentchain.attr["type"] = "3UTR"
             my_segmentchain.attr["gene_id"] = self.get_gene()
             my_segmentchain.attr["transcript_id"] = self.get_gene()
+            my_segmentchain.attr.update(extra_attr)
             
         return my_segmentchain   
 
