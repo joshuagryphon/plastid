@@ -7,19 +7,31 @@ Known splice junctions can be misidentified as novel or non-canonical junctions
 when intronic sequence immediately downstream of the fiveprime splice site
 exactly matches the exonic sequence immediately downstream of the threeprime
 splice site. In fact, the junction point could appear anywhere in this
-locally-repeated region with equal support from sequencing data.
+locally-repeated region with equal support from sequencing data. For example,
+suppose we have a splice junction as follows::
 
+        
+                Exon 1 [0,6)            Intron                                  Exon 2 [16,24)
+                ---------------------   --------------------------------------  ------------------------------
+    Sequence    G   C   T   C   T   A   C   T   A   G   N   N   N   C   T   A   C   T   A   G   A   T   G   G
+    Position    0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
+    Repeated                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    
+In this case, the splice junction could be moved 3 bases to the left, or
+four bases to the right, without losing consistency with the sequence of
+any cDNA or read alignment covering the junction.
+   
 To identify this and other causes of false positive splice junction calls,
 the following operations are performed on each query junction:
 
-    1.  If a mask file from crossmap (see :py:mod:`~yeti.bin.crossmap`)
-        is provided, junctions in which one or more of the 5\' and 3\' splice
+    1.  If a :term:`mask file` from |crossmap|
+        is provided, junctions in which one or more of the 5' and 3' splice
         sites appear in a repetitive region of the genome are flagged as
         non-informative and written to a separate file. 
 
     2.  For remaining splice junctions, the extent of locally repeated nucleotide
         sequence, if any, surrounding the query junction's splice donor and
-        acceptor sites, are determined in both the 5\' and 3\' directions.
+        acceptor sites, are determined in both the 5' and 3' directions.
         
         This is the maximum window (*equal-support region*) across which the
         actual splice junction could be moved without reducing sequence support.
