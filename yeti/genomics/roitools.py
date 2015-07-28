@@ -2182,13 +2182,13 @@ class Transcript(SegmentChain):
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-            #. ID, generated as `"%s_UTR5" % self.get_name()`
+            #. ID, generated as `"%s_5UTR" % self.get_name()`
 
 
         Parameters
         ----------
         extra_attr : keyword arguments
-            Values that will be included in the UTR5 subchain's `attr` dict.
+            Values that will be included in the 5'UTR subchain's `attr` dict.
             These can be used to overwrite values already present.
 
 
@@ -2204,7 +2204,7 @@ class Transcript(SegmentChain):
             my_segmentchain.attr["type"] = "5UTR"
             my_segmentchain.attr["gene_id"] = self.get_gene()
             my_segmentchain.attr["transcript_id"] = self.get_gene()
-            my_segmentchain.attr["ID"] = "%s_UTR5" % self.get_name()
+            my_segmentchain.attr["ID"] = "%s_5UTR" % self.get_name()
             my_segmentchain.attr.update(extra_attr)
 
         return my_segmentchain   
@@ -2217,13 +2217,13 @@ class Transcript(SegmentChain):
         
             #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
             #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-            #. ID, generated as `"%s_UTR3" % self.get_name()`
+            #. ID, generated as `"%s_3UTR" % self.get_name()`
 
 
         Parameters
         ----------
         extra_attr : keyword arguments
-            Values that will be included in the UTR3 subchain's `attr` dict.
+            Values that will be included in the 3' UTR subchain's `attr` dict.
             These can be used to overwrite values already present.
 
 
@@ -2239,6 +2239,7 @@ class Transcript(SegmentChain):
             my_segmentchain.attr["type"] = "3UTR"
             my_segmentchain.attr["gene_id"] = self.get_gene()
             my_segmentchain.attr["transcript_id"] = self.get_gene()
+            my_segmentchain.attr["ID"] = "%s_3UTR" % self.get_name()
             my_segmentchain.attr.update(extra_attr)
             
         return my_segmentchain   

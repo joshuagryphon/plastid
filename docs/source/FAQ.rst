@@ -106,7 +106,7 @@ So, a 30-nucleotide read would contribute 30 :term:`counts` to a dataset.
 
 While it is possible to write any mapping rule in :mod:`yeti`, the :term:`mapping rules <mapping rule>`
 included by default count each read only once (e.g. at their 5' end, 3' end, et c). Even when using
-center / entire mapping, each position covered by a read alignment is only incremented by :math:`1.0/\ell`,
+*center* or *entire* mapping, each position covered by a read alignment is only incremented by :math:`1.0/\ell`,
 where :math:`\ell` is the length of the read. So, in this case, a 30-nucleotide read would only 
 contribute 1 :term:`count <counts>` to a dataset. See :doc:`/concepts/mapping_rules/` for more information.
 

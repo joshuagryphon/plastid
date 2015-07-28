@@ -131,17 +131,17 @@ in addition to continuous features (e.g. single exons).
 More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation`
 files (see :mod:`yeti.readers`)::
  
-    >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+    >>> from yeti.readers.bed import BED_Reader
 
     >>> # get an iterator over transcripts in file
-    >>> reader = GTF2_TranscriptAssembler(open("sgd_plus_utrs_chrI.gtf"))
+    >>> reader = BED_Reader(open("sgd_plus_utrs_chrI.bed"),return_type=Transcript)
 
     >>> # do something with transcripts. here we just look at their names & attribute dictionaries
     >>> for transcript in reader:
     >>>     print(transcript.get_name() + ":\t" + str(transcript.attr))
-    YAL069W_mRNA:	{'cds_genome_end': 646, 'name': 'YAL069W', 'gene_id': 'YAL069W', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL069W_mRNA', 'cds_genome_start': 334, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL069W', 'score': '.', 'type': 'mRNA', 'ID': 'YAL069W_mRNA'}
-    YAL068W-A_mRNA:	{'cds_genome_end': 789, 'name': 'YAL068W-A', 'gene_id': 'YAL068W-A', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068W-A_mRNA', 'cds_genome_start': 537, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'YAL068W-A', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068W-A_mRNA'}
-    YAL068C_mRNA:	{'cds_genome_end': 2169, 'name': 'PAU8', 'gene_id': 'YAL068C', 'utr5_source': 'estimated', 'source': '.', 'transcript_id': 'YAL068C_mRNA', 'cds_genome_start': 1809, 'phase': '.', 'utr3_source': 'estimated', 'gene_aliases': 'PAU8,seripauperin PAU8', 'score': '.', 'type': 'mRNA', 'ID': 'YAL068C_mRNA'}
+    YAL069W_mRNA:   {'cds_genome_end': 649, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 334, 'type': 'mRNA', 'ID': 'YAL069W_mRNA'}
+    YAL068W-A_mRNA: {'cds_genome_end': 792, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 537, 'type': 'mRNA', 'ID': 'YAL068W-A_mRNA'}
+    YAL068C_mRNA:   {'cds_genome_end': 2169, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 1806, 'type': 'mRNA', 'ID': 'YAL068C_mRNA'}
     [rest of output omitted]
 
 
@@ -149,7 +149,7 @@ files (see :mod:`yeti.readers`)::
 and the genome::
 
     >>> # load transcripts into a dictionary keyed on transcript ID
-    >>> transcript_dict = { X.get_name() : X for X in GTF2_TranscriptAssembler(open("sgd_plus_utrs_chrI.gtf")) }
+    >>> transcript_dict = { X.get_name() : X for X in BED_Reader(open("sgd_plus_utrs_chrI.bed"),return_type=Transcript) }
 
     >>> # we'll use the two-exon, minus-strand gene TFC3 as an example
     >>> tfc3 = transcript_dict["YAL001C_mRNA"]
@@ -185,9 +185,10 @@ ends of sequencing reads appear at each position in a chain::
     >>> alignments.set_mapping(FivePrimeMapFactory())
 
     >>> # fetch the number of 5' ends of alignments at positions 300-320
-    >>> tfc3.get_counts(alignments)[300:320]
+    >>> tfc3.get_counts(alignments)[320:340]
     array([ 0.,  0.,  0.,  2.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  1.,  1.,
             0.,  0.,  0.,  0.,  0.,  0.,  0.])
+    
 
 
 It is also possible to fetch sub-sections of a |Transcripts| or |SegmentChains|
@@ -196,16 +197,16 @@ as new |SegmentChains|::
     >>> # take first 200 nucleotides of TFC3 mRNA
     >>> subchain = tfc3.get_subchain(0,200)
     >>> subchain
-    <SegmentChain segments=2 bounds=chrI:150896-151186(-) name=YAL001C_mRNA>
+    <SegmentChain segments=2 bounds=chrI:150896-151186(-) name=YAL001C_mRNA_subchain>
 
 |Transcript| includes several convenience methods to fetch 5' UTRs, coding regions,
 and 3'UTRs from coding transcripts::
 
     >>> tfc3.get_utr5()
-    <SegmentChain segments=1 bounds=chrI:151166-151186(-) name=YAL001C_mRNA>
+    <SegmentChain segments=1 bounds=chrI:151166-151186(-) name=YAL001C_mRNA_UTR5>
 
     >>> tfc3.get_cds()
-    <SegmentChain segments=2 bounds=chrI:147596-151166(-) name=YAL001C_mRNA>
+    <SegmentChain segments=2 bounds=chrI:147596-151166(-) name=YAL001C_mRNA_CDS>
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
@@ -328,7 +329,6 @@ But, it is be inefficient to scan an entire file to find overlapping features,
 or to test whether two features overlap if we already know from their genomic
 coordinates that they cannot.
 
- .. TODO adjust GenomeHash so GenomicSegment can be used as a query
 
 |GenomeHash| and its subclasses avoid this problem by indexing features
 by location. A |GenomeHash| may be created from a list or dictionary of features
@@ -342,9 +342,6 @@ Having made a |GenomeHash|, we can ask what is where in the genome. For
 example, to find all features between bases 10000-20000 on the plus
 strand of chromosome *chrI*::
 
-    >>> from yeti.genomics.genome_hash import GenomeHash 
-    >>> my_hash = GenomeHash(transcript_dict)
-    
     >>> roi = GenomicSegment("chrI",10000,20000,"+")
     >>> my_hash[roi]
     [<Transcript segments=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,

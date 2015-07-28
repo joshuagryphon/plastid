@@ -40,6 +40,8 @@ Cookbook
 
 :doc:`Translation efficiency </examples/translation_eff>`          Estimate translation efficiency from :term:`ribosome profiling` and :term:`RNA-seq` data
 
+:doc:`Custom genome annotations </examples/make_annotation>`       Make a custom `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ file containing custom :term:`features <feature>`.
+
 :doc:`Metagene analyses </examples/metagene>`                      Perform :term:`metagene analysis <metagene>`, using :term:`ribosome profiling`
                                                                    data at the start codon as an example. Then, develop metagene analysis around
                                                                    a custom landmark for use with other data types.
