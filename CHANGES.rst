@@ -8,11 +8,15 @@ also follow `Semantic versioning <http://semver.org/>`_.
  .. note::
  
     This project was initially developed internally under the provisional
-    name ``genometools``. We did not realize this name was already used by another
-    genomics project. So, midway through development, we changed the name to ``yeti``,
-    moved some things around the package to more reasonable locations, and reset
+    name ``genometools``. At that point, we didn't expect to release the project,
+    so we didn't checkt os ee whether the naem was free. It turns out, 
+    it was not!
+    
+    When we realized we would release this project extramurally, we provisionaly
+    codenamed it ``yeti``, moved some things around the package to more reasonable
+    locations, changed some method names and behaviors for consistency, and reset
     the version number. At this same time, we migrated from our old SVN
-    repository to git. 
+    repository to a git repository.
 
 
 yeti [0.1.1] = [2015-07-23]
@@ -35,7 +39,9 @@ Fixed
 .....
   - Removed bug from :func:`yeti.bin.metagene.do_generate` that extended
     maximal spanning windows past equivalence points in 3' directions.
-    Added extra test cases to suit it.
+    Added extra unit test cases to suit it.
+  - GenomeHash can again accept GenomicSegments as parameters to __getitem__.
+    Added unit tests for this.
 
 Removed
 .......

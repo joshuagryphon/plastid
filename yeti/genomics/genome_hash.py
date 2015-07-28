@@ -121,7 +121,7 @@ class AbstractGenomeHash(object):
         ------
         TypeError
             if feature is not a |GenomicSegment| or |SegmentChain|
-        """        
+        """
         pass
 
 
@@ -390,6 +390,9 @@ class GenomeHash(AbstractGenomeHash):
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         nearby_features = self.get_nearby_features(roi, stranded=stranded)
+        if isinstance(roi,GenomicSegment):
+            roi = SegmentChain(roi)
+
         if stranded == False:
             fn = roi.unstranded_overlaps
         else:

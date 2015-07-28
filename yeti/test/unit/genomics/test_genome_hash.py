@@ -27,9 +27,49 @@ def _name_sort(x):
     return str(x)
 
 class AbstractGenomeHashHelper(unittest.TestCase):
-    
+   
     @skip_if_abstract
-    def test_getitem(self):
+    def test_getitem_genomicsegment(self):
+        """test getitem
+        
+        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+        
+        2.  Make sure each feature cannot fetch its own antisense subregion
+        
+        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
+        """             
+        # make sure we can fetch each transcript's own CDS
+        u = 0
+        for txid,tx in self.tx_dict.items():
+            ol_features = list(self.cds_hash[tx.spanning_segment])
+            self.assertIn(txid,(X.get_name() for X in ol_features),
+                          msg="%s failed to fetch its own CDS on same strand. Got %s" % (txid,ol_features))
+        
+            # make sure 5' UTR does not fetch CDS
+            utr5 = tx.get_utr5()
+            if len(utr5) > 0:
+                u += 1
+                ol_features = list(self.cds_hash[utr5.spanning_segment])
+                self.assertNotIn(txid,(X.get_name() for X in ol_features),
+                                 msg="%s 5' UTR fetched CDS on same strand" % txid)
+    
+                ol_features = list(self.as_cds_hash[utr5.spanning_segment])
+                self.assertNotIn(txid,(X.get_name() for X in ol_features),
+                                 msg="%s 5' UTR fetched CDS on opposite strand" % txid)
+            
+            self.assertGreater(u,0)
+
+        # make sure we don't fetch each transcript's own antisense CDS
+        # on opposite strand
+        for txid,tx in self.tx_dict.items():
+            ol_features = list(self.as_cds_hash[tx.spanning_segment])
+            self.assertNotIn(txid,(X.get_name() for X in ol_features),
+                          msg="%s fetched its own name on wrong strand!" % txid)        
+
+
+
+    @skip_if_abstract
+    def test_getitem_segmentchain(self):
         """test getitem
         
         1.  Make sure each feature can fetch its own subregion from its own neighborhood
