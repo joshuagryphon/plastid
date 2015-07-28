@@ -47,7 +47,8 @@ def util_func(x):
 def get_pipes():
     readfd, writefd = os.pipe()
     fcntl.fcntl(readfd,fcntl.F_SETFL,os.O_NONBLOCK)
-    return os.fdopen(readfd), os.fdopen(writefd,"w")
+    fcntl.fcntl(writefd,fcntl.F_SETFL,os.O_NONBLOCK)
+    return os.fdopen(readfd,"r"), os.fdopen(writefd,"w")
 
 class UtilClass(object):
     def __init__(self,tmp):
@@ -61,6 +62,15 @@ class UtilClass(object):
 #===============================================================================
 
 # stdout/err redirection -------------------------------------------------------
+STDERR_FD = sys.stderr.fileno()
+
+if sys.version_info[0] == 2:
+    EMPTY_BUFFER_ERROR = IOError
+else:
+    # Python 3.x codecs returns None from empty non-blocking buffers
+    # which causes a TypeError to be raised instead of 
+    # the IOError raised in Python 2.x
+    EMPTY_BUFFER_ERROR = TypeError
 
 @attr(test="unit")
 def test_catch_stderr_doesnt_print_without_buffer():
@@ -70,19 +80,18 @@ def test_catch_stderr_doesnt_print_without_buffer():
     
     @catch_stderr(outer_writer)
     def inner():
-        wrapped = catch_stderr()(stderr_func)
         # make sure value is returned from wrapped function
-        msg = wrapped(message)
-        assert_equal(msg,message)
+            wrapped = catch_stderr()(stderr_func)
+            msg = wrapped(message)
+            assert_equal(msg,message)
     
     inner()
-
-    # make sure no message made it out of `inner`
-    # this means using non-blocking IO and having an IOError
-    # because resource isn't ready
     outer_writer.flush()
     outer_writer.close()
-    assert_equal("",outer_reader.read())
+
+    # make sure no message made it out of `inner`
+    # with nothing to read in pipe, outer_reader should raise IOError
+    assert_raises(EMPTY_BUFFER_ERROR,outer_reader.read)
     outer_reader.close()
     
 @attr(test="unit")
@@ -108,13 +117,14 @@ def test_catch_stderr_doesnt_print_with_buffer_but_catches_in_buffer():
         inner_reader.close()
     
     inner()
-    # make sure no message made it out of `inner`
-    # this means using non-blocking IO and having an IOError
-    # because resource isn't ready
     outer_writer.flush()
     outer_writer.close()
-    assert_equal("",outer_reader.read())
+
+    # make sure no message made it out of `inner`
+    # with nothing to read in pipe, outer_reader should raise IOError
+    assert_raises(EMPTY_BUFFER_ERROR,outer_reader.read)
     outer_reader.close()
+
 
 
 # catch warnings    ------------------------------------------------------------

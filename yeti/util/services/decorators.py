@@ -40,6 +40,7 @@ Decorators
 """
 import functools
 import os
+import fcntl
 import sys
 import warnings
 import types
@@ -297,21 +298,25 @@ def catch_stderr(buf=None):
         """
         if buf is None:
             buf = open(os.devnull,"a")
-            
+
         @functools.wraps(func)
         def new_func(*args,**kwargs):
-            old_err = sys.stderr
-            sys.stderr = buf
+            stderr_fd = os.dup(sys.__stderr__.fileno())
+            new_fd  = buf.fileno() #tmpfile.fileno()
+            os.dup2(new_fd,sys.stderr.fileno())
             try:
                 result = func(*args,**kwargs)
             except Exception as e:
-                buf.flush()
-                sys.stderr = old_err
+                sys.stderr.flush() 
+                sys.stderr.close() 
+                os.dup2(stderr_fd,sys.stderr.fileno())
                 raise(e)
-            
-            buf.flush()
-            sys.stderr = old_err
+
+            sys.stderr.flush() 
+            os.dup2(stderr_fd,sys.stderr.fileno())
             return result
+
+        return new_func
 
         return new_func
     return decorator
@@ -381,18 +386,17 @@ def catch_stdout(buf=None):
         @functools.wraps(func)
         def new_func(*args,**kwargs):
             stdout_fd = os.dup(sys.stdout.fileno())
-            tmpfile = tempfile.TemporaryFile()
-            new_fd  = tmpfile.fileno()
+            new_fd  = buf.fileno()
             os.dup2(new_fd,sys.stdout.fileno())
             try:
                 result = func(*args,**kwargs)
             except Exception as e:
-                tmpfile.flush()
-                tmpfile.close()
+                buf.flush()
+                buf.close()
                 os.dup2(stdout_fd,sys.stdout.fileno())
                 raise(e)
 
-            tmpfile.flush()
+            buf.flush()
             os.dup2(stdout_fd,sys.stdout.fileno())
             return result
 
