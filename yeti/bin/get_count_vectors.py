@@ -80,7 +80,7 @@ def main(args=sys.argv[1:]):
         for feature in overlapping:
             tx.add_masks(*feature._segments)
          
-        count_vec = tx.get_valid_counts(ga)
+        count_vec = tx.get_masked_counts(ga)
         numpy.savetxt(full_filename,count_vec,fmt=args.format)
 
 if __name__ == "__main__":

@@ -675,7 +675,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
         roi.add_masks(*mask)
         offset = int(round((roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
-        counts[i,offset:offset+roi.get_length()] = roi.get_valid_counts(ga)
+        counts[i,offset:offset+roi.get_length()] = roi.get_masked_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
         

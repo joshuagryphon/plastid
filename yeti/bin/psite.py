@@ -137,7 +137,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         roi    = SegmentChain.from_str(roi_table["region"][i])
         mask   = SegmentChain.from_str(roi_table["masked"][i])
         roi.add_masks(*mask)
-        valid_mask = roi.get_valid_counts(ga).mask
+        valid_mask = roi.get_masked_counts(ga).mask
         
         offset = int(round((roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
