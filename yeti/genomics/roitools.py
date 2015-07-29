@@ -1243,8 +1243,9 @@ class SegmentChain(object):
                            "cds_genome_end",
                            "thickstart",
                            "thickend",
-                           "type",]
-        
+                           "type",
+                           "_bedx_column_order"]
+
         for segment in self:
             ltmp2 = self._get_8_gff_columns(segment,feature_type) +\
                    [make_GFF3_tokens(gff_attr,
@@ -1252,7 +1253,6 @@ class SegmentChain(object):
                                      escape=True)]
 
         return "\t".join(ltmp2) + "\n"
-        
     
     def as_gtf(self,feature_type=None,escape=True,excludes=[]):
         """Format |SegmentChain| as a block of `GTF2`_ output.
@@ -1341,7 +1341,8 @@ class SegmentChain(object):
                            "thickstart",
                            "thickend",
                            "type",
-                           "color"]
+                           "color",
+                           "_bedx_column_order"]
         
         for segment in self:
             ltmp2 = self._get_8_gff_columns(segment,feature_type) +\
@@ -1407,7 +1408,10 @@ class SegmentChain(object):
         
     
     def as_bed(self,thickstart=None,thickend=None,as_int=True,color=None):
-        """Format |SegmentChain| as a string of BED12 output.
+        """Format |SegmentChain| as a string of BED12[+X] output.
+        
+        If the |SegmentChain| was imported as a `BED`_ file with extra columns,
+        these will be output in the same order, after the `BED`_ columns.
 
         Parameters
         ----------
@@ -1430,7 +1434,7 @@ class SegmentChain(object):
         Returns
         -------
         str 
-            Line of BED12-formatted text
+            Line of BED12[+X]-formatted text
 
 
         Notes
@@ -1489,6 +1493,11 @@ class SegmentChain(object):
                     ",".join([str(len(X)) for X in self]) + ",",
                     ",".join([str(X.start - self[0].start) for X in self]) + ","
                    ]            
+
+            extra_cols = self.attr.get("_bedx_column_order",[])
+            if len(extra_cols) > 0:
+                ltmp.append(str(self.attr[X]) for X in extra_cols)
+            
             return "\t".join([str(X) for X in ltmp]) + "\n"
         else:
             # SegmentChain with no intervals
@@ -1862,7 +1871,7 @@ class SegmentChain(object):
             return SegmentChain(*tuple(ivs))
         
     @staticmethod
-    def from_bed(line):
+    def from_bed(line,extra_columns=0):
         """Create a |SegmentChain| from a line from a `BED`_ file.
         The `BED`_ line may contain 4 to 12 columns, per the specification.
         These will be auto-detected and parsed appropriately.
@@ -1875,6 +1884,21 @@ class SegmentChain(object):
         line
             Line from a `BED`_ file, containing 4 or more columns
 
+        extra_columns: int or list of tuples, optional
+            Extra, non-BED columns in `BED`_ file corresponding to feature
+            attributes.
+            
+            If `extra_columns` is an int, it is taken to be the
+            number of attribute columns. Attributes will be stored in
+            the `attr` dictionary of the |SegmentChain|, under names like
+            `custom0`, `custom1`, ... , `customN`.
+            
+            If `extra_columns` is a list of tuples, each tuple is taken
+            to be a pair of `(attribute_name, formatter_func)`. In this case,
+            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+            will be set to `formatter_func(column_value)`.
+            
+            (Default: 0)
 
         Returns
         -------
@@ -1882,10 +1906,26 @@ class SegmentChain(object):
         """
         frags = []
         items = line.strip("\n").split("\t")
+        
+        if isinstance(extra_columns,int):
+            if extra_columns < 0:
+                raise ValueError("Cannot make SegmentChain from BED input: if an integer, extra_columns must be non-negative.")
+            num_extra_columns = extra_columns
+            column_formatters = [("custom%s" % X,str) for X in range(extra_columns)]
+        elif isinstance(extra_columns,list):
+            if all([len(X) == 2 for X in extra_columns]) == False:
+                raise ValueError("Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
+            column_formatters = extra_columns
+            num_extra_columns = len(extra_columns)
+        else:
+            raise TypeError("Cannot make SegmentChain from BED input: extra_columns must be an int or list. Got a %s" % type(extra_columns))
+            
+        num_bed_columns = len(items) - num_extra_columns
+        
         chrom         = items[0]
         chrom_start   = int(items[1])
         chrom_end     = int(items[2])
-        strand = "." if len(items) < 6 else items[5]
+        strand = "." if num_bed_columns < 6 else items[5]
     
         default_id  = "%s:%s-%s(%s)" % (chrom,chrom_start,chrom_end,strand)
     
@@ -1905,9 +1945,9 @@ class SegmentChain(object):
         # set attr defaults in case we're dealing with BED4-BED9 format
         attr = { KEY : VAL for KEY,VAL,_ in bed_columns.values() }
     
-        # populate attr with real values from columns that are present
+        # populate attr with real values from BED columns that are present
         for i, tup in sorted(bed_columns.items()):
-            if len(items) > i:
+            if num_bed_columns > i:
                 key     = tup[0]
                 default = tup[1]
                 func    = tup[2]
@@ -1917,6 +1957,14 @@ class SegmentChain(object):
                     attr[key] = default
             else:
                 break
+        
+        # populate attr with values from remaining columns, if present
+        for i in range(num_bed_columns,len(items)):
+            name, formatter = column_formatters[i-num_bed_columns] 
+            attr[name] = formatter(items[i])
+        
+        if num_bed_columns > 0:
+            attr["_bedx_column_order"] = [X[0] for X in column_formatters]
     
         # convert color to hex string
         try:
@@ -2451,10 +2499,12 @@ class Transcript(SegmentChain):
         return "".join(ltmp)
     
     def as_bed(self,as_int=True,color=None):
-        """Format `self` as a BED12 line, assigning CDS boundaries 
+        """Format `self` as a BED12[+X] line, assigning CDS boundaries 
         to the thickstart and thickend columns from `self.attr`
 
-
+        If the |SegmentChain| was imported as a `BED`_ file with extra columns,
+        these will be output in the same order, after the `BED`_ columns.
+        
         Parameters
         ----------
         as_int : bool, optional
@@ -2501,7 +2551,7 @@ class Transcript(SegmentChain):
                                    color=color)
 
     @staticmethod
-    def from_bed(line):
+    def from_bed(line,extra_columns=0):
         """Create a |Transcript| from a BED line with 4 or more columns.
         `thickstart` and `thickend` columns, if present, are assumed to specify
         CDS boundaries, a convention that, while common, is formally outside the
@@ -2514,15 +2564,31 @@ class Transcript(SegmentChain):
         ----------
         line
             Line from a BED file with at least 4 columns
-    
+
+        extra_columns: int or list of tuples, optional
+            Extra, non-BED columns in `BED`_ file corresponding to feature
+            attributes.
+            
+            If `extra_columns` is an int, it is taken to be the
+            number of attribute columns. Attributes will be stored in
+            the `attr` dictionary of the |SegmentChain|, under names like
+            `custom0`, `custom1`, ... , `customN`.
+            
+            If `extra_columns` is a list of tuples, each tuple is taken
+            to be a pair of `(attribute_name, formatter_func)`. In this case,
+            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+            will be set to `formatter_func(column_value)`.
+            
+            (Default: 0)
+                
     
         Returns
         -------
         |Transcript|
         """
-        ivc = SegmentChain.from_bed(line)
-        segments = ivc._segments
-        attr = ivc.attr
+        segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
+        segments = segchain._segments
+        attr = segchain.attr
         attr.pop("type") # default type for SegmentChain is "exon". We want to use "mRNA"
         attr["cds_genome_start"] = attr["thickstart"]
         attr["cds_genome_end"]   = attr["thickend"]
@@ -2534,9 +2600,9 @@ class Transcript(SegmentChain):
     
     @staticmethod
     def from_psl(psl_line):
-        ivc = SegmentChain.from_psl(psl_line)
-        segments = ivc._segments
-        attr = ivc.attr
+        segchain = SegmentChain.from_psl(psl_line)
+        segments = segchain._segments
+        attr = segchain.attr
         attr["cds_genome_start"] = None
         attr["cds_genome_end"] = None
         return Transcript(*segments,**attr)

@@ -160,6 +160,18 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         self.assertGreater(c,0)
 
     @skip_if_abstract    
+    def test_import_bed_extra_columns_no_names(self):
+        assert False
+
+    @skip_if_abstract    
+    def test_import_bed_extra_columns_with_names(self):
+        assert False
+
+    @skip_if_abstract    
+    def test_export_bed_extra_columns(self):
+        assert False
+
+    @skip_if_abstract    
     def test_export_bed_gtf(self):
         """Test export to BED12 and GTF formats"""
         bed_text = tempfile.NamedTemporaryFile(mode="w",delete=False)
@@ -920,7 +932,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(post_mask_counts,200)
 
     @skip_if_abstract    
-    def test_valid_total_length(self):
+    def test_masked_total_length(self):
         """Test `total_valid_length()` and `add_masks()`"""
         iv1 = GenomicSegment("chrA",100,150,"+")
         iv2 = GenomicSegment("chrA",150,200,"+")
