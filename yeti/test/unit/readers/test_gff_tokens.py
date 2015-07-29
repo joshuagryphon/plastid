@@ -10,6 +10,7 @@ from yeti.readers.gff_tokens import escape_GFF3, unescape_GFF3,\
                                                     make_GTF2_tokens,\
                                                     parse_GFF3_tokens,\
                                                     parse_GTF2_tokens
+from yeti.util.services.decorators import catch_warnings
 
 #===============================================================================
 # INDEX: test data
@@ -270,3 +271,15 @@ class TestGTF2_TokenParsing(TestGFF3_TokenParsing):
     def test_token_write_subset(self):
         my_dicts = [self.modify_dict(X) for X in self.token_dicts]
         super(TestGTF2_TokenParsing,self).test_token_write_subset(dicts=my_dicts,non_excludes=["gene_id","transcript_id"])
+
+    @catch_warnings("ignore") # need to catch warnings because duplicate GTF2 tags raise UserWarnings
+    def test_gtf2_list_duplicate_tags(self):
+        test_cases = [('gene_id "mygene"; transcript_id "mytranscript"; tag "tag value";',
+                       {'gene_id' : 'mygene', 'tag' : 'tag value', 'transcript_id' : 'mytranscript'}),
+                      ('gene_id "mygene"; transcript_id "mytranscript"; tag "tag value"; tag "tag value 2";',
+                       {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}),
+                       ('gene_id "mygene"; tag "tag value"; transcript_id "mytranscript"; tag "tag value 2";',
+                       {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}),
+                     ]
+        for inp, outp in test_cases:
+            self.assertDictEqual(self.parser(inp),outp)

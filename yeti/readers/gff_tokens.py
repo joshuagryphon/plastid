@@ -462,7 +462,6 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
 
     return stmp + _make_generic_tokens(attr,excludes=excludes,join_pat='%s "%s"; ',escape=escape).strip(" ")
 
-@catch_warnings(simple_filter="always")
 def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
     """Helper function to parse tokens in the final column of a `GFF3`_ file
     into a dictionary of attributes. Because, the following attributes are
@@ -480,12 +479,12 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
     Examples
     --------
         >>> tokens = 'a=1;c=3;b=2;e=5;d=4;z=26,Parents=gene01'
-        >>> _parse_GFF3_tokens(tokens)
+        >>> parse_GFF3_tokens(tokens)
         {'a': '1', 'c': '3', 'b': '2', 'e': '5', 'd': '4', 'z': '26', 'parents' : ['gene01'] }
 
         >>> tokens = 'a=1;c=3,7;b=2;e=5;d=4;z=26,Parents=gene01,gene02'
-        >>> _parse_GFF3_tokens(tokens)
-        {'a': '1', 'c': '3','7', 'b': '2', 'e': '5', 'd': '4', 'z': '26', 'parents' : ['gene01','gene02']}
+        >>> parse_GFF3_tokens(tokens)
+        {'a': '1', 'c': '3,7', 'b': '2', 'e': '5', 'd': '4', 'z': '26', 'parents' : ['gene01','gene02']}
 
  
     Parameters
@@ -518,27 +517,39 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
             d[key] = val
     return d
 
-@catch_warnings(simple_filter="always")
 def parse_GTF2_tokens(inp):
     """Helper function to parse tokens in the final column of a `GTF2`_ file
     into a dictionary of attributes. All attributes are returned as strings,
-    and are unescaped if GFF escape sequences (e.g. *'%2B'*) are present. 
+    and are unescaped if GFF escape sequences (e.g. *'%2B'*) are present.
+
+    If duplicate keys are present (e.g. as in GENCODE `GTF2`_ files),
+    their values are returned as a catenated list, even though, strictly speaking,
+    this is outside the `GTF2`_ spec.
     
     Examples
     --------
         >>> tokens = 'gene_id "mygene"; transcript_id "mytranscript";'
-        >>> _parse_GTF2_tokens(tokens)
+        >>> parse_GTF2_tokens(tokens)
         {'gene_id' : 'mygene', 'transcript_id' : 'mytranscript'}
     
         >>> tokens = 'gene_id "mygene"; transcript_id "mytranscript"'
-        >>> _parse_GTF2_tokens(tokens)
+        >>> parse_GTF2_tokens(tokens)
         {'gene_id' : 'mygene', 'transcript_id' : 'mytranscript'}
     
         >>> tokens = 'gene_id "mygene;"; transcript_id "myt;ranscript"'
-        >>> _parse_GTF2_tokens(tokens)
+        >>> parse_GTF2_tokens(tokens)
         {'gene_id' : 'mygene;', 'transcript_id' : 'myt;ranscript'}
     
-    
+        >>> tokens = 'gene_id "mygene"; transcript_id "mytranscript"; tag "tag value";'
+        >>> parse_GTF2_tokens(tokens)
+        {'gene_id' : 'mygene', 'tag' : 'tag value', 'transcript_id' : 'mytranscript'}
+
+        >>> tokens = 'gene_id "mygene"; transcript_id "mytranscript"; tag "tag value"; tag "tag value 2";'
+        >>> parse_GTF2_tokens(tokens)
+        {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}
+
+
+
     Parameters
     ----------
     inp : str
@@ -562,8 +573,14 @@ def parse_GTF2_tokens(inp):
             val = val[:-1]
 
         if key in d:
-            warnings.warn("Found duplicate key '%s' in GTF2 line:\n    %s" % (key,inp),
-                          UserWarning)        
-        d[key] = unescape_GTF2(val)
+            warnings.warn("Found duplicate key '%s' in GTF2 line. Aggregating tags & returning as list:\n    %s" % (key,inp),
+                          UserWarning)
+            if isinstance(d[key],list):
+                d[key].append(val)
+            else:
+                d[key] = [d[key]]
+                d[key].append(val)
+        else:
+            d[key] = unescape_GTF2(val)
         
     return d

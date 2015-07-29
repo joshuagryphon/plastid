@@ -34,6 +34,8 @@ Changed
 .......
   - import of scientific packages now simulated using 'mock' during documentation
     builds by Sphinx
+  - duplicated attributes in GTF2 column 9 are now catenated & returned as a list
+    in attr dict. This is outside GTF2 spec, but a behavior used by GENCODE
 
 Fixed
 .....
