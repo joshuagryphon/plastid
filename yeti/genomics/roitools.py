@@ -1789,7 +1789,7 @@ class SegmentChain(object):
         
         Parameters
         ----------
-        genome : dict
+        genome : dict or :class:`twobitreader.TwoBitFile`
             Dictionary mapping chromosome names to sequences.
             Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
        
@@ -1819,7 +1819,7 @@ class SegmentChain(object):
         
         Parameters
         ----------
-        genome : dict
+        genome : dict or :class:`twobitreader.TwoBitFile`
             Dictionary mapping chromosome names to sequences.
             Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
        

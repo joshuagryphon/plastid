@@ -2,6 +2,7 @@
 
 .. _Wiggle: http://genome.ucsc.edu/goldenpath/help/wiggle.html
 .. _bedGraph: http://genome.ucsc.edu/goldenpath/help/bedgraph.html
+.. _SAM: https://samtools.github.io/hts-specs/SAMv1.pdf
 .. _BAM: http://genome.ucsc.edu/goldenpath/help/bam.html
 .. _BED: http://genome.ucsc.edu/FAQ/FAQformat.html#format1
 .. _BigBed: http://genome.ucsc.edu/goldenPath/help/bigBed.html
@@ -44,6 +45,7 @@
 .. _SGD: http://www.yeastgenome.org
 .. _Flybase: http://flybase.org
 .. _ENCODE: https://www.encodeproject.org/
+.. _GENCODE: www.gencodegenes.org 
 
 
 .. Non-Python software links
@@ -52,11 +54,12 @@
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
 .. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
+.. _cufflinks: http://cole-trapnell-lab.github.io/cufflinks/
 .. _BWA: http://bio-bwa.sourceforge.net
 .. _blat: http://genome.cshlp.org/content/12/4/656.full
 .. _Cigar: https://samtools.github.io/hts-specs/SAMv1.pdf
-.. _SAM: https://samtools.github.io/hts-specs/SAMv1.pdf
 .. _DESeq: http://www-huber.embl.de/users/anders/DESeq/
+.. _kallisto: http://pachterlab.github.io/kallisto/
 
 .. Our links
 
