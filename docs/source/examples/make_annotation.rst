@@ -1,8 +1,6 @@
 Creating custom `BED`_, `GTF2`_, and `GFF3`_ files
 ==================================================
 
- .. TODO : update this document when custom BED columns are supported
-
 In this tutorial, we describe how to make custom :term:`genome annotations <annotation>`
 in `BED`_ and `GTF2`_ formats. These can then be used as any other annotation file:
 
@@ -91,7 +89,6 @@ An analysis pipeline for this experiment might look the following:
             >>> rfp = Transcript(GenomicSegment("lenti223",2100,3061,"+"),ID="mCherry",cds_genome_start=2200,cds_genome_end=2911)
 
             # now, write out features 
-
             >>> with open("custom.gtf","w") as fout:
             >>>     fout.write(gfp.as_gtf())
             >>>     fout.write(rfp.as_gtf())
@@ -131,7 +128,7 @@ An analysis pipeline for this experiment might look the following:
 Identifying target sites for gene knockdown via dCAS9
 .....................................................
 Suppose we wish to knock down target genes using the programmable
-DNA-binding protein dCAS9 protein (dCAS9; see :cite:`Gilbert2014`).
+DNA-binding protein dCAS9 (see :cite:`Gilbert2014`).
 This requires us to:
 
   #. Define windows upstream of the transcription start sites (TSS) for the genes we
@@ -141,10 +138,7 @@ This requires us to:
      RNAs for dCAS9. For details on how to do that, see :cite:`Gilbert2014`. Here,
      we'll just fetch the nucleotide sequence.
 
-It is possible to download known annotations of transcription start sites. For the sake of this
-example, let's suppose those files weren't available, and that we'd need to define these on our own.
-
-We'll use the same annotation as in the example above, but first we'll download the
+We'll use the same transcript annotation as in the example above, but first we'll download the
 `2bit <twobit>`_-formatted version of the genome sequence, which requires less memory to read
 (*n.b.* if you haven't already, you need to install the
 `twobitreader <https://pypi.python.org/pypi/twobitreader>`_ package from `PyPI`_).
@@ -181,6 +175,7 @@ Then, within a Python session, read each transcript and create TSS windows::
     >>>     tss_window_sequence = tss_window.get_fasta(genome)
     >>>     seq_out.write(tss_window_sequence)
     
+    >>> # close files
     >>> bed_out.close()
     >>> seq_out.close()
 
@@ -188,171 +183,11 @@ The `fasta`_ file of sequences can then be processed with any pipeline, and the
 TSS windows viewed in a :term:`genome browser`, like `IGV`_ or the `UCSC genome browser`_.
 
 
- .. _make-annotation-choose-format:
-
-Choosing a format: `BED`_, `BigBed`_, `GTF2`_, and `GFF3`_
-----------------------------------------------------------
-
-Which format to choose depends on your purposes. The following questions
-highlight the differences between formats:
-
-Are your features something other than exons, coding regions, UTRs or transcripts?
-..................................................................................
-If so, you need to use something other than `GTF2`_, which, according to its
-specification, can only transcripts and their parts:
-
-  - CDS
-  - start_codon
-  - stop_codon
-  - 5UTR
-  - 3UTR
-  - inter
-  - inter_CNS
-  - intron_CNS
-  - exon
-  
-
-Do you need rich attribute data?
-................................
-If so, use something other than `BED`_ format. In classic `BED`_ formats,
-it is possible to store the only the following attributes:
-
-  - feature name
-  - feature coordinates (feature can be discontinuous, like a multi-exon transcript)
-  - feature coding region start & stop  
-  - a score for the feature
-  - a color for rendering the feature in a genome browser
-
-Any other data (e.g. GO terms, IDs of parental or related features, et c) cannot
-be represented.
-
-`BigBed`_ and `BED+X`_ formats can include additional attributes
-as columns, but in these formats all records must contain the same types of
-attributes.
-
-`GTF2`_ and `GFF3`_ offer the richest feature descriptions because they contain
-a specific column (column 9) that holds key-value pairs describing arbitrary
-information, which can differ from record to record.
-
-
- .. Note::
-
-    The `GFF3`_ specification allows any schema of parent-child hierarchy,
-    making `GFF3`_ files incredibly flexible.
-    
-    However, |SegmentChains| are unaware of which schema is in use at any given moment,
-    and therefore do not know what types the parent |SegmentChain| and each
-    of its children (|GenomicSegments|) should be rendered as in `GFF3`_ output.
-    Due to this ambiguity, attempts to call the :meth:`~yeti.genomics.roitools.SegmentChain.as_gff3`
-    method on a |SegmentChain| that requires parent-child relationships for export
-    -- i.e. all multi-segment chains -- will raise an :py:obj:`AttributeError`.
-    
-    Instead, users may export the individual features from which the
-    multi-segment |SegmentChain| was constructed, setting *ID*, *Parent*,
-    and *type* attributes in each child feature's `attr` dict::
-
-        >>> # a multi-segment chain
-        >>> my_alignment
-        <SegmentChain segments=2 bounds=chrI:212353-214802(+) name=some_alignment>
-        >>> my_alignment.attr
-        {'ID': 'some_alignment', 'type': 'alignment'}
-        >>> list(my_alignment)
-        [<GenomicSegment chrI:212353-212900 strand='+'>,
-         <GenomicSegment chrI:214313-214802 strand='+'>]
-
-        >>> # make a single, continuous feature with the endpoints of `my_alignment`
-        >>> # 'ID' attribute should match 'ID' of my_alignment
-        >>> alignment_span = SegmentChain(my_alignment.spanning_segment,ID="some_alignment",type="alignment")
-
-        >>> # then make a subfeature for each segment `my_alignment`,
-        >>> # 'Parent' attribute should match the 'ID' attribute of `alignment_span`
-        >>> block1 = SegmentChain(my_alignment[0],Parent=my_alignment.get_name(),type="aligned_block")
-        >>> block2 = SegmentChain(my_alignment[1],Parent=my_alignment.get_name(),type="aligned_block")
-
-        >>> # write to file
-        >>> features = [alignment_span,block1,block2]
-        >>> with open("some_file.gff","w") as gff_out:
-        >>>     for feature in features:
-        >>>         gff_out.write(feature.as_gff3())
-
-    In contrast, multi-segment |Transcripts| *can* be unambiguously exported to `GFF3`_;
-    they are rendered using the ontology from 
-    `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_.
-
-
-Does your dataset include multiple types of features?
-.....................................................
-If so, use `GTF2`_ or `GFF3`_. Because `BED`_ files contain no column to
-describe feature type, it is simplest to make sure all features in the `BED`_
-file are of a single type.
-
-
-Are the features you care about discontinuous? And is your computer limited for memory?
-.......................................................................................
-If so, use one of the `BED`_-family formats. In `BED`_ files, each feature
--- even discontinuous
-features like multi-exon transcripts -- are represented as single lines. This
-means that programs don't need to search through a file to find all of the
-pieces (e.g. exons, piecse of coding regions, et c) that make up a feature.
-
-In contrast, in `GTF2`_ and `GFF3`_ files, each line can only contain a continuous
-feature or sub-feature. So, to represent a multi-exon transcript, each exon
-would be represented on its own line as a single subfeature. These would be
-linked together by a shared attribute (`'transcript_id'` in the case of `GTF2`_;
-`'parent'` in the case of `GFF3`_) to reconstruct the parental transcript.
-
-A `GTF2`_ or `GFF3`_ parser cannot know whether it has collected all of the sub-features
-needed to assemble a discontinuous feature until it receives information
-indicating this is so. This information could be:
-
-  - In a `GFF3`_ file, the special line::
-    
-        # this line is a comment, ignored by GFF3 parsers.
-        ###
-        # the line above is not a comment, but a GFF3 instruction!
-        # this line and the line above it are comments. 
-        
-    which indicates all features in memory may be assembled.
-  - In a sorted `GTF2`_ or `GFF3`_ file, a change in chromosomes, indicating
-    all features on the previous chromosome may be assembled.
-  - The end of the annotation file 
-
-In all cases, a `GTF2`_ or `GFF3`_ parser has to hold all collected features in memory until
-it it receives some signal that all related features have been collected. This costs
-memory, time, and disk space, but allows subfeatures to have their own
-annotation data, and arbitrary keywords.
-
-**However**, if all of your features are continuous, they can all represented one
-a single line in `GTF2`_ and `GFF3`_, and don't need to be assembled. In this case,
-`GTF2`_ or `GFF3`_ formats pose no additional cost compared to `BED`_.
-
-
-In summary
-..........
-The table below summarizes the discussion above: 
-
-==========   =====================================    ==========================    ======================   ==============
-**Format**   **Features that are not transcripts**    **Multiple feature types**    **Feature attributes**   **Memory use**
-             **or parts of transcripts**    
-----------   -------------------------------------    --------------------------    ----------------------   --------------
-`BED`_       Yes                                      No                            No                       Low
-
-`BED+X`_     Yes                                      If specified in extra         1 per extra column       Low
-                                                      column
-                                                      
-`BigBed`_    Yes                                      If specified in extra         1 per extra column       Low
-                                                      column
-                                                      
-`GTF2`_      No                                       Yes                           Unlimited                High for discontinuous features
-
-`GFF3`_      Yes                                      Yes                           Unlimited                High for discontinuous features
-==========   =====================================    ==========================    ======================   ==============
-
  .. _make-annotation-bigbed:
 
 Making `BigBed`_ files
 ----------------------
-`BigBed` files are easily made from `BED`_ files using `Jim Kent's utilities`_.
+`BigBed`_ files are easily made from `BED`_ files using `Jim Kent's utilities`_.
 To make a `BigBed`_ file:
 
  #. Create a custom `BED`_ or `BED+X`_, file, following the examples above
@@ -384,14 +219,13 @@ To make a `BigBed`_ file:
     Your annotation will be saved as ``my_annotation.bb``.
 
 
-For more details, see the documentation for `Jim Kent's utilities`_ and the
-`UCSC file format FAQ`_.
-
 -------------------------------------------------------------------------------
 
 
 See also
 --------
+  - :ref:`data-annotation-format` for a brief overview of the costs & benefits
+    of `BED`_, `BigBed`_, `GTF2`_ and `GFF3`_ files.
   - :class:`~yeti.genomics.roitools.SegmentChain` and
     :class:`~yeti.genomics.roitools.Transcript` for details on these classes
   - The `UCSC file format FAQ`_ for details on file formats and further discussion
@@ -402,5 +236,6 @@ See also
     for a description of a common `GFF3`_ feature ontology
   - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_,
     for the current SO consortium release.
+  - `Jim Kent's utilities`_ for more info on making `BigBed`_ files.
 
 

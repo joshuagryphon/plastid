@@ -61,7 +61,8 @@ In-depth
 ===============================================================    ===========================================================================================
 **Tutorial**                                                       **Contents**
 ---------------------------------------------------------------    -------------------------------------------------------------------------------------------
-:doc:`/concepts/data`                                              Introduction & discussion to the types of data used in genomics
+:doc:`/concepts/data`                                              Introduction & discussion to the types of data used in genomics, 
+                                                                   and the advantages and disadvantages of their various file formats.
 
 :doc:`/concepts/coordinates`                                       Primer on the various coordinate systems used in genomics
 

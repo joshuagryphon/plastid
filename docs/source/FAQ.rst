@@ -146,6 +146,13 @@ Either one can be an appropriate starting place for a pipeline, depending upon y
 See the documentation and/or source code for |cs| and |counts_in_region| for further
 discussion. 
 
+.. _faq-segmentchain-gff3:
+
+Why does :meth:`yeti.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
+..............................................................................................................
+This is due to the incredible flexibility of the `GFF3`_ file format and ambiguities that this flexibility
+necessarily induces. See :ref:`this advice <data-export-gff3>` on how to handle this.
+
 
 .. _faq-analysis-deseq:
 

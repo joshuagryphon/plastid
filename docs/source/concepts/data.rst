@@ -1,5 +1,5 @@
-Categories of genomics data
-===========================
+Categories and formats of genomics data
+=======================================
 This document contains very, very brief overviews of the types of data
 encountered in genomics, and of some common file formats.
 
@@ -115,40 +115,177 @@ There are a number of answers to this:
     become very onerous for mammalian-sized genomes. This is why, for example,
     the `2bit <twobit>`_, `BigBed`_, and `BigWig`_ formats were created. 
 
- #. The various file formats have their own strengths and weaknesses. For example,
-    we'll compare transcript annotations in `BED`_ and `GFF3`_ format:
-     
-      - `BED`_ files can contain one multi-exon transcript in a single line.
-        This means that if you are, for example, tabulating gene expression 
-        values, you can read one line of a file, process the transcript, 
-        count the reads covering it, and then forget that transcript before
-        moving on to the next record.
-      
-        In contrast, `GFF3`_ files are hierarchical. Each exon in a multi-exon
-        transcript would have its own line. Therefore, in order to
-        assemble a transcript from a `GFF3`_ file, many records need to be
-        held in memory until the `GFF3`_ reader is confidant it has read all of
-        the records that are members of the transcript of interest. Frequently,
-        a `GFF3`_ reader has know way of knowing that *a priori*, so many readers
-        end up holding all records in memory before processing any individual
-        transcript. This costs a tremendous amount of memory, and time, compared
-        to processing a `BED`_ file.
-
-      - However, `BED`_ files contain no feature annotation information beyond
-        a feature name. So, using only a `BED`_ file, one cannot, for example,
-        group transcripts by gene without some external source of information.
-        `GFF3`_ files, in contrast, offer the ability to include arbitrarily
-        complex information (parent-child relationships, paragraphs desribing
-        gene function, citations, GO terms, et c) for any given feature.
-
-For more info, see:
-
-  - the `UCSC file format FAQ <http:/genome.ucsc.edu/FAQ/FAQformat.html>`_,
-    which discusses various formats in detail
+ #. The various file formats have their own strengths and weaknesses. These
+    are detailed in :ref:`data-annotation-format`.
     
-  - the `GFF3`_ specification
-  
-  - the `GTF2`_ specification
+
+ .. _data-annotation-format:
+
+Which annotation format should I use?
+-------------------------------------
+When choosing a feature annotation format, consider the following questions:
+
+  - Will the annotation contain features that are not transcripts?
+  - Will multiple types of features be stored in the same file?
+  - Does rich attribute information need to be saved in the file?
+  - Are features discontinuous?
+  - Is the computing environment limited for processing power or memory and/or
+    is the feature annotation very large?
+
+
+`BED`_, `BED+X`_, & `BigBed`_
+.............................
+`BED`_-family files contain a single record per line. And, in contrast
+to `GTF2`_ or `GFF3`_ files, single records -- like transcripts -- can
+be discontinuous. This makes `BED`_ files computationally
+cheap to parse, because each line is a complete record. In contrast, 
+in `GTF2`_ and `GFF3`_ files, discontinuous features like transcripts need
+to be assembled from multiple continuous records (e.g. records describing
+individual exons).
+
+`BED`_ files contain columns that describe only the following attributes:
+
+  - feature name
+  - feature coordinates (feature can be discontinuous, like a multi-exon transcript)
+  - feature coding region start & stop  
+  - a score for the feature
+  - a color for rendering the feature in a genome browser
+
+Note that *there is no attribute for feature type:* typically all records
+in a `BED`_ file are of the same type (e.g. every record is a transcript
+or an alignment or a ChIP binding site, et c).
+
+`BigBed`_ and `BED+X`_ formats can include additional attributes in additional
+columns, but every entry in each column must be the same type of attribute 
+(e.g. a "gene id" column can only contain gene IDs).
+
+
+`GTF2`_ & `GFF3`_
+..................
+Unlike `BED`_-family files, `GTF2`_ and `GFF3`_ files are hierarchical:
+features have parents and children, which are other features. Continuous
+features are represented on a single line. Discontinuous features -- like
+transcripts -- are represented on multiple lines -- for example, one
+line per exon, intron, and continous portion of a coding region -- which
+are linked together via parent-child attributes (`'Parent'` in for `GFF3`_;
+`'gene_id'` and `'transcript_id'` in `GTF2`_).
+
+This has several important implications:
+
+ #. Sub-features in `GTF2`_ & `GFF3`_ can have their own attributes,
+    which differ from the attributes of their parent features.
+ 
+ #. In order to reconstruct a transcript (or any discontinuous feature),
+    `GTF2`_ & `GFF3`_ parsers need to collect all of the required subfeatures.
+    However, parsers only know when they have collected all of the features
+    if they receive information indicating this is so. This information could be:
+
+      - In a `GFF3`_ file, the special line::
+        
+            # this line is a comment, ignored by GFF3 parsers.
+            ###
+            # the line above is not a comment, but a GFF3 instruction!
+            # this line and the line above it are comments. 
+            
+        which indicates all features in memory may be assembled.
+      - In a sorted `GTF2`_ or `GFF3`_ file, a change in chromosomes, indicating
+        all features on the previous chromosome may safely be assembled.
+      - The end of the annotation file 
+
+    In all cases, a `GTF2`_ or `GFF3`_ parser has to hold all collected features
+    in memory until it it receives some signal that all related features have
+    been collected. This costs memory, time, and disk space, and can become
+    unwieldy for large genomes, files that contain many records,
+    or files that don't use the `'###'` instruction.
+
+However,
+a major advantage of `GTF2`_ and `GFF3`_ files is that they contain a column (column 9)
+for arbitrary key-value pairs of attributes (such as GO terms, descriptive paragraphs,
+IDs that cross-reference different databases). This allows different features to have
+different types of attributes.
+
+The primary difference between `GTF2`_ and `GFF3`_ formats is that, formally, 
+`GTF2`_ files only describe transcripts and their parts, according to a defined
+schema. The complete list of valid record types in `GTF2`_ is:
+
+  - CDS
+  - start_codon
+  - stop_codon
+  - 5UTR
+  - 3UTR
+  - inter
+  - inter_CNS
+  - intron_CNS
+  - exon
+
+`GFF3`_ files can describe any type of feature, and the `GFF3`_ specification
+allows any schema of parent-child hierarchy, making `GFF3`_ files incredibly
+flexible. The cost of this flexibility is that, lacking schema information,
+`GFF3`_ parsers cannot assemble complex
+features. Similarly, given an assembled feature in Python (represented as a
+|SegmentChain|), in the absence of a schema there is ambiguity surrounding
+what types the parent |SegmentChain| and each of its children (|GenomicSegments|)
+should be rendered as in `GFF3`_ output. Due to this ambiguity, attempts to call the
+:meth:`~yeti.genomics.roitools.SegmentChain.as_gff3` method on a multi-segment
+|SegmentChain| will raise an :py:obj:`AttributeError`.
+
+ .. _data-export-gff3:
+
+Instead, users may export the individual features from which the
+multi-segment |SegmentChain| was constructed, setting `'ID'`, `'Parent'`,
+and `'type'` attributes in each child feature's `attr` dict::
+
+    >>> # a multi-segment chain
+    >>> my_alignment
+    <SegmentChain segments=2 bounds=chrI:212353-214802(+) name=some_alignment>
+    >>> my_alignment.attr
+    {'ID': 'some_alignment', 'type': 'alignment'}
+    >>> list(my_alignment)
+    [<GenomicSegment chrI:212353-212900 strand='+'>,
+     <GenomicSegment chrI:214313-214802 strand='+'>]
+    >>> my_alignment.as_gff3()
+    # AttributeError!
+
+    >>> # make a single, continuous feature with the endpoints of `my_alignment`
+    >>> # 'ID' attribute should match 'ID' of my_alignment
+    >>> alignment_span = SegmentChain(my_alignment.spanning_segment,ID="some_alignment",type="alignment")
+
+    >>> # then make a subfeature for each segment `my_alignment`,
+    >>> # 'Parent' attribute should match the 'ID' attribute of `alignment_span`
+    >>> block1 = SegmentChain(my_alignment[0],Parent=my_alignment.get_name(),type="aligned_block")
+    >>> block2 = SegmentChain(my_alignment[1],Parent=my_alignment.get_name(),type="aligned_block")
+
+    >>> # write to file
+    >>> features = [alignment_span,block1,block2]
+    >>> with open("some_file.gff","w") as gff_out:
+    >>>     for feature in features:
+    >>>         gff_out.write(feature.as_gff3())
+
+In contrast, multi-segment |Transcripts| *can* be unambiguously exported to `GFF3`_;
+they are rendered using the ontology from 
+`Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_.
+
+
+In summary
+..........
+The table below summarizes the discussion above: 
+
+==========   =====================================    ==========================    ======================   ==============
+**Format**   **Features that are not transcripts**    **Multiple feature types**    **Feature attributes**   **Memory use**
+             **or parts of transcripts**    
+----------   -------------------------------------    --------------------------    ----------------------   --------------
+`BED`_       Yes                                      No                            No                       Low
+
+`BED+X`_     Yes                                      If specified in extra         1 per extra column       Low
+                                                      column
+                                                      
+`BigBed`_    Yes                                      If specified in extra         1 per extra column       Low (and indexed)
+                                                      column
+                                                      
+`GTF2`_      No                                       Yes                           Unlimited                High for discontinuous features
+
+`GFF3`_      Yes                                      Yes                           Unlimited                High for discontinuous features
+==========   =====================================    ==========================    ======================   ==============
 
 
 Getting the most out of your time & data
@@ -163,7 +300,24 @@ to save some time by following several practices:
     `UCSC`_'s similar-but-still-different *hg38*.
 
  #. If using a large genome (e.g. *Drosophila* or larger), consider using
-    non-hierarchical (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_, `BigWig`_ ) file
-    types instead of non-indexed formats.
+    non-hierarchical (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_,
+    `BigWig`_ ) formats instead of non-indexed formats.
 
  #. Work from alignments in `BAM`_, rather than `bowtie`_, format.
+
+-------------------------------------------------------------------------------
+
+See also
+--------
+  - :class:`~yeti.genomics.roitools.SegmentChain` and
+    :class:`~yeti.genomics.roitools.Transcript` for details on these classes
+  - The `UCSC file format FAQ`_ for details on file formats and further discussion
+    of their capabilities, advantages, and disadvantages
+  - The `GFF3 specification <GFF3>`_ for details on GFF3 files
+  - :doc:`/concepts/coordinates` for information on genomic coordinates
+  - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_,
+    for a description of a common `GFF3`_ feature ontology
+  - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_,
+    for the current SO consortium release.
+
+
