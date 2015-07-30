@@ -26,7 +26,7 @@ Glossary of terms
         In :term:`half-open` coordinate systems, the end coordinate of a
         :term:`feature` is defined as the first position **NOT** included in
         the feature. So, in this representation, the end coordinate of a
-        3-nucleotide :term:`feature` that starts at position 3 would be 7.
+        3-nucleotide :term:`feature` that starts at position 3 would be 6.
         
          :term:`half-open` coordinates are typical in Python,
         where all slicing and indexing of lists, strings, or other sliceable
@@ -40,7 +40,7 @@ Glossary of terms
         In :term:`fully-closed` coordinate systems, the end coordinate of a
         :term:`feature` is defined as the last position included in the feature.
         So, in this representation, the end coordinate of a 3-nucleotide
-        :term:`feature` that starts at position 3 would be 6.
+        :term:`feature` that starts at position 3 would be 5.
 
         In contrast, see :term:`half-open` coordinates. For a detailed discussion,
         with examples, see :doc:`/concepts/coordinates`.

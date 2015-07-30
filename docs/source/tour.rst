@@ -264,7 +264,7 @@ at runtime::
     >>> from yeti.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
     
     >>> alignments.set_mapping(FivePrimeMapFactory())
-    >>> tfc3.get_cds_().get_counts(alignments)[:50]
+    >>> tfc3.get_cds().get_counts(alignments)[:50]
     array([ 3.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
             0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,
             0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,
@@ -272,7 +272,7 @@ at runtime::
 
     >>> # change to mapping with 15 nucleotide offset from 5' end
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=15))
-    >>> tfc3.get_cds_().get_counts(alignments)[:50]
+    >>> tfc3.get_cds().get_counts(alignments)[:50]
     array([ 0.,  0.,  3.,  2.,  1.,  0.,  3.,  0.,  0.,  0.,  0.,  0.,  0.,
             0.,  0.,  3.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,
             0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
