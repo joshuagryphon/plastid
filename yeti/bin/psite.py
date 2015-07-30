@@ -275,15 +275,28 @@ def main(argv=sys.argv[1:]):
         
     # find max offset, plot, write dict
     offset_dict = OrderedDict() 
-    fig = plt.figure()
-    ax  = plt.gca()
-    plt.xlabel("nt from CDS start (5' end mapping)")
-    plt.ylabel("Normalized read density")
-    plt.title("Fiveprime read offsets by length")
+    profiles = args.max_length+1 - args.min_length
+    colors = matplotlib.cm.get_cmap("hsv")(numpy.linspace(0,1.0,profiles))
+    offset_dict = OrderedDict()
+    max_y = -numpy.inf
+
+    figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
+    fig, axes  = plt.subplots(nrows=profiles,sharex=True,figsize=(7.5,figheight))
+    fig.suptitle("Fiveprime read offsets by length")
+    axes[-1].set_xlabel("nt from CDS start (5' end mapping)")
+    plt.suptitle("Fiveprime read offsets by length")
     x = metagene_profile["x"]
     mask = numpy.tile(True,len(x)) if args.require_upstream is False else (x <= 0)
 
-    for k in range(args.min_length,args.max_length+1):
+    for n,k in enumerate(range(args.min_length,args.max_length+1)):
+        ax = axes[n]
+        ax.yaxis.set_visible(False)
+        color = colors[n]
+        ax.text(0.0,0.8,"%s-mers" % k,
+                ha="left",
+                va="top",
+                transform=matplotlib.transforms.offset_copy(ax.transAxes,fig,
+                                                            x=6.0,y=6.0,units="points"))
         y = metagene_profile["%s-mers" % k]
         # if y is nans or zeros, no offset is found
         if mask.sum() == numpy.isnan(y[mask]).sum() or y[mask].sum() == 0:
@@ -293,17 +306,23 @@ def main(argv=sys.argv[1:]):
             
         offset_dict[k] = offset
         if not numpy.isnan(y.max()):
-            lines = plt.plot(x,y)
-            plt.text(-offset,
+            lines = ax.plot(x,y,color=color)
+            ax.text(-offset,
                      y[mask].max(),
-                     "%s: %s" % (k,offset),
-                     color=lines[0].get_color(),
+                     "%s nt" % (offset),
+                     color=color,
                      ha="center",
                      transform=matplotlib.transforms.offset_copy(ax.transData,fig,
                                                                  x=3.0,y=3.0,units="points")
                     )   
 
+        max_y = max(max_y,ax.get_ylim()[1])
+
     plt.xlim(x.min(),x.max())
+
+    # put axes on common scale
+    for ax in axes:
+        ax.set_ylim(0,max_y)
 
     # save data as p-site offset table
     fn = "%s_p_offsets.txt" % args.outbase
