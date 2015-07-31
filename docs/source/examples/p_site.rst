@@ -14,7 +14,7 @@ an unbiased nuclease (e.g. RNase I, NOT microccal nuclease). that
 trims the :term:`ribosome-protected footprints <footprint>` to the
 edges of the ribosome.
 
-We will use the :doc:`/test_dataset` of yeast chromosome I.
+We will use the :doc:`/test_dataset`. 
 
 
 Strategy
@@ -86,38 +86,46 @@ From the terminal:
  .. code-block:: shell
 
     # generate metagene `roi` file. See `metagene` documentation for details
-    $ metagene generate chrI --landmark cds_start --annotation_files sgd_plus_utrs_chrI.gtf
+    $ metagene generate merlin_orfs --landmark cds_start --annotation_files merlin_orfs.gtf
 
     # run the psite script
-    # We ignore reads shorter than 25 nucleotides or longer than 35-
+    # We ignore reads shorter than 29 nucleotides or longer than 35-
     # there should be few of these, and it saves psite from doing 
     # unnecessary analyses
-    $ psite chrI_rois.txt SRR1562907 --min_length 25 --max_length 35 --require_upstream --count_files SRR1562907_chrI.bam
+    $ psite merlin_orfs_rois.txt SRR609197_riboprofile  --min_length 29 --max_length 35 --require_upstream --count_files SRR609197_riboprofile.bam
 
 The script will make many files, two of which are of interest to most users:
 
-  #. A two-column text file (``SRR1562907_p_offsets.txt``), in which the first
+  #. An SVG graphic (``SRR1562907_riboprofile_p_offsets.svg``), showing the metagene
+     profiles for each read length:
+
+      .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
+         :figclass: captionfigure
+         :alt: Output of P-site script
+
+         Graphical output of |psite| script.
+
+     From this image we can see that there are few 29- and 35-mers, so
+     their P-site mapping is likely to be off. We'll adjust these
+     manually below.
+
+  #. A two-column text file (``SRR609197_riboprofile_p_offsets.txt``), in which the first
      column is a read length and the second, the corresponding :term:`P-site offset`
      from the 5' end of the read::
 
         #length	p_offset
-        25	9
-        26	12
-        27	11
-        28	12
-        29	12
-        30	13
+        29	0
+        30	12
         31	13
-        32	13
-        33	13
-        34	13
-        35	13
+        32	14
+        33	14
+        34	14
+        35	0
         default	13
 
-  #. An SVG graphic (``SRR1562907_p_offsets.svg``), showing the metagene
-     profiles for each read length:
-
-        [TODO: include updated graphic]
+     As in the graphical output, the values for 29 and 35 appear to be off. We will
+     edit this file in a text editor, and set the offset to 12 for 29-mers, and 14
+     for 35-mers. We'll also set the default to 14, the most common value.
 
 
 
@@ -134,7 +142,7 @@ by |psite| to the ``--offset`` parameter. For example, from the terminal:
 
  .. code-block :: shell
 
-    $ some_script --offset SRR1562907_p_offsets.txt --fiveprime_variable --offset SRR1562907_p_offsets.txt [other arguments]
+    $ some_script --offset SRR609197_riboprofile_p_offsets_adjusted.txt --fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt [other arguments]
 
 
 In interactive sessions
@@ -144,7 +152,7 @@ In interactive sessions, we first need to load the offset file::
 
     >>> offset_dict = {}
 
-    >>> with open("SRR1562907_p_offsets.txt") as fin:
+    >>> with open("SRR609197_riboprofile_p_offsets_adjusted.txt") as fin:
     >>>     for line in fin: 
     >>>         if not line.startswith("#"): # ignore comments & metadata
     >>>             length, offset = line.strip("\n").split("\t")
