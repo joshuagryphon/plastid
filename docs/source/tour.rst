@@ -50,7 +50,7 @@ Classes & data structures
                                                                for quick lookup of features that overlap or cover a region.
     =======================================================    =========================================
 
-In the examples below, we'll be using a small :doc:`test_dataset` covering yeast chromosome I.
+In the examples below, we'll be using a small :doc:`test_dataset` covering the human cytomegalovirus (hCMV) genome (:cite:`Stern-ginossar2012`).
 
 -------------------------------------------------------------------------------
 
@@ -134,14 +134,14 @@ files (see :mod:`yeti.readers`)::
     >>> from yeti.readers.bed import BED_Reader
 
     >>> # get an iterator over transcripts in file
-    >>> reader = BED_Reader(open("sgd_plus_utrs_chrI.bed"),return_type=Transcript)
+    >>> reader = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
 
     >>> # do something with transcripts. here we just look at their names & attribute dictionaries
     >>> for transcript in reader:
     >>>     print(transcript.get_name() + ":\t" + str(transcript.attr))
-    YAL069W_mRNA:   {'cds_genome_end': 649, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 334, 'type': 'mRNA', 'ID': 'YAL069W_mRNA'}
-    YAL068W-A_mRNA: {'cds_genome_end': 792, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 537, 'type': 'mRNA', 'ID': 'YAL068W-A_mRNA'}
-    YAL068C_mRNA:   {'cds_genome_end': 2169, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 1806, 'type': 'mRNA', 'ID': 'YAL068C_mRNA'}
+    ORFL1W_(RL1):	{'cds_genome_end': 2298, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 1366, 'type': 'mRNA', 'ID': 'ORFL1W_(RL1)'}
+    ORFL2C:	{'cds_genome_end': 2723, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2502, 'type': 'mRNA', 'ID': 'ORFL2C'}
+    ORFL3C:	{'cds_genome_end': 3015, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2935, 'type': 'mRNA', 'ID': 'ORFL3C'}
     [rest of output omitted]
 
 
@@ -149,26 +149,26 @@ files (see :mod:`yeti.readers`)::
 and the genome::
 
     >>> # load transcripts into a dictionary keyed on transcript ID
-    >>> transcript_dict = { X.get_name() : X for X in BED_Reader(open("sgd_plus_utrs_chrI.bed"),return_type=Transcript) }
+    >>> transcript_dict = { X.get_name() : X for X in BED_Reader(open("merlin_orfs.bed"),return_type=Transcript) }
 
-    >>> # we'll use the two-exon, minus-strand gene TFC3 as an example
-    >>> tfc3 = transcript_dict["YAL001C_mRNA"]
-    >>> tfc3
-    <Transcript segments=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>
+    >>> # we'll use the two-exon, minus-strand gene ORFL83C as an example
+    >>> demo_tx = transcript_dict["ORFL83C_(UL29)"]
+    >>> demo_tx
+    <Transcript intervals=2 bounds=merlin:35005-37403(-) name=ORFL83C_(UL29)>
 
-    >>> # get genomic coordinate of 89th nucleotide from 5' end of TFC3
+    >>> # get genomic coordinate of 1124th nucleotide from 5' end of ORFL83C
     >>> # right before the splice junction
-    >>> tfc3.get_genomic_coordinate(89)
-    ('chrI', 151096, '-')
+    >>> demo_tx.get_genomic_coordinate(1124)
+    ('merlin', 36278, '-')
     
-    >>> # get genomic coordinate of 90th nucleotide from 5' end of TFC3
+    >>> # get genomic coordinate of 1125th nucleotide from 5' end of ORFL83C
     >>> # right after the splice junction
-    >>> tfc3.get_genomic_coordinate(90)
-    ('chrI', 151005, '-')
+    >>> demo_tx.get_genomic_coordinate(1125)
+    ('merlin', 36131, '-')
 
     >>> # and the inverse operation also works
-    >>> tfc3.get_segmentchain_coordinate('chrI', 151005, '-')
-    90
+    >>> demo_tx.get_segmentchain_coordinate("merlin",36131,"-")
+    1125
 
 .. _tour-get-counts:
 
@@ -181,32 +181,32 @@ ends of sequencing reads appear at each position in a chain::
     >>> import pysam
 
     >>> # load read alignments, and map them to 5' ends
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam","rb")])
+    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
     >>> alignments.set_mapping(FivePrimeMapFactory())
 
     >>> # fetch the number of 5' ends of alignments at positions 300-320
-    >>> tfc3.get_counts(alignments)[320:340]
-    array([ 0.,  0.,  0.,  2.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  1.,  1.,
-            0.,  0.,  0.,  0.,  0.,  0.,  0.])
-    
-
+    >>> demo_tx.get_counts(alignments)[320:340]
+    array([   3.,   23.,    3.,   17.,   67.,   22.,    5.,   15.,   14.,
+             99.,   26.,   13.,   27.,  112.,   34.,    1.,   13.,    0.,
+              4.,    2.])
 
 It is also possible to fetch sub-sections of a |Transcripts| or |SegmentChains|
 as new |SegmentChains|::
 
-    >>> # take first 200 nucleotides of TFC3 mRNA
-    >>> subchain = tfc3.get_subchain(0,200)
+    >>> # take first 200 nucleotides of  mRNA
+    >>> subchain = demo_tx.get_subchain(0,200)
     >>> subchain
-    <SegmentChain segments=2 bounds=chrI:150896-151186(-) name=YAL001C_mRNA_subchain>
+    <SegmentChain intervals=1 bounds=merlin:37203-37403(-) name=ORFL83C_(UL29)_subchain>
 
 |Transcript| includes several convenience methods to fetch 5' UTRs, coding regions,
 and 3'UTRs from coding transcripts::
 
-    >>> tfc3.get_utr5()
-    <SegmentChain segments=1 bounds=chrI:151166-151186(-) name=YAL001C_mRNA_UTR5>
+    >>> demo_tx.get_utr5()
+    <SegmentChain intervals=1 bounds=merlin:37353-37403(-) name=ORFL83C_(UL29)_5UTR>
 
-    >>> tfc3.get_cds()
-    <SegmentChain segments=2 bounds=chrI:147596-151166(-) name=YAL001C_mRNA_CDS>
+    >>> demo_tx.get_cds()
+    <Transcript intervals=2 bounds=merlin:35105-37353(-) name=ORFL83C_(UL29)_CDS>
+
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
@@ -214,9 +214,9 @@ of strings or :class:`Bio.SeqRecord.SeqRecord` objects. These sequences will
 automatically be spliced and reverse-complemented, as necessary::
 
     >>> from Bio import SeqIO
-    >>> genome = SeqIO.to_dict(SeqIO.parse(open("chrI.fa"),"fasta"))
-    >>> tfc3.get_cds().get_sequence(genome)
-    'ATGGTACTGACGATTTATCCTGACGAACTCGTACAAATAGTGTCTGATAAAATTGCTTCAAATAAGGGAAAAATCACTTTGAATCAGCTGTGGGATATATCTGGTAAATATT
+    >>> genome = SeqIO.to_dict(SeqIO.parse(open("merlin_NC006273-2.fa"),"fasta"))
+    >>> demo_tx.get_cds().get_sequence(genome)
+    'ATGTCCGGCCGTCGCAAGGGCTGCTCGGCGGCCACGGCGTCTTCCTCCTCGTCGTCGCCGCCGTCGCGCCTTCCTCTGCCTGGGCACGCGCGTCGGCCGCGTCGCAAACGCTGCTTGGTACCCGAGG...'  
     # rest of output omitted
 
 
@@ -264,27 +264,31 @@ at runtime::
     >>> from yeti.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
     
     >>> alignments.set_mapping(FivePrimeMapFactory())
-    >>> tfc3.get_cds().get_counts(alignments)[:50]
-    array([ 3.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,
-            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,
-            1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
+    >>> demo_tx.get_cds().get_counts(alignments)[:50]
+    array([ 24.,   4.,   0.,   1.,   6.,   1.,   0.,   1.,  16.,   2.,   1.,
+             1.,   2.,  13.,  17.,  13.,  13.,   2.,   3.,  23.,  10.,  39.,
+            22.,  23.,  31.,  34.,  11.,  20.,  15.,   2.,   8.,  10.,   4.,
+            11.,   9.,   5.,   5.,   4.,  13.,   5.,   2.,   0.,   2.,   4.,
+             0.,   7.,  48.,  10.,  14.,   2.])
 
     >>> # change to mapping with 15 nucleotide offset from 5' end
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=15))
-    >>> tfc3.get_cds().get_counts(alignments)[:50]
-    array([ 0.,  0.,  3.,  2.,  1.,  0.,  3.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  3.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,
-            0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-            1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
+    >>> demo_tx.get_cds().get_counts(alignments)[:50]
+    array([  3.,  26.,   8.,  17.,   4.,   4.,   9.,  27.,   7.,   3.,  17.,
+            10.,  18.,  20.,   1.,  24.,   4.,   0.,   1.,   6.,   1.,   0.,
+             1.,  16.,   2.,   1.,   1.,   2.,  13.,  17.,  13.,  13.,   2.,
+             3.,  23.,  10.,  39.,  22.,  23.,  31.,  34.,  11.,  20.,  15.,
+             2.,   8.,  10.,   4.,  11.,   9.])
 
     >>> # change to mapping from 3' end, with no offset
     >>> alignments.set_mapping(ThreePrimeMapFactory())
-    >>> tfc3.get_cds().get_counts(alignments)[:50]
-    array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  8.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  2.,  1.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
+    >>> demo_tx.get_cds().get_counts(alignments)[:50]
+    array([  5.,   6.,  14.,  17.,  24.,   5.,  14.,  19.,   4.,   5.,  11.,
+             6.,   4.,   4.,   0.,   2.,   0.,   0.,   1.,   6.,  14.,  26.,
+            25.,   4.,  23.,   7.,   8.,  24.,  11.,  11.,  22.,   9.,  14.,
+             2.,   0.,   1.,   5.,   9.,   7.,   1.,   6.,   3.,   1.,   4.,
+             5.,  15.,  15.,   6.,  17.,   8.])
+
 
 
 |GenomeArrays| and subclasses can be exported to `wiggle`_ or `bedGraph`_
@@ -302,12 +306,12 @@ method::
     >>> new_data = GenomeArray()
     >>> new_data.add_from_wiggle(open("alignments_rc.wig"),"-")
     
-    >>> tfc3.get_cds().get_counts(new_data)[:50]
-    array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  8.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  2.,  1.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,
-            0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
-
+    >>> demo_tx.get_cds().get_counts(new_data)[:50]
+    array([  5.,   6.,  14.,  17.,  24.,   5.,  14.,  19.,   4.,   5.,  11.,
+             6.,   4.,   4.,   0.,   0.,   0.,   0.,   0.,   6.,  14.,  26.,
+            25.,   4.,  23.,   7.,   8.,  24.,  11.,  11.,  22.,   9.,  14.,
+             2.,   0.,   0.,   5.,   9.,   7.,   1.,   6.,   3.,   1.,   4.,
+             5.,  15.,  15.,   6.,  17.,   8.])
 
 For further information, see:
 
@@ -342,26 +346,71 @@ Having made a |GenomeHash|, we can ask what is where in the genome. For
 example, to find all features between bases 10000-20000 on the plus
 strand of chromosome *chrI*::
 
-    >>> roi = GenomicSegment("chrI",10000,20000,"+")
+    >>> roi = GenomicSegment("merlin",10000,20000,"+")
     >>> my_hash[roi]
-    [<Transcript segments=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
-     <Transcript segments=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>]
+    [<Transcript intervals=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
+     <Transcript intervals=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
+     <Transcript intervals=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
+     <Transcript intervals=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
+     <Transcript intervals=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
+     <Transcript intervals=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
+     <Transcript intervals=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
+     <Transcript intervals=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
+     <Transcript intervals=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
+     <Transcript intervals=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
+     <Transcript intervals=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
+     <Transcript intervals=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
+     <Transcript intervals=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
+     <Transcript intervals=1 bounds=merlin:18467-18685(+) name=ORFL44W>,
+     <Transcript intervals=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
+     <Transcript intervals=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
+     <Transcript intervals=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
+     <Transcript intervals=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
+     <Transcript intervals=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>]
 
 Or on both strands::
 
     >>> my_hash.get_overlapping_features(roi,stranded=False)
-    [<Transcript segments=1 bounds=chrI:11423-12062(-) name=YAL065C_mRNA>,
-     <Transcript segments=1 bounds=chrI:9979-10540(+) name=YAL066W_mRNA>,
-     <Transcript segments=1 bounds=chrI:11934-12567(+) name=YAL064W-B_mRNA>,
-     <Transcript segments=1 bounds=chrI:13221-13854(-) name=YAL064C-A_mRNA>]
+    [<Transcript intervals=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
+     <Transcript intervals=1 bounds=merlin:17610-17858(-) name=ORFL43C.iORF1>,
+     <Transcript intervals=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
+     <Transcript intervals=1 bounds=merlin:17610-17969(-) name=ORFL43C>,
+     <Transcript intervals=2 bounds=merlin:7812-13053(-) name=ORFL27C>,
+     <Transcript intervals=1 bounds=merlin:15644-15916(-) name=ORFL38C>,
+     <Transcript intervals=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
+     <Transcript intervals=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
+     <Transcript intervals=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
+     <Transcript intervals=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
+     <Transcript intervals=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
+     <Transcript intervals=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
+     <Transcript intervals=1 bounds=merlin:15699-15938(-) name=ORFL39C>,
+     <Transcript intervals=1 bounds=merlin:17062-17295(-) name=ORFL41C>,
+     <Transcript intervals=1 bounds=merlin:13170-13403(-) name=ORFL31C.iORF1>,
+     <Transcript intervals=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
+     <Transcript intervals=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
+     <Transcript intervals=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
+     <Transcript intervals=1 bounds=merlin:12958-13227(-) name=ORFL29C>,
+     <Transcript intervals=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
+     <Transcript intervals=1 bounds=merlin:12911-13141(-) name=ORFL28C.iORF1>,
+     <Transcript intervals=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>,
+     <Transcript intervals=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
+     <Transcript intervals=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
+     <Transcript intervals=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
+     <Transcript intervals=1 bounds=merlin:13111-13440(-) name=ORFL31C_(UL2)>,
+     <Transcript intervals=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
+     <Transcript intervals=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
+     <Transcript intervals=1 bounds=merlin:12900-13160(-) name=ORFL28C>,
+     <Transcript intervals=1 bounds=merlin:18467-18685(+) name=ORFL44W>]
     
-Does anything interesting overlap *TFC3*?
+Does anything interesting overlap *ORFL83C_(UL29)*?
 
  .. code-block:: python
 
-    >>> my_hash[tfc3]
-    [<Transcript segments=2 bounds=chrI:147529-151186(-) name=YAL001C_mRNA>]
-    # nope, just TFC3 itself.
+    >>> my_hash[demo_tx]
+    [<Transcript intervals=1 bounds=merlin:37078-37449(-) name=ORFL84C>,
+     <Transcript intervals=1 bounds=merlin:33082-35058(-) name=ORFL79C_(UL27)>,
+     <Transcript intervals=1 bounds=merlin:37383-37898(-) name=ORFL85C_(UL30)>,
+     <Transcript intervals=2 bounds=merlin:35005-37403(-) name=ORFL83C_(UL29)>]
 
 For more information, see the module documentation for :mod:`~yeti.genomics.genome_hash`.
 

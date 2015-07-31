@@ -154,7 +154,7 @@ Mapping rules are set via :meth:`~yeti.genomics.genome_array.BAMGenomeArray.set_
    >>> import pysam
    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
-   >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam","rb")])
+   >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=5))
@@ -269,7 +269,7 @@ to mapping functions. To specify an offset, use a wrapper function::
     >>>
     >>>    return new_func
 
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam","rb")])
+    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
     >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 
