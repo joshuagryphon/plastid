@@ -27,23 +27,26 @@ This tutorial requires two types of data:
 
 First, we import everything we need::
 
-    >>> import pysam 
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, ThreePrimeMapFactory
+    >>> import pysam
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
     >>> from yeti.readers.bed import BED_Reader
+    >>> from yeti.util.scriptlib.argparsers import _parse_variable_offset_file
+    >>> from yeti.util.io.filters import CommentReader
 
 Next, load the transcripts. By default, :class:`~yeti.genomics.readers.BED_Reader` 
 and the other readers in :data:`yeti` behave as iterators. Here, we'll retrieve
 the transcripts as a :class:`list`::
 
-    >>> reader = list(BED_Reader(open("sgd_plus_utrs_chrI.bed")))
+    >>> offset_dict = _parse_variable_offset_file(CommentReader(open("SRR609197_riboprofile_p_offsets_adjusted.txt")))
+    >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
 Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
 which we'll load into a :class:`~yeti.genomics.genome_array.BAMGenomeArray`.
 For our :term:`mapping rule`, we'll map reads 15 nucleotides from the 3' end,
 corresponding to the P-site of the ribosome (cite:`Ingolia2009`)::
 
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam")])
-    >>> alignments.set_mapping(ThreePrimeMapFactory(offset=15))
+    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
+    >>> alignments.set_mapping(VariableFivePrimeMapFactory(offset_dict))
 
 Then, to fetch a vector of counts covering each transcript, we'll use
 the :meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`,
@@ -56,54 +59,26 @@ genomic coordinates)::
     >>> for transcript in transcripts:
     >>>     count_vectors.append(transcript.get_counts(alignments))
 
-    # we'll take transcript 38 as an example- it has lots of reads
+    # we'll take transcript 53 as an example- it has lots of reads
     # check the lengths of the first transcript and its vector.
     # they should be identical
-    >>> my_transcript = transcripts[38]
-    >>> my_vector = count_vectors[38]
+    >>> my_transcript = transcripts[53]
+    >>> my_vector = count_vectors[53]
     >>> my_transcript.get_length(), len(my_vector)
-    (1698, 1698)
+    (1571, 1571)
 
     # get total counts over entire vector
     >>> my_vector.sum()
-    367301.0
+    7444.0
 
-    >>> # slicing - look at first 100 positions of vector
-    >>> my_vector[:100]
-    array([  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             2.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   6.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   1.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   1.00000000e+00,   2.00000000e+00,
-             3.00000000e+00,   1.00000000e+00,   0.00000000e+00,
-             2.00000000e+00,   0.00000000e+00,   1.40000000e+01,
-             2.30000000e+01,   1.40000000e+02,   1.78500000e+03,
-             3.34000000e+02,   4.40000000e+01,   7.53000000e+02,
-             4.10000000e+02,   1.20000000e+02,   2.49000000e+02,
-             1.11000000e+02,   2.99000000e+02,   1.45300000e+03,
-             1.76000000e+02,   4.10000000e+01,   2.46000000e+02,
-             5.99000000e+02,   4.80000000e+01,   5.59000000e+02,
-             7.60000000e+01,   5.90000000e+01,   8.73000000e+02,
-             3.70000000e+01,   4.50000000e+01,   6.48000000e+02,
-             2.50000000e+01,   5.60000000e+01,   6.23000000e+02,
-             4.60000000e+01,   3.60000000e+01,   5.63000000e+02,
-             6.90000000e+01,   1.10000000e+01,   8.45000000e+02,
-             1.38000000e+02,   6.80000000e+01,   6.25000000e+02,
-             2.20000000e+01,   1.50000000e+01,   3.81000000e+02,
-             2.35000000e+02,   6.50000000e+01,   4.07000000e+02,
-             2.26000000e+02,   9.50000000e+01,   6.75000000e+02,
-             1.59000000e+02,   5.40000000e+01,   8.46000000e+02,
-             8.50000000e+01,   9.50000000e+01,   4.33000000e+02,
-             1.06000000e+02,   1.23000000e+02,   5.97000000e+02,
-             4.10000000e+01,   1.91000000e+02,   2.83000000e+02,
-             8.60000000e+01,   7.20000000e+01,   4.20000000e+02,
-             7.40000000e+01,   3.10000000e+01,   6.86000000e+02,
-             4.30000000e+01,   7.70000000e+01,   4.60000000e+02,
-             4.60000000e+01,   2.80000000e+01,   1.47000000e+02,
-             1.47000000e+02,   3.40000000e+01,   7.77000000e+02,
-             1.02000000e+02])
+    >>> # slicing 
+    >>> my_vector[200:250]
+    array([ 22.,  17.,   6.,   6.,   4.,   2.,   8.,   2.,   5.,  14.,  16.,
+            36.,  29.,   9.,  18.,   3.,  13.,  10.,   9.,   7.,  12.,  13.,
+             3.,   8.,  12.,  10.,   2.,   6.,   2.,  11.,  12.,   6.,  17.,
+            17.,   1.,  36.,  45.,  51.,  11.,   4.,  36.,  14.,  24.,  19.,
+             5.,   4.,   8.,   8.,  26.,  14.])
+
 
 Because the vector is a :class:`numpy.ndarray`, it can be manipulated using
 any of the tools in `numpy`_, `SciPy`_, or `matplotlib`_::
@@ -112,15 +87,15 @@ any of the tools in `numpy`_, `SciPy`_, or `matplotlib`_::
     
     # mean & variance in coverage
     >>> my_vector.mean(), my_vector.var()
-    >>> (216.31389870435808, 86983.56872319823)
+    >>> (4.7383831954169322, 33.108513999564828)
 
     # location of highest peak
     >>> my_vector.argmax()
-    218
+    55
 
     # take cumulative sum
     >>> my_vector.cumsum()
-    array([      0.,       0.,       0., ...,  367301.,  367301.,  367301.])
+    array([    0.,     0.,     0., ...,  7444.,  7444.,  7444.])
    
     # 30-codon sliding window average
     >>> window = numpy.ones(90).astype(float)/90.0
@@ -173,43 +148,42 @@ The script may then be executed from the terminal:
 
  .. code-block:: shell
 
-    $ get_count_vectors --annotation_files sgd_plus_utrs_chrI.bed \
+    $ get_count_vectors --annotation_files merlin_orfs.bed \
                         --annotation_format BED \
-                        --count_files SRR1562907_chrI.bam \
-                        --threeprime --offset 15 \
+                        --count_files SRR609197_riboprofile.bam \
+                        --fiveprime_variable \
+                        --offset SRR609197_riboprofile_p_offsets_adjusted.txt \
                         folder_of_vectors
 
 Each output file will be saved in `folder_of_vectors` and named for the `ID`
 attribute of the corresponding genomic :term:`feature`:
 
  .. code-block : shell                        
+
     $ ls folder_of_vectors
-    HRA1.txt            YAL019W_mRNA.txt    YAL039C_mRNA.txt    YAL063C-A_mRNA.txt  YAR027W_mRNA.txt
-    snR18.txt           YAL020C_mRNA.txt    YAL040C_mRNA.txt    YAL063C_mRNA.txt    YAR028W_mRNA.txt
-    tA(UGC)A.txt        YAL021C_mRNA.txt    YAL041W_mRNA.txt    YAL064C-A_mRNA.txt  YAR029W_mRNA.txt
-    tL(CAA)A.txt        YAL022C_mRNA.txt    YAL042C-A_mRNA.txt  YAL064W-B_mRNA.txt  YAR030C_mRNA.txt
-    tP(UGG)A.txt        YAL023C_mRNA.txt    YAL042W_mRNA.txt    YAL064W_mRNA.txt    YAR031W_mRNA.txt
-    tS(AGA)A.txt        YAL024C_mRNA.txt    YAL043C_mRNA.txt    YAL065C_mRNA.txt    YAR033W_mRNA.txt
-    YAL001C_mRNA.txt    YAL025C_mRNA.txt    YAL044C_mRNA.txt    YAL066W_mRNA.txt    YAR035C-A_mRNA.txt
-    (rest of output omitted)    
+    ORFL100C.txt               ORFL169C.txt                 ORFL237C.txt                    ORFL308C_(UL139).txt         ORFL85C_(UL30).txt
+    ORFL101C.iORF1_(UL36).txt  ORFL16C.iORF1.txt            ORFL238W.iORF1.txt              ORFL309C.txt                 ORFL86W.txt
+    ORFL101C.txt               ORFL16C.txt                  ORFL238W.txt                    ORFL30W.txt                  ORFL87W.txt
+    ORFL102C.iORF1.txt         ORFL170C.txt                 ORFL239C.txt                    ORFL310W.txt                 ORFL88C.iORF1.txt
+    ORFL102C_(UL38).txt        ORFL171W.txt                 ORFL23W_(RL12).txt              ORFL311W.txt                 ORFL88C_(UL30A).txt
+    ORFL103C_(vMIA).txt        ORFL172W.txt                 ORFL240C.txt                    ORFL312C.txt                 ORFL89C.txt
+    ORFL104C_(UL37).txt        ORFL173W.txt                 ORFL241C_(UL103).txt            ORFL313C_(UL138).txt         ORFL8C.txt
+    ORFL105C_(UL40).txt        ORFL174C.iORF2.txt           ORFL242W.txt                    ORFL314C.iORF1.txt           ORFL90C.txt
+    (rest of output omitted)
 
 
 The output can be loaded into numpy vectors using :func:`numpy.loadtxt`::
 
     >>> import numpy
     
-    >>> my_reloaded_vector = numpy.loadtxt("folder_of_vectors/YAL038W_mRNA.txt")
-    >>> my_reloaded_vector[:30]
-    array([  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             2.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   6.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   1.00000000e+00,   0.00000000e+00,
-             1.00000000e+00,   1.00000000e+00,   2.00000000e+00,
-             3.00000000e+00,   1.00000000e+00,   0.00000000e+00,
-             2.00000000e+00,   0.00000000e+00,   1.40000000e+01,
-             2.30000000e+01,   1.40000000e+02,   1.78500000e+03])
+    >>> my_reloaded_vector = numpy.loadtxt("folder_of_vectors/ORFL46W.iORF1_(UL13).txt")
+    >>> my_reloaded_vector[200:250]
+    array([ 22.,  17.,   6.,   6.,   4.,   2.,   7.,   2.,   5.,  14.,  15.,
+            34.,  27.,   9.,  18.,   3.,  13.,  10.,   9.,   7.,  12.,  13.,
+             3.,   8.,  12.,  10.,   2.,   6.,   2.,  11.,  12.,   6.,  17.,
+            17.,   1.,  35.,  45.,  49.,  11.,   4.,  36.,  14.,  24.,  19.,
+             5.,   4.,   8.,   8.,  26.,  14.])
+
 
 
 |get_count_vectors| can optionally take a :term:`mask file` to exclude
