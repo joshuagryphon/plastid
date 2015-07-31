@@ -133,16 +133,16 @@ additions, or deletions of gene/transcript models).
 
 We will run the :ref:`generate <metagene-generate>` program using the following arguments:
 
-  - ``yeast_cds_start`` : name all output files with the prefix `yeast_cds_start` 
+  - ``merlin_cds_start`` : name all output files with the prefix `merlin_cds_start` 
   - ``--landmark cds_start`` : calculate a metagene average surrounding start codons
-  - ``--annotation_files sgd_plus_utrs_chrI.gtf`` : use transcript models from this annotation file
+  - ``--annotation_files merlin_orfs.gtf`` : use transcript models from this annotation file
   - ``--downstream 200`` : include up to 200 nucleotides downstream of the start codon in the average
 
 The program is called from the terminal: 
 
  .. code-block:: shell
 
-    $ metagene generate yeast_cds_start --landmark cds_start --annotation_files sgd_plus_utrs_chrI.gtf --downstream 200
+    $ metagene generate merlin_cds_start --landmark cds_start --annotation_files merlin_orfs.gtf --downstream 200
 
 For a detailed description of these and other command-line arguments, see the
 :mod:`metagene script documentation <yeti.bin.metagene>`
@@ -175,16 +175,16 @@ Specifically, :ref:`count <metagene-count>` performs the following steps:
     in the average to a tab-delimited text file.
 
 To call the :ref:`count <metagene-count>` program, type into a terminal window.
-In this example ``--threeprime --offset 15`` specify our :term:`mapping rule` for the
+In this example ``--fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt`` specify our :term:`mapping rule` for the
 :term:`P-site offset`. 
 
  .. code-block:: shell
 
-    $ metagene count yeast_cds_start_rois.txt SRR1562907 --count_files SRR1562907_chrI.bam --threeprime --offset 15
+    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile --count_files SRR609197_riboprofile.bam --fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt
 
 
 A number of files are created and may be used for further processing. In our
-example, ``SRR1562907_metagene_profile.txt`` contains the final, reduced data.
+example, ``SRR609197_riboprofile_metagene_profile.txt`` contains the final, reduced data.
 This file contains three columns:
 
   #. *x:* an X-coordinate indicating the distance in nucleotides from
@@ -205,7 +205,7 @@ a single plot:
 
  .. code-block:: shell
  
-    $ metagene chart SRR1562907_cds_start.png SRR1562907_metagene_profile.txt --landmark "start codon" --title "Metagene demo"
+    $ metagene chart SRR609197_riboprofile_cds_start.png  SRR609197_riboprofile_metagene_profile.txt --landmark "start codon" --title "Metagene demo"
 
 This produces the image:
 
@@ -406,17 +406,17 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>> import pysam
     >>> import numpy
     >>> from yeti.genomics.genome_array import BAMGenomeArray, ThreePrimeMapFactory
-   
+
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some
-    >>> ALIGNMENTS = BAMGenomeArray([pysam.Samfile("SRR1562907_chrI.bam")])
-    >>> ALIGNMENTS.set_mapping(ThreePrimeMapFactory(15))
-    
+    >>> ALIGNMENTS = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+    >>> ALIGNMENTS.set_mapping(VariableFivePrimeMapFactory(offset_dict))
+
     >>> # skip masking out any repetitive regions for purpose of demo
     >>> dummy_mask_hash = GenomeHash([])
 
     >>> #load features, in our case, transcripts
-    >>> transcripts = list(GTF2_TranscriptAssembler(open("sgd_plus_utrs_chrI.gtf")))
+    >>> transcripts = list(GTF2_TranscriptAssembler(open("merlin_orfs.gtf")))
 
     >>> # include 100 nucleotides up- and downstream of feature
     >>> flank_upstream = flank_downstream = 100
@@ -425,17 +425,18 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>>                                          flank_upstream,flank_downstream,
     >>>                                          window_func=window_biggest_spike)
 
+
 :meth:`~yeti.bin.metagene.do_generate` returns an |ArrayTable| (similar to a :class:`pandas.DataFrame`)
 of data and a list of |SegmentChains| corresponding to the
 :term:`maximal spanning windows <maximal spanning window>` for each row
 in the |ArrayTable|. It is useful to save these in the same formats that the 
 :ref:`generate <metagene-generate>` program uses::
 
-    >>> with open("SRR1562907_big_spike_roi_file.txt","w") as roi_fh:
+    >>> with open("SRR609197_riboprofile_big_spike_roi_file.txt","w") as roi_fh:
     >>>     data_table.to_file(roi_fh)
-    >>>     data_fh.close()
+    >>>     roi_fh.close()
     >>>     
-    >>> with open("SRR1562907_big_spike_rois.bed","w") as bed_fh:
+    >>> with open("SRR609197_riboprofile_big_spike_rois.bed","w") as bed_fh:
     >>>     for roi in segment_chains:
     >>>         bed_fh.write(roi.as_bed())
     >>> 
@@ -446,8 +447,9 @@ Then, you can use the ROI file you just made with |metagene|
 
  .. code-block:: shell
 
-     $ metagene count SRR1562907_big_spike_roi_file.txt SRR1562907_big_spike --count_files SRR1562907_chrI.bam --threeprime --offset 15
-     $ metagene chart SRR1562907_big_spike_metagene.png SRR1562907_big_spike_metagene_profile.txt --landmark "highest ribosome peak" --title "Custom metagene demo"
+     $ metagene count SRR609197_riboprofile_big_spike_roi_file.txt SRR609197_riboprofile_big_spike --count_files SRR609197_riboprofile.bam --fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt
+     
+     $ metagene chart SRR609197_riboprofile_big_spike.png SRR609197_riboprofile_big_spike_metagene_profile.txt --landmark "highest ribosome peak" --title "Custom metagene demo"
 
 Which yields:
 
