@@ -42,9 +42,14 @@ the transcripts as a :class:`list`::
 
 Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
 which we'll load into a :class:`~yeti.genomics.genome_array.BAMGenomeArray`.
-For our :term:`mapping rule`, we'll map reads 15 nucleotides from the 3' end,
-corresponding to the P-site of the ribosome (cite:`Ingolia2009`)::
+For our :term:`mapping rule`, we'll map reads to their :term:`P-site offsets <P-site offset>`,
+using a dictionary of offsets that we generated using the |psite|
+script (see example in :doc:`/examples/p_site`).
 
+15 nucleotides from the 3' end,
+corresponding to the P-site of the ribosome (:cite:`Ingolia2009`)::
+
+    >>> offset_dict = _parse_variable_offset_file(open(""))
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
     >>> alignments.set_mapping(VariableFivePrimeMapFactory(offset_dict))
 

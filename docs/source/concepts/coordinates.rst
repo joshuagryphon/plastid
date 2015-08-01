@@ -137,14 +137,14 @@ Coordinate systems of some common file formats
     bowtie          0               n/a
     -------------   -------------   --------------------
     `bedGraph`_     0               Half-open
-    `BigWig`_*      0 or 1          Half-open or n/a          
+    `BigWig`_\*     0 or 1          Half-open or n/a          
     `Wiggle`_       1               n/a
     =============   =============   ====================
  
 *The coordinate representation used in `BigWig`_ files depends upon
 the format of the data blocks inside the file. If a `BigWig`_
 file contains `Wiggle`_-formatted data blocks, it is :term:`1-indexed`.
-If it contains `bedGraph`-formatted data blocks, it is :term:`0-indexed`, 
+If it contains `bedGraph`_-formatted data blocks, it is :term:`0-indexed`, 
 :term:`half-open`.
 
 Conventions used in `yeti`

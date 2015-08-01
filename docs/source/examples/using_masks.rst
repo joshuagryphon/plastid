@@ -204,7 +204,9 @@ the documentation for `Jim Kent's utilities`_.
  .. note::
 
     For mammalian genomes, |crossmap| can take several days to run,
-    especially if mismatches are allowed.
+    especially if mismatches are allowed. We intend to host precomputed
+    versions of these for a handful of commonly-used genomes to save
+    time.
 
 
 -------------------------------------------------------------------------------

@@ -15,13 +15,15 @@ The following files are included:
     ======================================================  =======================================================================  ============================================
     **Filename**                                            **Contents**                                                             **Source**
     ------------------------------------------------------  -----------------------------------------------------------------------  --------------------------------------------
-    ``merlin_NC006273-2.fa``                                Sequence of hCMV merlin strain                                           `NCBI`_
+    ``merlin_NC006273-2.fa``                                Sequence of hCMV merlin strain                                           `GenBank, accession no. NC_006273.2 <http://www.ncbi.nlm.nih.gov/nuccore/NC_006273.2>`_
 
     ``merlin_orfs.bed``, ``merlin_orfs.gtf``                Coding region models for hCMV strain, plus estimated UTRs                :cite:`Stern-Ginossar2012` (CDS).
                                                                                                                                      5' UTRs estimated as 50 nt upstream of CDS. 3' UTRs estimated as 100 nt downstream of CDS. 
 
-    ``SRR609197_riboprofile.bam``                           :term:`Ribosome profilingi` data, 5 hours post hCMV infection            :cite:`Stern-Ginossar2012`
+    ``SRR609197_riboprofile.bam``                           :term:`Ribosome profiling` data, 5 hours post hCMV infection,            :cite:`Stern-Ginossar2012`,
+                                                            aligned to hCMV merlin strain genome sequence                            raw data available at `SRA, accession no. SRR609197 <http://www.ncbi.nlm.nih.gov/sra/?term=SRR609197>`_
 
-    ``SRR592963_rnaseq.bam``                                :term:`RNA-seq` data, 5 hours posth CMV infection                        :cite:`Stern-Ginossar2012`
+    ``SRR592963_rnaseq.bam``                                :term:`RNA-seq` data, 5 hours posth CMV infection,                       :cite:`Stern-Ginossar2012`,
+                                                            aligned to hCMV merlin strain genome sequence                            raw data available at `SRA, accession no. SRR592963 <http://www.ncbi.nlm.nih.gov/sra/?term=SRR592963>`_
     ======================================================  =======================================================================  ============================================
 

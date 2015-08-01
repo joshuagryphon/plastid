@@ -252,3 +252,10 @@ Glossary of terms
         positions. This allows deduction of translation reading frames,
         if the reading frame is not known *a priori.* See :cite:`Ingolia2009`
         for more details
+
+    translation efficiency
+        An mRNA's translation efficiency measures how much protein is
+        made from that individual transcript. Translation efficiency
+        for an mRNA is therefore proportional to its translation initiation
+        rate.
+
