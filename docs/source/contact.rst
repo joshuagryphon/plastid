@@ -3,10 +3,12 @@ Contact
 
 Bug reports
 -----------
- .. TODO : update issue tracker link
+ .. TODO later: update issue tracker link
 Please report bugs to our issue tracker.
 
 
 Other
 -----
+ .. TODO: write contact / other section
+
 Some paragraph here.

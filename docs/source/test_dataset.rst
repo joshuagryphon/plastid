@@ -1,7 +1,7 @@
 Demo dataset
 ============
 
- .. TODO update the demo dataset filename to include package name
+ .. TODO later: update the demo dataset filename to include package name
 
 :download:`Download the demo dataset here <_static/demo.tar.bz2>`.
 

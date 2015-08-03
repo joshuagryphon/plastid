@@ -79,7 +79,7 @@ of the various file formats used in genomics. But, two points are relevant:
      speed cost. The exception is for short :term:`read alignments`, where indexed
      `BAM`_ files are universally recommended. 
 
-.. TODO: update when format support changes
+.. TODO later: update when format support changes
 
 Below is a table of commonly used file formats. At present, :data:`yeti` handles
 all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),

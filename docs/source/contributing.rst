@@ -7,7 +7,7 @@ now, we (try to) follow these conventions:
 Workflow
 --------
 
-.. TODO : update all repository links
+.. TODO later: update all repository links
 
 Start with a ticket
 ...................
