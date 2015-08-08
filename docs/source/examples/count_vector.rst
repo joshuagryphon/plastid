@@ -19,6 +19,8 @@ In the examples below, we use the :doc:`/test_dataset`.
 Working with vectors of counts interactively
 --------------------------------------------
 
+ .. TODO : update all count vectors in this example
+
 This tutorial requires two types of data:
 
   #. An :term:`annotation` of transcript models.
@@ -28,7 +30,7 @@ This tutorial requires two types of data:
 First, we import everything we need::
 
     >>> import pysam
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeOffsetFactory
     >>> from yeti.readers.bed import BED_Reader
     >>> from yeti.util.scriptlib.argparsers import _parse_variable_offset_file
     >>> from yeti.util.io.filters import CommentReader
@@ -37,21 +39,15 @@ Next, load the transcripts. By default, :class:`~yeti.genomics.readers.BED_Reade
 and the other readers in :data:`yeti` behave as iterators. Here, we'll retrieve
 the transcripts as a :class:`list`::
 
-    >>> offset_dict = _parse_variable_offset_file(CommentReader(open("SRR609197_riboprofile_p_offsets_adjusted.txt")))
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
 Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
 which we'll load into a :class:`~yeti.genomics.genome_array.BAMGenomeArray`.
-For our :term:`mapping rule`, we'll map reads to their :term:`P-site offsets <P-site offset>`,
-using a dictionary of offsets that we generated using the |psite|
-script (see example in :doc:`/examples/p_site`).
+We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
+estimating the P-site to be 14 nucleotides from the 5' end.
 
-15 nucleotides from the 3' end,
-corresponding to the P-site of the ribosome (:cite:`Ingolia2009`)::
-
-    >>> offset_dict = _parse_variable_offset_file(open(""))
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
-    >>> alignments.set_mapping(VariableFivePrimeMapFactory(offset_dict))
+    >>> alignments.set_mapping(FivePrimeMapFactory(14))
 
 Then, to fetch a vector of counts covering each transcript, we'll use
 the :meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`,
@@ -156,8 +152,8 @@ The script may then be executed from the terminal:
     $ get_count_vectors --annotation_files merlin_orfs.bed \
                         --annotation_format BED \
                         --count_files SRR609197_riboprofile.bam \
-                        --fiveprime_variable \
-                        --offset SRR609197_riboprofile_p_offsets_adjusted.txt \
+                        --fiveprime \
+                        --offset 14 \
                         folder_of_vectors
 
 Each output file will be saved in `folder_of_vectors` and named for the `ID`

@@ -1,6 +1,8 @@
 Performing metagene analyses
 ============================
 
+ .. TODO update graphics to reflect 5'/14 mapping
+
 Definition
 ----------
 A :term:`metagene` analysis is an average of quantitative data over one or more
@@ -175,12 +177,13 @@ Specifically, :ref:`count <metagene-count>` performs the following steps:
     in the average to a tab-delimited text file.
 
 To call the :ref:`count <metagene-count>` program, type into a terminal window.
-In this example ``--fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt`` specify our :term:`mapping rule` for the
-:term:`P-site offset`. 
+In this example ``--fiveprime --offset 14`` specify our :term:`mapping rule` for the
+:term:`P-site offset`, estimating the offset as 14 nucleotides from the 5' end
+of each :term:`read alignment`.
 
  .. code-block:: shell
 
-    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile --count_files SRR609197_riboprofile.bam --fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt
+    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile --count_files SRR609197_riboprofile.bam --fiveprime --offset 14
 
 
 A number of files are created and may be used for further processing. In our

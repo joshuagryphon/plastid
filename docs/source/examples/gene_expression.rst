@@ -294,21 +294,22 @@ For other experimental data types -- e.g. :term:`ribosome profiling`, :term:`DMS
 :term:`ChIP-Seq`, :term:`ClIP-Seq`, et c -- the assumptions made by many packages
 developed for :term:`RNA-seq` analysis do not hold. 
 
-In contrast, `DESeq`_ offers a very generally applicable statistical approach that is
+In contrast, the `R`_ package `DESeq`_ offers a very generally applicable
+statistical approach that is
 appropriate to virtually any count-based sequencing data (:cite:`Anders2010`,
 :cite:`Anders2013`).
 
-As input, `DESeq` takes two tables:
+As input, `DESeq` takes two objects:
 
  #. A table of *uncorrected, unnormalized* :term:`counts`, in which
     each row in the table corresponds to a genomic region, and each column an
     experimental sample. The value in each cell corresponds to the number of counts
     in that region, in that sample.
 
- #. A table describing which samples, if any, are technical or biological replicates,
-    and the relationships between sample groups
-
-From these tables, `DESeq`_ separately models intrinsic counting error as well
+ #. An experimental design describing the relationships between samples
+    (e.g. if any are technical or biological replicates)
+     
+From these, `DESeq`_ separately models intrinsic counting error as well
 as inter-replicate error, and from these error models can infer significant
 differences in count numbers between non-replicate samples.
 
@@ -335,37 +336,62 @@ the terminal. For example:
     $ paste <(cut -f ... ) <(cut -f ... ) >>new_file.txt
 
 
+The second table is specified as an experimental *design*.
+
+ .. code-block:: r
+
+
 Differential translation efficiency
 ...................................
 
+ .. TODO :
+
+    Tests for differential translation efficiency can also be implemented within
+    `DESeq`_..
+
+
 Statistical models for differential measurement of :term:`translation efficiency`
 are still a subject of discussion (TODO: citations). Here, we take an empirical
-approach used in :cite:`Ingolia2009` and :cite:`Ingolia2011`.
+approach used in :cite:`Ingolia2009`.
 
- .. TODO:: check accuracy of claims in this section
+ #. First, a :term:`false discovery rate` appropriate to the experiment 
+    -- often five percent -- is set.
 
  #. For each sample, the :term:`translation efficiency` of each mRNA measured as
     the ratio of :term:`ribsome-protected footprint` density in a coding region
     to the mRNA fragment density across the corresponding mRNA.
  
  #. Within each set of biological replicates, log2 fold-changes are calculated
-    for each transcript, and a normal distribution is fit to the observed log2
-    fold-changes. These distributions are used as estimates of inter-replicate
-    error.
+    for each transcript to yield an empirical distribution of changes derived
+    from sequencing error for that replicate set. These distributions are 
+    merged by summing the sets of their observations.
 
- #. log2 fold-changes are calculated for each transcript between non-replicate
-    samples. Significance is assayed for each transcript using a t-test to
-    evaluate the likelihood of the observed fold-change happening in either of
-    the inter-replicate distributions. If the hypothesis is rejected in both
-    samples, an observed change is deemed provisionally significant.
+ #. Similarly, log2 fold-changes are calculated for each transcript between
+    non-replicate samples. 
 
- #. A correction -- e.g. Bonferoni correction, false discovery rate,
-    or Q-value -- is made to account for multiple hypothesis testing. 
+ #. The number of false positives (FP) at a given fold-change may be estimated
+    as the number of observed fold changes greater to or equal than
+    the given fold-change in the negative control distribution from step (3).
 
-     .. TODO:: add citations for this step
+ #. Similarly, the number of total positives (FP+TP) at a given fold-change is the
+    number of observed fold-changes greater to or equal than that fold-change
+    in the distribution from step (4).
 
- #. Changes that exceed the significance threshold set by the multiple
-    hypothesis correction are deemed significant.
+ #. The number of true positives (TP) at each fold-chnage is then estimated by subtracting
+    the number of false positives at that fold-change (step 5) from the number
+    of total positives (step 6).
+
+ #. A significance threshold is set by solving for the fold change that corresponds
+    to the :term:`false discovery rate (FDR) <false discovery rate>` set in step (1). 
+    :term:`FDR` is calculated at each fold-change threshold :math:`t` as:
+
+     .. math::
+
+        FDR(t) = \frac{TP(t)}{TP(t)+FP(t)}
+
+    Then, the fold-change :math:`t` where :term:`FDR` equals the predetermined
+    :term:`false discovery rate` is taken to be the significance threshold.
+
 
 
 -------------------------------------------------------------------------------
@@ -379,10 +405,8 @@ See also
   - Documentation for |cs| and |counts_in_region| for further discussion 
     of their algorithms
 
-  - Literature on translation efficiency?
-
   - `DESeq` website, :cite:`Anders2010`, and :cite:`Anders2013` for discussions
-    on statsitical models for differential gene expression, an examples
+    on statistical models for differential gene expression, an examples
     on how to use `DESeq` for various experimental setups
 
   - :doc:`/examples/using_masks` for instructions on how to exclude parts of
