@@ -26,6 +26,11 @@ file that includes only one transcript isoform per gene.
 
 """
 import sys
+import warnings
+import argparse
+import inspect
+
+import numpy
 import matplotlib
 matplotlib.use("Agg")
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
@@ -37,14 +42,11 @@ from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
-import numpy
-import argparse
 import matplotlib.pyplot as plt
-import inspect
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-
+# TODO: support bowtie or wiggle files
 
 def main(argv=sys.argv[1:]):
     """Command-line program
@@ -99,28 +101,33 @@ def main(argv=sys.argv[1:]):
         for k in read_lengths:
             read_dict[k]     = []
             count_vectors[k] = []
-        cds_ivc = roi.get_cds()
+        cds_chain = roi.get_cds()
         
         # for each iv, fetch reads, sort them, and create individual count vectors
-        for iv in cds_ivc:
-            reads = gnd.get_reads(iv)
+        for seg in cds_chain:
+            reads = gnd[seg]
             for read in filter(lambda x: len(x.positions) in read_dict,reads):
                 read_dict[len(read.positions)].append(read)
 
+            # map and sort by length
             for read_length in read_dict:
                 count_vector = list(gnd.map_fn(read_dict[read_length],iv)[1])
                 count_vectors[read_length].extend(count_vector)
         
-        # add each count vector to total
+        # add each count vector for each length to total
         for k, vec in count_vectors.items():
             counts = numpy.array(vec)
             if roi.strand == "-":
                 counts = counts[::-1]
-            
-            try:
-                counts = counts.reshape((len(vec)/3.0,3))
-                phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)
-            except ValueError:
+           
+            if len(counts) % 3 == 0:
+                counts = counts.reshape((len(vec)/3,3))
+            else:
+                message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (len(counts),roi.get_name())
+                warnings.warn(message,UserWarning)
+                counts = counts.reshape(len(vec)//3,3)
+
+            phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)
                 printer.write("Ignoring %s because CDS is not divisible by 3: %s." % (roi.get_name(),cds_ivc.get_length()) )
 
     printer.write("Counted %s ROIs total." % (n+1))
@@ -132,7 +139,6 @@ def main(argv=sys.argv[1:]):
     
     # read length distribution
     dtmp["fraction_reads_counted"] = dtmp["reads_counted"].astype(float) / dtmp["reads_counted"].sum() 
-    
     
     # phase vectors
     phase_vectors = { K : V.astype(float)/V.astype(float).sum() for K,V in phase_sums.items() }
@@ -148,12 +154,12 @@ def main(argv=sys.argv[1:]):
     printer.write("Saving phasing table to %s ..." % fn)
     with argsopener(fn,args) as fh:
         dtmp.to_file(fh,keyorder=["read_length",
-                                                   "reads_counted",
-                                                   "fraction_reads_counted",
-                                                   "phase0",
-                                                   "phase1",
-                                                   "phase2",
-                                                    ],
+                                  "reads_counted",
+                                  "fraction_reads_counted",
+                                  "phase0",
+                                  "phase1",
+                                  "phase2",
+                                 ],
                       formatters={numpy.float64 : '{:.6f}'.format,
                                   numpy.float32 : '{:.6f}'.format,
                                   numpy.float128 : '{:.6f}'.format,
