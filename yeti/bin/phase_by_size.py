@@ -105,7 +105,7 @@ def main(argv=sys.argv[1:]):
         
         # for each iv, fetch reads, sort them, and create individual count vectors
         for seg in cds_chain:
-            reads = gnd[seg]
+            reads = gnd.get_reads(seg)
             for read in filter(lambda x: len(x.positions) in read_dict,reads):
                 read_dict[len(read.positions)].append(read)
 
