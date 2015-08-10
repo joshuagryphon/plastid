@@ -37,7 +37,7 @@ Capabilities provided include:
     Hashing regions of the genome that should be excluded from analyses
         :py:func:`get_mask_file_parser`
             Create an :py:class:`~argparse.ArgumentParser` that processes arguments
-            to open a :term:`mask annotation` file in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or
+            to open a :term:`mask file` in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or
             `PSL`_ format.
              
         :py:func:`get_genome_hash_from_mask_args`
