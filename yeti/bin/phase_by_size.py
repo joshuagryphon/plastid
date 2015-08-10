@@ -128,7 +128,6 @@ def main(argv=sys.argv[1:]):
                 counts = counts.reshape(len(vec)//3,3)
 
             phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)
-                printer.write("Ignoring %s because CDS is not divisible by 3: %s." % (roi.get_name(),cds_ivc.get_length()) )
 
     printer.write("Counted %s ROIs total." % (n+1))
     dtmp = ArrayTable(dtmp)
