@@ -28,8 +28,8 @@ potentially less error-prone process is to:
     the |SegmentChains| or |Transcripts| in the desired format. To make
     `BigBed`_ files, see :ref:`make-annotation-bigbed`.
 
-All coordinate conversions, splicing, text formatting, and attribute
-conversion is handled for you.
+:data:`yeti` automatically handles all coordinate conversions, splicing,
+text formatting, and attribute conversion.
 
 
 Examples
@@ -67,7 +67,9 @@ An analysis pipeline for this experiment might look the following:
             # unzip them
             $ gunzip *gz
 
-     #. Combine the sequences into a single file. From the terminal:
+     #. Combine the sequences of the human genome and the reporter construct
+        (lenti223.fa) into a single `FASTA`_ file, and build an alignment
+        index for `bowtie`_. From the terminal:
 
          .. code-block:: shell
 
@@ -76,8 +78,8 @@ An analysis pipeline for this experiment might look the following:
 
      #. Create a custom annotation describing the coordinates of the reporter gene
         with respect to the vector sequence. Coordinates should be :term:`0-indexed`
-        and :term:`half-open` (e.g. typical Python idioms). We do this in an
-        interactive Python session, by creating |Transcripts| describing the reporter::
+        and :term:`half-open` (i.e. typical Python idioms). This can be done 
+        interactively in Python by creating |Transcripts| describing the reporter::
 
             >>> from yeti.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 
@@ -135,8 +137,7 @@ This requires us to:
      wish to knock down. This step we'll perform here.
 
   #. Search within those windows for genomic sequences that we can target with guide
-     RNAs for dCAS9. For details on how to do that, see :cite:`Gilbert2014`. Here,
-     we'll just fetch the nucleotide sequence.
+     RNAs for dCAS9. For details on that procedure, see :cite:`Gilbert2014`.
 
 We'll use the same transcript annotation as in the example above, but first we'll download the
 `2bit <twobit>`_-formatted version of the genome sequence, which requires less memory to read
@@ -161,17 +162,23 @@ Then, within a Python session, read each transcript and create TSS windows::
 
     >>>  # open transcripts and process one-by-one
     >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+    >>>
     >>> transcripts = GTF2_TranscriptAssembler(open("gencode.v23.annotation.gtf"),sorted=True)
+    >>>
     >>> for tx in transcripts:
     >>>     chrom, tx_start, strand =  tx.get_genomic_coordinate(0)
+    >>>     # for plus-strand transcripts, TSS is 5' of transcript on chromosome
     >>>     if strand == "+":
     >>>         tss_window = GenomicSegment(chrom,tx_start-500,tx_start,strand)
+    >>>     # for minus-strand transcripts, TSS is 3' of transcript on chromosome
     >>>     elif strand == "-":
     >>>         tss_window = GenomicSegment(chrom,tx_start,tx_start+500,strand)
     >>>
+    >>>     # write coordinates of TSS to a BED file
     >>>     tss_window = SegmentChain(tss_window,ID="%s_tss_window" % tx.get_name())
     >>>     bed_out.write(tss_window.as_bed())
     >>>
+    >>>     # write genomic sequence of TSS to a FASTA file
     >>>     tss_window_sequence = tss_window.get_fasta(genome)
     >>>     seq_out.write(tss_window_sequence)
     

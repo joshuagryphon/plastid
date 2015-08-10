@@ -18,7 +18,7 @@ have been developed to handle this:
     as a single entity and summing all read alignments across all copies before
     calculating read density
 
-   - randomly assigning each multimapper to one of the possible places in a genome
+  - randomly assigning each multimapper to one of the possible places in a genome
     or transcriptome from which they could have arisen (the default behavior
     of the `TopHat`_ aligner)
    
@@ -28,11 +28,10 @@ have been developed to handle this:
 
   
 :data:`yeti` is compatible with any of these approaches, but provides
-tools specifically for determining which regions of the genome cannot
-give rise to uniquely mapping reads (see the |crossmap|) script, and
-for excluding such regions from subsequent analyses
-(see, for example :meth:`~yeti.genomics.roitools.SegmentChain.add_masks`). 
-          
+tools specifically for masking repetitive genomic regions from analysis.
+For further information on this strategy, see :doc:`/examples/using_masks`.
+
+-------------------------------------------------------------------------------
 
 See also
 --------

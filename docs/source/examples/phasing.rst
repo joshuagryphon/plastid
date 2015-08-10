@@ -1,9 +1,10 @@
 Read phasing in :term:`ribosome profiling`
 ==========================================
 
-Because the ribosome takes 3-nucleotide steps along the coding region
-it is translating, :term:`read alignments` from :term:`ribosome profiling` 
-data frequently exhibit :term:`triplet periodicity` when they are mapped
+During each cycle of peptide elongation, the ribosome takes a 3-nucleotide
+step along its mRNA. This physical process creates
+:term:`triplet periodicity` in :term:`ribosome profiling` data, which
+becomes visible when the :term:`read alignments`  are mapped
 to their :term:`P-site offsets <P-site offset>` (:cite:`Ingolia2009`):
 
  .. TODO: phasing figure
@@ -53,7 +54,9 @@ Examining phasing manually
 ..........................
 
 In this section, we tabulate :term:`sub-codon phasing` manually.
-First, we need to open the read alignments and transcript annotation::
+First, we need to open the read alignments and transcript annotation:
+
+ .. code-block:: python
 
     >>> import pysam
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
@@ -66,7 +69,9 @@ First, we need to open the read alignments and transcript annotation::
     >>> retrieve an iterator over transcripts
     >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
 
-Next, we can count phasing::
+Next, we can count phasing:
+
+ .. code-block:: python
 
     >>> # create a holder for phasing
     >>> phasing = numpy.zeros(3)
@@ -82,13 +87,17 @@ Next, we can count phasing::
     >>>     # if transcript is coding
     >>>     if len(cds) > 0: 
     >>>         try:
+    >>>
     >>>             # get numpy.ndarray of counts in coding region
     >>>             counts = cds.get_counts(alignments)[codon_buffer:-codon_buffer]
+    >>>
     >>>             # reshape to Nx3, where N = number of codons
     >>>             counts = counts.reshape((len(counts)/3,3))
+    >>>
     >>>             # sum over codon positions to get a 3-vector,
     >>>             # and add to data holder
     >>>             phasing += counts.sum(0)
+    >>>
     >>>         except: # raise exception if coding region is not n*3 nucleotides long
     >>>             print("Length (%s nt) of CDS for `%s` contains partial codons. Frameshift?" % (len(counts),my_transcript.get_name()))
 
@@ -99,14 +108,13 @@ Next, we can count phasing::
 
  .. note::
 
-    If your annotation includes multiple transcript isoforms for the same gene,
-    codons that appear in more than one isoform will be double-counted.
-    One may avoid this by using the `BED`_ output of the |metagene| script,
-    in which case read phasing will be estimated over maximal spanning
-    windows of coding regions in genes.
-
-    If your annotation contains overlapping coding regions which appear in 
-    different frames, including these in the phasing tabulation will 
+    If the transcript annotation includes multiple transcript isoforms
+    for the same gene, codons that appear in more than one isoform will
+    be double-counted in the phasing estimate. This may be avoided by
+    filtering the annotation file ahead of time.
+    
+    If the annotation file contains overlapping coding regions which appear
+    in different frames, including these in the phasing tabulation will 
     under-estimate phasing. It makes sense to exclude such areas using a
     :term:`mask file`.
 
@@ -117,18 +125,24 @@ Measuring :term:`phasing <sub-codon phasing>` using the |phase_by_size| script
 ..............................................................................
 
 The |phase_by_size| script automates the calculations described in 
-:ref:`exmaples-phasing-manual`, calculating phasing seprately for
-:term:`read alignments` of each length. It may be executed from
-the terminal. The command line below examines phasing in 
+:ref:`examples-phasing-manual`, calculating phasing seprately for
+:term:`read alignments` of each length.
+
+The command line below examines phasing in 
 the :term:`ribosome profiling` dataset ``SRR609197_riboprofile.bam``,
 estimating the P-site as 14 nucleotides from the 5' end of each read.
 In addition, we exclude 5 codons near the start and stop codons (
-via the ``--codon_buffer`` argument),
-because these are often hyper-phased compared to coding regions:
+via the ``--codon_buffer`` argument), because these are often hyper-phased
+compared to coding regions:
 
   .. code-block:: shell
 
-     $ phase_by_size SRR609197_phasing --count_files SRR609197_riboprofile.bam --annotation_files merlin_orfs.bed --annotation_file_format BED --fiveprime --offset 14 --codon_buffer 5
+     $ phase_by_size SRR609197_phasing \
+                     --count_files SRR609197_riboprofile.bam \
+                     --annotation_files merlin_orfs.bed \
+                     --annotation_file_format BED \
+                     --fiveprime --offset 14 \
+                     --codon_buffer 5
 
 |phase_by_size| will create a text file showing the raw number
 and proportion of reads whose P-sites map to each codon position

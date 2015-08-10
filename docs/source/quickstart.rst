@@ -1,9 +1,8 @@
 Before starting
 ===============
-To get started with genomic analysis, a few elements are important:
+To get started with genomic analysis, one needs:
 
-  - Some :doc:`data </concepts/data>` to analyze.
-    Frequently, the data consist of:
+  - Some :doc:`data </concepts/data>` to analyze, usually including:
   
       - A :term:`genome annotation <annotation>`, typically downloaded
         from a consortium like `UCSC`_, `Ensembl`_, `ENCODE`_, `SGD`_,
@@ -14,11 +13,16 @@ To get started with genomic analysis, a few elements are important:
       - Some :term:`high-throughput sequencing` data, in the form of
         :term:`read alignments`, preferably in `BAM`_ format. 
       
-        Because good alignment tools -- `bowtie`_, `Tophat`_, and others -- already exist,
-        and because choosing alignment parameters involves careful consideration,
-        :data:`yeti` does not perform this step for you. For help on performing
-        alignments, and a discussion of the subtleties involved, see the
-        documentation for the read alignment program you use. 
+         .. note::
+
+            Because excellent alignment tools -- `bowtie`_, `Tophat`_, and others --
+            already exist, and because choosing alignment parameters involves
+            careful consideration, :data:`yeti` does not perform this step.
+            
+            For help on performing alignments, and a discussion of the subtleties
+            involved, see the documentation for the read alignment program you use. 
+
+             .. TODO:: add reference for help on alignments
       
     For the curious, we have created a small :doc:`demo dataset </test_dataset>`,
     used throughout the examples in this documentation. 

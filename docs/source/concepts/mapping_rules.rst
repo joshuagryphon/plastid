@@ -4,7 +4,7 @@ Read mapping rules
 In this tutorial, we:
 
   - provide a :ref:`definition <mapping-rules-definition>`
-    for :term:`mapping rule <mapping rules>` and discuss
+    for :term:`mapping rules <mapping rule>` and discuss
     which :ref:`mapping rules are provided <mapping-rules-provided>`.
   
   - discuss how to set mapping rules in
@@ -39,9 +39,9 @@ of an alignment. For example:
     base is actually the first nucleotide *upstream*  of (i.e. outside) the 5'
     end of the read alignment (:cite:`Rouskin2014`).
   
-  - in ClIP- or ChIP-seq experiments, where a crosslink site (in some protocols
-    detectable as a mutation) within the read alignment, rather than the 5' or 3'
-    end is of interest.
+  - in ClIP- or ChIP-seq experiments, where the crosslink site (in some protocols
+    detectable as a mutation) is within the read alignment, rather than the 5' or 3'
+    end.
 
 ----------------------------------------------------
 
@@ -78,7 +78,8 @@ as needed. These include:
      This is also used for :term:`ribosome profiling` of *E. coli* (:cite:`Oh2011`) and
      *D. melanogaster* (:cite:`Dunn2013`), and RNA-seq. 
 
-In the image below, the same set of alignments is mapped under various rules.
+In the image below, the same set of :term:`read alignments` from a
+:term:`ribosome profiling` experiment is mapped under various rules.
 Note the :term:`start codon peak` and :term:`stop codon peak` that appear when 
 reads are mapped to specific locations:
 

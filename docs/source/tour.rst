@@ -39,18 +39,23 @@ Classes & data structures
 
 :data:`yeti` defines a number of classes to facilitate sequencing analyses:
 
-    =======================================================    =========================================
+    =======================================================    ===============================================
     **Class**                                                  **Purpose**
-    -------------------------------------------------------    -----------------------------------------
-    :ref:`tour-genomic-segment`, :ref:`tour-segment-chain`     Represent genomic features (e.g. mRNAs, genes, SNPs, stop codons) as Python objects
+    -------------------------------------------------------    -----------------------------------------------
+    :ref:`tour-genomic-segment`, :ref:`tour-segment-chain`     Represent genomic :term:`features <feature>`
+                                                               (e.g. mRNAs, genes, SNPs, stop codons) as
+                                                               Python objects
 
-    :ref:`GenomeArray <tour-genome-array>` & its subclasses    Index quantitative values or :term:`read alignments` to genomic coordinates.
+    :ref:`GenomeArray <tour-genome-array>` & its subclasses    Map quantitative values or
+                                                               :term:`read alignments` to genomic coordinates.
 
-    :ref:`GenomeHash <tour-genome-hash>` & its  subclasses     Indexes genomic :term:`features <feature>` by coordinates, 
-                                                               for quick lookup of features that overlap or cover a region.
-    =======================================================    =========================================
+    :ref:`GenomeHash <tour-genome-hash>` & its  subclasses     Index genomic :term:`features <feature>` by
+                                                               genomic coordinates, for quick lookup of
+                                                               :term:`features <feature>` that overlap or
+                                                               cover a region.
+    =======================================================    ===============================================
 
-In the examples below, we'll be using a small :doc:`test_dataset` covering the human cytomegalovirus (hCMV) genome (:cite:`Stern-ginossar2012`).
+In the examples below, we'll be using a small :doc:`test_dataset` covering the human cytomegalovirus (hCMV) genome (:cite:`Stern-Ginossar2012`).
 
 -------------------------------------------------------------------------------
 
@@ -58,8 +63,8 @@ In the examples below, we'll be using a small :doc:`test_dataset` covering the h
 
 |GenomicSegment|
 ................
-|GenomicSegments| are the fundamental building block of genomic features.
-They are defined by:
+|GenomicSegments| are the fundamental building block of genomic
+:term:`features <feature>`. They are defined by:
 
   - a chromosome name
   
@@ -80,8 +85,8 @@ can be used to build :ref:`SegmentChains <tour-segment-chain>`, which are intere
 
 .. _tour-segment-chain:
 
-|SegmentChains| & |Transcripts|
-...............................
+|SegmentChain| & |Transcript|
+.............................
 
 |SegmentChain| & its subclass |Transcript| model genomic features. They are
 constructed from zero or more |GenomicSegments|, and therefore can represent
@@ -244,7 +249,8 @@ to determine the genomic position(s) at which each alignment should be counted
     that end (e.g. for :term:`P-site mapping <P-site offset>` for
     :term:`ribosome profiling data`)
      
-  - fractionally over their entire lengths (for visualizing transcript in RNA-seq)
+  - fractionally over their entire lengths (for visualizing the full extent
+    of transcripts in :term:`RNA-seq` data)
    
   - fractionally to all positions covered by a central portion of the read
     alignment, after excluding a user-defined number of positions on each
@@ -252,7 +258,7 @@ to determine the genomic position(s) at which each alignment should be counted
     :cite:`Oh2011` or *D. melanogaster* :cite:`Dunn2013`)
 
 
-As in the example :ref:`above <tour-get-counts>`
+As in the example :ref:`above <tour-get-counts>`,
 |GenomeArrays| are most often called using the
 :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` method of |SegmentChains|
 or |Transcripts|. A number of other capabilities are worth noting:

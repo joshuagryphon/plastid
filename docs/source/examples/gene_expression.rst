@@ -3,27 +3,37 @@ Gene expression analysis
 
 This tutorial illustrates how to measure read density over regions. As 
 an example, we look at gene expression (in :term:`raw read counts <counts>` and :term:`RPKM`)
-using matched sampels of :term:`RNA-seq` and :term:`ribosome profiling` data.
-
-However, the analysis below applies to other types of
-:term:`high-throughput sequencing` data (e.g. ClIP-SEQ, :term:`DMS-Seq`, et c).
+using matched samples of :term:`RNA-seq` and :term:`ribosome profiling` data.
+However, the analysis below can apply to any type of
+:term:`high-throughput sequencing` data (e.g. ClIP-seq, ChIP-seq, :term:`DMS-seq`, et c).
 
 We will do this two ways:
 
- #. Using the :mod:`~yeti.bin.counts_in_region` script to
-    :ref:`count expression automatically <gene-expression-scripts>`.
-
  #. :ref:`Manually <gene-expression-interactive>`, in an interactive
     Python session
+
+ #. Using the :mod:`~yeti.bin.counts_in_region` script to
+    :ref:`count expression automatically <gene-expression-scripts>`.
 
 The examples below use the :doc:`/test_dataset` we have assembled.
 
 
  .. note::
 
-    For simplicity, we are performing these analyses without use 
-  
+    For simplicity, we are:
+    
+     #. performing these analyses without using a :term:`mask file`
+        to exclude repetitive genome seqence from analysis. In
+        practice, we would consider doing so. See
+        :doc:`/examples/using_masks` for a discussion of the
+        issues involved
 
+     #. not excluding start and stop codons from read density
+        measurements in :term:`ribosome profiling` data. In practice,
+        we would do so, because :term:`start <start codon peak>`
+        and :term:`stop codon peaks <stop codon peak>`, artificially
+        inflate estimates of steady-state translation.
+        
 
 Tabulating :term:`read counts <counts>` & :term:`RPKM`
 ------------------------------------------------------
@@ -44,7 +54,7 @@ The differences between the scripts are further explained in
 :ref:`faq-cs-vs-counts-in-region`. Here we will use :mod:`~yeti.bin.counts_in_region`.
 
 Our first dataset is :term:`ribosome profiling`, and we will map the ribosomal
-P-site at 14 nucleotides from the 5' end of each read (approximating :cite:`Stern-ginossar2012`).
+P-site at 14 nucleotides from the 5' end of each read (approximating :cite:`Stern-Ginossar2012`).
 To specify this, we use the arguments ``--fiveprime --offset 14``.
 
 The data we want to count is in the file ``SRR609197_riboprofile.bam``, which we pass
@@ -56,23 +66,13 @@ Putting this together, the script is run from the terminal as:
 
  .. code-block:: shell
 
-    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile.bam --annotation_files merlin_orfs.gtf --fiveprime --offset 14
+    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile.bam \
+                                       --annotation_files merlin_orfs.gtf \
+                                       --fiveprime --offset 14
 
 :mod:`~yeti.bin.counts_in_region` will create a tab-delimited text file called
 ``riboprofile.txt`` containing the results. For detailed documentation of the output
 and command-line arguments, see the module documentation for :mod:`~yeti.bin.counts_in_region`.
-
- .. note::
-
-    When calculating densities of :term:`ribosome-protected footprints`
-    over coding regions, the codons immediately surrounding the start
-    and stop codons should be excluded from analysis due to the presence of
-    :term:`start <start codon peak>` and :term:`stop codon peaks <stop codon peak>`,
-    which inflate estimates of steady-state translation. We eliminated this
-    step in this tutorial for the sake of simplicity.
-
-    In practice, one could do this by supplying a :term:`mask annotation file <mask file>`
-    annotating such regions. For a detailed explanation, see :doc:`/examples/using_masks`.
 
 
  .. _gene-expression-interactive:
@@ -80,8 +80,10 @@ and command-line arguments, see the module documentation for :mod:`~yeti.bin.cou
 Manually
 ........
 
-Gene expression -- or, more broadly, read coverage over arbitrary regions
--- can be calculated easily in an interactive Python session.
+Gene expression -- or, more broadly, read density over from any
+:term:`high-throughput sequencing` experiment over any genomic
+region -- can be calculated easily in an interactive Python
+session.
 
 In this example, we separately caclulate read density over:
 
@@ -93,14 +95,25 @@ In this example, we separately caclulate read density over:
 First, we need to import a few things::
 
     >>> import copy
+
+    >>> # opens BAM files
     >>> import pysam
+
+    >>> # spreadsheet-like holder for data
     >>> import pandas as pd
+
+    >>> # plotting functions
     >>> import matplotlib.pyplot as plt
+
+
+    >>> # reader for GTF2-format transcript annotations
     >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+
+    >>> # data structure that maps read alignments to genomic positions
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
 
-Then, we'll open our data, storing each dataset in a |BAMGenomeArray|::
+First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArray|::
 
     >>> my_datasets = { "ribosome_profiling" : "SRR609197_riboprofile.bam",
     >>>                 "RNA-seq"            : "SRR592963_rnaseq.bam",
@@ -182,30 +195,16 @@ CDS, 3'UTR and total region (exon) of each transcript:
     >>>             my_data["%s_%s_rpkm"   % (sample_name,region)].append(rpkm)
 
 
- .. note::
-
-    As mentioned above, when calculating densities of :term:`ribosome-protected footprints`
-    over coding regions, the codons immediately surrounding the start
-    and stop codons should be excluded from analysis due to the presence of
-    :term:`start <start codon peak>` and :term:`stop codon peaks <stop codon peak>`,
-    which inflate estimates of steady-state translation.
-
-    We skipped this here in order to keep this tutorial simple. For a detailed
-    discussion of using masks in interactive Python sessions, see
-    :ref:`masking-mask-file-interactive`.
-
-
-Finally, we can save the data to a file. It is easiest to do this by converting 
-our dictionary of lists into a :class:`pandas.DataFrame`::
+Finally, we can save the calculated values to a file. It is easiest to do this
+by converting the dictionary of lists into a :class:`pandas.DataFrame`:: 
 
     >>> # convert to DataFrame, then save as tab-delimited text file
     >>> df = pd.DataFrame(my_data)
     >>> df.to_csv("%s_expression.txt" % sample,sep="\t")
 
-That's it! These text files may be re-loaded for further analysis, or plotted.
-For fun, let's plot the :term:`RPKM` measurements for translation
-(:term:`ribosome profiling`) and transcription (:term:`RNA-seq`) against
-each other::
+The text files may be re-loaded for further analysis, or plotted. For example,
+to plot the :term:`RPKM` measurements for translation (:term:`ribosome profiling`)
+and transcription (:term:`RNA-seq`) against each other::
 
     >>> my_figure = plt.figure()
     >>> plt.loglog() # log-scaling makes it easier
@@ -219,7 +218,6 @@ each other::
     >>> df["RNA-seq_exon_rpkm"][df["RNA-seq_exon_rpkm"] == 0] = MIN_VAL
     >>> df["ribosome_profiling_CDS_rpkm"][df["ribosome_profiling_CDS_rpkm"] == 0] = MIN_VAL
 
-
     >>> # now, make a scatter plot
     >>> plt.scatter(plot_df["RNA-seq_exon_rpkm"],
     >>>             plot_df["ribosome_profiling_CDS_rpkm"],
@@ -228,6 +226,7 @@ each other::
     >>> plt.ylabel("Translation (RPKM of footprints over CDS)")
 
     >>> plt.show()
+
 
 This produces the following plot:
 
@@ -241,21 +240,21 @@ This produces the following plot:
 Estimating translation efficiency
 ---------------------------------
 
-:term:`Translation efficiency` is a measure of how much protein is
+:term:`Translation efficiency` is a measurement of how much protein is
 made from a single mRNA. :term:`Translation efficiency` thus reports
 specifically on the *translational* control of gene expression.
 
-:term:`translation efficiency` can be estimated
+:term:`Translation efficiency` can be estimated
 by normalizing an mRNA 's translating ribosome density (in :term:`RPKM`,
 as measured by :term:`ribosome profiling`) by the mRNA's abundance (in
 :term:`RPKM`, measured by :term:`RNA-Seq`) (:cite:`Ingolia2009`).
 
-Making this estimate from the calculations above is trivial::
+Making this estimate from the calculations above is simple::
 
     >>> df["translation_efficiency"] = df["ribosome_profiling_CDS_rpkm"] / df["RNA-seq_exon_rpkm"]
 
 Then, we can compare the effects of transcriptional and translational
-control:
+control::
 
     >>> plot_df = copy.deepcopy(df)
     >>> df["RNA-seq_exon_rpkm"][df["RNA-seq_exon_rpkm"] == 0] = MIN_VAL
@@ -284,7 +283,7 @@ RNA-Seq
 There are many strategies for significance testing of differential gene expression
 between multiple datasets, many of which are specifically developed for -- and
 make statistical corrections that assume -- :term:`RNA-seq` data
-(:cite:`some citation` ). In particuar, for :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_
+(TODO :cite:`citation` ). In particuar, for :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_
 are fast and efficient, and don't require any preprocessing within :data:`yeti` at all.
 For further information on using those packages, see their documentation.
 
@@ -292,22 +291,25 @@ Any :term:`high-throughput sequencing` experiment
 .................................................
 For other experimental data types -- e.g. :term:`ribosome profiling`, :term:`DMS-Seq`,
 :term:`ChIP-Seq`, :term:`ClIP-Seq`, et c -- the assumptions made by many packages
-developed for :term:`RNA-seq` analysis do not hold. 
+specifically developed for :term:`RNA-seq` analysis do not hold. 
 
-In contrast, the `R`_ package `DESeq`_ offers a very generally applicable
-statistical approach that is
-appropriate to virtually any count-based sequencing data (:cite:`Anders2010`,
-:cite:`Anders2013`).
+In contrast, the `R`_ package `DESeq`_ (:cite:`Anders2010`,
+:cite:`Anders2013`) offers a generally applicable statistical
+approach that is appropriate to virtually any count-based
+sequencing data.
 
-As input, `DESeq` takes two objects:
+As input, `DESeq`_ takes two objects:
 
- #. A table of *uncorrected, unnormalized* :term:`counts`, in which
-    each row in the table corresponds to a genomic region, and each column an
-    experimental sample. The value in each cell corresponds to the number of counts
-    in that region, in that sample.
+ #. A table of *uncorrected, unnormalized* :term:`counts`, in which:
 
- #. An experimental design describing the relationships between samples
-    (e.g. if any are technical or biological replicates)
+      - each table row corresponds to a genomic region
+      - each column corresponds to an experimental sample
+      - the value in a each cell corresponds ot the number of counts
+        in the corresponding genomic region and sample
+
+ #. An *experimental design* describing the relationships between samples
+    (e.g. if any are technical or biological replicates, if any samples
+    interact in other ways)
      
 From these, `DESeq`_ separately models intrinsic counting error as well
 as inter-replicate error, and from these error models can infer significant
@@ -336,9 +338,11 @@ the terminal. For example:
     $ paste <(cut -f ... ) <(cut -f ... ) >>new_file.txt
 
 
-The second table is specified as an experimental *design*.
+The second table is specified as an experimental *design* from within `R`_.
 
  .. code-block:: r
+
+    TODO: R code here
 
 
 Differential translation efficiency
@@ -347,15 +351,15 @@ Differential translation efficiency
  .. TODO :
 
     Tests for differential translation efficiency can also be implemented within
-    `DESeq`_..
+    `DESeq`_.
 
 
 Statistical models for differential measurement of :term:`translation efficiency`
 are still a subject of discussion (TODO: citations). Here, we take an empirical
 approach used in :cite:`Ingolia2009`.
 
- #. First, a :term:`false discovery rate` appropriate to the experiment 
-    -- often five percent -- is set.
+ #. First, a :term:`false discovery rate` (:cite:`Benjamini1995`) appropriate
+    to the experiment -- often five percent -- is set.
 
  #. For each sample, the :term:`translation efficiency` of each mRNA measured as
     the ratio of :term:`ribsome-protected footprint` density in a coding region

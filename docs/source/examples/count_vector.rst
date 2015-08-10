@@ -3,9 +3,8 @@ Vectors of counts along transcripts
 In this tutorial, we show:
 
   - :ref:`how to retrieve a vector <examples-count-vector-interactive>`
-    of the number of :term:`counts` from a
-    :term:`high-throughput sequencing` experiment that align to each
-    position in a transcript, in an interactive Python session
+    of the number of 5' ends of :term:`read alignments` that align to each
+    position in a transcript
 
   - :ref:`how to automate this process <examples-count-vector-script>`
     using the :mod:`~yeti.bin.get_count_vectors` script
@@ -21,19 +20,22 @@ Working with vectors of counts interactively
 
  .. TODO : update all count vectors in this example
 
-This tutorial requires two types of data:
+To count :term:`read alignments` along a transcript, we need two types of data:
 
-  #. An :term:`annotation` of transcript models.
+  #. An :term:`annotation` of transcript models
 
-  #. A :term:`high-throughput sequencing` dataset.
+  #. A :term:`high-throughput sequencing` dataset
 
 First, we import everything we need::
 
+    >>> # reader for BAM files
     >>> import pysam
+
+    >>> # data structure for mapping read alignments to genomic positions
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeOffsetFactory
+
+    >>> # reader for BED-format transcript annotations
     >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.util.scriptlib.argparsers import _parse_variable_offset_file
-    >>> from yeti.util.io.filters import CommentReader
 
 Next, load the transcripts. By default, :class:`~yeti.genomics.readers.BED_Reader` 
 and the other readers in :data:`yeti` behave as iterators. Here, we'll retrieve
@@ -44,12 +46,12 @@ the transcripts as a :class:`list`::
 Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
 which we'll load into a :class:`~yeti.genomics.genome_array.BAMGenomeArray`.
 We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
-estimating the P-site to be 14 nucleotides from the 5' end.
+estimating the P-site to be 14 nucleotides from the 5' end::
 
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
-    >>> alignments.set_mapping(FivePrimeMapFactory(14))
+    >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
-Then, to fetch a vector of counts covering each transcript, we'll use
+To fetch a vector of counts covering each transcript, we'll use
 the :meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`,
 which returns a fully-spliced vector (:class:`numpy.ndarray`) of counts corresponding to
 each position in the transcript, from the 5' end of the transcript to the 3'

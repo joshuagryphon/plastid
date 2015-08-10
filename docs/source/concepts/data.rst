@@ -53,11 +53,12 @@ Generally speaking, genomics data comes in a few flavors:
         sequencing data through alignment programs,
         such as `Bowtie`_, `Tophat`_, or `BWA`_. 
         
-        Finally, :term:`Read alignments <read alignments>`
+        :term:`Read alignments <read alignments>`
         can be converted to quantitative data by applying a :term:`mapping rule`,
-        to convert the read to a count. For example, one could count the number
-        of 5' ends of reads that align to each position in a genome. For
-        an in-depth discussion of this, see :doc:`concepts/mapping_rules`.
+        that converts the reads to :term:`counts`. For example, one could count
+        the number of 5' ends of reads that align to each position in a genome. For
+        an in-depth discussion of :term:`mapping rules <mapping rule>`, see
+        :doc:`concepts/mapping_rules`.
 
 
 Formats of data
@@ -75,7 +76,7 @@ of the various file formats used in genomics. But, two points are relevant:
      
      However, indexed files are frequently compressed, which can make reading them 
      slower to parse. For small genomes that don't use much memory in the first
-     place (e.g. yeast, *E. coli*), the meagre memory savings aren't worth this
+     place (e.g. yeast, *E. coli*), the meager memory savings aren't worth this
      speed cost. The exception is for short :term:`read alignments`, where indexed
      `BAM`_ files are universally recommended. 
 
@@ -94,13 +95,12 @@ all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
     
     Quantitative data       `bedGraph`_, `wiggle`_                `BigWig`_
     
-    Read alignments         `bowtie`_, `PSL`_                     `BAM`_ 
+    Read alignments         `bowtie`_, `SAM`_, `PSL`_             `BAM`_ 
     =====================   ===================================   ===================
  
  
-Finally, for large genomes, `BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be
-indexed via `tabix`_. :data:`yeti` supports (via `pysam`_) reading of
-`tabix`_-compressed files too.
+`BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be indexed via `tabix`_.
+:data:`yeti` supports (via `pysam`_) reading of `tabix`_-compressed files too.
 
 
 Why are there so many formats?
@@ -116,7 +116,7 @@ There are a number of answers to this:
     the `2bit <twobit>`_, `BigBed`_, and `BigWig`_ formats were created. 
 
  #. The various file formats have their own strengths and weaknesses. These
-    are detailed in :ref:`data-annotation-format`.
+    are detailed in :ref:`data-annotation-format`
     
 
  .. _data-annotation-format:
@@ -158,45 +158,46 @@ or an alignment or a ChIP binding site, et c).
 `BigBed`_ and `BED+X`_ formats can include additional attributes in additional
 columns, but every entry in each column must be the same type of attribute 
 (e.g. a "gene id" column can only contain gene IDs).
+:term:`Genome browsers <genome browser>` may or may not understand or even read
+these extra columns.
 
 
 `GTF2`_ & `GFF3`_
 ..................
 Unlike `BED`_-family files, `GTF2`_ and `GFF3`_ files are hierarchical:
-features have parents and children, which are other features. Continuous
+features have parents and children, which themselves are other features. Continuous
 features are represented on a single line. Discontinuous features -- like
 transcripts -- are represented on multiple lines -- for example, one
-line per exon, intron, and continous portion of a coding region -- which
-are linked together via parent-child attributes (`'Parent'` in for `GFF3`_;
-`'gene_id'` and `'transcript_id'` in `GTF2`_).
+line per exon, one line per intron, and one line per continous portion
+of a coding region. These sub-features are linked together via parent-child
+attributes (`'Parent'` in for `GFF3`_; `'gene_id'` and `'transcript_id'` in
+`GTF2`_), which associate them with the discontinuous feature they represent.
 
 This has several important implications:
 
  #. Sub-features in `GTF2`_ & `GFF3`_ can have their own attributes,
     which differ from the attributes of their parent features.
  
- #. In order to reconstruct a transcript (or any discontinuous feature),
+ #. In order to reconstruct a discontinuous feature like a transcript,
     `GTF2`_ & `GFF3`_ parsers need to collect all of the required subfeatures.
-    However, parsers only know when they have collected all of the features
+    However, parsers only know when they have collected all of the required features
     if they receive information indicating this is so. This information could be:
 
-      - In a `GFF3`_ file, the special line::
+      - In a `GFF3`_ file, the special line `'###'`::
         
-            # this line is a comment, ignored by GFF3 parsers.
             ###
             # the line above is not a comment, but a GFF3 instruction!
-            # this line and the line above it are comments. 
+            # this line and the line above it are comments.  
             
         which indicates all features in memory may be assembled.
       - In a sorted `GTF2`_ or `GFF3`_ file, a change in chromosomes, indicating
         all features on the previous chromosome may safely be assembled.
       - The end of the annotation file 
 
-    In all cases, a `GTF2`_ or `GFF3`_ parser has to hold all collected features
-    in memory until it it receives some signal that all related features have
-    been collected. This costs memory, time, and disk space, and can become
-    unwieldy for large genomes, files that contain many records,
-    or files that don't use the `'###'` instruction.
+    In all cases, a `GTF2`_ or `GFF3`_ parser has to hold a potentially large
+    set of subfeatures in memory until it it receives some signal that all related
+    subfeatures have been collected. This costs memory, time, and disk space, and
+    can become unwieldy for large genomes.
 
 However,
 a major advantage of `GTF2`_ and `GFF3`_ files is that they contain a column (column 9)
@@ -218,11 +219,12 @@ schema. The complete list of valid record types in `GTF2`_ is:
   - intron_CNS
   - exon
 
-`GFF3`_ files can describe any type of feature, and the `GFF3`_ specification
-allows any schema of parent-child hierarchy, making `GFF3`_ files incredibly
-flexible. The cost of this flexibility is that, lacking schema information,
-`GFF3`_ parsers cannot assemble complex
-features. Similarly, given an assembled feature in Python (represented as a
+`GFF3`_ files can describe any type of feature with any schema of parent-child
+hierarchy. This makes `GFF3`_ the most flexible format. The cost of this
+flexibility is that, without knowing the parent-child schema, `GFF3`_ parsers 
+don't know which chidl subfeatures to assemble into complex parent features.
+
+Similarly, given an assembled feature in Python (represented as a
 |SegmentChain|), in the absence of a schema there is ambiguity surrounding
 what types the parent |SegmentChain| and each of its children (|GenomicSegments|)
 should be rendered as in `GFF3`_ output. Due to this ambiguity, attempts to call the
@@ -297,7 +299,7 @@ to save some time by following several practices:
  #. Make sure your :term:`annotation` matches your :term:`genome build`. e.g.
     do not use the *mm9* mouse genome annotation with the *mm10* sequence
     assembly. Do not mix `Ensembl`_'s human genome build *GRCh38* and
-    `UCSC`_'s similar-but-still-different *hg38*.
+    `UCSC <UCSC genome browser>`_'s similar-but-still-different *hg38*.
 
  #. If using a large genome (e.g. *Drosophila* or larger), consider using
     non-hierarchical (e.g. `BED`_) and possibly indexed (e.g. `BigBed`_,

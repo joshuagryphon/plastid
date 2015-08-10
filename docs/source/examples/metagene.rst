@@ -144,7 +144,9 @@ The program is called from the terminal:
 
  .. code-block:: shell
 
-    $ metagene generate merlin_cds_start --landmark cds_start --annotation_files merlin_orfs.gtf --downstream 200
+    $ metagene generate merlin_cds_start --landmark cds_start \
+                                         --annotation_files merlin_orfs.gtf \
+                                         --downstream 200
 
 For a detailed description of these and other command-line arguments, see the
 :mod:`metagene script documentation <yeti.bin.metagene>`
@@ -183,7 +185,9 @@ of each :term:`read alignment`.
 
  .. code-block:: shell
 
-    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile --count_files SRR609197_riboprofile.bam --fiveprime --offset 14
+    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile \
+                     --count_files SRR609197_riboprofile.bam \
+                     --fiveprime --offset 14
 
 
 A number of files are created and may be used for further processing. In our
@@ -208,7 +212,10 @@ a single plot:
 
  .. code-block:: shell
  
-    $ metagene chart SRR609197_riboprofile_cds_start.png  SRR609197_riboprofile_metagene_profile.txt --landmark "start codon" --title "Metagene demo"
+    $ metagene chart SRR609197_riboprofile_cds_start.png \
+                     SRR609197_riboprofile_metagene_profile.txt \
+                     --landmark "start codon" \
+                     --title "Metagene demo"
 
 This produces the image:
 
@@ -450,9 +457,15 @@ Then, you can use the ROI file you just made with |metagene|
 
  .. code-block:: shell
 
-     $ metagene count SRR609197_riboprofile_big_spike_roi_file.txt SRR609197_riboprofile_big_spike --count_files SRR609197_riboprofile.bam --fiveprime_variable --offset SRR609197_riboprofile_p_offsets_adjusted.txt
+     $ metagene count SRR609197_riboprofile_big_spike_roi_file.txt \
+                      SRR609197_riboprofile_big_spike \
+                      --count_files SRR609197_riboprofile.bam \
+                      --fiveprimee --offset 14
      
-     $ metagene chart SRR609197_riboprofile_big_spike.png SRR609197_riboprofile_big_spike_metagene_profile.txt --landmark "highest ribosome peak" --title "Custom metagene demo"
+     $ metagene chart SRR609197_riboprofile_big_spike.png \
+                      SRR609197_riboprofile_big_spike_metagene_profile.txt \
+                      --landmark "highest ribosome peak" \
+                      --title "Custom metagene demo"
 
 Which yields:
 
@@ -465,7 +478,8 @@ Which yields:
     region, excluding :term:`start <start codon peak>` and
     :term:`stop codon peaks <stop codon peak>`.
     
-    
+
+-------------------------------------------------------------------------------
 
 See also
 --------

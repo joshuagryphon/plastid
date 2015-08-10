@@ -259,3 +259,14 @@ Glossary of terms
         for an mRNA is therefore proportional to its translation initiation
         rate.
 
+    FDR
+    false discovery rate
+        The :term:`false discovery rate` is defined as the fraction 
+        of positive results that are false positives (:cite:`Benjamini1995`):
+
+         .. math::
+
+            FDR = \frac{FP}{FP + TP}
+
+        For example, at a 5% :term:`false discovery rate`, a set of
+        20 positive results would contain approximately 1 false positive.

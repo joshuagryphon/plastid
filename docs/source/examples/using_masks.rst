@@ -2,14 +2,14 @@ Excluding (masking) regions of the genome
 =========================================
 
 Often, it is important to exclude missing or unreliable data from analysis.
-`numpy`_ and `SciPy`_ offer tools to do this with numerical data in the modules
-:mod:`numpy.ma` and :mod:`scipy.stats.mstats`.
+For example, `numpy`_ and `SciPy`_ offer masking tools for numerical data
+in the modules :mod:`numpy.ma` and :mod:`scipy.stats.mstats`.
 
 In genomics, specific regions of the genome -- repetitive sequences --
 are prone to yield missing or unreliable data, because reads from
 :term:`high-throughput sequencing` experiments will :term:`multimap <multimapping>`
-equally well to each repetition of the sequence, creating ambiguity
-in the data.
+equally well to each instance of the repeated sequence, creating
+ambiguity in the data.
 
 In this tutorial we discuss how to exclude or *mask* regions of the genome
 from analysis. We use repetitive sequence as an example, but, any region
@@ -36,28 +36,29 @@ encouraged to folow along.
 Manual masking of regions
 -------------------------
 
-Genomic features in :data:`yeti` are represented by |SegmentChains|
-and |Transcripts|, which are constructed from zero or more |GenomicSegments|.
-Masks, which are features, can also be represented as |SegmentChains|
-and |GenomicSegments|. Portions of |SegmentChains| and |Transcripts|
-can be masked using their :meth:`~yeti.genomics.roitools.SegmentChain.add_masks`
-methods::
+Genomic :term:`features <feature>` in :data:`yeti` are represented by
+|SegmentChains| and |Transcripts|, which are constructed from zero or
+more |GenomicSegments|.
+Because masks are :term:`features <feature>`, they are also represented
+as |SegmentChains| and |GenomicSegments|. Portions of |SegmentChains|
+and |Transcripts| can be masked using their
+:meth:`~yeti.genomics.roitools.SegmentChain.add_masks` methods::
 
     >>> import pysam
     >>> import numpy
     >>> from yeti.genomics.roitools import GenomicSegment
     >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, VariableFiveprimeMapFactory
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, FiverimeMapFactory
 
     >>> # load transcripts and count data
-    >>> offset_dict = 
-    >>> alignments = BAMGenomeArray([pysam.Samfile(,"rb")],VariableFivePrimeMapFactory(offset_dict))
+    >>> alignments = BAMGenomeArray([pysam.Samfile(,"rb")],FivePrimeMapFactory(offset=14))
     >>> transcripts = list(BED_Reader(open("")))
 
     >>> #this is ribosome profiling data, so we'll look at a coding region
     >>> demo_cds = transcripts[].get_cds()
 
-    >>> # Now, add masks. We'll mask out the first and last 5 codons
+    >>> # Now, add masks. We'll mask out the first and last 5 codons.
+    >>> # we can fetch these as subchains of the cds
     >>> start_codon_masks = list(demo_cds.get_subchain(0,15))
     >>> stop_codon_masks  = list(demo_cds.get_subchain(demo_cds_length-15,demo_cds_length))
     >>> demo_cds.add_masks(*start_codon_masks)
@@ -66,15 +67,15 @@ methods::
 After masks are added, we can get a masked count vector by calling
 :meth:`~yeti.genomics.roitools.SegmentChain.get_masked_counts`. This method
 returns a :class:`numpy.ma.MaskedArray`, rather than a :class:`numpy.ndarray`.
-:class:`~numpy.ma.MaskedArray` objects are useful, because they contain 
-all values, but ignore masked values when performing operations::
+:class:`~numpy.ma.MaskedArray` objects because they contain all the values,
+but ignore masked values when performing operations::
 
-    >>> # Now, get masked counts and masked length
+    >>> # get masked counts and masked length
     >>> demo_cds.get_masked_counts(alignments)
 
     >>> demo_cds.get_masked_counts(alignments).sum()
 
-Calling :meth:`~yeti.genomics.roitools.SegmentChain.get_masked_counts` after adding
+Calling :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` after adding
 masks will still return an *unmasked* :class:`numpy.ndarray`::
 
     >>> demo_cds.get_counts(alignments)
@@ -104,10 +105,11 @@ as a list of |GenomicSegments| or as a |SegmentChain|::
 
 :term:`Mask files <mask file>`
 ------------------------------
-Mask files are :term:`annotation files <annotation>` that define parts of a
-genome, transcriptome, or contig to exclude from analysis. They can be
-in any annotation format (e.g. `BED`_, `BigBed`_, `GFF3`_, or others),
-and can be used to mask any region, for any reason.
+:term:`Mask files <mask file>` are :term:`annotation files <annotation>` whose
+features cover genomic regions that should be masked from analysis.
+:term:`Mask files <mask file>` can exist in any annotation format
+(e.g. `BED`_, `BigBed`_, `GFF3`_, or others), and can be used to mask any region,
+-- not just repetitive sequence -- for any reason.
 
 
  .. _masking-mask-file-interactive
@@ -120,8 +122,10 @@ indexes mask by location in the genome. To create a |GenomeHash|::
 
     >>> from yeti.genomics.genome_hash import GenomeHash
 
-    >>> # load masks
+    >>> # get list of masks
     >>> mask_features = list(BED_Reader(open()))
+
+    >>> # use GenomeHash to index masks
     >>> mask_hash = GenomeHash(mask_features)
 
 Then, we can search the |GenomeHash| for relevant masks to apply to features::
@@ -133,8 +137,10 @@ Then, we can search the |GenomeHash| for relevant masks to apply to features::
 
 If the :term:`mask file` is very large, it should be converted to an
 :ref:`indexed file format` such as `BigBed`_, or a `tabix`_-compressed file
-so that mask features don't need to be held in memory. These formats can be
-loaded into |BigBedGenomeHash| and |TabixGenomeHash|, respectively.
+so that mask features don't need to be held in memory by |GenomeHash|.
+These formats can instead be loaded into |BigBedGenomeHash| and
+|TabixGenomeHash|, which take advnatage of the indexes present in
+`BigBed`_ and `tabix`_-compressed files.
 
 
  .. _masking-mask-file-command-line
@@ -143,12 +149,16 @@ Using :term:`mask files <mask file>` in :mod:`command-line scripts <yeti.bin>`
 ..............................................................................
 
 :term:`Mask files <mask file>` can be used by :mod:`command-line scripts <yeti.bin>`
-if a user supplies the ``--mask_annotation_files`` argument. For example, to 
+if a user supplies the argument ``--mask_annotation_files``. For example, to 
 mask regions when creating a :term:`metagene` window file:
 
  .. code-block:: shell
 
-    $ metagene generate outbase --landmark cds_start --annotation_files anno_file --mask_annotation_files mask_file --mask_annotation_format BED
+    $ metagene generate outbase
+                        --landmark cds_start \
+                        --annotation_files annotation_file.gtf \
+                        --mask_annotation_files mask_file.bed \
+                        --mask_annotation_format BED
 
 
  .. _masking-crossmap-script:
@@ -165,17 +175,17 @@ genome sequence, using the following approach (introduced in :cite:`Ingolia2009`
     :term:`ribosome profiling` experiment that typically produces 27- to 32-mers,
     one might choose `k` to be 25 or 30.
 
- #. The :term:`k-mers <k-mer>` are realigned to the genome sequence, permitting a user-configurable
+ #. The pseudo-reads are realigned to the genome sequence, permitting a user-configurable
     number of mismatches. Again, the number of mismatches should be chosen to conservatively
     reflect the number of mismatches that will be permitted when data from the
     :term:`high-throughput sequencing` experiment is aligned.
 
- #. The number of times each :term:`k-mer` aligns is counted. When a k-mer
+ #. The number of times each pseudo-read aligns is counted. When a pseudo-read
     :term:`multimaps <multimapping>` equally well to multiple genomic coordinates,
-    the genomic position that gave rise to that :term:`k-mer` is annotated as
+    the genomic position that gave rise to that pseud-read is annotated as
     repetitive under the given value for `k` and number of mismatches.
 
- #. Repetitive regions are saved to a `BED`_ file.
+ #. Repetitive regions are saved in `BED`_ format.
 
 
 Because |crossmap| internally uses `bowtie`_ for alignments, `bowtie`_
@@ -192,7 +202,10 @@ allowing 2 mismatches during alignment:
 
  .. code-block:: shell
 
-    $ crossmap -k 26 --offset 12 --mismatches 2 merlin_NC006273-2.fa merlin_NC006273-2 merlin_NC006273-2
+    $ crossmap -k 26 --offset 12 --mismatches 2 \
+               merlin_NC006273-2.fa \
+               merlin_NC006273-2 \
+               merlin_NC006273-2
 
 
 In this example, the `BED`_ file that is produced is quite small.
