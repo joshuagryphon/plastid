@@ -51,12 +51,12 @@ estimating the P-site to be 14 nucleotides from the 5' end::
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
-To fetch a vector of counts covering each transcript, we'll use
-the :meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`,
-which returns a fully-spliced vector (:class:`numpy.ndarray`) of counts corresponding to
+Now, we're ready to count. The method
+:meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`, returns
+a vector (:class:`numpy.ndarray`) of counts corresponding to
 each position in the transcript, from the 5' end of the transcript to the 3'
 end (i.e. for reverse-strand features, counts are reversed relative to
-genomic coordinates)::
+genomic coordinates), accounting for splicing of exons::
 
     >>> count_vectors = []
     >>> for transcript in transcripts:
@@ -134,11 +134,8 @@ This makes the following figure:
 
 Using the |get_count_vectors| script
 ------------------------------------
-The analysis above is performed by the command-line script
-|get_count_vectors|.
-
-To run, this script requires the same
-data types as above:
+The analysis above is implemented by the command-line script |get_count_vectors|.
+|get_count_vector| requires the same data types as above:
 
  #. An :term:`annotation` of genomic :term:`features <feature>`
     (e.g. transcripts for :term:`ribosome profiling`,
