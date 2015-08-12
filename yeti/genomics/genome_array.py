@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """GenomeArrays are randomly-accessible array-like structures that map quantitative data
 or :term:`read alignments` to genomic positions. In this way, they function like
 `numpy`_ arrays, except over coordinates specified by |GenomicSegments|
@@ -165,7 +164,7 @@ import scipy.sparse
 from collections import OrderedDict
 from yeti.readers.wiggle import WiggleReader
 from yeti.readers.bowtie import BowtieReader
-from yeti.genomics.roitools import GenomicSegment
+from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.util.services.mini2to3 import xrange, ifilter
 
 MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
@@ -1342,7 +1341,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                 
                 # values of nonzero positions must be same
                 if len(self_nonzero_vec) > 0:
-                        test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
+                    test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
                     if not (self[test_seg] - other[test_seg] <= tol).all():
                         return False
 
