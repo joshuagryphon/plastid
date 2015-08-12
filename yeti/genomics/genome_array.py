@@ -942,16 +942,16 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         return self._chr_lengths
         
-    def get_reads_and_counts(self,seg):
+    def get_reads_and_counts(self,roi):
         """Return :term:`read alignments` covering a |GenomicSegment|, and a
         count vector mapping reads to each positions in the |GenomicSegment|,
         following the rule specified by :meth:`~BAMGenomeArray.set_mapping`.
-        Reads are strand-matched to `seg` by default. To obtain unstranded reads,
-        set the value of `seg.strand` to ``.``
+        Reads are strand-matched to `roi` by default. To obtain unstranded reads,
+        set the value of `roi.strand` to ``.``
         
         Parameters
         ----------
-        seg : |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Region of interest
 
         
@@ -962,7 +962,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             covering region of interest
 
         numpy.ndarray
-            Counts at each position of `seg`, under whatever mapping rule
+            Counts at each position of `roi`, under whatever mapping rule
             was set by :py:meth:`~BAMGenomeArray.set_mapping`
 
 
@@ -971,20 +971,23 @@ class BAMGenomeArray(AbstractGenomeArray):
         ValueError
             if bamfiles not sorted or not indexed
         """
-        # fetch reads
-        if seg.chrom not in self.chroms():
-            return [], numpy.zeros(len(seg))
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
 
-        reads = itertools.chain.from_iterable((X.fetch(reference=seg.chrom,
-                                          start=seg.start,
-                                          end=seg.end,
+        # fetch reads
+        if roi.chrom not in self.chroms():
+            return [], numpy.zeros(len(roi))
+
+        reads = itertools.chain.from_iterable((X.fetch(reference=roi.chrom,
+                                          start=roi.start,
+                                          end=roi.end,
                                          # until_eof=True, # this could speed things up. need to test/investigate
                                           ) for X in self.bamfiles))
             
         # filter by strand
-        if seg.strand == "+":
+        if roi.strand == "+":
             reads = ifilter(lambda x: x.is_reverse is False,reads)
-        elif seg.strand == "-":
+        elif roi.strand == "-":
             reads = ifilter(lambda x: x.is_reverse is True,reads)
         
         # Pass through additional filters (e.g. size filters, if they have
@@ -993,7 +996,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             reads = ifilter(my_filter,reads)
         
         # retrieve selected parts of regions
-        reads,count_array = self.map_fn(reads,seg)
+        reads,count_array = self.map_fn(reads,roi)
         
         # normalize to reads per million if normalization flag is set
         if self._normalize is True:
@@ -1001,15 +1004,15 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         return reads, count_array
 
-    def get_reads(self,seg):
+    def get_reads(self,roi):
         """Returns reads covering a |GenomicSegment|. Reads are strand-matched
-        to `seg` by default, and are included or excluded depending upon the
+        to `roi` by default, and are included or excluded depending upon the
         rule specified by :meth:`~BAMGenomeArray.set_mapping`. To obtain unstranded
-        reads, set the value of `seg.strand` to `'.'`
+        reads, set the value of `roi.strand` to `'.'`
         
         Parameters
         ----------
-        seg : |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Region of interest
 
         
@@ -1025,10 +1028,10 @@ class BAMGenomeArray(AbstractGenomeArray):
         ValueError
             if bamfiles are not sorted or not indexed
         """
-        reads, _ = self.get_reads_and_counts(seg)
+        reads, _ = self.get_reads_and_counts(roi)
         return reads
 
-    def __getitem__(self,seg): 
+    def __getitem__(self,roi): 
         """Return an array mapping reads to specific positions in a |GenomicSegment|
         following rules set by :meth:`~BAMGenomeArray.set_mapping`. The values in
         the returned array in the order of the chromosome (leftmost-first, i.e.
@@ -1038,7 +1041,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Parameters
         ----------
-        seg : |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Region of interest
         
         
@@ -1066,7 +1069,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             |SegmentChain|, in the 5\' to 3\' direction of the chain
             (rather than the genome).      
         """
-        _, count_array = self.get_reads_and_counts(seg)
+        _, count_array = self.get_reads_and_counts(roi)
         return count_array
 
     def get_mapping(self):
@@ -1339,13 +1342,13 @@ class GenomeArray(MutableAbstractGenomeArray):
                 
                 # values of nonzero positions must be same
                 if len(self_nonzero_vec) > 0:
-                    test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
+                        test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
                     if not (self[test_seg] - other[test_seg] <= tol).all():
                         return False
 
         return True
         
-    def __getitem__(self,seg):
+    def __getitem__(self,roi):
         """Retrieve array of counts from a region of interest (ROI). Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
         are NOT reversed for negative strand features. For that, see
@@ -1363,7 +1366,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         
         Parameters
         ----------
-        seg : |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Region of interest
         
         
@@ -1380,26 +1383,26 @@ class GenomeArray(MutableAbstractGenomeArray):
             |SegmentChain|, in the 5\' to 3\' direction of the chain
             (rather than the genome).                       
         """
-        assert isinstance(seg,GenomicSegment)
-        assert seg.start >= 0
-        assert seg.end >= seg.start
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
+
         try:
-            assert seg.end < len(self._chroms[seg.chrom][seg.strand])
+            assert roi.end < len(self._chroms[roi.chrom][roi.strand])
         except AssertionError:
-            my_len = len(self._chroms[seg.chrom][seg.strand])
-            new_size = max(my_len + 10000,seg.end + 10000)
+            my_len = len(self._chroms[roi.chrom][roi.strand])
+            new_size = max(my_len + 10000,roi.end + 10000)
             for strand in self.strands():
-                new_strand = copy.deepcopy(self._chroms[seg.chrom][strand])
+                new_strand = copy.deepcopy(self._chroms[roi.chrom][strand])
                 new_strand.resize(new_size)
-                self._chroms[seg.chrom][strand] = new_strand
+                self._chroms[roi.chrom][strand] = new_strand
         except KeyError:
-            assert seg.strand in self.strands()
-            if seg.chrom not in self.keys():
-                self._chroms[seg.chrom] = {}
+            assert roi.strand in self.strands()
+            if roi.chrom not in self.keys():
+                self._chroms[roi.chrom] = {}
                 for strand in self.strands():
-                    self._chroms[seg.chrom][strand] = numpy.zeros(self.min_chr_size)
+                    self._chroms[roi.chrom][strand] = numpy.zeros(self.min_chr_size)
         
-        vals = self._chroms[seg.chrom][seg.strand][seg.start:seg.end]
+        vals = self._chroms[roi.chrom][roi.strand][roi.start:roi.end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
@@ -1992,7 +1995,7 @@ class SparseGenomeArray(GenomeArray):
         
         return d_out
 
-    def __getitem__(self,seg):
+    def __getitem__(self,roi):
         """Retrieve array of counts from a region of interest. Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
         are *NOT* reversed for negative strand features. For that, see
@@ -2000,7 +2003,7 @@ class SparseGenomeArray(GenomeArray):
         
         Parameters
         ----------
-        seg : |GenomicSegment|
+        roi : |SegmentChain| or |GenomicSegment|
             Region of interest
         
         Returns
@@ -2015,19 +2018,18 @@ class SparseGenomeArray(GenomeArray):
             |SegmentChain|, in the 5\' to 3\' direction of the chain
             (rather than the genome).         
         """
-        assert isinstance(seg,GenomicSegment)
-        assert seg.start >= 0
-        assert seg.end >= seg.start
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
 
-        if seg.chrom not in self:
-            self._chroms[seg.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
+        if roi.chrom not in self:
+            self._chroms[roi.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
                                        for K in self.strands()
                                       }
-        if seg.end > self._chroms[seg.chrom][seg.strand].shape[1]:
+        if roi.end > self._chroms[roi.chrom][roi.strand].shape[1]:
             for strand in self.strands():
-                self._chroms[seg.chrom][strand].resize((1,seg.end+10000))
+                self._chroms[roi.chrom][strand].resize((1,roi.end+10000))
 
-        vals = self._chroms[seg.chrom][seg.strand][0,seg.start:seg.end]
+        vals = self._chroms[roi.chrom][roi.strand][0,roi.start:roi.end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
