@@ -572,6 +572,40 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 self.assertLessEqual(err,self.tol,
                                      "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
 
+    @skip_if_abstract
+    def test_getitem_genomicsegment_roi_order_false(self):
+        for k in _SAMPLE_BASES:
+            for region in self.region_classes["unique"]:
+                seg = region.spanning_segment
+                strand_key = STRAND_KEYS[region.spanning_segment.strand]
+                gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=False)
+                known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
+
+                max_err = max(abs(gnd_counts - known_counts))
+                self.assertLessEqual(max_err,self.tol,
+                                "Positionwise count difference '%s' exceeded tolerance '%s' for %s __getitem__ with roi_order==False for sample test %s" % (self.tol,max_err,self.native_format,k))
+ 
+
+    @skip_if_abstract
+    def test_getitem_genomicsegment_roi_order_true(self):
+        for k in _SAMPLE_BASES:
+            for region in self.region_classes["unique"]:
+                seg = region.spanning_segment
+                strand_key = STRAND_KEYS[region.spanning_segment.strand]
+                gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=True)
+                known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
+                if seg.strand == "-":
+                    known_counts = known_counts[::-1]
+
+                max_err = max(abs(gnd_counts - known_counts))
+                self.assertLessEqual(max_err,self.tol,
+                                "Positionwise count difference '%s' exceeded tolerance '%s' for %s __getitem__ with roi_order==True for sample test %s" % (self.tol,max_err,self.native_format,k))
+
+    @skip_if_abstract
+    def test_getitem_segmentchain(self):
+        assert False
+
+
 @attr(test="unit")
 @attr(speed="slow")
 class TestGenomeArray(AbstractGenomeArrayHelper):
@@ -610,7 +644,13 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
             self.__class__.gnds = _read_bowtie_files_to_genome_arrays(self.test_folder,self.test_class)
             self.__class__.has_gnds = True
             #TestGenomeArray.setUpClassOnlyOnce()
-   
+
+    def test_setitem_genomicsegment(self):
+        assert False
+
+    def test_setitem_segmentchain(self):
+        assert False
+
     def variablestep_and_bed_import_helper(self,wiggle_type):
         """Helper function to evaluate tests on variable step wiggle or BEDgraph import
 
@@ -633,18 +673,19 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
 
             empty_iv = GenomicSegment("chrA",vec_len,chrA_len,strand)
             nonempty_iv = GenomicSegment("chrA",0,vec_len,strand)
+            nonempty_vec = gnd.__getitem__(nonempty_iv,roi_order=False)
 
             # make sure count vector has requisite counts
             self.assertGreater(my_vec.sum(),0)
 
             # make sure sums are equal
-            self.assertEquals(my_vec.sum(),gnd[nonempty_iv].sum())
+            self.assertEquals(my_vec.sum(),nonempty_vec.sum())
 
             # make sure all regions after count vector are empty
             self.assertEquals(gnd[empty_iv].sum(),0,"Found counts in region that should be empty.")
 
             # make sure all positions in regions up to count vector are correct
-            max_err = abs(my_vec - gnd[nonempty_iv]).max()
+            max_err = abs(my_vec - nonempty_vec).max()
             self.assertLessEqual(max_err,self.tol,
                                  "Positionwise count difference %s exceeded tolerance %s for wiggle import on %s strand" % (max_err,self.tol,label)
                                  )
