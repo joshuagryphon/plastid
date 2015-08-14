@@ -103,7 +103,7 @@ def main(argv=sys.argv[1:]):
             count_vectors[k] = []
         cds_chain = roi.get_cds()
         
-        # for each iv, fetch reads, sort them, and create individual count vectors
+        # for each seg, fetch reads, sort them, and create individual count vectors
         for seg in cds_chain:
             reads = gnd.get_reads(seg)
             for read in filter(lambda x: len(x.positions) in read_dict,reads):
@@ -111,7 +111,7 @@ def main(argv=sys.argv[1:]):
 
             # map and sort by length
             for read_length in read_dict:
-                count_vector = list(gnd.map_fn(read_dict[read_length],iv)[1])
+                count_vector = list(gnd.map_fn(read_dict[read_length],seg)[1])
                 count_vectors[read_length].extend(count_vector)
         
         # add each count vector for each length to total
