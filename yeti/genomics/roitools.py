@@ -1741,7 +1741,9 @@ class SegmentChain(object):
         """
         ltmp = []
         for iv in self:
-            ltmp.extend(gnd[iv])
+            #ltmp.extend(gnd[iv])
+            ltmp.extend(gnd.__getitem__(iv,roi_order=False))
+
         if self.strand == "-" and stranded is True:
             ltmp = ltmp[::-1]
             

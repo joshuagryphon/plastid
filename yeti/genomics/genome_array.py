@@ -941,7 +941,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         return self._chr_lengths
         
-    def get_reads_and_counts(self,roi):
+    def get_reads_and_counts(self,roi,roi_order=True):
         """Return :term:`read alignments` covering a |GenomicSegment|, and a
         count vector mapping reads to each positions in the |GenomicSegment|,
         following the rule specified by :meth:`~BAMGenomeArray.set_mapping`.
@@ -1001,6 +1001,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         if self._normalize is True:
             count_array = count_array / float(self.sum()) * 1e6
         
+        if roi_order == True and roi.strand == "-":
+            count_array = count_array[::-1]
+
         return reads, count_array
 
     def get_reads(self,roi):
@@ -1030,7 +1033,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         reads, _ = self.get_reads_and_counts(roi)
         return reads
 
-    def __getitem__(self,roi): 
+    def __getitem__(self,roi,roi_order=True): 
         """Return an array mapping reads to specific positions in a |GenomicSegment|
         following rules set by :meth:`~BAMGenomeArray.set_mapping`. The values in
         the returned array in the order of the chromosome (leftmost-first, i.e.
@@ -1068,7 +1071,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             |SegmentChain|, in the 5\' to 3\' direction of the chain
             (rather than the genome).      
         """
-        _, count_array = self.get_reads_and_counts(roi)
+        _, count_array = self.get_reads_and_counts(roi,roi_order=roi_order)
         return count_array
 
     def get_mapping(self):
@@ -1168,7 +1171,12 @@ class BAMGenomeArray(AbstractGenomeArray):
             for i in range(len(window_starts)):
                 my_start = window_starts[i]
                 my_end   = window_starts[i+1] if i + 1 < len(window_starts) else int(self._chr_lengths[chrom])
-                my_counts = self[GenomicSegment(chrom,my_start,my_end,strand)]
+                #my_counts = self[GenomicSegment(chrom,my_start,my_end,strand)]
+                my_counts = self.__getitem__(GenomicSegment(chrom,
+                                                            my_start,
+                                                            my_end,
+                                                            strand),
+                                             roi_order=False)
                 if my_counts.sum() > 0:
                     for idx in my_counts.nonzero()[0]:
                         genomic_x = my_start + idx
@@ -1216,7 +1224,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             for i in range(len(window_starts)):
                 my_start = window_starts[i]
                 my_end   = window_starts[i+1] if i + 1 < len(window_starts) else int(self._chr_lengths[chrom])
-                my_reads, my_counts = self.get_reads_and_counts(GenomicSegment(chrom,my_start,my_end,strand))
+                my_reads, my_counts = self.get_reads_and_counts(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
                 
                 if len(my_reads) > 0:
                     genomic_start_x = window_starts[i]
@@ -1347,7 +1355,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         return True
         
-    def __getitem__(self,roi):
+    def __getitem__(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest (ROI). Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
         are NOT reversed for negative strand features. For that, see
@@ -1405,6 +1413,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
+        if roi_order == True and roi.strand == "-":
+            vals = vals[::-1]
+
         return vals
     
     def __setitem__(self,seg,val):
@@ -1445,6 +1456,10 @@ class GenomeArray(MutableAbstractGenomeArray):
             warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
 
         self.set_normalize(False)
+
+        if seg.strand == "-" and isinstance(val,numpy.ndarray):
+            val = val[::-1]
+
         try:
             assert seg.end < len(self._chroms[seg.chrom][seg.strand])
         except AssertionError:
@@ -1994,7 +2009,7 @@ class SparseGenomeArray(GenomeArray):
         
         return d_out
 
-    def __getitem__(self,roi):
+    def __getitem__(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest. Coordinates
         in the array are in the order of the chromosome (leftmost-first), and
         are *NOT* reversed for negative strand features. For that, see
@@ -2032,7 +2047,11 @@ class SparseGenomeArray(GenomeArray):
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
-        return vals.toarray().reshape(vals.shape[1],)
+        vals = vals.toarray().reshape(vals.shape[1],)
+        if roi.strand == "-" and roi_order == True:
+            vals = vals[::-1]
+
+        return vals
 
     def __setitem__(self,seg,val):
         """Set values in |SparseGenomeArray| over a region of interest (ROI).
@@ -2069,6 +2088,10 @@ class SparseGenomeArray(GenomeArray):
         assert seg.end >= seg.start
         
         old_normalize = self._normalize
+
+        if isinstance(val,numpy.ndarray) and seg.strand == "-":
+            val = val[::-1]
+
         if old_normalize == True:
             warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
         self.set_normalize(False)
