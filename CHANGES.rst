@@ -18,6 +18,25 @@ also follow `Semantic versioning <http://semver.org/>`_.
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
 
+Unreleased
+----------
+
+Added
+.....
+  - GenomeArray __getitem__ and __setitem__ now can take
+    SegmentChains as arguments
+  - Mapping functions for bowtie files now issue warnings
+    when reads are unmappable
+  - support for 2bit files (via twobitreader) and for
+    dicts of strings in SegmentChain.get_sequence
+
+Changed
+.......
+  - __getitem__ from GenomeArrays now returns vectors 5' to 3'
+    relative to GenomicSegment rather than to genome
+  - _get_valid_X methods of SegmentChain changed to _get_masked_X
+    for consistency with documentation and with numpy notation
+
 
 yeti [0.1.1] = [2015-07-23]
 ---------------------------
@@ -52,7 +71,7 @@ Removed
       - BED_to_Transcripts
       - BigBed_to_Transcripts
       - GTF2_to_Transcripts
-      - GF3_to_Transcripts
+      - GFF3_to_Transcripts
       - TagAlignReader
 
 

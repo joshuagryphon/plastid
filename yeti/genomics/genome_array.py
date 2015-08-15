@@ -110,19 +110,19 @@ different rules may be appropriate. The following mapping rules are provided,
 although users are encouraged to provide their own if needed. These include:
 
     #.  *Fiveprime end mapping:*
-        Each read alignment is mapped to its 5\' end, or at a fixed
-        distance from its 5\' end. This is common for RNA-seq or CLiP-seq
+        Each read alignment is mapped to its 5' end, or at a fixed
+        distance from its 5' end. This is common for RNA-seq or CLiP-seq
         experiments.
         
     #.  *Variable fiveprime end mapping:*
         Each read alignment is mapped at a fixed distance from its
-        5\' end, where the distance is determined by the length of the read
+        5' end, where the distance is determined by the length of the read
         alignment. This is commonly used for mapping :term:`ribosome-protected footprints`
         to their P-sites in :term:`ribosome profiling` experiments.
     
     #.  *Threeprime end mapping:*
-        Each read alignment is mapped to its 3\' end, or at a fixed
-        distance from its 3\' end.
+        Each read alignment is mapped to its 3' end, or at a fixed
+        distance from its 3' end.
     
     #.  *Entire,* *Center-weighted,* or *nibble mapping:*
         Zero or more positions are trimmed from each end of the read alignment,
@@ -254,7 +254,7 @@ def FivePrimeMapFactory(offset=0):
     Parameters
     ----------
     offset : int, optional
-        Offset from 5\' end of read, in direction of 3\' end, at which 
+        Offset from 5' end of read, in direction of 3' end, at which 
         reads should be counted (Default: `0`)
     
     Returns
@@ -312,8 +312,8 @@ def FivePrimeMapFactory(offset=0):
  
 def ThreePrimeMapFactory(offset=0):
     """Returns a threeprime mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the 3\' end of the alignment,
-    in the direction of the 5\' end
+    Reads are mapped at a user-specified offset from the 3' end of the alignment,
+    in the direction of the 5' end
      
     Parameters
     ----------
@@ -392,7 +392,7 @@ def VariableFivePrimeMapFactory(offset_dict):
     # docstring of function we will return.
     docstring = """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at possibly varying
-        offsets from the 5\' end of each read.
+        offsets from the 5' end of each read.
  
         Parameters
         ----------
@@ -415,20 +415,28 @@ def VariableFivePrimeMapFactory(offset_dict):
             # Get offset from dict. If not present, ask for default offset
             # If no default, this will throw a KeyError, which users can
             # deal with.
-            read_length = len(read.positions) 
-            if read_length not in offset_dict:
+            read_length = len(read.positions)
+
+            if read_length in offset_dict:
+                offset = offset_dict[read_length]
+            elif "default" in offset_dict:
                 offset = offset_dict["default"]
             else:
-                offset = offset_dict[read_length]
+                warnings.warn("No offset for reads of length %s in offset dict. Ignoring." % len(read),
+                              UserWarning)
+                continue
+
+            offset = offset_dict[read_length]
                  
             if seg.strand == "+":
-                p_site = read.positions[offset] # read.pos + self.offset
+                p_site = read.positions[offset]
             else:
-                p_site = read.positions[-offset - 1] #read.pos + read.rlen - self.offset - 1
+                p_site = read.positions[-offset - 1]
              
             if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
                 count_array[p_site - seg.start] += 1
+
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -492,21 +500,29 @@ def center_map(feature,**kwargs):
         Positions to remove from each end before mapping (Default: `0`)
         
     kwargs['offset'] : int, optional
-        Mapping offset, if any, from 5\' end of read (Default: `0`)
+        Mapping offset, if any, from 5' end of read (Default: `0`)
     
     Returns
     -------
     list
-        tuples of *(GenomicSegment,float value over segment)*
+        tuples of `(GenomicSegment,float value over segment)`
     """
-    chrom  = feature.spanning_segment.chrom
+    nibble = kwargs["nibble"]
+    if len(feature.spanning_segment) <= 2*nibble:
+        warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
+                      UserWarning)
+        return []
+
     strand = feature.spanning_segment.strand
     offset = kwargs.get("offset",0)
     value  = float(kwargs.get("value",1.0))
     sign   = -1 if strand == "-" else 1
-    start  = feature.spanning_segment.start + kwargs['nibble'] + sign*offset
-    end    = feature.spanning_segment.end   - kwargs['nibble'] + sign*offset
-    seg = GenomicSegment(chrom,start,end,strand)
+    start  = feature.spanning_segment.start + nibble + sign*offset
+    end    = feature.spanning_segment.end   - nibble + sign*offset
+    seg = GenomicSegment(feature.spanning_segment.chrom,
+                         start,
+                         end,
+                         strand)
     frac = value/len(seg)
     return [(seg,frac)]
 
@@ -523,22 +539,29 @@ def five_prime_map(feature,**kwargs):
         Value to apportion (Default: `1`)
         
     kwargs['offset'] : int, optional
-        Mapping offset, if any, from 5\' toward 3\' end of read
+        Mapping offset, if any, from 5' toward 3' end of read
     
     Returns
     -------
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    chrom  = feature.spanning_segment.chrom
-    strand = feature.spanning_segment.strand
-    value   = kwargs.get("value",1.0)
     offset  = kwargs.get("offset",0)
+    if offset > feature.get_length():
+        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
+                      UserWarning)
+        return []
+
+    value   = kwargs.get("value",1.0)
+    strand = feature.spanning_segment.strand
     if strand in ("+","."):
         start = feature.spanning_segment.start + offset
     else:
         start = feature.spanning_segment.end - 1 - offset
-    seg = GenomicSegment(chrom,start,start+1,strand)
+    seg = GenomicSegment(feature.spanning_segment.chrom,
+                         start,
+                         start+1,
+                         strand)
     return [(seg,value)]
 
 def three_prime_map(feature,**kwargs):
@@ -554,22 +577,29 @@ def three_prime_map(feature,**kwargs):
         Value to apportion (Default: `1`)
         
     kwargs['offset'] : int, optional
-        Mapping offset, if any, from 3\' toward 5\' end of read.
+        Mapping offset, if any, from 3' toward 5' end of read.
     
     Returns
     -------
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    chrom  = feature.spanning_segment.chrom
-    strand = feature.spanning_segment.strand
-    value   = kwargs.get("value",1.0)
     offset  = kwargs.get("offset",0)
+    if offset > feature.get_length():
+        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
+                      UserWarning)
+        return []
+
+    value   = kwargs.get("value",1.0)
+    strand = feature.spanning_segment.strand
     if strand in ("+","."):
         start = feature.spanning_segment.end - 1 - offset
     else:
         start = feature.spanning_segment.start + offset
-    seg = GenomicSegment(chrom,start,start+1,strand)
+    seg = GenomicSegment(feature.spanning_segment.chrom,
+                         start,
+                         start+1,
+                         strand)
     return [(seg,value)]
 
 def variable_five_prime_map(feature,**kwargs):
@@ -593,15 +623,22 @@ def variable_five_prime_map(feature,**kwargs):
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    chrom  = feature.spanning_segment.chrom
     strand = feature.spanning_segment.strand
     value   = kwargs.get("value",1.0)
-    offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"]["default"])
+    offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"].get("default",None))
+    if offset is None:
+        warnings.warn("No offset for reads of length %s. Ignoring." % len(read),
+                      UserWarning)
+        return []
+
     if strand in ("+","."):
         start = feature.spanning_segment.start + offset
     else:
         start = feature.spanning_segment.end - 1 - offset
-    seg = GenomicSegment(chrom,start,start+1,strand)
+    seg = GenomicSegment(feature.spanning_segment.chrom,
+                         start,
+                         start+1,
+                         feature.spanning_segment.strand)
     return [(seg,value)]    
 
     
@@ -664,28 +701,24 @@ class AbstractGenomeArray(object):
     @abstractmethod
     def __getitem__(self,seg):
         """Retrieve array of counts from a region of interest. The values in
-        the returned array in the order of the chromosome (leftmost-first, i.e.
-        from lower coordinate to higher coordinate), and are **NOT** reversed
-        for negative strand features. For that, see 
-        :py:meth:`yeti.genomics.roitools.SegmentChain.get_counts`
+        the returned array are in 5' to 3' with respect to `seg` rather than
+        the genome (i.e. are reversed for reverse-strand features).
         
         Parameters
         ----------
-        seg : |GenomicSegment| 
+        seg : |GenomicSegment| or |SegmentChain|
             Region of interest in genome
         
         Returns
         -------
-        list
-            vector of numbers, each position corresponding to a position in the
-            region of interest, from left-to-right relative to the chromosome
+        :class:`numpy.ndarray`
+            vector of numbers, each position corresponding to a position
+            in `seg`, from 5' to 3' relative to `seg`
         
         See also
         --------
         SegmentChain.get_counts
-            Fetch from the GenomeArray a spliced vector of data covering a
-            |SegmentChain|, in the 5\' to 3\' direction of the chain
-            (rather than the genome).
+            Fetch a spliced vector of data covering a |SegmentChain|
         """
         pass
     
@@ -779,11 +812,15 @@ class MutableAbstractGenomeArray(AbstractGenomeArray):
         
         Parameters
         ----------
-        seg : |GenomicSegment| 
+        seg : |GenomicSegment| or |SegmentChain|
             Region of interest
 
-        val : int, float, or array of values
-            Values to set in array over coordinates specified by *seg*
+        val : int, float, or :class:`numpy.ndarray`
+            Scalar or vector of values to set in array over `seg`.
+            If a vector, values should be ordered 5'-to-3' relative
+            to `seg` rather than (i.e. for a reverse-strand feature,
+            position 0 in the vector would correspond to seg.end)
+            in the genome
         """
         pass
 
@@ -834,13 +871,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         See Also
         --------
         FivePrimeMapFactory
-            map reads to 5\' ends, with or without applying an offset
+            map reads to 5' ends, with or without applying an offset
         
         VariableFivePrimeMapFactory
-            map reads to 5\' ends, choosing an offset determined by read length
+            map reads to 5' ends, choosing an offset determined by read length
         
         ThreePrimeMapFactory
-            map reads to 3\' ends, with or without applying an offset
+            map reads to 3' ends, with or without applying an offset
         
         CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
@@ -946,11 +983,11 @@ class BAMGenomeArray(AbstractGenomeArray):
         count vector mapping reads to each positions in the |GenomicSegment|,
         following the rule specified by :meth:`~BAMGenomeArray.set_mapping`.
         Reads are strand-matched to `roi` by default. To obtain unstranded reads,
-        set the value of `roi.strand` to ``.``
+        set the value of `roi.strand` to `'.'`
         
         Parameters
         ----------
-        roi : |SegmentChain| or |GenomicSegment|
+        roi : |GenomicSegment|
             Region of interest
 
         
@@ -970,9 +1007,6 @@ class BAMGenomeArray(AbstractGenomeArray):
         ValueError
             if bamfiles not sorted or not indexed
         """
-        if isinstance(roi,SegmentChain):
-            return roi.get_counts(self)
-
         # fetch reads
         if roi.chrom not in self.chroms():
             return [], numpy.zeros(len(roi))
@@ -1014,7 +1048,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Parameters
         ----------
-        roi : |SegmentChain| or |GenomicSegment|
+        roi : |GenomicSegment|
             Region of interest
 
         
@@ -1034,43 +1068,40 @@ class BAMGenomeArray(AbstractGenomeArray):
         return reads
 
     def __getitem__(self,roi,roi_order=True): 
-        """Return an array mapping reads to specific positions in a |GenomicSegment|
-        following rules set by :meth:`~BAMGenomeArray.set_mapping`. The values in
-        the returned array in the order of the chromosome (leftmost-first, i.e.
-        from lower coordinate to higher coordinate), and are **NOT** reversed
-        for negative strand features. For that, see 
-        :py:meth:`yeti.genomics.roitools.SegmentChain.get_counts`
+        """Retrieve array of counts from a region of interest, following
+        the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
+        Values in the vector are ordered 5' to 3' relative to `roi`
+        rather than the genome (i.e. are reversed for reverse-strand
+        features).
         
         Parameters
         ----------
-        roi : |SegmentChain| or |GenomicSegment|
-            Region of interest
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
         
-        
-        Returns
-        -------
-        list
-            list<:py:class:`pysam.AlignedSegment`> of reads passing all filters
-            and mapped by :meth:`~BAMGenomeArray.set_mapping`
-        
-        numpy.ndarray
-            array of counts at each position from left-to-right in genomic coordinates,
-            generated from reads passing all filters
-
+        roi_order : bool, optional
+            If `True` (default) return vector of values 5' to 3' 
+            relative to vector rather than genome.
 
         Raises
         ------
         ValueError
             if bamfiles not sorted or not indexed
-            
-            
+
+        Returns
+        -------
+        numpy.ndarray
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
         See also
         --------
         SegmentChain.get_counts
-            Fetch from the GenomeArray a spliced vector of data covering a
-            |SegmentChain|, in the 5\' to 3\' direction of the chain
-            (rather than the genome).      
+            Fetch a spliced vector of data covering a |SegmentChain|
         """
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
+
         _, count_array = self.get_reads_and_counts(roi,roi_order=roi_order)
         return count_array
 
@@ -1095,13 +1126,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         See Also
         --------
         FivePrimeMapFactory
-            map reads to 5\' ends, with or without applying an offset
+            map reads to 5' ends, with or without applying an offset
         
         VariableFivePrimeMapFactory
-            map reads to 5\' ends, choosing an offset determined by read length
+            map reads to 5' ends, choosing an offset determined by read length
         
         ThreePrimeMapFactory
-            map reads to 3\' ends, with or without applying an offset
+            map reads to 3' ends, with or without applying an offset
         
         CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
@@ -1356,39 +1387,30 @@ class GenomeArray(MutableAbstractGenomeArray):
         return True
         
     def __getitem__(self,roi,roi_order=True):
-        """Retrieve array of counts from a region of interest (ROI). Coordinates
-        in the array are in the order of the chromosome (leftmost-first), and
-        are NOT reversed for negative strand features. For that, see
-        :meth:`yeti.genomics.roitools.SegmentChain.get_counts`
-        
-        If the ROI is on a valid chromosome and strand but outside the
-        bounds of the current |GenomeArray| (e.g. on on coordinates that exceed
-        the existing length of a chromosome), the |GenomeArray| will be
-        automatically expanded to fit that size.
-        
-        This is useful in circumstances where chromosome sizes aren't known ahead
-        of time (for example, when reading wiggle files when users don't explicitly
-        specify chromosome sizes).
-        
+        """Retrieve array of counts from a region of interest (`roi`)
+        with values in vector ordered 5' to 3' relative to `roi`
+        rather than genome (i.e. are reversed for reverse-strand
+        features).
         
         Parameters
         ----------
-        roi : |SegmentChain| or |GenomicSegment|
-            Region of interest
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
         
-        
+        roi_order : bool, optional
+            If `True` (default) return vector of values 5' to 3' 
+            relative to vector rather than genome.
+
         Returns
         -------
-        numpy.array
-            vector of counts at each position in region of interest
+        :class:`numpy.ndarray`
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
         
-            
         See also
         --------
         SegmentChain.get_counts
-            Fetch from the GenomeArray a spliced vector of data covering a
-            |SegmentChain|, in the 5\' to 3\' direction of the chain
-            (rather than the genome).                       
+            Fetch a spliced vector of data covering a |SegmentChain|
         """
         if isinstance(roi,SegmentChain):
             return roi.get_counts(self)
@@ -1419,37 +1441,41 @@ class GenomeArray(MutableAbstractGenomeArray):
         return vals
     
     def __setitem__(self,seg,val):
-        """Set values in |GenomeArray| over a region of interest (ROI).
-        If the ROI is on a valid chromosome and strand but outside the
-        bounds of the current |GenomeArray| (e.g. on on coordinates that exceed
-        the existing length of a chromosome), the |GenomeArray| will be
-        automatically expanded to fit that size.
+        """Set values in |GenomeArray| over a region of interest.
         
-        This is useful in circumstances where chromosome sizes aren't known ahead
-        of time (for example, when reading wiggle files when users don't explicitly
-        specify chromosome sizes).
-        
-        Values in `val` are assumed to be in genome order (i.e. from left-to-right
-        / lower to higher coordinates, **NOT** reversed if `seg` is on the negative-strand).  
+        If the `seg` is outside the bounds of the current |GenomeArray|,
+        the |GenomeArray| will be automatically expanded to accomodate
+        the genomic coordinates of `seg`.
 
         Parameters
         ----------
-        seg : |GenomicSegment|
+        seg : |GenomicSegment| or |SegmentChain|
             Region of interest
-        
-        val : int, float, or :py:class:`numpy.ndarray`
-            Values to set over region of interest, in genomic order
-        
-        
-        Raises
-        ------
-        AssertionError
-            if `seg` is invalid
+
+        val : int, float, or :class:`numpy.ndarray`
+            Scalar or vector of values to set in array over `seg`.
+            If a vector, values should be ordered 5'-to-3' relative
+            to `seg` rather than (i.e. for a reverse-strand feature,
+            position 0 in the vector would correspond to seg.end)
+            in the genome
         """
         self._sum = None
-        assert isinstance(seg,GenomicSegment)
-        assert seg.start >= 0
-        assert seg.end >= seg.start
+
+        if isinstance(seg,SegmentChain):
+            length = seg.get_length()
+            x = 0
+            for subseg in seg:
+                if isinstance(val,numpy.ndarray):
+                    if subseg.strand == "+":
+                        subval = val[x:x+len(subseg)]
+                    else:
+                        subval = val[length-x-len(subseg):length-x][::-1]
+                else:
+                    subval = val
+                x += len(subseg)
+                self[subseg] = subval
+
+            return
 
         old_normalize = self._normalize
         if old_normalize == True:
@@ -1813,13 +1839,13 @@ class GenomeArray(MutableAbstractGenomeArray):
         See also
         --------
         five_prime_map
-            map reads to 5\' ends, with or without applying an offset
+            map reads to 5' ends, with or without applying an offset
         
         variable_five_prime_map
-            map reads to 5\' ends, choosing an offset determined by read length
+            map reads to 5' ends, choosing an offset determined by read length
         
         three_prime_map
-            map reads to 3\' ends, with or without applying an offset
+            map reads to 3' ends, with or without applying an offset
         
         center_map
             map each read fractionally to every position in the read, optionally
@@ -2010,27 +2036,30 @@ class SparseGenomeArray(GenomeArray):
         return d_out
 
     def __getitem__(self,roi,roi_order=True):
-        """Retrieve array of counts from a region of interest. Coordinates
-        in the array are in the order of the chromosome (leftmost-first), and
-        are *NOT* reversed for negative strand features. For that, see
-        :meth:`yeti.genomics.roitools.SegmentChain.get_counts`
+        """Retrieve array of counts from a region of interest (`roi`)
+        with values in vector ordered 5' to 3' relative to `roi`
+        rather than genome (i.e. are reversed for reverse-strand
+        features).
         
         Parameters
         ----------
-        roi : |SegmentChain| or |GenomicSegment|
-            Region of interest
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
         
+        roi_order : bool, optional
+            If `True` (default) return vector of values 5' to 3' 
+            relative to vector rather than genome.
+
         Returns
         -------
-        numpy.ndarray
-            counts at each position in region of interest
-
+        :class:`numpy.ndarray`
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
         See also
         --------
         SegmentChain.get_counts
-            Fetch from the GenomeArray a spliced vector of data covering a
-            |SegmentChain|, in the 5\' to 3\' direction of the chain
-            (rather than the genome).         
+            Fetch a spliced vector of data covering a |SegmentChain|
         """
         if isinstance(roi,SegmentChain):
             return roi.get_counts(self)
@@ -2054,39 +2083,42 @@ class SparseGenomeArray(GenomeArray):
         return vals
 
     def __setitem__(self,seg,val):
-        """Set values in |SparseGenomeArray| over a region of interest (ROI).
-        If the ROI is on a valid chromosome and strand but outside the
-        bounds of the current |SparseGenomeArray| (e.g. on on coordinates that exceed
-        the existing length of a chromosome), the |SparseGenomeArray| will be
-        automatically expanded to fit that size.
+        """Set values in the |SparseGenomeArray| over a region of interest.
         
-        This is useful in circumstances where chromosome sizes aren't known ahead
-        of time (for example, when reading wiggle files when users don't explicitly
-        specify chromosome sizes).
-        
-        Values in `val` are assumed to be in genome order (i.e. from left-to-right
-        / lower to higher coordinates, **NOT** reversed if `seg` is on the negative-strand).  
+        If the `seg` is outside the bounds of the current |GenomeArray|,
+        the |GenomeArray| will be automatically expanded to accomodate
+        the genomic coordinates of `seg`.
 
         Parameters
         ----------
-        seg: |GenomicSegment|
+        seg : |GenomicSegment| or |SegmentChain|
             Region of interest
-        
-        val : int, float, or :py:class:`numpy.ndarray` of same length as `seg`
-            Value(s) to set in region specifed by interval `seg`, in order
-            from left-to-right relative to the chromosome
-       
-        
-        Raises
-        ------
-        AssertionError
-            if `seg` is invalid
+
+        val : int, float, or :class:`numpy.ndarray`
+            Scalar or vector of values to set in array over `seg`.
+            If a vector, values should be ordered 5'-to-3' relative
+            to `seg` rather than (i.e. for a reverse-strand feature,
+            position 0 in the vector would correspond to seg.end)
+            in the genome
         """
         self._sum = None
-        assert isinstance(seg,GenomicSegment)
-        assert seg.start >= 0
-        assert seg.end >= seg.start
-        
+
+        if isinstance(seg,SegmentChain):
+            length = seg.get_length()
+            x = 0
+            for subseg in seg:
+                if isinstance(val,numpy.ndarray):
+                    if subseg.strand == "+":
+                        subval = val[x:x+len(subseg)]
+                    else:
+                        subval = val[length-x-len(subseg):length-x][::-1]
+                else:
+                    subval = val
+                x += len(subseg)
+                self[subseg] = subval
+
+            return
+
         old_normalize = self._normalize
 
         if isinstance(val,numpy.ndarray) and seg.strand == "-":
@@ -2276,7 +2308,7 @@ class SparseGenomeArray(GenomeArray):
         Returns
         -------
         |SparseGenomeArray|
-            of same size as ``other``
+            of same size as `other`
         """
         return SparseGenomeArray(other.lengths(),strands=other.strands())
 
