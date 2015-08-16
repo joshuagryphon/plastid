@@ -572,6 +572,48 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 self.assertLessEqual(err,self.tol,
                                      "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
 
+    @skip_if_abstract
+    def test_getitem_genomicsegment_roi_order_false(self):
+        k = _SAMPLE_BASES[0]
+        for region in self.region_classes["unique"]:
+            seg = region.spanning_segment
+            strand_key = STRAND_KEYS[region.spanning_segment.strand]
+            gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=False)
+            known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
+
+            max_err = max(abs(gnd_counts - known_counts))
+            self.assertLessEqual(max_err,self.tol,
+                            "Positionwise count difference '%s' exceeded tolerance '%s' for %s __getitem__ with roi_order==False for sample test %s" % (self.tol,max_err,self.native_format,k))
+
+
+    @skip_if_abstract
+    def test_getitem_genomicsegment_roi_order_true(self):
+        k = _SAMPLE_BASES[0]
+        for region in self.region_classes["unique"]:
+            seg = region.spanning_segment
+            strand_key = STRAND_KEYS[region.spanning_segment.strand]
+            gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=True)
+            known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
+            if seg.strand == "-":
+                known_counts = known_counts[::-1]
+
+            max_err = max(abs(gnd_counts - known_counts))
+            self.assertLessEqual(max_err,self.tol,
+                            "Positionwise count difference '%s' exceeded tolerance '%s' for %s __getitem__ with roi_order==True for sample test %s" % (self.tol,max_err,self.native_format,k))
+
+    @skip_if_abstract
+    def test_getitem_segmentchain(self):
+        k = _SAMPLE_BASES[0]
+        for region in self.region_classes["unique"]:
+            strand_key = STRAND_KEYS[region.spanning_segment.strand]
+            gnd_counts   = self.gnds[k][region] # test
+            self.assertGreater(gnd_counts.sum(),0,"Region is empty in sample %s" % k)
+            known_counts = _get_ivc_numpy_counts(region,self.count_vecs["%s_%s" % (k,strand_key)])
+            max_err = max(abs(gnd_counts - known_counts))
+            self.assertLessEqual(max_err,self.tol,
+                            "Positionwise count difference '%s' exceeded tolerance '%s' for %s import for sample test %s" % (self.tol,max_err,self.native_format,k))
+
+
 @attr(test="unit")
 @attr(speed="slow")
 class TestGenomeArray(AbstractGenomeArrayHelper):
@@ -610,7 +652,85 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
             self.__class__.gnds = _read_bowtie_files_to_genome_arrays(self.test_folder,self.test_class)
             self.__class__.has_gnds = True
             #TestGenomeArray.setUpClassOnlyOnce()
-   
+
+    def test_setitem_genomicsegment_scalar(self):
+        ga = GenomeArray({"chrA" : 2000})
+        segplus  = GenomicSegment("chrA",50,100,"+")
+        segminus = GenomicSegment("chrA",50,100,"-")
+
+        # scalar set
+        ga[segplus]  = 52
+        ga[segminus] = 342
+
+        self.assertTrue((ga._chroms["chrA"]["+"][50:100]==52).all(),"%s failed scalar genomicsegment __setitem__ for plus strand.")
+        self.assertTrue((ga._chroms["chrA"]["-"][50:100]==342).all(),"%s failed scalar genomicsegment __setitem__ for minus strand.")
+        self.assertEqual(ga.sum(),52*len(segplus) + 342*len(segminus))
+
+    def test_setitem_genomicsegment_vector(self):
+        ga = GenomeArray({"chrA" : 2000})
+        segplus  = GenomicSegment("chrA",50,100,"+")
+        segminus = GenomicSegment("chrA",50,100,"-")
+
+        # vector set
+        r1 = numpy.random.randint(0,high=242,size=50)
+        r2 = numpy.random.randint(0,high=242,size=50)
+        ga[segplus]  = r1
+        ga[segminus] = r2
+
+        self.assertTrue((ga._chroms["chrA"]["+"][50:100]==r1).all(),"%s failed vector genomicsegment __setitem__ for plus strand.")
+        self.assertTrue((ga._chroms["chrA"]["-"][50:100]==r2[::-1]).all(),"%s failed vector genomicsegment __setitem__ for minus strand.")
+
+        self.assertEqual(ga.sum(),r1.sum()+r2.sum())
+
+    def test_setitem_segmentchain_scalar(self):
+        ga = GenomeArray({"chrA" : 2000})
+        pluschain = SegmentChain(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",150,732,"+"),
+                                 GenomicSegment("chrA",1800,2500,"+"))
+        minuschain = SegmentChain(GenomicSegment("chrA",50,100,"-"),
+                                  GenomicSegment("chrA",150,732,"-"),
+                                  GenomicSegment("chrA",1800,2500,"-"))
+        ga[pluschain]  = 31
+        ga[minuschain] = 424
+        for seg in pluschain:
+            self.assertTrue((ga._chroms[seg.chrom][seg.strand][seg.start:seg.end]==31).all())
+
+        for seg in minuschain:
+            self.assertTrue((ga._chroms[seg.chrom][seg.strand][seg.start:seg.end]==424).all())
+        
+        self.assertEqual(ga.sum(),31*pluschain.get_length()+424*minuschain.get_length())
+
+    def test_setitem_segmentchain_vector(self):
+        ga = GenomeArray({"chrA" : 2000})
+        pluschain = SegmentChain(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",150,732,"+"),
+                                 GenomicSegment("chrA",1800,2500,"+"))
+        minuschain = SegmentChain(GenomicSegment("chrA",50,100,"-"),
+                                  GenomicSegment("chrA",150,732,"-"),
+                                  GenomicSegment("chrA",1800,2500,"-"))
+
+        ga = GenomeArray({"chrA" : 2000})
+
+        plusvec  = numpy.random.randint(0,high=250,size=pluschain.get_length())
+        minusvec = numpy.random.randint(0,high=250,size=minuschain.get_length())
+
+        ga[pluschain]  = plusvec
+        ga[minuschain] = minusvec
+
+        x = 0
+        for seg in pluschain:
+            subvec = ga._chroms["chrA"]["+"][seg.start:seg.end]
+            self.assertTrue((subvec==plusvec[x:x+len(subvec)]).all())
+            x += len(subvec)
+
+        x = 0
+        for seg in minuschain:
+            subvec = ga._chroms["chrA"]["-"][seg.start:seg.end][::-1]
+            self.assertTrue((subvec==minusvec[len(minusvec)-x-len(subvec):len(minusvec)-x]).all())
+            x += len(subvec)
+
+        self.assertEqual(ga.sum(),plusvec.sum()+minusvec.sum())
+
     def variablestep_and_bed_import_helper(self,wiggle_type):
         """Helper function to evaluate tests on variable step wiggle or BEDgraph import
 
@@ -633,18 +753,19 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
 
             empty_iv = GenomicSegment("chrA",vec_len,chrA_len,strand)
             nonempty_iv = GenomicSegment("chrA",0,vec_len,strand)
+            nonempty_vec = gnd.__getitem__(nonempty_iv,roi_order=False)
 
             # make sure count vector has requisite counts
             self.assertGreater(my_vec.sum(),0)
 
             # make sure sums are equal
-            self.assertEquals(my_vec.sum(),gnd[nonempty_iv].sum())
+            self.assertEquals(my_vec.sum(),nonempty_vec.sum())
 
             # make sure all regions after count vector are empty
             self.assertEquals(gnd[empty_iv].sum(),0,"Found counts in region that should be empty.")
 
             # make sure all positions in regions up to count vector are correct
-            max_err = abs(my_vec - gnd[nonempty_iv]).max()
+            max_err = abs(my_vec - nonempty_vec).max()
             self.assertLessEqual(max_err,self.tol,
                                  "Positionwise count difference %s exceeded tolerance %s for wiggle import on %s strand" % (max_err,self.tol,label)
                                  )
