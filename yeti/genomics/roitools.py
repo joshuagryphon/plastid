@@ -1770,13 +1770,7 @@ class SegmentChain(object):
         -------
 		:py:class:`numpy.ma.masked_array`
         """
-        ltmp = []
-        for iv in self:
-            ltmp.extend(gnd[iv])
-        if self.strand == "-" and stranded is True:
-            ltmp = ltmp[::-1]
-        
-        atmp = numpy.ma.masked_invalid(ltmp)
+        atmp = numpy.ma.masked_invalid(self.get_counts(gnd))
         atmp.mask = True
         
         valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
@@ -1784,6 +1778,7 @@ class SegmentChain(object):
                            for X in self.get_masked_position_set()]
         for x in valid_positions:
             atmp.mask[x] = False
+        
         return atmp
     
     def get_sequence(self,genome,stranded=True):
