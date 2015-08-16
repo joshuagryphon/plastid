@@ -1440,8 +1440,8 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         return vals
     
-    def __setitem__(self,seg,val):
-        """Set values in |GenomeArray| over a region of interest.
+    def __setitem__(self,seg,val,roi_order=True):
+        """Set values in the |GenomeArray| over a region of interest.
         
         If the `seg` is outside the bounds of the current |GenomeArray|,
         the |GenomeArray| will be automatically expanded to accomodate
@@ -1458,22 +1458,28 @@ class GenomeArray(MutableAbstractGenomeArray):
             to `seg` rather than (i.e. for a reverse-strand feature,
             position 0 in the vector would correspond to seg.end)
             in the genome
+
+        roi_order : bool, optional
+            If `True` (default) and `val` is a vector, values in `val`
+            are assorted to go 5' to 3' relative to `seg` rather than
+            genome
         """
         self._sum = None
 
         if isinstance(seg,SegmentChain):
+            if isinstance(val,numpy.ndarray):
+                if seg.spanning_segment.strand == "-":
+                    val = val[::-1]
+
             length = seg.get_length()
             x = 0
             for subseg in seg:
                 if isinstance(val,numpy.ndarray):
-                    if subseg.strand == "+":
-                        subval = val[x:x+len(subseg)]
-                    else:
-                        subval = val[length-x-len(subseg):length-x][::-1]
+                    subval = val[x:x+len(subseg)]
                 else:
                     subval = val
                 x += len(subseg)
-                self[subseg] = subval
+                self.__setitem__(subseg,subval,roi_order=False)
 
             return
 
@@ -2048,7 +2054,7 @@ class SparseGenomeArray(GenomeArray):
         
         roi_order : bool, optional
             If `True` (default) return vector of values 5' to 3' 
-            relative to vector rather than genome.
+            relative to `roi` rather than genome.
 
         Returns
         -------
@@ -2082,7 +2088,7 @@ class SparseGenomeArray(GenomeArray):
 
         return vals
 
-    def __setitem__(self,seg,val):
+    def __setitem__(self,seg,val,roi_order=True):
         """Set values in the |SparseGenomeArray| over a region of interest.
         
         If the `seg` is outside the bounds of the current |GenomeArray|,
@@ -2100,28 +2106,34 @@ class SparseGenomeArray(GenomeArray):
             to `seg` rather than (i.e. for a reverse-strand feature,
             position 0 in the vector would correspond to seg.end)
             in the genome
-        """
+
+        roi_order : bool, optional
+            If `True` (default) and `val` is a vector, values in `val`
+            are assorted to go 5' to 3' relative to `seg` rather than
+            genome
+       """
         self._sum = None
 
         if isinstance(seg,SegmentChain):
+            if isinstance(val,numpy.ndarray):
+                if seg.spanning_segment.strand == "-":
+                    val = val[::-1]
+
             length = seg.get_length()
             x = 0
             for subseg in seg:
                 if isinstance(val,numpy.ndarray):
-                    if subseg.strand == "+":
-                        subval = val[x:x+len(subseg)]
-                    else:
-                        subval = val[length-x-len(subseg):length-x][::-1]
+                    subval = val[x:x+len(subseg)]
                 else:
                     subval = val
                 x += len(subseg)
-                self[subseg] = subval
+                self.__setitem__(subseg,subval,roi_order=False)
 
             return
 
         old_normalize = self._normalize
 
-        if isinstance(val,numpy.ndarray) and seg.strand == "-":
+        if isinstance(val,numpy.ndarray) and seg.strand == "-" and roi_order == True:
             val = val[::-1]
 
         if old_normalize == True:
