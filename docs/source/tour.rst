@@ -209,9 +209,9 @@ and 3'UTRs from coding transcripts::
     >>> demo_tx.get_utr5()
     <SegmentChain intervals=1 bounds=merlin:37353-37403(-) name=ORFL83C_(UL29)_5UTR>
 
-    >>> demo_tx.get_cds()
+    >>> demo_cds = tx.get_cds()
+    >>> demo_cds
     <Transcript intervals=2 bounds=merlin:35105-37353(-) name=ORFL83C_(UL29)_CDS>
-
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
@@ -234,14 +234,31 @@ see |SegmentChain| and |Transcript| in :py:mod:`yeti.genomics.roitools`.
 
 |GenomeArray| & its subclasses
 ..............................
-|GenomeArrays| are :class:`numpy.ndarray`-like objects that 
-map quantitative data, :term:`counts`, or :term:`read alignments`, to genomic
-positions. Data can be imported from count files (`Wiggle`_, `bedGraph`_)
+|GenomeArrays| are dictionary-like objects that  map quantitative data,
+:term:`counts`, or :term:`read alignments`, to genomic positions.
+Data can be imported from count files (`Wiggle`_, `bedGraph`_)
 or alignment files (`bowtie`_ or `BAM`_ formats). For very large genomes a
 sparse implementation is provided by |SparseGenomeArray|. A |BAMGenomeArray|
 is provided for :term:`read alignments` in `BAM`_ format.
 
-When importing :term:`read alignments`, users can specify a :term:`mapping function`
+|GenomeArrays| can be indexed by |GenomicSegments| or |SegmentChains|. 
+Doing so returns a vector of counts at each positionin the |GenomicSegment|
+or |SegmentChain|, with 5' to 3' coordinates relative to the chain (i.e.
+for reverse-strand features, position 0 of the vector corresponds to
+segment.end)::
+
+    >>> # genomic segment
+    >>> seg = GenomicSegment("merlin",x,y,"+")
+    >>> alignments[seg]
+
+    >>> # segment chain
+    >>> aligments[demo_cds]
+
+    >>> # has same effects as calling the 'get_counts()' method
+    >>> demo_cds.get_counts(alignments)
+
+
+When importing :term:`read alignments`, users can specify a :term:`mapping rule`
 to determine the genomic position(s) at which each alignment should be counted
 :data:`yeti` already includes mapping functions to map :term:`read alignments`:
 
@@ -257,14 +274,7 @@ to determine the genomic position(s) at which each alignment should be counted
     send of the read (as in ribosome profiling data from *E. coli*
     :cite:`Oh2011` or *D. melanogaster* :cite:`Dunn2013`)
 
-
-As in the example :ref:`above <tour-get-counts>`,
-|GenomeArrays| are most often called using the
-:meth:`~yeti.genomics.roitools.SegmentChain.get_counts` method of |SegmentChains|
-or |Transcripts|. A number of other capabilities are worth noting:
-
-
-:term:`mapping functions <mapping function>` for |BAMGenomeArrays| can be changed
+:term:`mapping rules <mapping function>` for |BAMGenomeArrays| can be changed
 at runtime::
 
     >>> from yeti.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
@@ -305,7 +315,7 @@ files for use in a :term:`genome browser`::
     >>>     alignments.to_bedgraph(fout,"my_trackname","-")
 
 
-And `wiggle`_ or `bedGraph`_ files can be imported into a |GenomeArray|
+`wiggle`_ or `bedGraph`_ files can be also imported into a |GenomeArray|
 using the :meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle`
 method::
 
