@@ -133,24 +133,25 @@ class GenomeHash(AbstractGenomeHash):
     Because all features are stored in memory, for large genomes, a |TabixGenomeHash|
     or |BigBedGenomeHash| is much more memory-efficient. 
     """
-    def __init__(self,features,binsize=DEFAULT_BIN_SIZE,do_copy=True):
+    def __init__(self,features=[],binsize=DEFAULT_BIN_SIZE,do_copy=False):
         """Create a |GenomeHash|
         
          Parameters
          ----------
-         features : dict or list
+         features : dict or list, optional
              dict or list of features, as |SegmentChain| objects or subclasses
+             (Default: `[]`)
             
          binsize : int, optional
-             size of *neighborhood* for hash.
+             Size in nucleotides of *neighborhood* for hash. (Default: %s)
             
          do_copy : bool
-             If `True` (default), features will be copied before being stored
+             If `True`, features will be copied before being stored
              in the hash. This comes at a speed cost, but will prevent unexpected
              side effects if the features are being changed outside the hash. 
              
-             If `False`, creation of the |GenomeHash| will be much faster.
-        """
+             If `False` (default), creation of the |GenomeHash| will be much faster.
+        """ % DEFAULT_BIN_SIZE
         self.copy = do_copy
         self.feature_dict = {}
         self._id_to_names = {}
