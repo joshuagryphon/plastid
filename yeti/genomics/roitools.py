@@ -1801,11 +1801,9 @@ class SegmentChain(object):
             Nucleotide sequence of the |SegmentChain| extracted from `genome`
         """
         chromseq = genome[self.spanning_segment.chrom]
-        if not isinstance(chromseq,SeqRecord):
-            chromseq = SeqRecord(Seq(chromseq,generic_dna))
-            
         ltmp = [chromseq[X.start:X.end] for X in self]
-        stmp = "".join([str(X.seq) for X in ltmp])
+        stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
+
         if self.strand == "-"  and stranded is True:
             stmp = str(Seq(stmp,generic_dna).reverse_complement())
             
