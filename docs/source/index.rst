@@ -17,7 +17,7 @@ This package provides:
   #. A set of :mod:`scripts <yeti.bin>` that implement common sequencing
      analyses
 
-  #. A :ref:`set of objects <tour-data-structures>` that create a simple,
+  #. A :ref:`set of classes <tour-data-structures>` that create a simple,
      intuitive interfaces to genomic :term:`features <feature>`,
      :term:`read alignments`, and quantitative data. These objects readily
      interace with existing scientific tools, like the `SciPy`_ stack.

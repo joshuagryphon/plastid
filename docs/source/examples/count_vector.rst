@@ -18,8 +18,6 @@ In the examples below, we use the :doc:`/test_dataset`.
 Working with vectors of counts interactively
 --------------------------------------------
 
- .. TODO : update all count vectors in this example
-
 To count :term:`read alignments` along a transcript, we need two types of data:
 
   #. An :term:`annotation` of transcript models

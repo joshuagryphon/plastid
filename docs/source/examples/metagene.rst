@@ -1,8 +1,6 @@
 Performing metagene analyses
 ============================
 
- .. TODO update graphics to reflect 5'/14 mapping
-
 Definition
 ----------
 A :term:`metagene` analysis is an average of quantitative data over one or more
