@@ -81,20 +81,18 @@ rather than strings. |SegmentChain| and |Transcript| don't mind::
     'GCTCGCCTATTTAACCTCCACCCACTACAACACACACATGCCGCACAATCATGCCAGCCACAGACACAAACAGCACCCACACCACGCCGCTTCACCCAGAGGACCAACACACGTTACCCTTACACCACAGCACCACACAACCTCATGTCCAAACTTCGGACAAACACGCCGACAAACAACACCGCACGCAGATGGAGCTC'
 
 
-Similarly, `TwoBitFile`_ objects from `twobitreader`_
+Similarly, `TwoBitFile`_ objects from `twobitreader`_  can be directly passed
+to :meth:`~yeti.genomics.roitools.SegmentChain.get_sequence`, because they 
+inherit from :class:`dict` and return strings::
 
- .. TODO : fix example below
-
-The objects returned from these readers can also be passed to
-:meth:`~yeti.genomics.roitools.SegmentChain.get_sequence`::
-
-    >>> # load CMV genome as a 2bit file
+# load CMV genome as a 2bit file
     >>> from twobitreader import TwoBitFile
     >>> twobit_genome = TwoBitFile("merlin_NC006273-2.2bit")
     >>> twobit_genome.keys()
-    ['merlin']
+        ['merlin']
 
-    >>> transcripts[0].get_sequence(twobit_genome)
+    >>> transcripts[0].get_sequence(twobit_genome)[:200]
+    'GCTCGCCTATTTAACCTCCACCCACTACAACACACACATGCCGCACAATCATGCCAGCCACAGACACAAACAGCACCCACACCACGCCGCTTCACCCAGAGGACCAACACACGTTACCCTTACACCACAGCACCACACAACCTCATGTCCAAACTTCGGACAAACACGCCGACAAACAACACCGCACGCAGATGGAGCTC'
 
 
 Manipulating sequence

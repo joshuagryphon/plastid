@@ -37,7 +37,7 @@ First, we import everything we need::
     >>> # reader for BED-format transcript annotations
     >>> from yeti.readers.bed import BED_Reader
 
-Next, load the transcripts. By default, :class:`~yeti.genomics.readers.BED_Reader` 
+Next, load the transcripts. By default, |BED_Reader|
 and the other readers in :data:`yeti` behave as iterators. Here, we'll retrieve
 the transcripts as a :class:`list`::
 
