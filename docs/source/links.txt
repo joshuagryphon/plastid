@@ -33,7 +33,11 @@
 .. _nose: https://nose.readthedocs.org/en/latest/
 .. _Sphinx: http://sphinx-doc.org/
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-.. _2bitreader: https://pythonhosted.org/twobitreader/ 
+.. _twobitreader: https://pythonhosted.org/twobitreader/
+.. _SeqRecord: http://biopython.org/wiki/SeqRecord
+.. _Seq: http://biopython.org/wiki/Seq
+.. _TwoBitFile: https://pythonhosted.org/twobitreader/twobitreader.html#twobitreader.TwoBitFile
+
 
 .. Genome browsers & data sources
 
@@ -60,6 +64,7 @@
 .. _Cigar: https://samtools.github.io/hts-specs/SAMv1.pdf
 .. _DESeq: http://www-huber.embl.de/users/anders/DESeq/
 .. _kallisto: http://pachterlab.github.io/kallisto/
+.. _R: http://www.r-project.org
 
 .. Our links
 

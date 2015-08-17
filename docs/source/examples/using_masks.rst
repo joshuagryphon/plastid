@@ -46,16 +46,17 @@ and |Transcripts| can be masked using their
 
     >>> import pysam
     >>> import numpy
-    >>> from yeti.genomics.roitools import GenomicSegment
+    >>> from yeti.genomics.roitools import GenomicSegment, Transcript
     >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FiverimeMapFactory
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load transcripts and count data
-    >>> alignments = BAMGenomeArray([pysam.Samfile(,"rb")],FivePrimeMapFactory(offset=14))
-    >>> transcripts = list(BED_Reader(open("")))
+    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")],FivePrimeMapFactory(offset=14))
+    >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
     >>> #this is ribosome profiling data, so we'll look at a coding region
-    >>> demo_cds = transcripts[].get_cds()
+    >>> demo_cds = transcripts[39].get_cds()
+    >>> demo_cds_length = demo_cds.get_length()
 
     >>> # Now, add masks. We'll mask out the first and last 5 codons.
     >>> # we can fetch these as subchains of the cds
@@ -64,42 +65,53 @@ and |Transcripts| can be masked using their
     >>> demo_cds.add_masks(*start_codon_masks)
     >>> demo_cds.add_masks(*stop_codon_masks)
 
+    >>> # save masks to a BED file
+    >>> fout = open("merlin_start_codon_masks.bed","w")
+    >>> for mask in start_codon_masks:
+    >>>     fout.write(SegmentChain(mask).as_bed())
+    >>>
+    >>> fout.close()
+
+
+
 After masks are added, we can get a masked count vector by calling
 :meth:`~yeti.genomics.roitools.SegmentChain.get_masked_counts`. This method
 returns a :class:`numpy.ma.MaskedArray`, rather than a :class:`numpy.ndarray`.
 :class:`~numpy.ma.MaskedArray` objects because they contain all the values,
 but ignore masked values when performing operations::
 
-    >>> # get masked counts and masked length
-    >>> demo_cds.get_masked_counts(alignments)
-
+    >>> # count reads that aren't masked
     >>> demo_cds.get_masked_counts(alignments).sum()
+    53.0
 
 Calling :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` after adding
 masks will still return an *unmasked* :class:`numpy.ndarray`::
 
-    >>> demo_cds.get_counts(alignments)
-
+    >>> # count all reads
     >>> demo_cds.get_counts(alignments).sum()
+    67.0
 
 Masked positions are also excluded from length measurements, if and only if
 :meth:`~yeti.genomics.roitools.SegmentChain.get_masked_length` is called::
 
     >>> demo_cds.get_masked_length() # masked length
+    213
 
     >>> demo_cds.get_length() # unmasked length
+    243
 
 
 We can also retrieve masks that have been added to a |SegmentChain|, either
 as a list of |GenomicSegments| or as a |SegmentChain|::
 
     >>> demo_cds.get_masks()
+    [<GenomicSegment merlin:14615-14630 strand='+'>,
+     <GenomicSegment merlin:14843-14858 strand='+'>]
 
     >>> demo_cds.get_masks_as_segmentchain()
+    <SegmentChain segments=2 bounds=merlin:14615-14858(+) name=merlin:14615-14630^14843-14858(+)>
 
-
-
-.
+et c.
 
  .. _masking-mask-files:
 
@@ -123,7 +135,7 @@ indexes mask by location in the genome. To create a |GenomeHash|::
     >>> from yeti.genomics.genome_hash import GenomeHash
 
     >>> # get list of masks
-    >>> mask_features = list(BED_Reader(open()))
+    >>> mask_features = list(BED_Reader(open("merlin_start_codon_masks.bed")))
 
     >>> # use GenomeHash to index masks
     >>> mask_hash = GenomeHash(mask_features)
@@ -132,8 +144,12 @@ Then, we can search the |GenomeHash| for relevant masks to apply to features::
 
     >>> demo_masks = mask_hash[demo_cds]
     >>> demo_masks
+    [<SegmentChain segments=1 bounds=merlin:14615-14630(+) name=merlin:14615-14630(+)>]
 
-    >>> demo_cds.add_masks(*demo_masks)
+    >>> # for each mask
+    >>> for mask_chain in demo_masks:
+    >>>     # unpack GenomicSegments from the chain and add each to the mask
+    >>>    demo_cds.add_masks(*mask_chain)
 
 If the :term:`mask file` is very large, it should be converted to an
 :ref:`indexed file format` such as `BigBed`_, or a `tabix`_-compressed file

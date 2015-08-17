@@ -415,15 +415,15 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> import pysam
     >>> import numpy
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, ThreePrimeMapFactory
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some
     >>> ALIGNMENTS = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
-    >>> ALIGNMENTS.set_mapping(VariableFivePrimeMapFactory(offset_dict))
+    >>> ALIGNMENTS.set_mapping(FivePrimeMapFactory(offset=14))
 
     >>> # skip masking out any repetitive regions for purpose of demo
-    >>> dummy_mask_hash = GenomeHash([])
+    >>> dummy_mask_hash = GenomeHash()
 
     >>> #load features, in our case, transcripts
     >>> transcripts = list(GTF2_TranscriptAssembler(open("merlin_orfs.gtf")))
@@ -460,9 +460,9 @@ Then, you can use the ROI file you just made with |metagene|
      $ metagene count SRR609197_riboprofile_big_spike_roi_file.txt \
                       SRR609197_riboprofile_big_spike \
                       --count_files SRR609197_riboprofile.bam \
-                      --fiveprimee --offset 14
+                      --fiveprime --offset 14
      
-     $ metagene chart SRR609197_riboprofile_big_spike.png \
+     $ metagene chart SRR609197_metagene_big_spike_demo.png \
                       SRR609197_riboprofile_big_spike_metagene_profile.txt \
                       --landmark "highest ribosome peak" \
                       --title "Custom metagene demo"

@@ -71,8 +71,24 @@ Putting this together, the script is run from the terminal as:
                                        --fiveprime --offset 14
 
 :mod:`~yeti.bin.counts_in_region` will create a tab-delimited text file called
-``riboprofile.txt`` containing the results. For detailed documentation of the output
-and command-line arguments, see the module documentation for :mod:`~yeti.bin.counts_in_region`.
+``riboprofile.txt`` containing the results. The first few lines of the file
+look like this::
+
+    ## total_dataset_counts: 500477
+    #region_name    region                  counts          counts_per_nucleotide   rpkm            length
+    ORFL1W_(RL1)    merlin:1316-2398(+)     1.14000000e+02  1.05360444e-01          2.10520051e+02  1082
+    ORFL2C          merlin:2401-2772(-)     1.00000000e+01  2.69541779e-02          5.38569762e+01  371
+    ORFL3C          merlin:2834-3064(-)     1.50000000e+01  6.52173913e-02          1.30310466e+02  230
+    ORFL4C          merlin:2929-3201(-)     1.40000000e+01  5.14705882e-02          1.02843064e+02  272
+    ORFL5C          merlin:4074-4307(-)     2.30000000e+01  9.87124464e-02          1.97236729e+02  233
+    ORFL6C          merlin:4078-4488(-)     6.10000000e+01  1.48780488e-01          2.97277373e+02  410
+    ORFL7C          merlin:4335-4739(-)     6.20000000e+01  1.53465347e-01          3.06638160e+02  404
+    [rest of output omitted]
+
+
+
+For detailed documentation of the output and command-line arguments, see
+the module documentation for :mod:`~yeti.bin.counts_in_region`.
 
 
  .. _gene-expression-interactive:
@@ -106,8 +122,8 @@ First, we need to import a few things::
     >>> import matplotlib.pyplot as plt
 
 
-    >>> # reader for GTF2-format transcript annotations
-    >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+    >>> # reader for BED-format transcript annotations
+    >>> from yeti.readers.bed import BED_Reader
 
     >>> # data structure that maps read alignments to genomic positions
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
@@ -148,7 +164,7 @@ effect of the order in which things are evaluated inside comprehensions::
 
     >>> # create an empty list for each sample, region, and metric
     >>> my_data = { "%s_%s_%s" % (SAMPLE,REGION,METRIC) : copy.deepcopy([])\
-    >>>                                                   for SAMPLE in datasets.keys()\
+    >>>                                                   for SAMPLE in my_datasets.keys()\
     >>>                                                   for REGION in regions\
     >>>                                                   for METRIC in metrics }
 
@@ -163,11 +179,12 @@ effect of the order in which things are evaluated inside comprehensions::
 
 Now that we have an empty dictionary of lists to hold our data, we're ready to start
 making measurements. We'll use nested for loops to count expression in the 5' UTR, 
-CDS, 3'UTR and total region (exon) of each transcript:
+CDS, 3'UTR and total region (exon) of each transcript (note: this will run for a 
+while; you might want to get some coffee):
 
  .. code-block:: python
 
-    >>> for transcript in GTF2_TranscriptAssembler(open("merlin_orfs.gtf")):
+    >>> for transcript in BED_Reader(open("merlin_orfs.bed"),return_type=Transcript):
     >>> 
     >>>     # First, save ID of transcript we are evaluating
     >>>     my_data["transcript_id"].append(transcript.get_name())
@@ -184,9 +201,10 @@ CDS, 3'UTR and total region (exon) of each transcript:
     >>>     for region,subchain in my_dict.items():
     >>>         # Save the length for each sub-region
     >>>         my_data["%s_length" % region].append(subchain.get_length())
+    >>>         my_data["%s_chain"  % region].append(str(subchain))
 
     >>>         # Iterate over each sample, getting the counts over each region
-    >>>         for sample_name, sample_data in datasets.items():
+    >>>         for sample_name, sample_data in my_datasets.items():
     >>>             # subchain.get_counts() fetches a list of counts at each position
     >>>             # here we just want the sum
     >>>             counts = sum(subchain.get_counts(sample_data))
@@ -194,13 +212,12 @@ CDS, 3'UTR and total region (exon) of each transcript:
     >>>             my_data["%s_%s_counts" % (sample_name,region)].append(counts)
     >>>             my_data["%s_%s_rpkm"   % (sample_name,region)].append(rpkm)
 
-
 Finally, we can save the calculated values to a file. It is easiest to do this
 by converting the dictionary of lists into a :class:`pandas.DataFrame`:: 
 
     >>> # convert to DataFrame, then save as tab-delimited text file
     >>> df = pd.DataFrame(my_data)
-    >>> df.to_csv("%s_expression.txt" % sample,sep="\t")
+    >>> df.to_csv("gene_expression_demo.txt",sep="\t")
 
 The text files may be re-loaded for further analysis, or plotted. For example,
 to plot the :term:`RPKM` measurements for translation (:term:`ribosome profiling`)
@@ -213,7 +230,7 @@ and transcription (:term:`RNA-seq`) against each other::
     >>> # this is because 0-values cannot be plotted in log-space,
     >>> # so we set them to a pseudo value called `MIN_VAL`
     >>>
-    >>> MIN_VAL = 1e-5
+    >>> MIN_VAL = 1
     >>> plot_df = copy.deepcopy(df)
     >>> df["RNA-seq_exon_rpkm"][df["RNA-seq_exon_rpkm"] == 0] = MIN_VAL
     >>> df["ribosome_profiling_CDS_rpkm"][df["ribosome_profiling_CDS_rpkm"] == 0] = MIN_VAL
@@ -221,7 +238,7 @@ and transcription (:term:`RNA-seq`) against each other::
     >>> # now, make a scatter plot
     >>> plt.scatter(plot_df["RNA-seq_exon_rpkm"],
     >>>             plot_df["ribosome_profiling_CDS_rpkm"],
-    >>>             marker="o",alpha=0.2,facecolor="none",edgecolor="#007ADF")
+    >>>             marker="o",alpha=0.5,facecolor="none",edgecolor="#007ADF")
     >>> plt.xlabel("Transcript levels (RPKM of mRNA fragments over all exons)")
     >>> plt.ylabel("Translation (RPKM of footprints over CDS)")
 
@@ -230,7 +247,7 @@ and transcription (:term:`RNA-seq`) against each other::
 
 This produces the following plot:
 
-     .. figure:: 
+     .. figure:: demo_gene_expr_tl_vs_tx.png
         :figclass: captionfigure
         :alt: Scatter plot of translation versus transcription levels
 
@@ -256,9 +273,10 @@ Making this estimate from the calculations above is simple::
 Then, we can compare the effects of transcriptional and translational
 control::
 
+    >>> plt.loglog()
     >>> plot_df = copy.deepcopy(df)
-    >>> df["RNA-seq_exon_rpkm"][df["RNA-seq_exon_rpkm"] == 0] = MIN_VAL
-    >>> df["translation_efficiency"][df["translation_efficiency"] == 0] = MIN_VAL
+    >>> plot_df["RNA-seq_exon_rpkm"][df["RNA-seq_exon_rpkm"] == 0] = MIN_VAL
+    >>> plot_df["translation_efficiency"][df["translation_efficiency"] == 0] = MIN_VAL
 
     >>> # now, make a scatter plot
     >>> plt.scatter(plot_df["RNA-seq_exon_rpkm"],
@@ -266,8 +284,17 @@ control::
     >>>             marker="o",alpha=0.2,facecolor="none",edgecolor="#007ADF")
     >>> plt.xlabel("Transcript levels (RPKM of mRNA fragments over all exons)")
     >>> plt.ylabel("Translation efficiency")
+    >>> plt.xlim(1,plt.get_xlim()[1])
+    >>> plt.ylim(plt.ylim()[0]/10.0,100)
 
     >>> plt.show()
+
+ .. figure:: demo_gene_expr_teff_vs_tx.png
+
+    :class: captionfigure
+    :caption: Translation efficiency vs transcription levels
+    :alt: Translation efficiency vs transcription levels
+
 
  .. TODO::
 

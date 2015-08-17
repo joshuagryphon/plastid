@@ -33,14 +33,14 @@ a coding region is decoded:
 
     Heavily biased nucleases -- for example, micrococcal
     nuclease, used for :term:`ribosome profiling` of  *E. coli* (:cite:`Oh2011`)
-    and *D. melanogaster* (:cite:`Dunn2014`) -- introduce uncertainty into
+    and *D. melanogaster* (:cite:`Dunn2013`) -- introduce uncertainty into
     P-site mapping, which obscures :term:`phasing <sub-codon phasing>`
     in these datasets.
 
 
 In this tutorial, we show how to measure :term:`sub-codon phasing`
 
-  - :ref:o`Manually <examples-phasing-manual>`, in an interactive Python session
+  - :ref:`Manually <examples-phasing-manual>`, in an interactive Python session
   - :ref:`From the command-line <exampels-phasing-script>`, using the
     |phase_by_size| script
 
@@ -62,12 +62,21 @@ First, we need to open the read alignments and transcript annotation:
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
     >>> from yeti.readers.bed import BED_Reader
 
+    >>> # retrieve an iterator over transcripts
+    >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
+
     >>> # open read alignments and map to P-sites
-    >>> alignments = BAMGenomeArray([pysam.Samfile("","rb")])
+    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
-    >>> retrieve an iterator over transcripts
-    >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
+:term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit variable
+phasing. So, we'll look at the most highly-phased population of reads, 33-mers. 
+To do so, we'll add a size filter:
+
+    >>> from yeti.genomics.genome_array import SizeFilterFactory
+    >>> size_filter = SizeFilterFactory(min=33,max=34)
+    >>> >>> alignments.add_filter("size",size_filter)
+
 
 Next, we can count phasing:
 
@@ -104,7 +113,7 @@ Next, we can count phasing:
     >>> # compute fraction of phased reads
     >>> phasing_proportions = phasing.astype(float) / phasing.sum()
     >>> phasing_proportions
-
+    array([ 0.51042163,  0.29362327,  0.19595509])
 
  .. note::
 
@@ -125,7 +134,7 @@ Measuring :term:`phasing <sub-codon phasing>` using the |phase_by_size| script
 ..............................................................................
 
 The |phase_by_size| script automates the calculations described in 
-:ref:`examples-phasing-manual`, calculating phasing seprately for
+:ref:`examples-phasing-manual`, calculating phasing separately for
 :term:`read alignments` of each length.
 
 The command line below examines phasing in 
@@ -137,24 +146,34 @@ compared to coding regions:
 
   .. code-block:: shell
 
-     $ phase_by_size SRR609197_phasing \
+     $ phase_by_size SRR609197 \
                      --count_files SRR609197_riboprofile.bam \
                      --annotation_files merlin_orfs.bed \
-                     --annotation_file_format BED \
+                     --annotation_format BED \
                      --fiveprime --offset 14 \
-                     --codon_buffer 5
+                     --codon_buffer 5 \
+                     --min_length 25 --max_length 35
 
-|phase_by_size| will create a text file showing the raw number
-and proportion of reads whose P-sites map to each codon position
-for each read length, an image that visually shows the same data:
+|phase_by_size| will create a text file showing the proportion of reads
+whose P-sites map to each codon position for each read length (columns
+*phase0, phase1,* & *phase0*) and the proportion of total reads that
+each read length represents (column *fraction_reads_counted*)::
 
- .. figure:: TODO
-    :figclass:captionfigure
-    :alt: Output of |phase_by_size| script
+    #read_length    reads_counted    fraction_reads_counted    phase0      phase1      phase2
+    25              6511             0.009640                  0.326832    0.327599    0.345569
+    26              9952             0.014735                  0.385953    0.295217    0.318830
+    27              17636            0.026111                  0.320934    0.282717    0.396348
+    28              42976            0.063629                  0.251792    0.381794    0.366414
+    29              93754            0.138809                  0.309309    0.370971    0.319720
+    30              148400           0.219716                  0.318733    0.367635    0.313632
+    31              155684           0.230501                  0.336624    0.421713    0.241663
+    32              118565           0.175543                  0.445578    0.374141    0.180281
+    33              58761            0.087000                  0.511121    0.299076    0.189803
+    34              18818            0.027861                  0.508237    0.276597    0.215166
+    35              4360             0.006455                  0.514450    0.236468    0.249083
 
-    Sample of graphical output of |phase_by_size|
 
- .. TODO: remove note if otehr file format support added to phase_by_size
+ .. TODO: remove note if other file format support added to phase_by_size
 
  .. note::
 

@@ -32,7 +32,7 @@ First, we import everything we need::
     >>> import pysam
 
     >>> # data structure for mapping read alignments to genomic positions
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeOffsetFactory
+    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # reader for BED-format transcript annotations
     >>> from yeti.readers.bed import BED_Reader
@@ -76,12 +76,12 @@ genomic coordinates), accounting for splicing of exons::
 
     >>> # slicing 
     >>> my_vector[200:250]
-    array([ 22.,  17.,   6.,   6.,   4.,   2.,   8.,   2.,   5.,  14.,  16.,
-            36.,  29.,   9.,  18.,   3.,  13.,  10.,   9.,   7.,  12.,  13.,
-             3.,   8.,  12.,  10.,   2.,   6.,   2.,  11.,  12.,   6.,  17.,
-            17.,   1.,  36.,  45.,  51.,  11.,   4.,  36.,  14.,  24.,  19.,
-             5.,   4.,   8.,   8.,  26.,  14.])
-
+    array([   7.,   25.,   18.,   13.,    5.,    1.,   11.,    3.,    0.,
+              1.,   25.,   11.,   29.,   27.,   18.,    3.,   16.,   20.,
+             10.,    0.,    4.,   20.,   10.,    2.,    3.,   19.,    4.,
+              9.,    1.,   15.,    5.,    3.,   11.,    8.,   13.,   15.,
+              4.,  121.,    3.,    6.,   45.,    3.,    4.,   39.,   14.,
+              3.,    9.,    7.,    8.,   24.])
 
 Because the vector is a :class:`numpy.ndarray`, it can be manipulated using
 any of the tools in `numpy`_, `SciPy`_, or `matplotlib`_::
@@ -90,11 +90,11 @@ any of the tools in `numpy`_, `SciPy`_, or `matplotlib`_::
     
     # mean & variance in coverage
     >>> my_vector.mean(), my_vector.var()
-    >>> (4.7383831954169322, 33.108513999564828)
+    (4.7383831954169322, 49.177260021207104)
 
     # location of highest peak
     >>> my_vector.argmax()
-    55
+    237
 
     # take cumulative sum
     >>> my_vector.cumsum()
@@ -178,12 +178,12 @@ The output can be loaded into numpy vectors using :func:`numpy.loadtxt`::
     
     >>> my_reloaded_vector = numpy.loadtxt("folder_of_vectors/ORFL46W.iORF1_(UL13).txt")
     >>> my_reloaded_vector[200:250]
-    array([ 22.,  17.,   6.,   6.,   4.,   2.,   7.,   2.,   5.,  14.,  15.,
-            34.,  27.,   9.,  18.,   3.,  13.,  10.,   9.,   7.,  12.,  13.,
-             3.,   8.,  12.,  10.,   2.,   6.,   2.,  11.,  12.,   6.,  17.,
-            17.,   1.,  35.,  45.,  49.,  11.,   4.,  36.,  14.,  24.,  19.,
-             5.,   4.,   8.,   8.,  26.,  14.])
-
+    array([   7.,   25.,   18.,   13.,    5.,    1.,   10.,    3.,    0.,
+              1.,   24.,    9.,   27.,   27.,   18.,    3.,   16.,   20.,
+             10.,    0.,    4.,   20.,   10.,    2.,    3.,   19.,    4.,
+              9.,    1.,   15.,    5.,    3.,   11.,    8.,   13.,   14.,
+              4.,  119.,    3.,    6.,   45.,    3.,    4.,   39.,   14.,
+              3.,    9.,    7.,    8.,   24.])
 
 
 |get_count_vectors| can optionally take a :term:`mask file` to exclude

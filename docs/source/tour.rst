@@ -144,9 +144,9 @@ files (see :mod:`yeti.readers`)::
     >>> # do something with transcripts. here we just look at their names & attribute dictionaries
     >>> for transcript in reader:
     >>>     print(transcript.get_name() + ":\t" + str(transcript.attr))
-    ORFL1W_(RL1):	{'cds_genome_end': 2298, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 1366, 'type': 'mRNA', 'ID': 'ORFL1W_(RL1)'}
-    ORFL2C:	{'cds_genome_end': 2723, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2502, 'type': 'mRNA', 'ID': 'ORFL2C'}
-    ORFL3C:	{'cds_genome_end': 3015, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2935, 'type': 'mRNA', 'ID': 'ORFL3C'}
+    ORFL1W_(RL1):	{'cds_genome_end': 2299, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 1366, 'type': 'mRNA', 'ID': 'ORFL1W_(RL1)'}
+    ORFL2C:	{'cds_genome_end': 2723, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2501, 'type': 'mRNA', 'ID': 'ORFL2C'}
+    ORFL3C:	{'cds_genome_end': 3015, 'color': '#000000', 'score': 0.0, 'cds_genome_start': 2934, 'type': 'mRNA', 'ID': 'ORFL3C'}
     [rest of output omitted]
 
 
@@ -159,21 +159,21 @@ and the genome::
     >>> # we'll use the two-exon, minus-strand gene ORFL83C as an example
     >>> demo_tx = transcript_dict["ORFL83C_(UL29)"]
     >>> demo_tx
-    <Transcript intervals=2 bounds=merlin:35005-37403(-) name=ORFL83C_(UL29)>
+    <Transcript segments=2 bounds=merlin:35004-37402(-) name=ORFL83C_(UL29)>
 
     >>> # get genomic coordinate of 1124th nucleotide from 5' end of ORFL83C
     >>> # right before the splice junction
     >>> demo_tx.get_genomic_coordinate(1124)
-    ('merlin', 36278, '-')
+    ('merlin', 36277, '-')
     
     >>> # get genomic coordinate of 1125th nucleotide from 5' end of ORFL83C
     >>> # right after the splice junction
     >>> demo_tx.get_genomic_coordinate(1125)
-    ('merlin', 36131, '-')
+    ('merlin', 36130, '-')
 
     >>> # and the inverse operation also works
-    >>> demo_tx.get_segmentchain_coordinate("merlin",36131,"-")
-    1125
+    >>> demo_tx.get_segmentchain_coordinate("merlin",36130,"-")
+    1126
 
 .. _tour-get-counts:
 
@@ -191,9 +191,9 @@ ends of sequencing reads appear at each position in a chain::
 
     >>> # fetch the number of 5' ends of alignments at positions 300-320
     >>> demo_tx.get_counts(alignments)[320:340]
-    array([   3.,   23.,    3.,   17.,   67.,   22.,    5.,   15.,   14.,
-             99.,   26.,   13.,   27.,  112.,   34.,    1.,   13.,    0.,
-              4.,    2.])
+    array([  23.,    3.,   17.,   67.,   22.,    5.,   15.,   14.,   99.,
+             26.,   13.,   27.,  112.,   34.,    1.,   13.,    0.,    4.,
+              2.,   11.])
 
 It is also possible to fetch sub-sections of a |Transcripts| or |SegmentChains|
 as new |SegmentChains|::
@@ -201,17 +201,17 @@ as new |SegmentChains|::
     >>> # take first 200 nucleotides of  mRNA
     >>> subchain = demo_tx.get_subchain(0,200)
     >>> subchain
-    <SegmentChain intervals=1 bounds=merlin:37203-37403(-) name=ORFL83C_(UL29)_subchain>
+    <SegmentChain intervals=1 bounds=merlin:37202-37402(-) name=ORFL83C_(UL29)_subchain>
 
 |Transcript| includes several convenience methods to fetch 5' UTRs, coding regions,
 and 3'UTRs from coding transcripts::
 
     >>> demo_tx.get_utr5()
-    <SegmentChain intervals=1 bounds=merlin:37353-37403(-) name=ORFL83C_(UL29)_5UTR>
+    <SegmentChain intervals=1 bounds=merlin:37353-37402(-) name=ORFL83C_(UL29)_5UTR>
 
-    >>> demo_cds = tx.get_cds()
+    >>> demo_cds = demo_tx.get_cds()
     >>> demo_cds
-    <Transcript intervals=2 bounds=merlin:35105-37353(-) name=ORFL83C_(UL29)_CDS>
+    <Transcript intervals=2 bounds=merlin:35104-37353(-) name=ORFL83C_(UL29)_CDS>
 
 
 |SegmentChain| and its subclasses can also fetch their sequences from dictionaries
@@ -248,15 +248,33 @@ for reverse-strand features, position 0 of the vector corresponds to
 segment.end)::
 
     >>> # genomic segment
-    >>> seg = GenomicSegment("merlin",x,y,"+")
+    >>> seg = GenomicSegment("merlin",1500,1600,"+")
     >>> alignments[seg]
+    array([ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  1.,  1.,
+        0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+        4.,  1.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+        0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+        0.,  0.,  0.,  0.,  2.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,
+        0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,
+        1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,
+        0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
 
     >>> # segment chain
-    >>> aligments[demo_cds]
+    >>> alignments[demo_cds][:100]
+    array([ 24.,   4.,   0.,   1.,   6.,   1.,   0.,   1.,  16.,   2.,   1.,
+         1.,   2.,  13.,  17.,  13.,  13.,   2.,   3.,  23.,  10.,  39.,
+        22.,  23.,  31.,  34.,  11.,  20.,  15.,   2.,   8.,  10.,   4.,
+        11.,   9.,   5.,   5.,   4.,  13.,   5.,   2.,   0.,   2.,   4.,
+         0.,   7.,  48.,  10.,  14.,   2.,   2.,   4.,   3.,   8.,   9.,
+         0.,   9.,   8.,   8.,   9.,  10.,   9.,  14.,   3.,   9.,  33.,
+         3.,   6.,  38.,   7.,   1.,  14.,   3.,  32.,  55.,  11.,   1.,
+         4.,   1.,   9.,   9.,   1.,   3.,   2.,   0.,   6.,  17.,  21.,
+         1.,  32.,   6.,   3.,  11.,   3.,   2.,   7.,  10.,   0.,  36.,
+         4.])
 
     >>> # has same effects as calling the 'get_counts()' method
-    >>> demo_cds.get_counts(alignments)
-
+    >>> (demo_cds.get_counts(alignments) == alignments[demo_cds]).all()
+    True
 
 When importing :term:`read alignments`, users can specify a :term:`mapping rule`
 to determine the genomic position(s) at which each alignment should be counted
@@ -364,69 +382,69 @@ strand of chromosome *chrI*::
 
     >>> roi = GenomicSegment("merlin",10000,20000,"+")
     >>> my_hash[roi]
-    [<Transcript intervals=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
-     <Transcript intervals=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
-     <Transcript intervals=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
-     <Transcript intervals=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
-     <Transcript intervals=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
-     <Transcript intervals=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
-     <Transcript intervals=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
-     <Transcript intervals=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
-     <Transcript intervals=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
-     <Transcript intervals=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
-     <Transcript intervals=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
-     <Transcript intervals=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
-     <Transcript intervals=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
-     <Transcript intervals=1 bounds=merlin:18467-18685(+) name=ORFL44W>,
-     <Transcript intervals=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
-     <Transcript intervals=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
-     <Transcript intervals=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
-     <Transcript intervals=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
-     <Transcript intervals=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>]
+    [<Transcript segments=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
+     <Transcript segments=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
+     <Transcript segments=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
+     <Transcript segments=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
+     <Transcript segments=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
+     <Transcript segments=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
+     <Transcript segments=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
+     <Transcript segments=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
+     <Transcript segments=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
+     <Transcript segments=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
+     <Transcript segments=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
+     <Transcript segments=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
+     <Transcript segments=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
+     <Transcript segments=1 bounds=merlin:18467-18685(+) name=ORFL44W>,
+     <Transcript segments=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
+     <Transcript segments=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
+     <Transcript segments=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
+     <Transcript segments=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
+     <Transcript segments=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>]
 
 Or on both strands::
 
     >>> my_hash.get_overlapping_features(roi,stranded=False)
-    [<Transcript intervals=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
-     <Transcript intervals=1 bounds=merlin:17610-17858(-) name=ORFL43C.iORF1>,
-     <Transcript intervals=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
-     <Transcript intervals=1 bounds=merlin:17610-17969(-) name=ORFL43C>,
-     <Transcript intervals=2 bounds=merlin:7812-13053(-) name=ORFL27C>,
-     <Transcript intervals=1 bounds=merlin:15644-15916(-) name=ORFL38C>,
-     <Transcript intervals=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
-     <Transcript intervals=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
-     <Transcript intervals=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
-     <Transcript intervals=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
-     <Transcript intervals=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
-     <Transcript intervals=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
-     <Transcript intervals=1 bounds=merlin:15699-15938(-) name=ORFL39C>,
-     <Transcript intervals=1 bounds=merlin:17062-17295(-) name=ORFL41C>,
-     <Transcript intervals=1 bounds=merlin:13170-13403(-) name=ORFL31C.iORF1>,
-     <Transcript intervals=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
-     <Transcript intervals=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
-     <Transcript intervals=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
-     <Transcript intervals=1 bounds=merlin:12958-13227(-) name=ORFL29C>,
-     <Transcript intervals=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
-     <Transcript intervals=1 bounds=merlin:12911-13141(-) name=ORFL28C.iORF1>,
-     <Transcript intervals=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>,
-     <Transcript intervals=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
-     <Transcript intervals=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
-     <Transcript intervals=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
-     <Transcript intervals=1 bounds=merlin:13111-13440(-) name=ORFL31C_(UL2)>,
-     <Transcript intervals=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
-     <Transcript intervals=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
-     <Transcript intervals=1 bounds=merlin:12900-13160(-) name=ORFL28C>,
-     <Transcript intervals=1 bounds=merlin:18467-18685(+) name=ORFL44W>]
-    
+    [<Transcript segments=1 bounds=merlin:19793-21178(+) name=ORFL46W.iORF2>,
+     <Transcript segments=1 bounds=merlin:17609-17857(-) name=ORFL43C.iORF1>,
+     <Transcript segments=1 bounds=merlin:19607-21178(+) name=ORFL46W.iORF1_(UL13)>,
+     <Transcript segments=1 bounds=merlin:17609-17968(-) name=ORFL43C>,
+     <Transcript segments=2 bounds=merlin:7811-13052(-) name=ORFL27C>,
+     <Transcript segments=1 bounds=merlin:15643-15915(-) name=ORFL38C>,
+     <Transcript segments=1 bounds=merlin:13561-13779(+) name=ORFL33W>,
+     <Transcript segments=1 bounds=merlin:19053-19559(+) name=ORFL45W.iORF1>,
+     <Transcript segments=1 bounds=merlin:17867-18142(+) name=ORFL42W>,
+     <Transcript segments=1 bounds=merlin:14914-15906(+) name=ORFL36W_(UL6)>,
+     <Transcript segments=1 bounds=merlin:14307-14957(+) name=ORFL35W_(UL5)>,
+     <Transcript segments=1 bounds=merlin:16522-17040(+) name=ORFL40W_(UL8)>,
+     <Transcript segments=1 bounds=merlin:15698-15937(-) name=ORFL39C>,
+     <Transcript segments=1 bounds=merlin:17061-17294(-) name=ORFL41C>,
+     <Transcript segments=1 bounds=merlin:13169-13402(-) name=ORFL31C.iORF1>,
+     <Transcript segments=1 bounds=merlin:13185-13406(+) name=ORFL30W>,
+     <Transcript segments=1 bounds=merlin:19559-21178(+) name=ORFL46W>,
+     <Transcript segments=1 bounds=merlin:12872-13192(+) name=ORFL26W>,
+     <Transcript segments=1 bounds=merlin:12957-13226(-) name=ORFL29C>,
+     <Transcript segments=1 bounds=merlin:13770-14369(+) name=ORFL34W_(UL4)>,
+     <Transcript segments=1 bounds=merlin:12910-13140(-) name=ORFL28C.iORF1>,
+     <Transcript segments=1 bounds=merlin:14565-14957(+) name=ORFL35W.iORF1>,
+     <Transcript segments=1 bounds=merlin:15814-16632(+) name=ORFL37W_(UL7)>,
+     <Transcript segments=1 bounds=merlin:12684-12929(+) name=ORFL25W>,
+     <Transcript segments=1 bounds=merlin:9799-11193(+) name=ORFL23W_(RL12)>,
+     <Transcript segments=1 bounds=merlin:13110-13439(-) name=ORFL31C_(UL2)>,
+     <Transcript segments=1 bounds=merlin:18591-19559(+) name=ORFL45W_(UL11)>,
+     <Transcript segments=1 bounds=merlin:11138-12169(+) name=ORFL24W_(RL13)>,
+     <Transcript segments=1 bounds=merlin:12899-13159(-) name=ORFL28C>,
+     <Transcript segments=1 bounds=merlin:18467-18685(+) name=ORFL44W>]
+
 Does anything interesting overlap *ORFL83C_(UL29)*?
 
  .. code-block:: python
 
     >>> my_hash[demo_tx]
-    [<Transcript intervals=1 bounds=merlin:37078-37449(-) name=ORFL84C>,
-     <Transcript intervals=1 bounds=merlin:33082-35058(-) name=ORFL79C_(UL27)>,
-     <Transcript intervals=1 bounds=merlin:37383-37898(-) name=ORFL85C_(UL30)>,
-     <Transcript intervals=2 bounds=merlin:35005-37403(-) name=ORFL83C_(UL29)>]
+    [<Transcript segments=1 bounds=merlin:37077-37449(-) name=ORFL84C>,
+     <Transcript segments=1 bounds=merlin:33081-35058(-) name=ORFL79C_(UL27)>,
+     <Transcript segments=1 bounds=merlin:37382-37898(-) name=ORFL85C_(UL30)>,
+     <Transcript segments=2 bounds=merlin:35004-37403(-) name=ORFL83C_(UL29)>]
 
 For more information, see the module documentation for :mod:`~yeti.genomics.genome_hash`.
 

@@ -102,7 +102,7 @@ From the terminal:
 
 For most users, two of the output files are of interest:
 
-  #. An SVG graphic (in this example, ``SRR1562907_riboprofile_p_offsets.svg``),
+  #. An SVG graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
      showing the metagene profile for each read length:
 
       .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
