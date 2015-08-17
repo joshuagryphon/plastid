@@ -1489,7 +1489,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         self.set_normalize(False)
 
-        if seg.strand == "-" and isinstance(val,numpy.ndarray):
+        if seg.strand == "-" and isinstance(val,numpy.ndarray) and roi_order == True:
             val = val[::-1]
 
         try:
