@@ -80,7 +80,7 @@ returns a :class:`numpy.ma.MaskedArray`, rather than a :class:`numpy.ndarray`.
 :class:`~numpy.ma.MaskedArray` objects because they contain all the values,
 but ignore masked values when performing operations::
 
-    >>> # count reads that aren't masked
+    >>> # count reads, excluding those mapping to masked positions
     >>> demo_cds.get_masked_counts(alignments).sum()
     53.0
 
@@ -94,10 +94,10 @@ masks will still return an *unmasked* :class:`numpy.ndarray`::
 Masked positions are also excluded from length measurements, if and only if
 :meth:`~yeti.genomics.roitools.SegmentChain.get_masked_length` is called::
 
-    >>> demo_cds.get_masked_length() # masked length
+    >>> demo_cds.get_masked_length() # length, excluding masked nucleotides
     213
 
-    >>> demo_cds.get_length() # unmasked length
+    >>> demo_cds.get_length() # total length
     243
 
 

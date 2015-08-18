@@ -157,7 +157,9 @@ compared to coding regions:
 |phase_by_size| will create a text file showing the proportion of reads
 whose P-sites map to each codon position for each read length (columns
 *phase0, phase1,* & *phase0*) and the proportion of total reads that
-each read length represents (column *fraction_reads_counted*)::
+each read length represents (column *fraction_reads_counted*):
+
+ .. code-block::
 
     #read_length    reads_counted    fraction_reads_counted    phase0      phase1      phase2
     25              6511             0.009640                  0.326832    0.327599    0.345569

@@ -85,7 +85,7 @@ Similarly, `TwoBitFile`_ objects from `twobitreader`_  can be directly passed
 to :meth:`~yeti.genomics.roitools.SegmentChain.get_sequence`, because they 
 inherit from :class:`dict` and return strings::
 
-# load CMV genome as a 2bit file
+    >>> # load CMV genome as a 2bit file
     >>> from twobitreader import TwoBitFile
     >>> twobit_genome = TwoBitFile("merlin_NC006273-2.2bit")
     >>> twobit_genome.keys()

@@ -247,7 +247,7 @@ and transcription (:term:`RNA-seq`) against each other::
 
 This produces the following plot:
 
-     .. figure:: demo_gene_expr_tl_vs_tx.png
+     .. figure:: /_static/images/demo_gene_expr_tl_vs_tx.png
         :figclass: captionfigure
         :alt: Scatter plot of translation versus transcription levels
 
@@ -289,7 +289,8 @@ control::
 
     >>> plt.show()
 
- .. figure:: demo_gene_expr_teff_vs_tx.png
+
+ .. figure:: /_static/images/demo_gene_expr_teff_vs_tx.png
 
     :class: captionfigure
     :caption: Translation efficiency vs transcription levels
