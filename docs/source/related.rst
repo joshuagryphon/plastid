@@ -4,25 +4,32 @@ Related resources
 If you are interested in :data:`yeti`, the following projects might also
 be helpful for you:
 
- .. TODO finish this page
 
 Similar projects, for interactive analysis of sequencing data
 -------------------------------------------------------------
-:data:`HTSeq`
-    [description]
+`HTSeq`_
+    A Python package designed for analysis of high-throughput
+    sequencing data. It parses annotation files and `BAM`_
+    files into objects that serve roles similar to those served
+    by  :data:`yeti`'s |GenomicSegment| and |GenomeArray|,
+    respectively, albeit with different behaviors.
 
 `metaseq`_
-    [description]
+    A Python package for analysis of genomics data. It is very
+    similar in intent to :data:`yeti` in that it introduces
+    simple, unified APIs to access genomic data of many file
+    types. In addition, it includes nice plotting utilities
+    for interactive analysis
 
 
 Short read aligners
 -------------------
 `bowtie`_
-    A fast short-read aligner for ungapped alignments.
+    A fast short-read aligner for ungapped alignments
 
 `TopHat`_
     A short read aligner built atop `bowtie`_ that can perform gapped alignments
-    and discover splice junctions.
+    and discover splice junctions
 
 
 Gene expression analysis
@@ -30,18 +37,18 @@ Gene expression analysis
 `DESeq`_
     Statistical models for assessment of differential gene expression,
     applicable to RNA-seq, :term:`ribosome profiling`, and many other
-    types of :term:`high-throughput sequencing` data.
+    types of :term:`high-throughput sequencing` data
     
     `DESeq`_ can be used to test for significant differences in expression
     counts obtained using the :mod:`~yeti.bin.cs` or
-    :mod:`~yeti.bin.counts_in_region` scripts.
+    :mod:`~yeti.bin.counts_in_region` scripts
 
 `cufflinks`_
     A software suite for transcript assembly and differential expression
-    analysis of RNA-seq data.
+    analysis of RNA-seq data
  
 `kallisto`_
-    Software for measurement of gene expression from RNA-seq data.
+    Software for measurement of gene expression from RNA-seq data
 
 
 General-purpose manipulation
@@ -51,15 +58,20 @@ General-purpose manipulation
  
 `Pysam`_
     Python bindings for `Samtools`_. :data:`yeti` uses `Pysam`_ internally
-    for parsing of `BAM`_ and `tabix`_-compressed files.
+    for parsing of `BAM`_ and `tabix`_-compressed files
 
 `bedtools`_
-    Manipulate annotations of continuous (unspliced) genomic regions,
-    and count read coverage for those regions
+    Fast command-line tools that perform arithmetic on annotations of continuous
+    genomic features, and that count read coverage and/or other properties
+    for those regions
+
+`pybedtools`_
+    Python bindings for `bedtools`_
 
 `Jim Kent's utilities`_
-    Index and convert files (e.g. `BED`_ to `BigBed`_, `wiggle`_ and `bedGraph`_
-    to `BigWig`_, `FASTA`_ to `2bit <twobit>`_, et c).
+    Convert text-based genomic files to randomly accessible, indexed binary 
+    formats (e.g. `BED`_ to `BigBed`_, `wiggle`_ and `bedGraph`_
+    to `BigWig`_, `FASTA`_ to `2bit <twobit>`_, et c)
 
 
 Genome browsers
@@ -71,6 +83,7 @@ Genome browsers
 
 `UCSC Genome Browser`_
     A web-based genome browser developed by University of California,
-    Santa Cruz. The `UCSC Genome Browser`_ integrates with UCSC` large
-    database of genomes and annotations, and offers many tools for manipulation
-    or analysis of genomics data.
+    Santa Cruz. The `UCSC Genome Browser`_ integrates with UCSC's large
+    database of genomes, annotations, and tracks of quantitive data.
+    It also offers many tools for visualization and manipulation
+    of genomics data.

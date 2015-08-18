@@ -37,7 +37,9 @@
 .. _SeqRecord: http://biopython.org/wiki/SeqRecord
 .. _Seq: http://biopython.org/wiki/Seq
 .. _TwoBitFile: https://pythonhosted.org/twobitreader/twobitreader.html#twobitreader.TwoBitFile
-
+.. _Metaseq: https://pythonhosted.org/metaseq/
+.. _pybedtools: https://pythonhosted.org/pybedtools
+.. _HTSeq: http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html 
 
 .. Genome browsers & data sources
 
@@ -55,6 +57,7 @@
 .. Non-Python software links
 
 .. _SAMtools: http://samtools.sourceforge.net/
+.. _bedtools: http://bedtools.readthedocs.org/
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
 .. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
@@ -66,9 +69,8 @@
 .. _kallisto: http://pachterlab.github.io/kallisto/
 .. _R: http://www.r-project.org
 
+
 .. Our links
 
-.. TODO later: update test dataset name when package is renamed
-
-.. _our github link: https://github.com 
-.. _test dataset: _static/demo.tar.bz2
+.. _repo: https://some_repo # TODO: update repo when ready
+.. _Weissman lab: http://weissmanlab.ucsf.edu
