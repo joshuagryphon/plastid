@@ -42,7 +42,7 @@ Cookbook
                                                                                 that gives rise to :term:`multimapping` reads -- from analysis.
                                                                                 Discussion of :term:`mask files <mask file>`.
 
-:doc:`Custom genome annotations </examples/make_annotation>`                    Make a custom `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ file containing
+:doc:`Custom genome annotations </examples/make_annotation>`                    Make a `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ file containing
                                                                                 custom :term:`features <feature>`.
 
 :doc:`Metagene analysis </examples/metagene>`                                   Perform :term:`metagene analysis <metagene>`, using :term:`ribosome profiling`
