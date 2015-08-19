@@ -113,7 +113,7 @@ def get_identical_attributes(features,exclude=set()):
     common_keys -= set(exclude)
     
     dtmp = { K : features[0].attr[K] for K in common_keys \
-                 if len(set([X.attr[K] for X in features])) == 1  }
+                 if all([X.attr[K] == features[0].attr[K] for X in features]) == True }
     return dtmp
 
 #===============================================================================

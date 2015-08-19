@@ -52,6 +52,7 @@ See Also
 __author__="joshua"
 __date__ ="$Dec 1, 2010 11:00:55 AM$"
 import itertools
+import warnings
 import gc
 import copy
 from abc import abstractmethod
@@ -1004,16 +1005,45 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     `GFF3`_ schemas vary
         `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
         by allowing users to supply `transcript_types` and `exon_types`, to indicate
-        which sorts of features should be included. By default, we use the schema
-        set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+        which sorts of features should be included. By default, we use a 
+        subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+
+        Briefly:
+        
+         1. The GFF3 file is combed for transcripts of the types specified by
+            `transcript_types`, exons specified by `exon_types`, and CDS specified by 
+            types listed in `cds_types`.
+        
+         2. Exons and CDS are matched with their parent transcripts by matching
+            the `Parent` attributes of CDS and exons to the `ID` of transcripts.
+            Transcripts are then constructed from those intervals, and coding
+            regions set accordingly.
+
+         3. If exons and/or CDS features point to a `Parent` that is not
+            in `transcript_types`, they are grouped into a new transcript,
+            whose ID is set to the value of their shared `Parent`. However,
+            this value for `Parent` might refer to a gene rather than
+            a transcript; unfortunately this cannot be known without other
+            information. Attributes that are common to all CDS and exon
+            features are bubbled up to the transcript.
+
+         4. If exons and/or CDS features have no `Parent`, but share a common ID,
+            they are grouped by ID into a single transcript. Attributes common
+            to all CDS and exon features are bubbled up to the transcript.
+            The `Parent` attribute is left unset.
+
+         5. If a transcript feature is annotated but has no child CDS or exons,
+            the transcript is assumed to be non-coding and is assembled from
+            any transcript-type features that share its `ID` attribute.
 
     Identity relationships between elements vary between `GFF3`_ files
         Also, different `GFF3`_ files specify discontiguous features differently. For example,
         in `Flybase <http://flybase.org>`_, different exons of a transcript will have unique IDs, but will share
         the same `'Parent'` attribute in column 9 of the GFF. In Wormbase, however, different
-        exons of the same transcript will share the same ID. Here, we treat GFFs as if
-        they are written in the Flybase style. We may support alternate formats in the future.    
-    
+        exons of the same transcript will share the same ID. Here, we first
+        check for the Flybase style (by Parent), then fall back to Wormbase
+        style (by shared ID).
+
     Transcript assembly
         To save memory, transcripts are assembled using lazy evaluation.
         Assembly proceeds as follows:
@@ -1074,8 +1104,10 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         Notes
         -----
         Sequence Ontology 2.5.3
-            By default, this assembler constructs transcripts following the `GFF3`_
-            schema from the `SO Consortium <http://www.sequenceontology.org/resources/intro.html>`_
+            By default, this assembler constructs transcripts following a subset of the `GFF3`_
+            schema from the `SO Consortium <http://www.sequenceontology.org/resources/intro.html>`_.
+            For details on assembly see the :class:`class docstring <GFF3_TranscriptAssembler>`,
+            above.
         """
         AbstractGFF_Assembler.__init__(self,*streams,reader_class=GFF3_Reader,**kwargs)
         self.transcript_types = set(kwargs.get("transcript_types",_DEFAULT_GFF3_TRANSCRIPT_TYPES))
@@ -1103,7 +1135,15 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                 self._tx_features[feature_name] = [feature]
         
         elif feature.attr["type"] in self.transcript_components:
-            tnames = feature.attr.get("Parent")
+            # assume parent is transcript ID.
+            # If no Parent, assume transcript is described as exon or CDS
+            # with identical ID attributes 
+
+            tnames = feature.attr.get("Parent",[feature.attr.get("ID",[])])
+
+            if len(tnames) == 0:
+                warnings.warn("Found %s at %s with no `Parent` or `ID`. Ignoring." % (feature.attr["type"],str(feature.spanning_segment)),
+                              UserWarning)
             for tname in tnames:
                 try:
                     self._feature_cache[feature.attr["type"]][tname].append(feature)
@@ -1121,38 +1161,68 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         rejected   = []
         transcripts = []
         tx_features_counted = []
-        
-        for type_ in self.exon_types:
-            for tname in self._feature_cache[type_].keys():
-                tx_features_counted.append(tname)
-                exons = self._feature_cache[type_].get(tname,[])
-                cds = []
-                for cds_type in self.cds_types:
-                    cds.extend(self._feature_cache[cds_type].get(tname,[]))
-                
-                gene_id = self._tx_features[tname][0].attr.get("Parent",tname) # use transcript name as gene if no Parent
+
+        # names of transcripts in transcript_types
+        tnames = set(self._tx_features.keys())
+        tnames = set([])
+
+        # find parents of exons & cds that are not present
+        # in types from transcript_types
+        for type_ in self.exon_types | self.cds_types:
+            tnames |= set(self._feature_cache[type_].keys())
+
+        for tname in tnames:
+            tx_features_counted.append(tname)
+
+            exons = []
+            for type_ in self.exon_types:
+                exons.extend(self._feature_cache[type_].get(tname,[]))
+
+            cds = []
+            for cds_type in self.cds_types:
+                cds.extend(self._feature_cache[cds_type].get(tname,[]))
+
+            # if transcript is represented, not just implied, use its attributes
+            if tname in self._tx_features:
+            
+                # use transcript name as gene if no Parent
+                gene_id = self._tx_features[tname][0].attr.get("Parent",[tname])
+
                 # gene IDs are now returned as lists from GFF3 parser
                 gene_id = ",".join(sorted(gene_id))
 
-                attr    = self._tx_features[tname][0].attr #get attr from transcript object
+                # get attr from transcript object
+                attr       = self._tx_features[tname][0].attr
                 attr["ID"] = tname
                 attr["transcript_id"] = tname
                 attr["gene_id"] = gene_id
-                exon_segments = [X.spanning_segment for X in exons]                        
 
+            # if transcript is just implied by presence of CDS and exons
+            # TODO: make "Parent" will carry over sensibly from lists
+            else:
+                attr = get_identical_attributes(exons + cds)
+                attr["ID"]   = tname
+                attr["transcript_id"] = tname
+                attr["type"] = "mRNA"
+
+            exon_segments = [X.spanning_segment for X in exons]
+            cds_segments  = [X.spanning_segment for X in cds]
+
+            if len(exon_segments) + len(cds_segments) > 0:
+                # transcript with child features
                 if len(cds) > 0:
                     cds   = sorted(cds,key = lambda x: x.spanning_segment.start)
                     attr["cds_genome_start"] = cds[0].spanning_segment.start
-                    attr["cds_genome_end"] = cds[-1].spanning_segment.end
+                    attr["cds_genome_end"]   = cds[-1].spanning_segment.end
         
-                    exons = sorted(exons,key = lambda x: x.spanning_segment.start)
+                    #exons = sorted(exons,key = lambda x: x.spanning_segment.start)
                     # correct exon boundaries that don't include entire CDS
-                    if cds[0].spanning_segment.start < exons[0].spanning_segment.start:
-                        exons[0].spanning_segment.start = cds[0].spanning_segment.start
-                    if cds[-1].spanning_segment.end > exons[-1].spanning_segment.end:
-                        exons[-1].spanning_segment.end = cds[-1].spanning_segment.end
+                    #if cds[0].spanning_segment.start < exons[0].spanning_segment.start:
+                    #    exons[0].spanning_segment.start = cds[0].spanning_segment.start
+                    #if cds[-1].spanning_segment.end > exons[-1].spanning_segment.end:
+                    #    exons[-1].spanning_segment.end = cds[-1].spanning_segment.end
                 try:
-                    my_tx = Transcript(*tuple(exon_segments),**attr)
+                    my_tx = Transcript(*tuple(exon_segments+cds_segments),**attr)
                     if self.add_three_for_stop == True:
                         my_tx = add_three_for_stop_codon(my_tx)
                     
@@ -1167,15 +1237,14 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     # there are 25 of these in flybase r5.43
                     self.printer.write("Rejecting %s because start or stop codons are outside exon boundaries." % tname)                        
                     rejected.append(tname)
-            
-        tx_features_not_counted = set(self._tx_features.keys()) - set(tx_features_counted)
-        for txid in tx_features_not_counted:
-            attr = self._tx_features[txid][0].attr
-            attr["ID"] = txid
-            attr["transcript_id"] = txid
-            segments  = [X.spanning_segment for X in self._tx_features[txid]]
-            my_txmodel = Transcript(*tuple(segments),**attr)
-            transcripts.append(my_txmodel)                    
+            else:
+                # transcript that has multiple subfeatures with shared ID but no children
+                attr = self._tx_features[tname][0].attr
+                attr["ID"] = tname
+                attr["transcript_id"] = tname
+                segments  = [X.spanning_segment for X in self._tx_features[tname]]
+                my_tx = Transcript(*tuple(segments),**attr)
+                transcripts.append(my_tx)
         
         return transcripts, rejected
         
