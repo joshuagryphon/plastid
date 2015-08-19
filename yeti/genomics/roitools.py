@@ -745,18 +745,6 @@ class SegmentChain(object):
                    self.strand == other.strand and\
                    self.get_position_set() == other.get_position_set()
         
-#         if len(self) != len(other):
-#             return False
-#         elif len(self) == 0:
-#             return False
-#         elif len(self) > 1:
-#             return self in other and other in self
-#         else:
-#             return self[0].start == other[0].start and\
-#                    self[0].end == other[0].end and\
-#                    self.strand == other.strand and\
-#                    self.chrom == other.chrom
-                   
     def __ne__(self,other):
         """Defines inequality for two SegmentChains as complement of :meth:`SegmentChain.__eq__`
 
