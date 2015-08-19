@@ -412,11 +412,7 @@ def VariableFivePrimeMapFactory(offset_dict):
         reads_out = []         
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            # Get offset from dict. If not present, ask for default offset
-            # If no default, this will throw a KeyError, which users can
-            # deal with.
             read_length = len(read.positions)
-
             if read_length in offset_dict:
                 offset = offset_dict[read_length]
             elif "default" in offset_dict:
@@ -426,8 +422,6 @@ def VariableFivePrimeMapFactory(offset_dict):
                               UserWarning)
                 continue
 
-            offset = offset_dict[read_length]
-                 
             if seg.strand == "+":
                 p_site = read.positions[offset]
             else:
