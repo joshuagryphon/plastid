@@ -306,7 +306,7 @@ def catch_stderr(buf=None):
             os.dup2(new_fd,sys.stderr.fileno())
             try:
                 result = func(*args,**kwargs)
-            except Exception as e:
+            except BaseException as e:
                 sys.stderr.flush() 
                 sys.stderr.close() 
                 os.dup2(stderr_fd,sys.stderr.fileno())
@@ -390,7 +390,7 @@ def catch_stdout(buf=None):
             os.dup2(new_fd,sys.stdout.fileno())
             try:
                 result = func(*args,**kwargs)
-            except Exception as e:
+            except BaseException as e:
                 buf.flush()
                 buf.close()
                 os.dup2(stdout_fd,sys.stdout.fileno())
