@@ -927,23 +927,16 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
             exons = self._feature_cache["exon_like"].get(tname,[])
             cds = self._feature_cache["CDS_like"].get(tname,[])
             if len(exons) > 0:
-                #gene_id = exons[0].attr.get("gene_id")
-                #attr    = exons[0].attr
                 exons = sorted(exons,key = lambda x: x.spanning_segment.start)
                 exon_segments = [X.spanning_segment for X in exons]
             elif len(cds) > 0:
                 # if cds but no exons, create exons since they are implied
-                #gene_id = cds[0].attr.get("gene_id")
-                #attr    = cds[0].attr
                 exons = sorted(cds,key = lambda x: x.spanning_segment.start)
                 exon_segments = [X.spanning_segment for X in exons]
             
             # propagate attributes that are the same in all exons/cds
             # to parent. This should include `gene_id` and `transcript_id`
             attr = get_identical_attributes(exons + cds)
-            #attr["ID"] = tname
-            #attr["transcript_id"] = tname
-            #attr["gene_id"] = gene_id        
             if len(cds) > 0:
                 cds = sorted(cds,key = lambda x: x.spanning_segment.start)
                 attr["cds_genome_end"]   = cds[-1].spanning_segment.end
