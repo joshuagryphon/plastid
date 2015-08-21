@@ -486,7 +486,11 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                     ("tabix"               , dict(default=False,
                                                   action="store_true",
                                                   help="%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files." % prefix)),
+                    ("sorted"              , dict(default=False,
+                                                  action="store_true",
+                                                  help="%sannotation_files are sorted by chromosomal position (Default: False)" % prefix))
                    ])
+
     if "GFF3" in input_choices:
         option_dict["gff_transcript_types"] = dict(type=str,
                                                   default=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
@@ -591,12 +595,14 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
                                                cds_types=args.gff_cds_types,
                                                printer=printer,
                                                add_three_for_stop=add_three,
-                                               tabix=tabix)
+                                               tabix=tabix,
+                                               is_sorted=args.sorted)
     elif args.annotation_format.lower() == "gtf2":
         transcripts = GTF2_TranscriptAssembler(*streams,
                                                printer=printer,
                                                tabix=tabix,
-                                               add_three_for_stop=add_three)
+                                               add_three_for_stop=add_three,
+                                               is_sorted=args.sorted)
         
     elif args.annotation_format.lower() == "bed":
         transcripts = BED_Reader(*streams,
