@@ -291,15 +291,17 @@ def FivePrimeMapFactory(offset=0):
         reads_out = []         
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if offset > len(read.positions):
+            if abs(offset) >= len(read.positions):
                 warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
                               UserWarning)
                 continue
-            if seg.strand == "+":
-                p_site = read.positions[offset] # read.pos + self.offset
-            else:
-                p_site = read.positions[-offset - 1] #read.pos + read.rlen - self.offset - 1
              
+            if seg.strand == "+":
+                 read_offset = offset
+            else:
+                 read_offset = -offset - 1 
+
+            p_site = read.positions[read_offset]
             if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
                 count_array[p_site - seg.start] += 1
@@ -350,15 +352,17 @@ def ThreePrimeMapFactory(offset=0):
         reads_out = []
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if offset > len(read.positions):
+            if offset >= len(read.positions): 
                 warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
                               UserWarning)
                 continue
+
             if seg.strand == "+":
-                p_site = read.positions[-offset - 1] #read.pos + read.rlen - 1 - self.offset
+                read_offset = - offset - 1
             else:
-                p_site = read.positions[offset] #read.pos + self.offset
-                 
+                read_offset = offset
+
+            p_site = read.positions[read_offset]  
             if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
                 count_array[p_site - seg.start] += 1
@@ -418,7 +422,12 @@ def VariableFivePrimeMapFactory(offset_dict):
             elif "default" in offset_dict:
                 offset = offset_dict["default"]
             else:
-                warnings.warn("No offset for reads of length %s in offset dict. Ignoring." % len(read),
+                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers" % (read_length, read_length),
+                              UserWarning)
+                continue
+
+            if offset >= read_length:
+                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
                               UserWarning)
                 continue
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import numpy
-import mock
 import warnings
-from nose.tools import assert_true, assert_equal
+from nose.tools import assert_true, assert_equal, assert_greater_equal
 from yeti.genomics.genome_array import FivePrimeMapFactory,\
                                        ThreePrimeMapFactory,\
                                        CenterMapFactory,\
@@ -15,9 +14,12 @@ class MockRead(object):
     def __init__(self,positions,strand):
         self.positions = positions
         self.is_reverse = True if strand == "+" else False
+    
+    def __len__(self):
+        return len(self.positions)
 
 
-class TestBAMMappingRules(object):
+class TestBAM_MappingRules(object):
 
     @classmethod
     def setUpClass(cls):
@@ -59,8 +61,10 @@ class TestBAMMappingRules(object):
         fn = self.map_factories[map_name](map_param)
         expected = self.expected[(map_name,map_param,strand)]
         reads_out, count_array = self.map_factories[map_name](map_param)(self.reads[strand],self.segs[strand])
-        assert_equal(reads_out,self.reads[strand])
-        assert_true((count_array == expected).all())
+        msg1 = "failed to return reads with %s mapping with param %s on strand '%s'." % (map_name, map_param, strand)
+        msg2 = "failed %s mapping vector with param %s on strand '%s'." % (map_name, map_param, strand)
+        assert_equal(reads_out,self.reads[strand],msg1)
+        assert_true((count_array == expected).all(),msg2)
 
     def test_fiveprime_threeprime_center(self):
         for mapping in ("fiveprime","threeprime","center"):
@@ -70,16 +74,71 @@ class TestBAMMappingRules(object):
 
     def test_fiveprime_variable(self):
         offset_dicts = {}
+        fancy = { X : X//2 for X in range (25,40) }
+        fancy_reads = { X : numpy.zeros(2000) for X in self.strands }
+        for read in self.reads["+"]:
+            fancy_reads["+"][read.positions[fancy[len(read.positions)]]] += 1
+        for read in self.reads["-"]:
+            fancy_reads["-"][read.positions[-fancy[len(read.positions)]-1]] += 1
+
+        fancy_plus  = numpy.zeros(2000)
+        fancy_minus = numpy.zeros(2000)
+
+
         offset_dicts[("default_only","+")] = ({ "default" : 0 },
-                                               self.expected[("fiveprime",0,"+")],
-                                             )
+                                               self.expected[("fiveprime",0,"+")])
+        offset_dicts[("default_only","-")] = ({ "default" : 0 },
+                                               self.expected[("fiveprime",0,"-")])
+        offset_dicts[("fancy","+")       ] = (fancy,fancy_reads["+"])
+        offset_dicts[("fancy","-")       ] = (fancy,fancy_reads["-"])
+                                             
         for (name, strand), (dict_, expected) in offset_dicts.items():
             fn = VariableFivePrimeMapFactory(dict_)
             reads_out, count_array = fn(self.reads[strand],self.segs[strand])
-            assert_true((count_array==expected).all())
+            msg = "Failed fiveprime variable mapping for test %s(%s)" % (name,strand)
+            assert_true((count_array==expected).all(),msg)
+
+    def check_unmappable_raises_warnings(self,test_name,map_param,strand):
+        map_factory = self.map_factories[test_name]
+        msg = "Map function '%s' failed to raise warning for unmappable reads on strand '%s'" % (test_name,strand)
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            fn = map_factory(map_param)
+            reads_out, count_array = fn(self.reads[strand],self.segs[strand])
+
+        assert_greater_equal(len(warns),0,msg)
 
     def test_unmappable_raises_warnings(self):
-        assert False
+        func_params = { "fiveprime"  : 30,
+                        "threeprime" : 30,
+                        "center"     : 15,
+                        "fiveprime_variable" : { 25 : 10, "default" : 28 }
+                       }
+        for test_name, map_param in func_params.items():
+            for strand in self.strands:
+                yield self.check_unmappable_raises_warnings, test_name, map_param, strand 
+
+    def check_unmappable_not_mapped_in_vector_or_returned(self,test_name,map_param,expected_num_reads,strand):
+        msg1 = "Map function '%s' failed to filter out short reads on strand '%s' from returned reads" % (test_name,strand)
+        msg2 = "Map function '%s' failed to filter out short reads on strand '%s' from count vector" % (test_name,strand)
+        fn = self.map_factories[test_name](map_param)
+        reads_out, count_array = fn(self.reads[strand],self.segs[strand])
+        assert_equal(len(reads_out),expected_num_reads,msg1)
+        assert_equal(count_array.sum(),expected_num_reads,msg2)
 
     def test_unmappable_not_mapped_in_vector_or_returned(self):
-        assert False
+        func_params = { "fiveprime"  : 30,
+                        "threeprime" : 30,
+                        "center"     : 15,
+                        "fiveprime_variable" : { 25 : 10, "default" : 28 }
+                       }
+        expected_num = { "fiveprime"  : len([X for X in self.reads["+"] if len(X) > func_params["fiveprime"]]),
+                         "threeprime" : len([X for X in self.reads["+"] if len(X) > func_params["threeprime"]]),
+                         "center"     : len([X for X in self.reads["+"] if len(X) > 2*func_params["center"]]),
+                         "fiveprime_variable" : len([X for X in self.reads["+"] if len(X) > 28 or len(X) == 25]),
+                       }
+        for test_name, map_param in func_params.items():
+            expected_num_reads = expected_num[test_name]
+            for strand in self.strands:
+                yield self.check_unmappable_not_mapped_in_vector_or_returned, test_name, map_param, expected_num_reads, strand 
+
