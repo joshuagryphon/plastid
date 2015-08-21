@@ -9042,3 +9042,22 @@ class TestGFF3_Assembler(AbstractTestAssembler):
         cls.unsorted_input = GFF3_TO_TRANSCRIPTS_UNSORTED
         cls.stop_feature_input = GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
         cls.test_class = GFF3_TranscriptAssembler
+
+    def test_feature_with_shared_id(self):
+        text = """
+chrA	.	CDS	51	200	.	+	.	ID=CDS_with_shared_id;
+chrA	.	CDS	701	800	.	+	.	ID=CDS_with_shared_id;
+
+
+chrB	.	mRNA	51	800	.	+	.	ID="parent_mRNA_of_CDS_no_exon_with_mRNA"
+chrB	.	CDS	51	200	.	+	.	ID=CDS_no_exon_with_mRNA:0;Parent="parent_mRNA_of_CDS_no_exon_with_mRNA"
+chrB	.	CDS	701	800	.	+	.	ID=CDS_no_exon_with_mRNA:1;Parent="parent_mRNA_of_CDS_no_exon_with_mRNA"
+"""
+        expected = [
+            Transcript(GenomicSegment("chrA",50,200,"+"),GenomicSegment("chrA",700,800,"+"),type="CDS",ID="CDS_with_shared_id"),
+            Transcript(GenomicSegment("chrA",50,800,"+"),ID="parent_mRNA_of_CDS_no_exon_with_mRNA"),
+
+                ]
+       
+        found = list(GFF3_TranscriptAssembler(StringIO.SringIO(text)))
+        self.check_output_against_reference(features,reference=expected)
