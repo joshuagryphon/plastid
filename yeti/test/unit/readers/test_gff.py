@@ -8836,7 +8836,7 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
         for tx1, tx2 in zip(reference,transcripts):
             self.assertEqual(tx1.spanning_segment.chrom,tx2.spanning_segment.chrom)
             self.assertEqual(tx1.spanning_segment.strand,tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1),len(tx2)) # number of intervals
+            self.assertEqual(len(tx1),len(tx2),"Number of intervals don't match for %s (%s) and %s (%s) " % (tx1.get_name(),len(tx1),tx2.get_name(),len(tx2))) # number of intervals
 
             for n, tx1iv in enumerate(tx1):
                 self.assertEqual(tx1iv,tx2[n],"Failed interval test for %s" % tx1.get_name())
@@ -9042,22 +9042,33 @@ class TestGFF3_Assembler(AbstractTestAssembler):
         cls.unsorted_input = GFF3_TO_TRANSCRIPTS_UNSORTED
         cls.stop_feature_input = GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
         cls.test_class = GFF3_TranscriptAssembler
+        cls.default_stop_offset = 0
 
     def test_feature_with_shared_id(self):
-        text = """
-chrA	.	CDS	51	200	.	+	.	ID=CDS_with_shared_id;
+        text = """chrA	.	CDS	51	200	.	+	.	ID=CDS_with_shared_id;
 chrA	.	CDS	701	800	.	+	.	ID=CDS_with_shared_id;
-
-
-chrB	.	mRNA	51	800	.	+	.	ID="parent_mRNA_of_CDS_no_exon_with_mRNA"
-chrB	.	CDS	51	200	.	+	.	ID=CDS_no_exon_with_mRNA:0;Parent="parent_mRNA_of_CDS_no_exon_with_mRNA"
-chrB	.	CDS	701	800	.	+	.	ID=CDS_no_exon_with_mRNA:1;Parent="parent_mRNA_of_CDS_no_exon_with_mRNA"
+chrB	.	mRNA	51	800	.	+	.	ID=parent_mRNA_of_CDS_with_mRNA
+chrB	.	exon	51	200	.	+	.	ID=exon_with_mRNA:0;Parent=parent_mRNA_of_CDS_with_mRNA
+chrB	.	exon	701	800	.	+	.	ID=exon_with_mRNA:1;Parent=parent_mRNA_of_CDS_with_mRNA
+chrB	.	CDS	51	200	.	+	.	ID=CDS_with_mRNA:0;Parent=parent_mRNA_of_CDS_with_mRNA
+chrB	.	CDS	701	800	.	+	.	ID=CDS_with_mRNA:1;Parent=parent_mRNA_of_CDS_with_mRNA
+chrC	.	CDS	51	200	.	+	.	ID=CDS_no_mRNA:0;Parent=parent_mRNA_of_CDS_no_mRNA
+chrC	.	CDS	701	800	.	+	.	ID=CDS_no_mRNA:1;Parent=parent_mRNA_of_CDS_no_mRNA
+chrD	.	mRNA	51	800	.	+	.	ID=parent_mRNA_of_CDS_with_mRNA_and_shared_ID
+chrD	.	exon	51	200	.	+	.	ID=exon_with_mRNA_and_shared_ID;Parent=parent_mRNA_of_CDS_with_mRNA_and_shared_ID
+chrD	.	exon	701	800	.	+	.	ID=exon_with_mRNA_and_shared_ID;Parent=parent_mRNA_of_CDS_with_mRNA_and_shared_ID
+chrD	.	CDS	51	200	.	+	.	ID=CDS_with_mRNA_and_shared_ID;Parent=parent_mRNA_of_CDS_with_mRNA_and_shared_ID
+chrD	.	CDS	701	800	.	+	.	ID=CDS_with_mRNA_and_shared_ID;Parent=parent_mRNA_of_CDS_with_mRNA_and_shared_ID
 """
+
         expected = [
-            Transcript(GenomicSegment("chrA",50,200,"+"),GenomicSegment("chrA",700,800,"+"),type="CDS",ID="CDS_with_shared_id"),
-            Transcript(GenomicSegment("chrA",50,800,"+"),ID="parent_mRNA_of_CDS_no_exon_with_mRNA"),
+            Transcript(GenomicSegment("chrA",50,200,"+"),GenomicSegment("chrA",700,800,"+"),ID="CDS_with_shared_id",cds_genome_start=50,cds_genome_end=800),
+            Transcript(GenomicSegment("chrB",50,200,"+"),GenomicSegment("chrB",700,800,"+"),ID="parent_mRNA_of_CDS_with_mRNA",cds_genome_start=50,cds_genome_end=800),
+            Transcript(GenomicSegment("chrC",50,200,"+"),GenomicSegment("chrC",700,800,"+"),ID="parent_mRNA_of_CDS_no_mRNA",cds_genome_start=50,cds_genome_end=800),
+            Transcript(GenomicSegment("chrD",50,200,"+"),GenomicSegment("chrD",700,800,"+"),ID="parent_mRNA_of_CDS_with_mRNA_and_shared_ID",cds_genome_start=50,cds_genome_end=800),
+
 
                 ]
        
-        found = list(GFF3_TranscriptAssembler(StringIO.SringIO(text)))
-        self.check_output_against_reference(features,reference=expected)
+        found = list(GFF3_TranscriptAssembler(cStringIO.StringIO(text)))
+        self.check_output_against_reference(found,reference=expected,stop_offset=0)
