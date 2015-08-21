@@ -46,8 +46,8 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      parents=[annotation_parser],
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--escape",default=False,action="store_true",
-                        help="If specified, tokens in column 9 will be URL-escaped (default: False)")
+    parser.add_argument("--no_escape",default=True,action="store_false",
+                        help="If specified and output format is GTF2, special characters in column 9 will be escaped (default: True)")
     parser.add_argument("--output_format",choices=["BED","GTF2"],default="GTF2",
                         help="Format of output file. (default: GTF2)")
     parser.add_argument("outfile",metavar="outfile.gtf",type=str,
@@ -60,7 +60,7 @@ def main(argv=sys.argv[1:]):
         
         for transcript in transcripts:
             if args.output_format == "GTF2":
-                fout.write(transcript.as_gtf(escape=args.escape))
+                fout.write(transcript.as_gtf(escape=args.no_escape))
             elif args.output_format == "BED":
                 fout.write(transcript.as_bed())
             if c % 1000 == 1:

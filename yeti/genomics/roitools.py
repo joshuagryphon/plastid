@@ -2227,7 +2227,7 @@ class Transcript(SegmentChain):
             
         return my_segmentchain   
 
-    def as_gtf(self,feature_type="exon",escape=True):
+    def as_gtf(self,feature_type="exon",escape=True,excludes=[]):
         """Format `self` as a `GTF2`_ block. |GenomicSegments| are formatted
         as `GTF2`_ `'exon'` features. Coding regions, if peresent, are formatted
         as `GTF2`_ `'CDS'` features. Stop codons are excluded in the `'CDS'` features,
@@ -2290,7 +2290,7 @@ class Transcript(SegmentChain):
             - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_        
         """
-        stmp  = SegmentChain.as_gtf(self,feature_type=feature_type,escape=escape)
+        stmp  = SegmentChain.as_gtf(self,feature_type=feature_type,escape=escape,excludes=[])
         cds_ivc_temp = self.get_cds()
         if len(cds_ivc_temp) > 0:
             child_ivc_attr  = copy.deepcopy(self.attr)
@@ -2306,15 +2306,15 @@ class Transcript(SegmentChain):
                                                         self.spanning_segment.strand,
                                                         cds_positions),
                                    type="CDS",**child_ivc_attr)
-            stmp += cds_ivc.as_gtf(feature_type="CDS",escape=escape)
+            stmp += cds_ivc.as_gtf(feature_type="CDS",escape=escape,excludes=excludes)
             
             start_codon_ivc = cds_ivc_temp.get_subchain(0, 3)
             start_codon_ivc.attr.update(child_ivc_attr)
-            stmp += start_codon_ivc.as_gtf(feature_type="start_codon",escape=escape)
+            stmp += start_codon_ivc.as_gtf(feature_type="start_codon",escape=escape,excludes=excludes)
     
             stop_codon_ivc = cds_ivc_temp.get_subchain(cds_ivc_temp.get_length()-3, cds_ivc_temp.get_length())
             stop_codon_ivc.attr.update(child_ivc_attr)
-            stmp += stop_codon_ivc.as_gtf(feature_type="stop_codon",escape=escape)
+            stmp += stop_codon_ivc.as_gtf(feature_type="stop_codon",escape=escape,excludes=excludes)
 
         return stmp
 
