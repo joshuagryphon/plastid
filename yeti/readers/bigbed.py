@@ -61,11 +61,37 @@ from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
 from yeti.util.io.openers import NullWriter
 from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
+from yeti.util.services.decorators import skipdoc
 
 
 #===============================================================================
 # INDEX: BigBedReader
 #===============================================================================
+
+@skipdoc
+class _FromBED_StrAdaptor(object):
+    """Adaptor class to return strings from |BigBedReaders|.
+    Is internally called by BigBedReader when `return_type` is set to :class:`str`,
+    because :class:`str` does not implement a ``from_bed`` method::
+
+        >>> reader = BigBedReader(some_file,return_type=str)
+    """
+    @staticmethod
+    def from_bed(inp):
+        """Dummy method. Returns strings as themselves, instead of parsing a `BED`_ line
+
+        Parameters
+        ----------
+        inp : str
+            line of `BED`_ formatted text
+        
+        Returns
+        -------
+        str
+            `inp`
+        """
+        return inp
+
 
 class BigBedReader(object):
     """Reader for `BigBed`_ files. This class is useful for both iteration
@@ -118,7 +144,7 @@ class BigBedReader(object):
     chrom_sizes : dict
         Dictionary mapping chromosome names to sizes
     
-    return_type : class implementing a :py:meth:`from_bed` method
+    return_type : class implementing a :py:meth:`from_bed` method, or str
         Class of object to return (Default: |SegmentChain|)
 
 
@@ -148,7 +174,7 @@ class BigBedReader(object):
             Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
             and any notion of a null-terminated string (Default: "III")
         
-        return_type : class implementing a :py:meth:`from_bed` method
+        return_type : str or class implementing a :py:meth:`from_bed` method, optional
             Class of object to return (Default: |SegmentChain|)
         
         add_three_for_stop : bool, optional
@@ -171,7 +197,11 @@ class BigBedReader(object):
         """
         self.filename = filename
         self.fh = open(filename,"rb")
-        self.return_type = return_type
+        if return_type == str:
+            self.return_type = _FromBED_StrAdaptor 
+        else:
+            self.return_type = return_type
+
         self.base_record_format = base_record_format
         self.add_three_for_stop = add_three_for_stop
 
