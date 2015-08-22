@@ -15,7 +15,7 @@ We will do this two ways:
  #. Using the :mod:`~yeti.bin.counts_in_region` script to
     :ref:`count expression automatically <gene-expression-scripts>`.
 
-The examples below use the :doc:`/test_dataset` we have assembled.
+The examples below use parts 1 & 2 of the :doc:`/test_dataset` we have assembled.
 
 
  .. note::
@@ -120,7 +120,6 @@ First, we need to import a few things::
 
     >>> # plotting functions
     >>> import matplotlib.pyplot as plt
-
 
     >>> # reader for BED-format transcript annotations
     >>> from yeti.readers.bed import BED_Reader
@@ -306,27 +305,37 @@ control::
 Testing for differential expression
 -----------------------------------
 
-RNA-Seq
-.......
+RNA-seq, specifically
+.....................
 There are many strategies for significance testing of differential gene expression
 between multiple datasets, many of which are specifically developed for -- and
-make statistical corrections that assume -- :term:`RNA-seq` data
-(TODO :cite:`citation` ). In particuar, for :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_
-are fast and efficient, and don't require any preprocessing within :data:`yeti` at all.
-For further information on using those packages, see their documentation.
+make statistical corrections that assume -- :term:`RNA-seq` data.
 
-Any :term:`high-throughput sequencing` experiment
-.................................................
-For other experimental data types -- e.g. :term:`ribosome profiling`, :term:`DMS-Seq`,
+For :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_ in particular are popular,
+and operate directly on alignments in `BAM`_ format. These packages don't require
+:data:`yeti` at all. For further information on them packages, see their documentation.
+
+
+Any :term:`high-throughput sequencing` experiment, including RNA-seq
+....................................................................
+For other experimental data types -- e.g. :term:`ribosome profiling`, :term:`DMS-seq`,
 :term:`ChIP-Seq`, :term:`ClIP-Seq`, et c -- the assumptions made by many packages
 specifically developed for :term:`RNA-seq` analysis do not hold. 
 
-In contrast, the `R`_ package `DESeq`_ (:cite:`Anders2010`,
-:cite:`Anders2013`) offers a generally applicable statistical
-approach that is appropriate to virtually any count-based
-sequencing data.
+In contrast, the `R`_ packages `DESeq`_ and `DESeq2`_ (:cite:`Anders2010,Anders2013,Love2014`)
+offer a generally applicable statistical approach that is appropriate to virtually
+any count-based sequencing data.
 
-As input, `DESeq`_ takes two objects:
+ .. note::
+ 
+    The discussion below is heavily simplified and largely draws upon guidance in
+    `Analysing RNA-Seq data with the "DESeq2" package <http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf>`_,
+    hosted on the `DESeq2`_ website.
+    
+    Users are encouraged to read the `DESeq`_/`DESeq2`_ documentation for a fuller
+    discussion with additional examples.
+
+As input, `DESeq`_ and `DESeq2`_ take two tables:
 
  #. A table of *uncorrected, unnormalized* :term:`counts`, in which:
 
@@ -339,90 +348,199 @@ As input, `DESeq`_ takes two objects:
     (e.g. if any are technical or biological replicates, if any samples
     interact in other ways)
      
-From these, `DESeq`_ separately models intrinsic counting error as well
-as inter-replicate error, and from these error models can infer significant
-differences in count numbers between non-replicate samples.
+From these, `DESeq`_ and `DESeq2`_ separately model intrinsic counting
+error (Poisson noise) as well as additional inter-replicate error
+resulting biological or experimental variability. From these error models,
+`DESeq`_ and `DESeq2`_ can detect significant differences in count numbers
+between non-replicate samples, accounting for different sequencing depth
+between samples.
 
 The first table may be constructed by running |cs| or |counts_in_region|
-on each biological sample, and extracting the relvant columns from their
-output. One could do this in a spreadsheet program, in Python, or from
-the terminal. For example:
-
- .. TODO: flesh out this example
+on each biological sample to obtain counts:
 
  .. code-block:: shell
 
-    $ counts_in_region ...
-    $ counts_in_region ...
-    $ counts_in_region ...
-    $ counts_in_region ...
-
-    $ # check which columns we want from each file
-    $ head --line 20 ...
-    
-    $ echo "sample1\tsample2" >new_file.txt # note! replace '\t' with a tab when you type this!
-
-    $ # create a new tab-delimited file from those columns
-    $ paste <(cut -f ... ) <(cut -f ... ) >>new_file.txt
+    $ counts_in_region ribo_rep1 --count_files SRR609197_riboprofile.bam  --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
+    $ counts_in_region inf_rnaseq_rep1 --count_files SRR592963_rnaseq.bam  --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region ribo_rep2 --count_files                             --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
+    $ counts_in_region inf_rnaseq_rep2 --count_files                       --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
 
 
-The second table is specified as an experimental *design* from within `R`_.
+From the output, the relevant columns can be extracted and moved to
+a single table::
+
+    >>> import pandas as pd
+    >>> import yeti
+    >>> sample_names = ["inf_rnaseq_rep1","inf_rnaseq_rep2","uninf_rnaseq_rep1","uninf_rnaseq"rep2"]
+
+    >>> # load samples as DataFrames
+    >>> samples = { K : yeti.loadtxt("%s.txt" % K) for K in sample_names }
+
+    >>> # combine columns to single file
+    >>> combined_df = samples["ribo_rep1"]["region_name","region"]
+    >>> for k,v in samples.items():
+    >>>     combined_df["%s_counts" % k] = v["counts"]
+
+    >>> combined_df.head()
+
+    >>> # save
+    >>> combined_df.savecsv("combined_counts.txt",sep="\t")
+
+
+The second table is specified as an *experimental design*. This can be created
+as a tab-delimited text file. In this example, the we have two conditions,
+"infected" and "uninfected", and two replicates of each condition::
+
+    sample_name        condition
+    inf_rnaseq_1       infected
+    inf_rnaseq_2       infected
+    uninf_rnaseq_1     uninfected
+    uninf_rnaseq_2     uninfected
+
+
+Then everything can be loaded in `R`_:
 
  .. code-block:: r
 
-    TODO: R code here
+    # load RNA seq data into a data.frame
+    # first line of file are colum headers
+    # "region" column specifies a list of row names
+    rnaseq_data <- read.delim("combined_counts.txt",
+                              sep="\t",
+                              header=True,
+                              row.names="region")
+
+    sample_table <- read.delim("rnaseq_sample_table.txt",
+                               sep="\t",
+                               header=True,
+                               row.names="sample_name")
+
+    # import DESeq2 & run with default settings
+    library("DESeq2")
+
+    # note, design string below tells DESeq2 that the 'condition' column
+    # distinguishes replicates from non-replicates 
+    dds <- DESeqDataSetFromMatrix(countData = rnaseq_data,
+                                  colData = sample_table,
+                                  design = ~ condition) # <--- this line
+
+    results <- results(dds)
+    summary(res)
+
+    # sort results by adjusted p-value
+    resOrdered <- res[order(res$padj),]
+
+    # export sorted data to text file
+    write.delim(as.data.frame(resOrdered),
+                sep="\t",
+                file="infected_uninfected_rnaseq_p_values.txt")
 
 
 Differential translation efficiency
 ...................................
 
- .. TODO :
+Tests for differential translation efficiency can also be implemented within
+`DESeq`_/`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
+Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_.
 
-    Tests for differential translation efficiency can also be implemented within
-    `DESeq`_.
+We use an experimental design similar to that above, but include a `sample_type`
+column and rows for  :term:`ribosome profiling` data::
+
+    sample_name        condition      sample_type
+    inf_rnaseq_1       infected       rnaseq
+    inf_rnaseq_2       infected       rnaseq
+    uninf_rnaseq_1     uninfected     rnaseq
+    uninf_rnaseq_2     uninfected     rnaseq
+    inf_riboprof_1     infected       riboprof
+    inf_riboprof_2     infected       riboprof
+    uninf_riboprof_1   uninfected     riboprof
+    uninf_riboprof_2   uninfected     riboprof
+
+To the design, we need to add  an *interaction term* to alert `DESeq`_/`DESeq2`_
+that we expect the relationship between the sample types (i.e. translation
+efficiency, the ratio of :term:`ribosome-protected footprints <footprint>`
+to RNA-seq fragments) to differ between conditions:
+
+ .. code-block:: r
+
+    # load RNA seq data into a data.frame
+    # first line of file are colum headers
+    # "region" column specifies a list of row names
+    combined_data <- read.delim("combined_counts.txt",
+                                sep="\t",
+                                header=True,
+                               row.names="region")
+
+    teff_sample_table <- read.delim("teff_sample_table.txt",
+                                   sep="\t",
+                                   header=True,
+                                  row.names="sample_name")
+
+    library("DESeq2")
+
+    # note the interaction term in the design below:
+    dds <- DESeqDataSetFromMatrix(countData = combined_data,
+                                  colData = teff_sample_table,
+                                  design = ~ sample_type + condition + sample_type:condition)
+
+    results <- results(dds)
+    summary(res)
+
+    # now, do wald test on interaction term
+    ????
+
+    # sort by adjusted p-value
+    resOrdered <- res[order(res$padj),]
+
+    # export
+    write.delim(as.data.frame(resOrdered),
+                sep="\t",
+                file="infected_uninfected_rnaseq_p_values.txt")
 
 
-Statistical models for differential measurement of :term:`translation efficiency`
-are still a subject of discussion (TODO: citations). Here, we take an empirical
-approach used in :cite:`Ingolia2009`.
+ .. old discussion- the empirical test used by Nick Ingolia 
 
- #. First, a :term:`false discovery rate` (:cite:`Benjamini1995`) appropriate
-    to the experiment -- often five percent -- is set.
+    Statistical models for differential measurement of :term:`translation efficiency`
+    are still a subject of discussion (TODO: citations). Here, we take an empirical
+    approach used in :cite:`Ingolia2009`.
 
- #. For each sample, the :term:`translation efficiency` of each mRNA measured as
-    the ratio of :term:`ribsome-protected footprint` density in a coding region
-    to the mRNA fragment density across the corresponding mRNA.
- 
- #. Within each set of biological replicates, log2 fold-changes are calculated
-    for each transcript to yield an empirical distribution of changes derived
-    from sequencing error for that replicate set. These distributions are 
-    merged by summing the sets of their observations.
+     #. First, a :term:`false discovery rate` (:cite:`Benjamini1995`) appropriate
+        to the experiment -- often five percent -- is set.
 
- #. Similarly, log2 fold-changes are calculated for each transcript between
-    non-replicate samples. 
+     #. For each sample, the :term:`translation efficiency` of each mRNA measured as
+        the ratio of :term:`ribsome-protected footprint` density in a coding region
+        to the mRNA fragment density across the corresponding mRNA.
+     
+     #. Within each set of biological replicates, log2 fold-changes are calculated
+        for each transcript to yield an empirical distribution of changes derived
+        from sequencing error for that replicate set. These distributions are 
+        merged by summing the sets of their observations.
 
- #. The number of false positives (FP) at a given fold-change may be estimated
-    as the number of observed fold changes greater to or equal than
-    the given fold-change in the negative control distribution from step (3).
+     #. Similarly, log2 fold-changes are calculated for each transcript between
+        non-replicate samples. 
 
- #. Similarly, the number of total positives (FP+TP) at a given fold-change is the
-    number of observed fold-changes greater to or equal than that fold-change
-    in the distribution from step (4).
+     #. The number of false positives (FP) at a given fold-change may be estimated
+        as the number of observed fold changes greater to or equal than
+        the given fold-change in the negative control distribution from step (3).
 
- #. The number of true positives (TP) at each fold-chnage is then estimated by subtracting
-    the number of false positives at that fold-change (step 5) from the number
-    of total positives (step 6).
+     #. Similarly, the number of total positives (FP+TP) at a given fold-change is the
+        number of observed fold-changes greater to or equal than that fold-change
+        in the distribution from step (4).
 
- #. A significance threshold is set by solving for the fold change that corresponds
-    to the :term:`false discovery rate (FDR) <false discovery rate>` set in step (1). 
-    :term:`FDR` is calculated at each fold-change threshold :math:`t` as:
+     #. The number of true positives (TP) at each fold-chnage is then estimated by subtracting
+        the number of false positives at that fold-change (step 5) from the number
+        of total positives (step 6).
 
-     .. math::
+     #. A significance threshold is set by solving for the fold change that corresponds
+        to the :term:`false discovery rate (FDR) <false discovery rate>` set in step (1). 
+        :term:`FDR` is calculated at each fold-change threshold :math:`t` as:
 
-        FDR(t) = \frac{TP(t)}{TP(t)+FP(t)}
+         .. math::
 
-    Then, the fold-change :math:`t` where :term:`FDR` equals the predetermined
-    :term:`false discovery rate` is taken to be the significance threshold.
+            FDR(t) = \frac{TP(t)}{TP(t)+FP(t)}
+
+        Then, the fold-change :math:`t` where :term:`FDR` equals the predetermined
+        :term:`false discovery rate` is taken to be the significance threshold.
 
 
 
@@ -437,9 +555,10 @@ See also
   - Documentation for |cs| and |counts_in_region| for further discussion 
     of their algorithms
 
-  - `DESeq` website, :cite:`Anders2010`, and :cite:`Anders2013` for discussions
-    on statistical models for differential gene expression, an examples
-    on how to use `DESeq` for various experimental setups
+  - Websites for `DESeq` and `DESeq2`_, as well as :cite:`Anders2010`,
+    :cite:`Anders2013` and :cite:`Love2014` for discussions of statistical models
+    for differential gene expression, an examples
+    on how to use `DESeq`_/`DESeq2`_ for various experimental setups
 
   - :doc:`/examples/using_masks` for instructions on how to exclude parts of
     the genome or transcriptome from analysis.
