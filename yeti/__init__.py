@@ -32,3 +32,5 @@ yeti is divided into the following subpackages:
 """
 __version__ = "0.1.1"
 __author__  = "Joshua Griffin Dunn"
+
+from yeti.util.array_table import load

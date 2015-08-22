@@ -311,7 +311,8 @@ class ArrayTable(object):
         :py:class:`pandas.DataFrame`
         """
         # inefficient but functional.
-        return ArrayTable.from_file(fh).as_data_frame()
+        #return ArrayTable.from_file(fh).as_data_frame()
+        return load(fh)
         
     @staticmethod
     def concat(*arraytables):
@@ -393,6 +394,26 @@ class ArrayTable(object):
                     dtmp[k].append(formatter(v))
         dtmp = { K : numpy.array(V) for K,V in dtmp.items() }
         return ArrayTable(dtmp)
+
+# TODO : test
+def load(filename_or_buf):
+    """Read output from command-line scripts or :meth:`ArrayTable.to_file`
+    into a  :class:`pandas.DataFrame`.
+
+    Parameters
+    ----------
+    filename_or_buf : str or open file-like
+        Path to data file, or open data file
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
+        Data
+    """
+    df = pd.read_table(filename_or_buf,sep="\t",comment="##",header=0)
+    col_names = { X : X[1:] if X[0] == "#" else X for X in df.columns }
+    df.rename(columns=col_names,inplace=True)
+    return df
 
 
 def equal_enough(col1,col2,tol=1e-10,printer=NullWriter()):
