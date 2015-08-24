@@ -30,7 +30,6 @@ import re
 import shlex
 import copy
 import warnings
-from yeti.util.services.decorators import catch_warnings
 
 gtfpat = re.compile(r"^ *([^ ]*) +(.*) *$")
 
