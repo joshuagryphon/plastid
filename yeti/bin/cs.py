@@ -191,8 +191,28 @@ def write_output_files(table,title,args):
         for k in table.keys():
             printer.write(", ".join([str(X) for X in [k, table[k].dtype, table[k].dtype.type]]))
 
+def merge_recursive(starting_set,tx_gene,gene_tx,genome_hash,explored=[]):
+    for gene_id in sorted(starting_set):
+        if gene_id not in explored:
+            explored.append(gene_id)
+            tx_sharing_exons = []
+            for txid in gene_tx[gene_id]:
+                tx = tx_ivcs[txid]
+                tx_sharing_exons.extend([X for X in genome_hash[tx] if X.shares_ivs_with(tx)])
+
+            genes_sharing_exons = sorted(set([gene_tx[X.get_name()] for X in tx_sharing_exons]))
+            # base case: all genes we find are in starting set. terminate
+            if all([X in starting_set for X in genes_sharing_exons]):
+                return starting_set
+            # otherwise, continue
+            else:
+                ltmp = sorted(set(starting_set + genes_sharing_exons))
+                return merge_recursive(ltmp,tx_gene,gene_tx,genome_hash,explored=explored)
+
+    return starting_set
+
 @skipdoc
-def merge_genes(tx_ivcs,tx_gene):
+def merge_genes(tx_gene,gene_tx,genome_hash):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
     
     Parameters
@@ -211,41 +231,15 @@ def merge_genes(tx_ivcs,tx_gene):
         Dictionary mapping raw gene names to the names of the merged genes
     """
     dout = {}
-    exondict = {}
-    
-    # backmap exons to genes as tuples
-    printer.write("Mapping exons to genes...")
-    for txid in tx_ivcs.keys():
-        my_segmentchain  = tx_ivcs[txid]
-        my_gene = tx_gene[txid]
-        for my_iv in my_segmentchain:
-            tup = (my_iv.chrom,my_iv.start,my_iv.end,my_iv.strand)
-            try:
-                exondict[tup].append(my_gene)
-            except KeyError:
-                exondict[tup] = [my_gene]
-    exondict = { K : set(V) for K,V in exondict.items() }
+    for n,gene_id in enumerate(gene_tx):
+        if gene_id not in dout:
+            merge = merge_recursive([gene_id],tx_gene,gene_tx,genome_hash)
+            newname = ",".join(merge)
+            for oldname in merge:
+                dout[oldname] = newname
+        if len(n) % 1000 == 0:
+            printer.write("Collapsed %s genes to %s groups..." % (n,len(dout))
 
-    # break things up by chromosome and strand to limit the number
-    # of unnecessary comparisons. we could have used a GenomeHash for this
-    chromosomes = set(map(lambda x: x[0],exondict.keys()))
-    strands     = set(map(lambda x: x[3],exondict.keys()))
-    combos = ((chrom,strand) for chrom in chromosomes for strand in strands)
-    
-    # map exons to find gene groups
-    for chrom, strand in combos:
-        printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
-        
-        chromstrandgenes = map(lambda x: x[1],filter(lambda x: x[0][0] == chrom and x[0][3] == strand,exondict.items()))
-        gene_groups = merge_sets(chromstrandgenes,verbose=True,printer=printer)
-    
-        # convert to dictionary mapping gene names to groups
-        for group in gene_groups:
-            merged_name = ",".join(sorted(group))
-            for gene in group:
-                dout[gene] = merged_name
-        
-    printer.write("Flattened to %s groups." % len(dout))
     return dout
 
 def do_generate(args):
@@ -275,7 +269,8 @@ def do_generate(args):
         command-line arguments for ``generate`` subprogram
     """
     transcripts = { X.get_name() : X for X in get_transcripts_from_args(args,printer=printer) }
-    
+    tx_hash = GenomeHash(transcripts,do_copy=False)
+
     # map transcripts to genes, et c
     # convert to tx_ivcs
     tx_gene  = {}
@@ -289,11 +284,12 @@ def do_generate(args):
             gene_tx[my_gene] = [txid]
             
     # merge genes that share exons & write output
-    #merged_genes = merge_genes(transcripts,gene_tx,tx_gene)
-    merged_genes = merge_genes(transcripts,tx_gene)
+    printer.write("Collapsing genes that share exons...")
+    merged_genes = merge_genes(tx_gene,gene_tx,tx_hash)
     number_merged = len(set(merged_genes.values()))
-    printer.write("Merged %s genes to %s loci." % (len(gene_tx.keys()),number_merged))
-    fout = argsopener("%s_merged.txt" % args.outbase,args,"w")
+    merged_fn = "%s_merged.txt" % args.outbase
+    printer.write("Collapsed %s genes to %s loci. Writing to %s" % (len(gene_tx.keys()),number_merged,merged_fn))
+    fout = argsopener(merged_fn,args,"w")
     for gene,merged_name in sorted(merged_genes.items()):
         fout.write("%s\t%s\n" % (gene,merged_name))
         
@@ -312,20 +308,18 @@ def do_generate(args):
     # save memory. remove old dictionaries
     del gene_tx
     del tx_gene
+    del tx_hash
     gc.collect()
     del gc.garbage[:]
     
     # hash genes in genome & prepare position dictionary
-    gene_raw_ivcs    = []
     gene_table = { "region"          : [],
                    "transcript_ids"  : [],
                    "exon_unmasked"    : [],
-                   #"chrom"           : [],
-                   #"strand"          : [],
                    }
 
     # flatten genes
-    printer.write("Flattening genes...")
+    printer.write("Flattening collapsed gene positions...")
     for n,(my_gene, my_txids) in enumerate(sorted(merged_gene_tx.items())):
         if n % 2000 == 0:
             printer.write("    %s genes..." % n)
@@ -351,18 +345,15 @@ def do_generate(args):
         
         my_gene_positions = set(my_gene_positions)
         my_gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
-        gene_raw_ivcs.append(my_gene_ivc_raw)
         gene_table["region"].append(my_gene)
         gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
-        #gene_table["chrom"].append(my_chrom)
-        #gene_table["strand"].append(my_strand)
         gene_table["exon_unmasked"].append(my_gene_ivc_raw)
         
     printer.write("    %s genes total." % (n+1))
 
     # mask genes
     printer.write("Masking nucleotides shared by neighboring genes and/or crossmaps...")
-    gene_hash = GenomeHash(gene_raw_ivcs,do_copy = False)
+    gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
     mask_hash = get_genome_hash_from_mask_args(args)
     gene_table["exon"]   = []
     gene_table["masked"] = []
