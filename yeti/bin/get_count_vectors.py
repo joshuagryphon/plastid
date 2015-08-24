@@ -25,10 +25,11 @@ from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
 from yeti.util.io.openers import get_short_name
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-
+from yeti.util.services.decorators import catch_warnings
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
+@catch_warnings("module")
 def main(args=sys.argv[1:]):
     """Command-line program
     

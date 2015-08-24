@@ -53,13 +53,14 @@ from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_segme
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.io.openers import argsopener, get_short_name
 from yeti.util.scriptlib.help_formatters import format_module_docstring
+from yeti.util.services.decorators import catch_warnings
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 _ANNOTATION_INPUT_CHOICES = ["BED","BigBed","GTF2","GFF3","PSL"]
 _ANNOTATION_DISABLED = ["add_three","annotation_file"]
 
-
+@catch_warnings("module")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

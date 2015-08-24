@@ -51,10 +51,13 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_segmentchain_file_parser,\
                                            get_mask_file_parser
 from yeti.util.scriptlib.help_formatters import format_module_docstring
+from yeti.util.services.decorators import catch_warnings
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 _DISABLED=["normalize"]
+
+@catch_warnings("module")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

@@ -41,6 +41,7 @@ from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
+from yeti.util.services.decorators import catch_warnings
 
 import matplotlib.pyplot as plt
 
@@ -48,6 +49,7 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 # TODO: support bowtie or wiggle files
 
+@catch_warnings("module")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

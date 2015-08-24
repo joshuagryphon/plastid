@@ -136,6 +136,7 @@ See command-line help for each subprogram for details on parameters for each
 __author__ = "joshua"
 
 import sys
+import warnings
 import argparse
 import numpy
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
@@ -460,6 +461,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
+@catch_warnings("module")
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
                 window_func=window_cds_start,
                 printer=NullWriter()):
@@ -607,7 +609,7 @@ algorithm:
 
     return dtmp, export_rois
 
-@catch_warnings("ignore")
+@catch_warnings("module")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
@@ -694,6 +696,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     return counts, norm_counts, profile_table
 
 
+@catch_warnings("module")
 def do_chart(sample_dict,landmark="landmark",title=None):
     """Plot metagene profiles
     
@@ -917,6 +920,8 @@ def main(argv=sys.argv[1:]):
         if len(args.labels) == len(args.infiles):
             samples = { K : ArrayTable.from_file(open(V)) for K,V in zip(args.labels,args.infiles)}
         else:
+            if len(args.labels) > 0:
+                warnings.warn("Only %s labels supplied for %s infiles. Ignoring labels" % (len(args.labels),len(args.infiles)),UserWarning)
             samples = { get_short_name(V) : ArrayTable.from_file(open(V)) for V in args.infiles }
         
         figure = do_chart(samples,title=args.title,landmark=args.landmark)

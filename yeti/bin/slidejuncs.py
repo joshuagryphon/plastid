@@ -88,6 +88,7 @@ from yeti.readers.bed import BED_Reader
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.scriptlib.argparsers import get_mask_file_parser,\
                                                       get_genome_hash_from_mask_args
+from yeti.util.services.decorators import catch_warnings
 from Bio import SeqIO
 import inspect
 
@@ -346,6 +347,7 @@ def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
 # INDEX : program body 
 #===============================================================================
 
+@catch_warnings("module")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

@@ -73,7 +73,7 @@ disabled_args = ["normalize",
                  "threeprime",
                  "center"]
 
-@catch_warnings("ignore")
+@catch_warnings("module")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
     """Calculate a :term:`metagene profile` for each read length in the dataset
     
