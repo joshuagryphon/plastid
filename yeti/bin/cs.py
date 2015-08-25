@@ -182,8 +182,6 @@ def write_output_files(table,title,args):
                                         "cds",
                                         "utr3",
                                         "masked",
-                                        #"chrom",
-                                        #"strand",
                                         "exon_unmasked",
                                         "transcript_ids"])
         pos_out.close()
@@ -191,28 +189,28 @@ def write_output_files(table,title,args):
         for k in table.keys():
             printer.write(", ".join([str(X) for X in [k, table[k].dtype, table[k].dtype.type]]))
 
-def merge_recursive(starting_set,tx_gene,gene_tx,genome_hash,explored=[]):
+def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]):
     for gene_id in sorted(starting_set):
         if gene_id not in explored:
             explored.append(gene_id)
             tx_sharing_exons = []
             for txid in gene_tx[gene_id]:
                 tx = tx_ivcs[txid]
-                tx_sharing_exons.extend([X for X in genome_hash[tx] if X.shares_ivs_with(tx)])
+                tx_sharing_exons.extend([X for X in genome_hash[tx] if X.shares_segments_with(tx)])
 
-            genes_sharing_exons = sorted(set([gene_tx[X.get_name()] for X in tx_sharing_exons]))
+            genes_sharing_exons = sorted(set([tx_gene[X.get_name()] for X in tx_sharing_exons]))
             # base case: all genes we find are in starting set. terminate
             if all([X in starting_set for X in genes_sharing_exons]):
                 return starting_set
             # otherwise, continue
             else:
                 ltmp = sorted(set(starting_set + genes_sharing_exons))
-                return merge_recursive(ltmp,tx_gene,gene_tx,genome_hash,explored=explored)
+                return merge_recursive(ltmp,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=explored)
 
     return starting_set
 
 @skipdoc
-def merge_genes(tx_gene,gene_tx,genome_hash):
+def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
     
     Parameters
@@ -231,14 +229,17 @@ def merge_genes(tx_gene,gene_tx,genome_hash):
         Dictionary mapping raw gene names to the names of the merged genes
     """
     dout = {}
+    groups = 0
     for n,gene_id in enumerate(gene_tx):
         if gene_id not in dout:
-            merge = merge_recursive([gene_id],tx_gene,gene_tx,genome_hash)
+            groups += 1
+            merge = merge_recursive([gene_id],tx_gene,gene_tx,tx_ivcs,genome_hash)
             newname = ",".join(merge)
             for oldname in merge:
                 dout[oldname] = newname
-        if len(n) % 1000 == 0:
-            printer.write("Collapsed %s genes to %s groups..." % (n,len(dout))
+
+        if n % 1000 == 0:
+            printer.write("Collapsed %s genes to %s groups..." % (len(dout),groups))
 
     return dout
 
@@ -250,9 +251,9 @@ def do_generate(args):
         
     2.  Within merged genes, all positions are classified. All positions are
         included in a set called *exon*. All positions that appear as coding
-        regions in all transcripts (i.e. are never part of a 5\'UTR or 3\'UTR)
+        regions in all transcripts (i.e. are never part of a 5'UTR or 3'UTR)
         included in a set called *CDS*. Similarly, all positions that appear
-        as 5\' UTR or 3\' UTR in all transcripts are included in sets called
+        as 5' UTR or 3' UTR in all transcripts are included in sets called
         *UTR5* or *UTR3*, respectively.
     
     3.  Genomic positions that are overlapped by multiple merged genes are
@@ -269,6 +270,7 @@ def do_generate(args):
         command-line arguments for ``generate`` subprogram
     """
     transcripts = { X.get_name() : X for X in get_transcripts_from_args(args,printer=printer) }
+    printer.write("Hashing transcripts by genomic position")
     tx_hash = GenomeHash(transcripts,do_copy=False)
 
     # map transcripts to genes, et c
@@ -285,10 +287,10 @@ def do_generate(args):
             
     # merge genes that share exons & write output
     printer.write("Collapsing genes that share exons...")
-    merged_genes = merge_genes(tx_gene,gene_tx,tx_hash)
+    merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash)
     number_merged = len(set(merged_genes.values()))
     merged_fn = "%s_merged.txt" % args.outbase
-    printer.write("Collapsed %s genes to %s loci. Writing to %s" % (len(gene_tx.keys()),number_merged,merged_fn))
+    printer.write("Collapsed %s genes to %s merged groups. Writing to %s" % (len(gene_tx.keys()),number_merged,merged_fn))
     fout = argsopener(merged_fn,args,"w")
     for gene,merged_name in sorted(merged_genes.items()):
         fout.write("%s\t%s\n" % (gene,merged_name))
@@ -319,7 +321,7 @@ def do_generate(args):
                    }
 
     # flatten genes
-    printer.write("Flattening collapsed gene positions...")
+    printer.write("Flattening merged gene positions...")
     for n,(my_gene, my_txids) in enumerate(sorted(merged_gene_tx.items())):
         if n % 2000 == 0:
             printer.write("    %s genes..." % n)
@@ -365,9 +367,12 @@ def do_generate(args):
         my_strand = gene_ivc_raw.spanning_segment.strand
         
         masked_positions = []
-        nearby_genes = gene_hash.get_overlapping_features(gene_ivc_raw)
+        nearby_genes = gene_hash[gene_ivc_raw]
+        #nearby_genes = gene_hash.get_overlapping_features(gene_ivc_raw)
         # don't mask out positions from identical gene
-        nearby_genes = filter(lambda x: x.get_position_set() != gene_ivc_raw.get_position_set(),nearby_genes)
+        #nearby_genes = filter(lambda x: x.get_position_set() != gene_ivc_raw.get_position_set(),nearby_genes)
+        gene_ivc_raw_positions = gene_ivc_raw.get_position_set()
+        nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
         for gene in nearby_genes:
             masked_positions.extend(gene.get_position_list())
         
@@ -391,12 +396,9 @@ def do_generate(args):
     del nearby_masks
     del mask_hash
     del gene_hash
-    del gene_raw_ivcs
     gc.collect()
     del gc.garbage[:]
 
-    #gene_table = ArrayTable(gene_table)
-        
     transcript_table = { "region"          : [],
                          "exon"            : [],
                          "utr5"            : [],
