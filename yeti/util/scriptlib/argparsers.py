@@ -515,7 +515,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
     else:
         return annotation_file_parser
 
-def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=Transcript):
+def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=Transcript,require_sort=False):
     """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
     
     Parameters
@@ -538,6 +538,9 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
     
     return_type : |SegmentChain| of subclass, optional
         Type of object to return (Default: |Transcript|)
+
+    require_sort : bool, optional
+        If True, quit if the annotation file(s) are not sorted or indexed
     
     Returns
     -------
@@ -556,6 +559,29 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
     """
     if prefix != "":
         args = PrefixNamespaceWrapper(args,prefix)
+
+    if require_sort == True and 'sorted' not in disabled:
+        if args.annotation_format in ("BED","GTF2","GFF3") and \
+            args.sorted == False and 'tabix' not in disabled and\
+            args.tabix == False:
+            printer.write("Using unsorted/unindexed annotation files requires impractical amounts of memory.")
+            if args.annotation_format == "BED":
+                printer.write("""Convert BED to BigBed using Jim Kent's bedToBigBed utility as follows:
+
+    $ sort -k1,1 -k2,2n my_file > my_file_sorted.bed
+    $ bedToBigBed my_file_sorted.bed chrom.sizes my_file_sorted.bb
+
+See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
+for download & documentation of Kent utilities""")
+                sys.exit(1)
+            else:
+                printer.write("""Index your GTF2/GFF with Tabix as follows:
+
+    $ sort -k1,1 -k4,4n my_file | bgzip > sorted.%s.gz
+    $ tabix -p gff sorted.%s.gz
+
+See http://www.htslib.org/doc/tabix.html for download and documentation of tabix and bgzip.""" % (args.annotation_format.lower(),args.annotation_format.lower()))
+                sys.exit(1)
 
     printer.write("Parsing features in %s..." % ", ".join(args.annotation_files))
     
@@ -590,7 +616,7 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
         streams = (opener(X) for X in args.annotation_files)
 
     if args.annotation_format in ("GFF3","GTF2"):
-        if sorted not in disabled and args.sorted == False and tabix not in disabled and args.tabix == False:
+        if 'sorted' not in disabled and args.sorted == False and 'tabix' not in disabled and args.tabix == False:
             msg = """Transcript assembly on %s files can require a lot of memory.
 Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
             warnings.warn(msg,UserWarning)
@@ -649,7 +675,8 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
         
     description : str, optional
         description of parser (used in command-line help screen)
-         
+ 
+
     Returns
     -------
     :class:`argparse.ArgumentParser`
@@ -668,7 +695,7 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
                                       disabled=disabled,
                                       description=description)
 
-def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter()):
+def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),require_sort=False):
     """Return a list of |SegmentChain| objects from arguments parsed by an
     :py:class:`~argparse.ArgumentParser` created by :py:func:`get_segmentchain_file_parser`
     
@@ -690,6 +717,9 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter())
     printer : file-like
         A stream to which stderr-like info can be written (default: |NullWriter|) 
     
+    require_sort : bool, optional
+        If True, quit if the annotation file(s) are not sorted or indexed
+
     
     Returns
     -------
@@ -710,7 +740,8 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter())
                                      prefix=prefix,
                                      disabled=disabled,
                                      printer=printer,
-                                     return_type=SegmentChain)
+                                     return_type=SegmentChain,
+                                     require_sort=require_sort)
 
 def get_mask_file_parser(prefix="mask_",disabled=[]):
     """Create an :class:`~argparse.ArgumentParser` to open annotation files that describe regions of the genome to mask from analyses

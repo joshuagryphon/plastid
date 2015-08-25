@@ -613,7 +613,7 @@ def test_get_transcript_from_args_multiple_bigbed_raises_error():
     args = parser.parse_args(shlex.split(argstr))
     assert_raises(SystemExit,get_transcripts_from_args,args)
 
-
+@attr(test="unit")
 def check_get_transcript_from_args_add_three_tabix(fmt):
     # check endpoints of transcript and CDS
     # GTF2 and BED format
@@ -672,6 +672,52 @@ def check_get_transcript_from_args_add_three_tabix(fmt):
 def test_get_transcript_from_args_add_three_tabix():
     for fmt in ("BED","GTF2"):
         yield check_get_transcript_from_args_add_three_tabix, fmt
+
+def check_arg_not_raises_error(name,func,args,params,kwargs):
+    try:
+        params = [args] + params
+        func(*params,**kwargs)
+        assert True
+    except IOError: # because we're using dummy files
+        pass
+
+def check_arg_raises_error(name,func,args,params,kwargs):
+    msg = "%s did not raise error with args '%s', params '%s' and kwargs '%s'" % (name,args,params,kwargs)
+    params = [args] + params
+    assert_raises(SystemExit,func,*params,**kwargs)
+
+@attr(test="unit")
+def test_annotation_not_sorted_raises_error_if_required():
+    for func in get_transcripts_from_args, get_segmentchains_from_args:
+        for fmt in ("BED","GTF2","GFF3"):
+            argstr = "--annotation_format %s --annotation_files some_file" % fmt
+            args = annotation_file_parser.parse_args(shlex.split(argstr))
+            name = "require_sort_but_not_sorted_%s" % fmt
+            yield check_arg_raises_error, name, func, args, [], {"require_sort" : True}
+
+@attr(test="unit")
+def test_annotation_sorted_raises_error_if_required():
+    for func in get_transcripts_from_args, get_segmentchains_from_args:
+        for fmt in ("BED","GTF2","GFF3"):
+            argstr = "--sorted --annotation_format %s --annotation_files some_file" % fmt
+            args = annotation_file_parser.parse_args(shlex.split(argstr))
+            name = "require_sort_and_sorted_%s" % fmt
+            yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : True}
+        for fmt in ("BED","GTF2","GFF3"):
+            argstr = "--tabix --annotation_format %s --annotation_files some_file" % fmt
+            args = annotation_file_parser.parse_args(shlex.split(argstr))
+            name = "require_sort_and_tabix_%s" % fmt
+            yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : True}
+
+@attr(test="unit")
+def test_annotation_not_sorted_not_raises_error_if_not_required():
+    for func in get_transcripts_from_args, get_segmentchains_from_args:
+        for fmt in ("BED","GTF2","GFF3"):
+            argstr = "--annotation_format %s --annotation_files some_file" % fmt
+            args = annotation_file_parser.parse_args(shlex.split(argstr))
+            name = "not_require_sort_and_not_sorted_%s" % fmt
+            yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : False}
+
 
 #=============================================================================
 # INDEX: tests for genome hash parsing
