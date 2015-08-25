@@ -197,7 +197,6 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
             for txid in gene_tx[gene_id]:
                 tx = tx_ivcs[txid]
                 tx_sharing_exons.extend([X for X in genome_hash[tx] if X.shares_segments_with(tx)])
-
             genes_sharing_exons = sorted(set([tx_gene[X.get_name()] for X in tx_sharing_exons]))
             # base case: all genes we find are in starting set. terminate
             if all([X in starting_set for X in genes_sharing_exons]):
