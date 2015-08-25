@@ -105,6 +105,7 @@ See Also
     Source code of command-line scripts, for further examples
 """
 import argparse
+import warnings
 import pysam
 import sys
 from collections import OrderedDict
@@ -573,7 +574,7 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
             printer.write("Bad arguments: we can only process one BigBed file.")
             sys.exit(2)
         if tabix == True:
-            printer.write("Tabix compression is incompatible with BigBed files. Ignoring.")
+            warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",UserWarning)
         transcripts = BigBedReader(args.annotation_files[0],
                                    return_type=Transcript,
                                    cache_depth=1,
@@ -587,6 +588,12 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
         streams = [pysam.tabix_iterator(opener(X), pysam.asTuple()) for X in args.annotation_files]
     else:
         streams = (opener(X) for X in args.annotation_files)
+
+    if args.annotation_format in ("GFF3","GTF2"):
+        if sorted not in disabled and args.sorted == False and tabix not in disabled and args.tabix == False:
+            msg = """Transcript assembly on %s files can require a lot of memory.
+Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
+            warnings.warn(msg,UserWarning)
     
     if args.annotation_format.lower() == "gff3":
         transcripts = GFF3_TranscriptAssembler(*streams,
@@ -767,6 +774,11 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
     tmp = PrefixNamespaceWrapper(args,prefix)
     if len(tmp.annotation_files) > 0:
         printer.write("Opening mask annotation file(s) %s..." % ", ".join(tmp.annotation_files))
+        if tmp.annotation_format in ("BED","GTF2","GFF3") and tmp.tabix == False:
+            msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
+Consider converting to BigBed or using tabix to index your mask file."""
+            warnings.warn(msg,UserWarning)
+
         if len(tmp.annotation_files) > 0:
             if tmp.annotation_format.lower() == "bigbed":
                 if len(tmp.annotation_files) > 1:

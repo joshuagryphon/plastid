@@ -6,6 +6,7 @@ import argparse
 import copy
 import numpy
 import itertools
+import warnings
 from pkg_resources import cleanup_resources
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true
@@ -27,6 +28,9 @@ from yeti.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            _parse_variable_offset_file
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.services.mini2to3 import StringIO
+
+warnings.simplefilter("ignore")
+
 
 def tearDownModule():
     cleanup_resources()
