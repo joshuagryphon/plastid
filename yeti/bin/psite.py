@@ -264,7 +264,7 @@ def main(argv=sys.argv[1:]):
     with argsopener(profile_fn,args,"w") as metagene_out:
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
-                                header=True,
+                                header=0,
                                 index=False,
                                 columns=["x"]+["%s-mers" % X for X in range(args.min_length,
                                                                             args.max_length+1)])
