@@ -669,7 +669,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     upstream_flank = roi_table["zero_point"][0]
     counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
     
-    for i,row in enumerate(roi_table.iterrows()) : #i in range(len(roi_table)):
+    for i,row in roi_table.iterrows() : #i in range(len(roi_table)):
         if i % 1000 == 1:
             printer.write("Counted %s ROIs..." % (i))
             
