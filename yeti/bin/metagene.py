@@ -669,14 +669,14 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     upstream_flank = roi_table["zero_point"][0]
     counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
     
-    for i in range(len(roi_table)):
+    for i,row in enumerate(roi_table.iterrows()) : #i in range(len(roi_table)):
         if i % 1000 == 1:
             printer.write("Counted %s ROIs..." % (i))
             
-        roi    = SegmentChain.from_str(roi_table["region"][i])
-        mask   = SegmentChain.from_str(roi_table["masked"][i])
+        roi    = SegmentChain.from_str(row["region"]) #roi_table["region"][i])
+        mask   = SegmentChain.from_str(row["masked"]) #roi_table["masked"][i])
         roi.add_masks(*mask)
-        offset = int(round((roi_table["alignment_offset"][i])))
+        offset = int(round((row["alignment_offset"]))) #roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
         counts[i,offset:offset+roi.get_length()] = roi.get_masked_counts(ga)
     

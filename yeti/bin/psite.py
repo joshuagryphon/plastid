@@ -46,6 +46,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import numpy
+import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
 import inspect
@@ -130,16 +131,16 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
         raw_count_dict[i].mask = numpy.tile(False,raw_count_dict[i].shape)
     
-    for i in range(len(roi_table)):
+    for row in roi_table.iterrows(): #i in range(len(roi_table)):
         if i % 1000 == 0:
             printer.write("Counted %s ROIs..." % (i+1))
             
-        roi    = SegmentChain.from_str(roi_table["region"][i])
-        mask   = SegmentChain.from_str(roi_table["masked"][i])
+        roi    = SegmentChain.from_str(row["region"]) #roi_table["region"][i])
+        mask   = SegmentChain.from_str(row["masked"]) #roi_table["masked"][i])
         roi.add_masks(*mask)
         valid_mask = roi.get_masked_counts(ga).mask
         
-        offset = int(round((roi_table["alignment_offset"][i])))
+        offset = int(round((row["alignment_offset"]))) #roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
         
         count_vectors = {}
@@ -182,7 +183,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         profile_table["%s-mers" % read_length]         = profile
         profile_table["%s_regions_counted" % read_length] = num_genes
         
-    profile_table = ArrayTable(profile_table)
+    profile_table = pd.DataFrame(profile_table) #ArrayTable(profile_table)
     
     return raw_count_dict, norm_count_dict, profile_table
 
@@ -240,7 +241,8 @@ def main(argv=sys.argv[1:]):
     # process arguments
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
-        roi_table = ArrayTable.from_file(roi_fh)
+        #roi_table = ArrayTable.from_file(roi_fh)
+        roi_table = pd.read_table(roi_fh,sep="\t",comment="#")
         roi_fh.close()
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
@@ -262,9 +264,14 @@ def main(argv=sys.argv[1:]):
     
     profile_fn = "%s_metagene_profiles.txt" % args.outbase
     with argsopener(profile_fn,args,"w") as metagene_out:
-        metagene_profile.to_file(metagene_out,
-                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
-                                                                               args.max_length+1)])
+#        metagene_profile.to_file(metagene_out,
+#                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
+#                                                                               args.max_length+1)])
+        metagene_profile.to_sv(metagene_out,
+                               sep="\t",
+                               header=True,
+                               columns=["x"]+["%s-mers" % X for X in range(args.min_length,
+                                                                           args.max_length+1)])
         metagene_out.close()
 
     for k in count_dict:
