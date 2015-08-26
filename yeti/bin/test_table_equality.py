@@ -12,6 +12,7 @@ Exit status is 0 if files are identical, 1 otherwise
 from yeti.util.array_table import ArrayTable, equal_enough
 from yeti.util.io.openers import opener, get_short_name, NullWriter
 from yeti.util.io.filters import NameDateWriter, CommentReader
+from pandas.testing import assert_frame_equal
 import sys
 import pandas as pd
 import argparse
@@ -21,6 +22,18 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 NUMERIC_DTYPES = "biufc"
 
+def test_3(df1,df2,sort_columns=[0],**kwargs):
+    return df1.sort(axis=1).sort(axis=0,columns=sort_columns).equals(df2.sort(axis=1).sort(axis=0,columns=sort_columns))
+
+def test_2(df1,df2,**kwargs):
+    """
+    From http://stackoverflow.com/questions/14224172/equality-in-pandas-dataframes-column-order-matters
+    """
+    try:
+        assert_frame_equal(df1.sort(axis=1),df2.sort(axis=1),check_names=True,**kwargs)
+        return True
+    except:
+        return False
 
 def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(),print_verbose=False,return_verbose=False):
     """Test equality of dataframes over multiple columns, with verbose output.
@@ -151,8 +164,6 @@ def main(argv=sys.argv[1:],verbose=False):
                         help="Give verbose output")
     parser.add_argument("--sort_keys",type=str,default=[],metavar="key",nargs="+",
                         help="If specified, values will be sorted by the column(s) corresponding to these name or numbers (0-indexed) before comparison")
-#    parser.add_argument("--index_col",type=int,default=0,metavar="key",
-#                        help="Name of on which to sort data before comparison (default: column 0)")
     parser.add_argument("--exclude",type=str,default=[],nargs="+",metavar="key",
                         help="Key or number (0-indexed) of columns to exclude")
     parser.add_argument("--no_header",default=False,action="store_true",
@@ -168,30 +179,33 @@ def main(argv=sys.argv[1:],verbose=False):
 
     if args.no_header is True:
         kwargs = { "sep"       : "\t",
-                   "header"    : None,
-                   #"index_col" : args.index_col,
                    "index_col" : False, # number rows so all columns are data
                    "comment"   : "#",
                   }
         with opener(args.file1) as fh:
-            df1 = pd.read_table(fh,**kwargs)
+            df1 = pd.read_table(fh,header=None,**kwargs)
             
         with opener(args.file2) as fh:
-            df2 = pd.read_table(fh,**kwargs)
+            df2 = pd.read_table(fh,header=None,**kwargs)
             
         df1.rename(columns={X:str(X) for X in df1.columns},inplace=True)
         df2.rename(columns={X:str(X) for X in df2.columns},inplace=True)
     else:
-        # TODO: move away from ArrayTable
-        # can do this easily by making appropriate readers
-        # and reassigning kwargs as necessary
         with opener(args.file1) as fh:
-            df1 = ArrayTable.from_file_to_data_frame(fh)
-            fh.close()
-        
+            df1 = pd.read_table(fh,header=True,**kwargs)
+            
         with opener(args.file2) as fh:
-            df2 = ArrayTable.from_file_to_data_frame(fh)
-            fh.close()
+            df2 = pd.read_table(fh,header=True,**kwargs)
+#        # TODO: move away from ArrayTable
+#        # can do this easily by making appropriate readers
+#        # and reassigning kwargs as necessary
+#        with opener(args.file1) as fh:
+#            df1 = ArrayTable.from_file_to_data_frame(fh)
+#            fh.close()
+#        
+#        with opener(args.file2) as fh:
+#            df2 = ArrayTable.from_file_to_data_frame(fh)
+#            fh.close()
     
     if len(args.exclude) > 0:
         printer.write("Excluding columns %s: " % ", ".join(args.exclude))
@@ -202,13 +216,14 @@ def main(argv=sys.argv[1:],verbose=False):
         if k in df2:
             df2.pop(k)
 
-    test_result, messages =  test_dataframe_equality(df1,
-                                                     df2,
-                                                     tol=args.tol,
-                                                     sort_columns=args.sort_keys,
-                                                     printer=printer,
-                                                     print_verbose=args.verbose,
-                                                     return_verbose=True)
+    test_result = test_3(df1,df2,sort_columns=arg.sort_keys)
+#    test_result, messages =  test_dataframe_equality(df1,
+#                                                     df2,
+#                                                     tol=args.tol,
+#                                                     sort_columns=args.sort_keys,
+#                                                     printer=printer,
+#                                                     print_verbose=args.verbose,
+#                                                     return_verbose=True)
     if test_result == True:
         printer.write("Files contain equivalent data.")
         exit_code = 0
