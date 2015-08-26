@@ -14,7 +14,7 @@
 ##          'program'          : 'count',
 ##          'roi_file'         : 'gen_cds_stop_rois.txt'
 ##        }
-#x	metagene_average	regions_counted
+x	metagene_average	regions_counted
 -100	0.00000000	61
 -99	0.03105590	61
 -98	0.00000000	61
