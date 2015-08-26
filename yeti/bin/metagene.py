@@ -141,7 +141,6 @@ import argparse
 import numpy
 import pandas as pd
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
-#from yeti.util.array_table import ArrayTable
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
@@ -604,12 +603,10 @@ algorithm:
             dtmp["zero_point"].append(flank_upstream)
             export_rois.append(max_spanning_window)
 
-    # convert to ArrayTable
-    #dtmp = ArrayTable(dtmp)
-    df = pd.DataFrame(dtmp,columns=["gene_id","window_size","region","masked","alignment_offset","zero_point"])
+    df = pd.DataFrame(dtmp) #,columns=["gene_id","window_size","region","masked","alignment_offset","zero_point"])
     printer.write("Processed %s transcripts total. Included %s." % (c+1,len(dtmp)))
 
-    return dtmp, export_rois
+    return df, export_rois
 
 @catch_warnings("module")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
@@ -690,9 +687,10 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
     num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0) 
     
-    profile_table = pd.DataFrame(metagene_average=profile,
-                                 regions_counted=num_genes,
-                                 x=numpy.arange(-upstream_flank,window_size-upstream_flank),
+    profile_table = pd.DataFrame({ "metagene_average" : profile,
+                                   "regions_counted"  : num_genes,
+                                   "x" : numpy.arange(-upstream_flank,window_size-upstream_flank),
+                                  }
                                 )
     return counts, norm_counts, profile_table
 
@@ -703,8 +701,8 @@ def do_chart(sample_dict,landmark="landmark",title=None):
     
     Parameters
     ----------
-    sample_dict : dict
-        Dictionary mapping sample names to |ArrayTable| s containing metagene
+    sample_dict : dict of :class:`pandas.DataFrame`
+        Dictionary mapping sample names to DataFrames containing metagene
         profile information from ``count`` subprogram
     
     landmark : str, optional
@@ -868,7 +866,12 @@ def main(argv=sys.argv[1:]):
         printer.write("Saving to ROIs %s..." % roi_file)
         with argsopener(roi_file,args,"w") as roi_fh:
             #roi_table.to_file(roi_fh)
-            roi_table.to_csv(roi_fh,sep="\t",header=True)
+            roi_table.to_csv(roi_fh,
+                             sep="\t",
+                             header=True,
+                             index=False,
+                             columns=["gene_id","window_size","region","masked","alignment_offset","zero_point"]
+                             )
             roi_fh.close()
             
         printer.write("Saving BED output as %s..." % bed_file)
@@ -882,17 +885,16 @@ def main(argv=sys.argv[1:]):
     elif args.program == "count":
         printer.write("Opening ROI file %s..." % args.roi_file)
         with open(args.roi_file) as fh:
-            #roi_table = ArrayTable.from_file(fh)
-            roi_table = pd.read_table(fh,sep="\t",comment="#")
+            roi_table = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
             fh.close()
         
         # open count files
-        gnd = get_genome_array_from_args(args,printer=printer,disabled=["normalize"])
+        ga = get_genome_array_from_args(args,printer=printer,disabled=["normalize"])
         
         # count
         printer.write("Counting...")
         counts, norm_counts, profile_table = do_count(roi_table,
-                                                      gnd,
+                                                      ga,
                                                       args.norm_region[0],
                                                       args.norm_region[1],
                                                       args.min_counts,
@@ -911,6 +913,7 @@ def main(argv=sys.argv[1:]):
             profile_table.to_csv(profile_out,
                                  sep="\t",
                                  header=True,
+                                 index=False,
                                  columns=["x","metagene_average","regions_counted"],
                                  )
             profile_out.close()
@@ -919,13 +922,11 @@ def main(argv=sys.argv[1:]):
     elif args.program == "chart":
         assert len(args.labels) in (0,len(args.infiles))
         if len(args.labels) == len(args.infiles):
-#            samples = { K : ArrayTable.from_file(open(V)) for K,V in zip(args.labels,args.infiles)}
-            samples = { K : pd.read_table(V,sep="\t",comment="#") for K,V in zip(args.labels,args.infiles)}
+            samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
         else:
             if len(args.labels) > 0:
                 warnings.warn("Only %s labels supplied for %s infiles. Ignoring labels" % (len(args.labels),len(args.infiles)),UserWarning)
-#            samples = { get_short_name(V) : ArrayTable.from_file(open(V)) for V in args.infiles }
-            samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#") for V in args.infiles }
+            samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
          
         figure = do_chart(samples,title=args.title,landmark=args.landmark)
         printer.write("Saving to %s..." % args.outfile)
