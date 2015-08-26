@@ -99,19 +99,19 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                     
 
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.array_table import ArrayTable
 
 from yeti.genomics.roitools import positionlist_to_segments, SegmentChain
 from yeti.genomics.genome_hash import GenomeHash
 from yeti.util.io.openers import opener, get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.services.sets import merge_sets
-from yeti.util.services.decorators import skipdoc
+from yeti.util.services.decorators import skipdoc, in_separate_process
 from scipy.misc import comb as combination
 
 import os
 import sys
 import numpy
+import pandas as pd
 import scipy.optimize
 import argparse
 import scipy.stats
@@ -151,7 +151,7 @@ def write_output_files(table,title,args):
     
     Parameters
     ----------
-    table : |ArrayTable|
+    table : :class:`pandas.DataFrame`
         Gene info table made in :py:func:`do_generate`
     
     title : str
@@ -176,14 +176,19 @@ def write_output_files(table,title,args):
 
     try:
         pos_out = argsopener("%s_%s.positions" % (args.outbase,title),args)
-        table.to_file(pos_out,keyorder=["region",
-                                        "exon",
-                                        "utr5",
-                                        "cds",
-                                        "utr3",
-                                        "masked",
-                                        "exon_unmasked",
-                                        "transcript_ids"])
+        table.to_csv(pos_out,
+                     sep="\t",
+                     header=True,
+                     index=False,
+                     columns=["region",
+                              "exon",
+                              "utr5",
+                              "cds",
+                              "utr3",
+                              "masked",
+                              "exon_unmasked",
+                              "transcript_ids"])
+
         pos_out.close()
     except ValueError:
         for k in table.keys():
@@ -243,7 +248,7 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
     return starting_set
 
 @skipdoc
-def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
+def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
     
     Parameters
@@ -260,8 +265,8 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
         Dictionary mapping unique transcript IDs to :class:`Transcript`
         objects
 
-    genome_hash : GenomeHash
-        GenomeHash containing all transcripts on all chromosomes
+    genome_hash : |GenomeHash|
+        |GenomeHash| containing all transcripts on all chromosomes
         as all genes in `gene_tx` and transcripts in `tx_gene`
 
 
@@ -286,6 +291,206 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
     printer.write("Collapsed %s genes to %s groups total." % (len(dout),groups))
 
     return dout
+
+def process_partial_group(transcripts,mask_hash,printer):
+    """
+    Parameters
+    ----------
+    transcripts : dict
+        Dictionary mapping unique transcript IDs to |Transcripts|
+
+    mask_hash : |GenomeHash|
+        |GenomeHash| of regions to exclude from analysis
+    """
+    
+    gene_table = { "region"          : [],
+                   "transcript_ids"  : [],
+                   "exon_unmasked"   : [],
+                   "exon"            : [],
+                   "masked"          : [],
+                   "utr5"            : [],
+                   "cds"             : [],
+                   "utr3"            : []
+                   }
+
+    # data table for transcripts
+    transcript_table = { "region"          : [],
+                         "exon"            : [],
+                         "utr5"            : [],
+                         "cds"             : [],
+                         "utr3"            : [],
+                         "masked"          : [],
+                         "exon_unmasked"   : [],
+                         "transcript_ids"  : []
+                        }
+
+    keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
+
+    # create position hash
+    tx_hash = GenomeHash(transcripts,do_copy=False)
+
+    # initialize variables
+    tx_gene = {}
+    gene_tx = {}
+    merged_gene_tx = {}
+
+    # map transcripts to genes & vice versa
+    for txid,txivc in transcripts.items():
+        my_gene = txivc.get_gene()
+        tx_gene[txid] = my_gene
+        try:
+            gene_tx[my_gene].append(txid)
+        except KeyError:
+            gene_tx[my_gene] = [txid]
+            
+    # merge genes that share exons & write output
+    printer.write("Collapsing genes that share exons...")
+    merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash,printer)
+
+    # remap transcripts to merged genes
+    printer.write("Mapping transcripts to merged genes...")
+    tx_merged_gene = { TXID : merged_genes[GENE_ID] for TXID, GENE_ID in tx_gene.items() }
+
+    # backlink merged genes to transcripts
+    for my_tx, my_gene in tx_merged_gene.items():
+        try:
+            merged_gene_tx[my_gene].append(my_tx)
+        except KeyError:
+            merged_gene_tx[my_gene] = [my_tx]
+
+    # flatten merged genes
+    printer.write("Flattening merged genes, masking positions, and labelling subfeatures...")
+    for n,(gene_id, my_txids) in enumerate(sorted(merged_gene_tx.items())):
+        if n % 1000 == 0 and n > 0:
+            printer.write("    %s genes..." % n)
+
+        my_gene_positions = []
+        chroms  = []
+        strands = []
+        for my_txid in my_txids:
+            my_segmentchain = transcripts[my_txid]
+            chroms.append(my_segmentchain.chrom)
+            strands.append(my_segmentchain.strand)
+            my_gene_positions.extend(my_segmentchain.get_position_list())
+            
+            try:
+                assert len(set(chroms))  == 1
+            except AssertionError:
+                printer.write("Skipping gene %s which contains multiple chromosomes: %s" % (gene_id,",".join(chroms)))
+
+            try:
+                assert len(set(strands)) == 1
+            except AssertionError:
+                printer.write("Skipping gene %s which contains multiple strands: %s" % (gene_id,",".join(strands)))
+        
+        my_gene_positions = set(my_gene_positions)
+        gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
+        gene_table["region"].append(gene_id)
+        gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
+        gene_table["exon_unmasked"].append(gene_ivc_raw)
+        
+    printer.write("    %s genes total." % (n+1))
+
+    # mask genes
+    printer.write("Masking positions and labeling subfeature positions...")
+    gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
+
+    for n,(gene_id,gene_ivc_raw) in enumerate(zip(gene_table["region"],gene_table["exon_unmasked"])):
+        if n % 2000 == 0:
+            printer.write("    %s genes..." % n)
+
+        my_chrom  = gene_ivc_raw.spanning_segment.chrom
+        my_strand = gene_ivc_raw.spanning_segment.strand
+        
+        masked_positions = []
+        nearby_genes = gene_hash[gene_ivc_raw]
+
+        # don't mask out positions from identical gene
+        gene_ivc_raw_positions = gene_ivc_raw.get_position_set()
+        nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
+        for gene in nearby_genes:
+            masked_positions.extend(gene.get_position_list())
+        
+        nearby_masks = mask_hash[gene_ivc_raw]
+        for mask in nearby_masks:
+            masked_positions.extend(mask.get_position_list())
+        
+        masked_positions = set(masked_positions)
+        
+        gene_positions_raw = gene_ivc_raw.get_position_set()
+        mask_ivc_positions = gene_positions_raw & masked_positions
+        total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions))
+        gene_table["masked"].append(total_mask_ivc)
+        
+        gene_post_mask = gene_positions_raw - masked_positions
+        gene_post_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,gene_post_mask))
+        gene_table["exon"].append(gene_post_mask_ivc)
+    
+        masked_positions = total_mask_ivc.get_position_set()
+        tmp_positions = { "utr5"  : set(),
+                          "cds"   : set(),
+                          "utr3"  : set(),
+                         }
+        txids  = merged_gene_tx[gene_id]
+        chrom  = gene_post_mask_ivc.chrom
+        strand = gene_post_mask_ivc.strand
+
+        # pool transcript positions
+        for txid in txids:
+            transcript = transcripts[txid]
+            
+            utr5pos = transcript.get_utr5().get_position_set()
+            cdspos  = transcript.get_cds().get_position_set()
+            utr3pos = transcript.get_utr3().get_position_set()
+            
+            tmp_positions["utr5"]  |= utr5pos
+            tmp_positions["cds"]   |= cdspos
+            tmp_positions["utr3"]  |= utr3pos 
+        
+        # eliminate positions in which CDS & UTRs overlap from each transcript
+        for txid in txids:
+            transcript = transcripts[txid]
+            transcript_positions = {
+                          "utr5"  : transcript.get_utr5().get_position_set(),
+                          "cds"   : transcript.get_cds().get_position_set(),
+                          "utr3"  : transcript.get_utr3().get_position_set(),
+                         }
+
+            for key1,key2 in keycombos:
+                transcript_positions[key1] -= tmp_positions[key2]
+                transcript_positions[key1] -= masked_positions
+        
+            transcript_table["region"].append(txid)
+            
+            # all unmasked positions
+            transcript_table["exon"].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,transcript.get_position_set() - masked_positions))))
+
+            # all uniquely-labeled unmasked positions            
+            for k,v in transcript_positions.items():
+                transcript_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,v))))
+            
+            transcript_table["masked"].append(str(total_mask_ivc))
+            transcript_table["exon_unmasked"].append(str(transcript))
+            transcript_table["transcript_ids"].append(txid)
+        
+        tmp_positions2 = copy.deepcopy(tmp_positions)
+        for k1,k2 in keycombos:
+            tmp_positions[k1] -= tmp_positions2[k2]
+            tmp_positions[k1] -= masked_positions
+
+        for k in (tmp_positions.keys()):
+            gene_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,tmp_positions[k]))))
+    
+    printer.write("    %s genes total." % (n+1))
+
+    # cast SegmentChains/Transcripts to strings to keep numpy from unpacking them
+    conversion_keys = ["exon","utr5","cds","utr3","masked","exon_unmasked"]
+    for k in conversion_keys:
+        gene_table[k] = [str(X) for X in gene_table[k]]
+        transcript_table[k] = [str(X) for X in transcript_table[k]]
+
+    return pd.DataFrame(gene_table), pd.DataFrame(transcript_table), merged_genes
+
 
 def do_generate(args):
     """Generate gene position files from gene annotations.
@@ -320,7 +525,7 @@ def do_generate(args):
     merged_gene_tx = {}
 
     # data table for merged genes
-    gene_table = { "region"          : [],
+    gene_table = pd.DataFrame({ "region"          : [],
                    "transcript_ids"  : [],
                    "exon_unmasked"   : [],
                    "exon"            : [],
@@ -328,10 +533,10 @@ def do_generate(args):
                    "utr5"            : [],
                    "cds"             : [],
                    "utr3"            : []
-                   }
+                   })
 
     # data table for transcripts
-    transcript_table = { "region"          : [],
+    transcript_table = pd.DataFrame({ "region"          : [],
                          "exon"            : [],
                          "utr5"            : [],
                          "cds"             : [],
@@ -339,7 +544,7 @@ def do_generate(args):
                          "masked"          : [],
                          "exon_unmasked"   : [],
                          "transcript_ids"  : []
-                        }
+                        })
 
     keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
 
@@ -365,195 +570,23 @@ def do_generate(args):
 
         # if chromosome is completely processed or EOF
         if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
-
-            # backtrack last transcript
             if do_loop == True:
                 source = itertools.chain([tx],source)
 
-            # collapse if change in chrom
             if last_chrom is not None or do_loop == False:
                 printer.write("Merging genes on chromosome/contig '%s'" % last_chrom)
-
-                # create position hash
-                tx_hash = GenomeHash(transcripts,do_copy=False)
-
-                # initialize variables
-                tx_gene = {}
-                gene_tx = {}
-                my_merged_gene_tx = {}
-
-                # map transcripts to genes & vice versa
-                for txid,txivc in transcripts.items():
-                    my_gene = txivc.get_gene()
-                    tx_gene[txid] = my_gene
-                    try:
-                        gene_tx[my_gene].append(txid)
-                    except KeyError:
-                        gene_tx[my_gene] = [txid]
-                        
-                # merge genes that share exons & write output
-                printer.write("Collapsing genes that share exons...")
-                my_merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash)
+                my_gene_table, my_transcript_table,my_merged_genes = process_partial_group(transcripts,mask_hash,printer)
+                gene_table = pd.concat((gene_table,my_gene_table),axis=0)
+                transcript_table = pd.concat((transcript_table,my_transcript_table),axis=0)
                 merged_genes.update(my_merged_genes)
 
-                # remap transcripts to merged genes
-                printer.write("Mapping transcripts to merged genes...")
-                my_tx_merged_gene = { TXID : merged_genes[GENE_ID] for TXID, GENE_ID in tx_gene.items() }
-                tx_merged_gene.update(my_tx_merged_gene)
-
-                # backlink merged genes to transcripts
-                for my_tx, my_gene in my_tx_merged_gene.items():
-                    try:
-                        merged_gene_tx[my_gene].append(my_tx)
-                        my_merged_gene_tx[my_gene].append(my_tx)
-                    except KeyError:
-                        merged_gene_tx[my_gene] = [my_tx]
-                        my_merged_gene_tx[my_gene] = [my_tx]
-
-                # flatten merged genes
-                printer.write("Flattening merged gene positions...")
-                for n,(my_gene, my_txids) in enumerate(sorted(my_merged_gene_tx.items())):
-                    if n % 1000 == 0 and n > 0:
-                        printer.write("    %s genes..." % n)
-
-                    my_gene_positions = []
-                    chroms  = []
-                    strands = []
-                    for my_txid in my_txids:
-                        my_segmentchain = transcripts[my_txid]
-                        chroms.append(my_segmentchain.chrom)
-                        strands.append(my_segmentchain.strand)
-                        my_gene_positions.extend(my_segmentchain.get_position_list())
-                        
-                        try:
-                            assert len(set(chroms))  == 1
-                        except AssertionError:
-                            printer.write("Skipping gene %s which contains multiple chromosomes: %s" % (my_gene,",".join(chroms)))
-
-                        try:
-                            assert len(set(strands)) == 1
-                        except AssertionError:
-                            printer.write("Skipping gene %s which contains multiple strands: %s" % (my_gene,",".join(strands)))
-                    
-                    my_gene_positions = set(my_gene_positions)
-                    my_gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
-                    gene_table["region"].append(my_gene)
-                    gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
-                    gene_table["exon_unmasked"].append(my_gene_ivc_raw)
-                    
-                printer.write("    %s genes total." % (n+1))
-
-                # mask genes
-                printer.write("Masking nucleotides shared by neighboring genes and/or crossmaps, and populating genes with transcript positions and masking regions jointly annotated as CDS and UTR...")
-
-                gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
-
-                for n,(gene_id,gene_ivc_raw) in enumerate(zip(gene_table["region"],gene_table["exon_unmasked"])[z:]):
-                    if n % 2000 == 0:
-                        printer.write("    %s genes..." % n)
-
-                    my_chrom  = gene_ivc_raw.spanning_segment.chrom
-                    my_strand = gene_ivc_raw.spanning_segment.strand
-                    
-                    masked_positions = []
-                    nearby_genes = gene_hash[gene_ivc_raw]
-
-                    # don't mask out positions from identical gene
-                    gene_ivc_raw_positions = gene_ivc_raw.get_position_set()
-                    nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
-                    for gene in nearby_genes:
-                        masked_positions.extend(gene.get_position_list())
-                    
-                    nearby_masks = mask_hash[gene_ivc_raw]
-                    for mask in nearby_masks:
-                        masked_positions.extend(mask.get_position_list())
-                    
-                    masked_positions = set(masked_positions)
-                    
-                    gene_positions_raw = gene_ivc_raw.get_position_set()
-                    mask_ivc_positions = gene_positions_raw & masked_positions
-                    total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions))
-                    gene_table["masked"].append(total_mask_ivc)
-                    
-                    gene_post_mask = gene_positions_raw - masked_positions
-                    gene_post_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,gene_post_mask))
-                    gene_table["exon"].append(gene_post_mask_ivc)
-                
-                    masked_positions = total_mask_ivc.get_position_set()
-                    tmp_positions = { "utr5"  : set(),
-                                      "cds"   : set(),
-                                      "utr3"  : set(),
-                                     }
-                    txids  = merged_gene_tx[gene_id]
-                    chrom  = gene_post_mask_ivc.chrom
-                    strand = gene_post_mask_ivc.strand
-
-                    # pool transcript positions
-                    for txid in txids:
-                        transcript = transcripts[txid]
-                        
-                        utr5pos = transcript.get_utr5().get_position_set()
-                        cdspos  = transcript.get_cds().get_position_set()
-                        utr3pos = transcript.get_utr3().get_position_set()
-                        
-                        tmp_positions["utr5"]  |= utr5pos
-                        tmp_positions["cds"]   |= cdspos
-                        tmp_positions["utr3"]  |= utr3pos 
-                    
-                    # eliminate positions in which CDS & UTRs overlap from each transcript
-                    for txid in txids:
-                        transcript = transcripts[txid]
-                        transcript_positions = {
-                                      "utr5"  : transcript.get_utr5().get_position_set(),
-                                      "cds"   : transcript.get_cds().get_position_set(),
-                                      "utr3"  : transcript.get_utr3().get_position_set(),
-                                     }
-
-                        for key1,key2 in keycombos:
-                            transcript_positions[key1] -= tmp_positions[key2]
-                            transcript_positions[key1] -= masked_positions
-                    
-                        transcript_table["region"].append(txid)
-                        
-                        # all unmasked positions
-                        transcript_table["exon"].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,transcript.get_position_set() - masked_positions))))
-
-                        # all uniquely-labeled unmasked positions            
-                        for k,v in transcript_positions.items():
-                            transcript_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,v)))) # & exon_pos_set))))
-                        
-                        transcript_table["masked"].append(str(total_mask_ivc))
-                        transcript_table["exon_unmasked"].append(str(transcript))
-                        transcript_table["transcript_ids"].append(txid)
-                    
-                    tmp_positions2 = copy.deepcopy(tmp_positions)
-                    for k1,k2 in keycombos:
-                        tmp_positions[k1] -= tmp_positions2[k2]
-                        tmp_positions[k1] -= masked_positions
-
-                    for k in (tmp_positions.keys()):
-                        gene_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,tmp_positions[k]))))
-                
-                printer.write("    %s genes total." % (n+1))
-
-
-                # free memory from chromosome
-                del transcripts
-                del tx_gene
-                del gene_tx
-                del tx_hash
-                del my_merged_gene_tx
-                del my_tx_merged_gene
-                del gene_hash
-                gc.collect()
-                del gc.garbage[:]
-                transcripts = {}
+            del transcripts
+            gc.collect()
+            del gc.garbage[:]
+            transcripts = {}
 
             # reset last chrom
             last_chrom = tx.spanning_segment.chrom
-
-            # update index
-            z = len(list(gene_table.values())[0])
 
         # otherwise, remember transcript
         else:
@@ -562,7 +595,6 @@ def do_generate(args):
     # write output
     printer.write("Writing output...")
     
-    # save merged genes
     merged_fn = "%s_merged.txt" % args.outbase
     number_merged = len(set(merged_genes.values()))
     printer.write("Collapsed %s genes to %s merged groups. Writing to %s" % (len(merged_genes),number_merged,merged_fn))
@@ -571,17 +603,8 @@ def do_generate(args):
         fout.write("%s\t%s\n" % (gene,merged_name))
         
     fout.close()
-    # cast SegmentChains/Transcripts to strings to keep numpy from unpacking
-    # them inside ArrayTable
-    conversion_keys = ["exon","utr5","cds","utr3","masked","exon_unmasked"]
-    for k in conversion_keys:
-        gene_table[k] = [str(X) for X in gene_table[k]]
-        transcript_table[k] = [str(X) for X in transcript_table[k]]
     
-    gene_table = ArrayTable(gene_table)
     write_output_files(gene_table,"gene",args)
-    
-    transcript_table = ArrayTable(transcript_table)
     write_output_files(transcript_table,"transcript",args)
     printer.write("Done!")
 
@@ -602,8 +625,9 @@ tab-delimited text file.
         command-line arguments for ``count`` subprogram    
     """
     keys=("exon","utr5","cds","utr3")
+    column_order = ["region"]
     with opener(args.position_file) as pos_fh:
-        gene_positions = ArrayTable.from_file(pos_fh)
+        gene_positions = pd.read_table(pos_fh,sep="\t",comment="#",index_col=None,header=0)
         pos_fh.close()
 
     # read count files
@@ -616,7 +640,9 @@ tab-delimited text file.
     dtmp = { "region" : [] }
     for x in keys:
         for y in ("reads","length","rpkm"):
-            dtmp["%s_%s" % (x, y) ] = []
+            label = "%s_%s" % (x, y)
+            dtmp[label] = []
+            column_order.append(label)
     
     for i,name in enumerate(gene_positions["region"]):
         dtmp["region"].append(name)
@@ -633,13 +659,9 @@ tab-delimited text file.
             dtmp["%s_rpkm"   % k].append(rpkm)
 
     fout = argsopener("%s.txt" % args.outbase,args,"w")
-    dtmp = ArrayTable(dtmp)
-    dtmp.to_file(fout,formatters={numpy.float64 : '{:.8f}'.format,
-                              numpy.float32 : '{:.8f}'.format,
-                              numpy.float128 : '{:.8f}'.format,
-                              }
-                )
-        
+    dtmp = pd.DataFrame(dtmp)
+    dtmp.to_csv(fout,sep="\t",header=True,index=False,columns=column_order)
+
     fout.close()
     printer.write("Done.")
 
@@ -650,7 +672,7 @@ tab-delimited text file.
 
 @skipdoc
 def read_count_file(fh,genes_to_include=None):
-    """Read a count file into an |ArrayTable|
+    """Read rows selected by gene name from a count file
     
     Parameters
     ----------
@@ -659,17 +681,18 @@ def read_count_file(fh,genes_to_include=None):
         
     genes_to_include : list or None
         List of genes to include in output.
-        If None, all are included
+        If `None`, all are included
     
     Returns
     -------
-    ArrayTable
+    :class:`pandas.DataFrame`
+
         Count data
     """
-    dtmp = ArrayTable.from_file(fh)
-    import_mask = numpy.array([True if X in genes_to_include else False for X in dtmp["region"]])
-    dout = { K : dtmp[K][import_mask] for K in dtmp.keys() }
-    return ArrayTable(dout)
+    df = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
+    import_mask = numpy.array([True if X in genes_to_include else False for X in df["region"]])
+
+    return df[import_mask]
 
 @skipdoc
 def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
@@ -678,17 +701,17 @@ def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
     
     Parameters
     ----------
-    rep_a : |ArrayTable|
-        replicate a, from read_count_file()
+    rep_a : :class:`pandas.DataFrame`
+        replicate a, from :func:`read_count_file`
         
-    rep_b : |ArrayTable|
-        replicate b, from read_count_file()
+    rep_b : :class:`pandas.DataFrame`
+        replicate b, from :func:`read_count_file`
         
-    bins : numpy.ndarray
+    bins : :class:`numpy.ndarray`
         sequence of bins, specified as floors
         
     key : str, optional
-        quantity on which to perform binning (Default: "exon_reads")
+        quantity on which to perform binning (Default: `exon_reads`)
 
     Returns
     -------
