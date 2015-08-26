@@ -241,20 +241,19 @@ def main(argv=sys.argv[1:]):
     # process arguments
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
-        #roi_table = ArrayTable.from_file(roi_fh)
-        roi_table = pd.read_table(roi_fh,sep="\t",comment="#")
+        roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
         roi_fh.close()
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
+    ga = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
     
     # remove default size filters
-    my_filters = gnd._filters.keys()
+    my_filters = ga._filters.keys()
     for f in my_filters:
-        gnd.remove_filter(f)
+        ga.remove_filter(f)
 
     count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
-                                                             gnd,
+                                                             ga,
                                                              args.norm_region[0],
                                                              args.norm_region[1],
                                                              args.min_counts,
@@ -264,12 +263,10 @@ def main(argv=sys.argv[1:]):
     
     profile_fn = "%s_metagene_profiles.txt" % args.outbase
     with argsopener(profile_fn,args,"w") as metagene_out:
-#        metagene_profile.to_file(metagene_out,
-#                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
-#                                                                               args.max_length+1)])
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
                                 header=True,
+                                index=False,
                                 columns=["x"]+["%s-mers" % X for X in range(args.min_length,
                                                                             args.max_length+1)])
         metagene_out.close()
