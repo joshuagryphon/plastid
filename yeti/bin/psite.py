@@ -56,7 +56,6 @@ from collections import OrderedDict
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_alignment_file_parser
 from yeti.genomics.roitools import SegmentChain
-from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
@@ -80,8 +79,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     
     Parameters
     ----------
-    roi_table : |ArrayTable|
-        |ArrayTable| specifying regions of interest, generated
+    roi_table : :class:`pandas.DataFrame`
+        Table specifying regions of interest, generated
         by :py:func:`yeti.bin.metagene.do_generate`
     
     ga : |BAMGenomeArray|
@@ -117,7 +116,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         for each window (row), normalized by the total number of counts in that row
         from `norm_start` to `norm_end`
     
-    |ArrayTable|
+    :class:`pandas.DataFrame`
         Metagene profile of median normalized counts at each position across
         all windows, and the number of windows included in the calculation of each
         median, stratified by read length
@@ -183,7 +182,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         profile_table["%s-mers" % read_length]         = profile
         profile_table["%s_regions_counted" % read_length] = num_genes
         
-    profile_table = pd.DataFrame(profile_table) #ArrayTable(profile_table)
+    profile_table = pd.DataFrame(profile_table)
     
     return raw_count_dict, norm_count_dict, profile_table
 
@@ -241,20 +240,19 @@ def main(argv=sys.argv[1:]):
     # process arguments
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
-        #roi_table = ArrayTable.from_file(roi_fh)
-        roi_table = pd.read_table(roi_fh,sep="\t",comment="#")
+        roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
         roi_fh.close()
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
+    ga = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
     
     # remove default size filters
-    my_filters = gnd._filters.keys()
+    my_filters = ga._filters.keys()
     for f in my_filters:
-        gnd.remove_filter(f)
+        ga.remove_filter(f)
 
     count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
-                                                             gnd,
+                                                             ga,
                                                              args.norm_region[0],
                                                              args.norm_region[1],
                                                              args.min_counts,
@@ -264,12 +262,10 @@ def main(argv=sys.argv[1:]):
     
     profile_fn = "%s_metagene_profiles.txt" % args.outbase
     with argsopener(profile_fn,args,"w") as metagene_out:
-#        metagene_profile.to_file(metagene_out,
-#                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
-#                                                                               args.max_length+1)])
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
-                                header=True,
+                                header=0,
+                                index=False,
                                 columns=["x"]+["%s-mers" % X for X in range(args.min_length,
                                                                             args.max_length+1)])
         metagene_out.close()
