@@ -131,7 +131,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
         raw_count_dict[i].mask = numpy.tile(False,raw_count_dict[i].shape)
     
-    for row in roi_table.iterrows(): #i in range(len(roi_table)):
+    for i,row in roi_table.iterrows(): #i in range(len(roi_table)):
         if i % 1000 == 0:
             printer.write("Counted %s ROIs..." % (i+1))
             
@@ -267,11 +267,11 @@ def main(argv=sys.argv[1:]):
 #        metagene_profile.to_file(metagene_out,
 #                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
 #                                                                               args.max_length+1)])
-        metagene_profile.to_sv(metagene_out,
-                               sep="\t",
-                               header=True,
-                               columns=["x"]+["%s-mers" % X for X in range(args.min_length,
-                                                                           args.max_length+1)])
+        metagene_profile.to_csv(metagene_out,
+                                sep="\t",
+                                header=True,
+                                columns=["x"]+["%s-mers" % X for X in range(args.min_length,
+                                                                            args.max_length+1)])
         metagene_out.close()
 
     for k in count_dict:
