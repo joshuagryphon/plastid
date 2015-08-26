@@ -3,7 +3,7 @@
 read densities (in :term:`RPKM`) specifically covering genes.
 
 :term:`Counts <counts>` and densities are calculated separately per gene for
-exons, 5\' UTRs, coding regions, and 3\' UTRs. In addition, positions overlapped
+exons, 5' UTRs, coding regions, and 3' UTRs. In addition, positions overlapped
 by multiple genes are excluded, as are positions annotated in
 :term:`mask annotation files<crossmap>`, if one is provided.
 
@@ -91,11 +91,11 @@ See also
 """
 
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                                      get_transcripts_from_args,\
-                                                      get_alignment_file_parser,\
-                                                      get_annotation_file_parser,\
-                                                      get_mask_file_parser,\
-                                                      get_genome_hash_from_mask_args
+                                           get_transcripts_from_args,\
+                                           get_alignment_file_parser,\
+                                           get_annotation_file_parser,\
+                                           get_mask_file_parser,\
+                                           get_genome_hash_from_mask_args
                                                     
 
 from yeti.util.scriptlib.help_formatters import format_module_docstring
@@ -190,6 +190,40 @@ def write_output_files(table,title,args):
             printer.write(", ".join([str(X) for X in [k, table[k].dtype, table[k].dtype.type]]))
 
 def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]):
+    """Merge genes whose transcripts share exons, recursively.
+
+    Parameters
+    ----------
+    starting_set : list
+        List of IDs of genes known to have transcripts whose exons overlap.
+        Initially, this list will contain one ID
+
+    tx_gene : dict
+        Dictionary mapping unique transcript IDs to the IDs of the genes
+        from which they derive
+    
+    gene_tx : dict
+        Dictionary mapping unique gene IDs to lists of the IDs
+        of the transcripts deriving from that gene
+
+    tx_ivcs : dict
+        Dictionary mapping unique transcript IDs to :class:`Transcript`
+        objects
+
+    genome_hash : GenomeHash
+        GenomeHash containing all transcripts on all chromosomes
+        as all genes in `gene_tx` and transcripts in `tx_gene`
+
+    explored : list, optional
+        List of IDs of genes from `starting_set` whose overlap partners
+        have already been identified. (Default: []).
+
+
+    Returns
+    -------
+    list
+        List of sorted gene IDs of genes whose transcripts share exons
+    """
     for gene_id in sorted(starting_set):
         if gene_id not in explored:
             explored.append(gene_id)
@@ -213,15 +247,24 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
     
     Parameters
-    ----------
-    tx_ivcs : dict
-        Dictionary mapping unique transcript IDs to :class:`Transcript`
-        objects
-        
+    ----------   
     tx_gene : dict
         Dictionary mapping unique transcript IDs to the IDs of the genes
         from which they derive
-        
+    
+    gene_tx : dict
+        Dictionary mapping unique gene IDs to lists of the IDs
+        of the transcripts deriving from that gene
+
+    tx_ivcs : dict
+        Dictionary mapping unique transcript IDs to :class:`Transcript`
+        objects
+
+    genome_hash : GenomeHash
+        GenomeHash containing all transcripts on all chromosomes
+        as all genes in `gene_tx` and transcripts in `tx_gene`
+
+
     Returns
     -------
     dict
@@ -237,8 +280,10 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash):
             for oldname in merge:
                 dout[oldname] = newname
 
-        if n % 1000 == 0:
+        if n % 1000 == 0 and n > 0:
             printer.write("Collapsed %s genes to %s groups..." % (len(dout),groups))
+
+    printer.write("Collapsed %s genes to %s groups total." % (len(dout),groups))
 
     return dout
 
@@ -268,136 +313,24 @@ def do_generate(args):
     args : :py:class:`argparse.Namespace`
         command-line arguments for ``generate`` subprogram
     """
-    transcripts = { X.get_name() : X for X in get_transcripts_from_args(args,printer=printer) }
-    printer.write("Hashing transcripts by genomic position")
-    tx_hash = GenomeHash(transcripts,do_copy=False)
-
-    # map transcripts to genes, et c
-    # convert to tx_ivcs
-    tx_gene  = {}
-    gene_tx  = {}
-    for txid,txivc in transcripts.items():
-        my_gene = txivc.get_gene()
-        tx_gene[txid] = my_gene
-        try:
-            gene_tx[my_gene].append(txid)
-        except KeyError:
-            gene_tx[my_gene] = [txid]
-            
-    # merge genes that share exons & write output
-    printer.write("Collapsing genes that share exons...")
-    merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash)
-    number_merged = len(set(merged_genes.values()))
-    merged_fn = "%s_merged.txt" % args.outbase
-    printer.write("Collapsed %s genes to %s merged groups. Writing to %s" % (len(gene_tx.keys()),number_merged,merged_fn))
-    fout = argsopener(merged_fn,args,"w")
-    for gene,merged_name in sorted(merged_genes.items()):
-        fout.write("%s\t%s\n" % (gene,merged_name))
-        
-    fout.close()
-
-    # remap transcripts to merged genes
-    printer.write("Mapping transcripts to merged genes...")
-    tx_merged_gene = { TXID : merged_genes[GENE_ID] for TXID, GENE_ID in tx_gene.items() }
+    # variables for transcript <-> merged gene mapping
+    transcripts    = {} 
+    merged_genes   = {}
+    tx_merged_gene = {}
     merged_gene_tx = {}
-    for my_tx, my_gene in tx_merged_gene.items():
-        try:
-            merged_gene_tx[my_gene].append(my_tx)
-        except KeyError:
-            merged_gene_tx[my_gene] = [my_tx]
-    
-    # save memory. remove old dictionaries
-    del gene_tx
-    del tx_gene
-    del tx_hash
-    gc.collect()
-    del gc.garbage[:]
-    
-    # hash genes in genome & prepare position dictionary
+
+    # data table for merged genes
     gene_table = { "region"          : [],
                    "transcript_ids"  : [],
-                   "exon_unmasked"    : [],
+                   "exon_unmasked"   : [],
+                   "exon"            : [],
+                   "masked"          : [],
+                   "utr5"            : [],
+                   "cds"             : [],
+                   "utr3"            : []
                    }
 
-    # flatten genes
-    printer.write("Flattening merged gene positions...")
-    for n,(my_gene, my_txids) in enumerate(sorted(merged_gene_tx.items())):
-        if n % 2000 == 0:
-            printer.write("    %s genes..." % n)
-
-        my_gene_positions = []
-        chroms  = []
-        strands = []
-        for my_txid in my_txids:
-            my_segmentchain = transcripts[my_txid]
-            chroms.append(my_segmentchain.chrom)
-            strands.append(my_segmentchain.strand)
-            my_gene_positions.extend(my_segmentchain.get_position_list())
-            
-            try:
-                assert len(set(chroms))  == 1
-            except AssertionError:
-                printer.write("Skipping gene %s which contains multiple chromosomes: %s" % (my_gene,",".join(chroms)))
-
-            try:
-                assert len(set(strands)) == 1
-            except AssertionError:
-                printer.write("Skipping gene %s which contains multiple strands: %s" % (my_gene,",".join(strands)))
-        
-        my_gene_positions = set(my_gene_positions)
-        my_gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
-        gene_table["region"].append(my_gene)
-        gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
-        gene_table["exon_unmasked"].append(my_gene_ivc_raw)
-        
-    printer.write("    %s genes total." % (n+1))
-
-    # mask genes
-    printer.write("Masking nucleotides shared by neighboring genes and/or crossmaps...")
-    gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
-    mask_hash = get_genome_hash_from_mask_args(args)
-    gene_table["exon"]   = []
-    gene_table["masked"] = []
-    for n,gene_ivc_raw in enumerate(gene_table["exon_unmasked"]):
-        if n % 2000 == 0:
-            printer.write("    %s genes..." % n)
-
-        my_chrom  = gene_ivc_raw.spanning_segment.chrom
-        my_strand = gene_ivc_raw.spanning_segment.strand
-        
-        masked_positions = []
-        nearby_genes = gene_hash[gene_ivc_raw]
-        #nearby_genes = gene_hash.get_overlapping_features(gene_ivc_raw)
-        # don't mask out positions from identical gene
-        #nearby_genes = filter(lambda x: x.get_position_set() != gene_ivc_raw.get_position_set(),nearby_genes)
-        gene_ivc_raw_positions = gene_ivc_raw.get_position_set()
-        nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
-        for gene in nearby_genes:
-            masked_positions.extend(gene.get_position_list())
-        
-        nearby_masks = mask_hash.get_overlapping_features(gene_ivc_raw)
-        for mask in nearby_masks:
-            masked_positions.extend(mask.get_position_list())
-        
-        masked_positions = set(masked_positions)
-        
-        gene_positions_raw = gene_ivc_raw.get_position_set()
-        mask_ivc_positions = gene_positions_raw & masked_positions
-        total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions))
-        gene_table["masked"].append(total_mask_ivc)
-        
-        gene_post_mask = gene_positions_raw - masked_positions
-        gene_post_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,gene_post_mask))
-        gene_table["exon"].append(gene_post_mask_ivc)
-        
-    printer.write("    %s genes total." % (n+1))
-    del nearby_genes
-    del nearby_masks
-    del mask_hash
-    del gene_hash
-    gc.collect()
-    del gc.garbage[:]
-
+    # data table for transcripts
     transcript_table = { "region"          : [],
                          "exon"            : [],
                          "utr5"            : [],
@@ -407,87 +340,237 @@ def do_generate(args):
                          "exon_unmasked"   : [],
                          "transcript_ids"  : []
                         }
-    
-    # populate gene positions with transcript position information
-    printer.write("Populating genes with transcript positions and masking regions jointly annotated as CDS and UTR...")
-    
-    supp_gene_table = {}
-    supp_gene_table["utr5"] = []
-    supp_gene_table["cds"]  = []
-    supp_gene_table["utr3"] = []
 
     keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
+
+    # data
+    is_sorted = (args.sorted == True) or \
+                (args.tabix == True) or \
+                (args.annotation_format == "BigBed")
+    source = get_transcripts_from_args(args,printer=printer)
+    mask_hash = get_genome_hash_from_mask_args(args)
     
-    for n,(gene_id, exon_ivc, mask_ivc) in enumerate(zip(gene_table["region"],gene_table["exon"],gene_table["masked"])):    #enumerate(gene_table.get_rows(keyorder=["region","exon","masked"])):
-        if n % 2000 == 0:
-            printer.write("    %s genes..." % n)
+    # loop conditions
+    last_chrom = None
+    do_loop = True
+    z = 0
 
-        masked_positions = mask_ivc.get_position_set()
-        tmp_positions = { "utr5"  : set(),
-                          "cds"   : set(),
-                          "utr3"  : set(),
-                         }
-        txids  = merged_gene_tx[gene_id]
-        chrom  = exon_ivc.chrom
-        strand = exon_ivc.strand
-        # pool transcript positions
-        for txid in txids:
-            transcript = transcripts[txid]
-            
-            utr5pos = transcript.get_utr5().get_position_set()
-            cdspos  = transcript.get_cds().get_position_set()
-            utr3pos = transcript.get_utr3().get_position_set()
-            
-            tmp_positions["utr5"]  |= utr5pos
-            tmp_positions["cds"]   |= cdspos
-            tmp_positions["utr3"]  |= utr3pos 
-        
-        # eliminate positions in which CDS & UTRs overlap from each transcript
-        for txid in txids:
-            transcript = transcripts[txid]
-            transcript_positions = {
-                          "utr5"  : transcript.get_utr5().get_position_set(),
-                          "cds"   : transcript.get_cds().get_position_set(),
-                          "utr3"  : transcript.get_utr3().get_position_set(),
-                         }
+    # to save memory, we process one chromosome at a time if input file is sorted
+    # knowing that at that moment all transcript parts are assembled
+    while do_loop == True:
+        try:
+            tx = next(source)
+        except StopIteration:
+            do_loop = False
 
-            for key1,key2 in keycombos:
-                transcript_positions[key1] -= tmp_positions[key2]
-                transcript_positions[key1] -= masked_positions
-        
-            transcript_table["region"].append(txid)
-            
-            # all unmasked positions
-            transcript_table["exon"].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,transcript.get_position_set() - masked_positions))))
+        # if chromosome is completely processed or EOF
+        if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
 
-            # all uniquely-labeled unmasked positions            
-            for k,v in transcript_positions.items():
-                transcript_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,v)))) # & exon_pos_set))))
-            
-            transcript_table["masked"].append(str(mask_ivc))
-            transcript_table["exon_unmasked"].append(str(transcript))
-            transcript_table["transcript_ids"].append(txid)
-        
-        tmp_positions2 = copy.deepcopy(tmp_positions)
-        for k1,k2 in keycombos:
-            tmp_positions[k1] -= tmp_positions2[k2]
-            tmp_positions[k1] -= masked_positions
+            # backtrack last transcript
+            if do_loop == True:
+                source = itertools.chain([tx],source)
 
-        for k in (tmp_positions.keys()):
-            supp_gene_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,tmp_positions[k]))))
+            # collapse if change in chrom
+            if last_chrom is not None or do_loop == False:
+                printer.write("Merging genes on chromosome/contig '%s'" % last_chrom)
 
-    printer.write("    %s genes total." % (n+1))
-    
-    for k,v in supp_gene_table.items():
-        gene_table[k] = v
+                # create position hash
+                tx_hash = GenomeHash(transcripts,do_copy=False)
 
-    del supp_gene_table
-    gc.collect()
-    del gc.garbage[:]
-    
+                # initialize variables
+                tx_gene = {}
+                gene_tx = {}
+                my_merged_gene_tx = {}
+
+                # map transcripts to genes & vice versa
+                for txid,txivc in transcripts.items():
+                    my_gene = txivc.get_gene()
+                    tx_gene[txid] = my_gene
+                    try:
+                        gene_tx[my_gene].append(txid)
+                    except KeyError:
+                        gene_tx[my_gene] = [txid]
+                        
+                # merge genes that share exons & write output
+                printer.write("Collapsing genes that share exons...")
+                my_merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash)
+                merged_genes.update(my_merged_genes)
+
+                # remap transcripts to merged genes
+                printer.write("Mapping transcripts to merged genes...")
+                my_tx_merged_gene = { TXID : merged_genes[GENE_ID] for TXID, GENE_ID in tx_gene.items() }
+                tx_merged_gene.update(my_tx_merged_gene)
+
+                # backlink merged genes to transcripts
+                for my_tx, my_gene in my_tx_merged_gene.items():
+                    try:
+                        merged_gene_tx[my_gene].append(my_tx)
+                        my_merged_gene_tx[my_gene].append(my_tx)
+                    except KeyError:
+                        merged_gene_tx[my_gene] = [my_tx]
+                        my_merged_gene_tx[my_gene] = [my_tx]
+
+                # flatten merged genes
+                printer.write("Flattening merged gene positions...")
+                for n,(my_gene, my_txids) in enumerate(sorted(my_merged_gene_tx.items())):
+                    if n % 1000 == 0 and n > 0:
+                        printer.write("    %s genes..." % n)
+
+                    my_gene_positions = []
+                    chroms  = []
+                    strands = []
+                    for my_txid in my_txids:
+                        my_segmentchain = transcripts[my_txid]
+                        chroms.append(my_segmentchain.chrom)
+                        strands.append(my_segmentchain.strand)
+                        my_gene_positions.extend(my_segmentchain.get_position_list())
+                        
+                        try:
+                            assert len(set(chroms))  == 1
+                        except AssertionError:
+                            printer.write("Skipping gene %s which contains multiple chromosomes: %s" % (my_gene,",".join(chroms)))
+
+                        try:
+                            assert len(set(strands)) == 1
+                        except AssertionError:
+                            printer.write("Skipping gene %s which contains multiple strands: %s" % (my_gene,",".join(strands)))
+                    
+                    my_gene_positions = set(my_gene_positions)
+                    my_gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
+                    gene_table["region"].append(my_gene)
+                    gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
+                    gene_table["exon_unmasked"].append(my_gene_ivc_raw)
+                    
+                printer.write("    %s genes total." % (n+1))
+
+                # mask genes
+                printer.write("Masking nucleotides shared by neighboring genes and/or crossmaps, and populating genes with transcript positions and masking regions jointly annotated as CDS and UTR...")
+
+                gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
+
+                for n,(gene_id,gene_ivc_raw) in enumerate(zip(gene_table["region"],gene_table["exon_unmasked"])[z:]):
+                    if n % 2000 == 0:
+                        printer.write("    %s genes..." % n)
+
+                    my_chrom  = gene_ivc_raw.spanning_segment.chrom
+                    my_strand = gene_ivc_raw.spanning_segment.strand
+                    
+                    masked_positions = []
+                    nearby_genes = gene_hash[gene_ivc_raw]
+
+                    # don't mask out positions from identical gene
+                    gene_ivc_raw_positions = gene_ivc_raw.get_position_set()
+                    nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
+                    for gene in nearby_genes:
+                        masked_positions.extend(gene.get_position_list())
+                    
+                    nearby_masks = mask_hash[gene_ivc_raw]
+                    for mask in nearby_masks:
+                        masked_positions.extend(mask.get_position_list())
+                    
+                    masked_positions = set(masked_positions)
+                    
+                    gene_positions_raw = gene_ivc_raw.get_position_set()
+                    mask_ivc_positions = gene_positions_raw & masked_positions
+                    total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions))
+                    gene_table["masked"].append(total_mask_ivc)
+                    
+                    gene_post_mask = gene_positions_raw - masked_positions
+                    gene_post_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,gene_post_mask))
+                    gene_table["exon"].append(gene_post_mask_ivc)
+                
+                    masked_positions = total_mask_ivc.get_position_set()
+                    tmp_positions = { "utr5"  : set(),
+                                      "cds"   : set(),
+                                      "utr3"  : set(),
+                                     }
+                    txids  = merged_gene_tx[gene_id]
+                    chrom  = gene_post_mask_ivc.chrom
+                    strand = gene_post_mask_ivc.strand
+
+                    # pool transcript positions
+                    for txid in txids:
+                        transcript = transcripts[txid]
+                        
+                        utr5pos = transcript.get_utr5().get_position_set()
+                        cdspos  = transcript.get_cds().get_position_set()
+                        utr3pos = transcript.get_utr3().get_position_set()
+                        
+                        tmp_positions["utr5"]  |= utr5pos
+                        tmp_positions["cds"]   |= cdspos
+                        tmp_positions["utr3"]  |= utr3pos 
+                    
+                    # eliminate positions in which CDS & UTRs overlap from each transcript
+                    for txid in txids:
+                        transcript = transcripts[txid]
+                        transcript_positions = {
+                                      "utr5"  : transcript.get_utr5().get_position_set(),
+                                      "cds"   : transcript.get_cds().get_position_set(),
+                                      "utr3"  : transcript.get_utr3().get_position_set(),
+                                     }
+
+                        for key1,key2 in keycombos:
+                            transcript_positions[key1] -= tmp_positions[key2]
+                            transcript_positions[key1] -= masked_positions
+                    
+                        transcript_table["region"].append(txid)
+                        
+                        # all unmasked positions
+                        transcript_table["exon"].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,transcript.get_position_set() - masked_positions))))
+
+                        # all uniquely-labeled unmasked positions            
+                        for k,v in transcript_positions.items():
+                            transcript_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,v)))) # & exon_pos_set))))
+                        
+                        transcript_table["masked"].append(str(total_mask_ivc))
+                        transcript_table["exon_unmasked"].append(str(transcript))
+                        transcript_table["transcript_ids"].append(txid)
+                    
+                    tmp_positions2 = copy.deepcopy(tmp_positions)
+                    for k1,k2 in keycombos:
+                        tmp_positions[k1] -= tmp_positions2[k2]
+                        tmp_positions[k1] -= masked_positions
+
+                    for k in (tmp_positions.keys()):
+                        gene_table[k].append(str(SegmentChain(*positionlist_to_segments(chrom,strand,tmp_positions[k]))))
+                
+                printer.write("    %s genes total." % (n+1))
+
+
+                # free memory from chromosome
+                del transcripts
+                del tx_gene
+                del gene_tx
+                del tx_hash
+                del my_merged_gene_tx
+                del my_tx_merged_gene
+                del gene_hash
+                gc.collect()
+                del gc.garbage[:]
+                transcripts = {}
+
+            # reset last chrom
+            last_chrom = tx.spanning_segment.chrom
+
+            # update index
+            z = len(list(gene_table.values())[0])
+
+        # otherwise, remember transcript
+        else:
+            transcripts[tx.get_name()] = tx
+   
     # write output
     printer.write("Writing output...")
     
+    # save merged genes
+    merged_fn = "%s_merged.txt" % args.outbase
+    number_merged = len(set(merged_genes.values()))
+    printer.write("Collapsed %s genes to %s merged groups. Writing to %s" % (len(merged_genes),number_merged,merged_fn))
+    fout = argsopener(merged_fn,args,"w")
+    for gene,merged_name in sorted(merged_genes.items()):
+        fout.write("%s\t%s\n" % (gene,merged_name))
+        
+    fout.close()
     # cast SegmentChains/Transcripts to strings to keep numpy from unpacking
     # them inside ArrayTable
     conversion_keys = ["exon","utr5","cds","utr3","masked","exon_unmasked"]
