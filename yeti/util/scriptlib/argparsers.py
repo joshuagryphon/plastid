@@ -878,7 +878,7 @@ def get_sequence_file_parser(input_choices=["FASTA","twobit","genbank","embl"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    annotation_file_parser = argparse.ArgumentParser(add_help=False)
+    sequence_file_parser = argparse.ArgumentParser(add_help=False)
     """Open sequence file in %s formats""" % ", ".join(input_choices)
 
     option_dict = OrderedDict([
@@ -894,9 +894,9 @@ def get_sequence_file_parser(input_choices=["FASTA","twobit","genbank","embl"],
         subparsers["annotation"].add_argument("--%s%s" % (prefix,k),**v)
     
     if return_subparsers == True:
-        return annotation_file_parser, subparsers
+        return sequence_file_parser, subparsers
     else:
-        return annotation_file_parser
+        return sequence_file_parser
 
 def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
@@ -919,12 +919,17 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     printer : file-like
         A stream to which stderr-like info can be written (default: |NullWriter|) 
 
+    Returns
+    -------
+    dict-like
+        Dictionary-like object mapping chromosome names to
+        :class:`Bio.SeqRecord.SeqRecord`-like objects
     """
     args = PrefixNamespaceWraper(args,prefix)
     printer.write("Opening sequence file '%s'." % args.sequence_file)
     if args.sequence_format == "twobit":
-        from twobitreader import TwoBitFile
-        return TwoBitFile(args.sequence_file)
+        from yeti.genomics.seqtools import TwoBitSeqRecordAdaptor
+        return TwoBitSeqRecordAdaptor(args.sequence_file)
     else:
         from Bio import SeqIO
         if index == True:

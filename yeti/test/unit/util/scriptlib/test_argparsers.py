@@ -762,6 +762,20 @@ def test_mask_genome_hash():
     for input_format, num_features in [("BED",12),("BigBed",12),("PSL",10)]:
         yield check_mask_genome_hash, input_format, num_features
 
+
+
+#=============================================================================
+# INDEX: tests for sequence file parsing
+#=============================================================================
+
+def test_get_sequences():
+    assert False
+
+def check_get_sequences(fmt):
+    pass
+
+
+
 #=============================================================================
 # INDEX: tests for PrefixNamespaceWrapper
 #=============================================================================

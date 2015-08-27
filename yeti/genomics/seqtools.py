@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """Utilities for mutating and searching nucleic acid sequences"""
 import random, re
+from Bio.Alphabet import generic_dna
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 IUPAC_TABLE = { "A" : "A",
                 "C" : "C",
@@ -94,7 +97,6 @@ def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
         seqsout.extend(mutate_seqs(seqsout,nucleotides=nucleotides,mutations=mutations-1))
         return set(seqsout) | set(seqs)
 
-
 def random_seq(size,nucleotides="ACTG"):
     """Generate a random nucleotide sequence of length `size` and composition `nucleotides`
     
@@ -115,3 +117,24 @@ def random_seq(size,nucleotides="ACTG"):
     seq = "".join([nucleotides[random.randrange(0,len(nucleotides))] for _ in range(0,size)])
     return seq
 
+
+class _TwoBitSeqProxy(object):
+    """Adaptor class that fetches :class:`Bio.SeqRecord.SeqRecord`
+    objects from :class:`twobitreader.TwoBitSequence` objects
+    """
+    def __init__(self,twobitseq):
+        self.twobitseq = twobitseq
+
+    def __getitem__(self,slice_):
+        return SeqRecord(Seq(self.twobitseq[slice_],generic_dna))
+
+class TwoBitSeqRecordAdaptor(object):
+    """Adaptor class that makes a :class:`twobitreader.TwoBitFile` behave
+    like a dictionary of :class:`Bio.SeqRecord.SeqRecord` objects.
+    """
+    def __init__(self,fh):
+        self.twobitfile = TwoBitFile(fh)
+        self._chroms = { K : _TwoBitSeqProxy(V) for K,V in self.twobitfile.items() }
+
+    def __getitem__(self,key):
+        return self._chroms[key]
