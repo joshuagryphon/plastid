@@ -13,7 +13,7 @@
 ##          'program'                : 'generate',
 ##          'tabix'                  : False
 ##        }
-#region	exon	utr5	cds	utr3	masked	exon_unmasked	transcript_ids
+region	exon	utr5	cds	utr3	masked	exon_unmasked	transcript_ids
 15S_rRNA	chrmt:6545-6847^6876-7018^7019-8194(+)	na	na	na	chrmt:6847-6876^7018-7019(+)	chrmt:6545-8194(+)	15S_rRNA
 21S_rRNA	chrmt:58008-58852^58865-58908^58909-58981^59003-60121^60122-60125^60127-60130^60131-60323^60325-60724^61867-62447(+)	na	na	na	chrmt:58852-58865^58908-58909^58981-59003^60121-60122^60125-60127^60130-60131^60323-60325(+)	chrmt:58008-60724^61867-62447(+)	21S_rRNA
 HRA1	chrI:99304-99868(+)	na	na	na	na	chrI:99304-99868(+)	HRA1

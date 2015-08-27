@@ -12,7 +12,7 @@
 ##          'position_file'    : 'gen_cs_gene.positions',
 ##          'program'          : 'count'
 ##        }
-#cds_length	cds_reads	cds_rpkm	exon_length	exon_reads	exon_rpkm	region	utr3_length	utr3_reads	utr3_rpkm	utr5_length	utr5_reads	utr5_rpkm
+cds_length	cds_reads	cds_rpkm	exon_length	exon_reads	exon_rpkm	region	utr3_length	utr3_reads	utr3_rpkm	utr5_length	utr5_reads	utr5_rpkm
 0	0.00000000	nan	1619	0.00000000	0.00000000	15S_rRNA	0	0.00000000	nan	0	0.00000000	nan
 0	0.00000000	nan	3254	0.00000000	0.00000000	21S_rRNA	0	0.00000000	nan	0	0.00000000	nan
 0	0.00000000	nan	564	0.00000000	0.00000000	HRA1	0	0.00000000	nan	0	0.00000000	nan
