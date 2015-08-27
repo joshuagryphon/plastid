@@ -1224,7 +1224,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                 except AssertionError:
                     warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,UserWarning)
                     # transcripts with exons on two strands
-                    /ejected.append(tname)
+                    rejected.append(tname)
                 except KeyError:
                     # transcripts where CDS ends outside bounds of transcript
                     # there are 25 of these in flybase r5.43

@@ -536,7 +536,7 @@ class BPlusTree(object):
         self.header      = self._parse_header()
 
         if self.header["magic"] != 0x78CA8C91:
-            raise MalformedFileError(self.filename,"Could not determine byte order of B+ Tree. Expected magic number to be %x, got %x." % (0x78CA8C91,self.header["magic"])
+            raise MalformedFileError(self.filename,"Could not determine byte order of B+ Tree. Expected magic number to be %x, got %x." % (0x78CA8C91,self.header["magic"]))
 
         self.tree_offset = start_offset + BPlusTreeHeaderFactory.calcsize()
         self.num_chroms = self.header["num_chroms"]
