@@ -5,44 +5,53 @@ to open and process various types of data.
 Capabilities provided include:
 
     Importing read alignments or counts
-        :py:func:`get_alignment_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
-            for alignment or count data in `BAM`_, `Bowtie`_, `Wiggle`_, and `bedGraph`_ files
+        :func:`get_alignment_file_parser`
+            Get :class:`~argparse.ArgumentParser` that opens alignment or
+            count data in `BAM`_, `Bowtie`_, `Wiggle`_, and `bedGraph`_ files
     
-        :py:func:`get_genome_array_from_args`
+        :func:`get_genome_array_from_args`
             Return a |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|,
             from command-line arguments parsed by a parser created with 
             :func:`get_alignment_file_parser`,
 
     Importing transcript models
-        :py:func:`get_annotation_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that process arguments
-            to open transcript models from `GTF2`_, `GFF3`_, `BigBed`_, and `BED`_ format
-            annotation files
+        :func:`get_annotation_file_parser`
+            Get :class:`~argparse.ArgumentParser` for opening transcript models
+            from `GTF2`_, `GFF3`_, `BigBed`_, and `BED`_ format annotation files
             
-        :py:func:`get_transcripts_from_args`
+        :func:`get_transcripts_from_args`
             Return |Transcripts| from command-line arguments parsed
-            by a parser created with :py:func:`get_annotation_file_parser`
+            by a parser created with :func:`get_annotation_file_parser`
 
     Importing arbitrary regions of interest
-        :py:func:`get_segmentchain_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
-            to import |SegmentChains| from `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, and `PSL`_
-            format files
+        :func:`get_segmentchain_file_parser`
+            Get :class:`~argparse.ArgumentParser` for opening regions of interest
+            as |SegmentChains| from `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, and `PSL`_
+            format annotation files
 
-        :py:func:`get_segmentchains_from_args`
+        :func:`get_segmentchains_from_args`
             Return |SegmentChains| from arguments parsed by a parser created with
-            :py:func:`get_segmentchain_file_parser`
+            :func:`get_segmentchain_file_parser`
+
+    Opening sequence files
+        :func:`get_sequence_file_parser`
+            Get :class:`~argparse.ArgumentParser` for opening files of
+            nucleic acid sequence
+
+        :func:`get_seqdict_from_args`
+            Return a dict-like object of SeqRecords of sequences from 
+            a parser mad with :func:`get_sequence_file_parser`
+
 
     Hashing regions of the genome that should be excluded from analyses
-        :py:func:`get_mask_file_parser`
-            Create an :py:class:`~argparse.ArgumentParser` that processes arguments
-            to open a :term:`mask file` in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or
-            `PSL`_ format.
+        :func:`get_mask_file_parser`
+            Get :class:`~argparse.ArgumentParser` to open a :term:`mask file` 
+            in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or `PSL`_ format.
              
-        :py:func:`get_genome_hash_from_mask_args`
+        :func:`get_genome_hash_from_mask_args`
             Return a |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
-            of genomic regions to mask from analyses
+            of genomic regions to mask from analyses from a parser made with
+            :func:`get_mask_file_parser`
 
 Example
 -------     
@@ -106,26 +115,11 @@ See Also
 """
 import argparse
 import warnings
-import pysam
 import sys
 from collections import OrderedDict
 from yeti.util.services.exceptions import MalformedFileError
-from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
-                                           BAMGenomeArray,\
-                                           SizeFilterFactory, CenterMapFactory,\
-                                           FivePrimeMapFactory, ThreePrimeMapFactory,\
-                                           VariableFivePrimeMapFactory,\
-                                           five_prime_map,  \
-                                           three_prime_map, \
-                                           center_map,      \
-                                           variable_five_prime_map
 
-from yeti.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
-from yeti.readers.bed import BED_Reader
-from yeti.readers.bigbed import BigBedReader
-from yeti.readers.psl import PSL_Reader
 from yeti.genomics.roitools import SegmentChain, Transcript
-from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
 from yeti.util.io.openers import opener, NullWriter
 from yeti.util.io.filters import CommentReader
 
@@ -153,6 +147,8 @@ _MASK_PARSER_TITLE = "mask file options (optional)"
 _MASK_PARSER_DESCRIPTION = """Add mask file(s) that annotate regions that should be excluded from analyses
 (e.g. repetitive genomic regions)."""
 
+_DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
+_DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
 
 #===============================================================================
 # INDEX: Alignment/count file parser, and helper functions
@@ -205,9 +201,6 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
         function that parses the :py:class:`~argparse.Namespace`
         returned by this :py:class:`~argparse.ArgumentParser`
     """
-
-    # pardon the long line. it is essential for Sphinx
- 
     alignment_file_parser = argparse.ArgumentParser(description=description,
                                                     add_help=False)
 
@@ -330,6 +323,16 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
         :py:class:`~argparse.Namespace` is processed by this function        
     """
     args = PrefixNamespaceWrapper(args,prefix)
+    import pysam
+    from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
+                                               BAMGenomeArray,\
+                                               SizeFilterFactory, CenterMapFactory,\
+                                               FivePrimeMapFactory, ThreePrimeMapFactory,\
+                                               VariableFivePrimeMapFactory,\
+                                               five_prime_map,  \
+                                               three_prime_map, \
+                                               center_map,      \
+                                               variable_five_prime_map
     
     # require at least one countfile
     if len(args.count_files) == 0:
@@ -601,6 +604,8 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
             sys.exit(2)
         if tabix == True:
             warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",UserWarning)
+
+        from yeti.readers.bigbed import BigBedReader
         transcripts = BigBedReader(args.annotation_files[0],
                                    return_type=Transcript,
                                    cache_depth=1,
@@ -608,6 +613,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
                                    printer=printer)
         
     elif tabix == True:
+        import pysam
         #streams = [pysam.tabix_iterator(opener(X), lambda x,y: x) for X in args.annotation_files] # used to work in earlier pysam
         # string parsing by supplying None instead of `asTuple()` no longer works
         # nor do anonymous lambda functions
@@ -616,6 +622,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
         streams = (opener(X) for X in args.annotation_files)
 
     if args.annotation_format in ("GFF3","GTF2"):
+        from yeti.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
         if 'sorted' not in disabled and args.sorted == False and 'tabix' not in disabled and args.tabix == False:
             msg = """Transcript assembly on %s files can require a lot of memory.
 Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
@@ -638,12 +645,14 @@ Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % ar
                                                is_sorted=args.sorted)
         
     elif args.annotation_format.lower() == "bed":
+        from yeti.readers.bed import BED_Reader
         transcripts = BED_Reader(*streams,
                                  add_three_for_stop=add_three,
                                  tabix=tabix,
                                  return_type=return_type,printer=printer)
 
     elif args.annotation_format.lower() == "psl":
+        from yeti.readers.psl import PSL_Reader
         transcripts = PSL_Reader(*streams,
                                  tabix=tabix,
                                  return_type=return_type,printer=printer)
@@ -802,6 +811,7 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function  
     """
+    from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
     tmp = PrefixNamespaceWrapper(args,prefix)
     if len(tmp.annotation_files) > 0:
         printer.write("Opening mask annotation file(s) %s..." % ", ".join(tmp.annotation_files))
@@ -822,8 +832,105 @@ Consider converting to BigBed or using tabix to index your mask file."""
                 hash_ivcs = get_segmentchains_from_args(args,prefix=prefix,printer=printer)
                 return GenomeHash(hash_ivcs)
     else:
-        return GenomeHash([])
+        return GenomeHash()
     
+
+#===============================================================================
+# INDEX: Sequence file parser
+#===============================================================================
+
+def get_sequence_file_parser(input_choices=["FASTA","twobit","genbank","embl"],
+                               disabled=[],
+                               prefix="",
+                               title=_DEFAULT_SEQUENCE_PARSER_TITLE,
+                               description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
+    """Return an :py:class:`~argparse.ArgumentParser` that opens
+    annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
+     
+    Parameters
+    ----------
+    input_choices : list, optional
+        list of permitted sequence file type choices.
+        (Default: '["FASTA","twobit","genbank","embl"]').
+        
+    disabled : list, optional
+        list of parameter names that should be disabled from parser
+        without preceding dashes
+
+    prefix : str, optional
+        string prefix to add to default argument options (Default: `''`)
+    
+    title : str, optional
+        title for option group (used in command-line help screen)
+        
+    description : str, optional
+        description of parser (used in command-line help screen)
+    
+   
+    Returns
+    -------
+    :class:`argparse.ArgumentParser`
+    
+    
+    See also
+    --------
+    get_seqdict_from_args
+        function that parses the :py:class:`~argparse.Namespace` returned
+        by this :py:class:`~argparse.ArgumentParser`
+    """
+    annotation_file_parser = argparse.ArgumentParser(add_help=False)
+    """Open sequence file in %s formats""" % ", ".join(input_choices)
+
+    option_dict = OrderedDict([
+                    ("sequence_file"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),
+                                                 type=str,
+                                                 help="A file of DNA sequence")),                               
+                    ("sequence_format"   , dict(choices=input_choices,
+                                                  default="FASTA",
+                                                  help="Format of %ssequence_file (default: FASTA)." % prefix)),    
+                   ])
+
+    for k,v in filter(lambda x: x[0] not in disabled,option_dict.items()):
+        subparsers["annotation"].add_argument("--%s%s" % (prefix,k),**v)
+    
+    if return_subparsers == True:
+        return annotation_file_parser, subparsers
+    else:
+        return annotation_file_parser
+
+def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
+    """Retrieve a dictionary-like object of sequences
+
+    Parameters
+    ----------
+    args : :py:class:`argparse.Namespace`
+        Namespace object from :py:func:`get_sequence_file_parser`
+    
+    prefix : str, optional
+        string prefix to add to default argument options.
+        Must be same prefix that was added in call to :py:func:`get_sequence_file_parser`
+        (Default: "")
+   
+    index : bool, optional
+        If sequence format is anything other than twobit, open with
+        lazily-evaluating :func:`Bio.SeqIO.index` instead of
+        :func:`Bio.SeqIO.to_dict` (Default: `True`)
+        
+    printer : file-like
+        A stream to which stderr-like info can be written (default: |NullWriter|) 
+
+    """
+    args = PrefixNamespaceWraper(args,prefix)
+    printer.write("Opening sequence file '%s'." % args.sequence_file)
+    if args.sequence_format == "twobit":
+        from twobitreader import TwoBitFile
+        return TwoBitFile(args.sequence_file)
+    else:
+        from Bio import SeqIO
+        if index == True:
+            return SeqIO.index(args.sequence_file,args.sequence_format)
+        else:
+            return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))
 
 #===============================================================================
 # INDEX: Utility classes
