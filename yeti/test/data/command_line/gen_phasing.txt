@@ -15,7 +15,7 @@
 ##          'offset'               : 'gen_p_offsets.txt',
 ##          'outbase'              : 'gen'
 ##        }
-#read_length	reads_counted	fraction_reads_counted	phase0	phase1	phase2
+read_length	reads_counted	fraction_reads_counted	phase0	phase1	phase2
 26	1577	0.015315	0.909321	0.020926	0.069753
 27	3551	0.034486	0.900310	0.023374	0.076317
 28	61820	0.600369	0.899224	0.025768	0.075008

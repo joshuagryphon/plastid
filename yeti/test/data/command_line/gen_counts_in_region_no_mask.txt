@@ -18,7 +18,7 @@
 ##          'outfile'                : 'gen_counts_in_region_no_mask.txt'
 ##        }
 ## total_dataset_counts: 115674
-#region_name	region	counts	counts_per_nucleotide	rpkm	length
+region_name	region	counts	counts_per_nucleotide	rpkm	length
 YEL010W_mRNA	chrV:136167-136770(+)	5.00000000e+03	8.29187396e+00	7.16831264e+04	603
 YNL129W_mRNA	chrXIV:381385-382320(+)	5.00000000e+03	5.34759358e+00	4.62298665e+04	935
 YIL056W_mRNA	chrIX:249864-251973(+)	5.00000000e+03	2.37079184e+00	2.04954600e+04	2109

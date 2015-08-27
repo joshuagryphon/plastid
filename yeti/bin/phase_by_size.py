@@ -30,6 +30,7 @@ import warnings
 import argparse
 import inspect
 
+import pandas as pd
 import numpy
 import matplotlib
 matplotlib.use("Agg")
@@ -37,7 +38,6 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_transcripts_from_args,\
                                                       get_alignment_file_parser,\
                                                       get_annotation_file_parser
-from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
@@ -132,7 +132,8 @@ def main(argv=sys.argv[1:]):
             phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)
 
     printer.write("Counted %s ROIs total." % (n+1))
-    dtmp = ArrayTable(dtmp)
+    for k in dtmp:
+        dtmp[k] = numpy.array(dtmp[k])
     
     # total reads counted for each size    
     for k in read_lengths:
@@ -144,7 +145,7 @@ def main(argv=sys.argv[1:]):
     # phase vectors
     phase_vectors = { K : V.astype(float)/V.astype(float).sum() for K,V in phase_sums.items() }
     for i in range(3):
-        dtmp["phase%s" % i] = numpy.zeros(len(dtmp)) 
+        dtmp["phase%s" % i] = numpy.zeros(len(dtmp["read_length"])) 
 
     for k, vec in phase_vectors.items():
         for i in range(3):
@@ -153,18 +154,20 @@ def main(argv=sys.argv[1:]):
     # phase table
     fn = "%s_phasing.txt" % args.outbase
     printer.write("Saving phasing table to %s ..." % fn)
+    dtmp = pd.DataFrame(dtmp)
     with argsopener(fn,args) as fh:
-        dtmp.to_file(fh,keyorder=["read_length",
-                                  "reads_counted",
-                                  "fraction_reads_counted",
-                                  "phase0",
-                                  "phase1",
-                                  "phase2",
-                                 ],
-                      formatters={numpy.float64 : '{:.6f}'.format,
-                                  numpy.float32 : '{:.6f}'.format,
-                                  numpy.float128 : '{:.6f}'.format,
-                                  }
+        dtmp.to_csv(fh,columns=["read_length",
+                                "reads_counted",
+                                "fraction_reads_counted",
+                                "phase0",
+                                "phase1",
+                                "phase2",
+                                ],
+                       float_format="%.6f",
+                       na_rep="nan",
+                       sep="\t",
+                       index=False,
+                       header=True
                       )
         fh.close()
     

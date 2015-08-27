@@ -330,7 +330,7 @@ def main(argv=sys.argv[1:]):
     # save data as p-site offset table
     fn = "%s_p_offsets.txt" % args.outbase
     fout = argsopener(fn,args)
-    fout.write("#length\tp_offset\n")
+    fout.write("length\tp_offset\n")
     for k in offset_dict:
         fout.write("%s\t%s\n" % (k,offset_dict[k]))
     

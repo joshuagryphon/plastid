@@ -3,6 +3,7 @@
 import os
 import shlex
 import numpy
+import pandas as pd
 from random import shuffle
 from tempfile import NamedTemporaryFile
 from pkg_resources import cleanup_resources
@@ -57,38 +58,43 @@ def test_exit_status():
     # write values
     keyorder = ["idxA"] + sorted(list(set(cols.keys()) - { "idxA" }))
 
-    table1 = ArrayTable(cols)
-    table1.to_file(headerfile)
-    table1.to_file(CommentWriter(noheaderfile),keyorder=keyorder)
+    table1 = pd.DataFrame(cols)
+    table1.to_csv(headerfile,index=False,header=True,sep="\t")
+    table1.to_csv(noheaderfile,index=False,header=False,sep="\t",
+columns=keyorder)
     headerfile.close()
     noheaderfile.close()
 
     table1["extra"] = 2**7 * numpy.random.random(size=size)
-    table1.to_file(headerfile_extra_cols)
-    table1.to_file(CommentWriter(noheaderfile_extra_cols),
-                   keyorder=["extra"]+keyorder)
+    table1.to_csv(headerfile_extra_cols,index=False,header=True,sep="\t")
+    table1.to_csv(noheaderfile_extra_cols,index=False,header=False,sep="\t",
+
+                   columns=["extra"]+keyorder)
     headerfile_extra_cols.close()
     noheaderfile_extra_cols.close()
 
     table1["extra"] += 10**-4 * numpy.random.random(size=size)
-    table1.to_file(headerfile_extra_cols_diff)
-    table1.to_file(CommentWriter(noheaderfile_extra_cols_diff),
-                   keyorder=["extra"]+keyorder)
+    table1.to_csv(headerfile_extra_cols_diff,index=False,header=True,sep="\t")
+    table1.to_csv(noheaderfile_extra_cols_diff,index=False,header=False,sep="\t",
+
+                   columns=["extra"]+keyorder)
     headerfile_extra_cols_diff.close()
     noheaderfile_extra_cols_diff.close()
 
     shufidx = numpy.arange(size)
     shuffle(shufidx)
-    table2 = ArrayTable({ K : V[shufidx] for K,V in cols.items()})
-    table2.to_file(headerfile_shuffled)
-    table2.to_file(CommentWriter(noheaderfile_shuffled),keyorder=keyorder)
+    table2 = pd.DataFrame({ K : V[shufidx] for K,V in cols.items()})
+    table2.to_csv(headerfile_shuffled,index=False,header=True,sep="\t")
+    table2.to_csv(noheaderfile_shuffled,index=False,header=False,sep="\t",
+columns=keyorder)
     headerfile_shuffled.close()
     noheaderfile_shuffled.close()
 
     table2["extra"] = table1["extra"][shufidx]
-    table2.to_file(headerfile_extra_cols_shuffled)
-    table2.to_file(CommentWriter(noheaderfile_extra_cols_shuffled),
-                   keyorder=["extra"]+keyorder)
+    table2.to_csv(headerfile_extra_cols_shuffled,index=False,header=True,sep="\t")
+    table2.to_csv(noheaderfile_extra_cols_shuffled,
+                  index=False,header=False,sep="\t",
+                   columns=["extra"]+keyorder)
     headerfile_extra_cols_shuffled.close()
     noheaderfile_extra_cols_shuffled.close()
 

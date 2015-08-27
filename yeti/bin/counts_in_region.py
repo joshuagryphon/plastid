@@ -91,7 +91,7 @@ def main(argv=sys.argv[1:]):
     gnd_sum = gnd.sum()
     with argsopener(args.outfile,args,"w") as fout:
         fout.write("## total_dataset_counts: %s\n" % gnd_sum)
-        fout.write("#region_name\tregion\tcounts\tcounts_per_nucleotide\trpkm\tlength\n")
+        fout.write("region_name\tregion\tcounts\tcounts_per_nucleotide\trpkm\tlength\n")
         for n,ivc in enumerate(transcripts):
             name = ivc.get_name()
             masks = crossmap.get_overlapping_features(ivc)

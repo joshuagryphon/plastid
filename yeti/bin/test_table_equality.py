@@ -22,10 +22,6 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 NUMERIC_DTYPES = "biufc"
 
-def test_3(df1,df2,**kwargs):
-    return df1.sort(axis=0).equals(df2.sort(axis=0))
-
-
 def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(),print_verbose=False,return_verbose=False):
     """Test equality of dataframes over multiple columns, with verbose output.
     If `NaNs` or `Infs` are present, these must be present in corresponding cells
@@ -65,14 +61,17 @@ def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(
         A list of strings explaining how `df1` and `df2` differ. Only
         returned if `return_verbose` is `True`
     """
+    df1 = df1.sort(axis=1).sort(axis=0)
+    df2 = df2.sort(axis=1).sort(axis=0)
+
     failures = []
-    keys1 = set(df1.keys())
-    keys2 = set(df2.keys())
+    keys1 = set(df1.columns)
+    keys2 = set(df2.columns)
     retval = True
     if keys1 != keys2:
         failstrs = ["Tables contain different columns (unique keys shown below):",
-                    "    %s: %s" % (1,", ".join(keys1 - keys2)),
-                    "    %s: %s" % (2,", ".join(keys2 - keys1))
+                    "    %s: %s" % (1,", ".join([str(X) for X in keys1 - keys2])),
+                    "    %s: %s" % (2,", ".join([str(X) for X in keys2 - keys1]))
                    ] 
         printer.write("\n".join(failstrs))
         failures.extend(failstrs)
@@ -89,9 +88,6 @@ def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(
     if retval == True:
         if print_verbose == True:    
             printer.write("Sorting data...")
-        if len(sort_columns) > 0:
-            df1.sort(columns=sort_columns,inplace=True)
-            df2.sort(columns=sort_columns,inplace=True)
     
         if print_verbose == True:
             printer.write("Testing equality of values by column with numerical tolerance %.3e..." % tol)
@@ -169,13 +165,15 @@ def main(argv=sys.argv[1:],verbose=False):
     args = parser.parse_args(argv)
 
     kwargs = { "sep"       : "\t",
-               "index_col" : args.sort_keys, #False, # number rows so all columns are data
+               "index_col" : args.sort_keys,
                "comment"   : "#",
               }
-
+    exclude = args.exclude
     if args.no_header is True:
         if args.sort_keys is not None:
             kwargs["index_col"] = [int(X) for X in args.sort_keys]
+        exclude = [int(X) for X in exclude]
+
         with opener(args.file1) as fh:
             df1 = pd.read_table(fh,header=None,**kwargs)
             
@@ -184,38 +182,22 @@ def main(argv=sys.argv[1:],verbose=False):
 
     else:
         with opener(args.file1) as fh:
-            df1 = pd.read_table(fh,header=True,**kwargs)
+            df1 = pd.read_table(fh,header=0,**kwargs)
             
         with opener(args.file2) as fh:
-            df2 = pd.read_table(fh,header=True,**kwargs)
-#        # TODO: move away from ArrayTable
-#        # can do this easily by making appropriate readers
-#        # and reassigning kwargs as necessary
-#        with opener(args.file1) as fh:
-#            df1 = ArrayTable.from_file_to_data_frame(fh)
-#            fh.close()
-#        
-#        with opener(args.file2) as fh:
-#            df2 = ArrayTable.from_file_to_data_frame(fh)
-#            fh.close()
+            df2 = pd.read_table(fh,header=0,**kwargs)
     
     if len(args.exclude) > 0:
         printer.write("Excluding columns %s: " % ", ".join(args.exclude))
 
-    for k in args.exclude:
+    for k in exclude:
         if k in df1:
             df1.pop(k)
         if k in df2:
             df2.pop(k)
 
-    test_result = test_3(df1,df2,sort_columns=args.sort_keys)
-#    test_result, messages =  test_dataframe_equality(df1,
-#                                                     df2,
-#                                                     tol=args.tol,
-#                                                     sort_columns=args.sort_keys,
-#                                                     printer=printer,
-#                                                     print_verbose=args.verbose,
-#                                                     return_verbose=True)
+    test_result, messages = test_dataframe_equality(df1,df2,printer=printer,print_verbose=True,return_verbose=True,tol=args.tol) #test_3(df1,df2)
+
     if test_result == True:
         printer.write("Files contain equivalent data.")
         exit_code = 0
@@ -226,7 +208,7 @@ def main(argv=sys.argv[1:],verbose=False):
     if __name__ == "__main__":
         sys.exit(exit_code)
     else:
-        if verbose == True:
+        if args.verbose == True or verbose == True:
             return exit_code, messages
         else:
             return exit_code

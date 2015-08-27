@@ -910,7 +910,9 @@ def _parse_variable_offset_file(fh):
         items = line.strip("\n").split("\t")
         if len(items) != 2:
             raise MalformedFileError(fh.__name__,"More or fewer than two columns on line:\n\t%s" % line.strip("\n"))
-        key   = items[0]
+        if items[0] == "length":
+            continue
+        key = items[0]
         try:
             key = key if key == "default" else int(key)
         except ValueError:
