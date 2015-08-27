@@ -77,9 +77,10 @@ Find genomic coordinate of position 53 in a chain::
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
-import numpy
 import re
 import copy
+import warnings
+import numpy
 
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -718,7 +719,7 @@ class SegmentChain(object):
                 else:
                     return False
         else:
-            raise TypeError("Other is not a GenomicSegment or SegmentChain")
+            raise TypeError("The 'in'/containment operator is only defined for GenomicSegments and SegmentChains")
         return False
     
     def __eq__(self,other):
@@ -790,7 +791,7 @@ class SegmentChain(object):
                         shared.append(segment)
                 return shared
         else:
-            raise TypeError("Other is not a GenomicSegment or SegmentChain")
+            raise TypeError("shares_segments_with() is defined only for GenomicSegments and SegmentChains")
     
     def unstranded_overlaps(self,other):
         """Return `True` if `self` and `other` share genomic positions
@@ -824,7 +825,7 @@ class SegmentChain(object):
                 o_pos  = other.get_position_set()
             return len(my_pos & o_pos) > 0 
         else:
-            raise TypeError("Other is not a GenomicSegment or SegmentChain")
+            raise TypeError("unstranded_overlaps() is only defined for GenomicSegments and SegmentChains")
         
     def overlaps(self,other):
         """Return `True` if `self` and `other` share genomic positions on the same strand
@@ -906,7 +907,7 @@ class SegmentChain(object):
                    self.chrom  == other.chrom and\
                    other.get_position_set() & self.get_position_set() == other.get_position_set()
         else:
-            raise TypeError("Other is not a GenomicSegment or SegmentChain")
+            raise TypeError("covers() is only defined for GenomicSegments and SegmentChains")
     
     def get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
@@ -1693,9 +1694,9 @@ class SegmentChain(object):
             if `start` or `end` is None
         """
         if start is None:
-            raise TypeError('start is None. Expected int')
+            raise TypeError('start coordinate supplied is None. Expected int')
         elif end is None:
-            raise TypeError('end is None. Expected int')
+            raise TypeError('end coordinate supplied is None. Expected int')
         positions = self.get_position_list()
         if stranded is True and self.strand == "-":
             positions = positions[::-1]
@@ -1727,6 +1728,9 @@ class SegmentChain(object):
         numpy.ndarray
             Array of counts from `gnd` covering `self`
         """
+        if len(self) == 0:
+            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),UserWarning)
+
         ltmp = []
         for iv in self:
             #ltmp.extend(gnd[iv])
@@ -1737,6 +1741,7 @@ class SegmentChain(object):
             
         return numpy.array(ltmp)
     
+    # TODO: cache / lazy eval this
     def get_masked_counts(self,gnd,stranded=True):
         """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
         coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
@@ -1788,12 +1793,17 @@ class SegmentChain(object):
         str
             Nucleotide sequence of the |SegmentChain| extracted from `genome`
         """
-        chromseq = genome[self.spanning_segment.chrom]
-        ltmp = [chromseq[X.start:X.end] for X in self]
-        stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
+        if len(self) == 0:
+            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),UserWarning)
+            return ""
 
-        if self.strand == "-"  and stranded is True:
-            stmp = str(Seq(stmp,generic_dna).reverse_complement())
+        else:
+            chromseq = genome[self.spanning_segment.chrom]
+            ltmp = [chromseq[X.start:X.end] for X in self]
+            stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
+
+            if self.strand == "-"  and stranded is True:
+                stmp = str(Seq(stmp,generic_dna).reverse_complement())
             
         return stmp
     

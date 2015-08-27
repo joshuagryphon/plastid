@@ -53,6 +53,7 @@ import struct
 import zlib
 import itertools
 import sys
+import warnings
 from collections import OrderedDict
 from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.readers.common import add_three_for_stop_codon
@@ -62,7 +63,7 @@ from yeti.util.io.openers import NullWriter
 from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
 from yeti.util.services.decorators import skipdoc
-
+from yeti.util.services.exceptions import MalformedFileError
 
 #===============================================================================
 # INDEX: BigBedReader
@@ -222,7 +223,7 @@ class BigBedReader(object):
                 self.autosql_parser = AutoSqlDeclaration(autosql)
                 self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self._num_custom_fields:])
             except AttributeError:
-                printer.write("Could not find or could not parse autoSql declaration: %s" % autosql)
+                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),UserWarning)
                 self.custom_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self._num_custom_fields)])
                 self.autosql_parser = lambda x: OrderedDict(zip(self.custom_fields,x.split("\t")[-self._num_custom_fields:]))
         
@@ -239,8 +240,6 @@ class BigBedReader(object):
         
         self.fifo = UniqueFIFO(cache_depth)
         self.fifo_dict = {}
-        
-        assert self.header["magic"] == 0x8789F2EB
 
     def close(self):
         """Close all open pointers to `BigBed`_ file"""
@@ -321,7 +320,8 @@ class BigBedReader(object):
             self.fh.seek(0)
             items = HeaderFactory(self.fh,self._byte_order)
         
-        assert items["magic"] == 0x8789F2EB
+        if self.header["magic"] != 0x8789F2EB:
+            raise MalformedFileError(self.filename,"Could not determine byte order of BigBed file. Expected magic number to be '%x', got '%x'." % (0x8789F2EB,self.header["magic"]))
         
         return items
     
@@ -534,7 +534,9 @@ class BPlusTree(object):
         self.fh = open(filename,"rb")
         self.header_offset = start_offset
         self.header      = self._parse_header()
-        assert self.header["magic"] == 0x78CA8C91
+
+        if self.header["magic"] != 0x78CA8C91:
+            raise MalformedFileError(self.filename,"Could not determine byte order of B+ Tree. Expected magic number to be %x, got %x." % (0x78CA8C91,self.header["magic"])
 
         self.tree_offset = start_offset + BPlusTreeHeaderFactory.calcsize()
         self.num_chroms = self.header["num_chroms"]
@@ -706,7 +708,8 @@ class RTree(object):
 
         self.fh            = open(filename,"rb")
         self.header        = self._parse_header()
-        assert self.header["magic"] == 0x2468ACE0
+        if self.header["magic"] != 0x2468ACE0:
+            raise MalformedFileError(self.filename,"Could not determine byte order of R tree. Expected magic number to be %x. Got %x." % (0x2468ACE0,self.header["magic"]))
         
         # to be populated as needed
         self.leaf_data              = {}

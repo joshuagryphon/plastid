@@ -511,8 +511,9 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
                 val = unescape_GFF3(val.strip(" "))
                 
             if key in d:
-                warnings.warn("Found duplicate key '%s' in GFF3 line:\n    %s" % (key,inp),
+                warnings.warn("Found duplicate attribute key '%s' in GFF3 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
                               UserWarning)
+                val = "%s,%s" % (d[key],val)
             d[key] = val
     return d
 
@@ -571,13 +572,10 @@ def parse_GTF2_tokens(inp):
             val = val[:-1]
 
         if key in d:
-            warnings.warn("Found duplicate key '%s' in GTF2 line. Aggregating tags & returning as list:\n    %s" % (key,inp),
+            warnings.warn("Found duplicate attribute key '%s' in GTF2 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
                           UserWarning)
-            if isinstance(d[key],list):
-                d[key].append(val)
-            else:
-                d[key] = [d[key]]
-                d[key].append(val)
+            d[key] = "%s,%s" % (d[key],unescape_GTF2(val))
+
         else:
             d[key] = unescape_GTF2(val)
         

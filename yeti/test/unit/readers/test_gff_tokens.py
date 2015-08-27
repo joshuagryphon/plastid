@@ -278,9 +278,9 @@ class TestGTF2_TokenParsing(TestGFF3_TokenParsing):
         test_cases = [('gene_id "mygene"; transcript_id "mytranscript"; tag "tag value";',
                        {'gene_id' : 'mygene', 'tag' : 'tag value', 'transcript_id' : 'mytranscript'}),
                       ('gene_id "mygene"; transcript_id "mytranscript"; tag "tag value"; tag "tag value 2";',
-                       {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}),
+                       {'gene_id' : 'mygene', 'tag' : 'tag value,tag value 2', 'transcript_id' : 'mytranscript'}),
                        ('gene_id "mygene"; tag "tag value"; transcript_id "mytranscript"; tag "tag value 2";',
-                       {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}),
+                       {'gene_id' : 'mygene', 'tag' : 'tag value,tag value 2', 'transcript_id' : 'mytranscript'}),
                      ]
         for inp, outp in test_cases:
             self.assertDictEqual(self.parser(inp),outp)

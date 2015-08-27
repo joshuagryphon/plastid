@@ -26,8 +26,7 @@ Decorators
     overall long-term memory usage.
 
 :py:func:`notimplemented`
-    Wrapped functions raise |NotImplementedExceptions|. Use if committing
-    incomplete code.
+    Wrapped functions raise NotImplementedErrors. Use if committing incomplete code.
 
 :py:func:`notused`
     No effects. Used for code annotation only
@@ -46,32 +45,11 @@ import warnings
 import types
 import tempfile
 from yeti.util.services.mini2to3 import get_func_code
-
-class NotImplementedException(Exception):
-    """Exception raised when modules make calls to functions
-    decorated with the :py:func:`notimplemented` annotation.
-    """
-    def __init__(self,func):
-        """Create a NotImplementedException
-        
-        Parameters
-        ----------
-        func : function
-            Function that was not implemented
-        """
-        self.func = func
-        func_code = get_func_code(func)
-        message = "NotImplementedException: call to unimplemented "+\
-                  "function %s in module %s line %s" % (self.func.__name__,
-                                                        self.func.__module__,
-                                                        func_code.co_firstlineno + 1)
-        Exception.__init__(self,message)
-
                        
 def notimplemented(func):
     """NotImplemented annotation decorator.
     Calls to functions annotated with this decorator raise
-    |NotImplementedException|, which record attributes of function callers
+    |NotImplementedError|, which record attributes of function callers
 
     Parameters
     ----------
@@ -85,7 +63,13 @@ def notimplemented(func):
     """
     @functools.wraps(func)
     def new_func(*args,**kwargs):
-        raise NotImplementedException(func)
+        func_code = get_func_code(func)
+        message = "NotImplementedException: call to unimplemented "+\
+                  "function %s in module %s line %s" % (func.__name__,
+                                                        func.__module__,
+                                                        func_code.co_firstlineno + 1)
+ 
+        raise NotImplementedError(message)
     
     return new_func
     

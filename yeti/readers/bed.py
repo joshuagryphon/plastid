@@ -142,5 +142,5 @@ class BED_Reader(AssembledFeatureReader):
                 return self.return_type.from_bed(line)
             except:
                 self.rejected.append(line)
-                self.printer.write("Rejecting line %s: %s" % (self.counter,line))
+                warnings.warn("Rejecting malformed bed line %s:\n    %s" % (self.counter,line),UserWarning)
                 return self.__next__()

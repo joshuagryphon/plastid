@@ -563,7 +563,7 @@ class TabixGenomeHash(AbstractGenomeHash):
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
         except ValueError:
-            msg = "Supported formats for TabixGenomeHash are: %s" % ", ".join(sorted(TabixGenomeHash._READERS.keys()))
+            msg = "Supported file formats for TabixGenomeHash are: %s" % ", ".join(sorted(TabixGenomeHash._READERS.keys()))
             printer.write(msg)
             raise ValueError(msg)
         

@@ -27,9 +27,10 @@ Group multiple entries from a `PSL`_ file by query sequence::
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
+import warnings
+import itertools
 from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain
-import itertools
 
 class PSL_Reader(AssembledFeatureReader): 
     """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
@@ -70,7 +71,7 @@ class PSL_Reader(AssembledFeatureReader):
                 return self.return_type.from_psl(line)
             except:
                 self.rejected.append(line)
-                self.printer.write("Rejecting line %s: %s" % (self.counter,line))
+                warnings.warn("Rejecting line %s: %s" % (self.counter,line),UserWarning)
                 return self.__next__()        
 
 

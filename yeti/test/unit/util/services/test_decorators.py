@@ -7,7 +7,6 @@ import warnings
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_true, assert_greater_equal, assert_raises, assert_set_equal, assert_not_equal
 from yeti.util.services.decorators import notimplemented, \
-                                                 NotImplementedException, \
                                                  deprecated, \
                                                  parallelize, \
                                                  in_separate_process, \
@@ -162,7 +161,7 @@ def test_notimplemented_raises_exception():
     my_func = notimplemented(util_func)
     assert_true(isinstance(my_func,types.FunctionType))
     
-    assert_raises(NotImplementedException,my_func,5)
+    assert_raises(NotImplementedError,my_func,5)
 
 # deprecated    ----------------------------------------------------------------
 

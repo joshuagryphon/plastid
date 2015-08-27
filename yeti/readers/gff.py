@@ -951,14 +951,14 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                         
                 transcripts.append(my_tx)
             except AssertionError:
-                self.printer.write("Rejecting %s because it contains exons on multiple strands." % tname)
+                warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,UserWarning)
                 # transcripts with exons on two strands
                 rejected_transcripts.append(tname)
             except KeyError:
                 # transcripts where CDS ends outside bounds of transcript
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
-                self.printer.write("Rejecting %s because start or stop codons are outside exon boundaries." % tname)
+                warnings.warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,UserWarning)
     
         return sorted(transcripts,key=sort_segmentchains_lexically), rejected_transcripts
         
@@ -1191,7 +1191,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                 attr["gene_id"] = gene_id
 
             # if transcript is just implied by presence of CDS and exons
-            # TODO: make "Parent" will carry over sensibly from lists
+            # TODO: make sure "Parent" will carry over sensibly from lists
             else:
                 attr = get_identical_attributes(exons + cds)
                 attr["ID"]   = tname
@@ -1222,13 +1222,13 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     transcripts.append(my_tx)     
                                    
                 except AssertionError:
-                    self.printer.write("Rejecting %s because it contains exons on multiple strands." % tname)
+                    warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,UserWarning)
                     # transcripts with exons on two strands
-                    rejected.append(tname)
+                    /ejected.append(tname)
                 except KeyError:
                     # transcripts where CDS ends outside bounds of transcript
                     # there are 25 of these in flybase r5.43
-                    self.printer.write("Rejecting %s because start or stop codons are outside exon boundaries." % tname)                        
+                    warnings.warn("Rejecting transcript '%s because start or stop codons are outside exon boundaries." % tname,UserWarning)
                     rejected.append(tname)
             else:
                 # transcript that has multiple subfeatures with shared ID but no children
