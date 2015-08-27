@@ -320,7 +320,7 @@ class BigBedReader(object):
             self.fh.seek(0)
             items = HeaderFactory(self.fh,self._byte_order)
         
-        if self.header["magic"] != 0x8789F2EB:
+        if items["magic"] != 0x8789F2EB:
             raise MalformedFileError(self.filename,"Could not determine byte order of BigBed file. Expected magic number to be '%x', got '%x'." % (0x8789F2EB,self.header["magic"]))
         
         return items
