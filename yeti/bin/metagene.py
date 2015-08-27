@@ -404,7 +404,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
                     position_matrix[n,my_offset:my_offset+my_len] = pos_list[::-1]
             
         except IndexError:
-            printer.write("IndexError at region %s: " % region.get_name())
+            warnings.warn("IndexError finding common positions at region '%s'. Ignoring region: " % region.get_name())
     
     # continue only if refpoints all match
     if len(set(refpoints)) == 1 and numpy.nan not in refpoints:
@@ -603,7 +603,7 @@ algorithm:
             dtmp["zero_point"].append(flank_upstream)
             export_rois.append(max_spanning_window)
 
-    df = pd.DataFrame(dtmp) #,columns=["gene_id","window_size","region","masked","alignment_offset","zero_point"])
+    df = pd.DataFrame(dtmp)
     printer.write("Processed %s transcripts total. Included %s." % (c+1,len(dtmp)))
 
     return df, export_rois
@@ -666,14 +666,14 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     upstream_flank = roi_table["zero_point"][0]
     counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
     
-    for i,row in roi_table.iterrows() : #i in range(len(roi_table)):
+    for i,row in roi_table.iterrows():
         if i % 1000 == 1:
             printer.write("Counted %s ROIs..." % (i))
             
-        roi    = SegmentChain.from_str(row["region"]) #roi_table["region"][i])
-        mask   = SegmentChain.from_str(row["masked"]) #roi_table["masked"][i])
+        roi    = SegmentChain.from_str(row["region"])
+        mask   = SegmentChain.from_str(row["masked"])
         roi.add_masks(*mask)
-        offset = int(round((row["alignment_offset"]))) #roi_table["alignment_offset"][i])))
+        offset = int(round((row["alignment_offset"])))
         assert offset + roi.get_length() <= window_size
         counts[i,offset:offset+roi.get_length()] = roi.get_masked_counts(ga)
     
@@ -865,11 +865,11 @@ def main(argv=sys.argv[1:]):
         bed_file = "%s_rois.bed" % args.outbase
         printer.write("Saving to ROIs %s..." % roi_file)
         with argsopener(roi_file,args,"w") as roi_fh:
-            #roi_table.to_file(roi_fh)
             roi_table.to_csv(roi_fh,
                              sep="\t",
                              header=True,
                              index=False,
+                             na_rep="nan",
                              columns=["gene_id","window_size","region","masked","alignment_offset","zero_point"]
                              )
             roi_fh.close()
@@ -914,6 +914,7 @@ def main(argv=sys.argv[1:]):
                                  sep="\t",
                                  header=True,
                                  index=False,
+                                 na_rep="nan",
                                  columns=["x","metagene_average","regions_counted"],
                                  )
             profile_out.close()
@@ -925,7 +926,7 @@ def main(argv=sys.argv[1:]):
             samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
         else:
             if len(args.labels) > 0:
-                warnings.warn("Only %s labels supplied for %s infiles. Ignoring labels" % (len(args.labels),len(args.infiles)),UserWarning)
+                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),UserWarning)
             samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
          
         figure = do_chart(samples,title=args.title,landmark=args.landmark)
