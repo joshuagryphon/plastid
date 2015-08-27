@@ -180,6 +180,8 @@ def write_output_files(table,title,args):
                      sep="\t",
                      header=True,
                      index=False,
+                     na_rep="nan",
+                     float_format="%.8f",
                      columns=["region",
                               "exon",
                               "utr5",
@@ -660,7 +662,7 @@ tab-delimited text file.
 
     fout = argsopener("%s.txt" % args.outbase,args,"w")
     dtmp = pd.DataFrame(dtmp)
-    dtmp.to_csv(fout,sep="\t",header=True,index=False,columns=column_order)
+    dtmp.to_csv(fout,sep="\t",header=True,index=False,columns=column_order,na_rep="nan",float_format="%.8f")
 
     fout.close()
     printer.write("Done.")

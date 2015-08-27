@@ -221,12 +221,13 @@ class TestGFF3_TokenParsing(unittest.TestCase):
             
         self.assertGreater(c,0)
 
-    def test_repeated_token_raises_warning_always(self):
+    def test_repeated_token_raises_warning(self):
         with warnings.catch_warnings(record=True) as warns:
-            for c,(name, inp) in enumerate(self.repeated):
+             for c,(name, inp) in enumerate(self.repeated):
+                warnings.simplefilter("always")
                 msg = "%s parser failed to raise warning for %s" % (self.fmt, name)
                 self.parser(inp)
-                self.assertEqual(len(warns)-1,c,msg)
+                self.assertEqual(len(warns),c+1)
 
         
 @attr(test="unit")
