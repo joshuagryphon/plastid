@@ -302,13 +302,12 @@ def catch_stderr(buf=None):
         @functools.wraps(func)
         def new_func(*args,**kwargs):
             stderr_fd = os.dup(sys.__stderr__.fileno())
-            new_fd  = buf.fileno() #tmpfile.fileno()
+            new_fd  = buf.fileno()#tmpfile.fileno()
             os.dup2(new_fd,sys.stderr.fileno())
             try:
                 result = func(*args,**kwargs)
             except BaseException as e:
                 sys.stderr.flush() 
-                sys.stderr.close() 
                 os.dup2(stderr_fd,sys.stderr.fileno())
                 raise(e)
 
@@ -318,7 +317,6 @@ def catch_stderr(buf=None):
 
         return new_func
 
-        return new_func
     return decorator
 
 # cannot write unit tests for this because nose substitutes
@@ -391,12 +389,11 @@ def catch_stdout(buf=None):
             try:
                 result = func(*args,**kwargs)
             except BaseException as e:
-                buf.flush()
-                buf.close()
+                sys.stdout.flush()
                 os.dup2(stdout_fd,sys.stdout.fileno())
                 raise(e)
 
-            buf.flush()
+            sys.stdout.flush()
             os.dup2(stdout_fd,sys.stdout.fileno())
             return result
 
