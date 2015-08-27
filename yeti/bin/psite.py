@@ -46,6 +46,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import numpy
+import pandas as pd
 import argparse
 import matplotlib.pyplot as plt
 import inspect
@@ -55,7 +56,6 @@ from collections import OrderedDict
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_alignment_file_parser
 from yeti.genomics.roitools import SegmentChain
-from yeti.util.array_table import ArrayTable
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
@@ -79,8 +79,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     
     Parameters
     ----------
-    roi_table : |ArrayTable|
-        |ArrayTable| specifying regions of interest, generated
+    roi_table : :class:`pandas.DataFrame`
+        Table specifying regions of interest, generated
         by :py:func:`yeti.bin.metagene.do_generate`
     
     ga : |BAMGenomeArray|
@@ -116,7 +116,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         for each window (row), normalized by the total number of counts in that row
         from `norm_start` to `norm_end`
     
-    |ArrayTable|
+    :class:`pandas.DataFrame`
         Metagene profile of median normalized counts at each position across
         all windows, and the number of windows included in the calculation of each
         median, stratified by read length
@@ -130,16 +130,16 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
         raw_count_dict[i].mask = numpy.tile(False,raw_count_dict[i].shape)
     
-    for i in range(len(roi_table)):
+    for i,row in roi_table.iterrows(): #i in range(len(roi_table)):
         if i % 1000 == 0:
             printer.write("Counted %s ROIs..." % (i+1))
             
-        roi    = SegmentChain.from_str(roi_table["region"][i])
-        mask   = SegmentChain.from_str(roi_table["masked"][i])
+        roi    = SegmentChain.from_str(row["region"]) #roi_table["region"][i])
+        mask   = SegmentChain.from_str(row["masked"]) #roi_table["masked"][i])
         roi.add_masks(*mask)
         valid_mask = roi.get_masked_counts(ga).mask
         
-        offset = int(round((roi_table["alignment_offset"][i])))
+        offset = int(round((row["alignment_offset"]))) #roi_table["alignment_offset"][i])))
         assert offset + roi.get_length() <= window_size
         
         count_vectors = {}
@@ -182,7 +182,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         profile_table["%s-mers" % read_length]         = profile
         profile_table["%s_regions_counted" % read_length] = num_genes
         
-    profile_table = ArrayTable(profile_table)
+    profile_table = pd.DataFrame(profile_table)
     
     return raw_count_dict, norm_count_dict, profile_table
 
@@ -240,19 +240,19 @@ def main(argv=sys.argv[1:]):
     # process arguments
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
-        roi_table = ArrayTable.from_file(roi_fh)
+        roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
         roi_fh.close()
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
+    ga = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
     
     # remove default size filters
-    my_filters = gnd._filters.keys()
+    my_filters = ga._filters.keys()
     for f in my_filters:
-        gnd.remove_filter(f)
+        ga.remove_filter(f)
 
     count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
-                                                             gnd,
+                                                             ga,
                                                              args.norm_region[0],
                                                              args.norm_region[1],
                                                              args.min_counts,
@@ -262,9 +262,12 @@ def main(argv=sys.argv[1:]):
     
     profile_fn = "%s_metagene_profiles.txt" % args.outbase
     with argsopener(profile_fn,args,"w") as metagene_out:
-        metagene_profile.to_file(metagene_out,
-                                  keyorder=["x"]+["%s-mers" % X for X in range(args.min_length,
-                                                                               args.max_length+1)])
+        metagene_profile.to_csv(metagene_out,
+                                sep="\t",
+                                header=0,
+                                index=False,
+                                columns=["x"]+["%s-mers" % X for X in range(args.min_length,
+                                                                            args.max_length+1)])
         metagene_out.close()
 
     for k in count_dict:
@@ -327,7 +330,7 @@ def main(argv=sys.argv[1:]):
     # save data as p-site offset table
     fn = "%s_p_offsets.txt" % args.outbase
     fout = argsopener(fn,args)
-    fout.write("#length\tp_offset\n")
+    fout.write("length\tp_offset\n")
     for k in offset_dict:
         fout.write("%s\t%s\n" % (k,offset_dict[k]))
     
