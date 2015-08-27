@@ -266,6 +266,7 @@ def main(argv=sys.argv[1:]):
                                 sep="\t",
                                 header=0,
                                 index=False,
+                                na_rep="nan",
                                 columns=["x"]+["%s-mers" % X for X in range(args.min_length,
                                                                             args.max_length+1)])
         metagene_out.close()
