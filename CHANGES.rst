@@ -18,8 +18,13 @@ also follow `Semantic versioning <http://semver.org/>`_.
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
 
-Unreleased
-----------
+
+yeti [0.2.0] = [2015-08-26]
+---------------------------
+**Big changes,** including some that are **backwards-incompatible.**
+We really think these are for the best, because they improve
+compatibility with other packages (e.g. pandas) and make
+the package more consistent in design & behavior
 
 Added
 .....
@@ -29,13 +34,21 @@ Added
     when reads are unmappable
   - support for 2bit files (via twobitreader) and for
     dicts of strings in SegmentChain.get_sequence
+  - various warnings added
 
 Changed
 .......
+  - pandas compatibility: header rows in all output files no longer have starting '#.
+    meaning UPDATE YOUR OLD POSITIONS/ROI FILES
   - __getitem__ from GenomeArrays now returns vectors 5' to 3'
-    relative to GenomicSegment rather than to genome
+    relative to GenomicSegment rather than to genome. This
+    is more consistent with user expectations.
   - _get_valid_X methods of SegmentChain changed to _get_masked_X
     for consistency with documentation and with numpy notation
+
+Removed
+.......
+  - ArrayTable class & tests
 
 
 yeti [0.1.1] = [2015-07-23]
@@ -48,10 +61,12 @@ Added
   - AssembledFeatureReader
   - Complete first draft of user manual documentation
   - Readthedocs support for documentation
+  - GFF3_TranscriptAssembler now also handles features whose subfeatures
+    share `ID` attributes instead of `Parent` attributes.
 
 Changed
 .......
-  - import of scientific packages now simulated using 'mock' during documentation
+  - import of scientific packages now simulated using `mock` during documentation
     builds by Sphinx
   - duplicated attributes in GTF2 column 9 are now catenated & returned as a list
     in attr dict. This is outside GTF2 spec, but a behavior used by GENCODE
@@ -184,7 +199,7 @@ genometools [0.8.2015-05-08] - 2015-05-08
 
 Changed
 .......
-  - Merger of make_tophat_juncs, find_juncs, and merge_juncs into one script
+  - Merger of `make_tophat_juncs`, `find_juncs`, and `merge_juncs` into one script
   - Standardization of column names among various output files:
     region, regions_counted, counts
   - Standardized method names in IVCollection: get_valid_counts, get_valid_length,

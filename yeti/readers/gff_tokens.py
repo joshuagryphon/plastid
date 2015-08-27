@@ -522,8 +522,7 @@ def parse_GTF2_tokens(inp):
     and are unescaped if GFF escape sequences (e.g. *'%2B'*) are present.
 
     If duplicate keys are present (e.g. as in GENCODE `GTF2`_ files),
-    their values are returned as a catenated list, even though, strictly speaking,
-    this is outside the `GTF2`_ spec.
+    their values are catenated, separated by a comma.
     
     Examples
     --------
@@ -545,7 +544,7 @@ def parse_GTF2_tokens(inp):
 
         >>> tokens = 'gene_id "mygene"; transcript_id "mytranscript"; tag "tag value"; tag "tag value 2";'
         >>> parse_GTF2_tokens(tokens)
-        {'gene_id' : 'mygene', 'tag' : ['tag value', 'tag value 2'], 'transcript_id' : 'mytranscript'}
+        {'gene_id' : 'mygene', 'tag' : 'tag value,tag value 2', 'transcript_id' : 'mytranscript'}
 
 
 

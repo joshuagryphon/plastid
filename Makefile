@@ -24,6 +24,7 @@ docs/source/class_substitutions.txt :
 	mv yeti_substitutions.txt docs/source/class_substitutions.txt
 
 docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
+    cp CHANGES.rst docs/source
 	$(MAKE) html -C docs
 
 docs/source/generated :

@@ -25,7 +25,6 @@ from nose.plugins.attrib import attr
 
 from Bio import SeqIO
 
-from yeti.util.array_table import ArrayTable
 from yeti.readers.bed import BED_to_SegmentChain
 from yeti.genomics.genome_array import GenomeArray,\
                                        SparseGenomeArray,\

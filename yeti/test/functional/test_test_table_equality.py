@@ -9,7 +9,6 @@ from tempfile import NamedTemporaryFile
 from pkg_resources import cleanup_resources
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal
-from yeti.util.array_table import ArrayTable
 from yeti.util.io.filters import CommentWriter
 from yeti.util.io.openers import NullWriter
 from yeti.genomics.roitools import GenomicSegment

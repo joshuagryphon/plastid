@@ -9,18 +9,85 @@ header row).
 
 Exit status is 0 if files are identical, 1 otherwise 
 """
-from yeti.util.array_table import ArrayTable, equal_enough
-from yeti.util.io.openers import opener, get_short_name, NullWriter
-from yeti.util.io.filters import NameDateWriter, CommentReader
-from pandas.util.testing import assert_frame_equal
-import sys
-import pandas as pd
 import argparse
 import inspect
 
+import sys
+import numpy
+import pandas as pd
+from yeti.util.io.openers import opener, get_short_name, NullWriter
+from yeti.util.io.filters import NameDateWriter, CommentReader
+
+
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-NUMERIC_DTYPES = "biufc"
+_NUMERIC_DTYPES = "biufc"
+
+def equal_enough(col1,col2,tol=1e-10,printer=NullWriter()):
+    """If `col1` and `col2` are both numeric, test that
+    all their values are within `tol` of each other. :obj:`numpy.nan` values,
+    if present, must be in the same place in each column. Ditto :obj:`numpy.inf`
+    values.
+    
+    If `col1` and `col2` are not numeric, return true if they have the same
+    `dtype` and the same values in all cells.
+    
+    Parameters
+    ----------
+    col1 : numpy.ndarray
+        First column of data
+    
+    col2 : numpy.ndarray
+        Second column of data
+        
+    tol : float
+        Error tolerance for numeric data between col1 and col2, value-wise
+        
+    printer : anything implementing a ``write()`` method (e.g. a |NameDateWriter|)
+        if not None, rich comparison information will be sent to this writer
+    
+    Returns
+    -------
+    bool
+        `True` if `col1 == col2` for non-numeric data;
+        `True` if `abs(col1 - col2) <= tol` for numeric data;
+        `False` otherwise
+    """ 
+    dtype_test  = col1.dtype.kind in _NUMERIC_DTYPES
+    dtype_test &= col2.dtype.kind in _NUMERIC_DTYPES
+        
+    if dtype_test:
+        nan1 = numpy.isnan(col1)
+        nan2 = numpy.isnan(col2)
+            
+        inf1 = numpy.isinf(col1)
+        inf2 = numpy.isinf(col2)
+            
+        # check nans in same place
+        nan_test = (nan1 == nan2).all()
+
+        # make sure infs are in same place, and are same sign
+        inf_test = (inf1 == inf2).all() & (col1[inf1] == col2[inf1]).all()
+        
+        diff_test = (abs(col1[~nan1 & ~inf1] - col2[~nan1 & ~inf1]) <= tol).all()
+            
+        if not nan_test:
+            printer.write("Failed nan test")
+        if not inf_test:
+            printer.write("Failed inf test")
+        if not diff_test:
+            printer.write("Failed tolerance test")
+        
+        return nan_test & diff_test & inf_test
+    elif col1.dtype.kind not in _NUMERIC_DTYPES and col2.dtype.kind not in _NUMERIC_DTYPES:
+        diff_test = (col1 == col2)
+        if not diff_test.all():
+            ltmp = ["%s,%s,%s" % (N,val1,val2) for N,(val1,val2) in enumerate(zip(col1[~diff_test],col2[~diff_test]))] 
+            printer.write("Differences:\n%s" % "\n".join(ltmp))
+        return diff_test.all()
+    else:
+        return False
+
 
 def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(),print_verbose=False,return_verbose=False):
     """Test equality of dataframes over multiple columns, with verbose output.
@@ -61,8 +128,12 @@ def test_dataframe_equality(df1,df2,tol=1e-8,sort_columns=[],printer=NullWriter(
         A list of strings explaining how `df1` and `df2` differ. Only
         returned if `return_verbose` is `True`
     """
-    df1 = df1.sort(axis=1).sort(axis=0)
-    df2 = df2.sort(axis=1).sort(axis=0)
+    if len(sort_columns) > 0:
+        df1 = df1.sort(axis=1).sort(axis=0,columns=sort_columns)
+        df2 = df2.sort(axis=1).sort(axis=0,columns=sort_columns)
+    else:
+        df1 = df1.sort(axis=1).sort(axis=0)
+        df2 = df2.sort(axis=1).sort(axis=0)
 
     failures = []
     keys1 = set(df1.columns)
