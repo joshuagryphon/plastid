@@ -53,6 +53,7 @@ from yeti.genomics.roitools import SegmentChain, positionlist_to_segments, Genom
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.services.mini2to3 import xrange
 from yeti.util.services.exceptions import MalformedFileError
+from yeti.util.scriptlib.argparsers import get_sequence_file_parser, get_seqdict_from_args
 
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -234,7 +235,8 @@ def main(argv=sys.argv[1:]):
         invoked from the command line
     """
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     parents=[get_sequence_file_parser()])
     parser.add_argument("-k",dest="read_length",metavar="READ_LENGTH",
                         type=int,default=29,
                         help="K-mer length to generate from input file. "+
@@ -245,16 +247,16 @@ def main(argv=sys.argv[1:]):
                         type=int,default=0,
                         help="Number of mismatches tolerated in alignment. "+
                            "(Default: 0)")
-    parser.add_argument("-f","--seqfile_format",dest="seqfile_format",default="fasta",
-                        choices=("fasta","genbank","embl"),
-                        help="Format of input file (fasta, genbank, embl; Default: fasta)")
+#    parser.add_argument("-f","--seqfile_format",dest="seqfile_format",default="fasta",
+#                        choices=("fasta","genbank","embl"),
+#                        help="Format of input file (fasta, genbank, embl; Default: fasta)")
     parser.add_argument("--bowtie",dest="bowtie",default="/usr/local/bin/bowtie",
                         type=str,
                         help="Location of bowtie binary (Default: ``/usr/local/bin/bowtie``)")
     parser.add_argument("--have_kmers",default=False,action="store_true",
-                        help="seqfile contains k-mers from a previous `crossmap` run, instead of a genome sequence to be diced.")
-    parser.add_argument("seqfile",type=str,
-                        help="Sequences of chromosomes or contigs (not transcripts) that will be crossmapped, or, a file of k-mers from a previous run of `crossmap` (if ``--have_kmers`` is specified)")
+                        help="If specified, 'sequence_file' contains k-mers from a previous `crossmap` run, instead of a genome sequence to be diced.")
+#    parser.add_argument("seqfile",type=str,
+#                        help="Sequences of chromosomes or contigs (not transcripts) that will be crossmapped, or, a file of k-mers from a previous run of `crossmap` (if ``--have_kmers`` is specified)")
     parser.add_argument("ebwt",type=str,
                         help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `seqfile`.")
     parser.add_argument("outbase",type=str,
@@ -268,7 +270,7 @@ def main(argv=sys.argv[1:]):
     toomany_file = "%s_multimap.fa"  % base
     bed_file     = "%s_crossmap.bed" % base
 
-    if not os.path.exists(args.seqfile):
+    if not os.path.exists(args.sequence_file):
         printer.write("Could not find source file: %s" % args.seqfile)
         printer.write("Exiting.")
         sys.exit(1)
@@ -278,7 +280,8 @@ def main(argv=sys.argv[1:]):
         printer.write("Dicing sequence file '%s' into '%s'" % (args.seqfile, kmer_file))
         seq_file  = opener(args.seqfile,"r")
         kmer      = opener(kmer_file,"w") 
-        seqs      = SeqIO.parse(seq_file,args.seqfile_format)
+        #seqs      = SeqIO.parse(seq_file,args.seqfile_format)
+        seqs = get_seqdict_from_args(args,index=True)
         for seq in seqs:
             printer("Processing %s" % seq.name)
             simulate_reads(seq,kmer,args.read_length)

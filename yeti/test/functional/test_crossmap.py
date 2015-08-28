@@ -35,7 +35,7 @@ _eq_ops = "--no_header --sort_keys 3"
 
 # command-line string used to execute crossmap script
 # substitute: fasta file, ebwt, outbase
-_exec_str   = "%s %s %s --offset %s --mismatches %s -k 26"
+_exec_str   = "%s %s --sequence_file %s --offset %s --mismatches %s -k 26"
 
 # basename for output files for a test run
 # substitute: offset, mismatches
@@ -55,9 +55,9 @@ _kmers = os.path.join(test_info["temp_file_path"],((_outbase_str % 0) +"_26_0_km
 offset = mismatches = 0
 outbase = _outbase_str % offset
 crossmap_tests = [
-    (_exec_str % (REF_FILES["yeast_fasta"],
-                  _ebwt,
+    (_exec_str % (_ebwt,
                   os.path.join(test_info["temp_file_path"],outbase),
+                  REF_FILES["yeast_fasta"],
                   offset,
                   mismatches),
      [REF_FILES[outbase + "_26_%s" % mismatches]],

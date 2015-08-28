@@ -87,7 +87,9 @@ from yeti.genomics.genome_hash import GenomeHash
 from yeti.readers.bed import BED_Reader
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.scriptlib.argparsers import get_mask_file_parser,\
-                                                      get_genome_hash_from_mask_args
+                                           get_genome_hash_from_mask_args,\
+                                           get_sequence_file_parser,\
+                                           get_seqdict_from_args
 from yeti.util.services.decorators import catch_warnings
 from Bio import SeqIO
 import inspect
@@ -363,7 +365,7 @@ def main(argv=sys.argv[1:]):
     """
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[get_mask_file_parser()],
+                                     parents=[get_sequence_file_parser(),get_mask_file_parser()],
                                      )
     parser.add_argument("--maxslide",type=int,default=10,
                         help="Maximum number of nt to search 5\' and 3\' of intron"+
@@ -372,8 +374,8 @@ def main(argv=sys.argv[1:]):
                         help="Reference file describing known splice junctions")
     parser.add_argument("--slide_canonical",action="store_true",default=False,
                         help="Slide junctions to canonical junctions if present within equal support region")
-    parser.add_argument("genome",type=str,metavar="genome.fa",
-                        help="Genome sequence in fasta format")
+#    parser.add_argument("genome",type=str,metavar="genome.fa",
+#                        help="Genome sequence in fasta format")
     parser.add_argument("infile",type=str,metavar="input.bed",
                         help="BED file describing discovered junctions")
     parser.add_argument("outbase",type=str,
@@ -381,7 +383,8 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     
     printer.write("Opening genome from %s..." % args.genome)
-    genome = SeqIO.to_dict(SeqIO.parse(opener(args.genome),format="fasta"))
+    #genome = SeqIO.to_dict(SeqIO.parse(opener(args.genome),format="fasta"))
+    genome = get_seqdict_from_args(args)
     
     # load crossmap    
     cross_hash = get_genome_hash_from_mask_args(args)
@@ -391,7 +394,7 @@ def main(argv=sys.argv[1:]):
         printer.write("Loading reference junctions from %s" % args.ref)
         known_hash = GenomeHash(list(BED_Reader(open(args.ref))),do_copy=False)
     else:
-        known_hash = GenomeHash([])
+        known_hash = GenomeHash()
 
     # set up variables    
     canonicals_plus = [("GT","AG"),

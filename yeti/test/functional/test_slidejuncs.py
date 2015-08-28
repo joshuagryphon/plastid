@@ -104,7 +104,7 @@ used in tests below"""
 #     3. always value 1 (untouched state)
 test_options = list(itertools.product((0,1),repeat=3))
 test_options = [numpy.array(list(X) + [1]) for X in test_options]
-base_command_line = " ".join([FASTA_FILE,COMBINED_BED,OUTBASE])
+base_command_line = " ".join([COMBINED_BED,OUTBASE,"--sequence_file %s" % FASTA_FILE])
 switches = [" --mask_annotation_format BED --mask_annotation_file %s" % MASK_FILE,
             " --ref %s" % REF_FILE,
             " --slide_canonical",
