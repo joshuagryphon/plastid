@@ -839,7 +839,7 @@ Consider converting to BigBed or using tabix to index your mask file."""
 # INDEX: Sequence file parser
 #===============================================================================
 
-def get_sequence_file_parser(input_choices=["FASTA","twobit","genbank","embl"],
+def get_sequence_file_parser(input_choices=["fasta","fastq","twobit","genbank","embl"],
                                disabled=[],
                                prefix="",
                                title=_DEFAULT_SEQUENCE_PARSER_TITLE,
@@ -891,12 +891,9 @@ def get_sequence_file_parser(input_choices=["FASTA","twobit","genbank","embl"],
                    ])
 
     for k,v in filter(lambda x: x[0] not in disabled,option_dict.items()):
-        subparsers["annotation"].add_argument("--%s%s" % (prefix,k),**v)
+        sequence_file_parser.add_argument("--%s%s" % (prefix,k),**v)
     
-    if return_subparsers == True:
-        return sequence_file_parser, subparsers
-    else:
-        return sequence_file_parser
+    return sequence_file_parser
 
 def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
@@ -925,7 +922,7 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
         Dictionary-like object mapping chromosome names to
         :class:`Bio.SeqRecord.SeqRecord`-like objects
     """
-    args = PrefixNamespaceWraper(args,prefix)
+    args = PrefixNamespaceWrapper(args,prefix)
     printer.write("Opening sequence file '%s'." % args.sequence_file)
     if args.sequence_format == "twobit":
         from yeti.genomics.seqtools import TwoBitSeqRecordAdaptor

@@ -172,3 +172,15 @@ class TwoBitSeqRecordAdaptor(object):
 
     def __getitem__(self,key):
         return self._chroms[key]
+
+    def __getattr__(self,attr):
+        try:
+            return getattr(self._chroms,attr)
+        except AttributeError:
+            return getattr(self.twobitfile,attr)
+
+    def __iter__(self):
+        return iter(self._chroms)
+
+    def __len__(self):
+        return len(self._chroms)

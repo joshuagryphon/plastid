@@ -8,8 +8,9 @@ import numpy
 import itertools
 import warnings
 from pkg_resources import cleanup_resources
+from twobitreader import TwoBitFile
 from nose.plugins.attrib import attr
-from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true
+from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true, assert_list_equal
 from yeti.test.ref_files import MINI, REF_FILES
 from yeti.util.io.filters import CommentReader
 from yeti.readers.bed import BED_to_SegmentChain
@@ -25,6 +26,8 @@ from yeti.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            get_segmentchains_from_args,\
                                            get_mask_file_parser,\
                                            get_genome_hash_from_mask_args,\
+                                           get_sequence_file_parser,\
+                                           get_seqdict_from_args,\
                                            _parse_variable_offset_file
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.services.mini2to3 import StringIO
@@ -180,6 +183,7 @@ mask_file_parser_disableable = ivcollection_file_parser_disableable
 alignment_file_parser    = get_alignment_file_parser()
 annotation_file_parser   = get_annotation_file_parser()
 ivcollection_file_parser = get_segmentchain_file_parser()
+sequence_file_parser     = get_sequence_file_parser()
 mask_file_parser         = get_mask_file_parser()
 
 def check_prefix(parser_fn,opts):
@@ -768,12 +772,18 @@ def test_mask_genome_hash():
 # INDEX: tests for sequence file parsing
 #=============================================================================
 
-def test_get_sequences():
-    assert False
+def test_sequence_file_parser_opens_formats():
+    for fmt,index in [("fasta",True),("fasta",False),("twobit",True)]:
 
-def check_get_sequences(fmt):
-    pass
+        yield check_sequence_file_parser_opens_format, fmt, index
 
+def check_sequence_file_parser_opens_format(fmt,index):
+    argstr = "--sequence_file %s --sequence_format %s" % (REF_FILES["yeast_%s" % fmt],fmt)
+    args = sequence_file_parser.parse_args(shlex.split(argstr))
+    seqdict = get_seqdict_from_args(args,index)
+    ref_chroms = sorted(TwoBitFile(REF_FILES["yeast_twobit"]).keys())
+    msg = "Sequence file parser failed to open format '%s'." % fmt
+    assert_list_equal(ref_chroms,sorted(seqdict.keys()),msg)
 
 
 #=============================================================================
