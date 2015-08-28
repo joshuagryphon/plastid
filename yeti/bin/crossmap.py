@@ -28,7 +28,8 @@ For large genomes, it is highly recommended to convert the `BED`_-format output
 to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
 (from the terminal)::
 
-    $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence | cut -f2,3 >OUTFILE.sizes
+    $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\
+                     cut -f2,3 | sed -e "s/\([^ ]\) [^\t]*/\1/" | >OUTFILE.sizes
     $ sort -k1,1 -k2,2n OUTBASE.bed > OUTBASE_sorted.bed
     $ bedToBigBed OUTBASE_sorted.bed OUTBASE.sizes OUTBASE_sorted.bb
 
@@ -92,9 +93,11 @@ def simulate_reads(seq_record,fh=sys.stdout,k=30):
     k : int, optional
         length of k-mers to generate (Default: `30`)
     """
+    seq = str(seq_record.seq)
+
     for x in xrange(0,len(seq_record)-k+1):
         fh.write(">%s:%s(+)\n" % (seq_record.name,x))
-        fh.write("%s\n" % str(seq_record.seq)[x:x+k])
+        fh.write("%s\n" % seq[x:x+k])
 
     return None
 
@@ -131,7 +134,7 @@ def revcomp_mask_ivc(seg,k,offset=0):
         Length of k-mers
 
     offset : int, optional
-        Offset from 5\' end of read at which to map mask (Default: `0`)
+        Offset from 5' end of read at which to map mask (Default: `0`)
 
     Returns
     -------
@@ -169,7 +172,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
         Length of k-mers
 
     offset : int, optional
-        Offset from 5\' end of read at which to map read, if any (Default: `0`)
+        Offset from 5' end of read at which to map read, if any (Default: `0`)
 
     Yields
     ------
@@ -242,23 +245,18 @@ def main(argv=sys.argv[1:]):
                         help="K-mer length to generate from input file. "+
                              "(Default: 29)")
     parser.add_argument("--offset",type=int,default=14,
-                        help="Offset from 5\' end of plus-strand read at which to attribute score (Default: 14)")
+                        help="Offset from 5' end of plus-strand read at which to attribute score (Default: 14)")
     parser.add_argument("--mismatches",metavar="N",
                         type=int,default=0,
                         help="Number of mismatches tolerated in alignment. "+
                            "(Default: 0)")
-#    parser.add_argument("-f","--seqfile_format",dest="seqfile_format",default="fasta",
-#                        choices=("fasta","genbank","embl"),
-#                        help="Format of input file (fasta, genbank, embl; Default: fasta)")
     parser.add_argument("--bowtie",dest="bowtie",default="/usr/local/bin/bowtie",
                         type=str,
                         help="Location of bowtie binary (Default: ``/usr/local/bin/bowtie``)")
     parser.add_argument("--have_kmers",default=False,action="store_true",
                         help="If specified, 'sequence_file' contains k-mers from a previous `crossmap` run, instead of a genome sequence to be diced.")
-#    parser.add_argument("seqfile",type=str,
-#                        help="Sequences of chromosomes or contigs (not transcripts) that will be crossmapped, or, a file of k-mers from a previous run of `crossmap` (if ``--have_kmers`` is specified)")
     parser.add_argument("ebwt",type=str,
-                        help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `seqfile`.")
+                        help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `sequence_file`.")
     parser.add_argument("outbase",type=str,
                         help="Basename for output files")
     args = parser.parse_args(argv)
@@ -271,23 +269,21 @@ def main(argv=sys.argv[1:]):
     bed_file     = "%s_crossmap.bed" % base
 
     if not os.path.exists(args.sequence_file):
-        printer.write("Could not find source file: %s" % args.seqfile)
+        printer.write("Could not find source file: %s" % args.sequence_file)
         printer.write("Exiting.")
         sys.exit(1)
     
     #simulate reads if necessary
     if args.have_kmers == False:
-        printer.write("Dicing sequence file '%s' into '%s'" % (args.seqfile, kmer_file))
-        seq_file  = opener(args.seqfile,"r")
+        printer.write("Dicing sequence file '%s' into '%s'" % (args.sequence_file, kmer_file))
         kmer      = opener(kmer_file,"w") 
-        #seqs      = SeqIO.parse(seq_file,args.seqfile_format)
         seqs = get_seqdict_from_args(args,index=True)
-        for seq in seqs:
-            printer("Processing %s" % seq.name)
-            simulate_reads(seq,kmer,args.read_length)
+        for seq in sorted(seqs):
+            printer("Processing %s" % seq)
+            simulate_reads(seqs[seq],kmer,args.read_length)
     else:
-        printer.write("Using kmers from file '%s'" % (args.seqfile))
-        kmer_file = args.seqfile
+        printer.write("Using kmers from file '%s'" % (args.sequence_file))
+        kmer_file = args.sequence_file
             
     #map reads using bowtie
     printer.write("Discarding uniquely mapping reads via alignment")

@@ -374,16 +374,13 @@ def main(argv=sys.argv[1:]):
                         help="Reference file describing known splice junctions")
     parser.add_argument("--slide_canonical",action="store_true",default=False,
                         help="Slide junctions to canonical junctions if present within equal support region")
-#    parser.add_argument("genome",type=str,metavar="genome.fa",
-#                        help="Genome sequence in fasta format")
     parser.add_argument("infile",type=str,metavar="input.bed",
                         help="BED file describing discovered junctions")
     parser.add_argument("outbase",type=str,
                         help="Basename for output files")
     args = parser.parse_args(argv)
     
-    printer.write("Opening genome from %s..." % args.genome)
-    #genome = SeqIO.to_dict(SeqIO.parse(opener(args.genome),format="fasta"))
+    printer.write("Opening genome from %s..." % args.sequence_file)
     genome = get_seqdict_from_args(args)
     
     # load crossmap    
@@ -405,7 +402,6 @@ def main(argv=sys.argv[1:]):
                         ("CT","GC")
                        ]
     
-    #scores             = {}
     known_in_range     = 0
     canonical_in_range = 0
     repetitive         = 0
