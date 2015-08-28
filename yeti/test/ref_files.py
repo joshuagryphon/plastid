@@ -78,6 +78,8 @@ REF_FILES = {
               "yeast_parent_child"  : os.path.join(RPATH,"annotations","sgd_plus_utrs_gff3_parent_child_table.txt"),
               "yeast_parent_child_exclude_cols"  : os.path.join(RPATH,"annotations","sgd_plus_utrs_gff3_parent_child_table_exclude.txt"),
               "yeast_fasta"         : os.path.join(RPATH,"annotations","2013-01-23.saccharomyces_cerevisiae.fa"),
+              "yeast_twobit"        : os.path.join(RPATH,"annotations","2013-01-23.saccharomyces_cerevisiae.2bit"),
+
               "yeast_juncs"         : os.path.join(RPATH,"command_line","sgd_plus_utrs.juncs"),
               "yeast_crossmap_o12_26_0"    : os.path.join(RPATH,"command_line","2013-01-23.sc_o12_26_0_crossmap.bed"),
               "yeast_crossmap_o12_26_0_bb" : os.path.join(RPATH,"command_line","2013-01-23.sc_o12_26_0_crossmap_sorted.bb"),

@@ -4,6 +4,7 @@ import random, re
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from twobitreader import TwoBitFile
 
 IUPAC_TABLE = { "A" : "A",
                 "C" : "C",
@@ -121,12 +122,45 @@ def random_seq(size,nucleotides="ACTG"):
 class _TwoBitSeqProxy(object):
     """Adaptor class that fetches :class:`Bio.SeqRecord.SeqRecord`
     objects from :class:`twobitreader.TwoBitSequence` objects
+
+    Defines 'seq' property and reverse_complement() method
     """
     def __init__(self,twobitseq):
+        """
+        Parameters
+        ----------
+        twobitseq : :class:`twobitreader.TwoBitSequence`
+        """
         self.twobitseq = twobitseq
+        self._seq = None
 
     def __getitem__(self,slice_):
-        return SeqRecord(Seq(self.twobitseq[slice_],generic_dna))
+        return SeqRecord(Seq(self.twobitseq.get_slice(min_=slice_.start,max_=slice_.stop),generic_dna))
+
+    def __len__(self):
+        return len(self.twobitseq)
+
+    def __str__(self):
+        """Return sequence in `self.twobitseq` as str"""
+        return str(self.twobitseq)
+
+    def __getattr__(self,attr):
+        if attr == "seq":
+            if self._seq is None:
+                self._seq = Seq(str(self.twobitseq),generic_dna)
+
+            return self._seq
+    
+    def reverse_complement(self):
+        """Return the reverse complement of the TwoBitSequence
+
+        Returns
+        -------
+        :class:`Bio.SeqRecord.SeqRecord`
+            Reverse complement of the sequence held in `self.twobitseq`
+        """
+        return SeqRecord(self.seq).reverse_complement()
+
 
 class TwoBitSeqRecordAdaptor(object):
     """Adaptor class that makes a :class:`twobitreader.TwoBitFile` behave

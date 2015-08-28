@@ -2,8 +2,12 @@
 import re
 import sys
 from nose.plugins.attrib import attr
-from nose.tools import assert_equal, assert_set_equal
-from yeti.genomics.seqtools import seq_to_regex, mutate_seqs, random_seq
+from nose.tools import assert_equal, assert_set_equal, assert_true
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+from yeti.test.ref_files import REF_FILES
+from yeti.genomics.seqtools import seq_to_regex, mutate_seqs, random_seq,\
+                                   _TwoBitSeqProxy, TwoBitSeqRecordAdaptor
 
 #===============================================================================
 # INDEX: unit tests
@@ -39,9 +43,60 @@ def test_random_chr():
     for length, nucs in RANDOM_CHR:
         yield check_random_seq, length, nucs
 
+@attr(test="unit")
+def testTwoBitSeqProxyFetch():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+    
+    seq = g2["chrV"][50:5000]
+    assert_true(isinstance(seq,SeqRecord))
+    assert_equal(g1["chrV"][50:5000].seq,seq.seq)
+
+@attr(test="unit")
+def testTwoBitSeqProxyLen():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+
+    for k in g1:
+        assert_equal(len(g1[k]),len(g2[k]))
+
+@attr(test="unit")
+def testTwoBitSeqProxyStr():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+
+    for k in g1:
+        assert_equal(str(g1[k].seq),str(g2[k]))
+
+@attr(test="unit")
+def testTwoBitSeqProxySeqProp():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+
+    for k in g1:
+        assert_equal(g1[k].seq,g2[k].seq)
+
+@attr(test="unit")
+def testTwoBitSeqProxyRevComp():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+
+    for k in g1:
+        assert_equal(g1[k].reverse_complement().seq,g2[k].reverse_complement().seq)
+
+@attr(test="unit")
+def testTwoBitSeqRecordAdaptor():
+    g1 = SeqIO.to_dict(SeqIO.parse(REF_FILES["yeast_fasta"],"fasta"))
+    g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
+
+    for k,v in g1.items():
+        assert_true(isinstance(g2[k],_TwoBitSeqProxy))
+   
+
+
 
 #===============================================================================
-# INDEX: test input & output
+# INDEX: test data
 #===============================================================================
 
 if sys.version_info > (3,):
