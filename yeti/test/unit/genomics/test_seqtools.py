@@ -50,7 +50,7 @@ def testTwoBitSeqProxyFetch():
     
     seq = g2["chrV"][50:5000]
     assert_true(isinstance(seq,SeqRecord))
-    assert_equal(g1["chrV"][50:5000].seq,seq.seq)
+    assert_equal(str(g1["chrV"][50:5000].seq),str(seq.seq))
 
 @attr(test="unit")
 def testTwoBitSeqProxyLen():
@@ -82,7 +82,7 @@ def testTwoBitSeqProxyRevComp():
     g2 = TwoBitSeqRecordAdaptor(REF_FILES["yeast_twobit"])
 
     for k in g1:
-        assert_equal(g1[k].reverse_complement().seq,g2[k].reverse_complement().seq)
+        assert_equal(str(g1[k].reverse_complement().seq),str(g2[k].reverse_complement().seq))
 
 @attr(test="unit")
 def testTwoBitSeqRecordAdaptor():
