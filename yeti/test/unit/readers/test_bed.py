@@ -13,153 +13,292 @@
 See http://genome.ucsc.edu/FAQ/FAQformat.html
 """
 import unittest
-from yeti.util.services.mini2to3 import cStringIO
 import functools
+import pandas as pd
+
+from csv import QUOTE_NONE
 from nose.plugins.attrib import attr
+from yeti.util.services.mini2to3 import cStringIO
 from yeti.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
+from nose.tools import assert_equal, assert_true
 
 #===============================================================================
 # INDEX: test suites
 #===============================================================================
 @attr(test="unit")
-class TestBED(unittest.TestCase):
+class TestBED():
     """Test case for BED input/output"""
     
     @classmethod
     def setUpClass(cls):
         cls.header = _BED_HEADER
         cls.data = {}
-        cls.data[12] = _BED12_DATA
-        for n in (3,4,5,6,8,9):
-            cls.data[n] = cls.get_bed_subset(cls.header,cls.data[12],n)
-        
-    @staticmethod
-    def get_bed_subset(header,data,columns):
-        """Select a subset of columns from BED data block
-        
-        Parameters
-        ----------
-        header : str
-            Multi-line header data for BED file
-            
-        data : str
-            Multi-line BED12 data
-        
-        columns : int
-            Number of columns to include
-        
-        Returns
-        -------
-        str : block of BED data, including header
-        """
-        ltmp = []
-        for line in data.split("\n"):
-            ltmp.append("%s\n" % "\t".join(line.split("\t")[:columns]))
-        
-        return header+"".join(ltmp)
-    
-    def bed_to_various_helper(self,known_set,reader_fn):
-        """Helper function for BED import to SegmentChain or Transcripts
-        
-        Parameters
-        ----------
-        known_set : list<SegmentChain> or list<Transcript>
-            Expected results of parsing BED blocks
-        
-        reader_fn : Function or class
-            Parser for blocks of BED formatted data
-        """
-        for n,data_str in sorted(self.data.items()):
-            c = 0
-            for (test_ivc,known_ivc) in zip(reader_fn(cStringIO.StringIO(data_str)),
-                                                       known_set):
-                # columns: chrom, start, end
-                if n >= 3:
-                    # no strand info, so we need to test iv.start, iv.end, iv.chrom
-                    err_msg = "Failed endpoint equality on %s-column BED input: %s,%s" % (n,known_ivc,test_ivc)
-                    self.assertEqual(known_ivc.spanning_segment.start,test_ivc.spanning_segment.start,err_msg)
-                    self.assertEqual(known_ivc.spanning_segment.end,test_ivc.spanning_segment.end,err_msg)
-                    self.assertEqual(known_ivc.spanning_segment.chrom,test_ivc.spanning_segment.chrom,err_msg)
-                # column: name
-                if n >= 4:
-                    err_msg = "Failed name equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
-                    self.assertEqual(known_ivc.attr["ID"],test_ivc.attr["ID"],err_msg)
-                # column: score
-                if n >= 5:
-                    err_msg = "Failed score equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
-                    self.assertEqual(known_ivc.attr.get("score",0),test_ivc.attr["score"],err_msg)
-                # column : strand
-                if n >= 6:
-                    err_msg = "Failed strand equality on %s-column BED input: %s,%s" % (n,known_ivc,test_ivc)
-                    self.assertEqual(known_ivc.spanning_segment.strand,test_ivc.spanning_segment.strand)
-                # column: color
-                if n >= 9:
-                    err_msg = "Failed color equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
-                    self.assertEqual(known_ivc.attr.get("color","#000000"),test_ivc.attr["color"],err_msg)
-                # columns: exon/block info
-                if n == 12:
-                    err_msg = "Failed block equality on %s-column BED input: %s,%s" % (n,known_ivc,test_ivc)
-                    for iv1, iv2 in zip(known_ivc,test_ivc):
-                        self.assertEqual(iv1,iv2,err_msg)
-                    err_msg = "Failed position set on %s-column BED input: %s,%s" % (n,known_ivc,test_ivc)
-                    self.assertEqual(known_ivc.get_position_set(),test_ivc.get_position_set(),err_msg)
-                
-                c += 1
-            
-            self.assertEqual(c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c))
+        cls.extracol_data = {}
+        bed_df = pd.read_table(cStringIO.StringIO(_BED12_DATA),header=None,sep="\t",index_col=None)
+        extra_df = pd.read_table(cStringIO.StringIO(_EXTRA_COLS),header=0,sep="\t",index_col=None)
+        cls.big_df = pd.concat([bed_df,extra_df],axis=1)
 
-    def ivcollection_thick_start_end_helper(self):
+        for n in (3,4,5,6,8,9,12):
+            cls.data[n] = cls.get_bed_subset(cls.header,n,0)
+            cls.extracol_data[n] = cls.get_bed_subset(cls.header,n,4)
+
+    @classmethod
+    def get_bed_subset(cls,header,bed_cols,extra_cols=0):
+        buf = cStringIO.StringIO()
+        columns = cls.big_df.columns[list(range(bed_cols)) + list(range(12,12+extra_cols))]
+        cls.big_df.to_csv(buf,columns=columns,sep="\t",index=False,header=False,quoting=QUOTE_NONE) #,float_format="%.8f")
+        return buf.getvalue()
+   
+    @staticmethod
+    def check_equal(found,expected,msg=None):
+        if msg is not None:
+            assert_equal(found,expected,msg)
+        else:
+            assert_equal(found,expected)
+
+    def test_bed_import_3to12plus4_columns_with_formatters(self):
+        names = [("numcol",int),
+                 ("floatcol",float),
+                 ("strcol",str),
+                 ("attrcol",str),
+                ]
+
+        tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=names)
+        seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=names)
+        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+                 (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
+                ]
+        for reader_fn, known_set, name in tests:
+            for n,data_str in sorted(self.extracol_data.items()):
+                c = 0
+                for (test_ivc,known_ivc) in zip(reader_fn(cStringIO.StringIO(data_str)),
+                                                           known_set):
+                    for x in range(4):
+                        colname = names[x][0]
+                        assert_true(colname in test_ivc.attr,"Column name '%s' not found in attr dict (%s BED columns)" % (x,n))
+                        assert_equal(test_ivc.attr[colname],self.big_df.iloc[c,12+x])
+
+                    # columns: chrom, start, end
+                    if n >= 3:
+                        # no strand info, so we need to test iv.start, iv.end, iv.chrom
+                        err_msg = "%s failed endpoint equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.start,test_ivc.spanning_segment.start,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.end,test_ivc.spanning_segment.end,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.chrom,test_ivc.spanning_segment.chrom,err_msg
+                    # column: name
+                    if n >= 4:
+                        err_msg = "%s failed name equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr["ID"],test_ivc.attr["ID"],err_msg
+                    # column: score
+                    if n >= 5:
+                        err_msg = "%s failed score equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("score",0),test_ivc.attr["score"],err_msg
+                    # column : strand
+                    if n >= 6:
+                        err_msg = "%s failed strand equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.strand,test_ivc.spanning_segment.strand
+                    # column: color
+                    if n >= 9:
+                        err_msg = "%s failed color equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("color","#000000"),test_ivc.attr["color"],err_msg
+                    # columns: exon/block info
+                    if n == 12:
+                        err_msg = "%s failed block equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        for iv1, iv2 in zip(known_ivc,test_ivc):
+                            assert_equal(iv1,iv2,err_msg)
+                        err_msg = "%s failed position set on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.get_position_set(), test_ivc.get_position_set(), err_msg
+                    
+                    c += 1
+                
+                yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+
+    def test_bed_import_3to12plus4_columns_with_names(self):
+        names = [X for X in self.big_df.columns[-4:]]
+        tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=names)
+        seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=names)
+        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+                 (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
+                ]
+        for reader_fn, known_set, name in tests:
+            for n,data_str in sorted(self.extracol_data.items()):
+                c = 0
+                for (test_ivc,known_ivc) in zip(reader_fn(cStringIO.StringIO(data_str)),
+                                                           known_set):
+                    for x in range(4):
+                        colname = names[x]
+                        assert_true(colname in test_ivc.attr)
+                        assert_equal(str(test_ivc.attr[colname]),str(self.big_df.iloc[c,12+x]))
+
+                    # columns: chrom, start, end
+                    if n >= 3:
+                        # no strand info, so we need to test iv.start, iv.end, iv.chrom
+                        err_msg = "%s failed endpoint equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.start,test_ivc.spanning_segment.start,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.end,test_ivc.spanning_segment.end,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.chrom,test_ivc.spanning_segment.chrom,err_msg
+                    # column: name
+                    if n >= 4:
+                        err_msg = "%s failed name equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr["ID"],test_ivc.attr["ID"],err_msg
+                    # column: score
+                    if n >= 5:
+                        err_msg = "%s failed score equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("score",0),test_ivc.attr["score"],err_msg
+                    # column : strand
+                    if n >= 6:
+                        err_msg = "%s failed strand equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.strand,test_ivc.spanning_segment.strand
+                    # column: color
+                    if n >= 9:
+                        err_msg = "%s failed color equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("color","#000000"),test_ivc.attr["color"],err_msg
+                    # columns: exon/block info
+                    if n == 12:
+                        err_msg = "%s failed block equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        for iv1, iv2 in zip(known_ivc,test_ivc):
+                            assert_equal(iv1,iv2,err_msg)
+                        err_msg = "%s failed position set on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.get_position_set(), test_ivc.get_position_set(), err_msg
+                    
+                    c += 1
+                
+                yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+    def test_bed_import_3to12plus4_columns_with_int(self):
+        tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=4)
+        seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=4)
+        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+                 (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
+                ]
+        for reader_fn, known_set, name in tests:
+            for n,data_str in sorted(self.extracol_data.items()):
+                c = 0
+                for (test_ivc,known_ivc) in zip(reader_fn(cStringIO.StringIO(data_str)),
+                                                           known_set):
+                    for x in range(4):
+                        colname = "custom%s" % x
+                        assert_true(colname in test_ivc.attr)
+                        assert_equal(str(test_ivc.attr[colname]),str(self.big_df.iloc[c,12+x]))
+
+                    # columns: chrom, start, end
+                    if n >= 3:
+                        # no strand info, so we need to test iv.start, iv.end, iv.chrom
+                        err_msg = "%s failed endpoint equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.start,test_ivc.spanning_segment.start,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.end,test_ivc.spanning_segment.end,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.chrom,test_ivc.spanning_segment.chrom,err_msg
+                    # column: name
+                    if n >= 4:
+                        err_msg = "%s failed name equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr["ID"],test_ivc.attr["ID"],err_msg
+                    # column: score
+                    if n >= 5:
+                        err_msg = "%s failed score equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("score",0),test_ivc.attr["score"],err_msg
+                    # column : strand
+                    if n >= 6:
+                        err_msg = "%s failed strand equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.strand,test_ivc.spanning_segment.strand
+                    # column: color
+                    if n >= 9:
+                        err_msg = "%s failed color equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("color","#000000"),test_ivc.attr["color"],err_msg
+                    # columns: exon/block info
+                    if n == 12:
+                        err_msg = "%s failed block equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        for iv1, iv2 in zip(known_ivc,test_ivc):
+                            assert_equal(iv1,iv2,err_msg)
+                        err_msg = "%s failed position set on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.get_position_set(), test_ivc.get_position_set(), err_msg
+                    
+                    c += 1
+                
+                yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+    def test_bed_import_3to12_columns(self):
+        tx_reader = functools.partial(BED_Reader,return_type=Transcript)
+        tests = [(BED_to_SegmentChain,_TEST_IVCOLLECTIONS,"tosegmentchain,segmentchain"),
+                 (BED_to_Transcripts,_TEST_TRANSCRIPTS,"totranscripts_transcript"),
+                 (BED_Reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+                 (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
+                ]
+        for reader_fn, known_set, name in tests:
+            for n,data_str in sorted(self.data.items()):
+                c = 0
+                for (test_ivc,known_ivc) in zip(reader_fn(cStringIO.StringIO(data_str)),
+                                                           known_set):
+                    # columns: chrom, start, end
+                    if n >= 3:
+                        # no strand info, so we need to test iv.start, iv.end, iv.chrom
+                        err_msg = "%s failed endpoint equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.start,test_ivc.spanning_segment.start,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.end,test_ivc.spanning_segment.end,err_msg
+                        yield self.check_equal, known_ivc.spanning_segment.chrom,test_ivc.spanning_segment.chrom,err_msg
+                    # column: name
+                    if n >= 4:
+                        err_msg = "%s failed name equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr["ID"],test_ivc.attr["ID"],err_msg
+                    # column: score
+                    if n >= 5:
+                        err_msg = "%s failed score equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("score",0),test_ivc.attr["score"],err_msg
+                    # column : strand
+                    if n >= 6:
+                        err_msg = "%s failed strand equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.spanning_segment.strand,test_ivc.spanning_segment.strand
+                    # column: color
+                    if n >= 9:
+                        err_msg = "%s failed color equality on %s-column BED input: %s,%s" % (name, n,known_ivc.attr,test_ivc.attr)
+                        yield self.check_equal, known_ivc.attr.get("color","#000000"),test_ivc.attr["color"],err_msg
+                    # columns: exon/block info
+                    if n == 12:
+                        err_msg = "%s failed block equality on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        for iv1, iv2 in zip(known_ivc,test_ivc):
+                            assert_equal(iv1,iv2,err_msg)
+                        err_msg = "%s failed position set on %s-column BED input: %s,%s" % (name, n,known_ivc,test_ivc)
+                        yield self.check_equal, known_ivc.get_position_set(), test_ivc.get_position_set(), err_msg
+                    
+                    c += 1
+                
+                yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+    def test_ivcollection_thick_start_end_8to12_columns(self):
         """Checks equality of thickstart and thickend attributes for SegmentChain objects"""
         for n,data_str in sorted(self.data.items()):
-            for c, (test_ivc,known_ivc) in enumerate(zip(BED_to_SegmentChain(cStringIO.StringIO(data_str)),
+            for c, (test_ivc,known_ivc) in enumerate(zip(BED_Reader(cStringIO.StringIO(data_str),return_type=SegmentChain),
                                                        _TEST_IVCOLLECTIONS)):
                 if n >= 8:
                     err_msg = "Failed thickstart/end equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
                     if known_ivc.attr.get("thickstart",None) is not None:
-                        self.assertEqual(known_ivc.attr["thickstart"],test_ivc.attr["thickstart"],err_msg)
+                        yield self.check_equal, known_ivc.attr["thickstart"],test_ivc.attr["thickstart"],err_msg
                     if known_ivc.attr.get("thickend",None) is not None:
-                        self.assertEqual(known_ivc.attr.get("thickend"),test_ivc.attr["thickend"],err_msg)
+                        yield self.check_equal, known_ivc.attr.get("thickend"),test_ivc.attr["thickend"],err_msg
         
-            self.assertEqual(c,20-1,"Not all intervals loaded! Expected %s, found %s." % (20-1,c))
+            yield self.check_equal, c,20-1,"Not all intervals loaded! Expected %s, found %s." % (20-1,c)
 
-
-    def transcript_cds_start_end_helper(self):
+    def test_transcript_cds_start_end_8to12_columns(self):
         """Checks equality of endpoints of coding regions for Transcript objects"""
         for n,data_str in sorted(self.data.items()):
-            for c, (test_ivc,known_ivc) in enumerate(zip(BED_to_Transcripts(cStringIO.StringIO(data_str)),
+            for c, (test_ivc,known_ivc) in enumerate(zip(BED_Reader(cStringIO.StringIO(data_str),return_type=Transcript),
                                                        _TEST_TRANSCRIPTS)):
                 if n >= 8:
                     err_msg = "Failed thickstart/end equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
                     if known_ivc.attr.get("cds_genome_start",None) is not None:
-                        self.assertEqual(known_ivc.attr["cds_start"],test_ivc.attr["cds_start"],err_msg)
-                        self.assertEqual(known_ivc.attr["cds_genome_start"],test_ivc.attr["cds_genome_start"],err_msg)
-                        self.assertEqual(known_ivc.cds_genome_start,test_ivc.cds_genome_start,err_msg)
-                        self.assertEqual(known_ivc.cds_start,test_ivc.cds_start,err_msg)
+                        yield self.check_equal, known_ivc.attr["cds_start"],test_ivc.attr["cds_start"],err_msg
+                        yield self.check_equal, known_ivc.attr["cds_genome_start"],test_ivc.attr["cds_genome_start"],err_msg
+                        yield self.check_equal, known_ivc.cds_genome_start,test_ivc.cds_genome_start,err_msg
+                        yield self.check_equal, known_ivc.cds_start,test_ivc.cds_start,err_msg
                     if known_ivc.attr.get("cds_genome_end",None) is not None:
-                        self.assertEqual(known_ivc.attr["cds_end"],test_ivc.attr["cds_end"],err_msg)
-                        self.assertEqual(known_ivc.attr["cds_genome_end"],test_ivc.attr["cds_genome_end"],err_msg)
-                        self.assertEqual(known_ivc.cds_genome_end,test_ivc.cds_genome_end,err_msg)
-                        self.assertEqual(known_ivc.cds_end,test_ivc.cds_end,err_msg)
+                        yield self.check_equal, known_ivc.attr["cds_end"],test_ivc.attr["cds_end"],err_msg
+                        yield self.check_equal, known_ivc.attr["cds_genome_end"],test_ivc.attr["cds_genome_end"],err_msg
+                        yield self.check_equal, known_ivc.cds_genome_end,test_ivc.cds_genome_end,err_msg
+                        yield self.check_equal, known_ivc.cds_end,test_ivc.cds_end,err_msg
             
-            self.assertEqual(c,20-1,"Not all intervals loaded! Expected %s, found %s." % (20-1,c))
+            yield self.check_equal, c,20-1,"Not all intervals loaded! Expected %s, found %s." % (20-1,c)
         
-    def test_bed_to_ivcollection(self):
-        self.bed_to_various_helper(reader_fn=BED_to_SegmentChain,known_set=_TEST_IVCOLLECTIONS)
-        self.ivcollection_thick_start_end_helper()
-
-    def test_bed_to_transcripts(self):
-        self.bed_to_various_helper(reader_fn=BED_to_Transcripts,known_set=_TEST_TRANSCRIPTS)
-        self.transcript_cds_start_end_helper()
-    
-    def test_bed_reader_to_ivcollections(self):
-        self.bed_to_various_helper(reader_fn=BED_Reader,known_set=_TEST_IVCOLLECTIONS)
-        self.ivcollection_thick_start_end_helper()
-
-    def test_bed_reader_to_transcripts(self):
-        partial = functools.partial(BED_Reader,return_type=Transcript)
-        self.bed_to_various_helper(reader_fn=partial,known_set=_TEST_TRANSCRIPTS)
-        self.transcript_cds_start_end_helper()
 
 #===============================================================================
 # INDEX: test data
@@ -240,3 +379,26 @@ chrA    100    2700    IVC9p    500.0    +    2100    2600    0,122,223    3    
 chrA    100    2700    IVC9m    500.0    -    2100    2600    0,122,223    3    1000,500,95,    0,2000,2505,
 chrA    100    2700    IVC10p    500.0    +    1099    2101    0,122,223    3    1000,500,95,    0,2000,2505,
 chrA    100    2700    IVC10m    500.0    -    1099    2101    0,122,223    3    1000,500,95,    0,2000,2505,""".replace("    ","\t")
+
+_EXTRA_COLS="""numcol    floatcol    strcol    attrcol
+0    3.14    a    gene_id "gene_0"; transcript_id "transcript_0";
+1    2.72523    abc    gene_id "gene_1"; transcript_id "transcript_1";
+2    30.12350    DEF    gene_id "gene_2"; transcript_id "transcript_2";
+3    15123.20    ghi    gene_id "gene_3"; transcript_id "transcript_3";
+4    2.0    alongword    gene_id "gene_4"; transcript_id "transcript_4";
+5    -3.1234    a sentence with spaces    gene_id "gene_5"; transcript_id "transcript_5";
+6    -20.5    some notes with "quotes"    gene_id "gene_6"; transcript_id "transcript_6";
+7    -1e10    1    gene_id "gene_7"; transcript_id "transcript_7";
+8    2e5    2    gene_id "gene_8"; transcript_id "transcript_8";
+9    2.3e6    3.0    gene_id "gene_9"; transcript_id "transcript_9";
+10    0.03    string1    gene_id "gene_10"; transcript_id "transcript_10";
+11    1.0    string2    gene_id "gene_11"; transcript_id "transcript_11";
+12    2.0    string3    gene_id "gene_12"; transcript_id "transcript_12";
+13    3.0    string4 string5 string6    gene_id "gene_13"; transcript_id "transcript_13";
+14    4.0    test    gene_id "gene_14"; transcript_id "transcript_14";
+15    5.0    testetst    gene_id "gene_15"; transcript_id "transcript_15";
+16    6.0    testsatsdfasf    gene_id "gene_16"; transcript_id "transcript_16";
+17    7.0    asdgahghfzgdasdfasdf    gene_id "gene_17"; transcript_id "transcript_17";
+18    8.0    asdfasdfadsfgaasdg    gene_id "gene_18"; transcript_id "transcript_18";
+19    9.0    asdfasdfdasfdas    gene_id "gene_19"; transcript_id "transcript_19";
+""".replace("    ","\t")

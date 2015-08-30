@@ -37,6 +37,7 @@ __date__ =  "Aug 23, 2011"
 __author__ = "joshua"
 
 import shlex
+import warnings
 from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.services.decorators import deprecated, skipdoc
@@ -105,7 +106,16 @@ class BED_Reader(AssembledFeatureReader):
     
     metadata : dict
         Attributes declared in track line, if any
+    
+    extra_columns : int or list, optional
+        Description of extra columns in `BED`_ file (e.g. for custom `ENCODE`_
+        formats.
+
+        TODO: copy description from roitools here
     """
+    def __init__(self,*args,**kwargs):
+        self.extra_columns = kwargs.get("extra_columns",0)
+        AssembledFeatureReader.__init__(self,*args,**kwargs)
 
     def _parse_track_line(self,inp):
         """Parse track line from `BED`_ file
@@ -139,7 +149,7 @@ class BED_Reader(AssembledFeatureReader):
             return self.__next__()
         else:
             try:
-                return self.return_type.from_bed(line)
+                return self.return_type.from_bed(line,extra_columns=self.extra_columns)
             except:
                 self.rejected.append(line)
                 warnings.warn("Rejecting malformed bed line %s:\n    %s" % (self.counter,line),UserWarning)

@@ -335,25 +335,34 @@ any count-based sequencing data.
     Users are encouraged to read the `DESeq`_/`DESeq2`_ documentation for a fuller
     discussion with additional examples.
 
-As input, `DESeq`_ and `DESeq2`_ take two tables:
+As input, `DESeq`_ and `DESeq2`_ take two tables and an equation:
 
- #. A table of *uncorrected, unnormalized* :term:`counts`, in which:
+ #. A :ref:`table <examples-deseq-count-table>` of *uncorrected, unnormalized*
+    :term:`counts`, in which:
 
       - each table row corresponds to a genomic region
       - each column corresponds to an experimental sample
       - the value in a each cell corresponds ot the number of counts
         in the corresponding genomic region and sample
 
- #. An *experimental design* describing the relationships between samples
-    (e.g. if any are technical or biological replicates, if any samples
-    interact in other ways)
-     
+ #. An :ref:`sample design table <examples-deseq-design-table>`
+    describing the properties of each sample
+    (e.g. if any are technical or biological replicates, or any treatments
+    or conditions that differ between samples)
+
+ #. An :ref:`design equation <examples-deseq-equation>`, describing how
+    the samples or treatments relate to one another
+
+    
 From these, `DESeq`_ and `DESeq2`_ separately model intrinsic counting
 error (Poisson noise) as well as additional inter-replicate error
 resulting biological or experimental variability. From these error models,
 `DESeq`_ and `DESeq2`_ can detect significant differences in count numbers
 between non-replicate samples, accounting for different sequencing depth
 between samples.
+
+
+ .. _examples-deseq-count-table
 
 The first table may be constructed by running |cs| or |counts_in_region|
 on each biological sample to obtain counts:
@@ -366,6 +375,7 @@ on each biological sample to obtain counts:
     $ counts_in_region inf_rnaseq_rep2 --count_files                       --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
 
 
+ .. TODO: include output
 From the output, the relevant columns can be extracted and moved to
 a single table::
 
@@ -374,9 +384,9 @@ a single table::
     >>> sample_names = ["inf_rnaseq_rep1","inf_rnaseq_rep2","uninf_rnaseq_rep1","uninf_rnaseq"rep2"]
 
     >>> # load samples as DataFrames
-    >>> samples = { K : yeti.loadtxt("%s.txt" % K) for K in sample_names }
+    >>> samples = { K : pd.read_table("%s.txt" % K,sep="\t",header=0,comment="#",index_col=None) for K in sample_names }
 
-    >>> # combine columns to single file
+    >>> # combine count columns to single DataFrame
     >>> combined_df = samples["ribo_rep1"]["region_name","region"]
     >>> for k,v in samples.items():
     >>>     combined_df["%s_counts" % k] = v["counts"]
@@ -384,12 +394,15 @@ a single table::
     >>> combined_df.head()
 
     >>> # save
-    >>> combined_df.savecsv("combined_counts.txt",sep="\t")
+    >>> combined_df.savecsv("combined_counts.txt",sep="\t",header=True,index=False)
 
 
-The second table is specified as an *experimental design*. This can be created
-as a tab-delimited text file. In this example, the we have two conditions,
-"infected" and "uninfected", and two replicates of each condition::
+ .. _examples-deseq-design-table:
+
+The second table contains the *experimental design*. This can be created
+in any text editor and saved as a tab-delimited text file. In this example,
+the we have two conditions, "infected" and "uninfected", and two replicates
+of each condition::
 
     sample_name        condition
     inf_rnaseq_1       infected
@@ -398,42 +411,52 @@ as a tab-delimited text file. In this example, the we have two conditions,
     uninf_rnaseq_2     uninfected
 
 
-Then everything can be loaded in `R`_:
+ .. _examples-deseq-equation:
 
+Because the only difference between samples is the `condition` column,
+the design equation is this case is very simple::
+
+    design = ~ condition
+
+
+With the count table, design table, and equation ready, everything can
+be loaded into `R`_:
+
+ .. TODO: put output below
  .. code-block:: r
 
-    # load RNA seq data into a data.frame
-    # first line of file are colum headers
-    # "region" column specifies a list of row names
-    rnaseq_data <- read.delim("combined_counts.txt",
-                              sep="\t",
-                              header=True,
-                              row.names="region")
+    > # load RNA seq data into a data.frame
+    > # first line of file are colum headers
+    > # "region" column specifies a list of row names
+    > count_table <- read.delim("combined_counts.txt",
+    >                           sep="\t",
+    >                           header=True,
+    >                           row.names="region")
 
-    sample_table <- read.delim("rnaseq_sample_table.txt",
-                               sep="\t",
-                               header=True,
-                               row.names="sample_name")
+    > sample_table <- read.delim("rnaseq_sample_table.txt",
+    >                            sep="\t",
+    >                            header=True,
+    >                            row.names="sample_name")
 
-    # import DESeq2 & run with default settings
-    library("DESeq2")
+    > # import DESeq2 & run with default settings
+    > library("DESeq2")
 
-    # note, design string below tells DESeq2 that the 'condition' column
-    # distinguishes replicates from non-replicates 
-    dds <- DESeqDataSetFromMatrix(countData = rnaseq_data,
-                                  colData = sample_table,
-                                  design = ~ condition) # <--- this line
+    > # note, design string below tells DESeq2 that the 'condition' column
+    > # distinguishes replicates from non-replicates 
+    > dds <- DESeqDataSetFromMatrix(countData = count_table,
+    >                               colData = sample_table,
+    >                               design = ~ condition) # <--- design equation
 
-    results <- results(dds)
-    summary(res)
+    > results <- results(dds)
+    > summary(res)
 
-    # sort results by adjusted p-value
-    resOrdered <- res[order(res$padj),]
+    > # sort results by adjusted p-value
+    > resOrdered <- res[order(res$padj),]
 
-    # export sorted data to text file
-    write.delim(as.data.frame(resOrdered),
-                sep="\t",
-                file="infected_uninfected_rnaseq_p_values.txt")
+    > # export sorted data to text file
+    > write.delim(as.data.frame(resOrdered),
+    >             sep="\t",
+    >             file="infected_uninfected_rnaseq_p_values.txt")
 
 
 Differential translation efficiency
@@ -443,8 +466,8 @@ Tests for differential translation efficiency can also be implemented within
 `DESeq`_/`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
 Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_.
 
-We use an experimental design similar to that above, but include a `sample_type`
-column and rows for  :term:`ribosome profiling` data::
+We use an sample table similar to that above, but include a `sample_type`
+column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries::
 
     sample_name        condition      sample_type
     inf_rnaseq_1       infected       rnaseq
@@ -456,46 +479,52 @@ column and rows for  :term:`ribosome profiling` data::
     uninf_riboprof_1   uninfected     riboprof
     uninf_riboprof_2   uninfected     riboprof
 
-To the design, we need to add  an *interaction term* to alert `DESeq`_/`DESeq2`_
-that we expect the relationship between the sample types (i.e. translation
-efficiency, the ratio of :term:`ribosome-protected footprints <footprint>`
-to RNA-seq fragments) to differ between conditions:
+To the design equation, we need to add  an *interaction term* to alert
+`DESeq`_/`DESeq2`_ that we expect the relationship between the sample
+types (i.e. translation efficiency, the ratio of
+:term:`ribosome-protected footprints <footprint>` to RNA-seq fragments)
+to differ between conditions::
 
+    design = ~ sample_type + condition + sample_type:condition
+
+In `R`_:
+
+ .. TODO: put output below
  .. code-block:: r
 
-    # load RNA seq data into a data.frame
-    # first line of file are colum headers
-    # "region" column specifies a list of row names
-    combined_data <- read.delim("combined_counts.txt",
-                                sep="\t",
-                                header=True,
-                               row.names="region")
+    > # load RNA seq data into a data.frame
+    > # first line of file are colum headers
+    > # "region" column specifies a list of row names
+    > combined_data <- read.delim("combined_counts.txt",
+    >                             sep="\t",
+    >                             header=True,
+    >                            row.names="region")
 
-    teff_sample_table <- read.delim("teff_sample_table.txt",
-                                   sep="\t",
-                                   header=True,
-                                  row.names="sample_name")
+    > teff_sample_table <- read.delim("teff_sample_table.txt",
+    >                                sep="\t",
+    >                                header=True,
+    >                                row.names="sample_name")
 
-    library("DESeq2")
+    > library("DESeq2")
 
-    # note the interaction term in the design below:
-    dds <- DESeqDataSetFromMatrix(countData = combined_data,
-                                  colData = teff_sample_table,
-                                  design = ~ sample_type + condition + sample_type:condition)
+    > # note the interaction term in the design below:
+    > dds <- DESeqDataSetFromMatrix(countData = combined_data,
+    >                               colData = teff_sample_table,
+    >                               design = ~ sample_type + condition + sample_type:condition)
 
-    results <- results(dds)
-    summary(res)
+    > results <- results(dds)
+    > summary(res)
 
-    # now, do wald test on interaction term
-    ????
+    > # now, do wald test on interaction term
+    TODO: complete this line
 
-    # sort by adjusted p-value
-    resOrdered <- res[order(res$padj),]
+    > # sort by adjusted p-value
+    > resOrdered <- res[order(res$padj),]
 
-    # export
-    write.delim(as.data.frame(resOrdered),
-                sep="\t",
-                file="infected_uninfected_rnaseq_p_values.txt")
+    > # export
+    > write.delim(as.data.frame(resOrdered),
+    >             sep="\t",
+    >             file="infected_uninfected_rnaseq_p_values.txt")
 
 
  .. old discussion- the empirical test used by Nick Ingolia 
