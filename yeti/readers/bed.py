@@ -37,6 +37,7 @@ __date__ =  "Aug 23, 2011"
 __author__ = "joshua"
 
 import shlex
+import warnings
 from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.services.decorators import deprecated, skipdoc
