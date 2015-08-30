@@ -1,7 +1,6 @@
 Working with GFF files
 ======================
 
-TODO: write this 
 
 GFF files are the most feature-rich annotation format. In the original
 specification, much of the file strucure was deliberately left
@@ -16,7 +15,7 @@ For example, it was up to users to decide:
     including encoded attributes and values, should be formatted
 
 Because of this, several flavors of GFF exist today, each adding
-their own specifications. Two are:
+their own specifications. Two of the most common are:
 
   - `GTF2`_, exlusively used for describing transcripts
   - `GFF3`_, which allows a hierarchical set of feature relationships,
@@ -24,7 +23,7 @@ their own specifications. Two are:
 
 In this tutorial, we discuss briefly discuss handling `GFF3`_ files
 in :data:`yeti`. We recommend that users read the `GFF3 specification <GFF3>`_
-for full discussion of the file type.
+for full discussion of the file type. In `GFF3`_:
 
   - coordinates are :term:`1-indexed` and :term:`fully-closed`
   - a ninth column containing key-value pairs of arbitary attributes
@@ -78,6 +77,7 @@ Some research groups prefer one representation over another, while others
 use both, even in the same file. 
 
 
+ .. _gff3-reading-overview:
 
 Reading `GFF3`_ files in :data:`yeti`
 -------------------------------------
@@ -90,7 +90,7 @@ Reading simple features
     >>> TODO open GFF3
 
 Attributes described in the ninth column of the `GFF3`_ file are placed 
-into the |SegmentChain|`s `attr` dictionary:
+into the `attr` dictionary of the |SegmentChain|::
 
     >>> feature.attr
 
@@ -108,10 +108,9 @@ For convenience, |GFF3_TranscriptAssembler| is provided.
 By assuming the `GFF3`_ uses th SO 2.5.3 ontology (used by many of the model
 organism databases,  including `SGD`_, `FlyBase`_, and `WormBase`_), it 
 assembles features into |Transcript| objects, first by `Parent` matching,
-and then by shared `ID`, if shared `ID`s are present. By default,
-|GFF3_TranscriptAssembler|.
+and then by shared `ID`, if shared `ID` attributes are present.
 
-The reader behaves as an iterator::
+The reader behaves as an iterator, which assembles groups of transcripts lazily::
 
     >>> reader = GFF3_TranscriptAssembler("some_file.gff")
     >>> for transcript in reader:
@@ -124,6 +123,7 @@ attribute::
     [] # list of strings, corresponding to bad GFF3 lines
 
 
+ .. _gff3-assembly-consequences:
 
 Consequences of assembly
 ........................
@@ -138,9 +138,13 @@ it is time to assemble:
     spans multiple chromosomes)
   - The end of the `GFF3`_ file
 
-Because so many features are held in memory, assembling `GFF3`_ files
-requires much more memory than a `BED`_ file.
+Because so many features must be held in memory before a feature can 
+be assembled from subfeatures, assembling a transcript form a `GFF3`_ file
+requires much more memory than simply reading a transcript from a single
+line of a `BED`_ file.
 
+
+ .. _gff3-write-assembler: 
 
 Writing your own assembler
 ..........................
@@ -151,7 +155,7 @@ as a base class.
 handling attributes? pooled attribute func
 stop feature?
 
-TODO : finish section
+TODO : finish section on writing own assembler
 
 
 
