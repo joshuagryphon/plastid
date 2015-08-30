@@ -1884,19 +1884,26 @@ class SegmentChain(object):
         line
             Line from a `BED`_ file, containing 4 or more columns
 
-        extra_columns: int or list of tuples, optional
+        extra_columns: int or list optional
             Extra, non-BED columns in `BED`_ file corresponding to feature
-            attributes.
+            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
             
-            If `extra_columns` is an int, it is taken to be the
-            number of attribute columns. Attributes will be stored in
-            the `attr` dictionary of the |SegmentChain|, under names like
-            `custom0`, `custom1`, ... , `customN`.
+            if `extra-columns` is:
             
-            If `extra_columns` is a list of tuples, each tuple is taken
-            to be a pair of `(attribute_name, formatter_func)`. In this case,
-            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
-            will be set to `formatter_func(column_value)`.
+              - an :class:`int`: it is taken to be the
+                number of attribute columns. Attributes will be stored in
+                the `attr` dictionary of the |SegmentChain|, under names like
+                `custom0`, `custom1`, ... , `customN`.
+
+              - a :class:`list` of :class:`str`, it is taken to be the names
+                of the attribute columns, in order, from left to right in the file.
+                In this case, attributes in extra columns will be stored under
+                there respective names in the `attr` dict.
+
+              - a :class:`list` of :class:`tuple`, each tuple is taken
+                to be a pair of `(attribute_name, formatter_func)`. In this case,
+                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+                will be set to `formatter_func(column_value)`.
             
             (Default: 0)
 
@@ -1913,14 +1920,22 @@ class SegmentChain(object):
             num_extra_columns = extra_columns
             column_formatters = [("custom%s" % X,str) for X in range(extra_columns)]
         elif isinstance(extra_columns,list):
-            if all([len(X) == 2 for X in extra_columns]) == False:
-                raise ValueError("Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
-            column_formatters = extra_columns
             num_extra_columns = len(extra_columns)
+            types = set([type(X) for X in extra_columns])
+            if len(types) > 1:
+                raise ValueError("List of `extra_columns` contains mixed types. Cannot parse.")
+            elif str in types:
+                column_formatters = [(X,str) for X in extra_columns]
+            elif tuple in types:
+                if all([len(X) == 2 for X in extra_columns]) == False:
+                    raise ValueError("Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
+                column_formatters = extra_columns
         else:
             raise TypeError("Cannot make SegmentChain from BED input: extra_columns must be an int or list. Got a %s" % type(extra_columns))
             
         num_bed_columns = len(items) - num_extra_columns
+        if num_bed_columns < 3:
+            raise ValueError("BED format requires at least 3 columns. Found only %s." % num_bed_columns)
         
         chrom         = items[0]
         chrom_start   = int(items[1])
@@ -1933,7 +1948,7 @@ class SegmentChain(object):
         # these values are used if any optional columns 4-12 are ommited
         bed_columns = { 3 :  ("ID",         default_id,    str),
                         4 :  ("score",      numpy.nan,     float),
-                        #5 :  ("strand",     strand),
+                        #5 :  ("strand",    ".", strand),
                         6 :  ("thickstart", None,          int),
                         7 :  ("thickend",   None,          int),
                         8 :  ("color",      "0,0,0",       str),
@@ -1943,7 +1958,7 @@ class SegmentChain(object):
                       }
     
         # set attr defaults in case we're dealing with BED4-BED9 format
-        attr = { KEY : VAL for KEY,VAL,_ in bed_columns.values() }
+        attr = { KEY : DEFAULT for KEY,DEFAULT,_ in bed_columns.values() }
     
         # populate attr with real values from BED columns that are present
         for i, tup in sorted(bed_columns.items()):
@@ -1963,6 +1978,7 @@ class SegmentChain(object):
             name, formatter = column_formatters[i-num_bed_columns] 
             attr[name] = formatter(items[i])
         
+        # stash order of columns for export
         if num_bed_columns > 0:
             attr["_bedx_column_order"] = [X[0] for X in column_formatters]
     
@@ -2565,19 +2581,26 @@ class Transcript(SegmentChain):
         line
             Line from a BED file with at least 4 columns
 
-        extra_columns: int or list of tuples, optional
+        extra_columns: int or list, optional
             Extra, non-BED columns in `BED`_ file corresponding to feature
-            attributes.
+            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
             
-            If `extra_columns` is an int, it is taken to be the
-            number of attribute columns. Attributes will be stored in
-            the `attr` dictionary of the |SegmentChain|, under names like
-            `custom0`, `custom1`, ... , `customN`.
+            if `extra-columns` is:
             
-            If `extra_columns` is a list of tuples, each tuple is taken
-            to be a pair of `(attribute_name, formatter_func)`. In this case,
-            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
-            will be set to `formatter_func(column_value)`.
+              - an :class:`int`: it is taken to be the
+                number of attribute columns. Attributes will be stored in
+                the `attr` dictionary of the |SegmentChain|, under names like
+                `custom0`, `custom1`, ... , `customN`.
+
+              - a :class:`list` of :class:`str`, it is taken to be the names
+                of the attribute columns, in order, from left to right in the file.
+                In this case, attributes in extra columns will be stored under
+                there respective names in the `attr` dict.
+
+              - a :class:`list` of :class:`tuple`, each tuple is taken
+                to be a pair of `(attribute_name, formatter_func)`. In this case,
+                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+                will be set to `formatter_func(column_value)`.
             
             (Default: 0)
                 

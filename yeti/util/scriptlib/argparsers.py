@@ -518,6 +518,11 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                                   help="%sannotation_files are sorted by chromosomal position (Default: False)" % prefix))
                    ])
 
+    if "BED" in input_choices:
+        option_dict["bed_extra_columns"] = dict(default=0,
+                                                nargs="+",
+                                                help="Number of extra columns in BED file (e.g. in custom ENCODE formats) "+
+                                                     "or list of names for those columns. (Default: 0).")
     if "GFF3" in input_choices:
         option_dict["gff_transcript_types"] = dict(type=str,
                                                   default=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
@@ -620,6 +625,16 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
         add_three = args.add_three
     else:
         add_three = False
+
+    if "bed_extra_columns" not in disabled:
+        bed_extra_columns = args.bed_extra_columns
+        if not(isinstance(bed_extra_columns,list)):
+            try:
+                bed_extra_columns = int(bed_extra_columns)
+            except ValueError:
+                pass
+    else:
+        bed_extra_columns = 0
     
     if args.annotation_format.lower() == "bigbed":
         if len(args.annotation_files) > 1:
@@ -672,7 +687,8 @@ Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % ar
         transcripts = BED_Reader(*streams,
                                  add_three_for_stop=add_three,
                                  tabix=tabix,
-                                 return_type=return_type,printer=printer)
+                                 return_type=return_type,printer=printer,
+                                 extra_columns=bed_extra_columns)
 
     elif args.annotation_format.lower() == "psl":
         from yeti.readers.psl import PSL_Reader
