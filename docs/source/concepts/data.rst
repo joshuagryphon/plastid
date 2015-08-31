@@ -133,8 +133,8 @@ When choosing a feature annotation format, consider the following questions:
     is the feature annotation very large?
 
 
-`BED`_, `BED+X`_, & `BigBed`_
-.............................
+`BED`_, :term:`BED X+Y`, & `BigBed`_
+....................................
 `BED`_-family files contain a single record per line. And, in contrast
 to `GTF2`_ or `GFF3`_ files, single records -- like transcripts -- can
 be discontinuous. This makes `BED`_ files computationally
@@ -155,11 +155,10 @@ Note that *there is no attribute for feature type:* typically all records
 in a `BED`_ file are of the same type (e.g. every record is a transcript
 or an alignment or a ChIP binding site, et c).
 
-`BigBed`_ and `BED+X`_ formats can include additional attributes in additional
+`BigBed`_ and :term:`BED X+Y` formats can include additional attributes in additional
 columns, but every entry in each column must be the same type of attribute 
 (e.g. a "gene id" column can only contain gene IDs).
-:term:`Genome browsers <genome browser>` may or may not understand or even read
-these extra columns.
+
 
 
 `GTF2`_ & `GFF3`_
@@ -272,22 +271,22 @@ In summary
 ..........
 The table below summarizes the discussion above: 
 
-==========   =====================================    ==========================    ======================   ==============
-**Format**   **Features that are not transcripts**    **Multiple feature types**    **Feature attributes**   **Memory use**
-             **or parts of transcripts**    
-----------   -------------------------------------    --------------------------    ----------------------   --------------
-`BED`_       Yes                                      No                            No                       Low
+===============   =====================================    ==========================    ======================   ==============
+**Format**        **Features that are not transcripts**    **Multiple feature types**    **Feature attributes**   **Memory use**
+                  **or parts of transcripts**    
+---------------   -------------------------------------    --------------------------    ----------------------   --------------
+`BED`_            Yes                                      No                            No                       Low
 
-`BED+X`_     Yes                                      If specified in extra         1 per extra column       Low
-                                                      column
+:term:`BED X+Y`   Yes                                      If specified in extra         1 per extra column       Low
+                                                           column
                                                       
-`BigBed`_    Yes                                      If specified in extra         1 per extra column       Low (and indexed)
-                                                      column
+`BigBed`_         Yes                                      If specified in extra         1 per extra column       Low (and indexed)
+                                                           column
                                                       
-`GTF2`_      No                                       Yes                           Unlimited                High for discontinuous features
+`GTF2`_           No                                       Yes                           Unlimited                High for discontinuous features
 
-`GFF3`_      Yes                                      Yes                           Unlimited                High for discontinuous features
-==========   =====================================    ==========================    ======================   ==============
+`GFF3`_           Yes                                      Yes                           Unlimited                High for discontinuous features
+===============   =====================================    ==========================    ======================   ==============
 
 
 Getting the most out of your time & data

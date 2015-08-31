@@ -270,3 +270,21 @@ Glossary of terms
 
         For example, at a 5% :term:`false discovery rate`, a set of
         20 positive results would contain approximately 1 false positive.
+
+    BED extended format
+    BED X+Y
+        Extended `BED`_ files contain 3-12 columns of `BED`_-formatted data (x),
+        plus additional (y) tab-delimited columns of arbitrary data.         
+        The `ENCODE`_ project has created several such formats (for a complete
+        list, see the `UCSC file format FAQ`_), including:
+
+          - `Broad peak <https://genome.ucsc.edu/FAQ/FAQformat.html#format13>`_ (BED 6+3)
+          - `Narrow peak <https://genome.ucsc.edu/FAQ/FAQformat.html#format12>`_ (BED 6+4)
+          - `tagAlign <https://genome.ucsc.edu/FAQ/FAQformat.html#format15>`_  (BED 3+3)
+
+        :data:`yeti` supports reading BED X+Y formats via the `extra_columns` keyword that can be
+        passed to :class:`~yeti.readers.bed.BED_Reader`, or the
+        :meth:`~yeti.genomics.roitools.SegmentChain.from_bed` method of |SegmentChain|
+        and |Transcript|. It also supports writing BED 12+Y formats via the same keyword
+        passed to the :meth:`~yeti.genomics.roitools.SegmentChain.as_bed`.
+

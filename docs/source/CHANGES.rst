@@ -19,10 +19,21 @@ also follow `Semantic versioning <http://semver.org/>`_.
     repository to a git repository.
 
 
+Unreleased
+----------
+
+Added
+.....
+  - Extended BED formats now supported
+
+
+
 yeti [0.2.0] = [2015-08-26]
 ---------------------------
-This update includes a number of backwards-incompatible changes;
-hence the version bump.
+**Big changes,** including some that are **backwards-incompatible.**
+We really think these are for the best, because they improve
+compatibility with other packages (e.g. pandas) and make
+the package more consistent in design & behavior
 
 Added
 .....
@@ -32,15 +43,15 @@ Added
     when reads are unmappable
   - support for 2bit files (via twobitreader) and for
     dicts of strings in SegmentChain.get_sequence
-  - various warnings
+  - various warnings added
 
 Changed
 .......
-  - ArrayTable removed
-  - All output files are pandas-compatible (header row now has no starting '#'),
+  - pandas compatibility: header rows in all output files no longer have starting '#.
     meaning UPDATE YOUR OLD POSITIONS/ROI FILES
   - __getitem__ from GenomeArrays now returns vectors 5' to 3'
-    relative to GenomicSegment rather than to genome
+    relative to GenomicSegment rather than to genome. This
+    is more consistent with user expectations.
   - _get_valid_X methods of SegmentChain changed to _get_masked_X
     for consistency with documentation and with numpy notation
 

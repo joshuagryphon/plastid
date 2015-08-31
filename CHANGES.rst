@@ -19,6 +19,15 @@ also follow `Semantic versioning <http://semver.org/>`_.
     repository to a git repository.
 
 
+Unreleased
+----------
+
+Added
+.....
+  - Extended BED formats now supported
+
+
+
 yeti [0.2.0] = [2015-08-26]
 ---------------------------
 **Big changes,** including some that are **backwards-incompatible.**

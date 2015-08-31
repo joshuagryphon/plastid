@@ -1404,10 +1404,8 @@ class SegmentChain(object):
                 phase]
         
         return [str(X) for X in ltmp]
-        
-        
     
-    def as_bed(self,thickstart=None,thickend=None,as_int=True,color=None):
+    def as_bed(self,thickstart=None,thickend=None,as_int=True,color=None,extra_columns=None):
         """Format |SegmentChain| as a string of BED12[+X] output.
         
         If the |SegmentChain| was imported as a `BED`_ file with extra columns,
@@ -1430,7 +1428,22 @@ class SegmentChain(object):
             Color represented as RGB hex string.
             If not none, overrides the color in `self.attr['color']`
     
-    
+        extra_columns : None or list, optional
+            If `None`, and the |SegmentChain| was imported using the `extra_columns`
+            keyword of :meth:`~yeti.genomics.roitools.SegmentChain.from_bed`,
+            the |SegmentChain| will be exported in BED 12+X format, in which
+            extra columns are in the same order as they were upon import. If no extra columns
+            were present, the |SegmentChain| will be exported a aa BED12 line.
+
+            If a list of attribute names, these attributes will be exported as
+            extra columns in order, overriding whatever happened upon import. 
+            If an attribute name is not in the `attr` dict of the |SegmentChain|,
+            it will be exported with the default empty value "".
+
+            If an empty list, no extra columns will be exported; the |SegmentChain|
+            will be formatted as a BED12 line.
+
+
         Returns
         -------
         str 
@@ -1494,9 +1507,11 @@ class SegmentChain(object):
                     ",".join([str(X.start - self[0].start) for X in self]) + ","
                    ]            
 
-            extra_cols = self.attr.get("_bedx_column_order",[])
-            if len(extra_cols) > 0:
-                ltmp.extend([self.attr[X] for X in extra_cols])
+            if extra_columns is None:
+                extra_columns = self.attr.get("_bedx_column_order",[])
+
+            if len(extra_columns) > 0:
+                ltmp.extend([self.attr.get(X,"") for X in extra_columns])
             
             return "\t".join([str(X) for X in ltmp]) + "\n"
         else:
@@ -2514,7 +2529,7 @@ class Transcript(SegmentChain):
 
         return "".join(ltmp)
     
-    def as_bed(self,as_int=True,color=None):
+    def as_bed(self,as_int=True,color=None,extra_columns=None):
         """Format `self` as a BED12[+X] line, assigning CDS boundaries 
         to the thickstart and thickend columns from `self.attr`
 
@@ -2530,6 +2545,21 @@ class Transcript(SegmentChain):
             Color represented as RGB hex string.
             If not none, overrides the color in `self.attr["color"]`
     
+        extra_columns : None or list, optional
+            If `None`, and the |Transcript| was imported using the `extra_columns`
+            keyword of :meth:`~yeti.genomics.roitools.Transcript.from_bed`,
+            the |Transcript| will be exported in BED 12+X format, in which
+            extra columns are in the same order as they were upon import. If no extra columns
+            were present, the |Transcript| will be exported a aa BED12 line.
+
+            If a list of attribute names, these attributes will be exported as
+            extra columns in order, overriding whatever happened upon import. 
+            If an attribute name is not in the `attr` dict of the |Transcript|,
+            it will be exported with the default empty value "".
+
+            If an empty list, no extra columns will be exported; the |Transcript|
+            will be formatted as a BED12 line.
+
     
         Returns
         -------
@@ -2564,7 +2594,8 @@ class Transcript(SegmentChain):
                                    thickstart=self.cds_genome_start,
                                    thickend=self.cds_genome_end,
                                    as_int=as_int,
-                                   color=color)
+                                   color=color,
+                                   extra_columns=extra_columns)
 
     @staticmethod
     def from_bed(line,extra_columns=0):
