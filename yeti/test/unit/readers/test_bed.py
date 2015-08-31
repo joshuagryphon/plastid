@@ -114,7 +114,6 @@ class TestBED():
                 
                 yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
 
-
     def test_bed_import_3to12plus4_columns_with_names(self):
         names = [X for X in self.big_df.columns[-4:]]
         tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=names)
@@ -217,6 +216,41 @@ class TestBED():
                     c += 1
                 
                 yield self.check_equal, c,len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+    def test_bed_export_3to12plus4_columns_with_names(self):
+        names = [X for X in self.big_df.columns[-4:]]
+        tests = [(Transcript.from_bed,_TEST_TRANSCRIPTS,"tx_frombed_plus4_int"),
+                 (SegmentChain.from_bed,_TEST_IVCOLLECTIONS,"segchain_frombed_plus4_int"),
+                ]
+        for import_fn, known_set, name in tests:
+            extracol12plus = [X.split("\t") for X in self.extracol_data[12].strip("\n").split("\n")]
+            for n,data_str in sorted(self.extracol_data.items()):
+                for c, line in enumerate(data_str.strip("\n").split("\n")):
+                    out_line = import_fn(line,extra_columns=names).as_bed(as_int=False).strip("\n")
+                    out_items = out_line.split("\t")[:n] + out_line.split("\t")[-4:]
+                    expected_items = extracol12plus[c][:n] + extracol12plus[c][-4:]
+                    msg = "%s BED %s+%s export unequal for lines:\nin:  %s\nout: %s\nexp: %s" % (name, n,4,line,
+                            "\t".join(out_items),"\t".join(expected_items))
+                    yield self.check_equal, out_items, expected_items, msg
+                
+                yield self.check_equal, c+1, len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
+
+    def test_bed_export_3to12plus4_columns_with_int(self):
+        tests = [(Transcript.from_bed,_TEST_TRANSCRIPTS,"tx_frombed_plus4_int"),
+                 (SegmentChain.from_bed,_TEST_IVCOLLECTIONS,"segchain_frombed_plus4_int"),
+                ]
+        for import_fn, known_set, name in tests:
+            extracol12plus = [X.split("\t") for X in self.extracol_data[12].strip("\n").split("\n")]
+            for n,data_str in sorted(self.extracol_data.items()):
+                for c, line in enumerate(data_str.strip("\n").split("\n")):
+                    out_line = import_fn(line,extra_columns=4).as_bed(as_int=False).strip("\n")
+                    out_items = out_line.split("\t")[:n] + out_line.split("\t")[-4:]
+                    expected_items = extracol12plus[c][:n] + extracol12plus[c][-4:]
+                    msg = "%s BED %s+%s export unequal for lines:\nin:  %s\nout: %s\nexp: %s" % (name, n,4,line,
+                            "\t".join(out_items),"\t".join(expected_items))
+                    yield self.check_equal, out_items, expected_items, msg
+                
+                yield self.check_equal, c+1, len(known_set),"Not all intervals loaded! Expected %s, found %s." % (len(known_set),c)
 
     def test_bed_import_3to12_columns(self):
         tx_reader = functools.partial(BED_Reader,return_type=Transcript)
@@ -359,18 +393,18 @@ track name=test_data description='my test data'
 """
 
 # same data, as BED12 block
-_BED12_DATA = """chrA    100    1100    IVC1p    0.0    +    -1    -1    0,0,0    1    1000,    0,
-chrA    100    1100    IVC1m    0.0    -    -1    -1    0,0,0    1    1000,    0,
-chrA    100    2600    IVC2p    0.0    +    -1    -1    0,0,0    2    1000,500,    0,2000,
-chrA    100    2600    IVC2m    0.0    -    -1    -1    0,0,0    2    1000,500,    0,2000,
-chrA    100    2600    IVC3p    500.0    +    -1    -1    0,0,0    2    1000,500,    0,2000,
-chrA    100    2600    IVC3m    500.0    -    -1    -1    0,0,0    2    1000,500,    0,2000,
-chrA    100    2700    IVC4p    500.0    +    -1    -1    0,0,0    3    1000,500,95,    0,2000,2505,
-chrA    100    2600    IVC4m    500.0    -    -1    -1    0,0,0    2    1000,500,    0,2000,
-chrA    100    2700    IVC5p    500.0    +    -1    -1    0,122,223    3    1000,500,95,    0,2000,2505,
-chrA    100    2700    IVC5m    500.0    -    -1    -1    0,122,223    3    1000,500,95,    0,2000,2505,
-chrA    100    2700    IVC6p    500.0    +    -1    -1    0,122,223    3    1000,500,95,    0,2000,2505,
-chrA    100    2700    IVC6m    500.0    -    -1    -1    0,122,223    3    1000,500,95,    0,2000,2505,
+_BED12_DATA = """chrA    100    1100    IVC1p    0.0    +    100    100    0,0,0    1    1000,    0,
+chrA    100    1100    IVC1m    0.0    -    100    100    0,0,0    1    1000,    0,
+chrA    100    2600    IVC2p    0.0    +    100    100    0,0,0    2    1000,500,    0,2000,
+chrA    100    2600    IVC2m    0.0    -    100    100    0,0,0    2    1000,500,    0,2000,
+chrA    100    2600    IVC3p    500.0    +    100    100    0,0,0    2    1000,500,    0,2000,
+chrA    100    2600    IVC3m    500.0    -    100    100    0,0,0    2    1000,500,    0,2000,
+chrA    100    2700    IVC4p    500.0    +    100    100    0,0,0    3    1000,500,95,    0,2000,2505,
+chrA    100    2600    IVC4m    500.0    -    100    100    0,0,0    2    1000,500,    0,2000,
+chrA    100    2700    IVC5p    500.0    +    100    100    0,122,223    3    1000,500,95,    0,2000,2505,
+chrA    100    2700    IVC5m    500.0    -    100    100    0,122,223    3    1000,500,95,    0,2000,2505,
+chrA    100    2700    IVC6p    500.0    +    100    100    0,122,223    3    1000,500,95,    0,2000,2505,
+chrA    100    2700    IVC6m    500.0    -    100    100    0,122,223    3    1000,500,95,    0,2000,2505,
 chrA    100    2700    IVC7p    500.0    +    2200    2400    0,122,223    3    1000,500,95,    0,2000,2505,
 chrA    100    2700    IVC7m    500.0    -    2200    2400    0,122,223    3    1000,500,95,    0,2000,2505,
 chrA    100    2700    IVC8p    500.0    +    100    2700    0,122,223    3    1000,500,95,    0,2000,2505,

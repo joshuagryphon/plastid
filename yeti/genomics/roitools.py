@@ -1477,8 +1477,8 @@ class SegmentChain(object):
             except ValueError:
                 color = self.attr.get("color","0,0,0") if color is None else color
             
-            thickstart = self.attr.get("thickstart",self[0].start) if thickstart is None else thickstart
-            thickend   = self.attr.get("thickend",self[0].start)   if thickend   is None else thickend
+            thickstart = self.attr.get("thickstart",self.spanning_segment.start) if thickstart is None else thickstart
+            thickend   = self.attr.get("thickend",self.spanning_segment.start)   if thickend   is None else thickend
             
             ltmp = [self[0].chrom,
                     self[0].start,
@@ -1496,7 +1496,7 @@ class SegmentChain(object):
 
             extra_cols = self.attr.get("_bedx_column_order",[])
             if len(extra_cols) > 0:
-                ltmp.append(str(self.attr[X]) for X in extra_cols)
+                ltmp.extend([self.attr[X] for X in extra_cols])
             
             return "\t".join([str(X) for X in ltmp]) + "\n"
         else:
@@ -1990,11 +1990,11 @@ class SegmentChain(object):
     
         # sanity check on thickstart and thickend
         if attr["thickstart"] == attr["thickend"]: # if coding region is 0 length, RNA is non-coding
-            attr["thickstart"] = attr["thickend"] = None
+            attr["thickstart"] = attr["thickend"] = chrom_start
         elif any([attr["thickstart"] is None, attr["thickend"] is None]):
-            attr["thickstart"] = attr["thickend"] = None
+            attr["thickstart"] = attr["thickend"] = chrom_start
         elif attr["thickstart"] < 0 or attr["thickend"] < 0:
-            attr["thickstart"] = attr["thickend"] = None
+            attr["thickstart"] = attr["thickend"] = chrom_start
         
         # convert blocks to GenomicSegments
         num_frags    = int(attr["blocks"])
@@ -2617,6 +2617,9 @@ class Transcript(SegmentChain):
         attr["cds_genome_end"]   = attr["thickend"]
         attr.pop("thickstart")
         attr.pop("thickend")
+        if attr["cds_genome_start"] == attr["cds_genome_end"]:
+            attr["cds_genome_start"] = attr["cds_genome_end"] = None
+
         transcript = Transcript(*segments,**attr)
     
         return transcript

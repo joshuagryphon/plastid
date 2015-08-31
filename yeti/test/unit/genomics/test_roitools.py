@@ -160,18 +160,6 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         self.assertGreater(c,0)
 
     @skip_if_abstract    
-    def test_import_bed_extra_columns_no_names(self):
-        assert False
-
-    @skip_if_abstract    
-    def test_import_bed_extra_columns_with_names(self):
-        assert False
-
-    @skip_if_abstract    
-    def test_export_bed_extra_columns(self):
-        assert False
-
-    @skip_if_abstract    
     def test_export_bed_gtf(self):
         """Test export to BED12 and GTF formats"""
         bed_text = tempfile.NamedTemporaryFile(mode="w",delete=False)
@@ -1100,7 +1088,11 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
     @skip_if_abstract    
     def test_to_from_bed_identity(self):
-        """Test import to and from BED12 format"""
+        """Test import to and from BED12 format
+        
+        NOTE: tests with varying numbers of BED columns (3-12) and with
+        or without extra_columns are in yeti.test.unit.readers.test_bed
+        """
         for ivc_id, ivc in self.bed_dict.items():
             err_msg = "%s %s fails BED io." % (self.test_class.__name__,ivc_id)
             self.assertTrue(self.is_identical(ivc,self.test_class.from_bed(ivc.as_bed())),err_msg)
