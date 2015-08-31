@@ -24,7 +24,10 @@ Unreleased
 
 Added
 .....
-  - Extended BED formats now supported
+  - Extended BED formats now supported in both import & export, command-line
+    scripts & interactive
+  - BED Detail format and ENCODE BED subtypes now automatically parsed
+    from track definition lines
 
 
 

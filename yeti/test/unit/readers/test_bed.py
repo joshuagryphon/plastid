@@ -14,6 +14,8 @@ See http://genome.ucsc.edu/FAQ/FAQformat.html
 """
 import unittest
 import functools
+import warnings
+import sys
 import pandas as pd
 
 from csv import QUOTE_NONE
@@ -21,7 +23,7 @@ from nose.plugins.attrib import attr
 from yeti.util.services.mini2to3 import cStringIO
 from yeti.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_dict_equal, assert_greater_equal
 
 #===============================================================================
 # INDEX: test suites
@@ -66,7 +68,7 @@ class TestBED():
 
         tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=names)
         seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=names)
-        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+        tests = [(seg_reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
                  (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
                 ]
         for reader_fn, known_set, name in tests:
@@ -118,7 +120,7 @@ class TestBED():
         names = [X for X in self.big_df.columns[-4:]]
         tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=names)
         seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=names)
-        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+        tests = [(seg_reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
                  (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
                 ]
         for reader_fn, known_set, name in tests:
@@ -169,7 +171,7 @@ class TestBED():
     def test_bed_import_3to12plus4_columns_with_int(self):
         tx_reader = functools.partial(BED_Reader,return_type=Transcript,extra_columns=4)
         seg_reader = functools.partial(BED_Reader,return_type=SegmentChain,extra_columns=4)
-        tests = [(seg_reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+        tests = [(seg_reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
                  (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
                 ]
         for reader_fn, known_set, name in tests:
@@ -220,7 +222,7 @@ class TestBED():
     def test_bed_export_3to12plus4_columns_with_names(self):
         names = [X for X in self.big_df.columns[-4:]]
         tests = [(Transcript.from_bed,_TEST_TRANSCRIPTS,"tx_frombed_plus4_int"),
-                 (SegmentChain.from_bed,_TEST_IVCOLLECTIONS,"segchain_frombed_plus4_int"),
+                 (SegmentChain.from_bed,_TEST_SEGMENTCHAINS,"segchain_frombed_plus4_int"),
                 ]
         for import_fn, known_set, name in tests:
             extracol12plus = [X.split("\t") for X in self.extracol_data[12].strip("\n").split("\n")]
@@ -237,7 +239,7 @@ class TestBED():
 
     def test_bed_export_3to12plus4_columns_with_int(self):
         tests = [(Transcript.from_bed,_TEST_TRANSCRIPTS,"tx_frombed_plus4_int"),
-                 (SegmentChain.from_bed,_TEST_IVCOLLECTIONS,"segchain_frombed_plus4_int"),
+                 (SegmentChain.from_bed,_TEST_SEGMENTCHAINS,"segchain_frombed_plus4_int"),
                 ]
         for import_fn, known_set, name in tests:
             extracol12plus = [X.split("\t") for X in self.extracol_data[12].strip("\n").split("\n")]
@@ -254,9 +256,9 @@ class TestBED():
 
     def test_bed_import_3to12_columns(self):
         tx_reader = functools.partial(BED_Reader,return_type=Transcript)
-        tests = [(BED_to_SegmentChain,_TEST_IVCOLLECTIONS,"tosegmentchain,segmentchain"),
+        tests = [(BED_to_SegmentChain,_TEST_SEGMENTCHAINS,"tosegmentchain,segmentchain"),
                  (BED_to_Transcripts,_TEST_TRANSCRIPTS,"totranscripts_transcript"),
-                 (BED_Reader,_TEST_IVCOLLECTIONS,"reader_segmentchain"),
+                 (BED_Reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
                  (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
                 ]
         for reader_fn, known_set, name in tests:
@@ -303,7 +305,7 @@ class TestBED():
         """Checks equality of thickstart and thickend attributes for SegmentChain objects"""
         for n,data_str in sorted(self.data.items()):
             for c, (test_ivc,known_ivc) in enumerate(zip(BED_Reader(cStringIO.StringIO(data_str),return_type=SegmentChain),
-                                                       _TEST_IVCOLLECTIONS)):
+                                                       _TEST_SEGMENTCHAINS)):
                 if n >= 8:
                     err_msg = "Failed thickstart/end equality on %s-column BED input: %s,%s" % (n,known_ivc.attr,test_ivc.attr)
                     if known_ivc.attr.get("thickstart",None) is not None:
@@ -333,13 +335,29 @@ class TestBED():
             
             yield self.check_equal, c,20-1,"Not all intervals loaded! Expected %s, found %s." % (20-1,c)
         
+    def test_track_subtype_parsing(self):
+        reader = BED_Reader(cStringIO.StringIO(_NARROW_PEAK_TEXT))
+        for c, (found, expected) in enumerate(zip(reader,_NARROW_PEAK_CHAINS)):
+            found.attr.pop("color")
+            found.attr.pop("score")
+            assert_dict_equal(found.attr,expected.attr)
+            assert_equal(found,expected)
+
+        assert_equal(c,len(_NARROW_PEAK_CHAINS)-1)
+
+    def test_track_subtype_raises_warning_if_wrong_extra_columns(self):
+        reader = BED_Reader(cStringIO.StringIO(_NARROW_PEAK_TEXT),extra_columns=14)
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            ltmp = list(reader)
+            assert_greater_equal(len(warns),0)
 
 #===============================================================================
 # INDEX: test data
 #===============================================================================
 
 # test dataset, constructed manually to include various edge cases
-_TEST_IVCOLLECTIONS = [
+_TEST_SEGMENTCHAINS = [
     # single-interval
     SegmentChain(GenomicSegment("chrA",100,1100,"+"),ID="IVC1p"),
     SegmentChain(GenomicSegment("chrA",100,1100,"-"),ID="IVC1m"),
@@ -385,7 +403,7 @@ _TEST_IVCOLLECTIONS = [
 ]
 
 # same data, as transcripts
-_TEST_TRANSCRIPTS = [Transcript(*X._segments,**X.attr) for X in _TEST_IVCOLLECTIONS]
+_TEST_TRANSCRIPTS = [Transcript(*X._segments,**X.attr) for X in _TEST_SEGMENTCHAINS]
 
 
 _BED_HEADER = """browser position chrA:100-1100
@@ -436,3 +454,15 @@ _EXTRA_COLS="""numcol    floatcol    strcol    attrcol
 18    8.0    asdfasdfadsfgaasdg    gene_id "gene_18"; transcript_id "transcript_18";
 19    9.0    asdfasdfdasfdas    gene_id "gene_19"; transcript_id "transcript_19";
 """.replace("    ","\t")
+
+
+_NARROW_PEAK_TEXT = """track type=narrowPeak
+chrI    100    15000    feature1    0    +    341.2    -123.2    -513.3    50
+chrII    320    15000    feature2    0    -    2.1    -5123.2    0    650""".replace("    ","\t")
+
+_NARROW_PEAK_CHAINS = [
+    SegmentChain(GenomicSegment("chrI",100,15000,"+"),ID='feature1',signalValue=341.2,pValue=-123.2,qValue=-513.3,peak=50,_bedx_column_order=["signalValue","pValue","qValue","peak"],thickstart=100,thickend=100),
+    SegmentChain(GenomicSegment("chrII",320,15000,"-"),ID='feature2',signalValue=2.1,pValue=-5123.2,qValue=0.0,peak=650,_bedx_column_order=["signalValue","pValue","qValue","peak"],thickstart=320,thickend=320),
+]
+
+

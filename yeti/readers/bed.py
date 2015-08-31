@@ -83,10 +83,37 @@ def BED_to_SegmentChain(stream):
     for ivc in reader:
         yield ivc
 
+bed_x_formats = {
+    "bedDetail" : [("ID",str),
+                   ("description",str),
+                  ],
+    "narrowPeak" : [("signalValue",float),
+                    ("pValue",float),
+                    ("qValue",float),
+                    ("peak",int)],
+    "broadPeak"  : [("signalValue",float),
+                    ("pValue",float),
+                    ("qValue",float)],
+    "gappedPeak" : [("signalValue",float),
+                    ("pValue",float),
+                    ("qValue",float)],
+    "tagAlign"   : [("sequence",str),
+                    ("score",float),
+                    ("strand",str)],
+    "pairedTagAlign" : [("seq1",str),
+                        ("seq2",str)],
+    "peptideMapping" : [("rawScore",float),
+                        ("spectrumId",str),
+                        ("peptideRank",int),
+                        ("peptideRepeatCount",int)],
+
+}
+
 class BED_Reader(AssembledFeatureReader):
-    """Reads `BED`_ files line-by-line into |SegmentChains| or |Transcripts|. 
-    Metadata, if present in a track declaration, is saved in `self.metadata`.
-    Malformed lines are stored in `self.rejected`, while parsing continues.
+    """Reads `BED`_ and :term:`BED X+Y` files line-by-line into |SegmentChains|
+    or |Transcripts|. Metadata, if present in a track declaration, is saved
+    in `self.metadata`. Malformed lines are stored in `self.rejected`, while
+    parsing continues.
 
     
     Attributes
@@ -108,14 +135,47 @@ class BED_Reader(AssembledFeatureReader):
         Attributes declared in track line, if any
     
     extra_columns : int or list, optional
-        Description of extra columns in `BED`_ file (e.g. for custom `ENCODE`_
-        formats.
+        Extra, non-BED columns in :term:`BED X+Y`_ format file corresponding to feature
+        attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+        
+        if `extra_columns` is:
+        
+          - an :class:`int`: it is taken to be the
+            number of attribute columns. Attributes will be stored in
+            the `attr` dictionary of the |SegmentChain|, under names like
+            `custom0`, `custom1`, ... , `customN`.
 
-        TODO: copy description from roitools here
+          - a :class:`list` of :class:`str`, it is taken to be the names
+            of the attribute columns, in order, from left to right in the file.
+            In this case, attributes in extra columns will be stored under
+            there respective names in the `attr` dict.
+
+          - a :class:`list` of :class:`tuple`, each tuple is taken
+            to be a pair of `(attribute_name, formatter_func)`. In this case,
+            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+            will be set to `formatter_func(column_value)`.
+        
+        If unspecified, :class:`BED_Reader` reads the track declaration line
+        (if present), and:
+
+          - if a known track type is specified by the `type` field, it attempts
+            to format the extra columns as specified by that type. Known track
+            types prently include:
+
+              - bedDetail
+              - narrowPeak
+              - broadPeak
+              - gappedPeak
+              - tagAlign
+              - pairedTagAlign
+              - peptideMapping
+          
+          - if not, it assumes 0 non-`BED`_ fields are present, and that all columns
+            are `BED`_ formatted.
     """
     def __init__(self,*args,**kwargs):
-        self.extra_columns = kwargs.get("extra_columns",0)
         AssembledFeatureReader.__init__(self,*args,**kwargs)
+        self.extra_columns = kwargs.get("extra_columns",0)
 
     def _parse_track_line(self,inp):
         """Parse track line from `BED`_ file
@@ -124,17 +184,45 @@ class BED_Reader(AssembledFeatureReader):
         ----------
         inp : str
             track definition line from `BED`_ file
-        
+
         Returns
         -------
         dict
             key-value pairs from `BED`_ line
         """
-        ltmp = shlex.split(inp)
+        self.metadata = {}
+        ltmp = shlex.split(inp.strip("\n"))
         for item in ltmp:
             k,v = item.split("=")
             self.metadata[k] = v
+
+        track_type = self.metadata.get("type",None)
+        if track_type is not None:
+            if track_type in bed_x_formats:
+                self.printer.write("Found track type '%s' in track definition line. Assuming extra columns follow UCSC definitions." % track_type)
+                if self.extra_columns == 0:
+                    self.extra_columns = bed_x_formats[track_type]
+                elif self.extra_columns != bed_x_formats[track_type]:
+                    my_columns = self._get_extra_column_names()
+                    track_format_columns = ",".join([X[0] for X in bed_x_formats[track_type]])
+                    warnings.warn("Extra columns specified by %s track type declaration (%s) don't match those specified by user (%s). Using those specified by user." %\
+                                  (track_type,track_format_columns,my_columns),UserWarning)
+                    self.metadata["type"] = "custom"
+            else:
+                self.printer.write("Found track type '%s' in track definition line." % track_type)
         
+    def _get_extra_column_names(self):
+        """Return names of extra columns in BED X+Y file)"""
+        if isinstance(self.extra_columns,int):
+            my_columns = "%s unnamed columns" % self.extra_columns
+        elif isinstance(self.extra_columns,list):
+            if all([isinstance(X,tuple) for X in self.extra_columns]):
+                my_columns = ",".join([X[0] for X in self.extra_columns])
+            elif all([isinstance(X,str) for X in self.extra_columns]):
+                my_columns = ",".join(self.extra_columns)
+
+        return my_columns
+
     def _assemble(self,line):
         """Read `BED`_ files line-by-line into types specified by `self.return_type`"""
         self.counter += 1
@@ -143,6 +231,7 @@ class BED_Reader(AssembledFeatureReader):
         elif line.startswith("browser"):
             return self.__next__()
         elif line.startswith("track"):
+            # reset metadata
             self._parse_track_line(line[5:])
             return self.__next__()
         elif line.startswith("#"):
@@ -152,5 +241,14 @@ class BED_Reader(AssembledFeatureReader):
                 return self.return_type.from_bed(line,extra_columns=self.extra_columns)
             except:
                 self.rejected.append(line)
-                warnings.warn("Rejecting malformed bed line %s:\n    %s" % (self.counter,line),UserWarning)
+                msg = "Cannot parse BED line number %s. " % self.counter
+                if self.metadata.get("type",None) is not None:
+                    msg += ("Are you sure this is a %s BED file with extra columns (%s)?" % (self.metadata.get("type"),self._get_extra_column_names()))
+                elif self.extra_columns != 0:
+                    msg += ("Are you sure this BED file has extra columns (%s)?" % self._get_extra_column_names())
+                else:
+                    msg += "Maybe this BED has extra columns (i.e. is a BED X+Y file)?"
+
+                msg += ("\n    %s" % line)
+                warnings.warn(msg,UserWarning)
                 return self.__next__()
