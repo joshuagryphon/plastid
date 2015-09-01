@@ -1127,6 +1127,28 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                 line_out = psl.as_psl()
                 self.assertEqual(line.strip("\n"),line_out.strip("\n"),"PSL export doesn't match input: \n    %s\n    %s" % (line,line_out)) 
         
+    @skip_if_abstract
+    def test_as_bed_extra_columns(self):
+        attr = { "ID" : "some feature ID",
+                     "extra_field_1" : 542,
+                     "extra_field_2" : "some extra field",
+                   }
+
+        my_chain = self.test_class(GenomicSegment("chrA",100,150,"+"),
+                                   GenomicSegment("chrA",500,550,"+"),
+                                   **attr)
+        self.assertEqual(my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"]).strip(),
+                         "chrA	100	550	some feature ID	0	+	100	100	0,0,0	2	50,50,	0,400,	542	some extra field")
+
+        self.assertEqual(my_chain.as_bed(extra_columns=["extra_field_1","nonexistent_field","extra_field_2"]).strip(),
+                         "chrA	100	550	some feature ID	0	+	100	100	0,0,0	2	50,50,	0,400,	542		some extra field")
+
+        my_chain.attr['_bedx_column_order'] = ["extra_field_1","extra_field_2"]
+        self.assertEqual(my_chain.as_bed().strip(),
+                         "chrA	100	550	some feature ID	0	+	100	100	0,0,0	2	50,50,	0,400,	542	some extra field")
+        self.assertEqual(my_chain.as_bed(extra_columns=[]).strip(),
+                         "chrA	100	550	some feature ID	0	+	100	100	0,0,0	2	50,50,	0,400,")
+
 #     def test_test_class(self):
 #         # make sure all these tests are run in subclasses using e.g. 'Transcript'
 #         # instead of inherited 'SegmentChain'

@@ -190,6 +190,36 @@ The `fasta`_ file of sequences can then be processed with any pipeline, and the
 TSS windows viewed in a :term:`genome browser`, like `IGV`_ or the `UCSC genome browser`_.
 
 
+ .. _make-annotation-bed-xplusy:
+
+Making custom :term:`BED X+Y`_ files
+------------------------------------
+
+To export attributes of a |SegmentChain| or |Transcript| as extra columns
+in a :term:`BED 12+Y` format, pass the `extra_columns` keyword to the
+:meth:`yeti.genomics.roitools.SegmentChain.as_bed` method::
+
+    >>> attr = { "ID" : "some feature ID",
+                 "extra_field_1" : 542,
+                 "extra_field_2" : "some extra field",
+               }
+
+    >>> my_chain = Transcript(GenomicSegment("chrA",100,150,"+"),
+                              GenomicSegment("chrA",500,550,"+"),
+                              **attr)
+    >>> my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"])
+    chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,
+
+    >>> my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"])
+    chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,    542    some extra field
+
+If an attribute is not defined, the column will be left empty ""::
+
+    >>> my_chain.as_bed(extra_columns=["extra_field_1","nonexistent_field","extra_field_2"])
+    chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,    542        some extra field
+
+
+
  .. _make-annotation-bigbed:
 
 Making `BigBed`_ files
@@ -197,8 +227,11 @@ Making `BigBed`_ files
 `BigBed`_ files are easily made from `BED`_ files using `Jim Kent's utilities`_.
 To make a `BigBed`_ file:
 
- #. Create a custom `BED`_ or `BED+X`_, file, following the examples above
-
+ #. Create a custom `BED`_ or :term:`BED X+Y`, file, following the examples above.
+    For :term:`BED X+Y` files, consider making an optional `autoSql`_ description
+    of the names & data types of the extra columns. This will allow parsers to 
+    convert these to native types when reading the `BigBed`_ file.
+ 
  #. Sort the `BED`_ file by chromosome and start position. This is easily 
     done in a terminal session:
     

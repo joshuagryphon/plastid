@@ -19,6 +19,18 @@ also follow `Semantic versioning <http://semver.org/>`_.
     repository to a git repository.
 
 
+Unreleased
+----------
+
+Added
+.....
+  - Extended BED formats now supported in both import & export, command-line
+    scripts & interactive
+  - BED Detail format and ENCODE BED subtypes now automatically parsed
+    from track definition lines
+
+
+
 yeti [0.2.0] = [2015-08-26]
 ---------------------------
 **Big changes,** including some that are **backwards-incompatible.**
