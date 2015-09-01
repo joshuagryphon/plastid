@@ -203,8 +203,8 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
 
     Parameters
     ----------
-    starting_set : list
-        List of IDs of genes known to have transcripts whose exons overlap.
+    starting_set : set
+        set of IDs of genes known to have transcripts whose exons overlap.
         Initially, this list will contain one ID
 
     tx_gene : dict
@@ -233,6 +233,7 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
     list
         List of sorted gene IDs of genes whose transcripts share exons
     """
+    genes_sharing_exons = starting_set
     for gene_id in sorted(starting_set):
         if gene_id not in explored:
             explored.append(gene_id)
@@ -240,16 +241,16 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
             for txid in gene_tx[gene_id]:
                 tx = tx_ivcs[txid]
                 tx_sharing_exons.extend([X for X in genome_hash[tx] if X.shares_segments_with(tx)])
-            genes_sharing_exons = sorted(set([tx_gene[X.get_name()] for X in tx_sharing_exons]))
+            genes_sharing_exons |= set([tx_gene[X.get_name()] for X in tx_sharing_exons])
             # base case: all genes we find are in starting set. terminate
             if all([X in starting_set for X in genes_sharing_exons]):
                 return starting_set
             # otherwise, continue
             else:
-                ltmp = sorted(set(starting_set + genes_sharing_exons))
-                return merge_recursive(ltmp,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=explored)
+                genes_sharing_exons |= merge_recursive(ltmp,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=explored)
+                return return genes_sharing_exons
 
-    return starting_set
+    #return starting_set
 
 @skipdoc
 def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
@@ -284,7 +285,7 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
     for n,gene_id in enumerate(gene_tx):
         if gene_id not in dout:
             groups += 1
-            merge = merge_recursive([gene_id],tx_gene,gene_tx,tx_ivcs,genome_hash)
+            merge = merge_recursive(set([gene_id]),tx_gene,gene_tx,tx_ivcs,genome_hash)
             newname = ",".join(merge)
             for oldname in merge:
                 dout[oldname] = newname
@@ -295,6 +296,67 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
     printer.write("Collapsed %s genes to %s groups total." % (len(dout),groups))
 
     return dout
+
+from yeti.util.services.sets import merge_sets
+
+@skipdoc
+def merge_genes_oldstyle(tx_ivcs,tx_gene):
+    """Merge genes whose transcripts share exons into a combined, "merged" gene
+    
+    Parameters
+    ----------
+    tx_ivcs : dict
+        Dictionary mapping unique transcript IDs to :class:`Transcript`
+        objects
+        
+    tx_gene : dict
+        Dictionary mapping unique transcript IDs to the IDs of the genes
+        from which they derive
+        
+    Returns
+    -------
+    dict
+        Dictionary mapping raw gene names to the names of the merged genes
+    """
+    dout = {}
+    exondict = {}
+    
+    # backmap exons to genes as tuples
+    printer.write("Mapping exons to genes...")
+    for txid in tx_ivcs.keys():
+        my_segmentchain  = tx_ivcs[txid]
+        my_gene = tx_gene[txid]
+        for my_iv in my_segmentchain:
+            tup = (my_iv.chrom,my_iv.start,my_iv.end,my_iv.strand)
+            try:
+                exondict[tup].append(my_gene)
+            except KeyError:
+                exondict[tup] = [my_gene]
+    exondict = { K : set(V) for K,V in exondict.items() }
+
+    # break things up by chromosome and strand to limit the number
+    # of unnecessary comparisons. we could have used a GenomeHash for this
+    chromosomes = set(map(lambda x: x[0],exondict.keys()))
+    strands     = set(map(lambda x: x[3],exondict.keys()))
+    combos = ((chrom,strand) for chrom in chromosomes for strand in strands)
+    
+    # map exons to find gene groups
+    for chrom, strand in combos:
+        printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
+        
+        chromstrandgenes = map(lambda x: x[1],filter(lambda x: x[0][0] == chrom and x[0][3] == strand,exondict.items()))
+        gene_groups = merge_sets(chromstrandgenes,verbose=True,printer=printer)
+    
+        # convert to dictionary mapping gene names to groups
+        for group in gene_groups:
+            merged_name = ",".join(sorted(group))
+            for gene in group:
+                dout[gene] = merged_name
+        
+    printer.write("Flattened to %s groups." % len(dout))
+    return dout
+
+
 
 def process_partial_group(transcripts,mask_hash,printer):
     """
