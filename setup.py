@@ -37,6 +37,7 @@ setup(
                         "biopython>=1.64",
                         "pysam>=0.7.7",
                         "pandas>=0.16.0",
+                        "twobitreader>=3.0.0",
                         ],
     include_package_data=True,
     package_data = {
