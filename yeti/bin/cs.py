@@ -18,55 +18,55 @@ Generate
     *D. melanogaster*) are annotated as entirely separate genes, when in reality
     they are a single gene. Positions covered by more than one non-merged gene
     on the same strand are excluded from analysis.
-    
+
     The remaining positions in each merged gene are then divided
     into the following groups:
-    
+
         *exon*
             all positions in all transcripts mapping to the merged gene
-        
+
         *CDS*
             positions which appear in coding regions in *all* transcript
             isoforms mapping to the merged gene. i.e. These positions
             are never part of a fiveprime or threeprime UTR in *any*
             transcript mapping to the merged gene
-        
+
         *UTR5*
-            positions which are annotated only as *5\' UTR* in all
+            positions which are annotated only as *5' UTR* in all
             transcript isoforms mapping to the merged gene
-            
+
         *UTR3*
             positions which are annotated only as *3 UTR* in all
             transcript isoforms mapping to the merged gene
-        
+
         *masked*
             positions excluded from analyses as directed in an optional
             :term:`mask file`
 
     .. Rubric :: Output files
-    
-    The following files are output, where `OUTBASE` is a name supplied 
+
+    The following files are output, where `OUTBASE` is a name supplied
     by the user:
-    
+
         OUTBASE_gene.positions
             Tab-delimited text file. Each line is a merged gene, and columns
             indicate the genomic coordinates and lengths of each of the position
             sets above.
-        
+
         OUTBASE_transcript.positions
             Tab-delimited text file. Each line is a transcript, and columns
             indicate the genomic coordinates and lengths of each of the position
             sets above.
-        
+
         OUTBASE_gene_REGION.bed
              `BED`_ files showing position sets for `REGION`,
              where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
              *masked*. These contain the same information in
              ``OUTBASE_gene.positions``, but can be visualized easily in a
-             :term:`genome browser` 
+             :term:`genome browser`
 
 
-Count    
+Count
     A :func:`count <do_count>` mode, in which the number of reads mapping to
     each type of position (e.g. *exon*, *CDS*, *UTR5*, and *UTR3*) is tabulated
     for each merged gene. Output is given in a tab-delimited text file that gives
@@ -78,7 +78,7 @@ Chart
     A :func:`chart <do_chart>` mode, which takes output from the ``count`` mode
     and generates several tables and charts that provide broad overviews
     of the data.
-        
+
 See command-line help for each subprogram for details on each mode
 
 See also
@@ -96,7 +96,7 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_annotation_file_parser,\
                                            get_mask_file_parser,\
                                            get_genome_hash_from_mask_args
-                                                    
+
 
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
@@ -105,7 +105,7 @@ from yeti.genomics.genome_hash import GenomeHash
 from yeti.util.io.openers import opener, get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.services.sets import merge_sets
-from yeti.util.services.decorators import skipdoc, in_separate_process
+from yeti.util.services.decorators import skipdoc
 from scipy.misc import comb as combination
 
 import os
@@ -137,28 +137,28 @@ def write_output_files(table,title,args):
             Tab-delimited text file. Each line is a merged gene, and columns
             indicate the genomic coordinates and lengths of each of the position
             sets above.
-        
+
         OUTBASE_transcript.positions
             Tab-delimited text file. Each line is a transcript, and columns
             indicate the genomic coordinates and lengths of each of the position
             sets above.
-        
+
         OUTBASE_gene_REGION.bed
              `BED`_ files showing position sets for `REGION`,
              where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
              *masked*. These contain the same information in
              ``OUTBASE_gene.positions``, but can be visualized easily in a
-             :term:`genome browser` 
+             :term:`genome browser`
 
-    
+
     Parameters
     ----------
     table : :class:`pandas.DataFrame`
         Gene info table made in :py:func:`do_generate`
-    
+
     title : str
         Title ("gene" or "transcript")
-    
+
     args : :py:class:`argparse.Namespace`
         Command-line arguments
     """
@@ -166,13 +166,13 @@ def write_output_files(table,title,args):
     bedfiles = { X : argsopener("%s_%s_%s.bed" % (args.outbase,title,X),args) for X in keys }
 
     for k in keys:
-        for region_name,ivc in zip(table["region"],table[k]):
+        for region_name, ivc in zip(table["region"],table[k]):
             if isinstance(ivc,str):
                 ivc = SegmentChain.from_str(ivc)
 
             ivc.attr["ID"] = region_name
-            bedfiles[k].write(ivc.as_bed())    
-        
+            bedfiles[k].write(ivc.as_bed())
+
     for k in bedfiles:
         bedfiles[k].close()
 
@@ -210,7 +210,7 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
     tx_gene : dict
         Dictionary mapping unique transcript IDs to the IDs of the genes
         from which they derive
-    
+
     gene_tx : dict
         Dictionary mapping unique gene IDs to lists of the IDs
         of the transcripts deriving from that gene
@@ -247,21 +247,22 @@ def merge_recursive(starting_set,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=[]
                 return starting_set
             # otherwise, continue
             else:
-                genes_sharing_exons |= merge_recursive(ltmp,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=explored)
-                return return genes_sharing_exons
+                ltmp = starting_set | genes_sharing_exons
+                ltmp |= merge_recursive(ltmp,tx_gene,gene_tx,tx_ivcs,genome_hash,explored=explored)
+                return ltmp
 
     #return starting_set
 
 @skipdoc
 def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
-    
+
     Parameters
-    ----------   
+    ----------
     tx_gene : dict
         Dictionary mapping unique transcript IDs to the IDs of the genes
         from which they derive
-    
+
     gene_tx : dict
         Dictionary mapping unique gene IDs to lists of the IDs
         of the transcripts deriving from that gene
@@ -282,11 +283,11 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
     """
     dout = {}
     groups = 0
-    for n,gene_id in enumerate(gene_tx):
+    for n, gene_id in enumerate(gene_tx):
         if gene_id not in dout:
             groups += 1
             merge = merge_recursive(set([gene_id]),tx_gene,gene_tx,tx_ivcs,genome_hash)
-            newname = ",".join(merge)
+            newname = ",".join(sorted(merge))
             for oldname in merge:
                 dout[oldname] = newname
 
@@ -297,22 +298,16 @@ def merge_genes(tx_gene,gene_tx,tx_ivcs,genome_hash,printer):
 
     return dout
 
-from yeti.util.services.sets import merge_sets
-
 @skipdoc
-def merge_genes_oldstyle(tx_ivcs,tx_gene):
+def merge_genes_oldstyle(tx_ivcs):
     """Merge genes whose transcripts share exons into a combined, "merged" gene
-    
+
     Parameters
     ----------
     tx_ivcs : dict
         Dictionary mapping unique transcript IDs to :class:`Transcript`
         objects
-        
-    tx_gene : dict
-        Dictionary mapping unique transcript IDs to the IDs of the genes
-        from which they derive
-        
+
     Returns
     -------
     dict
@@ -320,18 +315,19 @@ def merge_genes_oldstyle(tx_ivcs,tx_gene):
     """
     dout = {}
     exondict = {}
-    
+
     # backmap exons to genes as tuples
     printer.write("Mapping exons to genes...")
     for txid in tx_ivcs.keys():
         my_segmentchain  = tx_ivcs[txid]
-        my_gene = tx_gene[txid]
+        my_gene = my_segmentchain.get_gene()
         for my_iv in my_segmentchain:
             tup = (my_iv.chrom,my_iv.start,my_iv.end,my_iv.strand)
             try:
                 exondict[tup].append(my_gene)
             except KeyError:
                 exondict[tup] = [my_gene]
+
     exondict = { K : set(V) for K,V in exondict.items() }
 
     # break things up by chromosome and strand to limit the number
@@ -339,12 +335,13 @@ def merge_genes_oldstyle(tx_ivcs,tx_gene):
     chromosomes = set(map(lambda x: x[0],exondict.keys()))
     strands     = set(map(lambda x: x[3],exondict.keys()))
     combos = ((chrom,strand) for chrom in chromosomes for strand in strands)
-    
-    # map exons to find gene groups
+
+    # merge gene groups based upon shared gene names
     for chrom, strand in combos:
         printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
         
-        chromstrandgenes = map(lambda x: x[1],filter(lambda x: x[0][0] == chrom and x[0][3] == strand,exondict.items()))
+        #chromstrandgenes = map(lambda x: x[1],filter(lambda x: x[0][0] == chrom and x[0][3] == strand,exondict.items()))
+        chromstrandgenes = [X[1] for X in exondict.items() if X[0][0] == chrom and X[0][3] == strand]
         gene_groups = merge_sets(chromstrandgenes,verbose=True,printer=printer)
     
         # convert to dictionary mapping gene names to groups
@@ -368,7 +365,6 @@ def process_partial_group(transcripts,mask_hash,printer):
     mask_hash : |GenomeHash|
         |GenomeHash| of regions to exclude from analysis
     """
-    
     gene_table = { "region"          : [],
                    "transcript_ids"  : [],
                    "exon_unmasked"   : [],
@@ -377,7 +373,7 @@ def process_partial_group(transcripts,mask_hash,printer):
                    "utr5"            : [],
                    "cds"             : [],
                    "utr3"            : []
-                   }
+                 }
 
     # data table for transcripts
     transcript_table = { "region"          : [],
@@ -388,45 +384,37 @@ def process_partial_group(transcripts,mask_hash,printer):
                          "masked"          : [],
                          "exon_unmasked"   : [],
                          "transcript_ids"  : []
-                        }
+                       }
 
     keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
 
     # create position hash
-    tx_hash = GenomeHash(transcripts,do_copy=False)
+    #tx_hash = GenomeHash(transcripts,do_copy=False)
 
-    # initialize variables
-    tx_gene = {}
-    gene_tx = {}
-    merged_gene_tx = {}
 
-    # map transcripts to genes & vice versa
-    for txid,txivc in transcripts.items():
-        my_gene = txivc.get_gene()
-        tx_gene[txid] = my_gene
-        try:
-            gene_tx[my_gene].append(txid)
-        except KeyError:
-            gene_tx[my_gene] = [txid]
-            
     # merge genes that share exons & write output
     printer.write("Collapsing genes that share exons...")
-    merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash,printer)
+    merged_genes = merge_genes_oldstyle(transcripts)
+    #merged_genes = merge_genes(tx_gene,gene_tx,transcripts,tx_hash,printer)
 
     # remap transcripts to merged genes
+    # and vice-versa
+    merged_gene_tx = {}
+    tx_merged_gene = {}
     printer.write("Mapping transcripts to merged genes...")
-    tx_merged_gene = { TXID : merged_genes[GENE_ID] for TXID, GENE_ID in tx_gene.items() }
-
-    # backlink merged genes to transcripts
-    for my_tx, my_gene in tx_merged_gene.items():
+    for txid in transcripts:
+        my_tx = transcripts[txid]
+        my_gene = my_tx.get_gene()
+        my_merged = merged_genes[my_gene]
+        tx_merged_gene[txid] = my_merged
         try:
-            merged_gene_tx[my_gene].append(my_tx)
+            merged_gene_tx[my_merged].append(txid)
         except KeyError:
-            merged_gene_tx[my_gene] = [my_tx]
+            merged_gene_tx[my_merged] = [txid]
 
     # flatten merged genes
     printer.write("Flattening merged genes, masking positions, and labelling subfeatures...")
-    for n,(gene_id, my_txids) in enumerate(sorted(merged_gene_tx.items())):
+    for n, (gene_id, my_txids) in enumerate(sorted(merged_gene_tx.items())):
         if n % 1000 == 0 and n > 0:
             printer.write("    %s genes..." % n)
 
@@ -438,9 +426,9 @@ def process_partial_group(transcripts,mask_hash,printer):
             chroms.append(my_segmentchain.chrom)
             strands.append(my_segmentchain.strand)
             my_gene_positions.extend(my_segmentchain.get_position_list())
-            
+
             try:
-                assert len(set(chroms))  == 1
+                assert len(set(chroms)) == 1
             except AssertionError:
                 printer.write("Skipping gene %s which contains multiple chromosomes: %s" % (gene_id,",".join(chroms)))
 
@@ -448,13 +436,13 @@ def process_partial_group(transcripts,mask_hash,printer):
                 assert len(set(strands)) == 1
             except AssertionError:
                 printer.write("Skipping gene %s which contains multiple strands: %s" % (gene_id,",".join(strands)))
-        
+
         my_gene_positions = set(my_gene_positions)
         gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
         gene_table["region"].append(gene_id)
         gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
         gene_table["exon_unmasked"].append(gene_ivc_raw)
-        
+
     printer.write("    %s genes total." % (n+1))
 
     # mask genes
@@ -467,7 +455,7 @@ def process_partial_group(transcripts,mask_hash,printer):
 
         my_chrom  = gene_ivc_raw.spanning_segment.chrom
         my_strand = gene_ivc_raw.spanning_segment.strand
-        
+
         masked_positions = []
         nearby_genes = gene_hash[gene_ivc_raw]
 
@@ -476,13 +464,13 @@ def process_partial_group(transcripts,mask_hash,printer):
         nearby_genes = [X for X in nearby_genes if X.get_position_set() != gene_ivc_raw_positions]
         for gene in nearby_genes:
             masked_positions.extend(gene.get_position_list())
-        
+
         nearby_masks = mask_hash[gene_ivc_raw]
         for mask in nearby_masks:
             masked_positions.extend(mask.get_position_list())
-        
+
         masked_positions = set(masked_positions)
-        
+
         gene_positions_raw = gene_ivc_raw.get_position_set()
         mask_ivc_positions = gene_positions_raw & masked_positions
         total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions))
@@ -522,7 +510,7 @@ def process_partial_group(transcripts,mask_hash,printer):
                           "utr3"  : transcript.get_utr3().get_position_set(),
                          }
 
-            for key1,key2 in keycombos:
+            for key1, key2 in keycombos:
                 transcript_positions[key1] -= tmp_positions[key2]
                 transcript_positions[key1] -= masked_positions
         
@@ -587,8 +575,6 @@ def do_generate(args):
     # variables for transcript <-> merged gene mapping
     transcripts    = {} 
     merged_genes   = {}
-    tx_merged_gene = {}
-    merged_gene_tx = {}
 
     # data table for merged genes
     gene_table = pd.DataFrame({ "region"          : [],
@@ -670,7 +656,9 @@ def do_generate(args):
         
     fout.close()
     
+    printer.write("Writing gene table and BED files...")
     write_output_files(gene_table,"gene",args)
+    printer.write("Writing transcript summary table and BED files...")
     write_output_files(transcript_table,"transcript",args)
     printer.write("Done!")
 
@@ -1150,7 +1138,7 @@ correlation coefficients as a function of summed read counts in both samples
             bintable_out.write("bin\t" + "\t".join(stats)+"\n")
             for my_bin in bins:
                 ltmp = [my_bin]
-                for stat in stats:                    
+                for stat in stats:
                     ltmp.append(corrcoef_by_bin_table[label][region_counts][metric][my_bin].get(stat,""))
                 ltmp = [str(X) for X in ltmp]
                 bintable_out.write("\t".join(ltmp)+"\n\n")
