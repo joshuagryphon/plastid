@@ -459,16 +459,18 @@ def SizeFilterFactory(min=1,max=numpy.inf):
     Parameters
     ----------
     min : int, optional
-        Minimum read length to pass filter (Default: `1`)
+        Minimum read length to pass filter, inclusive (Default: `1`)
     
     max : int or numpy.inf, optional
-        Maximum read length to pass filter (Default: infinity)
+        Maximum read length to pass filter, inclusive (Default: infinity)
     
     Returns
     -------
     function
     """
-    assert max > min
+    if max < min:
+        raise ValueError("Alignment size filter: max read length must be >= min read length")
+    
     def my_func(x):
         my_length = len(x.positions)
         return True if my_length >= min and my_length <= max else False
