@@ -31,6 +31,7 @@ import warnings
 import itertools
 from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain
+from yeti.util.services.exceptions import FileFormatWarning
 
 class PSL_Reader(AssembledFeatureReader): 
     """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
@@ -71,7 +72,7 @@ class PSL_Reader(AssembledFeatureReader):
                 return self.return_type.from_psl(line)
             except:
                 self.rejected.append(line)
-                warnings.warn("Rejecting line %s: %s" % (self.counter,line),UserWarning)
+                warnings.warn("Rejecting line %s: %s" % (self.counter,line),FileFormatWarning)
                 return self.__next__()        
 
 

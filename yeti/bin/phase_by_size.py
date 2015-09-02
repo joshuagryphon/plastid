@@ -42,6 +42,7 @@ from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.services.decorators import catch_warnings
+from yeti.util.services.exceptions import DataWarning
 
 import matplotlib.pyplot as plt
 
@@ -126,7 +127,7 @@ def main(argv=sys.argv[1:]):
                 counts = counts.reshape((len(vec)/3,3))
             else:
                 message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (len(counts),roi.get_name())
-                warnings.warn(message,UserWarning)
+                warnings.warn(message,DataWarning)
                 counts = counts.reshape(len(vec)//3,3)
 
             phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)

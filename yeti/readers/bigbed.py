@@ -63,7 +63,7 @@ from yeti.util.io.openers import NullWriter
 from yeti.util.unique_fifo import UniqueFIFO
 from yeti.util.services.mini2to3 import ifilter
 from yeti.util.services.decorators import skipdoc
-from yeti.util.services.exceptions import MalformedFileError
+from yeti.util.services.exceptions import MalformedFileError, FileFormatWarning
 
 #===============================================================================
 # INDEX: BigBedReader
@@ -223,7 +223,7 @@ class BigBedReader(object):
                 self.autosql_parser = AutoSqlDeclaration(autosql)
                 self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self._num_custom_fields:])
             except AttributeError:
-                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),UserWarning)
+                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
                 self.custom_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self._num_custom_fields)])
                 self.autosql_parser = lambda x: OrderedDict(zip(self.custom_fields,x.split("\t")[-self._num_custom_fields:]))
         

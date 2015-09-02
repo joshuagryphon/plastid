@@ -151,6 +151,7 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_genome_hash_from_mask_args
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 from yeti.util.services.decorators import catch_warnings
+from yeti.util.services.exceptions import ArgumentWarning
 
 import inspect
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -926,7 +927,7 @@ def main(argv=sys.argv[1:]):
             samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
         else:
             if len(args.labels) > 0:
-                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),UserWarning)
+                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
             samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
          
         figure = do_chart(samples,title=args.title,landmark=args.landmark)

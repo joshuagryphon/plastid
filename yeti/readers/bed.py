@@ -41,6 +41,7 @@ import warnings
 from yeti.readers.common import AssembledFeatureReader
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.services.decorators import deprecated, skipdoc
+from yeti.util.services.exceptions import FileFormatWarning
 
 @skipdoc
 @deprecated
@@ -206,7 +207,7 @@ class BED_Reader(AssembledFeatureReader):
                     my_columns = self._get_extra_column_names()
                     track_format_columns = ",".join([X[0] for X in bed_x_formats[track_type]])
                     warnings.warn("Extra columns specified by %s track type declaration (%s) don't match those specified by user (%s). Using those specified by user." %\
-                                  (track_type,track_format_columns,my_columns),UserWarning)
+                                  (track_type,track_format_columns,my_columns),FileFormatWarning)
                     self.metadata["type"] = "custom"
             else:
                 self.printer.write("Found track type '%s' in track definition line." % track_type)
@@ -250,5 +251,5 @@ class BED_Reader(AssembledFeatureReader):
                     msg += "Maybe this BED has extra columns (i.e. is a BED X+Y file)?"
 
                 msg += ("\n    %s" % line)
-                warnings.warn(msg,UserWarning)
+                warnings.warn(msg,FileFormatWarning)
                 return self.__next__()

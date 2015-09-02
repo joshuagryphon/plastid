@@ -78,6 +78,7 @@ import re
 import warnings
 from collections import OrderedDict
 from abc import abstractmethod
+from yeti.util.services.exceptions import DataWarning
 
 # regular expressions that recognize various autoSql elements
 _pattern_bits = { "start"   : r"^\s*",
@@ -428,7 +429,7 @@ class AutoSqlField(AbstractAutoSqlElement):
             message = "Could not convert autoSql value '%s' for field '%s' to type '%s'. Leaving as str " % (text,
                                                                                                              self.attr["name"],
                                                                                                              self.formatter.__name__)
-            warnings.warn(message,UserWarning) 
+            warnings.warn(message,DataWarning) 
             return text
 
 
@@ -513,7 +514,7 @@ class SizedAutoSqlField(AutoSqlField):
                 message = "Could not convert autoSql value '%s' in field '%s' to tuple of type '%s'. Leaving as str " % (text,
                                                                                                                          self.attr["name"],
                                                                                                                          self.formatter.__name__)
-                warnings.warn(message,UserWarning) 
+                warnings.warn(message,DataWarning) 
                 return text
         else:
             retval = text

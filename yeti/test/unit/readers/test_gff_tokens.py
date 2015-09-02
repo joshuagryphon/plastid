@@ -273,7 +273,7 @@ class TestGTF2_TokenParsing(TestGFF3_TokenParsing):
         my_dicts = [self.modify_dict(X) for X in self.token_dicts]
         super(TestGTF2_TokenParsing,self).test_token_write_subset(dicts=my_dicts,non_excludes=["gene_id","transcript_id"])
 
-    @catch_warnings("ignore") # need to catch warnings because duplicate GTF2 tags raise UserWarnings
+    @catch_warnings("ignore") # need to catch warnings because duplicate GTF2 tags raise FileFormatWarnings
     def test_gtf2_list_duplicate_tags(self):
         test_cases = [('gene_id "mygene"; transcript_id "mytranscript"; tag "tag value";',
                        {'gene_id' : 'mygene', 'tag' : 'tag value', 'transcript_id' : 'mytranscript'}),

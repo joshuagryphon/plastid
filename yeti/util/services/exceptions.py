@@ -97,4 +97,13 @@ class MalformedFileError(Exception):
             `False` otherwise
         """ 
 
+class ArgumentWarning(Warning):
+    """Warning for illogical or nonsensical combinations of command-line arguments"""
+    pass
 
+class FileFormatWarning(Warning):
+    """Warning for slightly malformed but usable files"""
+    pass
+
+class DataWarning(Warning):
+    """Warning for unexpected attributes of data"""
