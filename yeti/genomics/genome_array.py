@@ -223,8 +223,9 @@ def CenterMapFactory(nibble=0):
         
         #reads = ifilter(lambda x: len(x.positions) > 2*nibble,reads)
         for read in reads:
-            if len(read.positions) <= 2*nibble:
-                warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
+            read_length = len(read.positions)
+            if read_length <= 2*nibble:
+                warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
                               UserWarning)
                 continue
             
@@ -291,8 +292,9 @@ def FivePrimeMapFactory(offset=0):
         reads_out = []         
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if abs(offset) >= len(read.positions):
-                warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
+            read_length = len(read.positions)
+            if abs(offset) >= read_length:
+                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                               UserWarning)
                 continue
              
@@ -352,8 +354,9 @@ def ThreePrimeMapFactory(offset=0):
         reads_out = []
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if offset >= len(read.positions): 
-                warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
+            read_length = len(read.positions)
+            if offset >= read_length: 
+                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                               UserWarning)
                 continue
 
@@ -422,7 +425,7 @@ def VariableFivePrimeMapFactory(offset_dict):
             elif "default" in offset_dict:
                 offset = offset_dict["default"]
             else:
-                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers" % (read_length, read_length),
+                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
                               UserWarning)
                 continue
 
@@ -514,7 +517,7 @@ def center_map(feature,**kwargs):
     """
     nibble = kwargs["nibble"]
     if len(feature.spanning_segment) <= 2*nibble:
-        warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
+        warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
                       UserWarning)
         return []
 
@@ -553,8 +556,8 @@ def five_prime_map(feature,**kwargs):
     """
     offset  = kwargs.get("offset",0)
     if offset > feature.get_length():
-        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
-                      UserWarning)
+        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+                     UserWarning)
         return []
 
     value   = kwargs.get("value",1.0)
@@ -591,7 +594,7 @@ def three_prime_map(feature,**kwargs):
     """
     offset  = kwargs.get("offset",0)
     if offset > feature.get_length():
-        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
+        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                       UserWarning)
         return []
 
@@ -631,10 +634,13 @@ def variable_five_prime_map(feature,**kwargs):
     strand = feature.spanning_segment.strand
     value   = kwargs.get("value",1.0)
     offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"].get("default",None))
+    feature_length = feature.get_length()
     if offset is None:
         warnings.warn("No offset for reads of length %s. Ignoring." % len(read),
                       UserWarning)
         return []
+    if offset >= feature_length():
+        warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length())
 
     if strand in ("+","."):
         start = feature.spanning_segment.start + offset
