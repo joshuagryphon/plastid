@@ -30,7 +30,7 @@ import re
 import shlex
 import copy
 import warnings
-from yeti.util.services.exception import FileFormatWarning
+from yeti.util.services.exceptions import FileFormatWarning
 
 gtfpat = re.compile(r"^ *([^ ]*) +(.*) *$")
 

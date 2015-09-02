@@ -517,7 +517,8 @@ def center_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     nibble = kwargs["nibble"]
-    if len(feature.spanning_segment) <= 2*nibble:
+    read_length = feature.get_length()
+    if read_length <= 2*nibble:
         warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
                       DataWarning)
         return []
@@ -556,7 +557,8 @@ def five_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    if offset > feature.get_length():
+    read_length = feature.get_length()
+    if offset > read_length:
         warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                      DataWarning)
         return []
@@ -594,7 +596,8 @@ def three_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    if offset > feature.get_length():
+    read_length = feature.get_length()
+    if offset > read_length:
         warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                       DataWarning)
         return []
@@ -637,11 +640,11 @@ def variable_five_prime_map(feature,**kwargs):
     offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"].get("default",None))
     feature_length = feature.get_length()
     if offset is None:
-        warnings.warn("No offset for reads of length %s. Ignoring." % len(read),
+        warnings.warn("No offset for reads of length %s. Ignoring." % feature_length,
                       DataWarning)
         return []
-    if offset >= feature_length():
-        warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length())
+    if offset >= feature_length:
+        warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
 
     if strand in ("+","."):
         start = feature.spanning_segment.start + offset
