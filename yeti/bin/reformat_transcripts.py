@@ -30,7 +30,7 @@ from yeti.util.services.decorators import catch_warnings
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-@catch_warnings("module")
+@catch_warnings("once")
 def main(argv=sys.argv[1:]): 
     """Command-line program
     

@@ -461,7 +461,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
-@catch_warnings("module")
+@catch_warnings("once")
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
                 window_func=window_cds_start,
                 printer=NullWriter()):
@@ -608,7 +608,7 @@ algorithm:
 
     return df, export_rois
 
-@catch_warnings("module")
+@catch_warnings("once")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
@@ -695,7 +695,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     return counts, norm_counts, profile_table
 
 
-@catch_warnings("module")
+@catch_warnings("once")
 def do_chart(sample_dict,landmark="landmark",title=None):
     """Plot metagene profiles
     

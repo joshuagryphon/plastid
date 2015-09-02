@@ -349,7 +349,7 @@ def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
 # INDEX : program body 
 #===============================================================================
 
-@catch_warnings("module")
+@catch_warnings("once")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

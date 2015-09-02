@@ -60,7 +60,7 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 _ANNOTATION_INPUT_CHOICES = ["BED","BigBed","GTF2","GFF3","PSL"]
 _ANNOTATION_DISABLED = ["add_three","annotation_file"]
 
-@catch_warnings("module")
+@catch_warnings("once")
 def main(argv=sys.argv[1:]):
     """Command-line program
     
