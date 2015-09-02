@@ -19,6 +19,7 @@ Identity relationships between elements vary between GFF3 files
 """
 import argparse
 import inspect
+import warnings
 import sys
 
 from yeti.util.scriptlib.argparsers import get_transcripts_from_args,\
@@ -26,11 +27,10 @@ from yeti.util.scriptlib.argparsers import get_transcripts_from_args,\
 from yeti.util.io.openers import argsopener, get_short_name
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-@catch_warnings("once")
 def main(argv=sys.argv[1:]): 
     """Command-line program
     

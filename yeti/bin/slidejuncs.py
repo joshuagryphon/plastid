@@ -90,9 +90,10 @@ from yeti.util.scriptlib.argparsers import get_mask_file_parser,\
                                            get_genome_hash_from_mask_args,\
                                            get_sequence_file_parser,\
                                            get_seqdict_from_args
-from yeti.util.services.decorators import catch_warnings
 from Bio import SeqIO
 import inspect
+import warnings
+warnings.simplefilter("once")
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -349,7 +350,6 @@ def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
 # INDEX : program body 
 #===============================================================================
 
-@catch_warnings("once")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

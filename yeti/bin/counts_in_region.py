@@ -40,6 +40,7 @@ import argparse
 import inspect
 import sys
 import itertools
+import warnings
 import numpy
 
 from yeti.util.io.filters import NameDateWriter
@@ -51,8 +52,8 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_segmentchain_file_parser,\
                                            get_mask_file_parser
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 _DISABLED=["normalize"]

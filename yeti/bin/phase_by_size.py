@@ -29,6 +29,7 @@ import sys
 import warnings
 import argparse
 import inspect
+import warnings
 
 import pandas as pd
 import numpy
@@ -41,16 +42,15 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
 from yeti.util.io.openers import get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 from yeti.util.services.exceptions import DataWarning
 
 import matplotlib.pyplot as plt
 
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 # TODO: support bowtie or wiggle files
 
-@catch_warnings("once")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

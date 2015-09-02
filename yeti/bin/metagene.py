@@ -138,6 +138,9 @@ __author__ = "joshua"
 import sys
 import warnings
 import argparse
+import inspect
+import warnings
+
 import numpy
 import pandas as pd
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
@@ -150,10 +153,9 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_mask_file_parser,\
                                                       get_genome_hash_from_mask_args
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 from yeti.util.services.exceptions import ArgumentWarning
 
-import inspect
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 #===============================================================================
@@ -462,7 +464,6 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
-@catch_warnings("once")
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
                 window_func=window_cds_start,
                 printer=NullWriter()):
@@ -609,7 +610,6 @@ algorithm:
 
     return df, export_rois
 
-@catch_warnings("once")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
@@ -696,7 +696,6 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     return counts, norm_counts, profile_table
 
 
-@catch_warnings("once")
 def do_chart(sample_dict,landmark="landmark",title=None):
     """Plot metagene profiles
     
