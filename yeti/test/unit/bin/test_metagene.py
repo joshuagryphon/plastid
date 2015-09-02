@@ -186,7 +186,7 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     #    alignment_offset
     #    zero_point
     err_str = ("Failed %s (up: %s, down: %s). " % (test_name,flank_up,flank_down)) + "%s unequal (%s vs %s)"
-    tx_ivcs = [_TRANSCRIPTS[X] for X in test_group]
+    tx_ivcs = (_TRANSCRIPTS[X] for X in test_group)
     roi_table, _ = do_generate(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
 #     print(result_groups)
 #     print(len(result_groups))
