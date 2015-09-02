@@ -19,6 +19,8 @@ from yeti.genomics.genome_hash import GenomeHash
 from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
 from yeti.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
 
+warnings.simplefilter("ignore",DeprecationWarning)
+
 #===============================================================================
 # INDEX: helper functions
 #===============================================================================

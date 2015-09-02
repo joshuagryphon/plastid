@@ -25,6 +25,8 @@ from yeti.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
 from nose.tools import assert_equal, assert_true, assert_dict_equal, assert_greater_equal
 
+warnings.simplefilter("ignore",DeprecationWarning)
+
 #===============================================================================
 # INDEX: test suites
 #===============================================================================
