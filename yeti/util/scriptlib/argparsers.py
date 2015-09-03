@@ -145,6 +145,7 @@ from yeti.util.services.exceptions import MalformedFileError
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.io.openers import opener, NullWriter
 from yeti.util.io.filters import CommentReader
+from yeti.util.services.exceptions import ArgumentWarning
 
 from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
                              _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
@@ -641,7 +642,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
             printer.write("Bad arguments: we can only process one BigBed file.")
             sys.exit(2)
         if tabix == True:
-            warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",UserWarning)
+            warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",ArgumentWarning)
 
         from yeti.readers.bigbed import BigBedReader
         transcripts = BigBedReader(args.annotation_files[0],
@@ -664,7 +665,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
         if 'sorted' not in disabled and args.sorted == False and 'tabix' not in disabled and args.tabix == False:
             msg = """Transcript assembly on %s files can require a lot of memory.
 Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
-            warnings.warn(msg,UserWarning)
+            warnings.warn(msg,ArgumentWarning)
     
     if args.annotation_format.lower() == "gff3":
         transcripts = GFF3_TranscriptAssembler(*streams,
@@ -857,7 +858,7 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
         if tmp.annotation_format in ("BED","GTF2","GFF3") and tmp.tabix == False:
             msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
 Consider converting to BigBed or using tabix to index your mask file."""
-            warnings.warn(msg,UserWarning)
+            warnings.warn(msg,ArgumentWarning)
 
         if len(tmp.annotation_files) > 0:
             if tmp.annotation_format.lower() == "bigbed":

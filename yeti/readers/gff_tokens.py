@@ -30,6 +30,7 @@ import re
 import shlex
 import copy
 import warnings
+from yeti.util.services.exceptions import FileFormatWarning
 
 gtfpat = re.compile(r"^ *([^ ]*) +(.*) *$")
 
@@ -512,7 +513,7 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
                 
             if key in d:
                 warnings.warn("Found duplicate attribute key '%s' in GFF3 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
-                              UserWarning)
+                              FileFormatWarning)
                 val = "%s,%s" % (d[key],val)
             d[key] = val
     return d
@@ -573,7 +574,7 @@ def parse_GTF2_tokens(inp):
 
         if key in d:
             warnings.warn("Found duplicate attribute key '%s' in GTF2 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
-                          UserWarning)
+                          FileFormatWarning)
             d[key] = "%s,%s" % (d[key],unescape_GTF2(val))
 
         else:

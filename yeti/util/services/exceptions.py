@@ -1,11 +1,31 @@
 #!/usr/bin/env python
-"""Exceptions and warnings used by command-line scripts or other methods
+"""Exceptions and warnings 
 
 Exceptions
 ----------
 |MalformedFileError|
-    Raised when a file cannot be parsed as expected
+    Raised when a file cannot be parsed as expected, and
+    execution must halt
 
+Warnings
+--------
+|ArgumentWarning|
+    Warning for command-line arguments that:
+    
+      - are nonsenical, but recoverable
+      - together might cause very slow execution
+        (e.g. run would be optimized by other combinations)
+
+|FileFormatWarning|
+    Warning for slightly malformed but usable files
+
+|DataWarning|
+    Warning raised when:
+
+      - data has unexpected attributes
+      - data has nonsensical, but recoverable values for attributes
+      - when values are out of the domain of a given operation,
+        but skipping the operation or estimating the value is permissible
 """
 
 class MalformedFileError(Exception):
@@ -37,64 +57,24 @@ class MalformedFileError(Exception):
             return "Error opening file '%s' at line %s: %s" % (self.filename, self.line_num, self.msg)
 
 
-        """If `col1` and `col2` are both numeric, test that
-        all their values are within `tol` of each other. :obj:`numpy.nan` values,
-        if present, must be in the same place in each column. Ditto :obj:`numpy.inf`
-        values.
-        
-        If `col1` and `col2` are not numeric, return true if they have the same
-        `dtype` and the same values in all cells.
-        
-        Parameters
-        ----------
-        col1 : numpy.ndarray
-            First column of data
-        
-        col2 : numpy.ndarray
-            Second column of data
-            
-        tol : float
-            Error tolerance for numeric data between col1 and col2, value-wise
-            
-        printer : anything implementing a ``write()`` method (e.g. a |NameDateWriter|)
-            if not None, rich comparison information will be sent to this writer
-        
-        Returns
-        -------
-        bool
-            `True` if `col1 == col2` for non-numeric data;
-            `True` if `abs(col1 - col2) <= tol` for numeric data;
-            `False` otherwise
-        """ 
 
-        """If `col1` and `col2` are both numeric, test that
-        all their values are within `tol` of each other. :obj:`numpy.nan` values,
-        if present, must be in the same place in each column. Ditto :obj:`numpy.inf`
-        values.
-        
-        If `col1` and `col2` are not numeric, return true if they have the same
-        `dtype` and the same values in all cells.
-        
-        Parameters
-        ----------
-        col1 : numpy.ndarray
-            First column of data
-        
-        col2 : numpy.ndarray
-            Second column of data
-            
-        tol : float
-            Error tolerance for numeric data between col1 and col2, value-wise
-            
-        printer : anything implementing a ``write()`` method (e.g. a |NameDateWriter|)
-            if not None, rich comparison information will be sent to this writer
-        
-        Returns
-        -------
-        bool
-            `True` if `col1 == col2` for non-numeric data;
-            `True` if `abs(col1 - col2) <= tol` for numeric data;
-            `False` otherwise
-        """ 
+class ArgumentWarning(Warning):
+    """Warning for nonsensical but recoverable combinations of command-line arguments,
+    or arguments that risk slow program execution"""
+    pass
 
 
+class FileFormatWarning(Warning):
+    """Warning for slightly malformed but usable files"""
+    pass
+
+
+class DataWarning(Warning):
+    """Warning for unexpected attributes of data
+    Raised when:
+
+      - data has unexpected attributes
+      - data has nonsensical, but recoverable values
+      - values are out of the domain of a given operation, but execution
+        can continue if the value is estimated or the operation skipped
+    """

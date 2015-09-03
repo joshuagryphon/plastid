@@ -14,6 +14,8 @@ from yeti.util.io.filters import CommentReader
 from yeti.readers.bigbed import BigBedReader
 
 from yeti.test.ref_files import REF_FILES
+import warnings
+warnings.simplefilter("ignore",DeprecationWarning)
 
 #===============================================================================
 # INDEX: Test case for GenomeHash

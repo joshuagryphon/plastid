@@ -119,7 +119,9 @@ import itertools
 import copy
 import inspect
 import gc
+import warnings
 
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 

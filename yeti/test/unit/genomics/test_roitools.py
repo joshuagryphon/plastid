@@ -30,6 +30,8 @@ from yeti.genomics.genome_array import GenomeArray
 from yeti.util.io.filters import CommentReader
 from yeti.util.services.decorators import skip_if_abstract
 
+import warnings
+warnings.simplefilter("ignore",DeprecationWarning)
 
 #===============================================================================
 # INDEX: Helper functions & constants

@@ -43,25 +43,25 @@ Output files
 where `OUTBASE` is supplied by the user.
 """
 import sys
+import argparse
+import inspect
+import warnings
+
 import matplotlib
 matplotlib.use("Agg")
 import numpy
 import pandas as pd
-import argparse
 import matplotlib.pyplot as plt
-import inspect
 
 from collections import OrderedDict
-
 from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_alignment_file_parser
 from yeti.genomics.roitools import SegmentChain
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 
-
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 disabled_args = ["normalize",
@@ -73,7 +73,6 @@ disabled_args = ["normalize",
                  "threeprime",
                  "center"]
 
-@catch_warnings("module")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
     """Calculate a :term:`metagene profile` for each read length in the dataset
     

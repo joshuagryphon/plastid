@@ -138,6 +138,9 @@ __author__ = "joshua"
 import sys
 import warnings
 import argparse
+import inspect
+import warnings
+
 import numpy
 import pandas as pd
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
@@ -150,9 +153,9 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_mask_file_parser,\
                                                       get_genome_hash_from_mask_args
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
+from yeti.util.services.exceptions import ArgumentWarning
 
-import inspect
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 #===============================================================================
@@ -461,7 +464,6 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
-@catch_warnings("module")
 def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
                 window_func=window_cds_start,
                 printer=NullWriter()):
@@ -608,7 +610,6 @@ algorithm:
 
     return df, export_rois
 
-@catch_warnings("module")
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
@@ -695,7 +696,6 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     return counts, norm_counts, profile_table
 
 
-@catch_warnings("module")
 def do_chart(sample_dict,landmark="landmark",title=None):
     """Plot metagene profiles
     
@@ -926,7 +926,7 @@ def main(argv=sys.argv[1:]):
             samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
         else:
             if len(args.labels) > 0:
-                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),UserWarning)
+                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
             samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
          
         figure = do_chart(samples,title=args.title,landmark=args.landmark)

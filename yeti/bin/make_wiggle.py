@@ -22,21 +22,21 @@ See also
 """
 __author__ = "joshua"
 __date__ = "2011-03-18"
-
-from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
-                                                      get_genome_array_from_args
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name, argsopener
-from yeti.util.services.colors import get_rgb255_from_str
-from yeti.util.services.decorators import catch_warnings
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+import warnings
 import inspect
 import sys
 
+from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
+                                           get_genome_array_from_args
+from yeti.util.io.filters import NameDateWriter
+from yeti.util.io.openers import get_short_name, argsopener
+from yeti.util.services.colors import get_rgb255_from_str
+from yeti.util.scriptlib.help_formatters import format_module_docstring
+
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 
-@catch_warnings("module")
 def main(argv=sys.argv[1:]):
     """Command-line program
     

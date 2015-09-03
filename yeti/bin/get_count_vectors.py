@@ -13,8 +13,9 @@ corresponds. If a :term:`mask file` -- e.g. from  :py:mod:`~yeti.bin.crossmap`
 import argparse
 import inspect
 import os
-import numpy
+import warnings
 import sys
+import numpy
 
 from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
                                                       get_genome_array_from_args,\
@@ -25,11 +26,10 @@ from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
 from yeti.util.io.openers import get_short_name
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.decorators import catch_warnings
 
+warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-@catch_warnings("module")
 def main(args=sys.argv[1:]):
     """Command-line program
     

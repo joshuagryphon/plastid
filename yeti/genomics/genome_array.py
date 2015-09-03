@@ -166,6 +166,7 @@ from yeti.readers.wiggle import WiggleReader
 from yeti.readers.bowtie import BowtieReader
 from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.util.services.mini2to3 import xrange, ifilter
+from yeti.util.services.exceptions import DataWarning
 
 MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
 
@@ -223,9 +224,10 @@ def CenterMapFactory(nibble=0):
         
         #reads = ifilter(lambda x: len(x.positions) > 2*nibble,reads)
         for read in reads:
-            if len(read.positions) <= 2*nibble:
-                warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
-                              UserWarning)
+            read_length = len(read.positions)
+            if read_length <= 2*nibble:
+                warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
+                              DataWarning)
                 continue
             
             if nibble == 0:
@@ -291,9 +293,10 @@ def FivePrimeMapFactory(offset=0):
         reads_out = []         
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if abs(offset) >= len(read.positions):
-                warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
-                              UserWarning)
+            read_length = len(read.positions)
+            if abs(offset) >= read_length:
+                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+                              DataWarning)
                 continue
              
             if seg.strand == "+":
@@ -352,9 +355,10 @@ def ThreePrimeMapFactory(offset=0):
         reads_out = []
         count_array = numpy.zeros(len(seg))
         for read in reads:
-            if offset >= len(read.positions): 
-                warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
-                              UserWarning)
+            read_length = len(read.positions)
+            if offset >= read_length: 
+                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+                              DataWarning)
                 continue
 
             if seg.strand == "+":
@@ -422,13 +426,13 @@ def VariableFivePrimeMapFactory(offset_dict):
             elif "default" in offset_dict:
                 offset = offset_dict["default"]
             else:
-                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers" % (read_length, read_length),
-                              UserWarning)
+                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
+                              DataWarning)
                 continue
 
             if offset >= read_length:
                 warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                              UserWarning)
+                              DataWarning)
                 continue
 
             if seg.strand == "+":
@@ -459,16 +463,18 @@ def SizeFilterFactory(min=1,max=numpy.inf):
     Parameters
     ----------
     min : int, optional
-        Minimum read length to pass filter (Default: `1`)
+        Minimum read length to pass filter, inclusive (Default: `1`)
     
     max : int or numpy.inf, optional
-        Maximum read length to pass filter (Default: infinity)
+        Maximum read length to pass filter, inclusive (Default: infinity)
     
     Returns
     -------
     function
     """
-    assert max > min
+    if max < min:
+        raise ValueError("Alignment size filter: max read length must be >= min read length")
+    
     def my_func(x):
         my_length = len(x.positions)
         return True if my_length >= min and my_length <= max else False
@@ -511,9 +517,10 @@ def center_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     nibble = kwargs["nibble"]
-    if len(feature.spanning_segment) <= 2*nibble:
-        warnings.warn("Read alignment length %s nt is less than `2*'nibble'` value of %s nt. Ignoring." % (len(read.positions),2*nibble),
-                      UserWarning)
+    read_length = feature.get_length()
+    if read_length <= 2*nibble:
+        warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
+                      DataWarning)
         return []
 
     strand = feature.spanning_segment.strand
@@ -550,9 +557,10 @@ def five_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    if offset > feature.get_length():
-        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
-                      UserWarning)
+    read_length = feature.get_length()
+    if offset > read_length:
+        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+                     DataWarning)
         return []
 
     value   = kwargs.get("value",1.0)
@@ -588,9 +596,10 @@ def three_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    if offset > feature.get_length():
-        warnings.warn("Offset %snt greater than read length %snt. Ignoring." % (offset,len(read)),
-                      UserWarning)
+    read_length = feature.get_length()
+    if offset > read_length:
+        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+                      DataWarning)
         return []
 
     value   = kwargs.get("value",1.0)
@@ -629,10 +638,13 @@ def variable_five_prime_map(feature,**kwargs):
     strand = feature.spanning_segment.strand
     value   = kwargs.get("value",1.0)
     offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"].get("default",None))
+    feature_length = feature.get_length()
     if offset is None:
-        warnings.warn("No offset for reads of length %s. Ignoring." % len(read),
-                      UserWarning)
+        warnings.warn("No offset for reads of length %s. Ignoring." % feature_length,
+                      DataWarning)
         return []
+    if offset >= feature_length:
+        warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
 
     if strand in ("+","."):
         start = feature.spanning_segment.start + offset
@@ -1488,7 +1500,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
+            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
 
         self.set_normalize(False)
 
@@ -1652,7 +1664,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         new_array = GenomeArray.like(self)
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
+            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
 
         if type(other) == self.__class__:
             if mode == "same":       
@@ -2140,7 +2152,7 @@ class SparseGenomeArray(GenomeArray):
             val = val[::-1]
 
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
+            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
         self.set_normalize(False)
 
         if seg.chrom not in self:
@@ -2256,7 +2268,7 @@ class SparseGenomeArray(GenomeArray):
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",UserWarning)
+            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
         self.set_normalize(False)
 
         if isinstance(other,GenomeArray):

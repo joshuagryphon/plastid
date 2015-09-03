@@ -86,6 +86,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
+from yeti.util.services.exceptions import DataWarning
 from yeti.util.services.decorators import skipdoc
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
@@ -1753,7 +1754,7 @@ class SegmentChain(object):
             Array of counts from `gnd` covering `self`
         """
         if len(self) == 0:
-            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),UserWarning)
+            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
 
         ltmp = []
         for iv in self:
@@ -1818,7 +1819,7 @@ class SegmentChain(object):
             Nucleotide sequence of the |SegmentChain| extracted from `genome`
         """
         if len(self) == 0:
-            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),UserWarning)
+            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
             return ""
 
         else:

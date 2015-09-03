@@ -19,6 +19,8 @@ from yeti.genomics.genome_hash import GenomeHash
 from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
 from yeti.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
 
+warnings.simplefilter("ignore",DeprecationWarning)
+
 #===============================================================================
 # INDEX: helper functions
 #===============================================================================
@@ -533,12 +535,12 @@ class test_BigBedReader(unittest.TestCase):
         bfile.close()
         for k in (4,12):
             fn = "bb%sas" % k
-            # ignore a UserWarning caused by trying to turn the BED color field
+            # ignore a Warning caused by trying to turn the BED color field
             # to an int- this has to deal with the fact that BedToBigBed wants
             # field 9 (itemRgb, typically uint[3]) to be `reserved uint;` in 
             # autoSql declarations
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore",UserWarning)
+                warnings.simplefilter("ignore")
                 bb = BigBedReader(self.bb_bonuscols[fn])
                 for n, item in enumerate(bb):
                     for key in values:
