@@ -548,6 +548,8 @@ algorithm:
             
             region             maximal spanning window, formatted as
                                `chromosome:start-end:(strand)`
+
+            region_bed         maximal spanning window, formatted as a `BED`_ line
             
             window_size        with of window
             
@@ -565,12 +567,14 @@ algorithm:
     """
     window_size = flank_upstream + flank_downstream
         
+    #export_rois = []
     dtmp = { "gene_id"           : [],
              "region"            : [],
              "masked"            : [],
              "alignment_offset"  : [],
              "window_size"       : [],
              "zero_point"        : [],
+             "region_bed"        : [],
              }
     
     # build gene-transcript graph
@@ -602,7 +606,6 @@ algorithm:
             # for each gene, find maximal window in which all points
             # are represented in all transcripts. return window and offset
             c = -1
-            export_rois = []
             for gene_id, tx_list in sorted(gene_transcript.items()):
                 c += 1
                 if c % 1000 == 1:
@@ -625,13 +628,14 @@ algorithm:
                     dtmp["masked"].append(str(mask_chain))
                     dtmp["alignment_offset"].append(offset)
                     dtmp["zero_point"].append(flank_upstream)
-                    export_rois.append(max_spanning_window)
+                    dtmp["region_bed"].append(max_spanning_window.as_bed())
+                    #export_rois.append(max_spanning_window)
 
-                    # clean up
-                    del transcripts
-                    gc.collect()
-                    del gc.garbage[:]
-                    transcripts = []
+            # clean up
+            del transcripts
+            gc.collect()
+            del gc.garbage[:]
+            transcripts = []
 
         else:
             transcripts.append(tx)
@@ -639,7 +643,7 @@ algorithm:
     df = pd.DataFrame(dtmp)
     printer.write("Processed %s transcripts total. Included %s." % (c+1,len(dtmp)))
 
-    return df, export_rois
+    return df# , export_rois
 
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
@@ -891,7 +895,7 @@ def main(argv=sys.argv[1:]):
         
         # get ROIs
         printer.write("Generating regions of interest...")   
-        roi_table, export_rois = do_generate(transcripts,
+        roi_table = do_generate(transcripts,
                                              mask_hash,
                                              args.upstream,
                                              args.downstream,
@@ -913,8 +917,8 @@ def main(argv=sys.argv[1:]):
             
         printer.write("Saving BED output as %s..." % bed_file)
         with argsopener(bed_file,args,"w") as bed_fh:
-            for roi in export_rois:
-                bed_fh.write(roi.as_bed())
+            for roi in roi_table["region_bed"]: #export_rois:
+                bed_fh.write(roi)
         
             bed_fh.close()
     
