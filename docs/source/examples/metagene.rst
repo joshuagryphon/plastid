@@ -242,10 +242,6 @@ feature, |metagene| requires a
 the feature of interest (e.g. a start codon) in each individual region examined
 (for example, each transcript).
 
-Regions that define a `"gene_id"` attribute in their `attr` dictionaries,
-will be grouped by shared `"gene_id"` to make a single
-:term:`maximal spanning window` for each group.
-
 |metagene| comes with two window functions:
 
   - :func:`~yeti.bin.metagene.window_cds_start`, for defining windows
@@ -254,8 +250,9 @@ will be grouped by shared `"gene_id"` to make a single
   - :func:`~yeti.bin.metagene.window_cds_stop`, for defining windows
     surrounding stop codons
 
-Once you have defined a window function, :func:`yeti.bin.metagene.do_generate`
+Once you have defined a window function, :func:`yeti.bin.metagene.group_regions_make_windows`
 can use it to generate :term:`maximal spanning windows <maximal spanning window>`.
+
 
 Parameters
 ..........
@@ -285,6 +282,7 @@ Window functions must take the following parameters, in order:
         is calculated. If `0`, the feature of interest is the
         reference point. (Default: `0`)
 
+
 Return values
 .............
 Window functions must return the following values, in order:
@@ -303,6 +301,10 @@ Window functions must return the following values, in order:
     (``str``, ``int``, ``str``)
         Genomic coordinate of reference point as `(chromosome name, coordinate, strand)`
         or :obj:`numpy.nan` if `roi` does not contain a feature of interest
+
+
+Window function examples
+.........................
 
 Here is a window function that produces windows surrounding transcription
 start sites::
@@ -348,6 +350,8 @@ start sites::
     >>>     # ref point is always `flank_upstream` from window in this case
     >>>     return new_chain, offset, new_chain.get_genomic_coordinate(flank_upstream)
 
+
+ .. _metagene-big-spike:
 
 Here is a window function that produces windows surrounding the highest spike
 in read density in a transcript. Note, it uses data structures in the global
@@ -402,9 +406,41 @@ scope:
     >>>         
     >>>     return new_chain, offset, ref_point_genome
 
- .. _metagene-big-spike:
- 
-Once your window function is written, you can generate maximal spanning windows.
+
+Using your window function
+..........................
+
+Once your window function is written, you can generate maximal spanning windows
+using :func:`yeti.bin.metagene.group_regions_make_windows`, which takes
+the following parameters:
+
+    ===================  ==============================  =======================================================================
+     **Parameter**        **Type**                        **Description**
+    -------------------  ------------------------------  -----------------------------------------------------------------------
+    source               :class:`list` or generator      source of regions of interest (|SegmentChains| or |Transcripts|)
+
+    mask_hash            |GenomeHash|                    |GenomeHash| describing regions to mask. If you don't need this,
+                                                         just pass ``GenomeHash()``
+
+    flank_upstream       :class:`int`                    Number of nucleotides upstream of landmark to include in window
+    
+    flank_downstream     :class:`int`                    Number of nucleotides downstream of landmark to include in windows
+
+    window_func          function                        Window function
+
+    group_by             str                             Attribute (in each region's `attr` dict) by which regions
+                                                         will be grouped before
+                                                         a maximal spanning window is made for the group (default: `gene_id`).
+                                                         Regions that don't contain the attribute will be given their own
+                                                         windows.
+
+    is_sorted            bool                            `source` is sorted.  If `True`, :func:`group_regions_make_windows`
+                                                         will take advantage of this to save memory. (Default: `False`)
+
+    printer              file-like                       Something importing a ``write()`` method, if verbose output is desired.
+    ===================  ==============================  =======================================================================
+
+
 Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> from yeti.bin.metagene import do_generate
@@ -429,29 +465,34 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>> # include 100 nucleotides up- and downstream of feature
     >>> flank_upstream = flank_downstream = 100
 
-    >>> data_table, segment_chains = do_generate(transcripts,dummy_mask_hash,
-    >>>                                          flank_upstream,flank_downstream,
-    >>>                                          window_func=window_biggest_spike)
+    >>> data_table = group_regions_make_windows(transcripts,dummy_mask_hash,
+    >>>                                         flank_upstream,flank_downstream,
+    >>>                                         window_func=window_biggest_spike)
 
 
-:meth:`~yeti.bin.metagene.do_generate` returns an |ArrayTable| (similar to a :class:`pandas.DataFrame`)
-of data and a list of |SegmentChains| corresponding to the
-:term:`maximal spanning windows <maximal spanning window>` for each row
-in the |ArrayTable|. It is useful to save these in the same formats that the 
-:ref:`generate <metagene-generate>` program uses::
+:meth:`~yeti.bin.metagene.group_regions_make_windows` returns
+a :class:`pandas.DataFrame` containing the
+:term:`maximal spanning windows <maximal spanning window>` and their
+corresponding alignment offsets. These can be saved to an `roi_file` for
+use in the :ref:`metagene count <metagene-count>` subprogram::
 
-    >>> with open("SRR609197_riboprofile_big_spike_roi_file.txt","w") as roi_fh:
-    >>>     data_table.to_file(roi_fh)
-    >>>     roi_fh.close()
-    >>>     
+    >>> data_table.to_csv("SRR609197_riboprofile_big_spike_roi_file.txt",
+    >>>                   sep="\t",
+    >>>                   header=True,
+    >>>                   index=False,
+    >>>                   na_rep="nan")
+
+It's also convenient to make a `BED`_ file for genome browsing::
+
     >>> with open("SRR609197_riboprofile_big_spike_rois.bed","w") as bed_fh:
-    >>>     for roi in segment_chains:
-    >>>         bed_fh.write(roi.as_bed())
-    >>> 
-    >>>     bed_fh.close()
+    >>>     for bed_line in data_table["region_bed"]:
+    >>>         bed_fh.write(bed_line)
+    >>>
+    >>> bed_fh.close()
  
-Then, you can use the ROI file you just made with |metagene|
-:ref:`count <metagene-count>` and :ref:`chart <metagene-chart>` as previously:
+
+The `roi file` can be used as if it were made by the command-line
+:ref:`metagene generate <metagene-generate>` subprogram:
 
  .. code-block:: shell
 
