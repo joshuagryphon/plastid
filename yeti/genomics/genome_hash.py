@@ -55,15 +55,12 @@ Retrieve features overlapping a region of interest on chromosome II::
 # Memory-efficient ways to hash features across a genome
 #===============================================================================
 import copy
-#import cStringIO
 from yeti.util.services.mini2to3 import cStringIO
-from pysam import Tabixfile
 from yeti.util.io.openers import NullWriter
 from yeti.readers.bed import BED_Reader
 from yeti.readers.gff import GTF2_Reader, GFF3_Reader
 from yeti.readers.psl import PSL_Reader
 from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.readers.bigbed import BigBedReader
 from abc import abstractmethod
 
 DEFAULT_BIN_SIZE=20000
@@ -463,6 +460,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
             genomic regions. Increasing this number increases speed at the
             cost of increased memory use. (Default: `5`)
         """
+        from yeti.readers.bigbed import BigBedReader
         self.filename = filename
         self.bigbedreader = BigBedReader(filename,
                                          base_record_format=base_record_format,
@@ -558,6 +556,7 @@ class TabixGenomeHash(AbstractGenomeHash):
             Format of tabix-compressed file(s). Choices are:
             `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'`
         """
+        from pysam import Tabixfile
         self.filenames = filenames
         self.printer = printer
         try:
