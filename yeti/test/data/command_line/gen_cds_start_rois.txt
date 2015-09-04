@@ -20,7 +20,7 @@
 ##          'tabix'                     : False,
 ##          'upstream'                  : 50
 ##        }
-alignment_offset	gene_id	masked	region	window_size	zero_point
+alignment_offset	region_id	masked	region	window_size	zero_point
 50	Q0010	chrmt:4017-4051(+)	chrmt:3951-4051(+)	150	50
 50	Q0017	chrmt:4281-4352(+)	chrmt:4253-4353(+)	150	50
 50	Q0032	na	chrmt:11666-11766(+)	150	50
