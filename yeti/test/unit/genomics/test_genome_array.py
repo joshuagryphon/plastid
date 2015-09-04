@@ -37,9 +37,7 @@ from yeti.genomics.genome_array import GenomeArray,\
                                        center_map
 from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.genomics.seqtools import random_seq
-
 from yeti.util.io.openers import NullWriter
-
 from yeti.util.services.decorators import skip_if_abstract
 from yeti.util.services.mini2to3 import cStringIO
 
@@ -912,9 +910,13 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
             my_func(gnd)
+        
+        got_warning = False
+        for w in warns:
+            if "turning off normalization" in str(w.message):
+                got_warning = True
 
-        self.assertEqual(len(warns),1)
-#        self.assertRaises(AssertionError,my_func,gnd)
+        self.assertTrue(got_warning)
                 
     def test_eq(self):
         chroms = { "chrA" : 1000, "chrB" : 10000 }
