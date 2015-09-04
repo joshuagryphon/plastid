@@ -326,7 +326,7 @@ def process_partial_group(transcripts,mask_hash,printer):
 
     # flatten merged genes
     printer.write("Flattening merged genes, masking positions, and labelling subfeatures...")
-    for n, (gene_id, my_txids) in enumerate(sorted(merged_gene_tx.items())):
+    for n, (gene_id, my_txids) in enumerate(merged_gene_tx.items()):
         if n % 1000 == 0 and n > 0:
             printer.write("    %s genes..." % n)
 
@@ -401,7 +401,7 @@ def process_partial_group(transcripts,mask_hash,printer):
                           "cds"   : set(),
                           "utr3"  : set(),
                          }
-        txids  = merged_gene_tx[gene_id]
+        txids  = sorted(merged_gene_tx[gene_id])
         chrom  = gene_post_mask_ivc.chrom
         strand = gene_post_mask_ivc.strand
 
@@ -477,8 +477,14 @@ def process_partial_group(transcripts,mask_hash,printer):
     print "transcript col lengths:"
     for k,v in transcript_table.items():
         print "%s\t%s" % (k,len(v))
+    
+    gene_df = pd.DataFrame(gene_table)
+    gene_df.sort(columns=["region"],inplace=True)
 
-    return pd.DataFrame(gene_table), pd.DataFrame(transcript_table), merged_genes
+    transcript_df = pd.DataFrame(transcript_table)
+    transcript_df.sort(columns=["region"],inplace=True)
+
+    return gene_df, pd.transcript_df, merged_genes
 
 def do_generate(args):
     """Generate gene position files from gene annotations.

@@ -24,10 +24,17 @@ Unreleased
 
 Added
 .....
-  - Extended BED formats now supported in both import & export, command-line
-    scripts & interactive
-  - BED Detail format and ENCODE BED subtypes now automatically parsed
+  - Support for extended BED formats now in both import & export,
+    in command-line scripts and interactively
+  - BED Detail format and known ENCODE BED subtypes now automatically parsed
     from track definition lines
+  - Created warning classes DataWarning, FileFormatWarning, and ArgumentWarning
+
+Changed
+.......
+  - speed & memory optimizations for `cs generate` script, resulting in 90% memory
+    reduction on human genome annotation GrCh38.78
+  - ditto `metagene generate` script
 
 
 
