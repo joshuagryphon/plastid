@@ -121,8 +121,9 @@ First, we need to import a few things::
     >>> # plotting functions
     >>> import matplotlib.pyplot as plt
 
-    >>> # reader for BED-format transcript annotations
+    >>> # reader for BED-format transcript annotations and Transcript object
     >>> from yeti.readers.bed import BED_Reader
+    >>> from yeti.genomics.roitools import Transcript
 
     >>> # data structure that maps read alignments to genomic positions
     >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
@@ -178,7 +179,7 @@ effect of the order in which things are evaluated inside comprehensions::
 
 Now that we have an empty dictionary of lists to hold our data, we're ready to start
 making measurements. We'll use nested for loops to count expression in the 5' UTR, 
-CDS, 3'UTR and total region (exon) of each transcript (note: this will run for a 
+CDS, 3'UTR and total region (exon) of each transcript (**note:** this will run for a 
 while; you might want to get some coffee):
 
  .. code-block:: python
@@ -216,7 +217,7 @@ by converting the dictionary of lists into a :class:`pandas.DataFrame`::
 
     >>> # convert to DataFrame, then save as tab-delimited text file
     >>> df = pd.DataFrame(my_data)
-    >>> df.to_csv("gene_expression_demo.txt",sep="\t")
+    >>> df.to_csv("gene_expression_demo.txt",sep="\t",index=False,header=True)
 
 The text files may be re-loaded for further analysis, or plotted. For example,
 to plot the :term:`RPKM` measurements for translation (:term:`ribosome profiling`)

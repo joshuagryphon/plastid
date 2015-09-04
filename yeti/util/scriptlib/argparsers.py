@@ -140,12 +140,11 @@ import argparse
 import warnings
 import sys
 from collections import OrderedDict
-from yeti.util.services.exceptions import MalformedFileError
+from yeti.util.services.exceptions import MalformedFileError, ArgumentWarning
 
 from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.io.openers import opener, NullWriter
 from yeti.util.io.filters import CommentReader
-from yeti.util.services.exceptions import ArgumentWarning
 
 from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
                              _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
