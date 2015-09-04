@@ -469,14 +469,6 @@ def process_partial_group(transcripts,mask_hash,printer):
     for k in conversion_keys:
         gene_table[k] = [str(X) for X in gene_table[k]]
         transcript_table[k] = [str(X) for X in transcript_table[k]]
-
-    print "gene col lengths:"
-    for k,v in gene_table.items():
-        print "%s\t%s" % (k,len(v))
-
-    print "transcript col lengths:"
-    for k,v in transcript_table.items():
-        print "%s\t%s" % (k,len(v))
     
     gene_df = pd.DataFrame(gene_table)
     gene_df.sort(columns=["region"],inplace=True)
