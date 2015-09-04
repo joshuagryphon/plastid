@@ -141,15 +141,8 @@ import warnings
 import sys
 from collections import OrderedDict
 from yeti.util.services.exceptions import MalformedFileError, ArgumentWarning
-
-from yeti.genomics.roitools import SegmentChain, Transcript
+#from yeti.genomics.roitools import SegmentChain, Transcript
 from yeti.util.io.openers import opener, NullWriter
-from yeti.util.io.filters import CommentReader
-
-from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
-                             _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
-                             _DEFAULT_GFF3_EXON_TYPES,\
-                             _DEFAULT_GFF3_CDS_TYPES
 
 
 #===============================================================================
@@ -347,6 +340,7 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
     """
     args = PrefixNamespaceWrapper(args,prefix)
     import pysam
+    from yeti.util.io.filters import CommentReader
     from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
                                                BAMGenomeArray,\
                                                SizeFilterFactory, CenterMapFactory,\
@@ -495,6 +489,11 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
+    from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
+                                 _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
+                                 _DEFAULT_GFF3_EXON_TYPES,\
+                                 _DEFAULT_GFF3_CDS_TYPES
+
     annotation_file_parser = argparse.ArgumentParser(add_help=False)
     """Open genome annotation files in %s format""" % ", ".join(input_choices)
     
@@ -546,7 +545,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
     else:
         return annotation_file_parser
 
-def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=Transcript,require_sort=False):
+def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=None,require_sort=False):
     """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
     
     Parameters
@@ -588,6 +587,10 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
+    if return_type is None:
+        from yeti.genomics.roitools import Transcript
+        return_type = Transcript
+
     if prefix != "":
         args = PrefixNamespaceWrapper(args,prefix)
 
@@ -645,7 +648,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
 
         from yeti.readers.bigbed import BigBedReader
         transcripts = BigBedReader(args.annotation_files[0],
-                                   return_type=Transcript,
+                                   return_type=return_type,
                                    cache_depth=1,
                                    add_three_for_stop=add_three,
                                    printer=printer)
@@ -783,6 +786,7 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
+    from yeti.genomics.roitools import SegmentChain
     disabled.append([prefix+"add_three"])
     return get_transcripts_from_args(args,
                                      prefix=prefix,

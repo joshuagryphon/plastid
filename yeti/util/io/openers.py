@@ -16,11 +16,6 @@ Important methods
 :py:func:`NullWriter`
     Returns an open filehandle to the system's null location.
 """
-import datetime
-import gzip
-import bz2
-import zipfile
-import re
 import os
 from yeti.util.io.filters import AbstractWriter
 
@@ -72,14 +67,17 @@ def opener(filename,mode="r",**kwargs):
         Other parameters to pass to appropriate file opener 
     """
     if filename.endswith(".gz"):
+        import gzip
         if "b" not in mode:
             mode += "b"
         call_func = gzip.GzipFile
     elif filename.endswith(".bz2"):
+        import bz2
         if "b" not in mode:
             mode += "b"
         call_func = bz2.BZ2File
     elif filename.endswith(".zip"):
+        import zipfile
         if "b" not in mode:
             mode += "b"
         call_func = zipfile.ZipFile
@@ -128,6 +126,7 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     -------
     str
     """
+    import re
     pat = r"([^%s]+)%s$" % (separator,terminator)
     try:
         stmp = re.search(pat,inpt).group(1)
@@ -180,6 +179,7 @@ def args_to_comment(namespace):
     -------
     string
     """
+    import datetime
     dtmp = namespace.__dict__
     ltmp = ["## date = '%s'" % datetime.datetime.today()]
     ltmp.append("## args = {  ")

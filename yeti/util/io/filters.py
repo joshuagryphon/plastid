@@ -63,7 +63,6 @@ Write to stdout, prepending name and date::
 
 """
 from __future__ import print_function
-import warnings
 import sys
 import datetime
 from abc import abstractmethod
@@ -328,6 +327,7 @@ class TeeReader(AbstractReader):
             try:
                 listener.alert(line)
             except AttributeError:
+                import warnings
                 warnings.warn("Could not alert listener %s: " % str(listener))
         return line
     
