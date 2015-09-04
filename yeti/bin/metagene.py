@@ -464,7 +464,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
-def do_generate(transcripts,mask_hash,flank_upstream,flank_downstream,
+def do_generate(source,mask_hash,flank_upstream,flank_downstream,
                 window_func=window_cds_start,is_sorted=False,
                 printer=NullWriter()):
     """Generate a file of maximal spanning windows surrounding a landmark,
