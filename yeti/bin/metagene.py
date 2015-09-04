@@ -140,8 +140,7 @@ import sys
 import warnings
 import argparse
 import inspect
-import warnings
-
+import itertools
 import numpy
 import pandas as pd
 from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
@@ -250,7 +249,7 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
     
     int
         Alignment offset to the window start, if `transcript` itself wasn't long
-        enough in the 5\' direction to include the entire distance specified by
+        enough in the 5' direction to include the entire distance specified by
         `flank_upstream`. Use this to align this window to other windows generated
         around start codons in other transcripts. If transcript is not coding,
         returns :obj:`numpy.nan`
@@ -481,7 +480,7 @@ algorithm:
     2.  For each set of transcripts that pass step (1), the maximal spanning
         window is created by aligning the set of transcripts at the landmark, and
         adding nucleotide positions in transcript coordinates to the growing
-        window in both 5\' and 3\' directions until either:
+        window in both 5' and 3' directions until either:
         
             - the next nucleotide position added is no longer corresponds to 
               the same genomic position in all transcripts
@@ -567,7 +566,6 @@ algorithm:
     """
     window_size = flank_upstream + flank_downstream
         
-    #export_rois = []
     dtmp = { "gene_id"           : [],
              "region"            : [],
              "masked"            : [],
@@ -577,8 +575,6 @@ algorithm:
              "region_bed"        : [],
              }
     
-    # build gene-transcript graph
-    printer.write("Building gene-transcript graph...")
     transcripts = []
     gene_transcript = {}
     last_chrom = None
@@ -595,6 +591,9 @@ algorithm:
 
         # end of chromosome or end of file
         if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
+            last_chrom = tx.spanning_segment.chrom
+            if do_loop == True:
+                source = itertools.chain([tx],source)
 
             for tx_chain in transcripts:
                 gene_id = tx_chain.get_gene()
@@ -606,10 +605,10 @@ algorithm:
             # for each gene, find maximal window in which all points
             # are represented in all transcripts. return window and offset
             c = -1
-            for gene_id, tx_list in sorted(gene_transcript.items()):
+            for gene_id, tx_list in gene_transcript.items():
                 c += 1
                 if c % 1000 == 1:
-                    printer.write("Processed %s transcripts, included %s..." % (c,len(list(dtmp.values())[0])))
+                    printer.write("Processed %s genes, included %s..." % (c,len(list(dtmp.values())[0])))
 
                 name = tx_list[0].get_gene() # name regions after gene id
                 max_spanning_window, offset =  maximal_spanning_window(tx_list,
@@ -629,21 +628,23 @@ algorithm:
                     dtmp["alignment_offset"].append(offset)
                     dtmp["zero_point"].append(flank_upstream)
                     dtmp["region_bed"].append(max_spanning_window.as_bed())
-                    #export_rois.append(max_spanning_window)
 
             # clean up
             del transcripts
+            del gene_transcript
             gc.collect()
             del gc.garbage[:]
             transcripts = []
+            gene_transcript = {}
 
         else:
             transcripts.append(tx)
 
     df = pd.DataFrame(dtmp)
-    printer.write("Processed %s transcripts total. Included %s." % (c+1,len(dtmp)))
+    df.sort(columns=["gene_id"],inplace=True)
+    printer.write("Processed %s genes total. Included %s." % (c+1,len(df)))
 
-    return df# , export_rois
+    return df
 
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
@@ -917,7 +918,7 @@ def main(argv=sys.argv[1:]):
             
         printer.write("Saving BED output as %s..." % bed_file)
         with argsopener(bed_file,args,"w") as bed_fh:
-            for roi in roi_table["region_bed"]: #export_rois:
+            for roi in roi_table["region_bed"]:
                 bed_fh.write(roi)
         
             bed_fh.close()
