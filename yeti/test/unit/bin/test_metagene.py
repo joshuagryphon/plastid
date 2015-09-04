@@ -14,7 +14,7 @@ from yeti.readers.gff import GFF3_TranscriptAssembler
 from yeti.bin.metagene import window_landmark, \
                                      window_cds_start, \
                                      window_cds_stop, \
-                                     do_generate
+                                     group_regions_make_windows
 from yeti.util.services.mini2to3 import cStringIO
 
 _FLANKS = [(0,100),
@@ -187,7 +187,7 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     #    zero_point
     err_str = ("Failed %s (up: %s, down: %s). " % (test_name,flank_up,flank_down)) + "%s unequal (%s vs %s)"
     tx_ivcs = (_TRANSCRIPTS[X] for X in test_group)
-    roi_table, _ = do_generate(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
+    roi_table = group_regions_make_windows(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
 #     print(result_groups)
 #     print(len(result_groups))
     c = 0
@@ -215,7 +215,7 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     assert_equal(n+1-c,len(roi_table))
     
 @attr(test="unit")
-def test_do_generate_finds_maximal_window():
+def test_group_regions_make_windows_finds_maximal_window():
     # test case, 3 transcripts same start
     # test case, 3 transcripts, different starts
     # test case, 3 transcripts, 2 share start, 1 different
@@ -228,7 +228,7 @@ def test_do_generate_finds_maximal_window():
             yield check_maximal_window, test_name, empty_hash, test_group, [result_group], flank_up, flank_down
 
 @attr(test="unit")
-def test_do_generate_multiple_genes():
+def test_group_regions_make_windows_multiple_genes():
     empty_hash = GenomeHash([])
     flank_up = 50
     flank_down = 100
@@ -237,7 +237,7 @@ def test_do_generate_multiple_genes():
         yield check_maximal_window, test_name, empty_hash, test_group, result_groups, flank_up, flank_down
 
 @attr(test="unit")
-def test_do_generate_finds_masks():
+def test_group_regions_make_windows_finds_masks():
     crossmap = GenomeHash(_MASKS)
     for flank_up,flank_down in _FLANKS:
         for test_name, test_group in _DO_GENERATE_MAX_WINDOW.items():
