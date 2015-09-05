@@ -16,10 +16,10 @@ Output files
     ${OUTBASE}_crossmap.bed
         Final :term:`mask file` annotation, in `BED`_ format
     
-    ${OUTBASE}_kmers.fa
-        :term:`K-mers <k-mer>` derived from genome. This file can be used to make subsequent
-        :term:`mask files <mask file>` under different alignment parameters, using the
-        the ``--have_kmers`` option
+    ${OUTBASE}_${CHROMOSOME}_kmers.fa
+        :term:`K-mers <k-mer>` derived from each chromosome. These files can
+        be reused in subsequent runs allowing a different number of mismatches,
+        using the ``--have_kmers`` option
 
 
 Notes
@@ -227,19 +227,21 @@ def fa_to_bed(toomany_fh,k,offset=0):
     yield plus_ivc, minus_ivc
 
 def chrom_worker(chrom_seq,args=None):
-    name, chrom_seq = chrom_seq
-    print name
-    print len(chrom_seq), chrom_seq.seq[:50]
+    name, seq_or_kmers = chrom_seq
     printer.write("Processing chromosome %s..." % name)
     base         = "%s_%s_%s_%s" % (args.outbase, args.read_length, args.mismatches, name)
     kmer_file    = "%s_kmers.fa"     % base
     toomany_file = "%s_multimap.fa"  % base
     bed_file     = "%s_crossmap.bed" % base
     
-    with open(kmer_file,"w") as kmer:
-        simulate_reads(chrom_seq,kmer,args.read_length)
+    if args.have_kmers == False:
+        with open(kmer_file,"w") as kmer: # only do this step if args.have_kmers == False
+            simulate_reads(seq_or_kmers,kmer,args.read_length)
 
-    kmer.close()
+        kmer.close()
+    else:
+        kmer_file = seq_or_kmers
+
     argdict = { "mismatches" : args.mismatches,
                 "processors" : 1, 
                 "bowtie"     : args.bowtie,
@@ -251,7 +253,7 @@ def chrom_worker(chrom_seq,args=None):
     
     cmd  = "%(bowtie)s -m1 -a --best -f -v %(mismatches)s -p %(processors)s %(ebwt)s %(kmers)s --max %(toomany)s >%(null)s" % argdict
 
-    printer.write("Performing alingment for chromosome '%s' :\n\t'%s'" % (name,cmd))
+    printer.write("Aligning %s-mers for chromosome '%s' :\n\t'%s'" % (args.read_length,name,cmd))
     try:
         retcode = subprocess.call(cmd,shell=True)
         if retcode < 0 or retcode == 2:
@@ -271,7 +273,7 @@ def chrom_worker(chrom_seq,args=None):
             else:
                 printer.write("Could not find multimapper source file '%s' ." % toomany_file)
     except OSError as e:
-        printer.write("Alignment failed: %s" % e)
+        printer.write("Alignment failed for chromosome '%s': %s" % (name,e))
 
     printer.write("Cleaning up chromosome '%s'..." % name)
     os.remove(toomany_file)
@@ -308,8 +310,10 @@ def main(argv=sys.argv[1:]):
                         type=str,
                         help="Location of bowtie binary (Default: ``/usr/local/bin/bowtie``)")
     parser.add_argument("--have_kmers",default=False,action="store_true",
-                        help="If specified, 'sequence_file' contains k-mers from a previous `crossmap` run, instead of a genome sequence to be diced.")
-    parser.add_argument("-p","--processes",type=int,default=4,metavar="N",
+                        help="If specified, use k-mer files from previous run. "+\
+                             " In this case 'sequence_file' should be the value "+\
+                             "'outbase' from the k-mer files you want to use.")
+    parser.add_argument("-p","--processes",type=int,default=2,metavar="N",
                         help="Number of processes to use (should be <= number of chromosomes")
     parser.add_argument("ebwt",type=str,
                         help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `sequence_file`.")
@@ -320,16 +324,20 @@ def main(argv=sys.argv[1:]):
 
     #filenames
     base         = "%s_%s_%s" % (args.outbase, args.read_length, args.mismatches)
-    kmer_file    = "%s_kmers.fa"     % base
-    toomany_file = "%s_multimap.fa"  % base
     bed_file     = "%s_crossmap.bed" % base
 
-    if not os.path.exists(args.sequence_file):
-        printer.write("Could not find source file: %s" % args.sequence_file)
-        printer.write("Exiting.")
-        sys.exit(1)
+    #if not os.path.exists(args.sequence_file):
+    #    printer.write("Could not find source file: %s" % args.sequence_file)
+    #    printer.write("Exiting.")
+    #    sys.exit(1)
 
-    seqs = get_seqdict_from_args(args,index=True)
+    if args.have_kmers == True:
+        import glob
+        kmer_files = glob.glob(args.sequence_file+"*kmers.fa")
+        seq_pat = re.compile(r".*_([^_]*)_kmers.fa")
+        seqs = { seq_pat.search(X).groups()[0] : X for X in kmer_files }
+    else:
+        seqs = get_seqdict_from_args(args,index=True) 
 
     worker = functools.partial(chrom_worker,args=args)
     chroms = seqs.items()
@@ -338,59 +346,6 @@ def main(argv=sys.argv[1:]):
     bed_filenames = pool.map(worker,chroms,1)
     pool.close()
     pool.join()
-    
-    #simulate reads if necessary
-#    if args.have_kmers == False:
-#        printer.write("Dicing sequence file '%s' into '%s'" % (args.sequence_file, kmer_file))
-#        kmer      = opener(kmer_file,"w") 
-#        seqs = get_seqdict_from_args(args,index=True)
-#        for seq in sorted(seqs):
-#            printer("Processing %s" % seq)
-#            simulate_reads(seqs[seq],kmer,args.read_length)
-#    else:
-#        printer.write("Using kmers from file '%s'" % (args.sequence_file))
-#        kmer_file = args.sequence_file
-#            
-#    #map reads using bowtie
-#    printer.write("Discarding uniquely mapping reads via alignment")
-#    
-#    argdict = { "mismatches" : args.mismatches,
-#                "processors" : 1, 
-#                "bowtie"     : args.bowtie,
-#                "toomany"    : toomany_file,
-#                "kmers"      : kmer_file,
-#                "ebwt"       : args.ebwt,
-#                "null"       : os.devnull,
-#                }
-#    
-#    cmd  = "%(bowtie)s -m1 -a --best -f -v %(mismatches)s -p %(processors)s %(ebwt)s %(kmers)s --max %(toomany)s >%(null)s" % argdict
-#
-#    printer.write("Executing:\n\t'%s'" % cmd)
-#    try:
-#        retcode = subprocess.call(cmd,shell=True)
-#        if retcode < 0 or retcode == 2:
-#            printer.write("Alignment terminated with status %s" % retcode)
-#        else:
-#            if os.path.exists(toomany_file):
-#                printer.write("Assembling multimappers into crossmap...")
-#                with argsopener(bed_file,args,"w") as bed_out:
-#                    for plus_ivc, minus_ivc in fa_to_bed(open(toomany_file),
-#                                                         args.read_length,
-#                                                         offset=args.offset):
-#                        bed_out.write(plus_ivc.as_bed())
-#                        bed_out.write(minus_ivc.as_bed())
-#                
-#                    bed_out.close()
-#            
-#            else:
-#                printer.write("Could not find multimapper source file '%s' ." % toomany_file)
-#                sys.exit(2)
-#    except OSError as e:
-#        printer.write("Alignment failed: %s" % e)
-#        sys.exit(2)
-#
-#    printer.write("Cleaning up...")
-#    os.remove(toomany_file)
    
     with open(bed_file,"a") as fout:
         for f in sorted(bed_filenames):
