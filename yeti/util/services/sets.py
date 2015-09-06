@@ -10,10 +10,9 @@ Exported functions
 :py:func:`get_random_sets`
     Generate random sets of members
 """
-import numpy.random
 import copy
 
-def merge_sets(list_of_sets,verbose=False,printer=None):
+def merge_sets(list_of_sets,printer=None):
     """Merges sets in a list if they have one or more common member,
     until all groups sharing common members are merged.
     
@@ -38,12 +37,9 @@ def merge_sets(list_of_sets,verbose=False,printer=None):
     list_of_sets : list
         List of sets of hashable items
 
-    verbose : bool, optional
-        If `True`, status is printed. (Default: `False`)
-
-    printer : file-like
-        Writer to which status is sent, as string, if verbose is `True`.
-        (Default: :obj:`sys.stdout`)
+    printer : file-like, or `None`
+        Writer to which status is sent, as string, if not `None` 
+        (Default: `None`)
 
     Returns
     -------
@@ -51,75 +47,74 @@ def merge_sets(list_of_sets,verbose=False,printer=None):
         list of merged sets
     """
     # first, simplify sets to remove redundancy
-    list_of_sets = list(set([tuple(sorted(X)) for X in list_of_sets]))
-    list_of_sets = [set(X) for X in list_of_sets]
+    list_of_sets = frozenset([frozenset(X) for X in list_of_sets])
     
     # count up all members
-    all_members = set()
+    all_members = []
     for my_set in list_of_sets:
-        all_members |= my_set
+        all_members.extend(my_set)
+
+    all_members = set(all_members)
         
-    # ignore singletons
-    #multis = filter(lambda x: len(x) > 1,list_of_sets)
+    # ignore singletons in merge process
     multis = [X for X in list_of_sets if len(X) > 1]
-    if verbose is True:
+    if  printer is not None:
         stmp = "Starting with %s sets, %s distinct members, and %s groups with multiple items..." % (len(list_of_sets), len(all_members),len(multis))
-        if printer is not None:
-            printer.write(stmp)
-        else:
-            printer.write(stmp)
+        printer.write(stmp)
         
-    merged_multis = _merge_sets(multis,verbose=verbose,printer=printer)
-    merged_members = set()
+    # find remaining singletons post-merge
+    merged_multis = _merge_sets(multis,printer=printer)
+    merged_members = []
     for my_set in merged_multis:
-        merged_members |= my_set
-        
+        merged_members.extend(my_set)
+
+    merged_members = frozenset(merged_members)
     unmerged_members = all_members - merged_members
     unmerged_sets = [set([X]) for X in unmerged_members]
-    return merged_multis + unmerged_sets
+
+    return sorted([set(X) for X in merged_multis] + unmerged_sets)
     
-def _merge_sets(list_of_sets,verbose=False,printer=None,callback=merge_sets):
+def _merge_sets(list_of_sets,printer=None):
     """Inner loop function for :func:`merge_sets`.
 
     Parameters
     ----------
     list_of_sets : list
-        List of sets of hashable items to merge
+        List of multimember sets of hashable items to merge
 
-    verbose : bool, optional
-        If `True`, status is printed (Default: `False`)
-
-    printer : file-like
-        Writer to which status is sent, as string, if verbose is True.
-        (Default: :obj:`sys.stdout`)
-
-    callback : function, optional
-        Callback function for next recursive call (Default: :func:`merge_sets`)
+    printer : file-like or `None`, optional
+        Writer to which status is sent, as string, if not `None`
+        (Default: :`None`)
 
     Returns
     -------
     list
-        list of partially merged sets
+        merged list of sets
     """
-    if verbose is True:
+    if printer is not None:
         stmp = "Starting with %s sets..." % len(list_of_sets)
-        if printer is not None:
-            printer.write(stmp)
-        else:
-            printer.write(stmp)
+        printer.write(stmp)
+
     new_sets = []
     for set_a in list_of_sets:
         new_set = set(copy.deepcopy(set_a))
         for set_b in list_of_sets:
-            set_b = set(set_b)
             if len(new_set & set_b) > 0:
                 new_set |= set_b
-        new_sets.append(tuple(new_set))
-    ltmp = list(set([tuple(X) for X in new_sets]))
+
+        new_sets.append(frozenset(new_set))
+
+    ltmp = list(set(new_sets))
+    if printer is not None:
+        stmp = "Merged %s starting sets to %s final sets..." % (len(list_of_sets), len(letmp))
+        printer.write(stmp)
+
+    # terminate if no new mergers
     if len(ltmp) == len(list_of_sets):
-        return [set(X) for X in set(ltmp)]
+        return [set(X) for X in ltmp]
+    # otherwise, recurse
     else:
-        return callback(ltmp,verbose,printer)
+        return _merge_sets(ltmp,printer=printer)
 
 def get_random_sets(num_sets,max_len=3,members=list("abcdefghijklmnop")):
     """Generates random sets of members
@@ -141,6 +136,7 @@ def get_random_sets(num_sets,max_len=3,members=list("abcdefghijklmnop")):
     list
         List of generated sets
     """
+    import numpy.random
     lout = []
     for _ in range(num_sets):
         num_in_set = numpy.random.randint(1,max_len+1)

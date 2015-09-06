@@ -3,6 +3,10 @@
 
 from yeti.util.services.sets import merge_sets
 from nose.plugins.attrib import attr
+from nose.tools import assert_set_equal
+
+def check_merge_equal(expected, found):
+    yield assert_set_equal, expected, found
 
 @attr(test="unit")
 def test_merge_sets(fn=merge_sets):
@@ -53,12 +57,12 @@ def test_merge_sets(fn=merge_sets):
          set(['b', 'l']),
          set(['a']),
          set(['a', 'p'])]
-    _tform = lambda x: sorted([tuple(sorted(X)) for X in x])
-    assert _tform(fn(a)) == _tform([set(['c']),
+    _tform = lambda x: frozenset([frozenset(X) for X in x])
+    yield check_merge_equal, _tform(fn(a)),  _tform([set(['c']),
                      set(['f']),
                      set(['l']),
                      set(['a', 'b', 'd', 'e', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p'])])
-    assert _tform(fn(b)) == _tform([set(['h']),
+    yield check_merge_equal, _tform(fn(b)), _tform([set(['h']),
                      set(['e']),
                      set(['i', 'k']),
                      set(['d', 'o']),
