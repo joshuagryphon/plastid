@@ -100,13 +100,13 @@ mismatches = 0
 processes = 4
 test_str = (_exec_str + " --have_kmers") % (
                                             os.path.join(test_info["temp_file_path"],_ebwt),
-                                            os.path.join(test_info["temp_file_path"],outbase),
+                                            os.path.join(test_info["temp_file_path"],outbase+"_p4"),
                                             os.path.join(test_info["temp_file_path"],_kmers),
                                             offset,
                                             mismatches,
                                             processes)
 ref_file  = REF_FILES[outbase + "_26_%s" % mismatches]
-test_file = os.path.join(test_info["temp_file_path"],outbase + ("_26_%s_crossmap.bed" % mismatches))
+test_file = os.path.join(test_info["temp_file_path"],outbase + "_p4"  +  ("_26_%s_crossmap.bed" % mismatches))
 crossmap_tests.append([test_str,[ref_file],[test_file],[_eq_ops]])
 
 
