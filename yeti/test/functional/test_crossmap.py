@@ -35,7 +35,7 @@ _eq_ops = "--no_header --sort_keys 3"
 
 # command-line string used to execute crossmap script
 # substitute: ebwt, outbase, sequence file, offset, mismatches
-_exec_str   = "%s %s --sequence_file %s --offset %s --mismatches %s -k 26 -p %s"
+_exec_str   = "%s %s --sequence_file %s --offset %s --mismatches %s -k 26 -p %s --save_kmers"
 
 # basename for output files for a test run
 # substitute: offset, mismatches

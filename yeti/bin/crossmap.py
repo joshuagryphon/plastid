@@ -277,6 +277,8 @@ def chrom_worker(chrom_seq,args=None):
 
     printer.write("Cleaning up chromosome '%s'..." % name)
     os.remove(toomany_file)
+    if args.have_kmers == False and args.save_kmers == False:
+        os.remove(kmer_file)
 
     return bed_file
 
@@ -313,6 +315,8 @@ def main(argv=sys.argv[1:]):
                         help="If specified, use k-mer files from previous run. "+\
                              " In this case 'sequence_file' should be the value "+\
                              "'outbase' from the k-mer files you want to use.")
+    parser.add_argument("--save_kmers",default=False,action="store_true",
+                        help="Save k-mer files for reuse in a subsequent run.")
     parser.add_argument("-p","--processes",type=int,default=2,metavar="N",
                         help="Number of processes to use (should be <= number of chromosomes")
     parser.add_argument("ebwt",type=str,
@@ -347,7 +351,7 @@ def main(argv=sys.argv[1:]):
     pool.close()
     pool.join()
    
-    with open(bed_file,"a") as fout:
+    with open(bed_file,"w") as fout:
         for f in sorted(bed_filenames):
             shutil.copyfileobj(open(f,"r"),fout)
             os.remove(f)
