@@ -30,5 +30,5 @@ yeti is divided into the following subpackages:
     ==============    =========================================================
      
 """
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __author__  = "Joshua Griffin Dunn"

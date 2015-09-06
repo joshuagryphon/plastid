@@ -3,7 +3,9 @@ Change log
 
 All major changes to ``yeti`` are documented here. Version numbers for the project
 follow the conventions described in :pep:`440`. After release 1.0, they will 
-also follow `Semantic versioning <http://semver.org/>`_.
+also follow `Semantic versioning <http://semver.org/>`_. Before then, they roughly
+follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring
+the last digit.
 
  .. note::
  
@@ -19,16 +21,28 @@ also follow `Semantic versioning <http://semver.org/>`_.
     repository to a git repository.
 
 
-Unreleased
-----------
+
+yeti [0.2.1] = [2015-09-06]
+---------------------------
 
 Added
 .....
-  - Extended BED formats now supported in both import & export, command-line
-    scripts & interactive
-  - BED Detail format and ENCODE BED subtypes now automatically parsed
+  - Support for extended BED formats now in both import & export,
+    in command-line scripts and interactively
+  - BED Detail format and known ENCODE BED subtypes now automatically parsed
     from track definition lines
+  - Created warning classes DataWarning, FileFormatWarning, and ArgumentWarning
+  - parallelized `crossmap` script
+  - command line support for more sequence file formats; and a sequence argparser
 
+Changed
+.......
+  - speed & memory optimizations for `cs generate` script, resulting in 90% memory
+    reduction on human genome annotation GrCh38.78
+  - ditto `metagene generate` script
+  - `crossmap` script does not save kmer files unless --save_kmers is given
+  - warnings now given at first (instead of every) occurence
+  - lazy imports; giving speed improvements to command-line scripts
 
 
 yeti [0.2.0] = [2015-08-26]
