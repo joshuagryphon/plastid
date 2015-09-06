@@ -476,7 +476,7 @@ def process_partial_group(transcripts,mask_hash,printer):
     transcript_df = pd.DataFrame(transcript_table)
     transcript_df.sort(columns=["region"],inplace=True)
 
-    return gene_df, pd.transcript_df, merged_genes
+    return gene_df, transcript_df, merged_genes
 
 def do_generate(args):
     """Generate gene position files from gene annotations.
