@@ -235,7 +235,6 @@ def merge_genes(tx_ivcs):
             exondicts[strand][chrom] = { K : set(V) for K,V in exondicts[strand][chrom].items() }
             printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
             gene_groups = merge_sets(exondicts[strand][chrom].values(),
-                                     verbose=True,
                                      printer=printer)
  
             for group in gene_groups:

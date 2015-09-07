@@ -106,7 +106,7 @@ def _merge_sets(list_of_sets,printer=None):
 
     ltmp = list(set(new_sets))
     if printer is not None:
-        stmp = "Merged %s starting sets to %s final sets..." % (len(list_of_sets), len(letmp))
+        stmp = "Merged %s starting sets to %s final sets..." % (len(list_of_sets), len(ltmp))
         printer.write(stmp)
 
     # terminate if no new mergers
