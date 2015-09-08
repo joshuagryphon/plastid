@@ -218,30 +218,30 @@ def CenterMapFactory(nibble=0):
         """ % nibble
  
     def map_func(reads,seg):
-        seg_positions = set(range(seg.start,seg.end))
+        seg_start = seg.start
+        seg_end = seg.end
+        seg_positions = frozenset(range(seg_start,seg_end))
         reads_out = []
-        count_array = numpy.zeros(len(seg))
-        
-        #reads = ifilter(lambda x: len(x.positions) > 2*nibble,reads)
+        count_array = numpy.zeros(seg_end - seg_start,dtype=float)
+
         for read in reads:
-            read_length = len(read.positions)
+            read_positions = read.positions
+            read_length = len(read_positions)
             if read_length <= 2*nibble:
                 warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
                               DataWarning)
                 continue
-            
-            if nibble == 0:
-                read_positions = read.positions
-            else:
-                read_positions = read.positions[nibble:-nibble]
- 
-            overlap = set(read_positions) & seg_positions
+
+            if nibble > 0:
+                read_positions = read_positions[nibble:-nibble]
+
+            overlap = numpy.array(list(frozenset(read_positions) & seg_positions),dtype=int)
             if len(overlap) > 0:
-                overlap_array_coordinates = [X-seg.start for X in overlap]
+                overlap -= seg_start
                 reads_out.append(read)
-                val = 1.0 / len(read_positions)
-                count_array[overlap_array_coordinates] += val
-                 
+                val = 1.0 / (read_length - 2*nibble)
+                count_array[overlap] += val
+
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -291,23 +291,27 @@ def FivePrimeMapFactory(offset=0):
          
     def map_func(reads,seg):
         reads_out = []         
-        count_array = numpy.zeros(len(seg))
+        seg_start = seg.start
+        seg_end = seg.end
+        seg_len = seg_end - seg_start
+        count_array = numpy.zeros(seg_len)
+
+        read_offset = offset
+        if seg.strand == "-":
+            read_offset = - offset - 1
+
         for read in reads:
-            read_length = len(read.positions)
+            read_positions = read.positions
+            read_length = len(read_positions)
             if abs(offset) >= read_length:
                 warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                               DataWarning)
                 continue
-             
-            if seg.strand == "+":
-                 read_offset = offset
-            else:
-                 read_offset = -offset - 1 
-
-            p_site = read.positions[read_offset]
-            if p_site >= seg.start and p_site < seg.end:
+            
+            p_site = read_positions[read_offset]
+            if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
-                count_array[p_site - seg.start] += 1
+                count_array[p_site - seg_start] += 1
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -352,24 +356,29 @@ def ThreePrimeMapFactory(offset=0):
             Vector of counts at each position in `seg`
         """ % offset
     def map_func(reads,seg):
+        seg_start = seg.start
+        seg_end   = seg.end
+        seg_len   = seg_end - seg_start
         reads_out = []
-        count_array = numpy.zeros(len(seg))
+        count_array = numpy.zeros(seg_len)
+
+        read_offset = offset
+        if seg.strand == "+":
+            read_offset = - offset - 1
+
         for read in reads:
-            read_length = len(read.positions)
+            read_positions = read.positions
+            read_length = len(read_positions)
             if offset >= read_length: 
                 warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                               DataWarning)
                 continue
 
-            if seg.strand == "+":
-                read_offset = - offset - 1
-            else:
-                read_offset = offset
-
             p_site = read.positions[read_offset]  
-            if p_site >= seg.start and p_site < seg.end:
+            if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
-                count_array[p_site - seg.start] += 1
+                count_array[p_site - seg_start] += 1
+
         return reads_out, count_array
      
     map_func.__doc__ = docstring
@@ -416,33 +425,38 @@ def VariableFivePrimeMapFactory(offset_dict):
             Vector of counts at each position in `seg`
         """
          
-    def map_func(reads,seg):
+    def map_func(reads,seg,offset_dict=offset_dict):
         reads_out = []         
-        count_array = numpy.zeros(len(seg))
+        seg_start  = seg.start
+        seg_end    = seg.end
+        seg_strand = seg.strand
+        count_array = numpy.zeros(seg_end - seg_start)
+        for read_length, offset in offset_dict.items(): # any([OFFSET>=LENGTH for LENGTH,OFFSET in offset_dict.items()]):
+            if offset >= read_length:
+                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+                              DataWarning)
+                break
+
+        if seg.strand == "-":
+            offset_dict = { K : -V-1 for K,V in offset_dict.items() }
+
         for read in reads:
-            read_length = len(read.positions)
-            if read_length in offset_dict:
-                offset = offset_dict[read_length]
-            elif "default" in offset_dict:
-                offset = offset_dict["default"]
-            else:
+            read_positions = read.positions
+            read_length = len(read_positions)
+            try:
+                offset = offset_dict.get(read_length,offset_dict["default"])
+            except KeyError:
                 warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
                               DataWarning)
                 continue
 
             if offset >= read_length:
-                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                              DataWarning)
                 continue
-
-            if seg.strand == "+":
-                p_site = read.positions[offset]
-            else:
-                p_site = read.positions[-offset - 1]
-             
-            if p_site >= seg.start and p_site < seg.end:
+    
+            p_site = read.positions[offset]
+            if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
-                count_array[p_site - seg.start] += 1
+                count_array[p_site - seg_start] += 1
 
         return reads_out, count_array
      
@@ -477,7 +491,7 @@ def SizeFilterFactory(min=1,max=numpy.inf):
     
     def my_func(x):
         my_length = len(x.positions)
-        return True if my_length >= min and my_length <= max else False
+        return my_length >= min and my_length <= max
     
     return my_func
 
