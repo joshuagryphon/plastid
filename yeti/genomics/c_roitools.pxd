@@ -2,7 +2,7 @@ cdef enum Strand:
    forward_strand, reverse_strand, unstranded, problem
 
 cdef class GenomicSegment(object):
-    cdef char* chrom
+    cdef str chrom
     cdef long start
     cdef long end
     cdef Strand strand

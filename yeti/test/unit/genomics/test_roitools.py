@@ -411,7 +411,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     
     @skip_if_abstract    
     def test_sort(self):
-        """Test sorting of intervals within an SegmentChain
+        """Test sorting of intervals within a SegmentChain
         
         This function is typically automatic and not exposed to users.
         We test it manually here by shuffling intervals within an 

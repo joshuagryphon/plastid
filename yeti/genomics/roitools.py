@@ -91,7 +91,7 @@ from yeti.util.services.decorators import skipdoc
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
-
+from yeti.genomics.c_roitools import GenomicSegment
 
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
@@ -275,206 +275,206 @@ def sort_segmentchains_by_name(segchain):
 # classes that handle genome annotation features
 #===============================================================================
 
-class GenomicSegment(object):
-    """A continuous segment of the genome, defined by a chromosome name,
-    a start coordinate, and end coordinate, and a strand.
-
-    Attributes
-    ----------
-    chrom : str
-        Name of chromosome
-
-    start : int
-        0-indexed, left most position of segment
-
-    end : int
-        0-indexed, half-open right most position of segment
-
-    strand : str
-        Chromosome strand (`'+'`, `'-'`, or `'.'`)
-    
-    
-    See also
-    --------
-    SegmentChain
-        Base class for genomic features, built from multiple |GenomicSegments|
-    """
-    
-    __slots__ = ("chrom","start","end","strand")
-    
-    def __init__(self,chrom,start,end,strand):
-        """Create a |GenomicSegment|
-        
-        Parameters
-        ----------
-        chrom : str
-            Chromosome name
-        
-        start : int
-            0-indexed, leftmost coordinate of feature
-        
-        end : int
-            0-indexed, half-open rightmost coordinate of feature
-            Must be >= `start`
-        
-        strand : str
-            Chromosome strand (`'+'`, `'-'`, or `'.'`)
-        """
-        if strand not in ("+","-","."):
-            raise ValueError("GenomicSegment: strand '%s' must be '+', '-', or '.'." % strand)
-        try:
-            assert end >= start
-        except AssertionError:
-            raise ValueError("GenomicSegment: end '%s' must be >= start '%s'" % (end,start))
-        self.chrom = chrom
-        self.start = start
-        self.end = end
-        self.strand = strand
-    
-    def __repr__(self):
-        return "<%s %s:%s-%s strand='%s'>" % (self.__class__.__name__,
-                                                  self.chrom,
-                                                  self.start,
-                                                  self.end,
-                                                  self.strand)
-    
-    def __str__(self):
-        return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, self.strand)
-    
-    @staticmethod
-    def from_str(inp):
-        """Construct a |GenomicSegment| from its ``str()`` representation
-        
-        Parameters
-        ----------
-        inp : str
-            String representation of |GenomicSegment| as `chrom:start-end(strand)`
-            where `start` and `end` are in 0-indexed, half-open coordinates
-        
-        Returns
-        -------
-        |GenomicSegment|
-        """
-        chrom, start, end, strand = segpat.search(inp).groups()
-        start = int(start)
-        end   = int(end) 
-        return GenomicSegment(chrom,start,end,strand)
-    
-    def __len__(self):
-        """Return length, in nucleotides, of |GenomicSegment|"""
-        return self.end - self.start
-    
-    def __eq__(self,other):
-        """Test whether `self` and `other` cover the exact same set of positions,
-        on the same chromosome and strand.
-        
-        Parameters
-        ----------
-        other : |GenomicSegment|
-            Query segment
-        
-        Returns
-        -------
-        bool
-        """
-        return isinstance(other,GenomicSegment) and\
-               self.chrom  == other.chrom and\
-               self.strand == other.strand and\
-               self.start  == other.start and\
-               self.end    == other.end
-    
-    def __ne__(self,other):
-        return False if self == other else True
-    
-    def __contains__(self,other):
-        """Test whether this segment contains `other`, where containment is
-        defined as all positions in `other` being present in self, when both
-        `self` and `other` share the same chromosome and strand.
-           
-        Parameters
-        ----------
-        other : |GenomicSegment|
-            Query segment
-        
-        Returns
-        -------
-        bool
-        """
-        my_range = set(range(self.start,self.end+1))
-        return self.chrom == other.chrom and\
-               self.strand == other.strand and\
-               other.start in my_range and\
-               other.end in my_range
-    
-    def contains(self,other):
-        """Test whether this segment contains `other`, where containment is
-        defined as all positions in `other` being present in self, when both
-        `self` and `other` share the same chromosome and strand.
-           
-        Parameters
-        ----------
-        other : |GenomicSegment|
-            Query segment
-        
-        Returns
-        -------
-        bool
-        """
-        return other in self
-        
-    def overlaps(self,other):
-        """Test whether this segment overlaps `other`, where overlap is defined
-        as sharing: a chromosome, a strand, and a subset of coordinates.
-           
-        Parameters
-        ----------
-        other : |GenomicSegment|
-            Query segment
-        
-        Returns
-        -------
-        bool
-        """
-        if self.chrom == other.chrom and self.strand == other.strand:
-            my_range  = set(range(self.start,self.end))
-            its_range = set(range(other.start,other.end))
-            if len(my_range & its_range) > 0:
-                    return True
-            else:
-                return False
-        else:
-            return False
-    
-    def as_igv_str(self):
-        """Format as an IGV location string"""
-        return "%s:%s-%s" % (self.chrom, self.start+1, self.end+1)
-    
-    @staticmethod
-    def from_igv_str(loc_str,strand="."):
-        """Construct |GenomicSegment| from IGV location string
-        
-        Parameters
-        ----------
-        igvloc : str
-            IGV location string, in format `'chromosome:start-end'`,
-            where `start` and `end` are 1-indexed and half-open
-            
-        strand : str
-            The chromosome strand (`'+'`, `'-'`, or `'.'`)
-            
-        Returns
-        -------
-        |GenomicSegment|
-        """
-        chrom,start,end = igvpat.search(loc_str).groups()
-        start = int(start) - 1
-        end   = int(end) - 1
-        return GenomicSegment(chrom,start,end,strand)
-    
-    def get_name(self):
-        """Alias for :meth:`GenomicSegment.__str__`"""
-        return str(self)
-
+#class GenomicSegment(object):
+#    """A continuous segment of the genome, defined by a chromosome name,
+#    a start coordinate, and end coordinate, and a strand.
+#
+#    Attributes
+#    ----------
+#    chrom : str
+#        Name of chromosome
+#
+#    start : int
+#        0-indexed, left most position of segment
+#
+#    end : int
+#        0-indexed, half-open right most position of segment
+#
+#    strand : str
+#        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+#    
+#    
+#    See also
+#    --------
+#    SegmentChain
+#        Base class for genomic features, built from multiple |GenomicSegments|
+#    """
+#    
+#    __slots__ = ("chrom","start","end","strand")
+#    
+#    def __init__(self,chrom,start,end,strand):
+#        """Create a |GenomicSegment|
+#        
+#        Parameters
+#        ----------
+#        chrom : str
+#            Chromosome name
+#        
+#        start : int
+#            0-indexed, leftmost coordinate of feature
+#        
+#        end : int
+#            0-indexed, half-open rightmost coordinate of feature
+#            Must be >= `start`
+#        
+#        strand : str
+#            Chromosome strand (`'+'`, `'-'`, or `'.'`)
+#        """
+#        if strand not in ("+","-","."):
+#            raise ValueError("GenomicSegment: strand '%s' must be '+', '-', or '.'." % strand)
+#        try:
+#            assert end >= start
+#        except AssertionError:
+#            raise ValueError("GenomicSegment: end '%s' must be >= start '%s'" % (end,start))
+#        self.chrom = chrom
+#        self.start = start
+#        self.end = end
+#        self.strand = strand
+#    
+#    def __repr__(self):
+#        return "<%s %s:%s-%s strand='%s'>" % (self.__class__.__name__,
+#                                                  self.chrom,
+#                                                  self.start,
+#                                                  self.end,
+#                                                  self.strand)
+#    
+#    def __str__(self):
+#        return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, self.strand)
+#    
+#    @staticmethod
+#    def from_str(inp):
+#        """Construct a |GenomicSegment| from its ``str()`` representation
+#        
+#        Parameters
+#        ----------
+#        inp : str
+#            String representation of |GenomicSegment| as `chrom:start-end(strand)`
+#            where `start` and `end` are in 0-indexed, half-open coordinates
+#        
+#        Returns
+#        -------
+#        |GenomicSegment|
+#        """
+#        chrom, start, end, strand = segpat.search(inp).groups()
+#        start = int(start)
+#        end   = int(end) 
+#        return GenomicSegment(chrom,start,end,strand)
+#    
+#    def __len__(self):
+#        """Return length, in nucleotides, of |GenomicSegment|"""
+#        return self.end - self.start
+#    
+#    def __eq__(self,other):
+#        """Test whether `self` and `other` cover the exact same set of positions,
+#        on the same chromosome and strand.
+#        
+#        Parameters
+#        ----------
+#        other : |GenomicSegment|
+#            Query segment
+#        
+#        Returns
+#        -------
+#        bool
+#        """
+#        return isinstance(other,GenomicSegment) and\
+#               self.chrom  == other.chrom and\
+#               self.strand == other.strand and\
+#               self.start  == other.start and\
+#               self.end    == other.end
+#    
+#    def __ne__(self,other):
+#        return False if self == other else True
+#    
+#    def __contains__(self,other):
+#        """Test whether this segment contains `other`, where containment is
+#        defined as all positions in `other` being present in self, when both
+#        `self` and `other` share the same chromosome and strand.
+#           
+#        Parameters
+#        ----------
+#        other : |GenomicSegment|
+#            Query segment
+#        
+#        Returns
+#        -------
+#        bool
+#        """
+#        my_range = set(range(self.start,self.end+1))
+#        return self.chrom == other.chrom and\
+#               self.strand == other.strand and\
+#               other.start in my_range and\
+#               other.end in my_range
+#    
+#    def contains(self,other):
+#        """Test whether this segment contains `other`, where containment is
+#        defined as all positions in `other` being present in self, when both
+#        `self` and `other` share the same chromosome and strand.
+#           
+#        Parameters
+#        ----------
+#        other : |GenomicSegment|
+#            Query segment
+#        
+#        Returns
+#        -------
+#        bool
+#        """
+#        return other in self
+#        
+#    def overlaps(self,other):
+#        """Test whether this segment overlaps `other`, where overlap is defined
+#        as sharing: a chromosome, a strand, and a subset of coordinates.
+#           
+#        Parameters
+#        ----------
+#        other : |GenomicSegment|
+#            Query segment
+#        
+#        Returns
+#        -------
+#        bool
+#        """
+#        if self.chrom == other.chrom and self.strand == other.strand:
+#            my_range  = set(range(self.start,self.end))
+#            its_range = set(range(other.start,other.end))
+#            if len(my_range & its_range) > 0:
+#                    return True
+#            else:
+#                return False
+#        else:
+#            return False
+#    
+#    def as_igv_str(self):
+#        """Format as an IGV location string"""
+#        return "%s:%s-%s" % (self.chrom, self.start+1, self.end+1)
+#    
+#    @staticmethod
+#    def from_igv_str(loc_str,strand="."):
+#        """Construct |GenomicSegment| from IGV location string
+#        
+#        Parameters
+#        ----------
+#        igvloc : str
+#            IGV location string, in format `'chromosome:start-end'`,
+#            where `start` and `end` are 1-indexed and half-open
+#            
+#        strand : str
+#            The chromosome strand (`'+'`, `'-'`, or `'.'`)
+#            
+#        Returns
+#        -------
+#        |GenomicSegment|
+#        """
+#        chrom,start,end = igvpat.search(loc_str).groups()
+#        start = int(start) - 1
+#        end   = int(end) - 1
+#        return GenomicSegment(chrom,start,end,strand)
+#    
+#    def get_name(self):
+#        """Alias for :meth:`GenomicSegment.__str__`"""
+#        return str(self)
+#
 
 #===============================================================================
 # higher-order classes that handle multi-feature structures, like transcripts
@@ -581,11 +581,17 @@ class SegmentChain(object):
         """
         self.sort()
         self._position_hash = self._get_position_hash()
-        if len(self) > 0:
+        if len(self) == 0:
+            self.spanning_segment = None
+        elif len(self) == 1:
+            self.spanning_segment = self[0]
+        elif len(self) >1:
             self.spanning_segment = GenomicSegment(self.chrom,
-                                      self[0].start,
-                                      self[-1].end,
-                                      self.strand)
+                                                   self[0].start,
+                                                   self[-1].end,
+                                                   self.strand)
+        else:
+            raise RuntimeError("Segmentchain '%s' has negative intervals (%s)?" % (self.get_name(),len(self)))
 
     def sort(self):
         """Sort component segments by ascending 5' chromosomal coordinate"""
