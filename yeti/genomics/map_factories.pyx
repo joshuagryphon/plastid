@@ -2,8 +2,10 @@ import warnings
 import numpy as np
 cimport numpy as np
 
+cimport c_roitools
+from c_roitools import forward_strand, reverse_strand, unstranded
+
 from pysam.calignedsegment cimport AlignedSegment
-from yeti.genomics.roitools import GenomicSegment
 from yeti.util.services.exceptions import DataWarning
 
 
@@ -23,10 +25,10 @@ cdef class cCenterMapFactory:
     def __cinit__(self, int nibble = 0):
         self.nibble = nibble
 
-    def __call__(self, list reads, object seg):
+    def __call__(self, list reads, c_roitools.GenomicSegment seg):
         cdef long seg_start = seg.start
         cdef long seg_end   = seg.end
-        cdef long seg_len   = seg.end - seg.start
+        cdef long seg_len   = seg_end - seg_start
         cdef frozenset seg_positions = frozenset(range(seg_len))
         cdef frozenset overlap
         cdef list reads_out = []
@@ -69,7 +71,7 @@ cdef class cFivePrimeMapFactory:
     def __cinit__(self, int offset = 0):
         self.offset = offset
 
-    def __call__(self, list reads, object seg):
+    def __call__(self, list reads, c_roitools.GenomicSegment seg):
         cdef long seg_start = seg.start
         cdef long seg_end   = seg.end
         cdef long seg_len   = seg_end - seg_start
@@ -82,18 +84,17 @@ cdef class cFivePrimeMapFactory:
         cdef int read_length
         cdef int do_warn = 0
         
+        cdef int read_offset = self.offset
+        if seg.strand == reverse_strand:
+             read_offset = -read_offset - 1 
+
         for read in reads:
             read_positions = read.positions
             read_length = len(read_positions)
-            if abs(self.offset) >= read_length:
+            if self.offset >= read_length:
                 do_warn = 1
                 continue
              
-            if seg.strand == "+":
-                 read_offset = self.offset
-            else:
-                 read_offset = -self.offset - 1 
-
             p_site = read_positions[read_offset]
             if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
