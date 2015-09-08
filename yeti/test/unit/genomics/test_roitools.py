@@ -26,6 +26,8 @@ from yeti.genomics.roitools import GenomicSegment,\
                                          Transcript,\
                                          positionlist_to_segments
 
+from yeti.genomics.c_roitools import GenomicSegment as cGenomicSegment
+
 from yeti.genomics.genome_array import GenomeArray
 from yeti.util.io.filters import CommentReader
 from yeti.util.services.decorators import skip_if_abstract
@@ -1618,227 +1620,259 @@ class TestTranscript(AbstractSegmentChainHelper):
 # INDEX: Test case for GenomicSegment
 #===============================================================================    
 
-_TEST_IVS = {}
-_TEST_IVS['iv1'] =  GenomicSegment("chrA",100,150,"+")
-_TEST_IVS['iv2'] =  GenomicSegment("chrA",150,200,"+")
-_TEST_IVS['iv3'] =  GenomicSegment("chrA",125,150,"+")
-_TEST_IVS['iv4'] =  GenomicSegment("chrA",100,125,"+")
-_TEST_IVS['iv5'] =  GenomicSegment("chrA",125,151,"+")
-_TEST_IVS['iv6'] =  GenomicSegment("chrA",99,150,"+")    
-_TEST_IVS['iv7'] =  GenomicSegment("chrA",100,150,"-")
-_TEST_IVS['iv10'] = GenomicSegment("chrA",100,150,"+")
-_TEST_IVS['biv1'] = GenomicSegment("chrB",100,150,"+")
-_TEST_IVS['biv2'] = GenomicSegment("chrB",150,200,"+")
-_TEST_IVS['biv3'] = GenomicSegment("chrB",125,150,"+")
-_TEST_IVS['biv4'] = GenomicSegment("chrB",100,125,"+")
-_TEST_IVS['biv5'] = GenomicSegment("chrB",125,151,"+")
-_TEST_IVS['biv6'] = GenomicSegment("chrB",99,150,"+")    
-_TEST_IVS['biv7'] = GenomicSegment("chrB",100,150,"-")
-_TEST_IVS['biv10'] = GenomicSegment("chrB",100,150,"+")
+_TEST_SEGS = {}
+_TEST_SEGS['iv1'] =  GenomicSegment("chrA",100,150,"+")
+_TEST_SEGS['iv2'] =  GenomicSegment("chrA",150,200,"+")
+_TEST_SEGS['iv3'] =  GenomicSegment("chrA",125,150,"+")
+_TEST_SEGS['iv4'] =  GenomicSegment("chrA",100,125,"+")
+_TEST_SEGS['iv5'] =  GenomicSegment("chrA",125,151,"+")
+_TEST_SEGS['iv6'] =  GenomicSegment("chrA",99,150,"+")    
+_TEST_SEGS['iv7'] =  GenomicSegment("chrA",100,150,"-")
+_TEST_SEGS['iv10'] = GenomicSegment("chrA",100,150,"+")
+_TEST_SEGS['biv1'] = GenomicSegment("chrB",100,150,"+")
+_TEST_SEGS['biv2'] = GenomicSegment("chrB",150,200,"+")
+_TEST_SEGS['biv3'] = GenomicSegment("chrB",125,150,"+")
+_TEST_SEGS['biv4'] = GenomicSegment("chrB",100,125,"+")
+_TEST_SEGS['biv5'] = GenomicSegment("chrB",125,151,"+")
+_TEST_SEGS['biv6'] = GenomicSegment("chrB",99,150,"+")    
+_TEST_SEGS['biv7'] = GenomicSegment("chrB",100,150,"-")
+_TEST_SEGS['biv10'] = GenomicSegment("chrB",100,150,"+")
+
+_C_TEST_SEGS = {}
+_C_TEST_SEGS['iv1'] =  cGenomicSegment("chrA",100,150,"+")
+_C_TEST_SEGS['iv2'] =  cGenomicSegment("chrA",150,200,"+")
+_C_TEST_SEGS['iv3'] =  cGenomicSegment("chrA",125,150,"+")
+_C_TEST_SEGS['iv4'] =  cGenomicSegment("chrA",100,125,"+")
+_C_TEST_SEGS['iv5'] =  cGenomicSegment("chrA",125,151,"+")
+_C_TEST_SEGS['iv6'] =  cGenomicSegment("chrA",99,150,"+")    
+_C_TEST_SEGS['iv7'] =  cGenomicSegment("chrA",100,150,"-")
+_C_TEST_SEGS['iv10'] = cGenomicSegment("chrA",100,150,"+")
+_C_TEST_SEGS['biv1'] = cGenomicSegment("chrB",100,150,"+")
+_C_TEST_SEGS['biv2'] = cGenomicSegment("chrB",150,200,"+")
+_C_TEST_SEGS['biv3'] = cGenomicSegment("chrB",125,150,"+")
+_C_TEST_SEGS['biv4'] = cGenomicSegment("chrB",100,125,"+")
+_C_TEST_SEGS['biv5'] = cGenomicSegment("chrB",125,151,"+")
+_C_TEST_SEGS['biv6'] = cGenomicSegment("chrB",99,150,"+")    
+_C_TEST_SEGS['biv7'] = cGenomicSegment("chrB",100,150,"-")
+_C_TEST_SEGS['biv10'] = cGenomicSegment("chrB",100,150,"+")
+
 
 @attr(test="unit")
 class TestGenomicSegment(unittest.TestCase):
     """Test suite for :py:class:`GenomicSegment`"""
+    @classmethod
+    def setUpClass(cls):
+        cls.test_class = GenomicSegment
+        cls.test_dict = _TEST_SEGS
     
     def test_creation_assertions(self):
-        """Require GenomicSegment.start <= GenomicSegment.end"""
+        """Require self.test_class.start <= self.test_class.end"""
         # end < start
-        self.assertRaises(AssertionError,
-                          GenomicSegment,
+        self.assertRaises(ValueError,
+                          self.test_class,
                           "chrA",100,50,"+",
                            )
         
         # invalid chromosome strand
-        self.assertRaises(AssertionError,
-                          GenomicSegment,
+        self.assertRaises(ValueError,
+                          self.test_class,
                           "chrA",100,50,"z",
                           )
     
     def test_to_from_str(self):
         """Test converstion to/from strings"""
         # absolute tests
-        self.assertEquals(str(_TEST_IVS['iv1']),"chrA:100-150(+)")
-        self.assertEquals(str(_TEST_IVS['iv2']),"chrA:150-200(+)")
-        self.assertEquals(str(_TEST_IVS['iv7']),"chrA:100-150(-)")
-        self.assertEquals(str(_TEST_IVS['biv1']),"chrB:100-150(+)")
+        self.assertEquals(str(self.test_dict['iv1']),"chrA:100-150(+)")
+        self.assertEquals(str(self.test_dict['iv2']),"chrA:150-200(+)")
+        self.assertEquals(str(self.test_dict['iv7']),"chrA:100-150(-)")
+        self.assertEquals(str(self.test_dict['biv1']),"chrB:100-150(+)")
         
         # reciprocity tests
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv1'])),_TEST_IVS['iv1'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv2'])),_TEST_IVS['iv2'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv3'])),_TEST_IVS['iv3'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv4'])),_TEST_IVS['iv4'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv5'])),_TEST_IVS['iv5'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv6'])),_TEST_IVS['iv6'])
-        self.assertEquals(GenomicSegment.from_str(str(_TEST_IVS['iv7'])),_TEST_IVS['iv7'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv1'])),self.test_dict['iv1'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv2'])),self.test_dict['iv2'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv3'])),self.test_dict['iv3'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv4'])),self.test_dict['iv4'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv5'])),self.test_dict['iv5'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv6'])),self.test_dict['iv6'])
+        self.assertEquals(self.test_class.from_str(str(self.test_dict['iv7'])),self.test_dict['iv7'])
 
         # non-reciprocity tests
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv1'])),_TEST_IVS['iv3'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv2'])),_TEST_IVS['iv5'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv3'])),_TEST_IVS['iv2'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv4'])),_TEST_IVS['iv6'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv5'])),_TEST_IVS['iv7'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv6'])),_TEST_IVS['iv4'])
-        self.assertNotEquals(GenomicSegment.from_str(str(_TEST_IVS['iv7'])),_TEST_IVS['iv1'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv1'])),self.test_dict['iv3'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv2'])),self.test_dict['iv5'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv3'])),self.test_dict['iv2'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv4'])),self.test_dict['iv6'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv5'])),self.test_dict['iv7'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv6'])),self.test_dict['iv4'])
+        self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv7'])),self.test_dict['iv1'])
     
     def test_len(self):
         """Test length reporting"""
-        self.assertEquals(len(_TEST_IVS['iv1']),50)
-        self.assertEquals(len(_TEST_IVS['iv2']),50)
-        self.assertEquals(len(_TEST_IVS['iv3']),25)
-        self.assertEquals(len(_TEST_IVS['iv7']),50)
+        self.assertEquals(len(self.test_dict['iv1']),50)
+        self.assertEquals(len(self.test_dict['iv2']),50)
+        self.assertEquals(len(self.test_dict['iv3']),25)
+        self.assertEquals(len(self.test_dict['iv7']),50)
     
     def test_eq(self):
         """Test (in)equality"""
         # identity
-        self.assertEquals(_TEST_IVS['iv1'],_TEST_IVS['iv1'])
+        self.assertEquals(self.test_dict['iv1'],self.test_dict['iv1'])
         
         # same coordinates
-        self.assertEquals(_TEST_IVS['iv1'],_TEST_IVS['iv10'])
-        self.assertEquals(_TEST_IVS['iv10'],_TEST_IVS['iv1'])
+        self.assertEquals(self.test_dict['iv1'],self.test_dict['iv10'])
+        self.assertEquals(self.test_dict['iv10'],self.test_dict['iv1'])
         
         # different coordintes, same strand
-        self.assertNotEquals(_TEST_IVS['iv1'],_TEST_IVS['iv2'])
+        self.assertNotEquals(self.test_dict['iv1'],self.test_dict['iv2'])
         
         # same coordinates, opposite strand
-        self.assertNotEquals(_TEST_IVS['iv1'],_TEST_IVS['iv7'])
+        self.assertNotEquals(self.test_dict['iv1'],self.test_dict['iv7'])
         
         # different coordinates, opposite strand
-        self.assertNotEquals(_TEST_IVS['iv2'],_TEST_IVS['iv7'])
+        self.assertNotEquals(self.test_dict['iv2'],self.test_dict['iv7'])
                              
         # same coordinates, different chromosomes, same strand
-        self.assertNotEquals(_TEST_IVS['iv1'],_TEST_IVS['biv10'])
+        self.assertNotEquals(self.test_dict['iv1'],self.test_dict['biv10'])
         
         # different coordintes, different chromosomes, same strand
-        self.assertNotEquals(_TEST_IVS['iv1'],_TEST_IVS['biv2'])
+        self.assertNotEquals(self.test_dict['iv1'],self.test_dict['biv2'])
         
         # same coordinates, different chromosomes, opposite strand
-        self.assertNotEquals(_TEST_IVS['iv1'],_TEST_IVS['biv7'])
+        self.assertNotEquals(self.test_dict['iv1'],self.test_dict['biv7'])
         
         # different coordinates, different chromosomes opposite strand
-        self.assertNotEquals(_TEST_IVS['iv2'],_TEST_IVS['biv7'])
+        self.assertNotEquals(self.test_dict['iv2'],self.test_dict['biv7'])
                                                           
     def test_contains(self):
         """Test containment"""
 
         # Identity
-        self.assertIn(_TEST_IVS['iv1'],_TEST_IVS['iv1'])
-        self.assertTrue(_TEST_IVS['iv1'].contains(_TEST_IVS['iv1']))
+        self.assertIn(self.test_dict['iv1'],self.test_dict['iv1'])
+        self.assertTrue(self.test_dict['iv1'].contains(self.test_dict['iv1']))
 
         # Same coordinates
-        self.assertIn(_TEST_IVS['iv1'],_TEST_IVS['iv10'])
-        self.assertTrue(_TEST_IVS['iv1'].contains(_TEST_IVS['iv10']))
+        self.assertIn(self.test_dict['iv1'],self.test_dict['iv10'])
+        self.assertTrue(self.test_dict['iv1'].contains(self.test_dict['iv10']))
         
-        self.assertIn(_TEST_IVS['iv10'],_TEST_IVS['iv1'])
-        self.assertTrue(_TEST_IVS['iv10'].contains(_TEST_IVS['iv1']))
+        self.assertIn(self.test_dict['iv10'],self.test_dict['iv1'])
+        self.assertTrue(self.test_dict['iv10'].contains(self.test_dict['iv1']))
         
         # Subsets
-        self.assertIn(_TEST_IVS['iv3'],_TEST_IVS['iv1'])
-        self.assertTrue(_TEST_IVS['iv1'].contains(_TEST_IVS['iv3']))
-        self.assertIn(_TEST_IVS['iv4'],_TEST_IVS['iv1'])
-        self.assertTrue(_TEST_IVS['iv1'].contains(_TEST_IVS['iv4']))
+        self.assertIn(self.test_dict['iv3'],self.test_dict['iv1'])
+        self.assertTrue(self.test_dict['iv1'].contains(self.test_dict['iv3']))
+        self.assertIn(self.test_dict['iv4'],self.test_dict['iv1'])
+        self.assertTrue(self.test_dict['iv1'].contains(self.test_dict['iv4']))
         
         # Supersets - should fail
-        self.assertNotIn(_TEST_IVS['iv1'],_TEST_IVS['iv3'])
-        self.assertFalse(_TEST_IVS['iv3'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv1'],self.test_dict['iv3'])
+        self.assertFalse(self.test_dict['iv3'].contains(self.test_dict['iv1']))
         
-        self.assertNotIn(_TEST_IVS['iv1'],_TEST_IVS['iv4'])
-        self.assertFalse(_TEST_IVS['iv4'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv1'],self.test_dict['iv4'])
+        self.assertFalse(self.test_dict['iv4'].contains(self.test_dict['iv1']))
         
         # Containment
-        self.assertTrue(_TEST_IVS['iv6'].contains(_TEST_IVS['iv1']))
+        self.assertTrue(self.test_dict['iv6'].contains(self.test_dict['iv1']))
         
         # Overlap, but not contains
-        self.assertNotIn(_TEST_IVS['iv5'],_TEST_IVS['iv1'])
-        self.assertNotIn(_TEST_IVS['iv6'],_TEST_IVS['iv1'])
-        self.assertFalse(_TEST_IVS['iv1'].contains(_TEST_IVS['iv5']))
-        self.assertFalse(_TEST_IVS['iv1'].contains(_TEST_IVS['iv6']))
-        self.assertFalse(_TEST_IVS['iv5'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv5'],self.test_dict['iv1'])
+        self.assertNotIn(self.test_dict['iv6'],self.test_dict['iv1'])
+        self.assertFalse(self.test_dict['iv1'].contains(self.test_dict['iv5']))
+        self.assertFalse(self.test_dict['iv1'].contains(self.test_dict['iv6']))
+        self.assertFalse(self.test_dict['iv5'].contains(self.test_dict['iv1']))
         
         # Same coordinates, opposite strand
-        self.assertNotIn(_TEST_IVS['iv7'],_TEST_IVS['iv1'])
-        self.assertFalse(_TEST_IVS['iv1'].contains(_TEST_IVS['iv7']))
+        self.assertNotIn(self.test_dict['iv7'],self.test_dict['iv1'])
+        self.assertFalse(self.test_dict['iv1'].contains(self.test_dict['iv7']))
         
         # different coordinates, opposite strand
-        self.assertNotIn(_TEST_IVS['iv2'],_TEST_IVS['iv7'])
-        self.assertFalse(_TEST_IVS['iv7'].contains(_TEST_IVS['iv2']))
+        self.assertNotIn(self.test_dict['iv2'],self.test_dict['iv7'])
+        self.assertFalse(self.test_dict['iv7'].contains(self.test_dict['iv2']))
                              
         # same coordinates, different chromosomes, same strand
-        self.assertNotIn(_TEST_IVS['iv1'],_TEST_IVS['biv1'])
-        self.assertFalse(_TEST_IVS['biv1'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv1'],self.test_dict['biv1'])
+        self.assertFalse(self.test_dict['biv1'].contains(self.test_dict['iv1']))
         
         # different coordinates, different chromosomes, same strand
-        self.assertNotIn(_TEST_IVS['iv1'],_TEST_IVS['biv2'])
-        self.assertFalse(_TEST_IVS['biv2'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv1'],self.test_dict['biv2'])
+        self.assertFalse(self.test_dict['biv2'].contains(self.test_dict['iv1']))
         
         # same coordinates, different chromosomes, opposite strand
-        self.assertNotIn(_TEST_IVS['iv1'],_TEST_IVS['biv7'])
-        self.assertFalse(_TEST_IVS['biv7'].contains(_TEST_IVS['iv1']))
+        self.assertNotIn(self.test_dict['iv1'],self.test_dict['biv7'])
+        self.assertFalse(self.test_dict['biv7'].contains(self.test_dict['iv1']))
         
         # different coordinates, different chromosomes opposite strand
-        self.assertNotIn(_TEST_IVS['iv2'],_TEST_IVS['biv7'])
-        self.assertFalse(_TEST_IVS['biv7'].contains(_TEST_IVS['iv2']))
+        self.assertNotIn(self.test_dict['iv2'],self.test_dict['biv7'])
+        self.assertFalse(self.test_dict['biv7'].contains(self.test_dict['iv2']))
         
     def test_overlaps(self):
         """Test overlap"""
         
         # Identity
-        self.assertTrue(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv1']))
+        self.assertTrue(self.test_dict['iv1'].overlaps(self.test_dict['iv1']))
 
         # Same coordinate, different objects
-        self.assertTrue(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv10']))
-        self.assertTrue(_TEST_IVS['iv10'].overlaps(_TEST_IVS['iv1']))
+        self.assertTrue(self.test_dict['iv1'].overlaps(self.test_dict['iv10']))
+        self.assertTrue(self.test_dict['iv10'].overlaps(self.test_dict['iv1']))
 
         # Adjacent, but not overlapping
-        self.assertFalse(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv2']))
-        self.assertFalse(_TEST_IVS['iv2'].overlaps(_TEST_IVS['iv1']))
+        self.assertFalse(self.test_dict['iv1'].overlaps(self.test_dict['iv2']))
+        self.assertFalse(self.test_dict['iv2'].overlaps(self.test_dict['iv1']))
 
         # Overlapping
-        self.assertTrue(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv3']))
-        self.assertTrue(_TEST_IVS['iv3'].overlaps(_TEST_IVS['iv1']))
-        self.assertTrue(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv4']))
-        self.assertTrue(_TEST_IVS['iv4'].overlaps(_TEST_IVS['iv1']))
+        self.assertTrue(self.test_dict['iv1'].overlaps(self.test_dict['iv3']))
+        self.assertTrue(self.test_dict['iv3'].overlaps(self.test_dict['iv1']))
+        self.assertTrue(self.test_dict['iv1'].overlaps(self.test_dict['iv4']))
+        self.assertTrue(self.test_dict['iv4'].overlaps(self.test_dict['iv1']))
         
         # Same coordinates, opposite strand
-        self.assertFalse(_TEST_IVS['iv1'].overlaps(_TEST_IVS['iv7']))
-        self.assertFalse(_TEST_IVS['iv7'].overlaps(_TEST_IVS['iv1']))
+        self.assertFalse(self.test_dict['iv1'].overlaps(self.test_dict['iv7']))
+        self.assertFalse(self.test_dict['iv7'].overlaps(self.test_dict['iv1']))
         
         # different coordinates, opposite strand
-        self.assertFalse(_TEST_IVS['iv2'].overlaps(_TEST_IVS['iv7']))
-        self.assertFalse(_TEST_IVS['iv7'].overlaps(_TEST_IVS['iv2']))
+        self.assertFalse(self.test_dict['iv2'].overlaps(self.test_dict['iv7']))
+        self.assertFalse(self.test_dict['iv7'].overlaps(self.test_dict['iv2']))
                              
         # same coordinates, different chromosomes, same strand
-        self.assertFalse(_TEST_IVS['iv1'].overlaps(_TEST_IVS['biv1']))
-        self.assertFalse(_TEST_IVS['biv1'].overlaps(_TEST_IVS['iv1']))
+        self.assertFalse(self.test_dict['iv1'].overlaps(self.test_dict['biv1']))
+        self.assertFalse(self.test_dict['biv1'].overlaps(self.test_dict['iv1']))
         
         # different coordinates, different chromosomes, same strand
-        self.assertFalse(_TEST_IVS['iv1'].overlaps(_TEST_IVS['biv2']))
-        self.assertFalse(_TEST_IVS['biv2'].overlaps(_TEST_IVS['iv1']))
+        self.assertFalse(self.test_dict['iv1'].overlaps(self.test_dict['biv2']))
+        self.assertFalse(self.test_dict['biv2'].overlaps(self.test_dict['iv1']))
         
         # same coordinates, different chromosomes, opposite strand
-        self.assertFalse(_TEST_IVS['iv1'].overlaps(_TEST_IVS['biv7']))
-        self.assertFalse(_TEST_IVS['biv7'].overlaps(_TEST_IVS['iv1']))
+        self.assertFalse(self.test_dict['iv1'].overlaps(self.test_dict['biv7']))
+        self.assertFalse(self.test_dict['biv7'].overlaps(self.test_dict['iv1']))
         
         # different coordinates, different chromosomes opposite strand
-        self.assertFalse(_TEST_IVS['iv2'].overlaps(_TEST_IVS['biv7']))
-        self.assertFalse(_TEST_IVS['biv7'].overlaps(_TEST_IVS['iv2']))
+        self.assertFalse(self.test_dict['iv2'].overlaps(self.test_dict['biv7']))
+        self.assertFalse(self.test_dict['biv7'].overlaps(self.test_dict['iv2']))
     
     def test_to_from_igv_str(self):
         """Test import/export from IGV-formatted location strings"""
 
         # absolute tests
-        self.assertEquals(_TEST_IVS['iv1'].as_igv_str(),"chrA:101-151")
-        self.assertEquals(_TEST_IVS['iv2'].as_igv_str(),"chrA:151-201")
-        self.assertEquals(_TEST_IVS['iv7'].as_igv_str(),"chrA:101-151")
-        self.assertEquals(_TEST_IVS['biv1'].as_igv_str(),"chrB:101-151")
+        self.assertEquals(self.test_dict['iv1'].as_igv_str(),"chrA:101-151")
+        self.assertEquals(self.test_dict['iv2'].as_igv_str(),"chrA:151-201")
+        self.assertEquals(self.test_dict['iv7'].as_igv_str(),"chrA:101-151")
+        self.assertEquals(self.test_dict['biv1'].as_igv_str(),"chrB:101-151")
         
         # reciprocity tests
         # same coordinates, same strand
-        self.assertEqual(GenomicSegment.from_igv_str(_TEST_IVS['iv1'].as_igv_str(),"+"),_TEST_IVS['iv1'])
+        self.assertEqual(self.test_class.from_igv_str(self.test_dict['iv1'].as_igv_str(),"+"),self.test_dict['iv1'])
 
         # same coordinates, wrong strand
-        self.assertNotEqual(GenomicSegment.from_igv_str(_TEST_IVS['iv1'].as_igv_str(),"-"),_TEST_IVS['iv1'])
-        self.assertNotEqual(GenomicSegment.from_igv_str(_TEST_IVS['iv1'].as_igv_str(),"."),_TEST_IVS['iv1'])
+        self.assertNotEqual(self.test_class.from_igv_str(self.test_dict['iv1'].as_igv_str(),"-"),self.test_dict['iv1'])
+        self.assertNotEqual(self.test_class.from_igv_str(self.test_dict['iv1'].as_igv_str(),"."),self.test_dict['iv1'])
         
         # different coordinates
-        self.assertNotEqual(GenomicSegment.from_igv_str(_TEST_IVS['iv1'].as_igv_str(),"+"),_TEST_IVS['iv2'])
+        self.assertNotEqual(self.test_class.from_igv_str(self.test_dict['iv1'].as_igv_str(),"+"),self.test_dict['iv2'])
+
+@attr(test="unit")
+class Test_C_GenomicSegment(TestGenomicSegment):
+    """Test suite for :py:class:`GenomicSegment`"""
+    @classmethod
+    def setUpClass(cls):
+        cls.test_class = cGenomicSegment
+        cls.test_dict = _C_TEST_SEGS
+
 

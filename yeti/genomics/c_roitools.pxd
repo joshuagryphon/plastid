@@ -8,6 +8,7 @@ cdef class GenomicSegment(object):
     cdef Strand strand
     cpdef bint contains(self,GenomicSegment)
     cpdef bint overlaps(self,GenomicSegment)
+    cpdef bint _cmp_helper(self,GenomicSegment,int)
     cpdef str as_igv_str(self)
     cpdef str get_name(self)
 

@@ -5,9 +5,13 @@ cimport numpy as np
 cimport c_roitools
 from c_roitools import forward_strand, reverse_strand, unstranded
 
-from pysam.calignedsegment cimport AlignedSegment
+cimport pysam.calignedsegment
 from yeti.util.services.exceptions import DataWarning
 
+from pysam.calignedsegment cimport AlignedSegment
+
+#cdef pysam.calignedsegment.AlignedSegment AlignedSegment
+cdef c_roitools.GenomicSegment GenomicSegment
 
 #===============================================================================
 # Factories for mapping functions for BAMGenomeArray or other structures

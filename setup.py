@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-from setuptools import setup, find_packages
+#from setuptools import setup, find_packages
 import os
 import yeti
+import numpy
+import pysam
 
 with open("README.rst") as f:
     long_description = f.read()
@@ -19,14 +21,34 @@ def get_scripts():
                                                       os.listdir(os.path.join("yeti","bin")))]
     return ["%s = yeti.bin.%s:main" % (X,X) for X in binscripts]
 
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext
+
 
 
 config_info = { "version"          : yeti.__version__,
                 "entry_points"     : dict(console_scripts=get_scripts()),
-                "packages"         : find_packages(),
+                "packages"         : ["yeti"], #find_packages(),
                 "long_description" : long_description,
               }
 
+
+
+include_path = []
+for mod in (numpy,pysam):
+    ic = mod.get_include()
+    if isinstance(ic,list):
+        include_path.extend(ic)
+    elif isinstance(ic,str):
+        include_path.append(ic)
+    else:
+        raise TypeError("Includes for %s are '%s' (type %s)" % (mod.__name__,ic,type(ic)))
+
+ext_modules = [
+    Extension("*",["yeti/genomics/*.pyx"],include_dirs = include_path),
+]
 
 setup(
     name = "yeti",
@@ -45,6 +67,9 @@ setup(
 #     "": ["*.bam","*.bai","*.bed","*.bb","*.gtf","*.gff","*.gz","*.tbi","*.psl",
 #          "*.bowtie","*.fa","*.wig","*.juncs","*.positions","*.sizes","*.as","*.txt"],
     },
+
+    ext_modules = cythonize(ext_modules, include_path = include_path),
+    cmd_class = { 'build_ext' : build_ext },
 
     zip_safe = True,
 

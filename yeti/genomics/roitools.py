@@ -320,8 +320,12 @@ class GenomicSegment(object):
         strand : str
             Chromosome strand (`'+'`, `'-'`, or `'.'`)
         """
-        assert strand in ("+","-",".")
-        assert end >= start
+        if strand not in ("+","-","."):
+            raise ValueError("GenomicSegment: strand '%s' must be '+', '-', or '.'." % strand)
+        try:
+            assert end >= start
+        except AssertionError:
+            raise ValueError("GenomicSegment: end '%s' must be >= start '%s'" % (end,start))
         self.chrom = chrom
         self.start = start
         self.end = end

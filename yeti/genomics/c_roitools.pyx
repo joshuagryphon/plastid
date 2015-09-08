@@ -1,14 +1,11 @@
 
-
-#cdef enum Strand:
-#   forward_strand, reverse_strand, unstranded
-
-cdef positionlist_to_segments(str chrom, str strand, list positions):
+cdef positionlist_to_segments(str chrom, str strandstr, list positions):
     positions = sorted(list(set(positions)))
     cdef list segments = []
     cdef long start = positions[0]
     cdef long last_pos = positions[0]
     cdef long i
+    cdef Strand strand = str_to_strand(strandstr)
     if len(positions) > 0:
         start = positions[0]
         last_pos = positions[0]
@@ -29,7 +26,7 @@ cdef void nonecheck(object obj,str place, str valname):
     if obj is None:
         raise ValueError("%s: value of %s cannot be None" % (place,valname))
 
-cdef char strand_to_str(Strand strand):
+cdef str strand_to_str(Strand strand):
     """Convert enum Strand to str representation"""
     if strand == forward_strand:
         return "+"
@@ -38,7 +35,7 @@ cdef char strand_to_str(Strand strand):
     else:
         return "."
 
-cdef Strand str_to_strand(char val) except problem:
+cdef Strand str_to_strand(str val) except problem:
     """Convert str representation of strand to enum"""
     if val == "+":
         return forward_strand
@@ -51,22 +48,18 @@ cdef Strand str_to_strand(char val) except problem:
 
 
 cdef class GenomicSegment:
-#    cdef char* chrom
-#    cdef long start
-#    cdef long end
-#    cdef Strand strand
 
-    def __cinit__(self, char* chrom, long start, long end, Strand strand):
-        if end > start:
+    def __cinit__(self, char* chrom, long start, long end, str strand):
+        if end < start:
             raise ValueError("GenomicSegment: start coordinate must be >= end.")
         my_chrom = chrom
         self.chrom  = my_chrom
         self.start  = start
         self.end    = end
-        self.strand = strand
+        self.strand = str_to_strand(strand)
     
     def __repr__(self):
-        return "<%s %s:%s-%s strand='%s'>" % (GenomicSegment,
+        return "<%s %s:%s-%s strand='%s'>" % ("GenomicSegment",
                                               self.chrom,
                                               self.start,
                                               self.end,
@@ -101,7 +94,10 @@ cdef class GenomicSegment:
         len = self.end - self.start
         return len
 
-    def __richcmp__(self,object other,int cmptype):
+    def __richcmp__(self,GenomicSegment other, int cmptype):
+        return self._cmp_helper(other,cmptype)
+
+    cpdef bint _cmp_helper(self,GenomicSegment other,int cmptype):
         nonecheck(other,"GenomicSegment.__eq__","other")
         if cmptype == 2: # equal 
             return isinstance(other,GenomicSegment) and\
@@ -110,7 +106,7 @@ cdef class GenomicSegment:
                    self.start  == other.start and\
                    self.end    == other.end
         elif cmptype == 3: #inequal
-            return not self.__richcmp__(other,2)
+            return not self._cmp_helper(other,2)
         else:
             raise AttributeError("Comparison operation not defined")
     
@@ -149,7 +145,7 @@ cdef class GenomicSegment:
         return self.chrom == other.chrom and\
                self.strand == other.strand and\
                (other.start >= self.start and other.end <= self.end and other.end >= other.start)
-        
+         
     cpdef bint overlaps(self,GenomicSegment other):
         """Test whether this segment overlaps `other`, where overlap is defined
         as sharing: a chromosome, a strand, and a subset of coordinates.
@@ -165,14 +161,13 @@ cdef class GenomicSegment:
         """
         nonecheck(other,"GenomicSegment.__eq__","other")
         if self.chrom == other.chrom and self.strand == other.strand:
-            my_range  = set(range(self.start,self.end))
-            its_range = set(range(other.start,other.end))
-            if len(my_range & its_range) > 0:
-                    return True
-            else:
-                return False
-        else:
-            return False
+            if (self.start >= other.start and self.start < other.end) or\
+               (other.start >= self.start and other.start < self.end): # or\
+#               (self.end <= other.end and self.end > other.start) or\
+ #              (other.end <= self.end and other.end > self.start):
+                   return True
+
+        return False
 
     cpdef str as_igv_str(self):
         """Format as an IGV location string"""
@@ -225,7 +220,7 @@ cdef class GenomicSegment:
     property strand:
         def __get__(self):
             return strand_to_str(self.strand)
-        def __set__(self, char val):
+        def __set__(self, str val):
             self.val = str_to_strand(val)
 
 
