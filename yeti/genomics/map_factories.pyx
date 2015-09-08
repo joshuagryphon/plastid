@@ -1,14 +1,15 @@
 import warnings
-import numpy as np
+#import numpy as np
 cimport numpy as np
 
 cimport c_roitools
 from c_roitools import forward_strand, reverse_strand, unstranded
 
-cimport pysam.calignedsegment
+
 from yeti.util.services.exceptions import DataWarning
 
-from pysam.calignedsegment cimport AlignedSegment
+from pysam.calignmentfile cimport AlignedSegment
+#from pysam.calignedsegment cimport AlignedSegment
 
 #cdef pysam.calignedsegment.AlignedSegment AlignedSegment
 cdef c_roitools.GenomicSegment GenomicSegment
