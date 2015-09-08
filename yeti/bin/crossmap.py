@@ -194,7 +194,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
         pos = int(pos) + offset
         if chrom != last_chrom:
             if last_chrom is not None:
-                my_range = set(range(start_pos,last_pos+1))
+                my_range = list(range(start_pos,last_pos+1))
                 plus_ivc  = SegmentChain(*positionlist_to_segments(last_chrom,"+",my_range))
                 minus_ivc = revcomp_mask_ivc(plus_ivc,k,offset)
                 last_chrom = chrom
@@ -208,7 +208,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
         else:
             delta = pos - last_pos
             if delta > 1:
-                my_range = set(range(start_pos,last_pos+1))
+                my_range = list(range(start_pos,last_pos+1))
                 last_pos   = pos
                 start_pos  = pos
                 plus_ivc  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
@@ -221,7 +221,7 @@ def fa_to_bed(toomany_fh,k,offset=0):
                 raise MalformedFileError(toomany_fh,msg,line_num=n)
     
     # export final feature
-    my_range = set(range(start_pos,last_pos+1))
+    my_range = list(range(start_pos,last_pos+1))
     plus_ivc  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
     minus_ivc = revcomp_mask_ivc(plus_ivc,k,offset)
     yield plus_ivc, minus_ivc

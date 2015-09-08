@@ -100,7 +100,7 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
 
 from yeti.util.scriptlib.help_formatters import format_module_docstring
 
-from yeti.genomics.roitools import positionlist_to_segments, SegmentChain
+from yeti.genomics.roitools import positions_to_segments, SegmentChain
 from yeti.genomics.genome_hash import GenomeHash
 from yeti.util.io.openers import opener, get_short_name, argsopener
 from yeti.util.io.filters import NameDateWriter
@@ -349,7 +349,7 @@ def process_partial_group(transcripts,mask_hash,printer):
                 printer.write("Skipping gene %s which contains multiple strands: %s" % (gene_id,",".join(strands)))
 
         my_gene_positions = set(my_gene_positions)
-        gene_ivc_raw = SegmentChain(*positionlist_to_segments(chroms[0],strands[0],my_gene_positions))
+        gene_ivc_raw = SegmentChain(*positions_to_segments(chroms[0],strands[0],my_gene_positions))
         gene_table["region"].append(gene_id)
         gene_table["transcript_ids"].append(",".join(sorted(my_txids)))
         gene_table["exon_unmasked"].append(gene_ivc_raw)
@@ -384,13 +384,13 @@ def process_partial_group(transcripts,mask_hash,printer):
 
         gene_positions_raw = gene_ivc_raw.get_position_set()
         mask_ivc_positions = gene_positions_raw & masked_positions
-        total_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,mask_ivc_positions),
+        total_mask_ivc = SegmentChain(*positions_to_segments(my_chrom,my_strand,mask_ivc_positions),
                                       ID=gene_id)
         gene_table["masked"].append(total_mask_ivc)
         gene_table["masked_bed"].append(total_mask_ivc.as_bed())
         
         gene_post_mask = gene_positions_raw - masked_positions
-        gene_post_mask_ivc = SegmentChain(*positionlist_to_segments(my_chrom,my_strand,gene_post_mask),
+        gene_post_mask_ivc = SegmentChain(*positions_to_segments(my_chrom,my_strand,gene_post_mask),
                                           ID=gene_id)
         gene_table["exon"].append(gene_post_mask_ivc)
         gene_table["exon_bed"].append(gene_post_mask_ivc.as_bed())
@@ -432,14 +432,14 @@ def process_partial_group(transcripts,mask_hash,printer):
             transcript_table["region"].append(txid)
             
             # all unmasked positions
-            my_chain = SegmentChain(*positionlist_to_segments(chrom,strand,transcript.get_position_set() - masked_positions),
+            my_chain = SegmentChain(*positions_to_segments(chrom,strand,transcript.get_position_set() - masked_positions),
                                     ID=txid)
             transcript_table["exon"].append(str(my_chain))
             transcript_table["exon_bed"].append(my_chain.as_bed())
 
             # all uniquely-labeled unmasked positions            
             for k,v in transcript_positions.items():
-                my_chain = SegmentChain(*positionlist_to_segments(chrom,strand,v),
+                my_chain = SegmentChain(*positions_to_segments(chrom,strand,v),
                                         ID=txid)
                 transcript_table[k].append(str(my_chain))
                 transcript_table["%s_bed" % k].append(my_chain.as_bed())
@@ -456,7 +456,7 @@ def process_partial_group(transcripts,mask_hash,printer):
             tmp_positions[k1] -= masked_positions
 
         for k in (tmp_positions.keys()):
-            my_chain = SegmentChain(*positionlist_to_segments(chrom,strand,tmp_positions[k]),
+            my_chain = SegmentChain(*positions_to_segments(chrom,strand,tmp_positions[k]),
                                     ID=gene_id)
             gene_table[k].append(str(my_chain))
             gene_table["%s_bed" % k].append(my_chain.as_bed())

@@ -140,7 +140,7 @@ import argparse
 import inspect
 import numpy
 import pandas as pd
-from yeti.genomics.roitools import SegmentChain, positionlist_to_segments
+from yeti.genomics.roitools import SegmentChain, positions_to_segments
 from yeti.util.io.filters import NameDateWriter
 from yeti.util.io.openers import get_short_name, argsopener, NullWriter
 from yeti.util.scriptlib.help_formatters import format_module_docstring
@@ -414,9 +414,9 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
         if len(set(new_shared_positions)) > 0:
     
             # define new ROI covering all positions common to all transcripts
-            new_roi = SegmentChain(*positionlist_to_segments(regions[0].chrom,
-                                                             regions[0].strand,
-                                                             new_shared_positions))
+            new_roi = SegmentChain(*positions_to_segments(regions[0].chrom,
+                                                          regions[0].strand,
+                                                          new_shared_positions))
             if name is None:
                 name = new_roi.get_name()
             
