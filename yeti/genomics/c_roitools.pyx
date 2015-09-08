@@ -5,13 +5,67 @@ segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 
 
-cdef positionlist_to_segments(str chrom, str strandstr, list positions):
-    positions = sorted(list(set(positions)))
-    cdef list segments = []
-    cdef long start = positions[0]
-    cdef long last_pos = positions[0]
-    cdef long i
-    cdef Strand strand = str_to_strand(strandstr)
+#==============================================================================
+# Exported helper functions e.g. for sorting or building |GenomicSegments|
+#==============================================================================
+
+cpdef positions_to_segments(str chrom, str strand, object positions):
+    """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
+
+    Parameters
+    ----------
+    chrom : str
+        Chromosome name
+       
+    strand : str
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+       
+    positions : list of integers
+        **End-inclusive** list, tuple, or set of positions to include
+        in final |GenomicSegment|
+           
+    Returns
+    -------
+    list
+        List of |GenomicSegments| covering `positions`
+    """
+    if isinstance(positions,set):
+        positions = sorted(list(positions))
+    else:
+        positions = sorted(list(set(positions)))
+    return positionlist_to_segments(chrom,strand,positions)
+
+cpdef positionlist_to_segments(str chrom, str strand, list positions):
+    """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
+
+    Parameters
+    ----------
+    chrom : str
+        Chromosome name
+       
+    strand : str
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+       
+    positions : list of unique integers
+        Sorted, **end-inclusive** list of positions to include
+        in final |GenomicSegment|
+           
+    Returns
+    -------
+    list
+        List of |GenomicSegments| covering `positions`
+
+
+     .. warning::
+        
+        This function is meant to quickly without excessive type conversions.
+        So, the elements `positions` must be **UNIQUE** and **SORTED**. If
+        they are not, use :func:`positions_to_segments` instead.
+    """
+    cdef:
+        list segments = []
+        long start, last_pos, i
+
     if len(positions) > 0:
         start = positions[0]
         last_pos = positions[0]
@@ -19,7 +73,7 @@ cdef positionlist_to_segments(str chrom, str strandstr, list positions):
             if i == start:
                 continue
             if i - last_pos == 1:
-                last_pos = 1
+                last_pos = i
             else:
                 segments.append(GenomicSegment(chrom,start,last_pos+1,strand))
                 start = i
@@ -28,7 +82,38 @@ cdef positionlist_to_segments(str chrom, str strandstr, list positions):
 
     return segments
 
+
+cpdef sort_segments_lexically(GenomicSegment seg):
+    """Key function to sort |GenomicSegments| lexically by genomic position,
+    by (in order of precedence): chromosome, start, end, strand
+
+    Parameters
+    ----------
+    seg : |GenomicSegment|
+
+    Returns
+    -------
+    str
+        Chromosome name
+        
+    int
+        Leftmost coordinate of |GenomicSegment|
+        
+    int
+        Rightmost coordinate of |GenomicSegment|
+        
+    str
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+    """
+    return (seg.chrom,seg.start,seg.end,seg.strand)
+
+
+#==============================================================================
+# Non-exported helpers
+#==============================================================================
+
 cdef void nonecheck(object obj,str place, str valname):
+    """Propagate errors if incoming objects are None"""
     if obj is None:
         raise ValueError("%s: value of %s cannot be None" % (place,valname))
 
@@ -53,11 +138,54 @@ cdef Strand str_to_strand(str val) except problem:
         raise ValueError("trand must be '+', '-', or '.'")
 
 
-cdef class GenomicSegment:
+#==============================================================================
+# Classes
+#==============================================================================
 
+cdef class GenomicSegment:
+    """A continuous segment of the genome, defined by a chromosome name,
+    a start coordinate, and end coordinate, and a strand.
+
+    Attributes
+    ----------
+    chrom : str
+        Name of chromosome
+
+    start : int
+        0-indexed, left most position of segment
+
+    end : int
+        0-indexed, half-open right most position of segment
+
+    strand : str
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+    
+    
+    See also
+    --------
+    SegmentChain
+        Base class for genomic features, built from multiple |GenomicSegments|
+    """
     def __cinit__(self, str chrom, long start, long end, str strand):
+        """Create a |GenomicSegment|
+        
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name
+        
+        start : int
+            0-indexed, leftmost coordinate of feature
+        
+        end : int
+            0-indexed, half-open rightmost coordinate of feature
+            Must be >= `start`
+        
+        strand : str
+            Chromosome strand (`'+'`, `'-'`, or `'.'`)
+        """
         if end < start:
-            raise ValueError("GenomicSegment: start coordinate must be >= end.")
+            raise ValueError("GenomicSegment: start coordinate (%s) must be >= end (%s)." % (start,end))
         my_chrom = chrom
         self.chrom  = my_chrom
         self.start  = start

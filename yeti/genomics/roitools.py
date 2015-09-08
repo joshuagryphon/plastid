@@ -91,7 +91,10 @@ from yeti.util.services.decorators import skipdoc
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
-from yeti.genomics.c_roitools import GenomicSegment
+from yeti.genomics.c_roitools import GenomicSegment, \
+                                     sort_segments_lexically, \
+                                     positionlist_to_segments, \
+                                     positions_to_segments
 
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
@@ -157,70 +160,35 @@ def _format_transcript(tx):
                                                           )
     return stmp
 
-def positionlist_to_segments(chrom,strand,positions):
-    """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
-
-    Parameters
-    ----------
-    chrom : str
-        Chromosome name
-       
-    strand : str
-        Chromosome strand (`'+'`, `'-'`, or `'.'`)
-       
-    positions : list of integers
-        **End-inclusive** list, tuple, or set of positions to include
-        in final |GenomicSegment|
-           
-    Returns
-    -------
-    list
-        List of |GenomicSegments| covering `positions`
-    """
-    positions = sorted(list(set(positions)))
-    intervals = []
-    if len(positions) > 0:
-        last_pos = positions[0]
-        start = positions[0]
-        for i in sorted(positions[1:]):
-            if i - last_pos == 1:
-                last_pos = i
-            else:
-                intervals.append(GenomicSegment(chrom,start,last_pos+1,strand))
-                start = i
-                last_pos = i
-        intervals.append(GenomicSegment(chrom,start,last_pos+1,strand))
-    return intervals
-
 
 #===============================================================================
 # sorting functions
 #===============================================================================
 
-def sort_segments_lexically(seg):
-    """Key function to sort |GenomicSegments| lexically by genomic position,
-    by (in order of precedence): chromosome, start, end, strand
-
-    Parameters
-    ----------
-    seg : |GenomicSegment|
-
-    Returns
-    -------
-    str
-        Chromosome name
-        
-    int
-        Leftmost coordinate of |GenomicSegment|
-        
-    int
-        Rightmost coordinate of |GenomicSegment|
-        
-    str
-        Chromosome strand (`'+'`, `'-'`, or `'.'`)
-    """
-    return (seg.chrom,seg.start,seg.end,seg.strand)
-
+#def sort_segments_lexically(seg):
+#    """Key function to sort |GenomicSegments| lexically by genomic position,
+#    by (in order of precedence): chromosome, start, end, strand
+#
+#    Parameters
+#    ----------
+#    seg : |GenomicSegment|
+#
+#    Returns
+#    -------
+#    str
+#        Chromosome name
+#        
+#    int
+#        Leftmost coordinate of |GenomicSegment|
+#        
+#    int
+#        Rightmost coordinate of |GenomicSegment|
+#        
+#    str
+#        Chromosome strand (`'+'`, `'-'`, or `'.'`)
+#    """
+#    return (seg.chrom,seg.start,seg.end,seg.strand)
+#
 def sort_segmentchains_lexically(segchain):
     """Key function to sort a list of |SegmentChains| lexically by genomic position,
     by (in order of precedence): chromosome, start, end, strand, length (in nucleotides)
@@ -1070,8 +1038,8 @@ class SegmentChain(object):
             positions = self.get_position_set()
             for segment in segments:
                 positions |= set(range(segment.start,segment.end))
-             
-            self._segments = positionlist_to_segments(self.chrom,self.strand,positions)
+            
+            self._segments = positions_to_segments(self.chrom,self.strand,positions)
         self._update()
         
     def add_masks(self,*mask_segments):
@@ -1110,7 +1078,7 @@ class SegmentChain(object):
             positions &= self.get_position_set()
             
             # regenerate list of ivs from positions, in case some were doubly-listed
-            self._mask_segments = positionlist_to_segments(self.chrom,self.strand,positions)
+            self._mask_segments = positions_to_segments(self.chrom,self.strand,positions)
         self._update()
     
     def get_masks(self):
@@ -1736,7 +1704,7 @@ class SegmentChain(object):
         if stranded is True and self.strand == "-":
             positions = positions[::-1]
         positions = positions[start:end]
-        ivs = positionlist_to_segments(self.chrom,self.strand,set(positions))
+        ivs = positionlist_to_segments(self.chrom,self.strand,positions)
         attr = copy.deepcopy(self.attr)
         attr["ID"] = "%s_subchain" % self.get_name()
         attr.update(extra_attr)

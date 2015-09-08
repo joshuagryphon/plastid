@@ -24,7 +24,8 @@ from yeti.readers.bed import BED_to_Transcripts,\
 from yeti.genomics.roitools import GenomicSegment,\
                                          SegmentChain,\
                                          Transcript,\
-                                         positionlist_to_segments
+                                         positionlist_to_segments,\
+                                         positions_to_segments
 
 from yeti.genomics.c_roitools import GenomicSegment as cGenomicSegment
 
@@ -59,6 +60,45 @@ def tearDownModule():
 @attr(test="unit")
 class TestMiscellaneous(unittest.TestCase):
     """Test suite for miscellaneous methods"""
+    def test_positions_to_segments(self):
+        # single GenomicSegment, both strands
+        self.assertListEqual(positions_to_segments("chrA","+",range(100)),
+                             [GenomicSegment("chrA",0,100,"+")])
+        self.assertListEqual(positions_to_segments("chrA","-",range(100)),
+                             [GenomicSegment("chrA",0,100,"-")])
+        self.assertListEqual(positions_to_segments("chrA",".",range(100)),
+                             [GenomicSegment("chrA",0,100,".")])
+        
+        # Multiple intervals, both strands
+        self.assertListEqual(positions_to_segments("chrA","+",list(range(100))+list(range(150,200))),
+                             [GenomicSegment("chrA",0,100,"+"),GenomicSegment("chrA",150,200,"+")])
+        self.assertListEqual(positions_to_segments("chrA","-",list(range(100))+list(range(150,200))),
+                             [GenomicSegment("chrA",0,100,"-"),GenomicSegment("chrA",150,200,"-")])
+        self.assertListEqual(positions_to_segments("chrA",".",list(range(100))+list(range(150,200))),
+                             [GenomicSegment("chrA",0,100,"."),GenomicSegment("chrA",150,200,".")])
+
+        # Multiple intervals, both strands, overlapping positions
+        self.assertListEqual(positions_to_segments("chrA","+",list(range(100))+list(range(150,200))+list(range(195,205))),
+                             [GenomicSegment("chrA",0,100,"+"),GenomicSegment("chrA",150,205,"+")])
+        self.assertListEqual(positions_to_segments("chrA","-",list(range(100))+list(range(150,200))+list(range(195,205))),
+                             [GenomicSegment("chrA",0,100,"-"),GenomicSegment("chrA",150,205,"-")])
+        self.assertListEqual(positions_to_segments("chrA",".",list(range(100))+list(range(150,200))+list(range(195,205))),
+                             [GenomicSegment("chrA",0,100,"."),GenomicSegment("chrA",150,205,".")])
+        
+        # negative controls
+        self.assertNotEqual(positions_to_segments("chrA","+",range(100)),
+                            positions_to_segments("chrA","-",range(100)))
+        self.assertNotEqual(positions_to_segments("chrA","+",range(100)),
+                            positions_to_segments("chrA",".",range(100)))
+        self.assertNotEqual(positions_to_segments("chrA",".",range(100)),
+                            positions_to_segments("chrA","-",range(100)))
+
+        self.assertNotEqual(positions_to_segments("chrA","+",range(100)),
+                            positions_to_segments("chrA","+",range(200)))
+
+        self.assertNotEqual(positions_to_segments("chrA","+",range(100)),
+                            positions_to_segments("chrB","+",range(100)))
+
     def test_positionlist_to_segments(self):
         # single GenomicSegment, both strands
         self.assertListEqual(positionlist_to_segments("chrA","+",range(100)),
@@ -76,14 +116,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertListEqual(positionlist_to_segments("chrA",".",list(range(100))+list(range(150,200))),
                              [GenomicSegment("chrA",0,100,"."),GenomicSegment("chrA",150,200,".")])
 
-        # Multiple intervals, both strands, overlapping positions
-        self.assertListEqual(positionlist_to_segments("chrA","+",list(range(100))+list(range(150,200))+list(range(195,205))),
-                             [GenomicSegment("chrA",0,100,"+"),GenomicSegment("chrA",150,205,"+")])
-        self.assertListEqual(positionlist_to_segments("chrA","-",list(range(100))+list(range(150,200))+list(range(195,205))),
-                             [GenomicSegment("chrA",0,100,"-"),GenomicSegment("chrA",150,205,"-")])
-        self.assertListEqual(positionlist_to_segments("chrA",".",list(range(100))+list(range(150,200))+list(range(195,205))),
-                             [GenomicSegment("chrA",0,100,"."),GenomicSegment("chrA",150,205,".")])
-        
+       
         # negative controls
         self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
                             positionlist_to_segments("chrA","-",range(100)))
@@ -97,7 +130,6 @@ class TestMiscellaneous(unittest.TestCase):
 
         self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
                             positionlist_to_segments("chrB","+",range(100)))
-
 
 #===============================================================================
 # INDEX: Tests for SegmentChain and Transcript
@@ -817,7 +849,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             for i in range(ivc.get_length()):
                 positions.append(ivc.get_genomic_coordinate(i)[1])
             positions = set(positions)
-            new_ivs = positionlist_to_segments(ivc.chrom,ivc.strand,positions)
+            new_ivs = positions_to_segments(ivc.chrom,ivc.strand,positions)
             for ivA in new_ivs:
                 found = False
                 for ivB in ivc:

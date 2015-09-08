@@ -13,4 +13,6 @@ cdef class GenomicSegment(object):
     cpdef str get_name(self)
 
 
-cdef positionlist_to_segments(str,str,list)
+cpdef sort_segments_lexically(GenomicSegment)
+cpdef positions_to_segments(str,str,object)
+cpdef positionlist_to_segments(str,str,list)
