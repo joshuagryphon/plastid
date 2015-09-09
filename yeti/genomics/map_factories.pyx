@@ -215,4 +215,144 @@ cdef class cFivePrimeMapFactory:
 
         return reads_out, count_array
      
+cdef class cThreePrimeMapFactory:
+    """Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+     
+    Parameters
+    ----------
+    offset : int >= 0, optional
+        Offset from 3' end of read, in direction of 5' end, at which 
+        reads should be counted (Default: `0`)
+    """
+    cdef int offset
 
+    def __cinit__(self, int offset = 0):
+        """Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+        Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+         
+        Parameters
+        ----------
+        offset : int >= 0, optional
+            Offset from 3' end of read, in direction of 5' end, at which 
+            reads should be counted (Default: `0`)
+        """
+        if offset < 0:
+            raise ValueError("ThreePrimeMapFactory: `offset` must be <= 0. Got %s." % offset)
+        self.offset = offset
+
+    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+        """Returns reads covering a region, and a count vector mapping reads
+        to specific positions in the region, mapping reads at `self.offset`
+        from the threeprime end of each read.
+ 
+        Parameters
+        ----------
+        reads : list of :py:class:`pysam.AlignedSegment`
+            Reads to map
+            
+        seg : |GenomicSegment|
+            Region of interest
+
+            
+        Returns
+        -------
+        list
+            List of :py:class:`pysam.AlignedSegment` that map to region
+            
+        :py:class:`numpy.ndarray`
+            Vector of counts at each position in `seg`
+        """
+        cdef:
+            long seg_start = seg.start
+            long seg_end   = seg.end
+            long seg_len   = seg_end - seg_start
+            np.ndarray[LONG_t,ndim=1] count_array = np.zeros(seg_len,dtype=LONG)
+            long [:] count_view = count_array
+
+            list reads_out = []
+            list read_positions
+            AlignedSegment read
+            long p_site
+            int read_length
+            int do_warn = 0
+            int read_offset = self.offset
+
+        if seg.strand != reverse_strand:
+             read_offset = -read_offset - 1 
+
+        for read in reads:
+            read_positions = read.positions
+            read_length = len(read_positions)
+            if self.offset >= read_length:
+                do_warn = 1
+                continue
+             
+            p_site = read_positions[read_offset]
+            if p_site >= seg_start and p_site < seg_end:
+                reads_out.append(read)
+                count_view[p_site - seg_start] += 1
+
+        if do_warn == 1:
+            warnings.warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+                          DataWarning)
+
+        return reads_out, count_array
+
+
+cdef class SizeFilterFactory(object):
+    """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
+    using ::meth:`BAMGenomeArray.add_filter`
+    
+    Parameters
+    ----------
+    min : float, optional
+        Minimum read length to pass filter, inclusive (Default: `1`)
+    
+    max : float or numpy.inf, optional
+        Maximum read length to pass filter, inclusive (Default: infinity)
+    
+    Returns
+    -------
+    function
+    """
+    # logically these would be ints but numpy.inf is a float
+    cdef:
+        float min_
+        float max_
+
+    def __cinit__(self,float min = 1, float max = np.inf):
+        """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
+        using ::meth:`BAMGenomeArray.add_filter`
+        
+        Parameters
+        ----------
+        min : float >= 1, optional
+            Minimum read length to pass filter, inclusive (Default: `1`)
+        
+        max : float or numpy.inf >= `min`, optional
+            Maximum read length to pass filter, inclusive (Default: infinity)
+        
+        Returns
+        -------
+        function
+
+         .. note::
+            
+            `min` and `max` are typed as floats only to allow `max`
+            to be `numpy.inf` by default. Fractional values and
+            numbers less than 1 are nonsensical, and will raise
+            :class:`ValueError`
+        """
+        if max < min:
+            raise ValueError("Alignment size filter: max read length must be >= min read length")
+
+        if min < 1:
+            raise ValueError("Alignment size filter: min read length must be >= 1. Got %s" % min)
+
+        self.min_ = min
+        self.max_ = max
+        
+    def __call__(self,AlignedSegment read not None):
+        cdef unsigned int my_length = len(read.positions)
+        return my_length >= self.min_ and my_length <= self.max_
