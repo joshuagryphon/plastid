@@ -1,3 +1,5 @@
+# cython: embedsignature=True
+
 import re
 import copy
 
@@ -81,7 +83,6 @@ cpdef positionlist_to_segments(str chrom, str strand, list positions):
         segments.append(GenomicSegment(chrom,start,last_pos+1,strand))
 
     return segments
-
 
 cpdef sort_segments_lexically(GenomicSegment seg):
     """Key function to sort |GenomicSegments| lexically by genomic position,
