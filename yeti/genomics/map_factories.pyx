@@ -65,11 +65,29 @@ cdef class cCenterMapFactory(object):
             Number of bases to remove from each side of read (Default: `0`)
         """
         if nibble < 0:
-            raise ValueError("CenterMapFactory: `nibble` must be >= 0")
+            raise ValueError("CenterMapFactory: `nibble` must be >= 0. Got %s." % nibble)
 
         self.nibble = nibble
 
     def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+        """Returns reads covering a region, and a count vector mapping reads
+        to specific positions in the region. `self.nibble` bases are trimmed from each
+        side of the read, and each of the `N` remaining alignment positions
+        are incremented by `1/N`
+        
+        Parameters
+        ----------
+        seg : |GenomicSegment|
+            Region of interest
+        
+        reads : list of :py:class:`pysam.AlignedSegment`
+            Reads to map
+            
+        Returns
+        -------
+        :py:class:`numpy.ndarray`
+            Vector of counts at each position in `seg`
+        """
         cdef bint do_warn = 0
 
         cdef long seg_start = seg.start
@@ -91,8 +109,7 @@ cdef class cCenterMapFactory(object):
             DOUBLE_t val
        
         for read in reads:
-            read = <AlignedSegment>read
-            read_positions = <list>read.positions
+            read_positions = <list>(<AlignedSegment>read).positions
             read_length = len(read_positions)
             map_length = read_length - 2*self.nibble
             if map_length < 0:
@@ -108,74 +125,67 @@ cdef class cCenterMapFactory(object):
                 reads_out.append(read)
 
         if do_warn == 1:
-            warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*self.nibble),
+            warnings.warn("Data contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*self.nibble),
                   DataWarning)
         
         return reads_out, count_array
 
 
-
-
-
-
- 
 cdef class cFivePrimeMapFactory:
-
-    cdef int offset
-
-    def __cinit__(self, int offset = 0):
-        self.offset = offset
-
-    def __call__(self, object reads, c_roitools.GenomicSegment seg):
-        cdef long seg_start = seg.start
-        cdef long seg_end   = seg.end
-        cdef long seg_len   = seg_end - seg_start
-        cdef np.ndarray[np.int_t,ndim=1] count_array = np.zeros(seg_len,dtype=int)
-        cdef list reads_out = []
-
-        cdef list read_positions
-        cdef AlignedSegment read
-        cdef long p_site
-        cdef int read_length
-        cdef int do_warn = 0
-        
-        cdef int read_offset = self.offset
-        if seg.strand == reverse_strand:
-             read_offset = -read_offset - 1 
-
-        for read in reads:
-            read_positions = read.positions
-            read_length = len(read_positions)
-            if self.offset >= read_length:
-                do_warn = 1
-                continue
-             
-            p_site = read_positions[read_offset]
-            if p_site >= seg_start and p_site < seg_end:
-                reads_out.append(read)
-                count_array[p_site - seg_start] += 1
-
-        if do_warn == 1:
-            warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
-                          DataWarning)
-
-        return reads_out, count_array
+    """Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
      
- 
- 
-cdef class f2:
-
+    Parameters
+    ----------
+    offset : int >= 0, optional
+        Offset from 5' end of read, in direction of 3' end, at which 
+        reads should be counted (Default: `0`)
+    """
     cdef int offset
 
     def __cinit__(self, int offset = 0):
+        """Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+        Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+         
+        Parameters
+        ----------
+        offset : int >= 0, optional
+            Offset from 5' end of read, in direction of 3' end, at which 
+            reads should be counted (Default: `0`)
+        """
+        if offset < 0:
+            raise ValueError("FivePrimeMapFactory: `offset` must be <= 0. Got %s." % offset)
         self.offset = offset
 
-    def __call__(self, object reads, c_roitools.GenomicSegment seg):
+    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+        """Returns reads covering a region, and a count vector mapping reads
+        to specific positions in the region, mapping reads at `self.offset`
+        from the fiveprime end of each read.
+ 
+        Parameters
+        ----------
+        reads : list of :py:class:`pysam.AlignedSegment`
+            Reads to map
+            
+        seg : |GenomicSegment|
+            Region of interest
+
+            
+        Returns
+        -------
+        list
+            List of :py:class:`pysam.AlignedSegment` that map to region
+            
+        :py:class:`numpy.ndarray`
+            Vector of counts at each position in `seg`
+        """
         cdef:
             long seg_start = seg.start
             long seg_end   = seg.end
             long seg_len   = seg_end - seg_start
-            np.ndarray[np.int_t,ndim=1] count_array = np.zeros(seg_len,dtype=int)
+            np.ndarray[LONG_t,ndim=1] count_array = np.zeros(seg_len,dtype=LONG)
+            long [:] count_view = count_array
+
             list reads_out = []
             list read_positions
             AlignedSegment read
@@ -197,11 +207,12 @@ cdef class f2:
             p_site = read_positions[read_offset]
             if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
-                count_array[p_site - seg_start] += 1
+                count_view[p_site - seg_start] += 1
 
         if do_warn == 1:
-            warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+            warnings.warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
                           DataWarning)
 
         return reads_out, count_array
- 
+     
+
