@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy
+import pysam
 import warnings
 from nose.tools import assert_true, assert_equal, assert_greater_equal
 from yeti.genomics.genome_array import FivePrimeMapFactory,\
@@ -19,6 +20,15 @@ class MockRead(object):
         return len(self.positions)
 
 
+
+#sam_header = { 'SQ' : [{'LN' : 3000, 'SN', : 'mock'] }
+
+
+
+
+
+
+
 class TestBAM_MappingRules(object):
 
     @classmethod
@@ -27,7 +37,9 @@ class TestBAM_MappingRules(object):
         max_ = 40
         cls.strands  = ("+","-")
         cls.segs = { X : GenomicSegment("mock",0,2000,X) for X in cls.strands }
-        cls.reads = { Y : [MockRead(range(X),Y) for X in range(min_,max_)] for Y in ("+","-") }
+        
+#        cls.reads = { Y : [MockRead(range(X),Y) for X in range(min_,max_)] for Y in ("+","-") }
+        cls.reads = { Y : [cls.make_alignment(0,X,Y) for X in range(min_,max_)] for Y in ("+","-") }
         cls.expected = {}
         for mapping in ("fiveprime","threeprime","center"):
             for param in (0,10):
@@ -56,6 +68,17 @@ class TestBAM_MappingRules(object):
             "fiveprime_variable" : VariableFivePrimeMapFactory,
             "center"             : CenterMapFactory
         }
+
+    @staticmethod
+    def make_alignment(start_pos,end_pos,strand):
+        read = pysam.AlignedSegment()
+        read.reference_start = start_pos
+        my_length = end_pos - start_pos
+        read.query_sequence = "N"*my_length
+        read.reference_id = 0
+        read.is_reverse = True if strand == "-" else False
+        read.cigarstring = "%sM" % my_length
+        return read
 
     def check_mapping(self,map_name,map_param,strand):
         fn = self.map_factories[map_name](map_param)
@@ -132,10 +155,10 @@ class TestBAM_MappingRules(object):
                         "center"     : 15,
                         "fiveprime_variable" : { 25 : 10, "default" : 28 }
                        }
-        expected_num = { "fiveprime"  : len([X for X in self.reads["+"] if len(X) > func_params["fiveprime"]]),
-                         "threeprime" : len([X for X in self.reads["+"] if len(X) > func_params["threeprime"]]),
-                         "center"     : len([X for X in self.reads["+"] if len(X) > 2*func_params["center"]]),
-                         "fiveprime_variable" : len([X for X in self.reads["+"] if len(X) > 28 or len(X) == 25]),
+        expected_num = { "fiveprime"  : len([X for X in self.reads["+"] if len(X.positions) > func_params["fiveprime"]]),
+                         "threeprime" : len([X for X in self.reads["+"] if len(X.positions) > func_params["threeprime"]]),
+                         "center"     : len([X for X in self.reads["+"] if len(X.positions) > 2*func_params["center"]]),
+                         "fiveprime_variable" : len([X for X in self.reads["+"] if len(X.positions) > 28 or len(X.positions) == 25]),
                        }
         for test_name, map_param in func_params.items():
             expected_num_reads = expected_num[test_name]
