@@ -11,6 +11,7 @@ import warnings
 import numpy as np
 cimport numpy as np
 cimport c_roitools
+cimport cython
 
 from pysam.calignmentfile cimport AlignedSegment
 from c_roitools cimport forward_strand, reverse_strand, unstranded
@@ -39,7 +40,11 @@ ctypedef np.long_t   LONG_t
 # in the GenomicSegment
 #===============================================================================
 
-cdef class cCenterMapFactory(object):
+cdef long [:] get_ref_pos(AlignedSegment read):
+    cdef long [:] pos_array = np.array(read.positions,dtype=LONG)
+    return pos_array
+
+cdef class CenterMapFactory(object):
     """Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
     A user-specified number of bases is removed from each side of each
     read alignment, and the `N` remaining bases are each apportioned `1/N`
@@ -50,8 +55,6 @@ cdef class cCenterMapFactory(object):
     nibble : int >= 0, optional
         Number of bases to remove from each side of read (Default: `0`)
     """
-
-    cdef unsigned int nibble
 
     def __cinit__(self, unsigned int nibble = 0):
         """Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
@@ -69,6 +72,8 @@ cdef class cCenterMapFactory(object):
 
         self.nibble = nibble
 
+    @cython.boundscheck(False) # valid because indices are explicitly checked
+    @cython.cdivision(True) # we can do this because we explicitly check map_length > 0
     def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region. `self.nibble` bases are trimmed from each
@@ -97,6 +102,8 @@ cdef class cCenterMapFactory(object):
         # count array we will return
         cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
         cdef double [:] count_view = count_array
+        #cdef double [:] count_array = np.zeros(seg_len,dtype=DOUBLE)
+        #cdef long [:] read_positions
 
         # replace by cpp vector?
         cdef list reads_out = []
@@ -109,8 +116,9 @@ cdef class cCenterMapFactory(object):
             DOUBLE_t val
        
         for read in reads:
-            read_positions = <list>(<AlignedSegment>read).positions
-            read_length = len(read_positions)
+            read_positions = <list>read.positions
+            #read_positions = get_ref_pos(<AlignedSegment>read)
+            read_length = len(read_positions) #read_positions.shape[0]
             map_length = read_length - 2*self.nibble
             if map_length < 0:
                 do_warn = 1
@@ -130,8 +138,15 @@ cdef class cCenterMapFactory(object):
         
         return reads_out, count_array
 
+    property nibble:
+        """Number of positions to trim from each side of read alignment before assigning genomic positions."""
+        def __get__(self):
+            return self.nibble
+        def __set__(self, unsigned int val):
+            self.nibble = val
 
-cdef class cFivePrimeMapFactory:
+
+cdef class FivePrimeMapFactory:
     """Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
      
@@ -141,7 +156,6 @@ cdef class cFivePrimeMapFactory:
         Offset from 5' end of read, in direction of 3' end, at which 
         reads should be counted (Default: `0`)
     """
-    cdef int offset
 
     def __cinit__(self, int offset = 0):
         """Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
@@ -214,8 +228,16 @@ cdef class cFivePrimeMapFactory:
                           DataWarning)
 
         return reads_out, count_array
+
+    property offset:
+        """Distance from 5' end of read at which to assign reads"""
+        def __get__(self):
+            return self.offset
+        def __set__(self, int val):
+            self.offset = val
+
      
-cdef class cThreePrimeMapFactory:
+cdef class ThreePrimeMapFactory:
     """Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
      
@@ -225,7 +247,6 @@ cdef class cThreePrimeMapFactory:
         Offset from 3' end of read, in direction of 5' end, at which 
         reads should be counted (Default: `0`)
     """
-    cdef int offset
 
     def __cinit__(self, int offset = 0):
         """Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
@@ -300,7 +321,15 @@ cdef class cThreePrimeMapFactory:
         return reads_out, count_array
 
 
-cdef class cVariableFivePrimeMapFactory(object):
+    property offset:
+        """Distance from 3' end of read at which to assign reads"""
+        def __get__(self):
+            return self.offset
+        def __set__(self, int val):
+            self.offset = val
+
+
+cdef class VariableFivePrimeMapFactory(object):
     """Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
     The offset for a read of a given length is supplied in `offset_dict[readlen]`
@@ -313,8 +342,6 @@ cdef class cVariableFivePrimeMapFactory(object):
         be supplied to provide a default value for lengths not specifically
         enumerated in `offset_dict`
     """
-    cdef int [10000] forward_offsets
-    cdef int [10000] reverse_offsets
 
     def __cinit__(self, dict offset_dict not None):
         cdef int [:] fw_view = self.forward_offsets
@@ -415,10 +442,6 @@ cdef class SizeFilterFactory(object):
     -------
     function
     """
-    # logically these would be ints but numpy.inf is a float
-    cdef:
-        float min_
-        float max_
 
     def __cinit__(self,float min = 1, float max = np.inf):
         """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
