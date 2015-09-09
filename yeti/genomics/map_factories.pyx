@@ -46,7 +46,7 @@ cdef long [:] get_ref_pos(AlignedSegment read):
 
 
 
-def dummy_map(list reads not None, c_roitools.GenomicSegment seg not None):
+def dummy1(list reads not None, c_roitools.GenomicSegment seg not None):
     cdef bint do_warn = 0
 
     cdef long seg_start = seg.start
@@ -54,6 +54,8 @@ def dummy_map(list reads not None, c_roitools.GenomicSegment seg not None):
     cdef long seg_len   = seg_end - seg_start
 
     # count array we will return
+
+    # replace with cython array? python array?
     cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
     cdef double [:] count_view = count_array
     #cdef double [:] count_array = np.zeros(seg_len,dtype=DOUBLE)
@@ -73,6 +75,38 @@ def dummy_map(list reads not None, c_roitools.GenomicSegment seg not None):
         read_positions = <list>read.positions
         #read_positions = get_ref_pos(<AlignedSegment>read)
         read_length = len(read_positions) #read_positions.shape[0]
+
+    return [], count_array
+
+def dummy2(list reads not None, c_roitools.GenomicSegment seg not None):
+    cdef bint do_warn = 0
+
+    cdef long seg_start = seg.start
+    cdef long seg_end   = seg.end
+    cdef long seg_len   = seg_end - seg_start
+    cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
+    cdef double [:] count_view = count_array
+    cdef list reads_out = []
+    cdef list read_positions
+
+    cdef:
+        AlignedSegment read 
+        int coord, map_length
+        unsigned int read_length, i
+        DOUBLE_t val
+   
+    return [], count_array
+
+def dummy3(list reads not None, c_roitools.GenomicSegment seg not None):
+    cdef bint do_warn = 0
+
+    cdef long seg_start = seg.start
+    cdef long seg_end   = seg.end
+    cdef long seg_len   = seg_end - seg_start
+    cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
+    cdef double [:] count_view = count_array
+   
+    return [], count_array
 
 
 cdef class CenterMapFactory(object):
@@ -146,7 +180,7 @@ cdef class CenterMapFactory(object):
        
         for read in reads:
             read_positions = <list>read.positions
-            read_length = len(read_positions) #read_positions.shape[0]
+            read_length = len(read_positions)
             map_length = read_length - 2*self.nibble
             if map_length < 0:
                 do_warn = 1
