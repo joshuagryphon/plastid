@@ -44,6 +44,37 @@ cdef long [:] get_ref_pos(AlignedSegment read):
     cdef long [:] pos_array = np.array(read.positions,dtype=LONG)
     return pos_array
 
+
+
+def dummy_map(list reads not None, c_roitools.GenomicSegment seg not None):
+    cdef bint do_warn = 0
+
+    cdef long seg_start = seg.start
+    cdef long seg_end   = seg.end
+    cdef long seg_len   = seg_end - seg_start
+
+    # count array we will return
+    cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
+    cdef double [:] count_view = count_array
+    #cdef double [:] count_array = np.zeros(seg_len,dtype=DOUBLE)
+    #cdef long [:] read_positions
+
+    # replace by cpp vector?
+    cdef list reads_out = []
+    cdef list read_positions
+
+    cdef:
+        AlignedSegment read 
+        int coord, map_length
+        unsigned int read_length, i
+        DOUBLE_t val
+   
+    for read in reads:
+        read_positions = <list>read.positions
+        #read_positions = get_ref_pos(<AlignedSegment>read)
+        read_length = len(read_positions) #read_positions.shape[0]
+
+
 cdef class CenterMapFactory(object):
     """Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
     A user-specified number of bases is removed from each side of each
@@ -102,8 +133,6 @@ cdef class CenterMapFactory(object):
         # count array we will return
         cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
         cdef double [:] count_view = count_array
-        #cdef double [:] count_array = np.zeros(seg_len,dtype=DOUBLE)
-        #cdef long [:] read_positions
 
         # replace by cpp vector?
         cdef list reads_out = []
@@ -117,14 +146,13 @@ cdef class CenterMapFactory(object):
        
         for read in reads:
             read_positions = <list>read.positions
-            #read_positions = get_ref_pos(<AlignedSegment>read)
             read_length = len(read_positions) #read_positions.shape[0]
             map_length = read_length - 2*self.nibble
             if map_length < 0:
                 do_warn = 1
                 continue
             elif map_length > 0:
-                val = 1.0 / <DOUBLE_t>map_length
+                val = 1.0 / map_length
                 for i in range(self.nibble,read_length - self.nibble):
                     coord = <long>(read_positions[i]) - seg_start
                     if coord >= 0 and coord < seg_len:
