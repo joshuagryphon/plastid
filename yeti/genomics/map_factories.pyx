@@ -198,7 +198,7 @@ cdef class cFivePrimeMapFactory:
              read_offset = -read_offset - 1 
 
         for read in reads:
-            read_positions = read.positions
+            read_positions = <list>read.positions
             read_length = len(read_positions)
             if self.offset >= read_length:
                 do_warn = 1
@@ -282,7 +282,7 @@ cdef class cThreePrimeMapFactory:
              read_offset = -read_offset - 1 
 
         for read in reads:
-            read_positions = read.positions
+            read_positions = <list>read.positions
             read_length = len(read_positions)
             if self.offset >= read_length:
                 do_warn = 1
@@ -295,6 +295,105 @@ cdef class cThreePrimeMapFactory:
 
         if do_warn == 1:
             warnings.warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+                          DataWarning)
+
+        return reads_out, count_array
+
+
+cdef class cVariableFivePrimeMapFactory(object):
+    """Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+    The offset for a read of a given length is supplied in `offset_dict[readlen]`
+     
+    Parameters
+    ----------
+    offset_dict : dict
+        Dictionary mapping read lengths to offsets that should be applied
+        to reads of that length during mapping. A special key, `'default'` may
+        be supplied to provide a default value for lengths not specifically
+        enumerated in `offset_dict`
+    """
+    cdef int [10000] forward_offsets
+    cdef int [10000] reverse_offsets
+
+    def __cinit__(self, dict offset_dict not None):
+        cdef int [:] fw_view = self.forward_offsets
+        cdef int [:] rc_view = self.reverse_offsets
+        cdef int offset
+        fw_view [:] = -1
+        rc_view [:] = 1
+
+        # store offsets in c arrays for fast lookup
+        # value for `default` in 0th place
+        for read_length, offset in offset_dict.items():
+            if read_length == "default":
+                fw_view[0] = offset
+                rc_view[0] = - offset - 1
+            else:
+                if offset >= read_length:
+                    warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+                    DataWarning)
+                    continue
+                fw_view[read_length] = offset
+                rc_view[read_length] = - offset - 1
+         
+    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+        """Returns reads covering a region, and a count vector mapping reads
+        to specific positions in the region, mapping reads at possibly varying
+        offsets from the 5' end of each read as determined by `self.offset_dict`
+ 
+        Parameters
+        ----------
+        seg : |GenomicSegment|
+            Region of interest
+        
+        reads : list of :py:class:`pysam.AlignedSegment`
+            Reads to map
+            
+        Returns
+        -------
+        :py:class:`numpy.ndarray`
+            Vector of counts at each position in `seg`
+        """
+        cdef:
+            long seg_start = seg.start
+            long seg_end = seg.end
+            long seg_len = seg_end - seg_start
+            list reads_out = []
+            int warn_length = 0
+            int [10000] offsets = self.forward_offsets
+            int read_length, offset, p_site
+            int empty_val = -1
+            int do_warning = 0
+            AlignedSegment read
+            np.ndarray[LONG_t,ndim=1] count_array = np.zeros(seg_len,dtype=LONG)
+            long [:] count_view = count_array
+            long psite
+
+        if seg.strand == reverse_strand:
+            offsets = self.reverse_offsets
+            empty_val = 1
+
+        for read in reads:
+            read_positions = <list>read.positions
+            read_length = len(read_positions)
+            offset = offsets[read_length]
+
+            # check value is defined, if not use default
+            if offset == empty_val:
+                offset = offsets[0]
+                # if defaut not defined, ignore read and warn
+                if offset == empty_val:
+                    do_warning = 1
+                    continue
+
+            p_site = read_positions[offset]
+            if p_site >= seg_start and p_site < seg_end:
+                reads_out.append(read)
+                count_view[p_site - seg.start] += 1
+
+        if do_warning == 1:
+            warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (warn_length, warn_length),
                           DataWarning)
 
         return reads_out, count_array
