@@ -3,7 +3,7 @@ import numpy
 import pysam
 import warnings
 from nose.tools import assert_true, assert_equal, assert_greater_equal
-from yeti.genomics.genome_array import FivePrimeMapFactory,\
+from yeti.genomics.map_factories import FivePrimeMapFactory,\
                                        ThreePrimeMapFactory,\
                                        CenterMapFactory,\
                                        VariableFivePrimeMapFactory

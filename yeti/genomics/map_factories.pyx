@@ -203,7 +203,7 @@ cdef class CenterMapFactory(object):
                 reads_out.append(read)
 
         if do_warn == 1:
-            warnings.warn("Data contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*self.nibble),
+            warnings.warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*self.nibble,
                   DataWarning)
         
         return reads_out, count_array
@@ -457,11 +457,13 @@ cdef class VariableFivePrimeMapFactory(object):
             long seg_end = seg.end
             long seg_len = seg_end - seg_start
             list reads_out = []
-            int warn_length = 0
+            int no_offset_length = 0
+            int bad_offset_length = 0
             int [10000] offsets = self.forward_offsets
-            int read_length, offset, p_site
             int empty_val = -1
-            int do_warning = 0
+            int do_no_offset_warning = 0
+            int do_bad_default_warning = 0
+            int read_length, offset, p_site
             AlignedSegment read
             np.ndarray[LONG_t,ndim=1] count_array = np.zeros(seg_len,dtype=LONG)
             long [:] count_view = count_array
@@ -474,23 +476,35 @@ cdef class VariableFivePrimeMapFactory(object):
         for read in reads:
             read_positions = <list>read.positions
             read_length = len(read_positions)
+            fo = self.forward_offsets[read_length] # needed for read length test
             offset = offsets[read_length]
 
             # check value is defined, if not use default
             if offset == empty_val:
                 offset = offsets[0]
+                fo = self.forward_offsets[0]
                 # if defaut not defined, ignore read and warn
                 if offset == empty_val:
-                    do_warning = 1
+                    do_no_offset_warning = 1
+                    no_offset_length = read_length
                     continue
+            
+            if fo >= read_length:
+                do_bad_default_warning = 1
+                bad_offset_length = read_length
+                continue
 
             p_site = read_positions[offset]
             if p_site >= seg_start and p_site < seg_end:
                 reads_out.append(read)
                 count_view[p_site - seg.start] += 1
 
-        if do_warning == 1:
-            warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (warn_length, warn_length),
+        if do_no_offset_warning == 1:
+            warnings.warn("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
+                          DataWarning)
+
+        if do_bad_default_warning == 1:
+            warnings.warn("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
                           DataWarning)
 
         return reads_out, count_array
