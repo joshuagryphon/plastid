@@ -21,13 +21,12 @@ from yeti.readers.gff import GTF2_TranscriptAssembler, \
                                              GFF3_Reader
 from yeti.readers.bed import BED_to_Transcripts,\
                                              BED_to_SegmentChain
-from yeti.genomics.roitools import GenomicSegment,\
-                                         SegmentChain,\
+from yeti.genomics.roitools import SegmentChain,\
                                          Transcript,\
                                          positionlist_to_segments,\
                                          positions_to_segments
 
-from yeti.genomics.c_roitools import GenomicSegment as cGenomicSegment
+from yeti.genomics.c_roitools import GenomicSegment
 
 from yeti.genomics.genome_array import GenomeArray
 from yeti.util.io.filters import CommentReader
@@ -101,35 +100,35 @@ class TestMiscellaneous(unittest.TestCase):
 
     def test_positionlist_to_segments(self):
         # single GenomicSegment, both strands
-        self.assertListEqual(positionlist_to_segments("chrA","+",range(100)),
+        self.assertListEqual(positionlist_to_segments("chrA","+",list(range(100))),
                              [GenomicSegment("chrA",0,100,"+")])
-        self.assertListEqual(positionlist_to_segments("chrA","-",range(100)),
+        self.assertListEqual(positionlist_to_segments("chrA","-",list(range(100))),
                              [GenomicSegment("chrA",0,100,"-")])
-        self.assertListEqual(positionlist_to_segments("chrA",".",range(100)),
+        self.assertListEqual(positionlist_to_segments("chrA",".",list(range(100))),
                              [GenomicSegment("chrA",0,100,".")])
         
         # Multiple intervals, both strands
-        self.assertListEqual(positionlist_to_segments("chrA","+",list(range(100))+list(range(150,200))),
+        self.assertListEqual(positionlist_to_segments("chrA","+",list(list(range(100)))+list(range(150,200))),
                              [GenomicSegment("chrA",0,100,"+"),GenomicSegment("chrA",150,200,"+")])
-        self.assertListEqual(positionlist_to_segments("chrA","-",list(range(100))+list(range(150,200))),
+        self.assertListEqual(positionlist_to_segments("chrA","-",list(list(range(100)))+list(range(150,200))),
                              [GenomicSegment("chrA",0,100,"-"),GenomicSegment("chrA",150,200,"-")])
-        self.assertListEqual(positionlist_to_segments("chrA",".",list(range(100))+list(range(150,200))),
+        self.assertListEqual(positionlist_to_segments("chrA",".",list(list(range(100)))+list(range(150,200))),
                              [GenomicSegment("chrA",0,100,"."),GenomicSegment("chrA",150,200,".")])
 
        
         # negative controls
-        self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
-                            positionlist_to_segments("chrA","-",range(100)))
-        self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
-                            positionlist_to_segments("chrA",".",range(100)))
-        self.assertNotEqual(positionlist_to_segments("chrA",".",range(100)),
-                            positionlist_to_segments("chrA","-",range(100)))
+        self.assertNotEqual(positionlist_to_segments("chrA","+",list(range(100))),
+                            positionlist_to_segments("chrA","-",list(range(100))))
+        self.assertNotEqual(positionlist_to_segments("chrA","+",list(range(100))),
+                            positionlist_to_segments("chrA",".",list(range(100))))
+        self.assertNotEqual(positionlist_to_segments("chrA",".",list(range(100))),
+                            positionlist_to_segments("chrA","-",list(range(100))))
 
-        self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
-                            positionlist_to_segments("chrA","+",range(200)))
+        self.assertNotEqual(positionlist_to_segments("chrA","+",list(range(100))),
+                            positionlist_to_segments("chrA","+",list(range(200))))
 
-        self.assertNotEqual(positionlist_to_segments("chrA","+",range(100)),
-                            positionlist_to_segments("chrB","+",range(100)))
+        self.assertNotEqual(positionlist_to_segments("chrA","+",list(range(100))),
+                            positionlist_to_segments("chrB","+",list(range(100))))
 
 #===============================================================================
 # INDEX: Tests for SegmentChain and Transcript
@@ -1670,23 +1669,6 @@ _TEST_SEGS['biv6'] = GenomicSegment("chrB",99,150,"+")
 _TEST_SEGS['biv7'] = GenomicSegment("chrB",100,150,"-")
 _TEST_SEGS['biv10'] = GenomicSegment("chrB",100,150,"+")
 
-_C_TEST_SEGS = {}
-_C_TEST_SEGS['iv1'] =  cGenomicSegment("chrA",100,150,"+")
-_C_TEST_SEGS['iv2'] =  cGenomicSegment("chrA",150,200,"+")
-_C_TEST_SEGS['iv3'] =  cGenomicSegment("chrA",125,150,"+")
-_C_TEST_SEGS['iv4'] =  cGenomicSegment("chrA",100,125,"+")
-_C_TEST_SEGS['iv5'] =  cGenomicSegment("chrA",125,151,"+")
-_C_TEST_SEGS['iv6'] =  cGenomicSegment("chrA",99,150,"+")    
-_C_TEST_SEGS['iv7'] =  cGenomicSegment("chrA",100,150,"-")
-_C_TEST_SEGS['iv10'] = cGenomicSegment("chrA",100,150,"+")
-_C_TEST_SEGS['biv1'] = cGenomicSegment("chrB",100,150,"+")
-_C_TEST_SEGS['biv2'] = cGenomicSegment("chrB",150,200,"+")
-_C_TEST_SEGS['biv3'] = cGenomicSegment("chrB",125,150,"+")
-_C_TEST_SEGS['biv4'] = cGenomicSegment("chrB",100,125,"+")
-_C_TEST_SEGS['biv5'] = cGenomicSegment("chrB",125,151,"+")
-_C_TEST_SEGS['biv6'] = cGenomicSegment("chrB",99,150,"+")    
-_C_TEST_SEGS['biv7'] = cGenomicSegment("chrB",100,150,"-")
-_C_TEST_SEGS['biv10'] = cGenomicSegment("chrB",100,150,"+")
 
 
 @attr(test="unit")
@@ -1898,13 +1880,4 @@ class TestGenomicSegment(unittest.TestCase):
         
         # different coordinates
         self.assertNotEqual(self.test_class.from_igv_str(self.test_dict['iv1'].as_igv_str(),"+"),self.test_dict['iv2'])
-
-@attr(test="unit")
-class Test_C_GenomicSegment(TestGenomicSegment):
-    """Test suite for :py:class:`GenomicSegment`"""
-    @classmethod
-    def setUpClass(cls):
-        cls.test_class = cGenomicSegment
-        cls.test_dict = _C_TEST_SEGS
-
 
