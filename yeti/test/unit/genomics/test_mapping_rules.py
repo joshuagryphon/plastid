@@ -10,25 +10,6 @@ from yeti.genomics.genome_array import FivePrimeMapFactory,\
 from yeti.genomics.roitools import GenomicSegment
 
 
-class MockRead(object):
-    """Mock class to substitute pysam.AlignedSegment"""
-    def __init__(self,positions,strand):
-        self.positions = positions
-        self.is_reverse = True if strand == "+" else False
-    
-    def __len__(self):
-        return len(self.positions)
-
-
-
-#sam_header = { 'SQ' : [{'LN' : 3000, 'SN', : 'mock'] }
-
-
-
-
-
-
-
 class TestBAM_MappingRules(object):
 
     @classmethod
@@ -38,7 +19,6 @@ class TestBAM_MappingRules(object):
         cls.strands  = ("+","-")
         cls.segs = { X : GenomicSegment("mock",0,2000,X) for X in cls.strands }
         
-#        cls.reads = { Y : [MockRead(range(X),Y) for X in range(min_,max_)] for Y in ("+","-") }
         cls.reads = { Y : [cls.make_alignment(0,X,Y) for X in range(min_,max_)] for Y in ("+","-") }
         cls.expected = {}
         for mapping in ("fiveprime","threeprime","center"):

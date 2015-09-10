@@ -1,4 +1,3 @@
-# cython: embedsignature=True
 """Cython implementations of :term:`mapping rules <mapping rule>`.
 
 See also
@@ -10,16 +9,12 @@ Module documentation for :mod:`~yeti.genomics.genome_array`
 import warnings
 import numpy as np
 cimport numpy as np
-cimport c_roitools
 cimport cython
 
 from pysam.calignmentfile cimport AlignedSegment
-from c_roitools cimport forward_strand, reverse_strand, unstranded
+from yeti.genomics.c_roitools cimport forward_strand, reverse_strand, unstranded, GenomicSegment
 from yeti.util.services.exceptions import DataWarning
 
-#from pysam.calignedsegment cimport AlignedSegment
-#cdef pysam.calignedsegment.AlignedSegment AlignedSegment
-cdef c_roitools.GenomicSegment GenomicSegment
 
 INT    = np.int
 FLOAT  = np.float
@@ -40,13 +35,7 @@ ctypedef np.long_t   LONG_t
 # in the GenomicSegment
 #===============================================================================
 
-cdef long [:] get_ref_pos(AlignedSegment read):
-    cdef long [:] pos_array = np.array(read.positions,dtype=LONG)
-    return pos_array
-
-
-
-def dummy1(list reads not None, c_roitools.GenomicSegment seg not None):
+def dummy1(list reads not None, GenomicSegment seg not None):
     cdef bint do_warn = 0
 
     cdef long seg_start = seg.start
@@ -78,7 +67,7 @@ def dummy1(list reads not None, c_roitools.GenomicSegment seg not None):
 
     return [], count_array
 
-def dummy2(list reads not None, c_roitools.GenomicSegment seg not None):
+def dummy2(list reads not None, GenomicSegment seg not None):
     cdef bint do_warn = 0
 
     cdef long seg_start = seg.start
@@ -97,7 +86,7 @@ def dummy2(list reads not None, c_roitools.GenomicSegment seg not None):
    
     return [], count_array
 
-def dummy3(list reads not None, c_roitools.GenomicSegment seg not None):
+def dummy3(list reads not None, GenomicSegment seg not None):
     cdef bint do_warn = 0
 
     cdef long seg_start = seg.start
@@ -107,6 +96,25 @@ def dummy3(list reads not None, c_roitools.GenomicSegment seg not None):
     cdef double [:] count_view = count_array
    
     return [], count_array
+
+def dummy4(list reads not None, GenomicSegment seg not None):
+    cdef bint do_warn = 0
+
+    cdef long seg_start = seg.start
+    cdef long seg_end   = seg.end
+    cdef long seg_len   = seg_end - seg_start
+   
+    return [], [] #count_array
+
+def dummy5(list reads not None, GenomicSegment seg not None):
+    return [], []
+
+def dummy6(list reads, GenomicSegment seg):
+    return [], []
+
+def dummy7(reads,seg):
+    return [], []
+
 
 
 cdef class CenterMapFactory(object):
@@ -139,7 +147,7 @@ cdef class CenterMapFactory(object):
 
     @cython.boundscheck(False) # valid because indices are explicitly checked
     @cython.cdivision(True) # we can do this because we explicitly check map_length > 0
-    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+    def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region. `self.nibble` bases are trimmed from each
         side of the read, and each of the `N` remaining alignment positions
@@ -233,7 +241,7 @@ cdef class FivePrimeMapFactory:
             raise ValueError("FivePrimeMapFactory: `offset` must be <= 0. Got %s." % offset)
         self.offset = offset
 
-    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+    def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at `self.offset`
         from the fiveprime end of each read.
@@ -324,7 +332,7 @@ cdef class ThreePrimeMapFactory:
             raise ValueError("ThreePrimeMapFactory: `offset` must be <= 0. Got %s." % offset)
         self.offset = offset
 
-    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+    def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at `self.offset`
         from the threeprime end of each read.
@@ -426,7 +434,7 @@ cdef class VariableFivePrimeMapFactory(object):
                 fw_view[read_length] = offset
                 rc_view[read_length] = - offset - 1
          
-    def __call__(self, list reads not None, c_roitools.GenomicSegment seg not None):
+    def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at possibly varying
         offsets from the 5' end of each read as determined by `self.offset_dict`
@@ -540,3 +548,4 @@ cdef class SizeFilterFactory(object):
     def __call__(self,AlignedSegment read not None):
         cdef unsigned int my_length = len(read.positions)
         return my_length >= self.min_ and my_length <= self.max_
+
