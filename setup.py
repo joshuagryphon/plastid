@@ -1,14 +1,12 @@
-#from setuptools import setup, find_packages
+#!/usr/bin/env python
 import os
 import yeti
 import sys
-import numpy
-import pysam
+from collections import Iterable
 
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
-from Cython.Distutils import build_ext
+from distutils.command.build_ext import build_ext as d_build_ext
+from setuptools import setup, find_packages, Extension, Command
+
 
 #===============================================================================
 # Constants/variables used below
@@ -18,26 +16,13 @@ NUMPY_VERSION  = "numpy>=1.9.2"
 SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION ="cython>=0.22"
 
-include_path = []
-"""Paths to headers/sources used by pyx files"""
+with open("README.rst") as f:
+    long_description = f.read()
 
-for mod in (numpy,pysam):
-    ic = mod.get_include()
-    if isinstance(ic,list):
-        include_path.extend(ic)
-    elif isinstance(ic,str):
-        include_path.append(ic)
-    else:
-        raise TypeError("Includes for %s are '%s' (type %s)" % (mod.__name__,ic,type(ic)))
+ext_paths = ["yeti/genomics/*.pyx"]
+"""Paths to Cython .pyx files"""
 
-
-ext_modules = [
-    Extension("*",["yeti/genomics/*.pyx"],include_dirs=include_path)
-]
-"""Cython modules to compile"""
-
-
-cython_directives = {
+cython_args= {
     "embedsignature" : True,
     "language_level" : sys.version_info[0],
 
@@ -48,17 +33,13 @@ cython_directives = {
 """Cython compiler options"""
 
 
-with open("README.rst") as f:
-    long_description = f.read()
-
-
 #===============================================================================
-# Helper functions for setup
+# Helper functions/classes for setup
 #===============================================================================
 
 def get_scripts():
-    """Detect command-line scripts before egg build
-    
+    """Detect command-line scripts automatically
+
     Returns
     -------
     list
@@ -67,11 +48,106 @@ def get_scripts():
     binscripts = [X.replace(".py","") for X in filter(lambda x: x.endswith(".py"),
                                                       os.listdir(os.path.join("yeti","bin")))]
     return ["%s = yeti.bin.%s:main" % (X,X) for X in binscripts]
+    
+
+class CythonBuildExtProxy(Command):
+    """Proxy class to enable use of Cython's `build_ext` without
+    having to import it before Cython is installed
+    """
+    user_options = d_build_ext.user_options
+
+    def __new__(cls):
+        obj = super(BuildExtClass,cls).__new__(cls)
+        return obj
+
+    def __init__(self,*args,**kwargs):
+        from Cython.Distutils import build_ext
+        self.__class__ = build_ext
+        build_ext.__init__(self,*args,**kwargs)
+
+
+class LateCython(list):
+    """Workaround:
+    
+    numpy, pysam, and Cython all need to be installed for the .pyx files
+    to build. Putting these in the setup() argument `setup_requires`
+    is insufficient, because other arguments passed to `setup_requires`
+    require numpy, pysam, and Cython.
+
+    So, this class delays evaluation of those arguments until all
+    dependencies in `setup_requires` have been installed, allowing
+    allowing numpy, pysam, and Cython to be imported.
+
+    Idea for proxy class from:
+        https://stackoverflow.com/questions/11010151/distributing-a-shared-library-and-some-c-code-with-a-cython-extension-module/26698408#26698408
+    """
+    def __init__(self,ext_paths,cython_kwargs={}):
+        """
+        Parameters
+        ----------
+        ext_paths : list
+            List of paths to Cython .pyx files
+
+        cython_kwargs : dict, optional
+            Cython compiler directives
+        """
+        from Cython.Distutils import build_ext
+        self.ext_paths = ext_paths
+        self.cython_kwargs = cython_kwargs
+        self.build_ext = build_ext
+
+    def get_include_path(self):
+        """Get path to headers & pyx files for dependencies
+
+        Returns
+        -------
+        list
+            List of paths to pass to cython compiler
+        """
+        import numpy
+        import pysam
+        ipath = []
+        for mod in (numpy,pysam):
+            ipart = mod.get_include()
+            if isinstance(ipart,str):
+                ipath.append(ipart)
+            elif isinstance(ipart,Iterable):
+                ipath.extend(ipart)
+            else:
+                raise ValueError("Could not parse include path: %s" % ipart)
+
+        return ipath
+
+    def _construct(self):
+        """Construct list of extensions and dependencies. Only called
+        when contents of `self` are iterated.
+        """
+        try:
+            from Cython.Build import cythonize
+            include_path = self.get_include_path()
+            extensions = [Extension("*",self.ext_paths,include_dirs=include_path)]
+            b = cythonize(extensions,
+                          include_path = include_path,
+                          compiler_directives = self.cython_kwargs)
+
+            return b
+        except ImportError:
+            raise RuntimeError("Cython not installed. Please install %s" % CYTHON_VERSION)
+
+    def __iter__(self):
+        return iter(self._construct())
+        
+    def __len__(self):
+        return 1
+
+    def __getitem__(self,key):
+        return self._construct()
 
 
 #===============================================================================
 # Program body 
 #===============================================================================
+
 
 setup(
 
@@ -113,7 +189,7 @@ setup(
 
     # packaging info
     zip_safe             = True,
-    packages             = ["yeti"], # find_packages()
+    packages             = find_packages()
     include_package_data = True,
     package_data         = {
 #    "": ["*.*"],#
@@ -121,19 +197,22 @@ setup(
 #          "*.bowtie","*.fa","*.wig","*.juncs","*.positions","*.sizes","*.as","*.txt"],
                            },
 
-
     # dependencies, entrypoints, ext modules, et c
-    cmd_class        = {
-                         'build_ext' : build_ext,
-                       },
-
     entry_points     = { "console_scripts" : get_scripts()
                        },
 
-    ext_modules      = cythonize(ext_modules,
-                                 include_path=include_path,
-                                 compiler_directives=cython_directives,
-                                ),
+    # these classes defer import of Cython, numpy, and pysam
+    # until after setup() has installed them, processing
+    # `setup_requires` and `install_requires`
+    ext_modules = LateCython(ext_paths,cython_args),
+    cmdclass    = {
+                    'build_ext' : CythonBuildExtProxy,
+                   },
+
+
+    setup_requires   = [CYTHON_VERSION,
+                        NUMPY_VERSION,
+                        SCIPY_VERSION],
 
     install_requires = [
     	                NUMPY_VERSION, #"numpy>=1.9.2",
