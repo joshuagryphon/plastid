@@ -178,6 +178,26 @@ def test_window_landmark():
             yield check_window_landmark, my_segmentchain, landmark, flank_up, flank_down
 
 def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up,flank_down):
+    """
+    test_name : str
+        Descriptive name of test
+
+    genome_hash : GenomeHash
+        Mask hash
+
+    test_group : list
+        List of transcript IDs, referring to transcripts in the GFF text above
+
+    result_groups : list
+        list of tuples of (region_str, aligment_offset, window_length) expected from 
+        maximal spanning window output
+
+    flank_up : int
+        Bases to include upstream of landmark in window
+
+    flank_down : int
+        bases to include downstream of landmark in window
+    """
     # table keys:
     #    gene_id
     #    window_size
@@ -188,29 +208,32 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     err_str = ("Failed %s (up: %s, down: %s). " % (test_name,flank_up,flank_down)) + "%s unequal (%s vs %s)"
     tx_ivcs = (_TRANSCRIPTS[X] for X in test_group)
     roi_table = group_regions_make_windows(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
-#     print(result_groups)
-#     print(len(result_groups))
+    roi_table.sort(columns=["region"],inplace=True)
+    trows = [X[1] for X in roi_table.iterrows()]
+    result_groups = sorted(result_groups,key=lambda x: x[0])
+    REGION = 0
+
     c = 0
     
     for n,result_group in enumerate(result_groups):
         # if no landmark
         if numpy.isnan(result_group[1]) or numpy.isnan(result_group[2]):
-            c += 1
+            c += 1 # increment counter for input that will have no output
             
         # if landmark
         else:
             check_equality(SegmentChain.from_str(result_group[0]),
-                           SegmentChain.from_str(roi_table["region"][n-c]),test_name) 
+                           SegmentChain.from_str(trows[n-c]["region"]),test_name) 
             assert_equal(result_group[1],
-                         roi_table["alignment_offset"][n-c],
-                         msg=err_str % ("offset",result_group[1],roi_table["alignment_offset"][n-c]))
+                         trows[n-c]["alignment_offset"],
+                         msg=err_str % ("offset",result_group[1],trows[n-c]["alignment_offset"]))
             assert_equal(result_group[2],
-                         roi_table["zero_point"][n-c],
-                         msg=err_str % ("ref_point",result_group[1],roi_table["zero_point"][n-c]))
+                         trows[n-c]["zero_point"],
+                         msg=err_str % ("ref_point",result_group[1],trows[n-c]["zero_point"]))
             if len(result_group) == 4:
                 assert_equal(result_group[3],
-                             roi_table["masked"][n-c],
-                             msg=err_str % ("mask",result_group[3],roi_table["masked"][n-c]))
+                             trows[n-c]["masked"],
+                             msg=err_str % ("mask",result_group[3],trows[n-c]["masked"]))
 
     assert_equal(n+1-c,len(roi_table))
     
