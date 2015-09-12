@@ -1408,8 +1408,8 @@ class SegmentChain(object):
                 phase = attr.get("phase",attr.get("frame"))
             # otherwise calculate
             else:
-                start = self.get_segmentchain_coordinate(chrom,start,strand,stranded=False)
-                phase = (3 - (start % 3)) % 3
+                my_start = self.get_segmentchain_coordinate(chrom,start,strand,stranded=False)
+                phase = (3 - (my_start % 3)) % 3
         
         ltmp = [chrom,
                 attr.get("source","."),
