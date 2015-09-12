@@ -8,6 +8,9 @@ from collections import Iterable
 from distutils.command.build_ext import build_ext as d_build_ext
 from setuptools import setup, find_packages, Extension, Command
 
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext as c_build_ext
+
 
 #===============================================================================
 # Constants/variables used below
@@ -28,9 +31,6 @@ setup_requires = [CYTHON_VERSION,
 """required for building .pyx files"""
 
 
-ext_paths = ["yeti/genomics/*.pyx"]
-"""Paths to Cython .pyx files"""
-
 
 cython_args= {
     "embedsignature" : True,
@@ -41,6 +41,26 @@ cython_args= {
     "profile"   : True,
 }
 """Cython compiler options"""
+
+packages = find_packages()
+
+ext_paths = ["yeti/genomics/*.pyx"]
+"""Paths to Cython .pyx files"""
+
+c_paths = [os.path.join(X.replace(",",os.sep),"*.c") for X in packages]
+"""Potential paths to cythonized .c files files"""
+
+import numpy
+import pysam
+ipath = []
+for mod in (numpy,pysam):
+    ipart = mod.get_include()
+    if isinstance(ipart,str):
+        ipath.append(ipart)
+    elif isinstance(ipart,Iterable):
+        ipath.extend(ipart)
+    else:
+        raise ValueError("Could not parse include path: %s" % ipart)
 
 
 #===============================================================================
@@ -59,24 +79,25 @@ def get_scripts():
                                                                 "__init__" not in x,
                                                       os.listdir(os.path.join("yeti","bin")))]
     return ["%s = yeti.bin.%s:main" % (X,X) for X in binscripts]
-    
+   
 
-class CythonBuildExtProxy(Command):
+class CythonBuildExtProxy(d_build_ext):
     """Proxy class to enable use of Cython's `build_ext` command class without
     having to import it before Cython is installed
     """
-    user_options = d_build_ext.user_options
-
-    def __new__(cls):
-        obj = super(BuildExtClass,cls).__new__(cls)
-        return obj
-
     def __init__(self,*args,**kwargs):
         # import and pull a switcheroo on type
         from Cython.Distutils import build_ext
-        self.__class__ = build_ext
-        build_ext.__init__(self,*args,**kwargs)
+        self._obj = build_ext(*args,**kwargs)
 
+    def __str__(self):
+        return str(self._obj)
+
+    def __getattr__(self,attr):
+        return getattr(self._obj,attr)
+
+    def __setattr__(self,attr,val):
+        return setattr(self._obj,attr,val)
 
 class LateCython(list):
     """Workaround:
@@ -106,58 +127,65 @@ class LateCython(list):
         """
         self.ext_paths = ext_paths
         self.cython_kwargs = cython_kwargs
+        self._extensions = None
 
-    def get_include_path(self):
-        """Get path to headers & pyx files for dependencies
-
-        Returns
-        -------
-        list
-            List of paths to pass to cython compiler
-        """
-        import numpy
-        import pysam
-        ipath = []
-        for mod in (numpy,pysam):
-            ipart = mod.get_include()
-            if isinstance(ipart,str):
-                ipath.append(ipart)
-            elif isinstance(ipart,Iterable):
-                ipath.extend(ipart)
-            else:
-                raise ValueError("Could not parse include path: %s" % ipart)
-
-        return ipath
+    def __getattr__(self,attr):
+        if attr == "extensions":
+            if self._extensions is None:
+                self._cythonize()
+            return self._extensions
 
     def _cythonize(self):
         """Add packages from `setup_requires` to sys.path, and then
         cythonize extensions. Only called when contents of `self` are iterated,
         i.e. when setuptools is building the package extensions.
         """
-        # add all eggs from `setup_requires` to sys.path
-        eggs = glob.glob(".eggs/*egg")
-        for egg in eggs:
-            print("Adding %s to sys.path" % egg)
-            sys.path.append(egg)
+        if self._extensions is None:
+            try:
+            # add all eggs from `setup_requires` to sys.path
+                eggs = glob.glob(".eggs/*egg")
+                for n,egg in enumerate(eggs):
+                    print("Adding %s to sys.path" % egg)
+                    sys.path.append(egg)
 
-        # build
-        from Cython.Build import cythonize
-        include_path = self.get_include_path()
-        extensions = [Extension("*",self.ext_paths,include_dirs=include_path)]
-        b = cythonize(extensions,
-                      include_path = include_path,
-                      compiler_directives = self.cython_kwargs)
+                # get include paths
+                import numpy
+                import pysam
+                ipath = []
+                for mod in (numpy,pysam):
+                    ipart = mod.get_include()
+                    if isinstance(ipart,str):
+                        ipath.append(ipart)
+                    elif isinstance(ipart,Iterable):
+                        ipath.extend(ipart)
+                    else:
+                        raise ValueError("Could not parse include path: %s" % ipart)
 
-        return b
+                # try to build if not yet built
+                from Cython.Build import cythonize
+                extensions = [Extension("*",self.ext_paths,include_dirs = ipath)]
+                b = cythonize(extensions,
+                              include_path = ipath,
+                              compiler_directives = self.cython_kwargs)
+                self._extensions = b
+
+                for i in range(n+1):
+                    sys.path.pop()
+                return self._extensions
+            except ImportError:
+                for i in range(n+1):
+                    sys.path.pop()
+
+        return self._extensions
 
     def __iter__(self):
-        return iter(self._cythonize())
+        return iter(self.extensions)
         
     def __len__(self):
         return len(self.ext_paths)
 
     def __getitem__(self,key):
-        return self._cythonize()
+        return self.extensions[k]
 
 
 #===============================================================================
@@ -204,7 +232,7 @@ setup(
 
 
     # packaging info
-    packages             = find_packages(),
+    packages             = packages,
     include_package_data = True,
     package_data         = {
 #    "": ["*.*"],#
@@ -216,23 +244,27 @@ setup(
     entry_points     = { "console_scripts" : get_scripts()
                        },
 
-
     # the following defer import of Cython, numpy, and pysam
     # until after setup() has processed `setup_requires`
-    ext_modules = LateCython(ext_paths,cython_args),
+
+    #ext_modules = LateCython(ext_paths,cython_args),
+    ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
+                              compiler_directives = cython_args,
+                              include_path = ipath),
     cmdclass    = {
-                    'build_ext' : CythonBuildExtProxy,
+                    #'build_ext' : CythonBuildExtProxy,
+                    'build_ext' : c_build_ext,
                    },
 
 
     setup_requires   = setup_requires,
-    install_requires = setup_requires + [
-                        SCIPY_VERSION, #"scipy>=0.15.1",
+    install_requires = [
+                        SCIPY_VERSION,
+                        "pandas>=0.16.0",
                         "matplotlib>=1.3.0",
                         "biopython>=1.64",
-                        "pandas>=0.16.0",
                         "twobitreader>=3.0.0",
-                        ],
+                        ] + setup_requires,
    
     tests_require     = [ "nose>=1.0" ],
     test_suite        = "nose.collector",
