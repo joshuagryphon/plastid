@@ -9,7 +9,7 @@ from yeti.genomics.roitools import GenomicSegment, SegmentChain
 from yeti.util.services.exceptions import MalformedFileError
 from yeti.bin.crossmap import simulate_reads, \
                                      FastaNameReader, \
-                                     revcomp_mask_ivc, \
+                                     revcomp_mask_chain, \
                                      fa_to_bed
 
 #===============================================================================
@@ -60,10 +60,10 @@ class TestCrossmap(unittest.TestCase):
         self.assertEqual(next(reader),"chr30b")
         self.assertRaises(StopIteration,reader.next)
     
-    def test_revcomp_mask_ivc_no_offset(self):
+    def test_revcomp_mask_chain_no_offset(self):
         for k in (25,50):
             for offset in (0,10):
-                revlist = [revcomp_mask_ivc(X,k,offset) for X in self.ivcs["plus"]]
+                revlist = [revcomp_mask_chain(X,k,offset) for X in self.ivcs["plus"]]
                 self.assertListEqual(self.ivcs["minus_k%s_off%s" % (k,offset)],revlist)
     
     def test_fa_to_bed(self):

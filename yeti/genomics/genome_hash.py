@@ -632,10 +632,10 @@ class TabixGenomeHash(AbstractGenomeHash):
         if isinstance(roi,GenomicSegment):
             #roi_chain = SegmentChain(roi)
             roi_seg = roi
-            roi_list = [roi]
+            roi_chain = SegmentChain(roi)
         elif isinstance(roi,SegmentChain):
-            roi_list = roi
-            roi_seg = roi_chain.spanning_segment
+            roi_chain = roi
+            roi_seg = roi.spanning_segment
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
         
@@ -644,7 +644,7 @@ class TabixGenomeHash(AbstractGenomeHash):
                                                          X.start,
                                                          X.end))) \
                                                          for R in self.tabix_readers \
-                                                         for X in roi_list])
+                                                         for X in roi_chain])
             
         features = (self._reader_class(cStringIO.StringIO(feature_text)))
         if stranded == True:
