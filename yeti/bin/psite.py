@@ -26,7 +26,7 @@ Output files
 
     OUTBASE_p_offsets.svg
         Plot of metagene profiles for each read length, when reads are mapped
-        to their 5\' ends, :term:`P-site offsets <P-site offset>` are applied.
+        to their 5' ends, :term:`P-site offsets <P-site offset>` are applied.
 
     OUTBASE_metagene_profiles.txt
         Metagene profiles, stratified by read length, before :term:`P-site offsets <P-site offset>`
@@ -129,16 +129,16 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
         raw_count_dict[i].mask = numpy.tile(False,raw_count_dict[i].shape)
     
-    for i,row in roi_table.iterrows(): #i in range(len(roi_table)):
+    for i,row in roi_table.iterrows():
         if i % 1000 == 0:
             printer.write("Counted %s ROIs..." % (i+1))
             
-        roi    = SegmentChain.from_str(row["region"]) #roi_table["region"][i])
-        mask   = SegmentChain.from_str(row["masked"]) #roi_table["masked"][i])
+        roi    = SegmentChain.from_str(row["region"])
+        mask   = SegmentChain.from_str(row["masked"])
         roi.add_masks(*mask)
         valid_mask = roi.get_masked_counts(ga).mask
         
-        offset = int(round((row["alignment_offset"]))) #roi_table["alignment_offset"][i])))
+        offset = int(round((row["alignment_offset"])))
         assert offset + roi.get_length() <= window_size
         
         count_vectors = {}

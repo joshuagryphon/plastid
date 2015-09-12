@@ -202,12 +202,15 @@ def window_landmark(region,flank_upstream=50,flank_downstream=50,ref_delta=0,lan
     
     my_end = min(region.get_length(),landmark + ref_delta + flank_downstream)
     roi    = region.get_subchain(my_start,my_end)
+    span = region.spanning_segment
+    chrom = span.chrom
+    strand = span.strand
    
     if landmark + ref_delta == region.get_length():
-        if region.spanning_segment.strand == "+":
-            ref_point = (region.spanning_segment.chrom,region.spanning_segment.end,region.spanning_segment.strand)
+        if span.strand == "+":
+            ref_point = (chrom,span.end,strand)
         else:
-            ref_point = (region.spanning_segment.chrom,region.spanning_segment.start - 1,region.spanning_segment.strand)
+            ref_point = (chrom,span.start - 1,strand)
     else:
         ref_point = region.get_genomic_coordinate(landmark+ref_delta)
 
@@ -599,16 +602,17 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
 
             for tx_chain in transcripts:
                 # if attr is missing, use transcript name, which should be unique
+                attr = tx_chain.attr
                 if group_by == "gene_id":
-                    if "gene_id" in tx_chain.attr:
-                        group_attr = tx_chain.attr["gene_id"]
+                    if "gene_id" in attr:
+                        group_attr = attr["gene_id"]
                     else:
                         group_attr = tx_chain.get_gene()
                         warnings.warn("Region '%s' has no gene_id. Inferring gene_id to be '%s'" % (tx_chain.get_name(), group_attr),
                                       DataWarning)
                 else:
-                    if group_by in tx_chain.attr:
-                        group_attr = tx_chain.attr[group_by]
+                    if group_by in attr:
+                        group_attr = attr[group_by]
                     else:
                         warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Defaulting to region name." % (tx_chain.get_name(),group_by),
                                       DataWarning)

@@ -86,6 +86,7 @@ def main(argv=sys.argv[1:]):
     transcripts = get_transcripts_from_args(args,printer=printer)
     
     read_lengths = list(range(args.min_length,args.max_length+1))
+    codon_buffer = args.codon_buffer
     
     dtmp = { "read_length"   : numpy.array(read_lengths),
              "reads_counted" : numpy.zeros_like(read_lengths,dtype=int),
@@ -130,7 +131,7 @@ def main(argv=sys.argv[1:]):
                 warnings.warn(message,DataWarning)
                 counts = counts.reshape(len(vec)//3,3)
 
-            phase_sums[k] += counts[args.codon_buffer:-args.codon_buffer,:].sum(0)
+            phase_sums[k] += counts[codon_buffer:-codon_buffer,:].sum(0)
 
     printer.write("Counted %s ROIs total." % (n+1))
     for k in dtmp:

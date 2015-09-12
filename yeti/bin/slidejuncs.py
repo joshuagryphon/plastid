@@ -223,19 +223,26 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
     """
     exact_match = None
     ltmp = []
-    iv1,iv2 = query_junc[0], query_junc[1]
+    iv1,iv2  = query_junc[0], query_junc[1]
+    iv1end   = iv1.end
+    iv2start = iv2.start
+    qstrand  = query_junc.strand
+    qchrom   = query_junc.chrom
+
     for ivc in knownjunctions:
-        if query_junc.strand != ivc.strand:
+        if qchrom != ivc.chrom:
             continue
-        elif query_junc.chrom != ivc.chrom:
+        elif qstrand != ivc.strand:
             continue
         elif query_junc == ivc:
             exact_match = query_junc
             break
         kiv1, kiv2 = ivc[0],ivc[1]
-        if  kiv1.end   in set(range(iv1.end+minus_range,  iv1.end  +plus_range+1))\
-        and kiv2.start in set(range(iv2.start+minus_range,iv2.start+plus_range+1)):
-            if kiv2.start - kiv1.end == iv2.start - iv1.end:
+        kend = kiv1.end
+        kstart = kiv2.start
+        if  kend   in set(range(iv1end+minus_range,  iv1end  +plus_range+1))\
+        and kstart in set(range(iv2start+minus_range,iv2start+plus_range+1)):
+            if kstart - kend == iv2start - iv1end:
                 ltmp.append(ivc)
     return [exact_match] if exact_match is not None else ltmp
         
@@ -288,17 +295,20 @@ def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals
     chrom  = query_junc.chrom
     strand = query_junc.strand
     iv1,iv2 = query_junc[0], query_junc[1]
+
+    iv1start, iv1end = iv1.start, iv1.end
+    iv2start, iv2end = iv2.start, iv2.end
     for i in range(minus_range,plus_range+1):
         for pair in canonicals:
-            if str(genome[chrom][iv1.end + i:iv1.end + i + 2].seq) == pair[0]\
-            and str(genome[chrom][iv2.start - 2 + i:iv2.start + i].seq) == pair[1]:
+            if str(genome[chrom][iv1end + i:iv1end + i + 2].seq) == pair[0]\
+            and str(genome[chrom][iv2start - 2 + i:iv2start + i].seq) == pair[1]:
                 new_iv1 = GenomicSegment(chrom,
-                                          iv1.start,
-                                          iv1.end + i,
+                                          iv1start,
+                                          iv1end + i,
                                           strand)
                 new_iv2 = GenomicSegment(chrom,
-                                          iv2.start + i,
-                                          iv2.end,
+                                          iv2start + i,
+                                          iv2end,
                                           strand)
                 ltmp.append(SegmentChain(new_iv1,new_iv2))
     
@@ -331,18 +341,22 @@ def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
     -------
     bool
         `True` if any of the genomic positions within `minus_range...plus_range`
-        of the 5\' or 3\' splice sites of `query_junc` overlap a repetitive
+        of the 5' or 3' splice sites of `query_junc` overlap a repetitive
         region of the genome as annotated by ``cross_hash``.
         Otherwise, `False`
     """
-    fiveprime_splice_area = GenomicSegment(query_junc.spanning_segment.chrom,
-                                           query_junc[0].end + minus_range,
-                                           query_junc[0].end + plus_range + 1,
-                                           query_junc.spanning_segment.strand)
-    threeprime_splice_area = GenomicSegment(query_junc.spanning_segment.chrom,
-                                            query_junc[1].start + minus_range,
-                                            query_junc[1].start + plus_range + 1,
-                                            query_junc.spanning_segment.strand)
+    chrom = query_junc.spanning_segment.chrom
+    strand = query_junc.spanning_segment.strand
+    qend = query_junc[0].end
+    qstart = query_junc[1].start
+    fiveprime_splice_area = GenomicSegment(chrom,
+                                           qend + minus_range,
+                                           qend + plus_range + 1,
+                                           strand)
+    threeprime_splice_area = GenomicSegment(chrom,
+                                            qstart + minus_range,
+                                            qstart + plus_range + 1,
+                                            strand)
     support_region = SegmentChain(fiveprime_splice_area,threeprime_splice_area)
     return len(cross_hash.get_overlapping_features(support_region)) > 0
 
