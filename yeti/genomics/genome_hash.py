@@ -243,14 +243,18 @@ class GenomeHash(AbstractGenomeHash):
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
-            iv = roi
+            rois = [roi]
         elif isinstance(roi,SegmentChain):
-            iv = roi.spanning_segment
+            rois = roi
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
-        bin_start = iv.start // self.binsize
-        bin_end = iv.end // self.binsize
-        return list(range(bin_start,bin_end+1))
+        bins = []
+        for seg in rois:
+            bin_start = seg.start // self.binsize
+            bin_end = seg.end // self.binsize
+            bins.extend(range(bin_start,bin_end+1))
+
+        return list(set(bins))
     
     def _get_nearby_feature_ids(self,roi,stranded=True):
         """Return unique IDs of |SegmentChain| s in all the bins occupied by `roi`
@@ -626,18 +630,21 @@ class TabixGenomeHash(AbstractGenomeHash):
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
-            roi_chain = SegmentChain(roi)
+            #roi_chain = SegmentChain(roi)
             roi_seg = roi
+            roi_list = [roi]
         elif isinstance(roi,SegmentChain):
-            roi_chain = roi
+            roi_list = roi
             roi_seg = roi_chain.spanning_segment
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
         
-        feature_text = "\n".join(["\n".join(list(R.fetch(roi_seg.chrom,
-                                                         roi_seg.start,
-                                                         roi_seg.end))) \
-                                                         for R in self.tabix_readers])
+        chrom = roi_seg.chrom
+        feature_text = "\n".join(["\n".join(list(R.fetch(chrom,
+                                                         X.start,
+                                                         X.end))) \
+                                                         for R in self.tabix_readers \
+                                                         for X in roi_list])
             
         features = (self._reader_class(cStringIO.StringIO(feature_text)))
         if stranded == True:

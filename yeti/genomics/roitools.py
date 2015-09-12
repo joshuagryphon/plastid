@@ -99,6 +99,12 @@ segpat  = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
 ivcpat = re.compile(r"([^:]*):([^(]+)\(([+-.])\)")
 
 
+# TODO: make segments sort lexically via __richcmp__
+# TODO: get_counts as a view
+# TODO: make get_counts efficient by pre-allocating one array or memoryview
+
+
+
 #===============================================================================
 # io functions
 #===============================================================================
@@ -196,6 +202,7 @@ def positionlist_to_segments(chrom,strand,positions):
 #===============================================================================
 # sorting functions
 #===============================================================================
+
 
 def sort_segments_lexically(seg):
     """Key function to sort |GenomicSegments| lexically by genomic position,
@@ -590,12 +597,11 @@ class SegmentChain(object):
 
     def __repr__(self):
         sout = "<%s segments=%s" % (self.__class__.__name__, len(self))
-        if len(self) > 0:
-            sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
-                                              self[0].start,
-                                              self[-1].end,
-                                              self[0].strand)
-            sout += " name=%s" % self.get_name()
+        sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
+                                          self[0].start,
+                                          self[-1].end,
+                                          self[0].strand)
+        sout += " name=%s" % self.get_name()
         sout += ">"
         return sout
 
@@ -699,6 +705,7 @@ class SegmentChain(object):
                         return True
                 return False            
             else:
+                # TODO: change logic to any() over GenomicSegments
                 selfpos = self.get_position_set()
                 opos    = other.get_position_set()
                 
@@ -940,6 +947,7 @@ class SegmentChain(object):
         set
             Set of genomic coordinates, as integers
         """
+        # TODO: cache this
         positions = set(self._position_hash.keys())
         return positions
         
@@ -970,6 +978,7 @@ class SegmentChain(object):
         set
             Set of genomic coordinates, as integers
         """
+        # TODO: cache this
         position_set = self.get_position_set()
         masked = []
         for segment in self._mask_segments:
@@ -1162,12 +1171,14 @@ class SegmentChain(object):
             an alignment)
         """
         juncs = []
+        chrom = self.chrom
+        strand = self.strand
         for i in range(len(self)-1):
             seg1, seg2 = self[i], self[i+1]
-            juncs.append(GenomicSegment(seg1.chrom,
+            juncs.append(GenomicSegment(chrom,
                                         seg1.end,
                                         seg2.start,
-                                        seg1.strand))
+                                        strand))
         return juncs
     
     def as_gff3(self,feature_type=None,escape=True,excludes=[]):
@@ -1385,23 +1396,28 @@ class SegmentChain(object):
             ======== =========        
         """
         phase = "."
+        attr = self.attr
+        chrom  = segment.chrom
+        strand = segment.strand
+        start  = segment.start
+        end    = segment.end
         if feature_type == "CDS":
             # use phase/frame if known for length-1 features
             # called "phase" in GFF3 conventions; "frame" in GTF2
-            if len(self) == 1 and ("phase" in self.attr or "frame" in self.attr):
-                phase = self.attr.get("phase",self.attr.get("frame"))
+            if len(self) == 1 and ("phase" in attr or "frame" in attr):
+                phase = attr.get("phase",attr.get("frame"))
             # otherwise calculate
             else:
-                segment_start = self.get_segmentchain_coordinate(segment.chrom,segment.start,segment.strand,stranded=False)
-                phase = (3 - (segment_start % 3)) % 3
+                start = self.get_segmentchain_coordinate(chrom,start,strand,stranded=False)
+                phase = (3 - (start % 3)) % 3
         
-        ltmp = [segment.chrom,
-                self.attr.get("source","."),
+        ltmp = [chrom,
+                attr.get("source","."),
                 feature_type,
-                segment.start + 1,
-                segment.end + 1 - 1,
-                str(self.attr.get("score",".")),
-                segment.strand,
+                start + 1,
+                end + 1 - 1,
+                str(attr.get("score",".")),
+                strand,
                 phase]
         
         return [str(X) for X in ltmp]
