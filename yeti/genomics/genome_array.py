@@ -537,7 +537,7 @@ def center_map(feature,**kwargs):
                       DataWarning)
         return []
 
-    span = feature.spanning_spanment
+    span = feature.spanning_segment
     strand = span.strand
     chrom  = span.chrom
     offset = kwargs.get("offset",0)
@@ -1461,17 +1461,16 @@ class GenomeArray(MutableAbstractGenomeArray):
         except AssertionError:
             my_len = len(self._chroms[chrom][strand])
             new_size = max(my_len + 10000,end + 10000)
-            for strand in self.strands():
-                self._chroms[chrom][strand.resize(new_size)
-                #new_strand = copy.deepcopy(self._chroms[chrom][strand])
-                #new_strand.resize(new_size)
-                #self._chroms[chrom][strand] = new_strand
+            for my_strand in self.strands():
+                new_strand = copy.deepcopy(self._chroms[roi.chrom][my_strand])
+                new_strand.resize(new_size)
+                self._chroms[chrom][my_strand] = new_strand
         except KeyError:
             assert strand in self.strands()
             if chrom not in self.keys():
                 self._chroms[chrom] = {}
-                for strand in self.strands():
-                    self._chroms[chrom][strand] = numpy.zeros(self.min_chr_size)
+                for my_strand in self.strands():
+                    self._chroms[chrom][my_strand] = numpy.zeros(self.min_chr_size)
         
         vals = self._chroms[chrom][strand][start:end]
         if self._normalize is True:
@@ -1544,16 +1543,17 @@ class GenomeArray(MutableAbstractGenomeArray):
         except AssertionError:
             my_len = len(self._chroms[chrom][strand])
             new_size = max(my_len + 10000,end + 10000)
-            for strand in self.strands():
-                #new_strand = copy.deepcopy(self._chroms[chrom][strand])
-                #new_strand.resize(new_size)
-                self._chroms[chrom][strand].resize(new_size) # = new_strand
+            for my_strand in self.strands():
+                # this looks silly; but resize() can't work in-place iwth refs to array
+                new_strand = copy.deepcopy(self._chroms[chrom][my_strand])
+                new_strand.resize(new_size)
+                self._chroms[chrom][my_strand]  = new_strand
         except KeyError:
             assert strand in self.strands()
             if chrom not in self.keys():
                 self._chroms[chrom] = {}
-                for strand in self.strands():
-                    self._chroms[chrom][strand] = numpy.zeros(self.min_chr_size) 
+                for my_strand in self.strands():
+                    self._chroms[chrom][my_strand] = numpy.zeros(self.min_chr_size) 
             
         self._chroms[chrom][strand][start:end] = val
         self.set_normalize(old_normalize)
@@ -1905,8 +1905,8 @@ class GenomeArray(MutableAbstractGenomeArray):
             trimming positions from the ends first            
         """
         for feature in BowtieReader(fh):
-            span = feature.spanning_segment
-            if len(span) >= min_length and len(feature.spanning_segment) <= max_length:
+            span_len = len(feature.spanning_segment)
+            if span_len >= min_length and span_len <= max_length:
                 tuples = mapfunc(feature,**trans_args)
                 for seg, val in tuples:
                     self[seg] += val
