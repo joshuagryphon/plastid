@@ -124,7 +124,7 @@ class FastaNameReader(AbstractReader):
         else:
             return self.__next__()
 
-def revcomp_mask_ivc(seg,k,offset=0):
+def revcomp_mask_chain(seg,k,offset=0):
     """Reverse-complement a single-interval mask, correcting for `offset`.
     
     Parameters
@@ -156,11 +156,11 @@ def revcomp_mask_ivc(seg,k,offset=0):
 #     
 #         RC + offset = (FW + offset) + k - 1 - offset
 #         RC = (FW + offset) + k - 1 - 2*offset   
-    roi = seg.spanning_segment
+    span = seg.spanning_segment
     new_offset = k - 1 - 2*offset
-    ivminus = GenomicSegment(roi.chrom,
-                             roi.start + new_offset,
-                             roi.end + new_offset,
+    ivminus = GenomicSegment(span.chrom,
+                             span.start + new_offset,
+                             span.end + new_offset,
                              "-")
     return SegmentChain(ivminus)
 
@@ -197,13 +197,13 @@ def fa_to_bed(toomany_fh,k,offset=0):
         if chrom != last_chrom:
             if last_chrom is not None:
                 #my_range = set(range(start_pos,last_pos+1))
-                #plus_ivc  = SegmentChain(*positionlist_to_segments(last_chrom,"+",my_range))
-                plus_ivc = SegmentChain(GenomicSegment(last_chrom,"+",start_pos,last_pos+1))
-                minus_ivc = revcomp_mask_ivc(plus_ivc,k,offset)
+                #plus_chain  = SegmentChain(*positionlist_to_segments(last_chrom,"+",my_range))
+                plus_chain = SegmentChain(GenomicSegment(last_chrom,start_pos,last_pos+1,"+"))
+                minus_chain = revcomp_mask_chain(plus_chain,k,offset)
                 last_chrom = chrom
                 start_pos  = pos
                 last_pos   = pos
-                yield plus_ivc, minus_ivc
+                yield plus_chain, minus_chain
             else:
                 last_chrom = chrom
                 start_pos  = pos
@@ -211,13 +211,13 @@ def fa_to_bed(toomany_fh,k,offset=0):
         else:
             delta = pos - last_pos
             if delta > 1:
-                plus_ivc = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1))
-                minus_ivc = revcomp_mask_ivc(plus_ivc,k,offset)
+                plus_chain = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1,"+"))
+                minus_chain = revcomp_mask_chain(plus_chain,k,offset)
                 #my_range = set(range(start_pos,last_pos+1))
                 last_pos   = pos
                 start_pos  = pos
-                #plus_ivc  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
-                yield plus_ivc, minus_ivc
+                #plus_chain  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
+                yield plus_chain, minus_chain
             elif delta == 1:
                 last_pos = pos
             else:
@@ -226,10 +226,10 @@ def fa_to_bed(toomany_fh,k,offset=0):
     
     # export final feature
     #my_range = set(range(start_pos,last_pos+1))
-    #plus_ivc  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
-    plus_ivc = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1,"+"))
-    minus_ivc = revcomp_mask_ivc(plus_ivc,k,offset)
-    yield plus_ivc, minus_ivc
+    #plus_chain  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
+    plus_chain = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1,"+"))
+    minus_chain = revcomp_mask_chain(plus_chain,k,offset)
+    yield plus_chain, minus_chain
 
 def chrom_worker(chrom_seq,args=None):
     name, seq_or_kmers = chrom_seq
@@ -267,11 +267,11 @@ def chrom_worker(chrom_seq,args=None):
             if os.path.exists(toomany_file):
                 printer.write("Assembling multimappers from chromosome '%s' into crossmap..."% name)
                 with argsopener(bed_file,args,"w") as bed_out:
-                    for plus_ivc, minus_ivc in fa_to_bed(open(toomany_file),
+                    for plus_chain, minus_chain in fa_to_bed(open(toomany_file),
                                                          args.read_length,
                                                          offset=args.offset):
-                        bed_out.write(plus_ivc.as_bed())
-                        bed_out.write(minus_ivc.as_bed())
+                        bed_out.write(plus_chain.as_bed())
+                        bed_out.write(minus_chain.as_bed())
                 
                     bed_out.close()
             
