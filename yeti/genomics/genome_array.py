@@ -537,13 +537,15 @@ def center_map(feature,**kwargs):
                       DataWarning)
         return []
 
-    strand = feature.spanning_segment.strand
+    span = feature.spanning_spanment
+    strand = span.strand
+    chrom  = span.chrom
     offset = kwargs.get("offset",0)
     value  = float(kwargs.get("value",1.0))
     sign   = -1 if strand == "-" else 1
-    start  = feature.spanning_segment.start + nibble + sign*offset
-    end    = feature.spanning_segment.end   - nibble + sign*offset
-    seg = GenomicSegment(feature.spanning_segment.chrom,
+    start  = span.start + nibble + sign*offset
+    end    = span.end   - nibble + sign*offset
+    seg = GenomicSegment(chrom,
                          start,
                          end,
                          strand)
@@ -578,12 +580,13 @@ def five_prime_map(feature,**kwargs):
         return []
 
     value   = kwargs.get("value",1.0)
-    strand = feature.spanning_segment.strand
+    span = feature.spanning_segment
+    strand = span.strand
     if strand in ("+","."):
-        start = feature.spanning_segment.start + offset
+        start = span.start + offset
     else:
-        start = feature.spanning_segment.end - 1 - offset
-    seg = GenomicSegment(feature.spanning_segment.chrom,
+        start = span.end - 1 - offset
+    seg = GenomicSegment(span.chrom,
                          start,
                          start+1,
                          strand)
@@ -617,12 +620,13 @@ def three_prime_map(feature,**kwargs):
         return []
 
     value   = kwargs.get("value",1.0)
-    strand = feature.spanning_segment.strand
+    span = feature.spanning_segment
+    strand = span.strand
     if strand in ("+","."):
-        start = feature.spanning_segment.end - 1 - offset
+        start = span.end - 1 - offset
     else:
-        start = feature.spanning_segment.start + offset
-    seg = GenomicSegment(feature.spanning_segment.chrom,
+        start = span.start + offset
+    seg = GenomicSegment(span.chrom,
                          start,
                          start+1,
                          strand)
@@ -649,9 +653,10 @@ def variable_five_prime_map(feature,**kwargs):
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    strand = feature.spanning_segment.strand
+    span = feature.spanning_segment
+    strand = span.strand
     value   = kwargs.get("value",1.0)
-    offset  = kwargs["offset"].get(len(feature.spanning_segment),kwargs["offset"].get("default",None))
+    offset  = kwargs["offset"].get(len(span),kwargs["offset"].get("default",None))
     feature_length = feature.get_length()
     if offset is None:
         warnings.warn("No offset for reads of length %s. Ignoring." % feature_length,
@@ -661,13 +666,13 @@ def variable_five_prime_map(feature,**kwargs):
         warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
 
     if strand in ("+","."):
-        start = feature.spanning_segment.start + offset
+        start = span.start + offset
     else:
-        start = feature.spanning_segment.end - 1 - offset
-    seg = GenomicSegment(feature.spanning_segment.chrom,
+        start = span.end - 1 - offset
+    seg = GenomicSegment(span.chrom,
                          start,
                          start+1,
-                         feature.spanning_segment.strand)
+                         strand)
     return [(seg,value)]    
 
     
@@ -1037,19 +1042,23 @@ class BAMGenomeArray(AbstractGenomeArray):
             if bamfiles not sorted or not indexed
         """
         # fetch reads
-        if roi.chrom not in self.chroms():
+        chrom  = roi.chrom
+        strand = roi.strand
+        start  = roi.start
+        end    = roi.end
+        if chrom not in self.chroms():
             return [], numpy.zeros(len(roi))
 
-        reads = itertools.chain.from_iterable((X.fetch(reference=roi.chrom,
-                                          start=roi.start,
-                                          end=roi.end,
-                                         # until_eof=True, # this could speed things up. need to test/investigate
-                                          ) for X in self.bamfiles))
+        reads = itertools.chain.from_iterable((X.fetch(reference=chrom,
+                                               start=start,
+                                               end=end,
+                                               # until_eof=True, # this could speed things up. need to test/investigate
+                                               ) for X in self.bamfiles))
             
         # filter by strand
-        if roi.strand == "+":
+        if strand == "+":
             reads = ifilter(lambda x: x.is_reverse is False,reads)
-        elif roi.strand == "-":
+        elif strand == "-":
             reads = ifilter(lambda x: x.is_reverse is True,reads)
         
         # Pass through additional filters (e.g. size filters, if they have
@@ -1058,13 +1067,13 @@ class BAMGenomeArray(AbstractGenomeArray):
             reads = ifilter(my_filter,reads)
         
         # retrieve selected parts of regions
-        reads,count_array = self.map_fn(reads,roi)
+        reads, count_array = self.map_fn(reads,roi)
         
         # normalize to reads per million if normalization flag is set
         if self._normalize is True:
             count_array = count_array / float(self.sum()) * 1e6
         
-        if roi_order == True and roi.strand == "-":
+        if roi_order == True and strand == "-":
             count_array = count_array[::-1]
 
         return reads, count_array
@@ -1231,7 +1240,6 @@ class BAMGenomeArray(AbstractGenomeArray):
             for i in range(len(window_starts)):
                 my_start = window_starts[i]
                 my_end   = window_starts[i+1] if i + 1 < len(window_starts) else int(self._chr_lengths[chrom])
-                #my_counts = self[GenomicSegment(chrom,my_start,my_end,strand)]
                 my_counts = self.__getitem__(GenomicSegment(chrom,
                                                             my_start,
                                                             my_end,
@@ -1443,28 +1451,33 @@ class GenomeArray(MutableAbstractGenomeArray):
         """
         if isinstance(roi,SegmentChain):
             return roi.get_counts(self)
-
-        try:
-            assert roi.end < len(self._chroms[roi.chrom][roi.strand])
-        except AssertionError:
-            my_len = len(self._chroms[roi.chrom][roi.strand])
-            new_size = max(my_len + 10000,roi.end + 10000)
-            for strand in self.strands():
-                new_strand = copy.deepcopy(self._chroms[roi.chrom][strand])
-                new_strand.resize(new_size)
-                self._chroms[roi.chrom][strand] = new_strand
-        except KeyError:
-            assert roi.strand in self.strands()
-            if roi.chrom not in self.keys():
-                self._chroms[roi.chrom] = {}
-                for strand in self.strands():
-                    self._chroms[roi.chrom][strand] = numpy.zeros(self.min_chr_size)
         
-        vals = self._chroms[roi.chrom][roi.strand][roi.start:roi.end]
+        chrom  = roi.chrom
+        strand = roi.strand
+        start  = roi.start
+        end    = roi.end
+        try:
+            assert roi.end < len(self._chroms[chrom][strand])
+        except AssertionError:
+            my_len = len(self._chroms[chrom][strand])
+            new_size = max(my_len + 10000,end + 10000)
+            for strand in self.strands():
+                self._chroms[chrom][strand.resize(new_size)
+                #new_strand = copy.deepcopy(self._chroms[chrom][strand])
+                #new_strand.resize(new_size)
+                #self._chroms[chrom][strand] = new_strand
+        except KeyError:
+            assert strand in self.strands()
+            if chrom not in self.keys():
+                self._chroms[chrom] = {}
+                for strand in self.strands():
+                    self._chroms[chrom][strand] = numpy.zeros(self.min_chr_size)
+        
+        vals = self._chroms[chrom][strand][start:end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
             
-        if roi_order == True and roi.strand == "-":
+        if roi_order == True and strand == "-":
             vals = vals[::-1]
 
         return vals
@@ -1518,26 +1531,31 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         self.set_normalize(False)
 
-        if seg.strand == "-" and isinstance(val,numpy.ndarray) and roi_order == True:
+
+        chrom  = seg.chrom
+        strand = seg.strand
+        start  = seg.start
+        end    = seg.end
+        if strand == "-" and isinstance(val,numpy.ndarray) and roi_order == True:
             val = val[::-1]
 
         try:
-            assert seg.end < len(self._chroms[seg.chrom][seg.strand])
+            assert end < len(self._chroms[seg.chrom][seg.strand])
         except AssertionError:
-            my_len = len(self._chroms[seg.chrom][seg.strand])
-            new_size = max(my_len + 10000,seg.end + 10000)
+            my_len = len(self._chroms[chrom][strand])
+            new_size = max(my_len + 10000,end + 10000)
             for strand in self.strands():
-                new_strand = copy.deepcopy(self._chroms[seg.chrom][strand])
-                new_strand.resize(new_size)
-                self._chroms[seg.chrom][strand] = new_strand
+                #new_strand = copy.deepcopy(self._chroms[chrom][strand])
+                #new_strand.resize(new_size)
+                self._chroms[chrom][strand].resize(new_size) # = new_strand
         except KeyError:
-            assert seg.strand in self.strands()
-            if seg.chrom not in self.keys():
-                self._chroms[seg.chrom] = {}
+            assert strand in self.strands()
+            if chrom not in self.keys():
+                self._chroms[chrom] = {}
                 for strand in self.strands():
-                    self._chroms[seg.chrom][strand] = numpy.zeros(self.min_chr_size) 
+                    self._chroms[chrom][strand] = numpy.zeros(self.min_chr_size) 
             
-        self._chroms[seg.chrom][seg.strand][seg.start:seg.end] = val
+        self._chroms[chrom][strand][start:end] = val
         self.set_normalize(old_normalize)
 
     def keys(self):
@@ -1887,8 +1905,8 @@ class GenomeArray(MutableAbstractGenomeArray):
             trimming positions from the ends first            
         """
         for feature in BowtieReader(fh):
-            if len(feature.spanning_segment) >= min_length and len(feature.spanning_segment) <= max_length:
-                seg = feature.spanning_segment
+            span = feature.spanning_segment
+            if len(span) >= min_length and len(feature.spanning_segment) <= max_length:
                 tuples = mapfunc(feature,**trans_args)
                 for seg, val in tuples:
                     self[seg] += val

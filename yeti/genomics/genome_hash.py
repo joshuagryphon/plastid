@@ -626,20 +626,22 @@ class TabixGenomeHash(AbstractGenomeHash):
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(roi,GenomicSegment):
-            roi_ivc = SegmentChain(roi)
+            roi_chain = SegmentChain(roi)
+            roi_seg = roi
         elif isinstance(roi,SegmentChain):
-            roi_ivc = roi
+            roi_chain = roi
+            roi_seg = roi_chain.spanning_segment
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
         
-        feature_text = "\n".join(["\n".join(list(R.fetch(roi_ivc.spanning_segment.chrom,
-                                                         roi_ivc.spanning_segment.start,
-                                                         roi_ivc.spanning_segment.end))) \
+        feature_text = "\n".join(["\n".join(list(R.fetch(roi_seg.chrom,
+                                                         roi_seg.start,
+                                                         roi_seg.end))) \
                                                          for R in self.tabix_readers])
             
-        features = list(self._reader_class(cStringIO.StringIO(feature_text)))
+        features = (self._reader_class(cStringIO.StringIO(feature_text)))
         if stranded == True:
-            features = [X for X in features if roi_ivc.overlaps(X)]
+            features = [X for X in features if roi_chain.overlaps(X)]
         else:
-            features = [X for X in features if roi_ivc.unstranded_overlaps(X)]
+            features = [X for X in features if roi_chain.unstranded_overlaps(X)]
         return features
