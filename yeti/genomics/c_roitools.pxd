@@ -1,5 +1,8 @@
 cdef enum Strand:
-   forward_strand, reverse_strand, unstranded, problem
+    forward_strand = 0
+    unstranded     = 2
+    reverse_strand = 1
+    undef_strand   = -1
 
 cdef class GenomicSegment(object):
     cdef str chrom
@@ -13,6 +16,10 @@ cdef class GenomicSegment(object):
     cpdef str get_name(self)
 
 
+cdef str strand_to_str(Strand)
+cdef Strand str_to_strand(str) except undef_strand
+
 cpdef sort_segments_lexically(GenomicSegment)
 cpdef positions_to_segments(str,str,object)
 cpdef positionlist_to_segments(str,str,list)
+

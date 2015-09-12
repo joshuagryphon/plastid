@@ -1756,6 +1756,146 @@ class TestGenomicSegment(unittest.TestCase):
         # different coordinates, different chromosomes opposite strand
         self.assertNotEquals(self.test_dict['iv2'],self.test_dict['biv7'])
                                                           
+    def test_richcmp(self):
+
+        a100_150p  = GenomicSegment("chrA",100,150,"+")
+        a100_150p2 = GenomicSegment("chrA",100,150,"+")
+
+        a100_175p  = GenomicSegment("chrA",100,175,"+")
+        a125_150p  = GenomicSegment("chrA",125,150,"+")
+
+        b100_150p  = GenomicSegment("chrB",100,150,"+")
+
+        a100_150m  = GenomicSegment("chrA",100,150,"-")
+        a100_150m2 = GenomicSegment("chrA",100,150,"-")
+
+        a100_175m  = GenomicSegment("chrA",100,175,"-")
+        a125_150m  = GenomicSegment("chrA",125,150,"-")
+
+        b100_150m  = GenomicSegment("chrB",100,150,"-")
+
+        expect_true = [ 
+                        # equalities
+                        a100_150p == a100_150p2,  # test 0
+                        a100_150p <= a100_150p2,
+                        a100_150p >= a100_150p2,
+
+                        # inequalities
+                        a100_150p != a100_175p,
+                        a100_150p != a125_150p,
+                        a100_150p != a100_150m,
+                        a100_150p != b100_150p,
+                        
+                        # start/end coordinate priority
+                        a100_150p <  a100_175p,
+                        a100_150p <  a125_150p,
+                        a100_150p <  b100_150p,
+                        a100_150p <= a100_175p,   # test 10
+                        a100_150p <= a125_150p,
+
+                        # chromosome priority
+                        a100_150p <= b100_150p,
+                        a125_150p <= b100_150p,
+                        a100_150m <= b100_150p,
+                        a100_150p <  b100_150p,
+                        a125_150p <  b100_150p,
+                        a100_150m <  b100_150p,
+
+                        # strand 
+                        a100_150p <  a100_150m,
+                        a100_150p <= a100_150m,
+                        a125_150p >  a100_150m,   # test 20
+                        a125_150p >  a100_150m,
+
+                        # start/end coordinate priority
+                        a100_175p >  a100_150p,
+                        a125_150p >  a100_150p,
+                        b100_150p >  a100_150p,
+                        a100_175p >= a100_150p,
+                        a125_150p >= a100_150p,
+
+                        # chromosome priority
+                        b100_150p >= a100_150p,
+                        b100_150p >= a125_150p,
+                        b100_150p >= a100_150m,
+                        b100_150p >  a100_150p,   # test 30
+                        b100_150p >  a125_150p,
+                        b100_150p >  a100_150m,
+
+                        # strand priority
+                        a100_150m >  a100_150p,
+                        a100_150m >= a100_150p,
+                        a125_150m >  a125_150p,
+                        a125_150m >= a125_150p,
+        ]
+
+        expect_false = [ 
+                        # equalities
+                        a100_150p != a100_150p2,   # test 0
+                        a100_150p <  a100_150p2,
+                        a100_150p >  a100_150p2,
+
+                        # inequalities
+                        a100_150p == a100_175p,
+                        a100_150p == a125_150p,
+                        a100_150p == a100_150m,
+                        a100_150p == b100_150p,
+                        
+                        # start/end coordinate priority
+                        a100_150p >  a100_175p,
+                        a100_150p >  a125_150p,
+                        a100_150p >  b100_150p,
+                        a100_150p >= a100_175p,    # test 10
+                        a100_150p >= a125_150p,
+
+                        # chromosome priority
+                        a100_150p >= b100_150p,
+                        a125_150p >= b100_150p,
+                        a100_150m >= b100_150p,
+                        a100_150p >  b100_150p,
+                        a125_150p >  b100_150p,
+                        a100_150m >  b100_150p,
+
+                        # strand priority
+                        a100_150p >  a100_150m,
+                        a100_150p >= a100_150m,
+                        a125_150p <  a100_150m,    # test 20
+                        a125_150p <= a100_150m,
+
+                        # start/end coordinate priority
+                        a100_175p <  a100_150p,
+                        a125_150p <  a100_150p,
+                        b100_150p <  a100_150p,
+                        a100_175p <= a100_150p,
+                        a125_150p <= a100_150p,
+
+                        # chromosome priority
+                        b100_150p <= a100_150p,
+                        b100_150p <= a125_150p,
+                        b100_150p <= a100_150m,
+                        b100_150p <  a100_150p,    # test 30
+                        b100_150p <  a125_150p,
+                        b100_150p <  a100_150m,
+
+                        # strand priority
+                        a100_150m <  a100_150p,
+                        a100_150m <= a100_150p,
+                        a125_150m <  a125_150p,
+                        a125_150m <= a125_150p,
+        ]
+        for n,test in enumerate(expect_true):
+            self.assertTrue(test,"GenomicSegment.test_richcmp: Failed expected True test #%s:" % n)
+
+        for n,test in enumerate(expect_false):
+            self.assertFalse(test,"GenomicSegment.test_richcmp: Failed expected False test #%s:" % n)
+
+        self.assertEqual(sorted([a125_150p,a100_175p,b100_150p,a100_150m]),
+                                [a100_150m,a100_175p,a125_150p,b100_150p],
+                                "GenomicSegment failed sort test 1")
+
+                                     
+
+
     def test_contains(self):
         """Test containment"""
 

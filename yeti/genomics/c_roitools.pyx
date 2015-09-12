@@ -7,6 +7,15 @@ segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 
 
+# compile time constants - __richcmp__ test
+DEF LT  = 0
+DEF LEQ = 1
+DEF EQ  = 2
+DEF NEQ = 3
+DEF GT  = 4
+DEF GEQ = 5
+
+
 #==============================================================================
 # Exported helper functions e.g. for sorting or building |GenomicSegments|
 #==============================================================================
@@ -127,7 +136,7 @@ cdef str strand_to_str(Strand strand):
     else:
         return "."
 
-cdef Strand str_to_strand(str val) except problem:
+cdef Strand str_to_strand(str val) except undef_strand:
     """Convert str representation of strand to enum"""
     if val == "+":
         return forward_strand
@@ -136,7 +145,7 @@ cdef Strand str_to_strand(str val) except problem:
     elif val == ".":
         return unstranded
     else:
-        raise ValueError("trand must be '+', '-', or '.'")
+        raise ValueError("Strand must be '+', '-', or '.'")
 
 
 #==============================================================================
@@ -145,7 +154,8 @@ cdef Strand str_to_strand(str val) except problem:
 
 cdef class GenomicSegment:
     """A continuous segment of the genome, defined by a chromosome name,
-    a start coordinate, and end coordinate, and a strand.
+    a start coordinate, and end coordinate, and a strand. Building block
+    for a |SegmentChain| or a |Transcript|.
 
     Attributes
     ----------
@@ -159,13 +169,87 @@ cdef class GenomicSegment:
         0-indexed, half-open right most position of segment
 
     strand : str
-        Chromosome strand (`'+'`, `'-'`, or `'.'`)
-    
-    
+Chromosome strand (`'+'`, `'-'`, or `'.'`)
+   
+
+    Examples
+    --------
+
+    |GenomicSegments| sort lexically by chromosome, start position, end position,
+    and finally strand::
+        
+        >>> GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrB",0,10,"+")
+        True
+
+        >>> GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",75,100,"+")
+        True
+
+        >>> GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",55,75,"+")
+        True
+
+        >>> GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,150,"+")
+        True
+
+        >>> GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,100,"-")
+        True
+
+
+    They also provide a few convenience methods for containment or overlap. To be
+    contained, a segment must be on the same chromosome and strand as its container,
+    and its coordinates must be within or equal to its endpoints
+
+        >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"+")
+        True
+
+        >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",50,100,"+")
+        True
+       
+        >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"-")
+        False
+
+        >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",75,200,"+")
+        False
+
+
+
+
+GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"+")
+True
+
+GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",50,100,"+")
+True
+       
+GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"-")
+False
+
+GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",75,200,"+")
+False
+GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrB",0,10,"+")
+True
+
+GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",75,100,"+")
+True
+
+GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",55,75,"+")
+True
+
+GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,150,"+")
+True
+
+GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,100,"-")
+True
+
+    Similarly, to overlap, |GenomicSegments| must be on the same strand and 
+    chromosome.
+     
     See also
     --------
     SegmentChain
         Base class for genomic features, built from multiple |GenomicSegments|
+
+    Transcript
+        Subclass of |SegmentChain| that adds convenience methods for manipulating
+        coding regions, UTRs, et c
     """
     def __cinit__(self, str chrom, long start, long end, str strand):
         """Create a |GenomicSegment|
@@ -245,20 +329,50 @@ cdef class GenomicSegment:
         return len
 
     def __richcmp__(self,GenomicSegment other, int cmptype):
+        if other is None or not isinstance(other,GenomicSegment):
+            return False
+
         return self._cmp_helper(other,cmptype)
 
+    # TODO: suspend type check via decorator
     cpdef bint _cmp_helper(self,GenomicSegment other,int cmptype):
         nonecheck(other,"GenomicSegment eq/neq","other")
-        if other is None:
-            return False
-        if cmptype == 2: # equal 
-            return isinstance(other,GenomicSegment) and\
-                   self.chrom  == other.chrom and\
+        schrom = self.chrom
+        ochrom = other.chrom
+        if cmptype == EQ:
+            return schrom      == ochrom and\
                    self.strand == other.strand and\
                    self.start  == other.start and\
                    self.end    == other.end
-        elif cmptype == 3: #inequal
-            return not self._cmp_helper(other,2)
+        elif cmptype == NEQ:
+            return self._cmp_helper(other,EQ) == False
+        elif cmptype == LT:
+            if schrom < ochrom:
+                return True
+            elif schrom > ochrom:
+                return False
+            elif schrom == ochrom:
+                sstart = self.start
+                ostart = other.start
+                if sstart < ostart:
+                    return True
+                elif sstart > ostart:
+                    return False
+                elif sstart == ostart:
+                    send = self.end
+                    oend = other.end
+                    if send < oend:
+                        return True
+                    elif send > oend:
+                        return False
+                    elif send == oend:
+                        return self.strand < other.strand
+        elif cmptype == GT:
+            return other._cmp_helper(self,LT) # (other < self)
+        elif cmptype == LEQ:
+            return self._cmp_helper(other,LT) or self._cmp_helper(other,EQ) # (self == other) or (self < other)
+        elif cmptype == GEQ:
+            return other._cmp_helper(self,LT) or self._cmp_helper(other,EQ) # (self == other) or (other < self)
         else:
             raise AttributeError("Comparison operation not defined")
     
@@ -385,7 +499,5 @@ cdef class GenomicSegment:
             return strand_to_str(self.strand)
         def __set__(self, str val):
             self.val = str_to_strand(val)
-
-
 
 
