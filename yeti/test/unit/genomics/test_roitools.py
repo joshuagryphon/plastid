@@ -1893,9 +1893,6 @@ class TestGenomicSegment(unittest.TestCase):
                                 [a100_150m,a100_175p,a125_150p,b100_150p],
                                 "GenomicSegment failed sort test 1")
 
-                                     
-
-
     def test_contains(self):
         """Test containment"""
 

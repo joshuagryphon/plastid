@@ -275,18 +275,17 @@ True
         self.chrom  = my_chrom
         self.start  = start
         self.end    = end
-        self.strand = str_to_strand(strand)
+        self.c_strand = str_to_strand(strand)
     
     def __repr__(self):
         return "<%s %s:%s-%s strand='%s'>" % ("GenomicSegment",
                                               self.chrom,
                                               self.start,
                                               self.end,
-                                              strand_to_str(self.strand))
+                                              self.strand)
     
     def __str__(self):
-        return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, 
-                                 strand_to_str(self.strand))
+        return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, self.strand)
     
     @staticmethod
     def from_str(str inp):
@@ -314,7 +313,7 @@ True
         cdef str newchrom, newstrand
         cdef long newstart, newend
         newchrom = copy.copy(self.chrom)
-        newstrand = strand_to_str(self.strand)
+        newstrand = self.strand
         newstart = self.start
         newend = self.end
         return GenomicSegment(newchrom,newstart,newend,newstrand)
@@ -340,10 +339,10 @@ True
         schrom = self.chrom
         ochrom = other.chrom
         if cmptype == EQ:
-            return schrom      == ochrom and\
-                   self.strand == other.strand and\
-                   self.start  == other.start and\
-                   self.end    == other.end
+            return schrom         == ochrom and\
+                   self.c_strand == other.c_strand and\
+                   self.start     == other.start and\
+                   self.end       == other.end
         elif cmptype == NEQ:
             return self._cmp_helper(other,EQ) == False
         elif cmptype == LT:
@@ -366,7 +365,7 @@ True
                     elif send > oend:
                         return False
                     elif send == oend:
-                        return self.strand < other.strand
+                        return self.c_strand < other.c_strand
         elif cmptype == GT:
             return other._cmp_helper(self,LT) # (other < self)
         elif cmptype == LEQ:
@@ -409,7 +408,7 @@ True
         """
         nonecheck(other,"GenomicSegment.contains","other")
         return self.chrom == other.chrom and\
-               self.strand == other.strand and\
+               self.c_strand == other.c_strand and\
                (other.start >= self.start and other.end <= self.end and other.end >= other.start)
          
     cpdef bint overlaps(self,GenomicSegment other):
@@ -426,7 +425,7 @@ True
         bool
         """
         nonecheck(other,"GenomicSegment.overlaps","other")
-        if self.chrom == other.chrom and self.strand == other.strand:
+        if self.chrom == other.chrom and self.c_strand == other.c_strand:
             if (self.start >= other.start and self.start < other.end) or\
                (other.start >= self.start and other.start < self.end):
                    return True
@@ -496,8 +495,8 @@ True
           - '.' for unstranded / both strands
         """
         def __get__(self):
-            return strand_to_str(self.strand)
+            return strand_to_str(self.c_strand)
         def __set__(self, str val):
-            self.val = str_to_strand(val)
+            self.c_strand = str_to_strand(val)
 
 

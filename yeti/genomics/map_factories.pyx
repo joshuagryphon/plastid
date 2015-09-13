@@ -278,7 +278,7 @@ cdef class FivePrimeMapFactory:
             int do_warn = 0
             int read_offset = self.offset
 
-        if seg.strand == reverse_strand:
+        if seg.c_strand == reverse_strand:
              read_offset = -read_offset - 1 
 
         for read in reads:
@@ -369,7 +369,7 @@ cdef class ThreePrimeMapFactory:
             int do_warn = 0
             int read_offset = self.offset
 
-        if seg.strand != reverse_strand:
+        if seg.c_strand != reverse_strand:
              read_offset = -read_offset - 1 
 
         for read in reads:
@@ -469,7 +469,7 @@ cdef class VariableFivePrimeMapFactory(object):
             long [:] count_view = count_array
             long psite
 
-        if seg.strand == reverse_strand:
+        if seg.c_strand == reverse_strand:
             offsets = self.reverse_offsets
             empty_val = 1
 
