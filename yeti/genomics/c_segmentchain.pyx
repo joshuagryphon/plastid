@@ -286,6 +286,7 @@ cdef class SegmentChain(object):
         self._segments        = []
         self._mask_segments   = []      # list<GenomicSegment> of masked positions
         self._position_hash   = clone(cp_array('l'),0,False)
+        self._inverse_hash    = {}
         self.spanning_segment = NullSegment
 
     def __init__(self,*segments,**attr):
@@ -363,7 +364,7 @@ cdef class SegmentChain(object):
         """
         #print("In SegmentChain._update")
         self.sort()
-        self._position_hash = self._get_position_hash()
+        self._update_position_hash()
         #self._mask_hash [::1] = [-1] # TODO: remember this
         num_segs = len(self)
         
@@ -384,6 +385,27 @@ cdef class SegmentChain(object):
 
         else:
             raise RuntimeError("Segmentchain '%s' has negative intervals (%s)?" % (self.get_name(),num_segs))
+
+    cdef dict _update_inverse_hash(self):
+        """Generate inverse position hash, mapping genomic to |SegmentChain| coordinates.
+        The hash is stored in `self._inverse_hash`.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping genomic coordinate -> |SegmentChain coordinate|
+        """
+        cdef long [::1] positions = self._position_hash
+        cdef long length = len(positions)
+        cdef long i = 0
+        cdef ihash = {}
+
+        while i < length:
+            ihash[positions[i]] = i
+            i += 1
+
+        self._inverse_hash = ihash
+        return ihash
 
     cpdef void sort(self):
         """Sort component segments by ascending 5' chromosomal coordinate"""
@@ -871,13 +893,13 @@ cdef class SegmentChain(object):
         """
         return set(self.get_position_list())
         
-    cdef long [::1] _get_position_hash(self):
-        """Retrieve a position hash
+    cdef long [::1] _update_position_hash(self):
+        """Update position hash, mapping |SegmentChain| coordinates to genomnic coordinates
         
         Returns
         -------
-        dict
-            Dictionary mapping each position in the |SegmentChain| to its 
+        long [::1]
+            Memoryview mapping each position in the |SegmentChain| to its 
             chromosomal coordinate
         """
         #self.sort()
@@ -894,7 +916,8 @@ cdef class SegmentChain(object):
                 my_hash[c] = x
                 c += 1
                 x += 1
-
+        
+        self._position_hash = my_hash
         return my_hash
     
 #    def get_masked_position_set(self):
@@ -1008,7 +1031,8 @@ cdef class SegmentChain(object):
             for seg in segments:
                 positions |= set(range(seg.start,seg.end))
             
-            self._segments = positions_to_segments(my_chrom,my_strand,positions) # TODO: - change to cstrand when appropriatea
+            self._segments = positions_to_segments(my_chrom,my_strand,positions)
+            self._inverse_hash = {}
             #print("Done positions_to_segments")
             self._update()
         
@@ -1571,48 +1595,85 @@ cdef class SegmentChain(object):
             return "\t".join(str(X) for X in ltmp) + "\n"
         except KeyError:
             raise AttributeError("SegmentChains only support PSL output if all PSL attributes are defined in self.attr: match_length, mismatches, rep_matches, N, query_gap_count, query_gap_bases, strand, query_length, query_start, query_end, target_name, target_length, target_start, target_end")
-#        
-#    cpdef long get_segmentchain_coordinate(self, str chrom, long genomic_x, str strand, bint stranded=True):
-#        """Finds the |SegmentChain| coordinate corresponding to a genomic position
-#        
-#        Parameters
-#        ----------
-#        chrom : str
-#            Chromosome name
-#            
-#        genomic_x : int
-#            coordinate, in genomic space
-#            
-#        strand : str
-#            Chromosome strand (`'+'`, `'-'`, or `'.'`)
-#            
-#        stranded : bool, optional
-#            If `True`, coordinates are given in stranded space
-#            (i.e. from 5' end of chain, as one might expect for a transcript).
-#            If `False`, coordinates are given from the left end of `self`,
-#            regardless of strand. (Default: `True`)
-#        
-#        
-#        Returns
-#        -------
-#        int
-#            Position in |SegmentChain|
-#            
-#        Raises
-#        ------
-#        KeyError
-#            if position outside bounds of |SegmentChain|
-#        """
-#        assert chrom  == self.chrom
-#        assert str_to_strand(strand) == self.strand
-#
-#        if self._position_hash == {}:
-#            self._position_hash = self._get_position_hash()
-#        if stranded == True and self.c_strand == reverse_strand:
-#            return self.get_length() - self._position_hash[genomic_x] - 1
-#        else:
-#            return self._position_hash[genomic_x]
-#
+        
+
+    def get_segmentchain_coordinate(self, str chrom, long genomic_x, str strand, bint stranded = True):
+        """Finds the |SegmentChain| coordinate corresponding to a genomic position
+        
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name
+            
+        genomic_x : int
+            coordinate, in genomic space
+            
+        strand : str
+            Chromosome strand (`'+'`, `'-'`, or `'.'`)
+            
+        stranded : bool, optional
+            If `True`, coordinates are given in stranded space
+            (i.e. from 5' end of chain, as one might expect for a transcript).
+            If `False`, coordinates are given from the left end of `self`,
+            regardless of strand. (Default: `True`)
+        
+        
+        Returns
+        -------
+        int
+            Position in |SegmentChain|
+            
+        Raises
+        ------
+        KeyError
+            if position outside bounds of |SegmentChain|
+        """
+        if chrom != self.chrom:
+            raise ValueError("get_segmentchain_coordinate: query chromosome '%s' does not match chain '%s'" % chrom, self)
+        if strand != self.strand:
+            raise ValueError("get_segmentchain_coordinate: query strand '%s' does not match chain '%s'" % strand, self)
+
+        return self.c_get_segmentchain_coordinate(genomic_x,stranded)
+
+    cdef long c_get_segmentchain_coordinate(self, long genomic_x, bint stranded) except -1:
+        """Finds the |SegmentChain| coordinate corresponding to a genomic position
+        
+        Parameters
+        ----------
+        genomic_x : int
+            coordinate, in genomic space
+            
+        stranded : bool, optional
+            If `True`, coordinates are given in stranded space
+            (i.e. from 5' end of chain, as one might expect for a transcript).
+            If `False`, coordinates are given from the left end of `self`,
+            regardless of strand. (Default: `True`)
+        
+        
+        Returns
+        -------
+        int
+            Position in |SegmentChain|
+            
+        Raises
+        ------
+        KeyError
+            if position outside bounds of |SegmentChain|
+        """
+        cdef:
+            long [:] positions = self._position_hash
+            long length = self.length
+            long orig_index = genomic_x
+            dict ihash = self._inverse_hash
+
+        if len(ihash) != positions.shape[0]:
+            self._update_get_inverse_hash()
+
+        if stranded == True and self.strand == "-":
+            return self.get_length() - ihash[genomic_x] - 1
+        else:
+            return ihash[genomic_x]
+
     def get_genomic_coordinate(self,x,stranded=True):
         """Finds genomic coordinate corresponding to position `x` in `self`
         
@@ -1778,9 +1839,8 @@ cdef class SegmentChain(object):
             raise TypeError('end coordinate supplied is None. Expected int')
 
         if stranded == True and self.c_strand == reverse_strand:
-            nstart = length - start - 1
-            start = length - end
-            end = nstart
+            end   = - start - 1 
+            start = - end - 1
 
         positions = positions[start:end]
         segs = positions_to_segments(self.chrom,self.strand,positions)
@@ -1852,61 +1912,61 @@ cdef class SegmentChain(object):
 #            atmp.mask[x] = False
 #        
 #        return atmp
-#    
-#    def get_sequence(self,genome,stranded=True):
-#        """Return spliced genomic sequence of |SegmentChain| as a string
-#        
-#        Parameters
-#        ----------
-#        genome : dict or :class:`twobitreader.TwoBitFile`
-#            Dictionary mapping chromosome names to sequences.
-#            Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
-#       
-#        stranded : bool
-#            If `True` and the |SegmentChain| is on the minus strand,
-#            sequence will be reverse-complemented (Default: True)
-#            
-#            
-#        Returns
-#        -------
-#        str
-#            Nucleotide sequence of the |SegmentChain| extracted from `genome`
-#        """
-#        if len(self) == 0:
-#            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
-#            return ""
-#
-#        else:
-#            chromseq = genome[self.spanning_segment.chrom]
-#            ltmp = [chromseq[X.start:X.end] for X in self]
-#            stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
-#
-#            if self.c_strand == reverse_strand  and stranded is True:
-#                stmp = str(Seq(stmp,generic_dna).reverse_complement())
-#            
-#        return stmp
-#    
-#    def get_fasta(self,genome,stranded=True):
-#        """Formats sequence of SegmentChain as FASTA output
-#        
-#        Parameters
-#        ----------
-#        genome : dict or :class:`twobitreader.TwoBitFile`
-#            Dictionary mapping chromosome names to sequences.
-#            Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
-#       
-#        stranded : bool
-#            If `True` and the |SegmentChain| is on the minus strand,
-#            sequence will be reverse-complemented (Default: True)
-#
-#            
-#        Returns
-#        -------
-#        str
-#            FASTA-formatted seuqence of |SegmentChain| extracted from `genome`
-#        """
-#        return ">%s\n%s\n" % (self.get_name(),self.get_sequence(genome,stranded=stranded))
-#
+    
+    def get_sequence(self,genome,stranded=True):
+        """Return spliced genomic sequence of |SegmentChain| as a string
+        
+        Parameters
+        ----------
+        genome : dict or :class:`twobitreader.TwoBitFile`
+            Dictionary mapping chromosome names to sequences.
+            Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
+       
+        stranded : bool
+            If `True` and the |SegmentChain| is on the minus strand,
+            sequence will be reverse-complemented (Default: True)
+            
+            
+        Returns
+        -------
+        str
+            Nucleotide sequence of the |SegmentChain| extracted from `genome`
+        """
+        if len(self) == 0:
+            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
+            return ""
+
+        else:
+            chromseq = genome[self.spanning_segment.chrom]
+            ltmp = [chromseq[X.start:X.end] for X in self]
+            stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
+
+            if self.strand == "-"  and stranded is True:
+                stmp = str(Seq(stmp,generic_dna).reverse_complement())
+            
+        return stmp
+    
+    def get_fasta(self,genome,stranded=True):
+        """Formats sequence of SegmentChain as FASTA output
+        
+        Parameters
+        ----------
+        genome : dict or :class:`twobitreader.TwoBitFile`
+            Dictionary mapping chromosome names to sequences.
+            Sequences may be strings, string-like, or :py:class:`Bio.Seq.SeqRecord` objects
+       
+        stranded : bool
+            If `True` and the |SegmentChain| is on the minus strand,
+            sequence will be reverse-complemented (Default: True)
+
+            
+        Returns
+        -------
+        str
+            FASTA-formatted seuqence of |SegmentChain| extracted from `genome`
+        """
+        return ">%s\n%s\n" % (self.get_name(),self.get_sequence(genome,stranded=stranded))
+
     @staticmethod
     def from_str(str inp):
         """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.str`:
@@ -1986,17 +2046,15 @@ cdef class SegmentChain(object):
         -------
         |SegmentChain|
         """
-        #cdef:
-        #    list frags = []
-        #    list items = line.strip("\n").split("\t")
-        #    list column_formatters, frag_sizes, frag_offsets
-        #    set types
-        #    int num_extra_columns, i
-        #    str chrom, chrom_start, chrom_end, default_id, k
-        #    dict base_columns, attr
-        
-        frags = []
-        items = line.strip("\n").split("\t")
+        cdef:
+            list frags = []
+            list items = line.strip("\n").split("\t")
+            list column_formatters, frag_sizes, frag_offsets
+            set types
+            int num_extra_columns, i
+            long chrom_start, chrom_end
+            str chrom, default_id, k
+            dict base_columns, attr
         
         if isinstance(extra_columns,int):
             if extra_columns < 0:
@@ -2022,8 +2080,8 @@ cdef class SegmentChain(object):
             raise ValueError("BED format requires at least 3 columns. Found only %s." % num_bed_columns)
         
         chrom         = items[0]
-        chrom_start   = int(items[1])
-        chrom_end     = int(items[2])
+        chrom_start   = long(items[1])
+        chrom_end     = long(items[2])
         strand = "." if num_bed_columns < 6 else items[5]
     
         default_id  = "%s:%s-%s(%s)" % (chrom,chrom_start,chrom_end,strand)
@@ -2093,7 +2151,7 @@ cdef class SegmentChain(object):
         for k in ("blocks","blocksizes","blockstarts"):
             attr.pop(k)
     
-        return SegmentChain(*tuple(frags),**attr)
+        return SegmentChain(*frags,**attr)
     
     @staticmethod
     def from_psl(psl_line):
@@ -2110,8 +2168,14 @@ cdef class SegmentChain(object):
         -------
         |SegmentChain|
         """
-        items = psl_line.strip().split("\t")        
-        attr = {}
+        cdef:
+            list items = psl_line.strip().split("\t")        
+            list segs = []
+            list block_starts, q_starts, t_starts
+            dict attr = {}
+            long t_start, block_size
+            GenomicSegment seg
+
         attr["type"]             = "alignment"
         attr["query_name"]       = items[9]
         attr["match_length"]     = int(items[0])
@@ -2140,15 +2204,14 @@ cdef class SegmentChain(object):
         attr["q_starts"] = q_starts
         attr["t_starts"] = t_starts
         
-        ivs = []
         for t_start, block_size in zip(t_starts,block_sizes):
-            iv = GenomicSegment(attr["target_name"],
+            seg = GenomicSegment(attr["target_name"],
                                  t_start,
                                  t_start + block_size,
                                  attr["strand"])
-            ivs.append(iv)
+            segs.append(seg)
         
-        return SegmentChain(*ivs,**attr)        
+        return SegmentChain(*segs,**attr)        
 
     def __deepcopy__(self,memo):
         new_ivs  = copy.deepcopy(self._segments)

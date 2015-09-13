@@ -479,11 +479,17 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         """Test identity of %ss""" % (self.test_class.__name__)
         combos = itertools.product(self.ivcs.keys(),repeat=2)
         for k1, k2 in combos:
+            msg = "%s test_identity: %s and %s evaluated as %s. Expected %s."
+            chain1 = self.ivcs[k1]
+            chain2 = self.ivcs[k2]
+            answer = self.is_identical(chain1,chain2)
             if k1 == k2:
-                self.assertTrue(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
+                self.assertTrue(answer,msg % (self.__test_class__,chain1,chain2,False,True)  )
             else:
-                self.assertFalse(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
-            
+                #self.assertFalse(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
+                self.assertFalse(answer,msg % (self.__test_class__,chain1,chain2,True,False)  )
+
+
     def _eq_check(self,test_key,test_func,strand_tests=["sense"]):
         """Test SegmentChains for various stranded equality properties
         
@@ -628,15 +634,15 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(ivc.get_length(),475)
         
         # add GenomicSegment from the wrong strand
-        self.assertRaises(ValueError,
+        self.assertRaises(AssertionError,
                           ivc.add_segments,self.ivs["a3m"])
         
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(ValueError,
+        self.assertRaises(AssertionError,
                           ivc.add_segments,self.ivs["b3p"])
 
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(ValueError,
+        self.assertRaises(AssertionError,
                           ivc.add_segments,self.ivs["b3m"])
     
     @skip_if_abstract    

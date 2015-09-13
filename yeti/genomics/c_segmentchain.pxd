@@ -9,7 +9,7 @@ cdef class SegmentChain(object):
         GenomicSegment spanning_segment
         long [::1] _position_hash
         int  [::1] _position_mask # really should be bint, but we can't use it there
-        dict attr
+        dict attr, _inverse_hash
 
     cdef void _update(self)
     cpdef void sort(self)
@@ -28,9 +28,11 @@ cdef class SegmentChain(object):
     cpdef SegmentChain get_antisense(self)
     cpdef list get_position_list(self)
     cpdef set get_position_set(self)
-    cdef long [::1] _get_position_hash(self)
+    cdef long [::1] _update_position_hash(self)
+    cdef dict _update_inverse_hash(self)
     cpdef long get_length(self)
     cdef long c_get_genomic_coordinate(self,long,bint) except -1
+    cdef long c_get_segmentchain_coordinate(self,long,bint) except -1
     cdef SegmentChain c_get_subchain(self,long,long,bint)
 
 
