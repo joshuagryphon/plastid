@@ -1,16 +1,18 @@
-cdef class CenterMapFactory(object):
+from yeti.genomics.c_common import fusedreal
+
+cdef class CenterMapFactory:
     cdef unsigned int nibble
 
-cdef class FivePrimeMapFactory(object):
+cdef class FivePrimeMapFactory:
     cdef int offset
 
-cdef class ThreePrimeMapFactory(object):
+cdef class ThreePrimeMapFactory:
     cdef int offset
 
-cdef class VariableFivePrimeMapFactory(object):
+cdef class VariableFivePrimeMapFactory:
     cdef int [10000] forward_offsets
     cdef int [10000] reverse_offsets
 
-cdef class SizeFilterFactory(object):
+cdef class SizeFilterFactory:
     cdef float min_, max_
 

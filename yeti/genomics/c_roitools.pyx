@@ -2,6 +2,8 @@
 
 import re
 import copy
+from yeti.genomics.c_common cimport Strand, forward_strand, reverse_strand, \
+                                    unstranded, undef_strand
 
 segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
@@ -119,7 +121,7 @@ cpdef sort_segments_lexically(GenomicSegment seg):
 
 
 #==============================================================================
-# Non-exported helpers
+# Helpers
 #==============================================================================
 
 cdef void nonecheck(object obj,str place, str valname):
@@ -210,34 +212,6 @@ Chromosome strand (`'+'`, `'-'`, or `'.'`)
         >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",75,200,"+")
         False
 
-
-
-
-GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"+")
-True
-
-GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",50,100,"+")
-True
-       
-GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"-")
-False
-
-GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",75,200,"+")
-False
-GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrB",0,10,"+")
-True
-
-GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",75,100,"+")
-True
-
-GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",55,75,"+")
-True
-
-GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,150,"+")
-True
-
-GenomicSegment("chrA",50,100,"+") < GenomicSegment("chrA",50,100,"-")
-True
 
     Similarly, to overlap, |GenomicSegments| must be on the same strand and 
     chromosome.
@@ -499,4 +473,12 @@ True
         def __set__(self, str val):
             self.c_strand = str_to_strand(val)
 
+    property c_strand:
+        def __get__(self):
+            return self.c_strand
+        def __set__(self,val):
+            self.c_strand = val
 
+# Exported object
+NullSegment = GenomicSegment("NullChromosome",0,0,".")
+NullSegment.c_strand = undef_strand

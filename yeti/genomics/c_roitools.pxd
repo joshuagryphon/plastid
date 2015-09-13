@@ -1,8 +1,4 @@
-cdef enum Strand:
-    forward_strand = 0
-    unstranded     = 2
-    reverse_strand = 1
-    undef_strand   = -1
+from yeti.genomics.c_common cimport Strand, undef_strand
 
 cdef class GenomicSegment(object):
     cdef str chrom

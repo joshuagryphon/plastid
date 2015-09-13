@@ -12,7 +12,8 @@ cimport numpy as np
 cimport cython
 
 from pysam.calignmentfile cimport AlignedSegment
-from yeti.genomics.c_roitools cimport forward_strand, reverse_strand, unstranded, GenomicSegment
+from yeti.genomics.c_common cimport forward_strand, reverse_strand, unstranded
+from yeti.genomics.c_roitools cimport GenomicSegment
 from yeti.util.services.exceptions import DataWarning
 
 
@@ -25,6 +26,7 @@ ctypedef np.int_t    INT_t
 ctypedef np.float_t  FLOAT_t
 ctypedef np.double_t DOUBLE_t
 ctypedef np.long_t   LONG_t
+
 
 #===============================================================================
 # Factories for mapping functions for BAMGenomeArray or other structures
@@ -117,7 +119,7 @@ def dummy7(reads,seg):
 
 
 
-cdef class CenterMapFactory(object):
+cdef class CenterMapFactory:
     """Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
     A user-specified number of bases is removed from each side of each
     read alignment, and the `N` remaining bases are each apportioned `1/N`
@@ -399,7 +401,7 @@ cdef class ThreePrimeMapFactory:
             self.offset = val
 
 
-cdef class VariableFivePrimeMapFactory(object):
+cdef class VariableFivePrimeMapFactory:
     """Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
     The offset for a read of a given length is supplied in `offset_dict[readlen]`
@@ -510,7 +512,7 @@ cdef class VariableFivePrimeMapFactory(object):
         return reads_out, count_array
 
 
-cdef class SizeFilterFactory(object):
+cdef class SizeFilterFactory:
     """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
     using ::meth:`BAMGenomeArray.add_filter`
     
