@@ -175,7 +175,10 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     
         norm_counts = numpy.ma.masked_invalid(norm_count_dict[read_length])
     
-        profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+        with warnings.catch_warnings(): # ignore numpy mean of empty slice warning
+            warnings.filterwarnings("ignore",".*mean of empty.*",RuntimeWarning)
+            profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+
         num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0) 
         
         profile_table["%s-mers" % read_length]         = profile

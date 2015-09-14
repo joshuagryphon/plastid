@@ -427,36 +427,31 @@ def VariableFivePrimeMapFactory(offset_dict):
          
     def map_func(reads,seg,offset_dict=offset_dict):
         reads_out = []         
-        seg_start  = seg.start
-        seg_end    = seg.end
-        seg_strand = seg.strand
-        count_array = numpy.zeros(seg_end - seg_start)
-        for read_length, offset in offset_dict.items(): # any([OFFSET>=LENGTH for LENGTH,OFFSET in offset_dict.items()]):
-            if offset >= read_length:
-                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                              DataWarning)
-                break
-
-        if seg.strand == "-":
-            offset_dict = { K : -V-1 for K,V in offset_dict.items() }
-
+        count_array = numpy.zeros(len(seg))
         for read in reads:
-            read_positions = read.positions
-            read_length = len(read_positions)
-            try:
-                offset = offset_dict.get(read_length,offset_dict["default"])
-            except KeyError:
+            read_length = len(read.positions)
+            if read_length in offset_dict:
+                offset = offset_dict[read_length]
+            elif "default" in offset_dict:
+                offset = offset_dict["default"]
+            else:
                 warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
                               DataWarning)
                 continue
 
             if offset >= read_length:
+                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+                              DataWarning)
                 continue
-    
-            p_site = read.positions[offset]
-            if p_site >= seg_start and p_site < seg_end:
+
+            if seg.strand == "+":
+                p_site = read.positions[offset]
+            else:
+                p_site = read.positions[-offset - 1]
+             
+            if p_site >= seg.start and p_site < seg.end:
                 reads_out.append(read)
-                count_array[p_site - seg_start] += 1
+                count_array[p_site - seg.start] += 1
 
         return reads_out, count_array
      
