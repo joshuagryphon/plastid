@@ -63,12 +63,14 @@ fi
 source_folder=$1
 outbase=$2
 
-grep -r '^ *class .*(' "$source_folder" |\
+grep -Er '^ *(cdef)? *class .*\(' "$source_folder" |\
      grep -v ".svn" | grep -v "Binary file " |\
      sed -e 's/(.*): *$//g' \
          -e 's/class //g' \
+         -e 's/cdef //g' \
          -e 's/\//./g' \
          -e 's/\.py:/:/g' \
+         -e 's/\.pxd:/:/g' \
          -e "s/$remove_prefix//g" |\
 		 sort | uniq | tee >(awk 'BEGIN { FS=":" }
                              { printf(" .. |%s| replace:: :py:class:`~%s.%s`\n",$2,$1,$2) # single
