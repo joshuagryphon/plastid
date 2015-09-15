@@ -95,7 +95,7 @@ from yeti.genomics.c_roitools import GenomicSegment, \
                                      sort_segments_lexically, \
                                      positionlist_to_segments, \
                                      positions_to_segments
-
+from yeti.genomics.c_segmentchain import SegmentChain as cSegmentChain
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 segpat  = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
@@ -1830,6 +1830,8 @@ class SegmentChain(object):
         
         return SegmentChain(*ivs,**attr)        
     
+SegmentChain = cSegmentChain
+
 class Transcript(SegmentChain):
     """Subclass of |SegmentChain| specifically for transcripts.
     In addition to coordinate-conversion, count fetching, sequence fetching,
@@ -1902,7 +1904,7 @@ class Transcript(SegmentChain):
             If provided, a gene_id used for `GTF2`_ export
             Otherwise, generated from genomic coordinates.
         """
-        self._segments   = []
+#        self._segments   = []
         if "type" not in attr:
             attr["type"] = "mRNA"
             
@@ -1910,6 +1912,9 @@ class Transcript(SegmentChain):
         self.cds_genome_end   = attr.get("cds_genome_end",None)
         SegmentChain.__init__(self,*ivs,**attr)
         self._update()
+
+    def __deepcopy__(self,memo):
+        return Transcript(*copy.deepcopy([X for X in self._segments]),**copy.deepcopy(self.attr))
  
     def _update(self):
         SegmentChain._update(self)
@@ -2140,9 +2145,9 @@ class Transcript(SegmentChain):
                 cds_positions = cds_positions[:-3]
             else:
                 cds_positions = cds_positions[3:]
-            cds_ivc = SegmentChain(*positionlist_to_segments(self.spanning_segment.chrom,
-                                                        self.spanning_segment.strand,
-                                                        cds_positions),
+            cds_ivc = SegmentChain(*positions_to_segments(self.spanning_segment.chrom,
+                                                          self.spanning_segment.strand,
+                                                          cds_positions),
                                    type="CDS",**child_ivc_attr)
             stmp += cds_ivc.as_gtf(feature_type="CDS",escape=escape,excludes=excludes)
             

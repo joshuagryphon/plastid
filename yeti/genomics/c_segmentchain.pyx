@@ -414,7 +414,6 @@ cdef class SegmentChain(object):
         elif num_segs >1:
             segs = self._segments
             seg0 = segs[0]
-            #print("num_segs > 1, making spanning seg")
             self.spanning_segment = GenomicSegment(seg0.chrom,
                                                    seg0.start,
                                                    segs[-1].end,
@@ -2189,7 +2188,6 @@ cdef class SegmentChain(object):
         # set attr defaults in case we're dealing with BED4-BED9 format
         attr = { KEY : DEFAULT for KEY,DEFAULT,_ in bed_columns.values() }
     
-        print("got attr")
         # populate attr with real values from BED columns that are present
         for i, tup in sorted(bed_columns.items()):
             if num_bed_columns > i:
@@ -2207,7 +2205,6 @@ cdef class SegmentChain(object):
         for i in range(num_bed_columns,len(items)):
             name, formatter = column_formatters[i-num_bed_columns] 
             attr[name] = formatter(items[i])
-        print("parsed attr")
         
         # stash order of columns for export
         if num_bed_columns > 0:
@@ -2226,7 +2223,6 @@ cdef class SegmentChain(object):
             attr["thickstart"] = attr["thickend"] = chrom_start
         elif attr["thickstart"] < 0 or attr["thickend"] < 0:
             attr["thickstart"] = attr["thickend"] = chrom_start
-        print("got thickstart thickend")
         
         # convert blocks to GenomicSegments
         num_frags    = int(attr["blocks"])
@@ -2236,12 +2232,10 @@ cdef class SegmentChain(object):
             frag_start = chrom_start + frag_offsets[i]
             frag_end   = frag_start  + frag_sizes[i]
             frags.append(GenomicSegment(chrom,frag_start,frag_end,strand))
-        print("got fragments")
 
         # clean up attr
         for k in ("blocks","blocksizes","blockstarts"):
             attr.pop(k)
-        print("popping attr")
     
         return SegmentChain(*frags,**attr)
     

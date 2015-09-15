@@ -6,6 +6,9 @@ import tempfile
 import unittest
 import itertools
 import copy
+import numpy
+import warnings
+
 from yeti.util.services.mini2to3 import cStringIO
 
 from random import shuffle
@@ -17,27 +20,25 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import generic_dna
 from yeti.test.ref_files import MINI
 from yeti.readers.gff import GTF2_TranscriptAssembler, \
-                                             GFF3_TranscriptAssembler, \
-                                             GFF3_Reader
-from yeti.readers.bed import BED_to_Transcripts,\
-                                             BED_to_SegmentChain
-from yeti.genomics.roitools import SegmentChain,\
-                                         Transcript,\
-                                         positionlist_to_segments,\
-                                         positions_to_segments
+                             GFF3_TranscriptAssembler, \
+                             GFF3_Reader
+from yeti.readers.bed import BED_Reader
 
-from yeti.genomics.c_roitools import GenomicSegment
+from yeti.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
+#from yeti.genomics.c_segmentchain import SegmentChain
+from yeti.genomics.roitools import Transcript, SegmentChain
 
 from yeti.genomics.genome_array import GenomeArray
 from yeti.util.io.filters import CommentReader
 from yeti.util.services.decorators import skip_if_abstract
 
-import warnings
+
 warnings.simplefilter("ignore",DeprecationWarning)
 
 #===============================================================================
 # INDEX: Helper functions & constants
 #===============================================================================
+
 
 ANNOTATION_FILES = {
                     "bed100" : resource_filename("yeti","test/data/annotations/100transcripts.bed"),
@@ -159,7 +160,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         position_test = ivc1.get_position_set() == ivc2.get_position_set()
         strand_test   = ivc1.spanning_segment.strand == ivc2.spanning_segment.strand
         chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
-        return position_test & strand_test & chrom_test
+        return len(ivc1) > 0 and len(ivc2) > 0 and position_test and strand_test and chrom_test
     
     @skip_if_abstract
     def test_import_bed_gtf_gff(self):
@@ -207,9 +208,11 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         bed_text.close()
         gtf_text.close()
 
-        bed_transcripts = {X.get_name() : X  for X in BED_to_Transcripts(open(bed_text.name)) }
+        print("test_export_bed_gtf: able to write")
+        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=Transcript) }
         gtf_transcripts = {X.get_name() : X  for X in GTF2_TranscriptAssembler(open(gtf_text.name),
-                                                                               add_three_for_stop=False) }
+                                                                               add_three_for_stop=False,
+                                                                               return_type=Transcript) }
 
         # Test equality of imported & exported keysets
         self.assertEquals(set(self.bed_dict.keys()),set(bed_transcripts.keys()))
@@ -482,14 +485,18 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         """Test identity of %ss""" % (self.test_class.__name__)
         combos = itertools.product(self.ivcs.keys(),repeat=2)
         for k1, k2 in combos:
-            if "C" in k1 or "C" in k2:
-                self.assertRaises(AttributeError,
-                                  self.is_identical,self.ivcs[k1],self.ivcs[k2])
-            elif k1 == k2:
-                self.assertTrue(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
+            msg = "%s test_identity: '%s' %s and '%s' %s evaluated as %s. Expected %s."
+            chain1 = self.ivcs[k1]
+            chain2 = self.ivcs[k2]
+            print("testing %s (%s), %s (%s)" % (k1,chain1,k2,chain2))
+            answer = self.is_identical(chain1,chain2)
+            if k1 == k2 and len(chain1) > 0 and len(chain2) > 0:
+                self.assertTrue(answer,msg % (self.test_class,k1,chain1,k2,chain2,False,True)  )
             else:
-                self.assertFalse(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
-            
+                #self.assertFalse(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
+                self.assertFalse(answer,msg % (self.test_class,k1,chain1,k2,chain2,True,False)  )
+
+
     def _eq_check(self,test_key,test_func,strand_tests=["sense"]):
         """Test SegmentChains for various stranded equality properties
         
@@ -634,22 +641,22 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(ivc.get_length(),475)
         
         # add GenomicSegment from the wrong strand
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["a3m"])
         
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["b3p"])
 
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["b3m"])
     
     @skip_if_abstract    
     def test_add_masks(self):
         for strand, opp in [("+","-"),("-","+")]:
             ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
-                   GenomicSegment("chrA",250,300,strand))
+                               GenomicSegment("chrA",250,300,strand))
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
@@ -666,15 +673,15 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             chrom_mask_c = GenomicSegment("chrB",275,350,strand)
             
             # don't add opposite-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,opp_mask_a)
+            self.assertRaises(ValueError,ivc.add_masks,opp_mask_a)
             self.assertEqual(ivc.get_masks(),[])
 
             # don't add opposite-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,opp_mask_a,opp_mask_b,opp_mask_c)
+            self.assertRaises(ValueError,ivc.add_masks,opp_mask_a,opp_mask_b,opp_mask_c)
             self.assertEqual(ivc.get_masks(),[])
 
             # don't add wrong chromosome same-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,chrom_mask_a,chrom_mask_b,chrom_mask_c)
+            self.assertRaises(ValueError,ivc.add_masks,chrom_mask_a,chrom_mask_b,chrom_mask_c)
             self.assertEqual(ivc.get_masks(),[])
             
             # don't add intron mask
@@ -708,56 +715,59 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     @skip_if_abstract    
     def test_get_masks(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                GenomicSegment("chrA",250,300,strand))
             
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            self.assertEqual(ivc.get_masks(),[])
+            self.assertEqual(chain.get_masks(),[])
             
-            ivc.add_masks(mask_a)
-            self.assertEqual(ivc.get_masks(),[mask_a])
+            chain.add_masks(mask_a)
+            self.assertEqual(chain.get_masks(),[mask_a])
             
-            ivc.reset_masks()
-            self.assertEqual(ivc.get_masks(),[])
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks(),[mask_a,mask_b])
+            chain.reset_masks()
+            self.assertEqual(chain.get_masks(),[])
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks(),[mask_a,mask_b])
     
     @skip_if_abstract    
     def test_get_masks_as_segmentchain(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                    GenomicSegment("chrA",250,300,strand))
             
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            self.assertEquals(len(ivc.get_masks_as_segmentchain()),0)
-            self.assertTrue(isinstance(ivc.get_masks_as_segmentchain(),SegmentChain))
+            self.assertEquals(len(chain.get_masks_as_segmentchain()),0)
+            self.assertTrue(isinstance(chain.get_masks_as_segmentchain(),SegmentChain))
             
-            ivc.add_masks(mask_a)
-            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a))
+            chain.add_masks(mask_a)
+            self.assertEqual(chain.get_masks_as_segmentchain(),SegmentChain(mask_a))
             
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                    GenomicSegment("chrA",250,300,strand))
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
     
     @skip_if_abstract    
     def test_reset_masks(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
-                               GenomicSegment("chrA",250,300,strand))
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
+                                 GenomicSegment("chrA",250,300,strand))
+
+            pre_length = chain.length
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks(),[mask_a,mask_b])
-            ivc.reset_masks()
-            self.assertEqual(ivc.get_masks(),[],"Failed to reset masks")
-
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks(),[mask_a,mask_b])
+            self.assertEqual(chain.masked_length,pre_length - len(mask_a) - len(mask_b))
+            chain.reset_masks()
+            self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
+            self.assertEqual(pre_length,chain.masked_length)
     
     @skip_if_abstract    
     def test_get_junctions(self):
@@ -820,7 +830,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                     
     @skip_if_abstract    
     def test_get_genomic_coordinate(self):
-        """Test conversions between genome-centric and SegmentChain-centric coordinates"""
+        #"""Test conversions between genome-centric and SegmentChain-centric coordinates"""
         iv1 = GenomicSegment("chrA",2,3,"+")
         iv2 = GenomicSegment("chrA",15,19,"+") 
         iv3 = GenomicSegment("chrA",20,24,"+")
@@ -882,12 +892,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         # assert that full range reproduces full transcript on plus strand
         whole_range = ivca.get_subchain(0,ivca.get_length())
-        self.assertTrue(self.is_identical(whole_range,ivca))
+        self.assertTrue(self.is_identical(whole_range,ivca),"test_get_subchain: expected %s, got %s" % (ivca,whole_range))
         self.assertTrue(ivca.covers(whole_range))
 
         # assert that full range reproduces full transcript on minus strand
         whole_range = nvca.get_subchain(0,nvca.get_length())
-        self.assertTrue(self.is_identical(whole_range,nvca))
+        self.assertTrue(self.is_identical(whole_range,nvca),"test_get_subchain: expected %s, got %s" % (nvca,whole_range))
         self.assertTrue(nvca.covers(whole_range))
         
         # assert they don't cover each other
@@ -957,7 +967,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
     @skip_if_abstract    
     def test_masked_total_length(self):
-        """Test `total_valid_length()` and `add_masks()`"""
+        """Test `get_masked_length()` and `add_masks()`"""
         iv1 = GenomicSegment("chrA",100,150,"+")
         iv2 = GenomicSegment("chrA",150,200,"+")
         iv3 = GenomicSegment("chrA",250,350,"+")
@@ -1010,7 +1020,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         whole_position_set = set(whole_position_list)
         masked_set = whole_position_set - set(range(50,125))
 
-        pre_unmask_list = ivc1.get_position_list()
+        pre_unmask_list = list(ivc1.get_position_list())
         pre_unmask_set  = ivc1.get_position_set()
         pre_unmask_valid_set = ivc1.get_masked_position_set()
 
@@ -1021,7 +1031,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # add real mask
         ivc1.add_masks(mask)
         
-        post_unmask_list = ivc1.get_position_list()
+        post_unmask_list = list(ivc1.get_position_list())
         post_unmask_set  = ivc1.get_position_set()
         post_unmask_valid_set = ivc1.get_masked_position_set()
 
@@ -1030,7 +1040,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(post_unmask_valid_set,masked_set)
         
         # add non-overlapping mask
-        pre_unmask_list = ivc2.get_position_list()
+        pre_unmask_list = list(ivc2.get_position_list())
         pre_unmask_set  = ivc2.get_position_set()
         pre_unmask_valid_set = ivc2.get_masked_position_set()
 
@@ -1039,7 +1049,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(pre_unmask_valid_set,whole_position_set)
         
         ivc2.add_masks(non_overlap_mask)
-        post_unmask_list = ivc2.get_position_list()
+        post_unmask_list = list(ivc2.get_position_list())
         post_unmask_set  = ivc2.get_position_set()
         post_unmask_valid_set = ivc2.get_masked_position_set()
 
@@ -1135,11 +1145,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
  
     @skip_if_abstract    
     def test_from_psl(self):
-        ref_transcripts = { X.get_name() : X for X in BED_to_Transcripts(open(MINI["bed_file"])) }
+        ref_transcripts = { X.get_name() : X for X in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class) }
         # PSL file won't have knowledge of CDS, so we set these to none in our reference transcripts
-        for tx in ref_transcripts.values():
-            tx.cds_start = tx.cds_end = None
-            tx.cds_genoem_start = tx.cds_genoem_end = None
+        if self.test_class == Transcript:
+            for tx in ref_transcripts.values():
+                tx.cds_start = tx.cds_end = None
+                tx.cds_genome_start = tx.cds_genome_end = None
         for line in open(MINI["psl_file"]):
             if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
                 psl = self.test_class.from_psl(line)
@@ -1152,8 +1163,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             
     @skip_if_abstract    
     def test_to_psl_raises_error_if_attributes_not_defined(self):
-        for tx in BED_to_Transcripts(open(MINI["bed_file"])):
-            self.assertRaises(AttributeError,tx.as_psl)
+        for chain in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class):
+            self.assertRaises(AttributeError,chain.as_psl)
     
     @skip_if_abstract    
     def test_to_from_psl_identity(self):
@@ -1191,6 +1202,33 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 #         print(self.test_class.__name__)
 #         assert False
 
+    @skip_if_abstract
+    def test_get_position_set(self):
+        chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",120,130,"+"))
+        self.assertEqual(chain1.get_position_set(), set(range(50,100)) | set(range(120,130)),
+                         "%s failed to get correct position set on plus strand." % self.test_class.__name__)
+
+        chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
+                                 GenomicSegment("chrA",120,130,"-"))
+        self.assertEqual(chain1.get_position_set(), set(range(50,100)) | set(range(120,130)),
+                         "%s failed to get correct position set on minus strand." % self.test_class.__name__)
+
+    @skip_if_abstract
+    def test_get_position_list(self):
+        chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",120,130,"+"))
+        self.assertTrue((chain1.get_position_list() == numpy.array(list(range(50,100)) + list(range(120,130)))).all(),
+                         "%s failed to get correct position list on plus strand." % self.test_class.__name__)
+
+        chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
+                                 GenomicSegment("chrA",120,130,"-"))
+        self.assertTrue((chain2.get_position_list() == numpy.array(list(range(50,100)) + list(range(120,130)))).all(),
+                         "%s failed to get correct position list on minus strand." % self.test_class.__name__)
+
+
+
+
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
     """Test suite for :py:class:`yeti.genomics.roitools.SegmentChain`"""
@@ -1199,7 +1237,7 @@ class TestSegmentChain(AbstractSegmentChainHelper):
     def setUpClass(cls):
         cls.test_class = SegmentChain
         
-        cls.bed_list = list(BED_to_SegmentChain(CommentReader(open(ANNOTATION_FILES["bed100"]))))
+        cls.bed_list = list(BED_Reader(CommentReader(open(ANNOTATION_FILES["bed100"])),return_type=SegmentChain))
         cls.gff_list = list(GFF3_TranscriptAssembler(open(ANNOTATION_FILES["gff100"]),
                                                    exon_types=["exon"],add_three_for_stop=False,
                                                    return_type=SegmentChain))
@@ -1387,7 +1425,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         cls.test_class = Transcript
         
         #TestSegmentChain.setUp(cls)
-        cls.bed_list = list(BED_to_Transcripts(CommentReader(open(ANNOTATION_FILES["bed100"]))))
+        cls.bed_list = list(BED_Reader(CommentReader(open(ANNOTATION_FILES["bed100"])),return_type=Transcript))
         cls.gff_list = GFF3_TranscriptAssembler(open(ANNOTATION_FILES["gff100"]),
                                         exon_types=["exon"],add_three_for_stop=False)
         # stop codon features in GTF make add_three_for_stop unnecessary
@@ -1511,26 +1549,27 @@ class TestTranscript(AbstractSegmentChainHelper):
     @staticmethod
     def is_identical_no_cds(ivc1,ivc2):
         """Test for identity between positions of two Transcripts, ignoring CDS"""
-        position_test = ivc1.get_position_set() == ivc2.get_position_set()
-        strand_test   = ivc1.spanning_segment.strand == ivc2.spanning_segment.strand
-        chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
+        #position_test = ivc1.get_position_set() == ivc2.get_position_set()
+        #strand_test   = ivc1.spanning_segment.strand == ivc2.spanning_segment.strand
+        #chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
         
-        return position_test & strand_test & chrom_test
+        return TestSegmentChain.is_identical(ivc1,ivc2) #position_test & strand_test & chrom_test
     
     @staticmethod
     def is_identical(ivc1,ivc2):
         """Test for identity between positions of two Transcripts"""
-        start_test = (ivc1.cds_start is None and ivc2.cds_start is None) or\
+ 
+        start_test = (getattr(ivc1,"cds_start",None) is None and getattr(ivc2,"cds_start",None) is None) or\
                      (ivc1.cds_start == ivc2.cds_start)
-        end_test   = (ivc1.cds_end is None and ivc2.cds_end is None) or\
+        end_test   = (getattr(ivc1,"cds_end",None) is None and getattr(ivc2,"cds_end",None) is None) or\
                      (ivc1.cds_end == ivc2.cds_end)
         return start_test & end_test & TestTranscript.is_identical_no_cds(ivc1,ivc2)
     
     def test_get_subregions(self):
         """Test fetching of CDS, UTR5, UTR3"""
-        utr5_dict = { X.get_name() : X for X in BED_to_SegmentChain(open(ANNOTATION_FILES["utr5_100"]))}
-        utr3_dict = { X.get_name() : X for X in BED_to_SegmentChain(open(ANNOTATION_FILES["utr3_100"]))}
-        cds_dict  = { X.get_name() : X for X in BED_to_SegmentChain(open(ANNOTATION_FILES["cds100"]))}
+        utr5_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr5_100"]),return_type=SegmentChain)}
+        utr3_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr3_100"]),return_type=SegmentChain)}
+        cds_dict  = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["cds100"]),return_type=SegmentChain)}
         i = 0
         j = 0
         k = 0

@@ -950,8 +950,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                         my_tx = add_three_for_stop_codon(my_tx)
                         
                 transcripts.append(my_tx)
-            except AssertionError:
-                warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,DataWarning)
+            except ValueError:
+                warnings.warn("Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands." % tname,DataWarning)
                 # transcripts with exons on two strands
                 rejected_transcripts.append(tname)
             except KeyError:
@@ -1221,7 +1221,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     
                     transcripts.append(my_tx)     
                                    
-                except AssertionError:
+                except ValueError:
                     warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,DataWarning)
                     # transcripts with exons on two strands
                     rejected.append(tname)
