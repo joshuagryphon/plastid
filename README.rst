@@ -1,34 +1,65 @@
-Welcome to ``yeti``
-===================
-(c) 2013 Joshua G Dunn
+Welcome to `plastid`!
+====================
+
+We're in beta!
+--------------
+Welcome! ``plastid`` is still in beta. This means that the package
+is functional, but we're adding speed/memory optimizations, and considering
+moving some things around inside the package so that they either make more
+sense or take lest time to get to. We welcome your feedback
+in this process, should you have any.
 
 
 Introduction
 ------------
 
-``yeti`` is:
+``plastid`` is a Python library for genomic analysis -- in particular,
+high-throughput sequencing data -- with an emphasis on simplicity for
+users. It was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
+at `UCSF <http://ucsf.edu>`_,  initially for analysis of
+ribosome profiling and RNA-seq data. Versions of it have been used
+in several publications.
 
-    #. A lightweight library that makes it easy for biologists and 
-       computational biologists to manipulate genomic information using
-       familiar tools and idioms.
-       
-       To this end, ``yeti`` defines simple APIs that serve as a
-       bridge between the rich scientific environment of the SciPy stack,
-       and a fair chunk of the variety of file formats that encode genomics
-       data (e.g. BAM, Wiggle, bedGraph, BED, BigBed, GTF2, GFF3, PSL, et c).
+``plastid``'s intended audience includes computational and traditional biologists,
+software developers, and even those who are new to sequencing analysis. It is
+released under the :doc:`BSD 3-Clause license <license>`.
 
-    #. A set of scripts, built upon this library, that implement common
-       sequencing workflows end-to-end. Biologists can use these scripts
-       directly on their aligned sequencing data, without much preprocessing
-       and certainly without neeing to delve into the APIs described above.
+This package provides:
+
+  #. A set of scripts that implement common sequencing
+     analyses
+
+  #. A set of classes that create a simple,
+     intuitive interfaces to genomic features,
+     read alignments, and quantitative data. These objects readily
+     interace with existing scientific tools, like the SciPy stack.
+
+  #. Script writing tools that make it easy to use the objects
+     implemented in ``plastid``.
+
+  #. Extensive documentation, both in source code and at readthedocs
 
 
-For more information
---------------------
-`yeti documentation <http://pygi.readthedocs.org>`_
-    Installation, getting started, cookbook, advanced usage, technical
-    documentation and other resources
+Installation
+------------
+We're in development, so this takes a few extra steps:
 
-`source repository <http://>`_
-    Source code for developers and contributors
+    1. Make sure you have numpy and cython installed::
 
+        pip install numpy cython
+
+    2. Clone this repo::
+        
+        git clone https://github.com/joshuagryphon/plastid.git
+
+    3. Install dependencies::
+
+        cd plastid && pip install -r requirements.txt
+
+    4. Build extensions::
+
+        python setup.py build_ext --inplace
+
+    5. Install beta::
+
+        python setup.py develop --user
