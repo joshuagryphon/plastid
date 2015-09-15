@@ -95,7 +95,7 @@ from yeti.genomics.c_roitools import GenomicSegment, \
                                      sort_segments_lexically, \
                                      positionlist_to_segments, \
                                      positions_to_segments
-from yeti.genomics.c_segmentchain import SegmentChain as cSegmentChain
+#from yeti.genomics.c_segmentchain import SegmentChain as cSegmentChain
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 segpat  = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
@@ -1845,7 +1845,6 @@ class SegmentChain(object):
         
         return SegmentChain(*ivs,**attr)        
     
-SegmentChain = cSegmentChain
 
 class Transcript(SegmentChain):
     """Subclass of |SegmentChain| specifically for transcripts.
