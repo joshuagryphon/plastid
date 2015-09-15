@@ -1,7 +1,9 @@
 from yeti.genomics.c_roitools cimport GenomicSegment, Strand
 from yeti.genomics.c_common cimport ExBool, bool_exception
 from cpython import array
+import numpy
 import array
+cimport numpy
 
 cdef class SegmentChain(object):
     cdef:
@@ -32,10 +34,9 @@ cdef class SegmentChain(object):
     cpdef  ExBool c_richcmp(self,SegmentChain,int) except bool_exception
 
     cpdef SegmentChain get_antisense(self)
-    cpdef list get_position_list(self)
+    cdef numpy.ndarray c_get_position_list(self,bint)
     cpdef set get_position_set(self)
 
-    cpdef long get_length(self)
     cdef long c_get_genomic_coordinate(self, long, bint) except -1
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
     cdef SegmentChain c_get_subchain(self,long, long, bint)

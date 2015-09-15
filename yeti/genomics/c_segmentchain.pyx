@@ -95,6 +95,8 @@ from yeti.util.services.exceptions import DataWarning
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
+
+
 from yeti.genomics.c_roitools cimport GenomicSegment, \
                                       positionlist_to_segments, \
                                       positions_to_segments, \
@@ -103,8 +105,6 @@ from yeti.genomics.c_roitools import NullSegment
 from yeti.genomics.c_common cimport ExBool, true, false, bool_exception, \
                                     Strand, forward_strand, reverse_strand,\
                                     unstranded, undef_strand
-
-
 
 
 
@@ -687,6 +687,7 @@ cdef class SegmentChain(object):
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
+    # TODO: there must be a better/faster way
     cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
         cdef:
             set o_pos, my_pos
@@ -866,26 +867,52 @@ cdef class SegmentChain(object):
         new_segments = [GenomicSegment(X.chrom,X.start,X.end,strand_to_str(new_strand)) for X in self._segments]
         return SegmentChain(*new_segments)
 
-    cpdef list get_position_list(self):
+    def get_position_list(self,do_copy = False):
         """Retrieve a sorted end-inclusive list of genomic coordinates included in this |SegmentChain|
-        
+         
+        Parameters
+        ----------
+        do_copy : bool, optional
+            If `False` (default), return a view of the |SegmentChain|'s
+            internal position mapping. If `True`, return  a copy
+ 
         Returns
         -------
-        list
-            List of genomic coordinates, as integers
+        :class:`numpy.ndarray`
+            Ggenomic coordinates in `self`, as integers, in genomic order
         """
-        cdef long [:] positions = self._position_hash
-        cdef long length = len(positions)
-        cdef long i
+        return self.c_get_position_list(do_copy)
 
-        #numpy_array = np.asarray(<np.int32_t[:10, :10]> my_pointer) 
-        ltmp = []
-        # TODO: faster way to convert memoryview to list?
-        while i < length:
-            ltmp.append(positions[i])
-            i = i + 1
+    cdef numpy.ndarray c_get_position_list(self, bint do_copy):
+        """Retrieve a sorted end-inclusive list of genomic coordinates included in this |SegmentChain|
         
-        return ltmp
+        Parameters
+        ----------
+        do_copy : bool, optional
+            If `False` (default), return a view of the |SegmentChain|'s
+            internal position mapping. If `True`, return  a copy
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+            Ggenomic coordinates in `self`, as integers, in genomic order
+        """
+        cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._position_hash,dtype=long) 
+        if do_copy == False:
+            return positions
+        else:
+            return copy.deepcopy(positions)
+
+        #cdef long [:] positions = self._position_hash
+        #cdef long length = len(positions)
+        #cdef long i
+        #ltmp = []
+        # TODO: faster way to convert memoryview to list or numpyarray, add copy = True
+        #while i < length:
+        #    ltmp.append(positions[i])
+        #    i = i + 1
+        # 
+        #return ltmp
     
     cpdef set get_position_set(self):
         """Retrieve an end-inclusive set of genomic coordinates included in this |SegmentChain|
@@ -925,7 +952,7 @@ cdef class SegmentChain(object):
         self._position_hash = my_hash
         self._inverse_hash  = ihash
     
-    # TODO - numpy arrays for this
+    # TODO - numpy arrays internally for this
     def get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
         `self` that **HAVE NOT** been masked using :meth:`SegmentChain.add_masks`
@@ -980,7 +1007,7 @@ cdef class SegmentChain(object):
             
         return gene
     
-    cpdef long get_length(self):
+    def get_length(self):
         """Return total length, in nucleotides, of `self`
         
         Returns
@@ -1000,6 +1027,32 @@ cdef class SegmentChain(object):
         return self.masked_length #len(self.get_masked_position_set())
         
     cdef tuple check_segments(self, tuple segments):
+        """Check that all segments have same chromosome name and strand.
+        If `self` already has segments in it, all |GenomicSegments|
+        in `segments` must additionally have the same chromosme and
+        strand as `self.`
+
+        If so, return those as a tuple. If not, raise ValueError.
+
+        Parameters
+        ----------
+        segments : tuple
+            Tuple of |GenomicSegments|
+
+        Returns
+        -------
+        str
+            chromosome name
+
+        str
+            chromosome strand ('+', '-', or '.')
+
+        Raises
+        ------
+        ValueError
+            If segments in `segments` have differing chromosomes or strands
+            from `self` or, if `self` is 0-length, from each other
+        """
         cdef:
             GenomicSegment seg, seg0
             str my_chrom
@@ -1885,7 +1938,6 @@ cdef class SegmentChain(object):
 
         return SegmentChain(*segs)
 
-    # TODO: optimize fetching
     def get_counts(self,ga,stranded=True):
         """Return list of counts or values at each position in `self`
         
@@ -2266,6 +2318,9 @@ cdef class SegmentChain(object):
             segs.append(seg)
         
         return SegmentChain(*segs,**attr)        
+
+    def __copy__(self): 
+        return SegmentChain(*self,**self.attr)
 
     def __deepcopy__(self,memo):
         new_ivs  = copy.deepcopy(self._segments)

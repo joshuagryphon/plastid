@@ -6,6 +6,9 @@ import tempfile
 import unittest
 import itertools
 import copy
+import numpy
+import warnings
+
 from yeti.util.services.mini2to3 import cStringIO
 
 from random import shuffle
@@ -28,7 +31,7 @@ from yeti.genomics.genome_array import GenomeArray
 from yeti.util.io.filters import CommentReader
 from yeti.util.services.decorators import skip_if_abstract
 
-import warnings
+
 warnings.simplefilter("ignore",DeprecationWarning)
 
 #===============================================================================
@@ -763,7 +766,6 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             self.assertEqual(chain.get_masks(),[mask_a,mask_b])
             chain.reset_masks()
             self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
-
     
     @skip_if_abstract    
     def test_get_junctions(self):
@@ -1016,7 +1018,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         whole_position_set = set(whole_position_list)
         masked_set = whole_position_set - set(range(50,125))
 
-        pre_unmask_list = ivc1.get_position_list()
+        pre_unmask_list = list(ivc1.get_position_list())
         pre_unmask_set  = ivc1.get_position_set()
         pre_unmask_valid_set = ivc1.get_masked_position_set()
 
@@ -1027,7 +1029,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # add real mask
         ivc1.add_masks(mask)
         
-        post_unmask_list = ivc1.get_position_list()
+        post_unmask_list = list(ivc1.get_position_list())
         post_unmask_set  = ivc1.get_position_set()
         post_unmask_valid_set = ivc1.get_masked_position_set()
 
@@ -1036,7 +1038,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(post_unmask_valid_set,masked_set)
         
         # add non-overlapping mask
-        pre_unmask_list = ivc2.get_position_list()
+        pre_unmask_list = list(ivc2.get_position_list())
         pre_unmask_set  = ivc2.get_position_set()
         pre_unmask_valid_set = ivc2.get_masked_position_set()
 
@@ -1045,7 +1047,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(pre_unmask_valid_set,whole_position_set)
         
         ivc2.add_masks(non_overlap_mask)
-        post_unmask_list = ivc2.get_position_list()
+        post_unmask_list = list(ivc2.get_position_list())
         post_unmask_set  = ivc2.get_position_set()
         post_unmask_valid_set = ivc2.get_masked_position_set()
 
@@ -1214,12 +1216,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     def test_get_position_list(self):
         chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
                                  GenomicSegment("chrA",120,130,"+"))
-        self.assertEqual(chain1.get_position_list(), list(range(50,100)) + list(range(120,130)),
+        self.assertTrue((chain1.get_position_list() == numpy.array(list(range(50,100)) + list(range(120,130)))).all(),
                          "%s failed to get correct position list on plus strand." % self.test_class.__name__)
 
         chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
                                  GenomicSegment("chrA",120,130,"-"))
-        self.assertEqual(chain1.get_position_list(), list(range(50,100)) + list(range(120,130)),
+        self.assertTrue((chain2.get_position_list() == numpy.array(list(range(50,100)) + list(range(120,130)))).all(),
                          "%s failed to get correct position list on minus strand." % self.test_class.__name__)
 
 

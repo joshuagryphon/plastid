@@ -739,7 +739,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             ivc.add_masks(mask_a)
             self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a))
             
-            ivc._mask_segments = []
+            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+                                   GenomicSegment("chrA",250,300,strand))
             ivc.add_masks(mask_a,mask_b)
             self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
     
