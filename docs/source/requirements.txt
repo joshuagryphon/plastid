@@ -1,5 +1,2 @@
 numpydoc
 sphinxcontrib-argdoc
-pysam>=0.8.3
-biopython>=1.64
-twobitreader>=3.0.0
