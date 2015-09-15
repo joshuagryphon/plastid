@@ -1,7 +1,7 @@
 Change log
 ==========
 
-All major changes to ``yeti`` are documented here. Version numbers for the project
+All major changes to ``plastid`` are documented here. Version numbers for the project
 follow the conventions described in :pep:`440`. After release 1.0, they will 
 also follow `Semantic versioning <http://semver.org/>`_. Before then, they roughly
 follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring
@@ -11,7 +11,7 @@ the last digit.
  
     This project was initially developed internally under the provisional
     name ``genometools``. At that point, we didn't expect to release the project,
-    so we didn't checkt os ee whether the naem was free. It turns out, 
+    so we didn't check to see whether the name was free. It turns out, 
     it was not!
     
     When we realized we would release this project extramurally, we provisionaly
@@ -19,6 +19,11 @@ the last digit.
     locations, changed some method names and behaviors for consistency, and reset
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
+
+    Anyway, we don't plan on changing the name again anytime soon. Please pardon
+    the confusion!
+
+
 
 plastid [0.2.2] = [2015-09-15]
 ------------------------------

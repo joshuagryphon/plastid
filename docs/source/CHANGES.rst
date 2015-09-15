@@ -11,18 +11,36 @@ the last digit.
  
     This project was initially developed internally under the provisional
     name ``genometools``. At that point, we didn't expect to release the project,
-    so we didn't checkt os ee whether the naem was free. It turns out, 
+    so we didn't check to see whether the name was free. It turns out, 
     it was not!
     
     When we realized we would release this project extramurally, we provisionaly
-    codenamed it ``plastid``, moved some things around the package to more reasonable
+    codenamed it ``yeti``, moved some things around the package to more reasonable
     locations, changed some method names and behaviors for consistency, and reset
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
 
+    Anyway, we don't plan on changing the name again anytime soon. Please pardon
+    the confusion!
 
 
-plastid [0.2.1] = [2015-09-06]
+
+plastid [0.2.2] = [2015-09-15]
+------------------------------
+First release under official name!
+
+Added
+.....
+  - Major algorithmic improvements to internals & command-line scripts
+
+Changed
+.......
+  - Reimplemented mapping rules and some internals in Cython,
+    giving 2-10x speedup for some operations
+  - GenomicSegment now sorts lexically. Properties are read-only
+
+
+yeti [0.2.1] = [2015-09-06]
 ---------------------------
 
 Added
@@ -45,7 +63,7 @@ Changed
   - lazy imports; giving speed improvements to command-line scripts
 
 
-plastid [0.2.0] = [2015-08-26]
+yeti [0.2.0] = [2015-08-26]
 ---------------------------
 **Big changes,** including some that are **backwards-incompatible.**
 We really think these are for the best, because they improve
@@ -77,7 +95,7 @@ Removed
   - ArrayTable class & tests
 
 
-plastid [0.1.1] = [2015-07-23]
+yeti [0.1.1] = [2015-07-23]
 ---------------------------
 
 Added
@@ -99,7 +117,7 @@ Changed
 
 Fixed
 .....
-  - Removed bug from :func:`plastid.bin.metagene.do_generate` that extended
+  - Removed bug from :func:`yeti.bin.metagene.do_generate` that extended
     maximal spanning windows past equivalence points in 3' directions.
     Added extra unit test cases to suit it.
   - GenomeHash can again accept GenomicSegments as parameters to __getitem__.
@@ -116,9 +134,9 @@ Removed
       - TagAlignReader
 
 
-plastid [0.1.0] = [2015-06-06]
+yeti [0.1.0] = [2015-06-06]
 ---------------------------
-First internal release of project under new codename, ``plastid``. Reset version 
+First internal release of project under new codename, ``yeti``. Reset version 
 number.
 
 Added
@@ -130,7 +148,7 @@ Added
 
 Changed
 .......
-  - Package renamed from ``genometools`` to its provisional codename ``plastid``
+  - Package renamed from ``genometools`` to its provisional codename ``yeti``
   - Reset version number to 0.1.0
   - Refactored existing readers to descent from AssembledFeatureReader
   - Migration from old SVN to GIT repo
@@ -143,9 +161,9 @@ Changed
         GenomicInterval                     GenomicSegment
         IVCollection                        SegmentChain
         NibbleMapFactory                    CenterMapFactory
-        genometools.genomics.ivtools        plastid.genomics.roitools
-        genometools.genomics.readers        plastid.readers
-        genometools.genomics.scriptlib      plastid.util.scriptlib
+        genometools.genomics.ivtools        yeti.genomics.roitools
+        genometools.genomics.readers        yeti.readers
+        genometools.genomics.scriptlib      yeti.util.scriptlib
         ==================================  ====================================
 
 
