@@ -20,7 +20,7 @@ with open("README.rst") as f:
     long_description = f.read()
 
 
-NUMPY_VERSION  = "numpy>=1.9.2"
+NUMPY_VERSION  = "numpy>=1.9"
 SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
 PYSAM_VERSION  = "pysam>=0.8.3"

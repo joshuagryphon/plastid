@@ -22,7 +22,7 @@ import copy
 import itertools
 from yeti.util.io.filters import AbstractReader
 from yeti.util.io.openers import NullWriter
-from yeti.genomics.roitools import SegmentChain, Transcript
+from yeti.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 from abc import abstractmethod
 
 
@@ -56,7 +56,11 @@ def add_three_for_stop_codon(tx):
         if tx.spanning_segment.strand == "+":
             # if cds at end of transcript, both need to grow by three
             if tx.spanning_segment.end == tx.cds_genome_end:
-                segments[-1].end += 3
+                old_seg = segments[-1]
+                new_seg = GenomicSegment(old_seg.chrom,old_seg.start,old_seg.end +3,old_seg.strand)
+                segments[-1] = new_seg
+                #segments[-1] = GenomicSegment
+                #segments[-1].end += 3
                 attr["cds_genome_end"] = tx.cds_genome_end + 3
             else:
                 # if new end will be end of transcript, set manually
@@ -79,7 +83,10 @@ def add_three_for_stop_codon(tx):
         else:
             # if cds starts at beginning of transcript, both need to grow by three
             if tx.spanning_segment.start == tx.cds_genome_start:
-                segments[0].start -= 3
+                old_seg = segments[0]
+                new_seg = GenomicSegment(old_seg.chrom,old_seg.start - 3, old_seg.end,old_seg.strand)
+                segments[0] = new_seg
+                #segments[0].start -= 3
                 attr["cds_genome_start"] = tx.cds_genome_start - 3
             else:
                 # otherwise, fetch

@@ -1061,20 +1061,24 @@ def _parse_variable_offset_file(fh):
     for line in fh:
         items = line.strip("\n").split("\t")
         if len(items) != 2:
-            raise MalformedFileError(fh.__name__,"More or fewer than two columns on line:\n\t%s" % line.strip("\n"))
+            name = getattr(fh,"__name__","Variable offset file")
+            raise MalformedFileError(name,"More or fewer than two columns on line:\n\t%s" % line.strip("\n"))
         if items[0] == "length":
             continue
         key = items[0]
         try:
             key = key if key == "default" else int(key)
         except ValueError:
-            raise MalformedFileError(fh.__name__,"Non integer value for key '%s' on line:\n\t%s" % (key,line.strip("\n")))
+            name = getattr(fh,"__name__","Variable offset file")
+            raise MalformedFileError(name,"Non integer value for key '%s' on line:\n\t%s" % (key,line.strip("\n")))
         if key in my_dict:
-            raise MalformedFileError(fh.__name__,"multiple offsets defined for read length %s" % key)
+            name = getattr(fh,"__name__","Variable offset file")
+            raise MalformedFileError(name,"multiple offsets defined for read length %s" % key)
         else:
             try:
                 my_dict[key] = int(items[1])
             except ValueError:
-                raise MalformedFileError(fh.__name__,"Non integer value for value '%s' on line:\n\t%s" % (items[1],line.strip("\n")))
+                name = getattr(fh,"__name__","Variable offset file")
+                raise MalformedFileError(name,"Non integer value for value '%s' on line:\n\t%s" % (items[1],line.strip("\n")))
             
     return my_dict
