@@ -12,7 +12,7 @@ in this process, should you have any.
 For documentation, see `our home page <http://plastid.readthedocs.org/en/latest/>`_
 on `ReadtheDocs.org <http://readthedocs.org>`_.
 
-To run the tests, download the :download:`test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>` and unpack
+To run the tests, download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack
 it into ``plastid/test``.
 
 
