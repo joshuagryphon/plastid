@@ -14,8 +14,8 @@ cdef class SegmentChain(object):
 
     cdef void _update(self)
     #cdef array.array _get_position_hash(self)
-    cdef long [:]  _get_position_hash(self)
-    cdef dict _update_inverse_hash(self)
+    cdef void  _get_position_hash(self)
+    #cdef dict _update_inverse_hash(self)
 
     cdef tuple check_segments(self, tuple)
     cdef c_add_segments(self, tuple)

@@ -714,54 +714,55 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     @skip_if_abstract    
     def test_get_masks(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                GenomicSegment("chrA",250,300,strand))
             
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            self.assertEqual(ivc.get_masks(),[])
+            self.assertEqual(chain.get_masks(),[])
             
-            ivc.add_masks(mask_a)
-            self.assertEqual(ivc.get_masks(),[mask_a])
+            chain.add_masks(mask_a)
+            self.assertEqual(chain.get_masks(),[mask_a])
             
-            ivc.reset_masks()
-            self.assertEqual(ivc.get_masks(),[])
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks(),[mask_a,mask_b])
+            chain.reset_masks()
+            self.assertEqual(chain.get_masks(),[])
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks(),[mask_a,mask_b])
     
     @skip_if_abstract    
     def test_get_masks_as_segmentchain(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                    GenomicSegment("chrA",250,300,strand))
             
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            self.assertEquals(len(ivc.get_masks_as_segmentchain()),0)
-            self.assertTrue(isinstance(ivc.get_masks_as_segmentchain(),SegmentChain))
+            self.assertEquals(len(chain.get_masks_as_segmentchain()),0)
+            self.assertTrue(isinstance(chain.get_masks_as_segmentchain(),SegmentChain))
             
-            ivc.add_masks(mask_a)
-            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a))
+            chain.add_masks(mask_a)
+            self.assertEqual(chain.get_masks_as_segmentchain(),SegmentChain(mask_a))
             
-            ivc._mask_segments = []
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
+                                   GenomicSegment("chrA",250,300,strand))
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks_as_segmentchain(),SegmentChain(mask_a,mask_b))
     
     @skip_if_abstract    
     def test_reset_masks(self):
         for strand in ("+", "-"):
-            ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
+            chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                GenomicSegment("chrA",250,300,strand))
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
-            ivc.add_masks(mask_a,mask_b)
-            self.assertEqual(ivc.get_masks(),[mask_a,mask_b])
-            ivc.reset_masks()
-            self.assertEqual(ivc.get_masks(),[],"Failed to reset masks")
+            chain.add_masks(mask_a,mask_b)
+            self.assertEqual(chain.get_masks(),[mask_a,mask_b])
+            chain.reset_masks()
+            self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
 
     
     @skip_if_abstract    
@@ -918,48 +919,47 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertTrue(nvca.covers(sub_minus))
         self.assertFalse(sub_plus.covers(nvca))
     
-#    @skip_if_abstract    
-#    def test_get_counts(self):
-#        """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
-#        assert False
-#        ga = GenomeArray({"chrA":2000})
-#        ga[GenomicSegment("chrA",100,200,"+")] = 1
-#        ga[GenomicSegment("chrA",250,350,"+")] = 1
-#        
-#        iv1 = GenomicSegment("chrA",100,150,"+")
-#        iv2 = GenomicSegment("chrA",150,200,"+")
-#        iv3 = GenomicSegment("chrA",250,350,"+")
-#
-#        mask = GenomicSegment("chrA",50,125,"+")
-#        non_overlap_mask = GenomicSegment("chrA",400,500,"+")
-#        
-#        ivc1 = self.test_class(iv1,iv2,iv3)
-#        ivc2 = self.test_class(iv1,iv2,iv3)
-#        
-#        pre_unmask_counts = sum(ivc1.get_counts(ga))
-#        pre_mask_counts = ivc1.get_masked_counts(ga).sum()
-#        self.assertEquals(pre_unmask_counts,200)
-#        self.assertEquals(pre_mask_counts,200)
-#
-#        # add real mask
-#        ivc1.add_masks(mask)
-#        
-#        post_mask_counts = ivc1.get_masked_counts(ga).sum()
-#        post_unmask_counts = sum(ivc1.get_counts(ga))
-#        self.assertEquals(post_mask_counts,175)
-#        self.assertEquals(post_unmask_counts,200)
-#        
-#        # add non-overlapping mask
-#        pre_unmask_counts = sum(ivc2.get_counts(ga))
-#        pre_mask_counts = ivc2.get_masked_counts(ga).sum()
-#        self.assertEquals(pre_unmask_counts,200)
-#        self.assertEquals(pre_mask_counts,200)
-#        
-#        ivc2.add_masks(non_overlap_mask)
-#        post_unmask_counts = sum(ivc2.get_counts(ga))
-#        post_mask_counts   = ivc2.get_masked_counts(ga).sum()       
-#        self.assertEquals(post_unmask_counts,200)
-#        self.assertEquals(post_mask_counts,200)
+    @skip_if_abstract    
+    def test_get_counts(self):
+        """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
+        ga = GenomeArray({"chrA":2000})
+        ga[GenomicSegment("chrA",100,200,"+")] = 1
+        ga[GenomicSegment("chrA",250,350,"+")] = 1
+        
+        iv1 = GenomicSegment("chrA",100,150,"+")
+        iv2 = GenomicSegment("chrA",150,200,"+")
+        iv3 = GenomicSegment("chrA",250,350,"+")
+
+        mask = GenomicSegment("chrA",50,125,"+")
+        non_overlap_mask = GenomicSegment("chrA",400,500,"+")
+        
+        ivc1 = self.test_class(iv1,iv2,iv3)
+        ivc2 = self.test_class(iv1,iv2,iv3)
+        
+        pre_unmask_counts = sum(ivc1.get_counts(ga))
+        pre_mask_counts = ivc1.get_masked_counts(ga).sum()
+        self.assertEquals(pre_unmask_counts,200)
+        self.assertEquals(pre_mask_counts,200)
+
+        # add real mask
+        ivc1.add_masks(mask)
+        
+        post_mask_counts = ivc1.get_masked_counts(ga).sum()
+        post_unmask_counts = sum(ivc1.get_counts(ga))
+        self.assertEquals(post_mask_counts,175)
+        self.assertEquals(post_unmask_counts,200)
+        
+        # add non-overlapping mask
+        pre_unmask_counts = sum(ivc2.get_counts(ga))
+        pre_mask_counts = ivc2.get_masked_counts(ga).sum()
+        self.assertEquals(pre_unmask_counts,200)
+        self.assertEquals(pre_mask_counts,200)
+        
+        ivc2.add_masks(non_overlap_mask)
+        post_unmask_counts = sum(ivc2.get_counts(ga))
+        post_mask_counts   = ivc2.get_masked_counts(ga).sum()       
+        self.assertEquals(post_unmask_counts,200)
+        self.assertEquals(post_mask_counts,200)
 
     @skip_if_abstract    
     def test_masked_total_length(self):

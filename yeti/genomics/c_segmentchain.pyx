@@ -80,7 +80,12 @@ __author__ = "joshua"
 import re
 import copy
 import warnings
+import array
+
 import numpy
+cimport numpy
+
+from cpython cimport array
 
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -98,8 +103,15 @@ from yeti.genomics.c_roitools import NullSegment
 from yeti.genomics.c_common cimport ExBool, true, false, bool_exception, \
                                     Strand, forward_strand, reverse_strand,\
                                     unstranded, undef_strand
-from cpython cimport array
-import array
+
+
+
+
+
+
+#===============================================================================
+# constants
+#===============================================================================
 
 cdef hash_template = array.array('l',[]) 
 cdef mask_template = array.array('i',[])
@@ -115,6 +127,16 @@ DEF EQ  = 2
 DEF NEQ = 3
 DEF GT  = 4
 DEF GEQ = 5
+
+INT    = numpy.int
+FLOAT  = numpy.float
+DOUBLE = numpy.double
+LONG   = numpy.long
+
+ctypedef numpy.int_t    INT_t
+ctypedef numpy.float_t  FLOAT_t
+ctypedef numpy.double_t DOUBLE_t
+ctypedef numpy.long_t   LONG_t
 
 
 #===============================================================================
@@ -337,11 +359,6 @@ cdef class SegmentChain(object):
         def __get__(self):
             return self.masked_length
 
-    property hash_length:
-        """Nucleotide length of the spliced SegmentChain"""
-        def __get__(self):
-            return self._position_hash.shape[0]
-
     property spanning_segment:
         def __get__(self):
             return self.spanning_segment
@@ -361,8 +378,14 @@ cdef class SegmentChain(object):
             return self.spanning_segment.c_strand
 
     property _segments:
+        """List of |GenomicSegments| that comprise the |SegmentChain|"""
         def __get__(self):
             return self._segments
+
+    property _mask_segments:
+        """Trimmed |GenomicSegments| representing masked regions of the |SegmentChain|"""
+        def __get__(self):
+            return self._mask_segments
 
     property attr:
         def __get__(self):
@@ -379,8 +402,7 @@ cdef class SegmentChain(object):
             GenomicSegment seg0
         
         self.sort()
-        self._inverse_hash  = {}
-        self._position_hash = self._get_position_hash()
+        self._get_position_hash()
         self.length = sum([len(X) for X in self._segments])
         self.masked_length = self.length
        
@@ -400,28 +422,6 @@ cdef class SegmentChain(object):
 
         else:
             raise RuntimeError("Segmentchain '%s' has negative intervals (%s)?" % (self.get_name(),num_segs))
-
-    cdef dict _update_inverse_hash(self):
-        """Generate inverse position hash, mapping genomic to |SegmentChain| coordinates.
-        The hash is stored in `self._inverse_hash`.
-
-        Returns
-        -------
-        dict
-            Dictionary mapping genomic coordinate -> |SegmentChain coordinate|
-        """
-        cdef long [:] positions = self._position_hash
-        cdef long length = positions.shape[0]
-        cdef long i = 0
-        cdef ihash = {}
-
-        while i < length:
-            ihash[positions[i]] = i
-            i += 1
-
-        self._inverse_hash = ihash
-        assert len(ihash) == length
-        return ihash
 
     cpdef void sort(self):
         """Sort component segments by ascending 5' chromosomal coordinate"""
@@ -878,6 +878,7 @@ cdef class SegmentChain(object):
         cdef long length = len(positions)
         cdef long i
 
+        #numpy_array = np.asarray(<np.int32_t[:10, :10]> my_pointer) 
         ltmp = []
         # TODO: faster way to convert memoryview to list?
         while i < length:
@@ -896,7 +897,7 @@ cdef class SegmentChain(object):
         """
         return set(self.get_position_list())
         
-    cdef long [:] _get_position_hash(self):
+    cdef void _get_position_hash(self):
         """Update position hash, mapping |SegmentChain| coordinates to genomic coordinates
         
         Returns
@@ -905,27 +906,29 @@ cdef class SegmentChain(object):
             Memoryview mapping each position in the |SegmentChain| to its 
             chromosomal coordinate
         """
-        #self.sort()
         cdef list segments = self._segments
         cdef long length = sum([len(X) for X in segments])
         cdef long [:] my_hash = array.clone(hash_template,length,False)  
         cdef long x, c
         cdef GenomicSegment segment
+        cdef dict ihash = {}
 
         c = 0
         for segment in self._segments:
             x = segment.start
             while x < segment.end:
                 my_hash[c] = x
+                ihash[x] = c
                 c += 1
                 x += 1
         
-        return my_hash
+        self._position_hash = my_hash
+        self._inverse_hash  = ihash
     
-    # TODO
+    # TODO - numpy arrays for this
     def get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
-        `self` that have not been masked using :meth:`SegmentChain.add_masks`
+        `self` that **HAVE NOT** been masked using :meth:`SegmentChain.add_masks`
 
         Returns
         -------
@@ -1059,18 +1062,21 @@ cdef class SegmentChain(object):
             self.c_add_segments(segments)
         
     def add_masks(self,*mask_segments):
-        """Adds one or more |GenomicSegment| to the collection of masks. 
+        """Adds one or more |GenomicSegment| to the collection of masks.
+        Masks will be trimmed to the positions of the |SegmentChain|
+        during addition.
 
         Parameters
         ----------
         mask_segments : |GenomicSegment|
             One or more segments, in genomic coordinates, covering positions to
-            exclude from return values of :meth:`get_masked_position_set`, :meth:`get_masked_counts`, or :meth:`get_masked_length`
+            exclude from return values of :meth:`get_masked_position_set`,
+            :meth:`get_masked_counts`, or :meth:`get_masked_length`
 		
-		See also
-		--------
-		SegmentChain.get_masks
-		SegmentChain.get_masks_as_segmentchain
+        See also
+        --------
+        SegmentChain.get_masks
+        SegmentChain.get_masks_as_segmentchain
         SegmentChain.reset_masks
         """
         cdef:
@@ -1078,7 +1084,7 @@ cdef class SegmentChain(object):
             set positions
             GenomicSegment seg
             int [:] pmask
-            long i
+            long i, coord
             int tmpsum = 0
             dict ihash
 
@@ -1099,7 +1105,8 @@ cdef class SegmentChain(object):
             ihash = self._inverse_hash
             pmask = array.clone(mask_template,self.length,True)
             for i in positions:
-                pmask[ihash[i]] = 1
+                coord = ihash[i]
+                pmask[coord] = 1
                 tmpsum += 1
 
             self.masked_length = self.length - tmpsum
@@ -1415,13 +1422,13 @@ cdef class SegmentChain(object):
         ltmp = [chrom,
                 self.attr.get("source","."),
                 feature_type,
-                segment_start + 1,
-                segment_end,
+                str(segment_start + 1),
+                str(segment_end),
                 str(self.attr.get("score",".")),
                 strand,
                 phase]
         
-        return [str(X) for X in ltmp]
+        return ltmp
     
     def as_bed(self, thickstart=None, thickend=None, as_int=True, color=None, extra_columns=None):
         """Format |SegmentChain| as a string of BED12[+X] output.
@@ -1596,7 +1603,6 @@ cdef class SegmentChain(object):
             dict attr = self.attr
             list ltmp
             str block_sizes, q_starts, t_starts
-            GenomicSegment X
         try:
             ltmp = [
                 attr["match_length"],
@@ -1698,9 +1704,6 @@ cdef class SegmentChain(object):
             long length = self.length
             long orig_index = genomic_x
             dict ihash = self._inverse_hash
-
-        if len(ihash) != positions.shape[0]:
-            ihash = self._update_inverse_hash()
 
         if self.c_strand == reverse_strand and stranded == True:
             return self.get_length() - ihash[genomic_x] - 1
@@ -1882,71 +1885,79 @@ cdef class SegmentChain(object):
 
         return SegmentChain(*segs)
 
-#    def get_counts(self,gnd,stranded=True):
-#        """Return list of counts or values at each position in `self`
-#        
-#        Parameters
-#        ----------
-#        gnd : non-abstract subclass of |AbstractGenomeArray|
-#            GenomeArray from which to fetch counts
-#            
-#        stranded : bool, optional
-#            If `True` and the SegmentChain is on the minus strand,
-#            count order will be reversed relative to genome so that the
-#            array positions march from the 5' to 3' end of the chain.
-#            (Default: `True`)
-#            
-#            
-#        Returns
-#        -------
-#        numpy.ndarray
-#            Array of counts from `gnd` covering `self`
-#        """
-#        if len(self) == 0:
-#            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
-#
-#        ltmp = []
-#        for iv in self:
-#            #ltmp.extend(gnd[iv])
-#            ltmp.extend(gnd.__getitem__(iv,roi_order=False))
-#
-#        if self.c_strand == reverse_strand and stranded is True:
-#            ltmp = ltmp[::-1]
-#            
-#        return numpy.array(ltmp)
-#    
-#    # TODO: cache / lazy eval this
-#    def get_masked_counts(self,gnd,stranded=True):
-#        """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
-#        coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
-#        will be masked in the array
-#        
-#        Parameters
-#        ----------
-#        gnd : non-abstract subclass of |AbstractGenomeArray|
-#            GenomeArray from which to fetch counts
-#            
-#        stranded : bool, optional
-#            If true and the |SegmentChain| is on the minus strand,
-#            count order will be reversed relative to genome so that the
-#            array positions march from the 5' to 3' end of the chain.
-#            (Default: `True`)
-#            
-#            
-#        Returns
-#        -------
-#		:py:class:`numpy.ma.masked_array`
-#        """
-#        atmp = numpy.ma.masked_invalid(self.get_counts(gnd))
-#        atmp.mask = True
-#        
-#        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
-#                                                            self.spanning_segment.strand) 
-#                           for X in self.get_masked_position_set()]
-#        for x in valid_positions:
-#            atmp.mask[x] = False
-#        
-#        return atmp
+    # TODO: optimize fetching
+    def get_counts(self,ga,stranded=True):
+        """Return list of counts or values at each position in `self`
+        
+        Parameters
+        ----------
+        ga : non-abstract subclass of |AbstractGenomeArray|
+            GenomeArray from which to fetch counts
+            
+        stranded : bool, optional
+            If `True` and the SegmentChain is on the minus strand,
+            count order will be reversed relative to genome so that the
+            array positions march from the 5' to 3' end of the chain.
+            (Default: `True`)
+            
+            
+        Returns
+        -------
+        numpy.ndarray
+            Array of counts from `gnd` covering `self`
+        """
+        cdef:
+            long c, cend
+            GenomicSegment seg
+            numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
+            #double [:] count_view = count_array
+
+        if len(self) == 0:
+            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
+
+        c = 0
+        for seg in self:
+            cend = c + len(seg)
+            count_array[c:cend] = ga.__getitem__(seg,roi_order=False)
+            c = cend
+
+        if self.c_strand == reverse_strand and stranded is True:
+            count_array = count_array[::-1]
+            
+        return count_array
+    
+    # TODO: cache / lazy eval this
+    def get_masked_counts(self,ga,stranded=True):
+        """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
+        coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
+        will be masked in the array
+        
+        Parameters
+        ----------
+        gnd : non-abstract subclass of |AbstractGenomeArray|
+            GenomeArray from which to fetch counts
+            
+        stranded : bool, optional
+            If true and the |SegmentChain| is on the minus strand,
+            count order will be reversed relative to genome so that the
+            array positions march from the 5' to 3' end of the chain.
+            (Default: `True`)
+            
+            
+        Returns
+        -------
+		:py:class:`numpy.ma.masked_array`
+       """
+        atmp = numpy.ma.masked_invalid(self.get_counts(ga))
+        atmp.mask = True
+        
+        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
+                                                            self.spanning_segment.strand) 
+                           for X in self.get_masked_position_set()]
+        for x in valid_positions:
+            atmp.mask[x] = False
+        
+        return atmp
     
     def get_sequence(self,genome,stranded=True):
         """Return spliced genomic sequence of |SegmentChain| as a string
@@ -2553,7 +2564,7 @@ cdef class Transcript(SegmentChain):
         """
         cdef:
             SegmentChain my_segmentchain
-            attr = dict{}
+            dict attr = {}
 
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             my_segmentchain = self.get_subchain(self.cds_end,self.length,stranded=True)
