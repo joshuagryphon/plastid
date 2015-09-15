@@ -59,7 +59,7 @@ Then repeat the installation:
 .. _distribution-error: 
 
 I get an ``ImportError`` or ``DistributionError`` when using :data:`plastid`
-.........................................................................
+............................................................................
 
 If you get an error like the following::
 
@@ -122,7 +122,7 @@ contribute 1 :term:`count <counts>` to a dataset. See :doc:`/concepts/mapping_ru
 .. _faq-cs-vs-counts-in-region:
 
 What are the differences between :mod:`~plastid.bin.counts_in_region` and :mod:`~plastid.bin.cs`?
-...........................................................................................
+.................................................................................................
 :mod:`~plastid.bin.counts_in_region` very simply counts read coverage (or any data) over
 regions of interest, and reports those numbers in terms of :term:`counts` and :term:`RPKM`. It can 
 optionally take a :term:`mask file`, if there are genomic positions in the regions
@@ -156,7 +156,7 @@ discussion.
 .. _faq-segmentchain-gff3:
 
 Why does :meth:`plastid.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
-..............................................................................................................
+..................................................................................................................
 This is due to the incredible flexibility of the `GFF3`_ file format and ambiguities that this flexibility
 necessarily induces. See :ref:`this advice <data-export-gff3>` on how to handle this.
 

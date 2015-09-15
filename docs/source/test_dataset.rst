@@ -1,7 +1,7 @@
 Demo dataset
 ============
 
-:download:`Download the demo dataset here <https://www.dropbox.com/s/abktvrngn1lnzpb/plastid_demo.tar.bz2?dl=0>`.
+`Download the demo dataset here <https://www.dropbox.com/s/abktvrngn1lnzpb/plastid_demo.tar.bz2?dl=0>`_.
 
 We have put together a small demo dataset that is used in the :doc:`tour`
 and in :doc:`examples`. It consists of feature :term:`annotations`, 

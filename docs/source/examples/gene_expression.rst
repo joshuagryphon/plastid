@@ -15,7 +15,7 @@ We will do this two ways:
  #. Using the :mod:`~plastid.bin.counts_in_region` script to
     :ref:`count expression automatically <gene-expression-scripts>`.
 
-The examples below use parts 1 & 2 of the :doc:`/test_dataset` we have assembled.
+The examples below the :doc:`/test_dataset`.
 
 
  .. note::
@@ -306,6 +306,12 @@ control::
 Testing for differential expression
 -----------------------------------
 
+ .. note::
+
+    We need to add some more samples to the test dataset for this section.
+    In the mean time, just read along
+
+
 RNA-seq, specifically
 .....................
 There are many strategies for significance testing of differential gene expression
@@ -372,8 +378,8 @@ on each biological sample to obtain counts:
 
     $ counts_in_region ribo_rep1 --count_files SRR609197_riboprofile.bam  --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
     $ counts_in_region inf_rnaseq_rep1 --count_files SRR592963_rnaseq.bam  --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
-    $ counts_in_region ribo_rep2 --count_files                             --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
-    $ counts_in_region inf_rnaseq_rep2 --count_files                       --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region ribo_rep2 --count_files [SOME_OTHER_FILE].bam       --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
+    $ counts_in_region inf_rnaseq_rep2 --count_files [SOME_OTHER_FILE].bam --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
 
 
  .. TODO: include output

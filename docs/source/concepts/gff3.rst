@@ -87,7 +87,9 @@ Reading simple features
 |GFF3_Reader| parses each line of a `GFF3`_ file and returns a single-segment
 |SegmentChain| corresponding to the feature described by the line::
     
-    >>> TODO open GFF3
+    >>> reader = GFF3_Reader(open("some_file.gff"))
+    >>> for feature in reader:
+    >>>     pass #do_something
 
 Attributes described in the ninth column of the `GFF3`_ file are placed 
 into the `attr` dictionary of the |SegmentChain|::
@@ -144,18 +146,19 @@ requires much more memory than simply reading a transcript from a single
 line of a `BED`_ file.
 
 
- .. _gff3-write-assembler: 
 
-Writing your own assembler
-..........................
-It is possible to write custom assemblers transcripts (or any complex feature)
-from any :term:`ontology`. |AbstractGFF_Assembler| is provided 
-as a base class.
+ .. TODO : gff3-write-assembler 
 
-handling attributes? pooled attribute func
-stop feature?
+    Writing your own assembler
+    ..........................
+    It is possible to write custom assemblers transcripts (or any complex feature)
+    from any :term:`ontology`. |AbstractGFF_Assembler| is provided 
+    as a base class.
 
-TODO : finish section on writing own assembler
+    handling attributes? pooled attribute func
+    stop feature?
+
+    TODO : finish section on writing own assembler
 
 
 
