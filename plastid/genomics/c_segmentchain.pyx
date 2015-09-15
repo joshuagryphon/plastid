@@ -1986,6 +1986,9 @@ cdef class SegmentChain(object):
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
             numpy.ndarray[INT_t,ndim=1] mask = numpy.asarray(self._position_mask,dtype=int)
 
+        if self.c_strand == reverse_strand:
+            mask = mask[::-1]
+
         return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
 #        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
