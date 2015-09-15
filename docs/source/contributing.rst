@@ -9,6 +9,12 @@ Workflow
 
 .. TODO later: update all repository links
 
+Download the test dataset
+.........................
+Get the test dataset from :download:`here <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`
+and unpack it into ``plastid/test/``. The archive will create a folder called `data` and you'll be good to go.
+
+
 Start with a ticket
 ...................
 Before submitting a patch, please open a ticket. This will allow public

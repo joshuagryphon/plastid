@@ -73,5 +73,6 @@
 
 .. Our links
 
-.. _repo: https://some_repo # TODO: update repo when ready
+.. _plastid_repo: https://github.com/joshuagryphon/plastid
+.. _plastid_issues: https://github.com/joshuagryphon/plastid
 .. _Weissman lab: http://weissmanlab.ucsf.edu

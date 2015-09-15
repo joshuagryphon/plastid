@@ -1,6 +1,15 @@
 :data:`yeti` |version| welcome!
 ===============================
 
+We're in beta!
+--------------
+Welcome! :data:`plastid` is still in beta. This means that the package
+is functional, but we're adding speed/memory optimizations, and considering
+moving some things around inside the package so that they either make more
+sense or take lest time to get to. We welcome :doc:`your feedback </contact>`
+in this process, should you have any.
+
+
 Introduction
 ------------
 

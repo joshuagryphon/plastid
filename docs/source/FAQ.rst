@@ -9,23 +9,29 @@ Frequently-asked questions
 Installation and runtime
 ------------------------
 
-.. _faq-install-fails-virtualenv:
+.. _faq-install-numpy-first:
 
-Install fails in a Python `Virtualenv`_
-.......................................
+
+The tests won't run
+...................
+In order to run the tests, you need to download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack it into ``plastid/test/``. We didn't include this 
+in the main package in order to keep the download small.
+
+
+Install fails midway
+....................
 
 This is a due to a `known bug <https://github.com/numpy/numpy/issues/2434>`_ 
-with `NumPy`_, `SciPy`_, and `matplotlib`_ installation under setuptools. There is,
-however, a workaround. Enter your `Virtualenv`_ and manually install the SciPy
-stack via `Pip`_:
+with `NumPy`_, `SciPy`_, and `matplotlib`_ installation under setuptools.
+As a workaround. Just install `NumPy`_ first. Starting in the folder
+where you cloned :data:`plastid`:
 
 .. code-block:: shell
 
-    (venv)$ pip install numpy scipy matplotlib pandas
-    (venv)$ easy_install yeti.egg --reinstall
+    $ pip install numpy cython # get these first
+    $ pip install -r requirements.txt  # get everything else
 
-
-Then check your installations by running unit tests:
+You can your installations by running unit tests:
 
 .. code-block:: shell
 
@@ -45,7 +51,9 @@ Then repeat the installation:
 
 .. code-block:: shell
 
-    (venv)$ pip install yeti
+    $ python setup.py build_ext --inplace # build plastid extensions
+    $ python setup.py install --user # install
+
 
 
 .. _distribution-error: 
@@ -71,9 +79,8 @@ If you get an error like the following::
      pkg_resources.DistributionNotFound: scipy>=0.12.0 
 
 
-One or more dependencies (in this example, `scipy`_ is not installed). If
-installing in a `virtualenv`_, please see
-:ref:`this workaround <faq-install-fails-virtualenv>`.
+One or more dependencies (in this example, `scipy`_ is not installed).
+Please see :ref:`this workaround <faq-install-numpy-first>`.
 
 
 -------------------------------------------------------------------------------
