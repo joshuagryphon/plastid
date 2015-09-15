@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# yeti documentation build configuration file, created by
+# plastid documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec  5 11:55:54 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -18,7 +18,6 @@ import unittest
 import datetime
 import mock
 import plastid
-yeti=plastid
 
 
 # -- General configuration ------------------------------------------------
@@ -26,7 +25,7 @@ yeti=plastid
 
 project = u'plastid'
 copyright = u'2014, Joshua G. Dunn'
-version = str(yeti.__version__) # |version|
+version = str(plastid.__version__) # |version|
 release = "%s-r%s" % (plastid.__version__,str(datetime.date.today()).replace("-","_")) # |release|
 
 # set up substitutions file for automated crossreferences
@@ -120,7 +119,7 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     
         1.  Appear above ``exclude_always``
 
-        2.  Have an attribute called ``yeti_skipdoc`` set to *True*
+        2.  Have an attribute called ``plastid_skipdoc`` set to *True*
         
         3.  Have the same docstring as the method with the same name defined in 
             a base class that appears in ``exclude_if_no_redoc_base_classes``
@@ -155,7 +154,7 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     if skip == False:
         if name in exclude_always:
             skip = True
-        elif getattr(obj,"yeti_skipdoc",False) == True:
+        elif getattr(obj,"plastid_skipdoc",False) == True:
             skip = True
         elif name in exclude_if_no_redoc:
             for cls in exclude_if_no_redoc_base_classes:
@@ -345,7 +344,7 @@ pygments_style = 'sphinx'
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'yetidoc'
+htmlhelp_basename = 'plastid-doc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -365,7 +364,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'yeti.tex', u'yeti Documentation',
+  ('index', 'plastid.tex', u'Plastid Documentation',
    u'Joshua G. Dunn', 'manual'),
 ]
 
@@ -395,7 +394,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'yeti', u'yeti Documentation',
+    ('index', 'plastid', u'plastid Documentation',
      [u'Joshua Griffin Dunn'], 1)
 ]
 
@@ -409,8 +408,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'yeti', u'yeti Documentation',
-   u'Joshua Griffin Dunn', 'yeti', 'One line description of project.',
+  ('index', 'plastid', u'plastid Documentation',
+   u'Joshua Griffin Dunn', 'plastid', 'One line description of project.',
    'Miscellaneous'),
 ]
 
