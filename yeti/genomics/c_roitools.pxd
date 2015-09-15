@@ -9,11 +9,9 @@ cdef class GenomicSegment(object):
     cpdef bint overlaps(self,GenomicSegment)
     cpdef bint _cmp_helper(self,GenomicSegment,int)
     cpdef str as_igv_str(self)
-    cpdef str get_name(self)
-
 
 cdef str strand_to_str(Strand)
-cdef Strand str_to_strand(str) except undef_strand
+cdef Strand str_to_strand(str) #except undef_strand
 
 cpdef sort_segments_lexically(GenomicSegment)
 cpdef positions_to_segments(str,str,object)

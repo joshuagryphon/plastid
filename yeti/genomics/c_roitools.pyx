@@ -143,7 +143,7 @@ cdef str strand_to_str(Strand strand):
         raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'" % (forward_strand,
             reverse_strand, unstranded, strand))
 
-cdef Strand str_to_strand(str val) except undef_strand:
+cdef Strand str_to_strand(str val):
     """Convert str representation of strand to enum"""
     if val == "+":
         return forward_strand
@@ -151,6 +151,8 @@ cdef Strand str_to_strand(str val) except undef_strand:
         return reverse_strand
     elif val == ".":
         return unstranded
+    elif val == "\x00":
+        return undef_strand
     else:
         raise ValueError("Strand must be '+', '-', or '.'")
 
@@ -319,7 +321,7 @@ cdef class GenomicSegment:
         ochrom = other.chrom
         if cmptype == EQ:
             return schrom         == ochrom and\
-                   self.c_strand == other.c_strand and\
+                   self.c_strand  == other.c_strand and\
                    self.start     == other.start and\
                    self.end       == other.end
         elif cmptype == NEQ:
@@ -441,30 +443,20 @@ cdef class GenomicSegment:
         end   = long(s_end) - 1
         return GenomicSegment(chrom,start,end,strand)
     
-    cpdef str get_name(self):
-        """Alias for :meth:`GenomicSegment.__str__`"""
-        return str(self)
-
     property start:
         """Zero-indexed (Pythonic) start coordinate of |GenomicSegment|"""
         def __get__(self):
             return self.start
-        def __set__(self, val):
-            self.start = <long?>val
 
     property end:
         """Zero-indexed, half-open (Pythonic) end coordinate of |GenomicSegment|"""
         def __get__(self):
             return self.end
-        def __set__(self, val):
-            self.end = <long?>val
 
     property chrom:
         """Chromosome where |GenomicSegment| resides"""
         def __get__(self):
             return self.chrom
-        def __set__(self, str val):
-            self.chrom = val
 
     property strand:
         """Strand of |GenomicSegment|:
@@ -475,15 +467,10 @@ cdef class GenomicSegment:
         """
         def __get__(self):
             return strand_to_str(self.c_strand)
-        def __set__(self, str val):
-            self.c_strand = str_to_strand(val)
 
     property c_strand:
         def __get__(self):
             return self.c_strand
-        def __set__(self,val):
-            self.c_strand = val
 
 # Exported object
-NullSegment = GenomicSegment("NullChromosome",0,0,".")
-NullSegment.c_strand = undef_strand
+NullSegment = GenomicSegment("NullChromosome",0,0,"\x00")
