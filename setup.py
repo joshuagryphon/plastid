@@ -225,7 +225,7 @@ setup(
 
     # package metadata
     name             = "plastid",
-    version          = 0.2.2, #plastid.__version__,
+    version          = "0.2.2", #plastid.__version__,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
