@@ -2,16 +2,10 @@
  .. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <plastid.bin.crossmap.FastaNameReader>`
  .. |GenomicSegment| replace:: :py:class:`~plastid.genomics.c_roitools.GenomicSegment`
  .. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.c_roitools.GenomicSegment>`
- .. |SegmentChain| replace:: :py:class:`~plastid.genomics.c_segmentchain.pyxnot.SegmentChain`
- .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.c_segmentchain.pyxnot.SegmentChain>`
- .. |SegmentChain| replace:: :py:class:`~plastid.genomics.c_segmentchain.pyx.SegmentChain`
- .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.c_segmentchain.pyx.SegmentChain>`
- .. |Transcript| replace:: :py:class:`~plastid.genomics.c_segmentchain.pyx.Transcript`
- .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.c_segmentchain.pyx.Transcript>`
- .. |SegmentChain| replace:: :py:class:`~plastid.genomics.c_segmentchain.SegmentChain`
- .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.c_segmentchain.SegmentChain>`
+ .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
+ .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
  .. |Transcript| replace:: :py:class:`~plastid.genomics.c_segmentchain.Transcript`
- .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.c_segmentchain.Transcript>`
+ .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
  .. |AbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.AbstractGenomeArray`
  .. |AbstractGenomeArrays| replace:: :py:class:`AbstractGenomeArrays <plastid.genomics.genome_array.AbstractGenomeArray>`
  .. |BAMGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BAMGenomeArray`
