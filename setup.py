@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import plastid
+#import plastid
 import sys
 import glob
 from collections import Iterable
@@ -197,7 +197,7 @@ setup(
 
     # package metadata
     name             = "plastid",
-    version          = plastid.__version__,
+    version          = "0.2.3", #plastid.__version__,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
