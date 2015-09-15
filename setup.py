@@ -8,10 +8,6 @@ from collections import Iterable
 from distutils.command.build_ext import build_ext as d_build_ext
 from setuptools import setup, find_packages, Extension, Command
 
-from Cython.Build import cythonize
-from Cython.Distutils import build_ext as c_build_ext
-
-
 #===============================================================================
 # Constants/variables used below
 #===============================================================================
