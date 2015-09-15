@@ -17,16 +17,17 @@ import sys
 import unittest
 import datetime
 import mock
-import yeti
+import plastid
+yeti=plastid
 
 
 # -- General configuration ------------------------------------------------
 
 
-project = u'yeti'
+project = u'plastid'
 copyright = u'2014, Joshua G. Dunn'
 version = str(yeti.__version__) # |version|
-release = "%s-r%s" % (yeti.__version__,str(datetime.date.today()).replace("-","_")) # |release|
+release = "%s-r%s" % (plastid.__version__,str(datetime.date.today()).replace("-","_")) # |release|
 
 # set up substitutions file for automated crossreferences
 rst_prolog = """
@@ -38,7 +39,7 @@ rst_prolog = """
 master_doc = 'index'
 
 # ignore package prefix when alphabetizing index
-modindex_common_prefix = ["yeti."]
+modindex_common_prefix = ["plastid."]
 
 extensions = [
     'sphinx.ext.autodoc',
