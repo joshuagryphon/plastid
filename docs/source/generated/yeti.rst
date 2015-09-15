@@ -1,21 +1,19 @@
 yeti package
 ============
 
-Package contents
-----------------
-
- .. automodule:: yeti
+.. automodule:: yeti
     :members:
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
 
- .. toctree::
-    :maxdepth: 4
-    :hidden:
-    
+.. toctree::
+
     yeti.bin
     yeti.genomics
     yeti.readers
-    yeti.util
     yeti.test
+    yeti.util
+
