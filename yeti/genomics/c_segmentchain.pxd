@@ -38,7 +38,6 @@ cdef class SegmentChain(object):
     cpdef set get_position_set(self)
     cpdef set get_masked_position_set(self)
 
-
     cdef long c_get_genomic_coordinate(self, long, bint) except -1
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
     cdef SegmentChain c_get_subchain(self,long, long, bint)

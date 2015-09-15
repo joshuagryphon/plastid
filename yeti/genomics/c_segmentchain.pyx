@@ -83,6 +83,7 @@ import warnings
 import array
 
 import numpy
+from numpy.ma import MaskedArray as MaskedArray
 cimport numpy
 
 from cpython cimport array
@@ -409,7 +410,6 @@ cdef class SegmentChain(object):
         if num_segs == 0:
             self.spanning_segment = NullSegment 
         elif num_segs == 1:
-            #print("Setting spanning seg to only seg")
             self.spanning_segment = self._segments[0]
         elif num_segs >1:
             segs = self._segments
@@ -893,12 +893,12 @@ cdef class SegmentChain(object):
         new_segments = [GenomicSegment(X.chrom,X.start,X.end,strand_to_str(new_strand)) for X in self._segments]
         return SegmentChain(*new_segments)
 
-    def get_position_list(self,do_copy = False):
+    def get_position_list(self,copy = False):
         """Retrieve a sorted **end-inclusive** numpy array of genomic coordinates in this |SegmentChain|
          
         Parameters
         ----------
-        do_copy : bool, optional
+        copy : bool, optional
             If `False` (default), return a view of the |SegmentChain|'s
             internal position mapping. If `True`, return  a copy
  
@@ -907,14 +907,14 @@ cdef class SegmentChain(object):
         :class:`numpy.ndarray`
             Ggenomic coordinates in `self`, as integers, in genomic order
         """
-        return self.c_get_position_list(do_copy)
+        return self.c_get_position_list(copy)
 
-    cdef numpy.ndarray c_get_position_list(self, bint do_copy):
+    cdef numpy.ndarray c_get_position_list(self, bint copy):
         """Retrieve a sorted end-inclusive list of genomic coordinates in this |SegmentChain|
         
         Parameters
         ----------
-        do_copy : bool, optional
+        copy : bool, optional
             If `False` (default), return a view of the |SegmentChain|'s
             internal position mapping. If `True`, return  a copy
 
@@ -924,7 +924,7 @@ cdef class SegmentChain(object):
             Ggenomic coordinates in `self`, as integers, in genomic order
         """
         cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._position_hash,dtype=long) 
-        if do_copy == False:
+        if copy == False:
             return positions
         else:
             return copy.deepcopy(positions)
@@ -1957,8 +1957,7 @@ cdef class SegmentChain(object):
             
         return count_array
     
-    # TODO: cache / lazy eval this
-    def get_masked_counts(self,ga,stranded=True):
+    def get_masked_counts(self,ga,stranded=True,copy=False):
         """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
         coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
         will be masked in the array
@@ -1973,26 +1972,30 @@ cdef class SegmentChain(object):
             count order will be reversed relative to genome so that the
             array positions march from the 5' to 3' end of the chain.
             (Default: `True`)
+
+        copy : bool, optional
+            If `False` (defualt) returns a view of the data; so changing
+            values in the view changes the values in the |GenomeArray|
+            if it is mutable. If `True`, a copy is returned instead.
             
             
         Returns
         -------
 		:py:class:`numpy.ma.masked_array`
         """
-#        cdef:
-#            numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
-#            numpy.ndarray[INT_t,ndim=1] mask = numpy.asarray(self._position_mask,dtype=int)
+        cdef:
+            numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
+            numpy.ndarray[INT_t,ndim=1] mask = numpy.asarray(self._position_mask,dtype=int)
 
-        atmp = numpy.ma.masked_invalid(self.get_counts(ga))
-        atmp.mask = True
+        return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
-        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
-                                                            self.spanning_segment.strand) 
-                           for X in self.get_masked_position_set()]
-        for x in valid_positions:
-            atmp.mask[x] = False
+#        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
+#                                                            self.spanning_segment.strand) 
+#                           for X in self.get_masked_position_set()]
+#        for x in valid_positions:
+#            atmp.mask[x] = False
         
-        return atmp
+#        return atmp
     
     def get_sequence(self,genome,stranded=True):
         """Return spliced genomic sequence of |SegmentChain| as a string
