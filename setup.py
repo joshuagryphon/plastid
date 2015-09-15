@@ -74,9 +74,8 @@ if not on_rtd:
 else:
     from setuptools.command import build_ext
     ext_modules = []
-    install_requires = [
-                        "scipy","numpy","pandas","matplotlib","biopython","twobitreader",
-                        ]
+    install_requires = []
+                      #  "scipy","numpy","pandas","matplotlib","biopython","#  ]
 
 
 #===============================================================================
