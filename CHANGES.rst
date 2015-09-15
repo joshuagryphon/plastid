@@ -20,6 +20,19 @@ the last digit.
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
 
+plastid [0.2.2] = [2015-09-15]
+------------------------------
+First release under official name!
+
+Added
+.....
+  - Major algorithmic improvements to internals & command-line scripts
+
+Changed
+.......
+  - Reimplemented mapping rules and some internals in Cython,
+    giving 2-10x speedup for some operations
+  - GenomicSegment now sorts lexically. Properties are read-only
 
 
 yeti [0.2.1] = [2015-09-06]
