@@ -1,5 +1,3 @@
-from yeti.genomics.c_common import fusedreal
-
 cdef class CenterMapFactory:
     cdef unsigned int nibble
 

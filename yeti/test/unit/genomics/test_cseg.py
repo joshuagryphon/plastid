@@ -35,6 +35,7 @@ warnings.simplefilter("ignore",DeprecationWarning)
 # INDEX: Helper functions & constants
 #===============================================================================
 
+
 ANNOTATION_FILES = {
                     "bed100" : resource_filename("yeti","test/data/annotations/100transcripts.bed"),
                     "gff100" : resource_filename("yeti","test/data/annotations/100transcripts.gff"),
@@ -155,7 +156,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         position_test = ivc1.get_position_set() == ivc2.get_position_set()
         strand_test   = ivc1.spanning_segment.strand == ivc2.spanning_segment.strand
         chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
-        return position_test & strand_test & chrom_test
+        return len(ivc1) > 0 and len(ivc2) > 0 and position_test and strand_test and chrom_test
     
     @skip_if_abstract
     def test_import_bed_gtf_gff(self):
@@ -203,11 +204,13 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         bed_text.close()
         gtf_text.close()
 
-        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=Transcript) }
+        print("test_export_bed_gtf: able to write")
+        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=SegmentChain) } #Transcript) }
         gtf_transcripts = {X.get_name() : X  for X in GTF2_TranscriptAssembler(open(gtf_text.name),
                                                                                add_three_for_stop=False,
-                                                                               return_type=Transcript) }
+                                                                               return_type=SegmentChain) } #Transcript) }
 
+        print("test_export_bed_gtf: able to read back in")
         # Test equality of imported & exported keysets
         self.assertEquals(set(self.bed_dict.keys()),set(bed_transcripts.keys()))
         self.assertEquals(set(self.bed_dict.keys()),set(gtf_transcripts.keys()))
@@ -218,6 +221,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
             self.assertTrue(self.is_identical(tx,bed_transcripts[txid]),err_msg)
             self.assertTrue(self.is_identical(tx,gtf_transcripts[txid]),err_msg)
 
+        print("reimported transcripts evaluate equally")
         # Test inequality of those that should be different
         c = 0
         for k1, k2 in zip(self.sorted_keys,self.shuffled_keys):
@@ -229,6 +233,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
             
         self.assertGreater(c,0)
 
+        print("Testing inequality of items that should be different")
         os.remove(bed_text.name)
         os.remove(gtf_text.name)        
     
@@ -479,15 +484,16 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         """Test identity of %ss""" % (self.test_class.__name__)
         combos = itertools.product(self.ivcs.keys(),repeat=2)
         for k1, k2 in combos:
-            msg = "%s test_identity: %s and %s evaluated as %s. Expected %s."
+            msg = "%s test_identity: '%s' %s and '%s' %s evaluated as %s. Expected %s."
             chain1 = self.ivcs[k1]
             chain2 = self.ivcs[k2]
+            print("testing %s (%s), %s (%s)" % (k1,chain1,k2,chain2))
             answer = self.is_identical(chain1,chain2)
-            if k1 == k2:
-                self.assertTrue(answer,msg % (self.__test_class__,chain1,chain2,False,True)  )
+            if k1 == k2 and len(chain1) > 0 and len(chain2) > 0:
+                self.assertTrue(answer,msg % (self.test_class,k1,chain1,k2,chain2,False,True)  )
             else:
                 #self.assertFalse(self.is_identical(self.ivcs[k1],self.ivcs[k2]))
-                self.assertFalse(answer,msg % (self.__test_class__,chain1,chain2,True,False)  )
+                self.assertFalse(answer,msg % (self.test_class,k1,chain1,k2,chain2,True,False)  )
 
 
     def _eq_check(self,test_key,test_func,strand_tests=["sense"]):
@@ -634,22 +640,22 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(ivc.get_length(),475)
         
         # add GenomicSegment from the wrong strand
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["a3m"])
         
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["b3p"])
 
         # add GenomicSegment from the wrong chromosome
-        self.assertRaises(AssertionError,
+        self.assertRaises(ValueError,
                           ivc.add_segments,self.ivs["b3m"])
     
     @skip_if_abstract    
     def test_add_masks(self):
         for strand, opp in [("+","-"),("-","+")]:
             ivc = SegmentChain(GenomicSegment("chrA",100,150,strand),
-                   GenomicSegment("chrA",250,300,strand))
+                               GenomicSegment("chrA",250,300,strand))
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
@@ -666,15 +672,15 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             chrom_mask_c = GenomicSegment("chrB",275,350,strand)
             
             # don't add opposite-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,opp_mask_a)
+            self.assertRaises(ValueError,ivc.add_masks,opp_mask_a)
             self.assertEqual(ivc.get_masks(),[])
 
             # don't add opposite-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,opp_mask_a,opp_mask_b,opp_mask_c)
+            self.assertRaises(ValueError,ivc.add_masks,opp_mask_a,opp_mask_b,opp_mask_c)
             self.assertEqual(ivc.get_masks(),[])
 
             # don't add wrong chromosome same-strand masks
-            self.assertRaises(AssertionError,ivc.add_masks,chrom_mask_a,chrom_mask_b,chrom_mask_c)
+            self.assertRaises(ValueError,ivc.add_masks,chrom_mask_a,chrom_mask_b,chrom_mask_c)
             self.assertEqual(ivc.get_masks(),[])
             
             # don't add intron mask
@@ -819,7 +825,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                     
     @skip_if_abstract    
     def test_get_genomic_coordinate(self):
-        """Test conversions between genome-centric and SegmentChain-centric coordinates"""
+        #"""Test conversions between genome-centric and SegmentChain-centric coordinates"""
         iv1 = GenomicSegment("chrA",2,3,"+")
         iv2 = GenomicSegment("chrA",15,19,"+") 
         iv3 = GenomicSegment("chrA",20,24,"+")
@@ -881,12 +887,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         # assert that full range reproduces full transcript on plus strand
         whole_range = ivca.get_subchain(0,ivca.get_length())
-        self.assertTrue(self.is_identical(whole_range,ivca))
+        self.assertTrue(self.is_identical(whole_range,ivca),"test_get_subchain: expected %s, got %s" % (ivca,whole_range))
         self.assertTrue(ivca.covers(whole_range))
 
         # assert that full range reproduces full transcript on minus strand
         whole_range = nvca.get_subchain(0,nvca.get_length())
-        self.assertTrue(self.is_identical(whole_range,nvca))
+        self.assertTrue(self.is_identical(whole_range,nvca),"test_get_subchain: expected %s, got %s" % (nvca,whole_range))
         self.assertTrue(nvca.covers(whole_range))
         
         # assert they don't cover each other
@@ -912,10 +918,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertTrue(nvca.covers(sub_minus))
         self.assertFalse(sub_plus.covers(nvca))
     
-    @skip_if_abstract    
-    def test_get_counts(self):
-        """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
-        assert False
+#    @skip_if_abstract    
+#    def test_get_counts(self):
+#        """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
+#        assert False
 #        ga = GenomeArray({"chrA":2000})
 #        ga[GenomicSegment("chrA",100,200,"+")] = 1
 #        ga[GenomicSegment("chrA",250,350,"+")] = 1
@@ -954,10 +960,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 #        post_mask_counts   = ivc2.get_masked_counts(ga).sum()       
 #        self.assertEquals(post_unmask_counts,200)
 #        self.assertEquals(post_mask_counts,200)
-#
+
     @skip_if_abstract    
     def test_masked_total_length(self):
-        """Test `total_valid_length()` and `add_masks()`"""
+        """Test `get_masked_length()` and `add_masks()`"""
         iv1 = GenomicSegment("chrA",100,150,"+")
         iv2 = GenomicSegment("chrA",150,200,"+")
         iv3 = GenomicSegment("chrA",250,350,"+")
@@ -1135,11 +1141,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
  
     @skip_if_abstract    
     def test_from_psl(self):
-        ref_transcripts = { X.get_name() : X for X in BED_Reader(open(MINI["bed_file"]),return_type=Transcript) }
+        ref_transcripts = { X.get_name() : X for X in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class) }
         # PSL file won't have knowledge of CDS, so we set these to none in our reference transcripts
-        for tx in ref_transcripts.values():
-            tx.cds_start = tx.cds_end = None
-            tx.cds_genoem_start = tx.cds_genoem_end = None
+        if self.test_class == Transcript:
+            for tx in ref_transcripts.values():
+                tx.cds_start = tx.cds_end = None
+                tx.cds_genoem_start = tx.cds_genoem_end = None
         for line in open(MINI["psl_file"]):
             if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
                 psl = self.test_class.from_psl(line)
@@ -1152,8 +1159,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             
     @skip_if_abstract    
     def test_to_psl_raises_error_if_attributes_not_defined(self):
-        for tx in BED_Reader(open(MINI["bed_file"]),return_type=Transcript):
-            self.assertRaises(AttributeError,tx.as_psl)
+        for chain in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class):
+            self.assertRaises(AttributeError,chain.as_psl)
     
     @skip_if_abstract    
     def test_to_from_psl_identity(self):

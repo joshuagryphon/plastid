@@ -135,8 +135,13 @@ cdef str strand_to_str(Strand strand):
         return "+"
     elif strand == reverse_strand:
         return "-"
-    else:
+    elif strand == unstranded:
         return "."
+    elif strand == undef_strand:
+        return "<undefined strand>"
+    else:
+        raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'" % (forward_strand,
+            reverse_strand, unstranded, strand))
 
 cdef Strand str_to_strand(str val) except undef_strand:
     """Convert str representation of strand to enum"""
@@ -171,7 +176,7 @@ cdef class GenomicSegment:
         0-indexed, half-open right most position of segment
 
     strand : str
-Chromosome strand (`'+'`, `'-'`, or `'.'`)
+        Chromosome strand (`'+'`, `'-'`, or `'.'`)
    
 
     Examples
