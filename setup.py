@@ -51,7 +51,13 @@ if not on_rtd:
     setup_requires = [CYTHON_VERSION,
                       PYSAM_VERSION,
                       NUMPY_VERSION]
-
+    install_requires = [
+                        SCIPY_VERSION,
+                        "pandas>=0.16.0",
+                        "matplotlib>=1.3.0",
+                        "biopython>=1.64",
+                        "twobitreader>=3.0.0",
+                        ] + setup_requires
     ipath = []
     for mod in (numpy,pysam):
         ipart = mod.get_include()
@@ -68,6 +74,9 @@ if not on_rtd:
 else:
     from setuptools.command import build_ext
     ext_modules = []
+    install_requires = [
+                        "scipy","numpy","pandas","matplotlib","biopython","twobitreader",
+                        ]
 
 
 #===============================================================================
@@ -263,13 +272,7 @@ setup(
 
 
     setup_requires   = setup_requires,
-    install_requires = [
-                        SCIPY_VERSION,
-                        "pandas>=0.16.0",
-                        "matplotlib>=1.3.0",
-                        "biopython>=1.64",
-                        "twobitreader>=3.0.0",
-                        ] + setup_requires,
+    install_requires = install_requires,
    
     tests_require     = [ "nose>=1.0" ],
     test_suite        = "nose.collector",
