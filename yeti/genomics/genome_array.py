@@ -1062,7 +1062,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             reads = ifilter(my_filter,reads)
         
         # retrieve selected parts of regions
-        reads, count_array = self.map_fn(reads,roi)
+        reads,count_array = self.map_fn(list(reads),roi)
         
         # normalize to reads per million if normalization flag is set
         if self._normalize is True:

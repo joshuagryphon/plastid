@@ -1,20 +1,15 @@
 yeti.util.services package
 ==========================
 
-Package contents
-----------------
-
 .. automodule:: yeti.util.services
     :members:
     :undoc-members:
     :show-inheritance:
 
-
 Submodules
 ----------
 
 .. toctree::
-   :maxdepth: 2
 
    yeti.util.services.colors
    yeti.util.services.decorators
@@ -23,3 +18,4 @@ Submodules
    yeti.util.services.mini2to3
    yeti.util.services.misc
    yeti.util.services.sets
+

@@ -1,5 +1,7 @@
-*swp
-*pyc
+*.swp
+*.pyc
+*.c
+*.so
 *~
 .*project
 .noseids

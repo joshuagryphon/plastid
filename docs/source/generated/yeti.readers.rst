@@ -1,20 +1,15 @@
 yeti.readers package
 ====================
 
-Package contents
-----------------
-
 .. automodule:: yeti.readers
     :members:
     :undoc-members:
     :show-inheritance:
 
-
 Submodules
 ----------
 
 .. toctree::
-   :maxdepth: 2
 
    yeti.readers.autosql
    yeti.readers.bed
@@ -25,3 +20,4 @@ Submodules
    yeti.readers.gff_tokens
    yeti.readers.psl
    yeti.readers.wiggle
+

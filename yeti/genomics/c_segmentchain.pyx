@@ -80,39 +80,68 @@ __author__ = "joshua"
 import re
 import copy
 import warnings
+import array
+
 import numpy
+from numpy.ma import MaskedArray as MaskedArray
+cimport numpy
+
+from cpython cimport array
 
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
 from yeti.util.services.exceptions import DataWarning
-from yeti.util.services.decorators import skipdoc
 from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from yeti.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
-from yeti.genomics.c_roitools import GenomicSegment, \
-                                     sort_segments_lexically, \
-                                     positionlist_to_segments, \
-                                     positions_to_segments
-from yeti.genomics.c_segmentchain import SegmentChain as cSegmentChain
+
+
+from yeti.genomics.c_roitools cimport GenomicSegment, \
+                                      positionlist_to_segments, \
+                                      positions_to_segments, \
+                                      strand_to_str, str_to_strand
+from yeti.genomics.c_roitools import NullSegment
+from yeti.genomics.c_common cimport ExBool, true, false, bool_exception, \
+                                    Strand, forward_strand, reverse_strand,\
+                                    unstranded, undef_strand
+
+
+#===============================================================================
+# constants
+#===============================================================================
+
+cdef hash_template = array.array('l',[]) 
+cdef mask_template = array.array('i',[])
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
-segpat  = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
+segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
 ivcpat = re.compile(r"([^:]*):([^(]+)\(([+-.])\)")
 
+# compile time constants - __richcmp__ test
+DEF LT  = 0
+DEF LEQ = 1
+DEF EQ  = 2
+DEF NEQ = 3
+DEF GT  = 4
+DEF GEQ = 5
 
-# TODO: make segments sort lexically via __richcmp__
-# TODO: get_counts as a view
-# TODO: make get_counts efficient by pre-allocating one array or memoryview
+INT    = numpy.int
+FLOAT  = numpy.float
+DOUBLE = numpy.double
+LONG   = numpy.long
 
+ctypedef numpy.int_t    INT_t
+ctypedef numpy.float_t  FLOAT_t
+ctypedef numpy.double_t DOUBLE_t
+ctypedef numpy.long_t   LONG_t
 
 
 #===============================================================================
 # io functions
 #===============================================================================
 
-@skipdoc
 def _get_attr(dtmp):
     ltmp=[]
     for k,v in sorted(dtmp.items()):
@@ -120,7 +149,6 @@ def _get_attr(dtmp):
     
     return ",".join(ltmp)
 
-@skipdoc
 def _format_segmentchain(segchain):
     """Formats a |SegmentChain| as a string, which when ``eval`` ed, should reconstruct the |SegmentChain|.
     Used for creating test datasets.
@@ -142,7 +170,6 @@ def _format_segmentchain(segchain):
                                                           )
     return stmp
 
-@skipdoc
 def _format_transcript(tx):
     """Formats a |Transcript| as a string, which when ``eval`` ed, should reconstruct the |Transcript|.
     Used for creating test datasets.
@@ -225,7 +252,7 @@ def sort_segmentchains_by_name(segchain):
 # or alignments
 #===============================================================================
 
-class SegmentChain(object):
+cdef class SegmentChain(object):
     """Base class for genomic features. |SegmentChains| can contain zero or more
     |GenomicSegments|, and therefore can model discontinuous, features -- such
     as multi-exon transcripts or gapped alignments -- in addition,
@@ -275,6 +302,17 @@ class SegmentChain(object):
         and `BED`_ export, as well as methods for fetching coding regions
         and UTRs as subsegments
     """
+
+    def __cinit__(self,*segments,**attr):
+        self._segments        = []
+        self._mask_segments   = []
+        self._position_hash   = array.clone(hash_template,0,False)
+        self._position_mask   = array.clone(mask_template,0,False)
+        self._inverse_hash    = {}
+        self.length = 0
+        self.masked_length = 0
+        self.spanning_segment = NullSegment
+
     def __init__(self,*segments,**attr):
         """Create an |SegmentChain| from zero or more |GenomicSegment| objects
         
@@ -305,50 +343,126 @@ class SegmentChain(object):
 
             ``gene_id``             A gene ID used for `GTF2`_ export
             ====================    ============================================
-       """
-        self.spanning_segment = None  #interval spanning entire SegmentChain
-        self._segments      = []
-        self._mask_segments = []      # list<GenomicSegment> of masked positions
-        self._position_hash = self._get_position_hash()
-        self.strand = None
-        self.chrom  = None
+        """
         self.attr = attr
-        
         if "type" not in attr:
             self.attr["type"] = "exon"
         
-        self.add_segments(*segments)
+        self.c_add_segments(segments)
 
-    def _update(self):
-        """Sort component |GenomicSegments| within the |SegmentChain|,
-        and maintain synchrony of position hashes
+    property length:
+        def __get__(self):
+            return self.length
+
+    property masked_length:
+        def __get__(self):
+            return self.masked_length
+
+    property spanning_segment:
+        def __get__(self):
+            return self.spanning_segment
+
+    property chrom:
+        """Chromosome the SegmentChain resides on"""
+        def __get__(self):
+            return self.spanning_segment.chrom
+
+    property strand:
+        """Strand of the SegmentChain"""
+        def __get__(self):
+            return strand_to_str(self.spanning_segment.c_strand)
+
+    property c_strand:
+        def __get__(self):
+            return self.spanning_segment.c_strand
+
+    property _segments:
+        """List of |GenomicSegments| that comprise the |SegmentChain|"""
+        def __get__(self):
+            return self._segments
+
+    property _mask_segments:
+        """Trimmed |GenomicSegments| representing masked regions of the |SegmentChain|"""
+        def __get__(self):
+            return self._mask_segments
+
+    property attr:
+        def __get__(self):
+            return self.attr
+        def __set__(self,attr):
+            self.attr = attr
+
+    cpdef void _update(self):
+        """Rebuilt position hashes and spanning segment, after adding positions
         """
+        cdef:
+            int num_segs = len(self)
+            list segs
+            GenomicSegment seg0
+        
         self.sort()
-        self._position_hash = self._get_position_hash()
-        if len(self) == 0:
-            self.spanning_segment = None
-        elif len(self) == 1:
-            self.spanning_segment = self[0]
-        elif len(self) >1:
-            self.spanning_segment = GenomicSegment(self.chrom,
-                                                   self[0].start,
-                                                   self[-1].end,
-                                                   self.strand)
-        else:
-            raise RuntimeError("Segmentchain '%s' has negative intervals (%s)?" % (self.get_name(),len(self)))
+        self._get_position_hash()
+        self.length = sum([len(X) for X in self._segments])
 
-    def sort(self):
+        self._position_mask = array.clone(mask_template,0,False)
+        self.add_masks()
+       
+        if num_segs == 0:
+            self.spanning_segment = NullSegment 
+        elif num_segs == 1:
+            self.spanning_segment = self._segments[0]
+        elif num_segs >1:
+            segs = self._segments
+            seg0 = segs[0]
+            self.spanning_segment = GenomicSegment(seg0.chrom,
+                                                   seg0.start,
+                                                   segs[-1].end,
+                                                   seg0.strand)
+
+        else:
+            raise RuntimeError("Segmentchain '%s' has negative intervals (%s)?" % (self.get_name(),num_segs))
+
+    cdef void _get_position_hash(self):
+        """Update position hash, mapping |SegmentChain| coordinates to genomic coordinates
+        
+        Returns
+        -------
+        long [:]
+            Memoryview mapping each position in the |SegmentChain| to its 
+            chromosomal coordinate
+        """
+        cdef list segments = self._segments
+        cdef long length = sum([len(X) for X in segments])
+        cdef long [:] my_hash = array.clone(hash_template,length,False)  
+        cdef long x, c
+        cdef GenomicSegment segment
+        cdef dict ihash = {}
+
+        c = 0
+        for segment in self._segments:
+            x = segment.start
+            while x < segment.end:
+                my_hash[c] = x
+                ihash[x] = c
+                c += 1
+                x += 1
+        
+        self._position_hash = my_hash
+        self._inverse_hash  = ihash
+
+    cpdef void sort(self):
         """Sort component segments by ascending 5' chromosomal coordinate"""
-        self._segments.sort(key=sort_segments_lexically)
-        self._mask_segments.sort(key=sort_segments_lexically)
+        self._segments.sort()
+        self._mask_segments.sort()
 
     def __repr__(self):
         sout = "<%s segments=%s" % (self.__class__.__name__, len(self))
-        sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
-                                          self[0].start,
-                                          self[-1].end,
-                                          self[0].strand)
-        sout += " name=%s" % self.get_name()
+        if len(self) > 0:
+            sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
+                                              self[0].start,
+                                              self[-1].end,
+                                              self[0].strand)
+            sout += " name=%s" % self.get_name()
         sout += ">"
         return sout
 
@@ -382,10 +496,7 @@ class SegmentChain(object):
         |GenomicSegment|
         """
         return self._segments[index]
-    
-    def __setitem__(self,key,val):
-        self._segments[key] = val
-            
+           
     def __iter__(self):
         """Interation over each |GenomicSegment| in the |SegmentChain|,
         from left to right on the chromsome"""
@@ -405,7 +516,7 @@ class SegmentChain(object):
         """Return the number of |GenomicSegments| in the |SegmentChain|"""
         return len(self._segments)
     
-    def __contains__(self,other):
+    def __contains__(self, object other):
         """Tests whether |SegmentChain| contains another |SegmentChain|
         or |GenomicSegment|. Containment is defined for each type as follows:
         
@@ -434,51 +545,61 @@ class SegmentChain(object):
         -------
         bool
         """
+        cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            tmp = SegmentChain(other)
-            return tmp in self
-        elif isinstance(other,SegmentChain):        
-            if len(self) == 0 or len(other) == 0:
-                return False
-            elif other.get_length() > self.get_length():
-                return False
-            elif self.chrom != other.chrom:
-                return False
-            elif self.strand != other.strand:
-                return False
-            elif len(other) == 1:
-                for segment in self:
-                    if segment.contains(other[0]):
-                        return True
-                return False            
-            else:
-                # TODO: change logic to any() over GenomicSegments
-                selfpos = self.get_position_set()
-                opos    = other.get_position_set()
-                
-                if opos & selfpos == opos:
-                    myjuncs = self.get_junctions()
-                    ojuncs  = other.get_junctions()
-        
-                    found = False
-                    for i, myjunc in enumerate(myjuncs):
-                        if ojuncs[0] == myjunc:
-                            mystart = i
-                            found   = True
-                            break
-                else:
-                    return False
-                
-                if found is True:
-                    return ojuncs == myjuncs[mystart:mystart+len(ojuncs)]
-                else:
-                    return False
+            return self.__contains__(SegmentChain(other))
+        elif isinstance(other,SegmentChain):
+            retval = self.c_contains(other)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain.unstranded_overlaps() errored on chain '%s' and object '%s'" % (self,other))
+            return retval == true
         else:
             raise TypeError("The 'in'/containment operator is only defined for GenomicSegments and SegmentChains")
-        return False
+     
+    cdef ExBool c_contains(self, SegmentChain other) except bool_exception:
+        cdef:
+            set selfpos, opos
+            list myjuncs, ojuncs
+            int i, mystart
+            bint found
+
+        if len(self) == 0 or len(other) == 0:
+            return false
+        elif self.chrom != other.chrom:
+            return false
+        elif self.c_strand != other.c_strand:
+            return false
+        elif other.length > self.length:
+            return false
+        elif len(other) == 1:
+            for segment in self:
+                if segment.contains(other[0]):
+                    return true
+            return false 
+        else:
+            selfpos = self.get_position_set()
+            opos    = other.get_position_set()
+            
+            if opos & selfpos == opos:
+                myjuncs = self.get_junctions()
+                ojuncs  = other.get_junctions()
     
-    def __eq__(self,other):
-        """Test whether `self` and `other` are equal. Equality is defined as
+                found = False
+                for i, myjunc in enumerate(myjuncs):
+                    if ojuncs[0] == myjunc:
+                        mystart = i
+                        found   = True
+                        break
+            else:
+                return false
+            
+            if found == True:
+                return true if ojuncs == myjuncs[mystart:mystart+len(ojuncs)] else false
+            else:
+                return false
+
+    def __richcmp__(self, object other, int cmpval):
+        """Test whether `self` and `other` are equal or unequal. Equality is defined as
         identity of positions, chromosomes, and strands. Two |SegmentChain| with
         zero intervals, by convention, are not equal.
            
@@ -492,30 +613,36 @@ class SegmentChain(object):
         bool
         """
         if isinstance(other,GenomicSegment):
-            other = SegmentChain(GenomicSegment)
-            
-        if len(self) == 0 or len(other) == 0:
-            return False
+            return self.__richcmp__(SegmentChain(GenomicSegment),cmpval) == true
+        elif isinstance(other,SegmentChain):
+            retval = self.c_richcmp(other,cmpval)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain eq/ineq/et c comparison failed with chain '%s' on object '%'""" % (self,other))
+            return retval == true
+
+    cpdef ExBool c_richcmp(self, SegmentChain other, int cmpval) except bool_exception:
+        cdef ExBool opval
+        if cmpval == EQ:
+            if len(self) == 0 or len(other) == 0:
+                return false
+            else:
+                if self.chrom == other.chrom and\
+                   self.c_strand == other.c_strand and\
+                   self.get_position_set() == other.get_position_set():
+                       return true
+                return false
+        elif cmpval == NEQ:
+            opval = self.c_richcmp(other,EQ)
+            if opval == bool_exception:
+                pass
+            elif opval == true:
+                return false
+            elif opval == false:
+                return true
         else:
-            return self.chrom == other.chrom and\
-                   self.strand == other.strand and\
-                   self.get_position_set() == other.get_position_set()
-        
-    def __ne__(self,other):
-        """Defines inequality for two SegmentChains as complement of :meth:`SegmentChain.__eq__`
+            raise ValueError("This operation is not defined for SegmentChains.")
 
-        Parameters
-        ----------
-        other : |SegmentChain| or |GenomicSegment|
-        	Query feature
-        
-        Returns
-        -------
-        bool
-        """
-        return False if self == other else True
-
-    def shares_segments_with(self,other):
+    def shares_segments_with(self, object other):
         """Returns a list of |GenomicSegment| that are shared between `self` and `other`
            
         Parameters
@@ -537,18 +664,24 @@ class SegmentChain(object):
             tmp = SegmentChain(other)
             return self.shares_segments_with(tmp)
         elif isinstance(other,SegmentChain):
-            if self.chrom != other.chrom or self.strand != other.strand:
-                return []
-            else:
-                shared = []
-                for segment in other:
-                    if segment in self._segments:
-                        shared.append(segment)
-                return shared
+            return self.c_shares_segments_with(other)
         else:
-            raise TypeError("shares_segments_with() is defined only for GenomicSegments and SegmentChains")
-    
-    def unstranded_overlaps(self,other):
+            raise TypeError("SegmentChain.shares_segments_with() is defined only for GenomicSegments and SegmentChains. Found %s." % type(other))
+ 
+    cdef list c_shares_segments_with(self, SegmentChain other):
+        cdef:
+            list shared
+            GenomicSegment segment
+        if self.chrom != other.chrom or self.c_strand != other.c_strand:
+            return []
+        else:
+            shared = []
+            for segment in other:
+                if segment in self._segments:
+                    shared.append(segment)
+            return shared
+   
+    def  unstranded_overlaps(self, object other):
         """Return `True` if `self` and `other` share genomic positions
         on the same chromosome, regardless of their strands
         
@@ -569,20 +702,30 @@ class SegmentChain(object):
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            tmp = SegmentChain(other)
-            return self.unstranded_overlaps(tmp)
+            return self.unstranded_overlaps(SegmentChain(other))
         elif isinstance(other,SegmentChain):
-            if self.chrom != other.chrom:
-                return False
-            else:
-                my_pos = self.get_position_set()
-                o_pos  = other.get_position_set()
-            return len(my_pos & o_pos) > 0 
+            retval = self.c_unstranded_overlaps(other)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain.unstranded_overlaps() errored on chain '%s' and object '%s'" % (self,other))
+            return retval == true
         else:
-            raise TypeError("unstranded_overlaps() is only defined for GenomicSegments and SegmentChains")
-        
-    def overlaps(self,other):
+            raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
+
+    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            set o_pos, my_pos
+        if self.chrom != other.chrom:
+            return false
+        else:
+            my_pos = self.get_position_set()
+            o_pos  = other.get_position_set()
+        if len(my_pos & o_pos) > 0:
+            return true
+        return false
+
+    def overlaps(self, object other):
         """Return `True` if `self` and `other` share genomic positions on the same strand
         
         Parameters
@@ -601,12 +744,26 @@ class SegmentChain(object):
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            tmp = SegmentChain(other)
-            return self.overlaps(tmp)
-        return self.strand == other.strand and self.unstranded_overlaps(other) 
+            return self.overlaps(SegmentChain(other))
+        elif isinstance(other,SegmentChain):
+            retval = self.c_overlaps(other)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain.overlaps() errored on chain '%s' and object '%s'" % (self,other))
+            return retval == true
+        else:
+            raise TypeError("SegmentChain.overlaps() is defined only for GenomicSegments and SegmentChains. Found %s." % type(other))
+ 
+    cdef ExBool c_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            Strand sstrand = self.c_strand
+            Strand ostrand = other.c_strand
+        if self.c_unstranded_overlaps(other) == true and self.c_strand & other.c_strand == other.c_strand:
+            return true
+        return false
     
-    def antisense_overlaps(self,other):
+    def antisense_overlaps(self, object other):
         """Returns `True` if `self` and `other` share genomic positions on opposite strands
         
         Parameters
@@ -625,12 +782,27 @@ class SegmentChain(object):
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            tmp = SegmentChain(other)
-            return self.antisense_overlaps(tmp)
-        return self.strand != other.strand and self.unstranded_overlaps(other) 
+            return self.antisense_overlaps(SegmentChain(other))
+        elif isinstance(other,SegmentChain):
+            retval = self.c_antisense_overlaps(other)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain.antisense_overlaps() errored on chain '%s' and object '%s'" % (self,other))
+            return retval == true
+        else:
+            raise TypeError("SegmentChain.antisense_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
-    def covers(self,other):
+    cdef ExBool c_antisense_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            Strand sstrand = self.c_strand
+            Strand ostrand = other.c_strand
+        if self.c_unstranded_overlaps(other) == true:
+            if sstrand == unstranded or ostrand == unstranded or sstrand != ostrand:
+                return true
+        return false
+
+    def covers(self, object other):
         """Return `True` if `self` and `other` share a chromosome and strand,
         and all genomic positions in `other` are present in `self`.
         By convention, zero-length |SegmentChains| are not covered by other
@@ -653,18 +825,49 @@ class SegmentChain(object):
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef ExBool retval
         if isinstance(other,GenomicSegment):
             return self.covers(SegmentChain(other))
-        elif len(self) == 0 or len(other) == 0:
-            return False
         elif isinstance(other,SegmentChain):
-            return self.strand == other.strand and\
-                   self.chrom  == other.chrom and\
-                   other.get_position_set() & self.get_position_set() == other.get_position_set()
+            retval = self.c_covers(other)
+            if retval == bool_exception:
+                raise RuntimeError("SegmentChain.covers() errored on chain '%s' and object '%s'" % (self,other))
+            return retval == true
         else:
-            raise TypeError("covers() is only defined for GenomicSegments and SegmentChains")
+            raise TypeError("SegmentChain.covers() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
+ 
+    cdef ExBool c_covers(self, SegmentChain other) except bool_exception:
+        """Return `True` if `self` and `other` share a chromosome and strand,
+        and all genomic positions in `other` are present in `self`.
+        By convention, zero-length |SegmentChains| are not covered by other
+        chains.
+        
+        
+        Parameters
+        ----------
+        other : |SegmentChain| or |GenomicSegment|
+        	Query feature
+         
+        Returns
+        -------
+        bool
+            `True` if `self` and `other` share a chromosome and strand, and all
+            genomic positions in `other` are present in `self`. Otherwise `False`
+        
+        Raises
+        ------
+        TypeError
+            if `other` is not a |GenomicSegment| or |SegmentChain|
+        """
+        if len(self) == 0 or len(other) == 0:
+            return false
+        elif self.chrom  == other.chrom and\
+             self.c_strand == other.c_strand and\
+             other.get_position_set() & self.get_position_set() == other.get_position_set():
+            return true
+        return false
     
-    def get_antisense(self):
+    cpdef SegmentChain get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
         Returns
@@ -672,21 +875,60 @@ class SegmentChain(object):
         SegmentChain
             |SegmentChain| antisense to `self`
         """
-        new_strand = "+" if self.strand == "-" else "-" if self.strand == "+" else "."
-        new_segments = [GenomicSegment(X.chrom,X.start,X.end,new_strand) for X in self]
-        return SegmentChain(*tuple(new_segments))
+        cdef:
+            Strand strand = self.spanning_segment.c_strand
+            Strand new_strand
+            list new_segments
 
-    def get_position_list(self):
-        """Retrieve a sorted end-inclusive list of genomic coordinates included in this |SegmentChain|
-        
+        if strand == forward_strand:
+            new_strand = reverse_strand
+        elif strand == reverse_strand:
+            new_strand = forward_strand
+        elif strand == unstranded:
+            new_strand = unstranded
+        else:
+            raise ValueError("Strand for SegmentChain '%s' is undefined and has no anti-sense." % self)
+
+        new_segments = [GenomicSegment(X.chrom,X.start,X.end,strand_to_str(new_strand)) for X in self._segments]
+        return SegmentChain(*new_segments)
+
+    def get_position_list(self,copy = False):
+        """Retrieve a sorted **end-inclusive** numpy array of genomic coordinates in this |SegmentChain|
+         
+        Parameters
+        ----------
+        copy : bool, optional
+            If `False` (default), return a view of the |SegmentChain|'s
+            internal position mapping. If `True`, return  a copy
+ 
         Returns
         -------
-        list
-            List of genomic coordinates, as integers
+        :class:`numpy.ndarray`
+            Ggenomic coordinates in `self`, as integers, in genomic order
         """
-        return sorted(list(self.get_position_set()))
-    
-    def get_position_set(self):
+        return self.c_get_position_list(copy)
+
+    cdef numpy.ndarray c_get_position_list(self, bint copy):
+        """Retrieve a sorted end-inclusive list of genomic coordinates in this |SegmentChain|
+        
+        Parameters
+        ----------
+        copy : bool, optional
+            If `False` (default), return a view of the |SegmentChain|'s
+            internal position mapping. If `True`, return  a copy
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+            Ggenomic coordinates in `self`, as integers, in genomic order
+        """
+        cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._position_hash,dtype=long) 
+        if copy == False:
+            return positions
+        else:
+            return copy.deepcopy(positions)
+
+    cpdef set get_position_set(self):
         """Retrieve an end-inclusive set of genomic coordinates included in this |SegmentChain|
         
         Returns
@@ -694,45 +936,21 @@ class SegmentChain(object):
         set
             Set of genomic coordinates, as integers
         """
-        # TODO: cache this
-        positions = set(self._position_hash.keys())
-        return positions
-        
-    def _get_position_hash(self):
-        """Create a dictionary that maps genomic positions to |SegmentChain| positions
-        
-        Returns
-        -------
-        dict
-            Dictionary mapping each position in the |SegmentChain| to its 
-            chromosomal coordinate
-        """
-        self.sort()
-        my_hash = {}
-        c = 0
-        for segment in self:
-            for x in range(segment.start,segment.end):
-                my_hash[x] = c
-                c += 1
-        return my_hash
-    
-    def get_masked_position_set(self):
+        return set(self.get_position_list())
+   
+    cpdef set get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
-        `self` that have not been masked using :meth:`SegmentChain.add_masks`
+        `self` that **HAVE NOT** been masked using :meth:`SegmentChain.add_masks`
 
         Returns
         -------
         set
             Set of genomic coordinates, as integers
         """
-        # TODO: cache this
-        position_set = self.get_position_set()
-        masked = []
-        for segment in self._mask_segments:
-            masked.extend(range(segment.start,segment.end))
-        
-        masked = set(masked)
-        return position_set - masked
+        cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._position_hash,dtype=long)
+        cdef numpy.ndarray[INT_t,ndim=1]  mask = numpy.asarray(self._position_mask,dtype=int)
+        assert len(positions) == len(mask)
+        return set(positions[mask == 0])
     
     def get_name(self):
         """Returns the name of this |SegmentChain|, first searching through
@@ -778,7 +996,7 @@ class SegmentChain(object):
         -------
         int
         """
-        return sum([len(X) for X in self])
+        return self.length #_position_hash.shape[0] #sum([len(X) for X in self])
 
     def get_masked_length(self):
         """Return the total length, in nucleotides, of positions in `self`
@@ -788,8 +1006,77 @@ class SegmentChain(object):
         -------
         int
         """
-        return len(self.get_masked_position_set())
+        return self.masked_length
         
+    cdef tuple check_segments(self, tuple segments):
+        """Check that all segments have same chromosome name and strand.
+        If `self` already has segments in it, all |GenomicSegments|
+        in `segments` must additionally have the same chromosme and
+        strand as `self.`
+
+        If so, return those as a tuple. If not, raise ValueError.
+
+        Parameters
+        ----------
+        segments : tuple
+            Tuple of |GenomicSegments|
+
+        Returns
+        -------
+        str
+            chromosome name
+
+        str
+            chromosome strand ('+', '-', or '.')
+
+        Raises
+        ------
+        ValueError
+            If segments in `segments` have differing chromosomes or strands
+            from `self` or, if `self` is 0-length, from each other
+        """
+        cdef:
+            GenomicSegment seg, seg0
+            str my_chrom
+            str my_strand
+
+        if len(segments) > 0:
+            seg0 = segments[0]
+            if len(self) > 0:
+                my_chrom  = self.chrom
+                my_strand = self.strand
+            else:
+                my_chrom  = seg0.chrom
+                my_strand = seg0.strand
+
+            for seg in segments:
+                if seg.chrom != my_chrom:
+                    raise ValueError("Incoming GenomicSegment '%s' mismatches chromosome (%s) of SegmentChain '%s'" % (seg,my_chrom,str(self)))
+                if seg.strand != my_strand:
+                    raise ValueError("Incoming GenomicSegment '%s' mismatches strand (%s) of SegmentChain '%s'" % (seg,my_strand,str(self)))
+
+            return (my_chrom,my_strand)
+        else:
+            return (self.chrom,self.strand)
+
+    cdef c_add_segments(self, tuple segments):
+        cdef:
+            str my_chrom, my_strand
+            set positions
+            GenomicSegment seg
+
+        if len(segments) > 0:
+            my_chrom, my_strand = self.check_segments(segments)
+            # TODO: figure out a more efficient way?  Comparing segments to each other not ideal because quadratic
+            # add new positions
+            positions = self.get_position_set()
+            for seg in segments:
+                positions |= set(range(seg.start,seg.end))
+            
+            # reset variables
+            self._segments = positions_to_segments(my_chrom,my_strand,positions)
+            self._update()
+
     def add_segments(self,*segments):
         """Add 1 or more |GenomicSegments| to the |SegmentChain|. If there are
         already segments in the chain, the incoming segments must be 
@@ -800,64 +1087,64 @@ class SegmentChain(object):
         segments : |GenomicSegment|
             One or more |GenomicSegment| to add to |SegmentChain|
         """
+        cdef:
+            str my_chrom, my_strand
+            set positions
+            GenomicSegment seg
+
         if len(segments) > 0:
-            strands = set([X.strand for X in segments])
-            chroms  = set([X.chrom for X in segments])
-            assert len(strands) == 1
-            assert len(chroms)  == 1
-            if len(self) > 0:
-                assert segments[0].chrom  == self.chrom
-                assert segments[0].strand == self.strand
-            else:
-                self.chrom  = segments[0].chrom
-                self.strand = segments[0].strand
-            
-            # add new positions
-            positions = self.get_position_set()
-            for segment in segments:
-                positions |= set(range(segment.start,segment.end))
-            
-            self._segments = positions_to_segments(self.chrom,self.strand,positions)
-        self._update()
+            if len(self._mask_segments) > 0:
+                warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
+
+            self.c_add_segments(segments)
         
     def add_masks(self,*mask_segments):
-        """Adds one or more |GenomicSegment| to the collection of masks. 
+        """Adds one or more |GenomicSegment| to the collection of masks.
+        Masks will be trimmed to the positions of the |SegmentChain|
+        during addition.
 
         Parameters
         ----------
         mask_segments : |GenomicSegment|
             One or more segments, in genomic coordinates, covering positions to
-            exclude from return values of :meth:`get_masked_position_set`, :meth:`get_masked_counts`, or :meth:`get_masked_length`
+            exclude from return values of :meth:`get_masked_position_set`,
+            :meth:`get_masked_counts`, or :meth:`get_masked_length`
 		
-		See also
-		--------
-		SegmentChain.get_masks
-		SegmentChain.get_masks_as_segmentchain
+        See also
+        --------
+        SegmentChain.get_masks
+        SegmentChain.get_masks_as_segmentchain
         SegmentChain.reset_masks
         """
-        if len(mask_segments) > 0:
-            strands = set([X.strand for X in mask_segments])
-            chroms  = set([X.chrom for X in mask_segments])
-            assert len(strands) == 1
-            assert len(chroms)  == 1
-            if len(self) > 0:
-                assert mask_segments[0].chrom  == self.chrom
-                assert mask_segments[0].strand == self.strand
-            else:
-                self.chrom  = mask_segments[0].chrom
-                self.strand = mask_segments[0].strand
-            
-            # add new positions to any existing masks
-            positions = set()
-            for segment in list(mask_segments) + self._mask_segments:
-                positions |= set(range(segment.start,segment.end))
-             
-            # trim away non-overlapping masks
-            positions &= self.get_position_set()
-            
-            # regenerate list of ivs from positions, in case some were doubly-listed
-            self._mask_segments = positions_to_segments(self.chrom,self.strand,positions)
-        self._update()
+        cdef:
+            str my_chrom, my_strand
+            set positions = set()
+            GenomicSegment seg
+            int [:] pmask = array.clone(mask_template,self.length,True)
+            long i, coord
+            int tmpsum = 0
+            dict ihash
+
+        my_chrom, my_strand = self.check_segments(mask_segments)
+           
+        # add new positions to any existing masks
+        for segment in list(mask_segments) + self._mask_segments:
+            positions |= set(range(segment.start,segment.end))
+         
+        # trim away non-overlapping masks
+        positions &= self.get_position_set()
+        
+        # regenerate list of ivs from positions, in case some were doubly-listed
+        self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
+
+        ihash = self._inverse_hash
+        for i in positions:
+            coord = ihash[i]
+            pmask[coord] = 1
+            tmpsum += 1
+
+        self.masked_length = self.length - tmpsum
+        self._position_mask = pmask
     
     def get_masks(self):
         """Return masked positions as a list of |GenomicSegments|
@@ -903,6 +1190,7 @@ class SegmentChain(object):
         SegmentChain.add_masks
         """
         self._mask_segments = []
+        self.add_masks()
             
     def get_junctions(self):
         """Returns a list of |GenomicSegments| representing spaces
@@ -918,17 +1206,15 @@ class SegmentChain(object):
             an alignment)
         """
         juncs = []
-        chrom = self.chrom
-        strand = self.strand
         for i in range(len(self)-1):
             seg1, seg2 = self[i], self[i+1]
-            juncs.append(GenomicSegment(chrom,
+            juncs.append(GenomicSegment(seg1.chrom,
                                         seg1.end,
                                         seg2.start,
-                                        strand))
+                                        seg1.strand))
         return juncs
     
-    def as_gff3(self,feature_type=None,escape=True,excludes=[]):
+    def as_gff3(self, str feature_type=None, bint escape=True, list excludes=[]):
         """Format a length-1 |SegmentChain| as a line of `GFF3`_ output.
         
         Because `GFF3`_ files permit many schemas of parent-child hierarchy,
@@ -986,7 +1272,10 @@ class SegmentChain(object):
             - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
-        """ 
+        """
+        cdef dict gff_attr
+        cdef list always_excluded, ltmp
+
         if len(self) == 0: # empty SegmentChain
             return ""
         elif len(self) > 1:
@@ -1006,14 +1295,14 @@ class SegmentChain(object):
                            "_bedx_column_order"]
 
         for segment in self:
-            ltmp2 = self._get_8_gff_columns(segment,feature_type) +\
+            ltmp = self._get_8_gff_columns(segment,feature_type) +\
                    [make_GFF3_tokens(gff_attr,
                                      excludes=always_excluded+excludes,
                                      escape=True)]
 
-        return "\t".join(ltmp2) + "\n"
+        return "\t".join(ltmp) + "\n"
     
-    def as_gtf(self,feature_type=None,escape=True,excludes=[]):
+    def as_gtf(self, str feature_type=None, bint escape=True, list excludes=[]):
         """Format |SegmentChain| as a block of `GTF2`_ output.
         
         The `frame` or `phase` attribute (`GTF2`_ column 8) is valid only for `'CDS'`
@@ -1081,6 +1370,10 @@ class SegmentChain(object):
             - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_           
         """
+        cdef:
+            dict gtf_attr
+            list ltmp1, ltmp2, always_excluded
+
         if len(self) == 0:
             return ""
         
@@ -1113,7 +1406,7 @@ class SegmentChain(object):
 
         return "\n".join(ltmp1) + "\n"
     
-    def _get_8_gff_columns(self,segment,feature_type):
+    def _get_8_gff_columns(self, GenomicSegment segment, str feature_type):
         """Format columns 1-8 of GFF/GTF2/GFF3 files.
         
         Parameters
@@ -1142,34 +1435,37 @@ class SegmentChain(object):
                 9     Attributes. Formatting depends on flavor of GFF                      
             ======== =========        
         """
-        phase = "."
-        attr = self.attr
-        chrom  = segment.chrom
-        strand = segment.strand
-        start  = segment.start
-        end    = segment.end
+        cdef:
+            str chrom  = segment.chrom
+            str strand = segment.strand
+            str phase  = "."
+            long segment_start = segment.start
+            long segment_end   = segment.end
+            long new_segment_start
+            list ltmp
+
         if feature_type == "CDS":
             # use phase/frame if known for length-1 features
             # called "phase" in GFF3 conventions; "frame" in GTF2
-            if len(self) == 1 and ("phase" in attr or "frame" in attr):
-                phase = attr.get("phase",attr.get("frame"))
+            if len(self) == 1 and ("phase" in self.attr or "frame" in self.attr):
+                phase = str(self.attr.get("phase",self.attr.get("frame")))
             # otherwise calculate
             else:
-                my_start = self.get_segmentchain_coordinate(chrom,start,strand,stranded=False)
-                phase = (3 - (my_start % 3)) % 3
+                new_segment_start = self.get_segmentchain_coordinate(chrom,segment_start,strand,stranded=False)
+                phase = str((3 - (new_segment_start % 3)) % 3)
         
         ltmp = [chrom,
-                attr.get("source","."),
+                self.attr.get("source","."),
                 feature_type,
-                start + 1,
-                end + 1 - 1,
-                str(attr.get("score",".")),
+                str(segment_start + 1),
+                str(segment_end),
+                str(self.attr.get("score",".")),
                 strand,
                 phase]
         
-        return [str(X) for X in ltmp]
+        return ltmp
     
-    def as_bed(self,thickstart=None,thickend=None,as_int=True,color=None,extra_columns=None):
+    def as_bed(self, thickstart=None, thickend=None, as_int=True, color=None, extra_columns=None):
         """Format |SegmentChain| as a string of BED12[+X] output.
         
         If the |SegmentChain| was imported as a `BED`_ file with extra columns,
@@ -1177,9 +1473,6 @@ class SegmentChain(object):
 
         Parameters
         ----------
-        as_int : bool, optional
-            Force `score` to integer (Default: `True`)
-    
         thickstart : int or `None`, optional
             If not `None`, overrides the genome coordinate that starts thick
             plotting in genome browser found in `self.attr['thickstart']`
@@ -1187,7 +1480,10 @@ class SegmentChain(object):
         thickend : int or None, optional
             If not None, overrides the genome coordinate that stops
             thick plotting in genome browser found in `self.attr['thickend']`
-    
+
+        as_int : bool, optional
+            Force `score` to integer (Default: `True`)
+   
         color : str or None, optional
             Color represented as RGB hex string.
             If not none, overrides the color in `self.attr['color']`
@@ -1237,8 +1533,13 @@ class SegmentChain(object):
         For more details
             See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
         """
+        cdef:
+            list ltmp
+            GenomicSegment span
+            
         if len(self) > 0:
             score = self.attr.get("score",0)
+            span = self.spanning_segment
             try:
                 score = float(score)
                 if as_int is True:
@@ -1254,15 +1555,15 @@ class SegmentChain(object):
             except ValueError:
                 color = self.attr.get("color","0,0,0") if color is None else color
             
-            thickstart = self.attr.get("thickstart",self.spanning_segment.start) if thickstart is None else thickstart
-            thickend   = self.attr.get("thickend",self.spanning_segment.start)   if thickend   is None else thickend
+            thickstart = self.attr.get("thickstart",span.start) if thickstart is None else thickstart
+            thickend   = self.attr.get("thickend",span.start)   if thickend   is None else thickend
             
-            ltmp = [self[0].chrom,
-                    self[0].start,
-                    self[-1].end,
+            ltmp = [span.chrom,
+                    span.start,
+                    span.end,
                     self.get_name(),
                     score,
-                    self[0].strand,
+                    span.strand,
                     thickstart,
                     thickend,
                     color,
@@ -1333,27 +1634,32 @@ class SegmentChain(object):
         AttributeError
             If not all of the attributes listed above are defined
         """
-        ltmp = []
+        cdef:
+            dict attr = self.attr
+            list ltmp
+            str block_sizes, q_starts, t_starts
         try:
-            ltmp.append(self.attr["match_length"])
-            ltmp.append(self.attr["mismatches"])
-            ltmp.append(self.attr["rep_matches"])
-            ltmp.append(self.attr["N"])
-            ltmp.append(self.attr["query_gap_count"])
-            ltmp.append(self.attr["query_gap_bases"])
-            ltmp.append(self.attr["target_gap_count"])
-            ltmp.append(self.attr["target_gap_bases"])
-            ltmp.append(self.attr["strand"])
-            ltmp.append(self.attr["query_name"])
-            ltmp.append(self.attr["query_length"])
-            ltmp.append(self.attr["query_start"])
-            ltmp.append(self.attr["query_end"])
-            ltmp.append(self.attr["target_name"])
-            ltmp.append(self.attr["target_length"])
-            ltmp.append(self.attr["target_start"])
-            ltmp.append(self.attr["target_end"])
-            ltmp.append(len(self))
-    
+            ltmp = [
+                attr["match_length"],
+                attr["mismatches"],
+                attr["rep_matches"],
+                attr["N"],
+                attr["query_gap_count"],
+                attr["query_gap_bases"],
+                attr["target_gap_count"],
+                attr["target_gap_bases"],
+                attr["strand"],
+                attr["query_name"],
+                attr["query_length"],
+                attr["query_start"],
+                attr["query_end"],
+                attr["target_name"],
+                attr["target_length"],
+                attr["target_start"],
+                attr["target_end"],
+                len(self),
+            ]
+   
             block_sizes = ",".join([str(len(X)) for X in self]) + ","
             q_starts = ",".join([str(X) for X in self.attr["q_starts"]]) + ","
             t_starts = ",".join([str(X) for X in self.attr["t_starts"]]) + ","
@@ -1365,7 +1671,7 @@ class SegmentChain(object):
         except KeyError:
             raise AttributeError("SegmentChains only support PSL output if all PSL attributes are defined in self.attr: match_length, mismatches, rep_matches, N, query_gap_count, query_gap_bases, strand, query_length, query_start, query_end, target_name, target_length, target_start, target_end")
         
-    def get_segmentchain_coordinate(self,chrom,genomic_x,strand,stranded=True):
+    def get_segmentchain_coordinate(self, str chrom, long genomic_x, str strand, bint stranded = True):
         """Finds the |SegmentChain| coordinate corresponding to a genomic position
         
         Parameters
@@ -1396,15 +1702,45 @@ class SegmentChain(object):
         KeyError
             if position outside bounds of |SegmentChain|
         """
-        assert chrom  == self.chrom
-        assert strand == self.strand
-        if self._position_hash == {}:
-            self._position_hash = self._get_position_hash()
-        if stranded is True and self.strand == "-":
-            return self.get_length() - self._position_hash[genomic_x] - 1
+        if chrom != self.chrom:
+            raise ValueError("get_segmentchain_coordinate: query chromosome '%s' does not match chain '%s'" % chrom, self)
+        if strand != self.strand:
+            raise ValueError("get_segmentchain_coordinate: query strand '%s' does not match chain '%s'" % strand, self)
+
+        return self.c_get_segmentchain_coordinate(genomic_x,stranded)
+
+    cdef long c_get_segmentchain_coordinate(self, long genomic_x, bint stranded) except -1:
+        """Finds the |SegmentChain| coordinate corresponding to a genomic position
+        
+        Parameters
+        ----------
+        genomic_x : int
+            coordinate, in genomic space
+            
+        stranded : bool, optional
+            If `True`, coordinates are given in stranded space
+            (i.e. from 5' end of chain, as one might expect for a transcript).
+            If `False`, coordinates are given from the left end of `self`,
+            regardless of strand. (Default: `True`)
+        
+        
+        Returns
+        -------
+        int
+            Position in |SegmentChain|
+            
+        Raises
+        ------
+        KeyError
+            if position outside bounds of |SegmentChain|
+        """
+        cdef dict ihash = self._inverse_hash
+
+        if self.c_strand == reverse_strand and stranded == True:
+            return self.length - ihash[genomic_x] - 1
         else:
-            return self._position_hash[genomic_x]
-    
+            return ihash[genomic_x]
+
     def get_genomic_coordinate(self,x,stranded=True):
         """Finds genomic coordinate corresponding to position `x` in `self`
         
@@ -1425,8 +1761,8 @@ class SegmentChain(object):
         str 
             Chromosome name
         
-        int
-            Genomic cordinate corresponding to `x`
+        long
+            Genomic cordinate corresponding to position `x`
         
         str
             Chromosome strand (`'+'`, `'-'`, or `'.'`)
@@ -1437,12 +1773,57 @@ class SegmentChain(object):
         IndexError
             if `x` is outside the bounds of the |SegmentChain|
         """
-        positions = self.get_position_list()
-        if stranded is True and self.strand == "-":
-            positions = positions[::-1]
-        return self.chrom, positions[x], self.strand
-    
-    def get_subchain(self,start,end,stranded=True,**extra_attr):
+        cdef long new_x = self.c_get_genomic_coordinate(x, stranded)
+        if new_x == -1:
+            raise RuntimeError("Cannot fetch coordinate %s from SegmentChain %s (length %s)" % (x,self,self.length))
+
+        return self.chrom, new_x, self.strand
+
+    cdef long c_get_genomic_coordinate(self, long x, bint stranded) except -1:
+        """Finds genomic coordinate corresponding to position `x` in `self`
+        
+        Parameters
+        ----------
+        x : int
+            position of interest, relative to |SegmentChain|
+            
+        stranded : bool
+            If `True`, `x` is assumed to be in stranded space (i.e. counted from
+            5' end of chain, as one might expect for a transcript). If `False`,
+            coordinates assumed to be counted the left end of the `self`,
+            regardless of the strand of `self`.
+
+        .. note::
+
+           Unlike :meth:`SegmentChain.get_genomic_coordinate`, this only returns
+           a `long`, as opposed to a tuple of (chrom_name, position, chrom_strand)
+           
+
+        Returns
+        -------
+        long
+            Genomic coordinate corresponding to position `x`
+
+
+        See also
+        --------
+        SegmentChain.get_genomic_coordinate
+        """
+        cdef:
+            long [:] positions = self._position_hash
+            long length = self.length
+            long orig_index = x
+            Strand strand = self.c_strand
+
+        if strand == reverse_strand and stranded == True:
+            x = length - x - 1
+
+        if x < 0 or x >= length:
+            raise IndexError("Position %s is outside bounds [0,%s) of SegmentChain '%s'" % (orig_index, length, self.get_name()))
+
+        return positions[x]
+
+    def get_subchain(self, long start, long end, bint stranded=True, **extra_attr):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions
         specified in coordinates relative this |SegmentChain|. Attributes in
         `self.attr` are copied to the child SegmentChain, with the exception
@@ -1457,7 +1838,7 @@ class SegmentChain(object):
             position of interest in SegmentChain coordinates, 0-indexed 
             and half-open
             
-        stranded : bool
+        stranded : bool, optional
             If `True`, `start` and `end` are assumed to be in stranded space (i.e. counted from
             5' end of chain, as one might expect for a transcript). If `False`,
             they assumed to be counted the left end of the `self`,
@@ -1470,7 +1851,7 @@ class SegmentChain(object):
         Returns
         -------
         |SegmentChain|
-            covering positions `start` to `end` of `self`
+            covering parent chain positions `start` to `end` of `self`
         
         
         Raises
@@ -1481,27 +1862,67 @@ class SegmentChain(object):
         TypeError
             if `start` or `end` is None
         """
+        cdef SegmentChain chain = self.c_get_subchain(start,end,stranded)
+        cdef dict old_attr = copy.deepcopy(self.attr)
+        old_attr.update(extra_attr)
+        chain.attr = old_attr
+        chain.attr["ID"] = "%s_subchain" % self.get_name()
+        return chain
+
+    cdef SegmentChain c_get_subchain(self, long start, long end, bint stranded):
+        """Similar to :meth:`SegmentChain.get_subchain` but does not copy `attr` dict
+        
+        Parameters
+        ----------
+        start : long
+            position of interest in SegmentChain coordinates, 0-indexed
+            
+        end : long
+            position of interest in SegmentChain coordinates, 0-indexed 
+            and half-open
+            
+        stranded : bool
+            If `True`, `start` and `end` are assumed to be in stranded space (i.e. counted from
+            5' end of chain, as one might expect for a transcript). If `False`,
+            they assumed to be counted the left end of the `self`,
+            regardless of the strand of `self`.
+
+        Returns
+        -------
+        |SegmentChain|
+            covering parent chain positions `start` to `end`
+
+        See also
+        --------
+        SegmentChain.get_subchain
+        """
+        cdef:
+             long [:] positions = self._position_hash
+             long length = self.length
+             long tmp
+             list segs
+
         if start is None:
             raise TypeError('start coordinate supplied is None. Expected int')
         elif end is None:
             raise TypeError('end coordinate supplied is None. Expected int')
-        positions = self.get_position_list()
-        if stranded is True and self.strand == "-":
-            positions = positions[::-1]
+
+        if stranded == True and self.c_strand == reverse_strand:
+            tmp = end
+            end   = length - start 
+            start = length - tmp 
+            
         positions = positions[start:end]
-        ivs = positionlist_to_segments(self.chrom,self.strand,positions)
-        attr = copy.deepcopy(self.attr)
-        attr["ID"] = "%s_subchain" % self.get_name()
-        attr.update(extra_attr)
+        segs = positions_to_segments(self.chrom,self.strand,positions)
 
-        return SegmentChain(*tuple(ivs),**attr)
+        return SegmentChain(*segs)
 
-    def get_counts(self,gnd,stranded=True):
+    def get_counts(self,ga,stranded=True):
         """Return list of counts or values at each position in `self`
         
         Parameters
         ----------
-        gnd : non-abstract subclass of |AbstractGenomeArray|
+        ga : non-abstract subclass of |AbstractGenomeArray|
             GenomeArray from which to fetch counts
             
         stranded : bool, optional
@@ -1516,21 +1937,26 @@ class SegmentChain(object):
         numpy.ndarray
             Array of counts from `gnd` covering `self`
         """
+        cdef:
+            long c, cend
+            GenomicSegment seg
+            numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
+
         if len(self) == 0:
             warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
 
-        ltmp = []
-        for iv in self:
-            #ltmp.extend(gnd[iv])
-            ltmp.extend(gnd.__getitem__(iv,roi_order=False))
+        c = 0
+        for seg in self:
+            cend = c + len(seg)
+            count_array[c:cend] = ga.__getitem__(seg,roi_order=False)
+            c = cend
 
-        if self.strand == "-" and stranded is True:
-            ltmp = ltmp[::-1]
+        if self.c_strand == reverse_strand and stranded is True:
+            count_array = count_array[::-1]
             
-        return numpy.array(ltmp)
+        return count_array
     
-    # TODO: cache / lazy eval this
-    def get_masked_counts(self,gnd,stranded=True):
+    def get_masked_counts(self,ga,stranded=True,copy=False):
         """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
         coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
         will be masked in the array
@@ -1545,22 +1971,30 @@ class SegmentChain(object):
             count order will be reversed relative to genome so that the
             array positions march from the 5' to 3' end of the chain.
             (Default: `True`)
+
+        copy : bool, optional
+            If `False` (defualt) returns a view of the data; so changing
+            values in the view changes the values in the |GenomeArray|
+            if it is mutable. If `True`, a copy is returned instead.
             
             
         Returns
         -------
 		:py:class:`numpy.ma.masked_array`
         """
-        atmp = numpy.ma.masked_invalid(self.get_counts(gnd))
-        atmp.mask = True
+        cdef:
+            numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
+            numpy.ndarray[INT_t,ndim=1] mask = numpy.asarray(self._position_mask,dtype=int)
+
+        return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
-        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
-                                                            self.spanning_segment.strand) 
-                           for X in self.get_masked_position_set()]
-        for x in valid_positions:
-            atmp.mask[x] = False
+#        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
+#                                                            self.spanning_segment.strand) 
+#                           for X in self.get_masked_position_set()]
+#        for x in valid_positions:
+#            atmp.mask[x] = False
         
-        return atmp
+#        return atmp
     
     def get_sequence(self,genome,stranded=True):
         """Return spliced genomic sequence of |SegmentChain| as a string
@@ -1617,7 +2051,7 @@ class SegmentChain(object):
         return ">%s\n%s\n" % (self.get_name(),self.get_sequence(genome,stranded=stranded))
 
     @staticmethod
-    def from_str(inp):
+    def from_str(str inp):
         """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.str`:
            
             `chrom:start-end^start-end(strand)`
@@ -1637,20 +2071,25 @@ class SegmentChain(object):
         -------
         |SegmentChain|
         """
+        cdef:
+            str chrom, middle, strand, sstart, send, piece
+            list segs
+            long start, end
+
         if inp in ("na","nan","None:(None)","None","none",None) or isinstance(inp,float) and numpy.isnan(inp):
             return SegmentChain()
         else:
             chrom,middle,strand = ivcpat.search(inp).groups()
-            ivs = []
+            segs = []
             for piece in middle.split("^"):
-                start,end = piece.split("-")
-                start = int(start)
-                end = int(end)
-                ivs.append(GenomicSegment(chrom,start,end,strand))
-            return SegmentChain(*tuple(ivs))
+                sstart,send = piece.split("-")
+                start = long(sstart)
+                end = long(send)
+                segs.append(GenomicSegment(chrom,start,end,strand))
+            return SegmentChain(*segs)
         
     @staticmethod
-    def from_bed(line,extra_columns=0):
+    def from_bed(str line, extra_columns=0):
         """Create a |SegmentChain| from a line from a `BED`_ file.
         The `BED`_ line may contain 4 to 12 columns, per the specification.
         These will be auto-detected and parsed appropriately.
@@ -1690,8 +2129,18 @@ class SegmentChain(object):
         -------
         |SegmentChain|
         """
-        frags = []
-        items = line.strip("\n").split("\t")
+        cdef:
+            int num_bed_columns, num_extra_columns
+            dict attr
+            list frags = []
+            list items = line.strip("\n").split("\t")
+
+            #list column_formatters, frag_sizes, frag_offsets
+            #set types
+            #int num_extra_columns, i
+            #long chrom_start, chrom_end
+            #str chrom, default_id, k
+            #dict base_columns, attr
         
         if isinstance(extra_columns,int):
             if extra_columns < 0:
@@ -1717,8 +2166,8 @@ class SegmentChain(object):
             raise ValueError("BED format requires at least 3 columns. Found only %s." % num_bed_columns)
         
         chrom         = items[0]
-        chrom_start   = int(items[1])
-        chrom_end     = int(items[2])
+        chrom_start   = long(items[1])
+        chrom_end     = long(items[2])
         strand = "." if num_bed_columns < 6 else items[5]
     
         default_id  = "%s:%s-%s(%s)" % (chrom,chrom_start,chrom_end,strand)
@@ -1783,12 +2232,12 @@ class SegmentChain(object):
             frag_start = chrom_start + frag_offsets[i]
             frag_end   = frag_start  + frag_sizes[i]
             frags.append(GenomicSegment(chrom,frag_start,frag_end,strand))
-    
+
         # clean up attr
         for k in ("blocks","blocksizes","blockstarts"):
             attr.pop(k)
     
-        return SegmentChain(*tuple(frags),**attr)
+        return SegmentChain(*frags,**attr)
     
     @staticmethod
     def from_psl(psl_line):
@@ -1805,8 +2254,14 @@ class SegmentChain(object):
         -------
         |SegmentChain|
         """
-        items = psl_line.strip().split("\t")        
-        attr = {}
+        cdef:
+            list items = psl_line.strip().split("\t")        
+            list segs = []
+            list block_starts, q_starts, t_starts
+            dict attr = {}
+            long t_start, block_size
+            GenomicSegment seg
+
         attr["type"]             = "alignment"
         attr["query_name"]       = items[9]
         attr["match_length"]     = int(items[0])
@@ -1835,19 +2290,27 @@ class SegmentChain(object):
         attr["q_starts"] = q_starts
         attr["t_starts"] = t_starts
         
-        ivs = []
         for t_start, block_size in zip(t_starts,block_sizes):
-            iv = GenomicSegment(attr["target_name"],
+            seg = GenomicSegment(attr["target_name"],
                                  t_start,
                                  t_start + block_size,
                                  attr["strand"])
-            ivs.append(iv)
+            segs.append(seg)
         
-        return SegmentChain(*ivs,**attr)        
-    
-SegmentChain = cSegmentChain
+        return SegmentChain(*segs,**attr)        
 
-class Transcript(SegmentChain):
+    def __copy__(self): 
+        return SegmentChain(*self,**self.attr)
+
+    def __deepcopy__(self,memo):
+        new_ivs  = copy.deepcopy(self._segments)
+        new_attr = copy.deepcopy(self.attr)
+        return SegmentChain(*new_ivs,**new_attr)    
+
+
+
+# TODO: fix properties
+cdef class Transcript(SegmentChain):
     """Subclass of |SegmentChain| specifically for transcripts.
     In addition to coordinate-conversion, count fetching, sequence fetching,
     and various other methods inherited from |SegmentChain|, |Transcript|
@@ -1919,19 +2382,79 @@ class Transcript(SegmentChain):
             If provided, a gene_id used for `GTF2`_ export
             Otherwise, generated from genomic coordinates.
         """
-#        self._segments   = []
+        SegmentChain.__init__(self,*ivs,**attr)
         if "type" not in attr:
             attr["type"] = "mRNA"
             
-        self.cds_genome_start = attr.get("cds_genome_start",None)
-        self.cds_genome_end   = attr.get("cds_genome_end",None)
-        SegmentChain.__init__(self,*ivs,**attr)
+        self.cds_genome_start = long(attr.get("cds_genome_start",None))
+        self.cds_genome_end   = long(attr.get("cds_genome_end",None))
         self._update()
-
-    def __deepcopy__(self,memo):
-        return Transcript(*copy.deepcopy([X for X in self._segments]),**copy.deepcopy(self.attr))
  
-    def _update(self):
+    property cds_start:
+        def __get__(self):
+            return self.cds_start
+        def __set__(self, long val):
+            self.cds_start = val
+            if val is not None:
+                if self.strand == "-":
+                    self.cds_genome_end = self._position_hash[val+1]
+                else:
+                    self.cds_genome_start = self._position_hash[val]
+            else:
+                 if self.strand == "-":
+                    self.cds_genome_end = None
+                 else:
+                    self.cds_genome_start = None
+
+    property cds_end:
+        def __get__(self):
+            return self.cds_end
+        def __set__(self, long val):
+            self.cds_end = val
+            if val is not None:
+                if self.strand == "-":
+                    self.cds_genome_start = self._position_hash[val]
+                else:
+                    self.cds_genome_end = self._position_hash[val]
+            else:
+                if self.strand == "-":
+                    self.cds_genome_start = None
+                else:
+                    self.cds_genome_end = None
+
+    property cds_genome_start:
+        def __get__(self):
+            return self.cds_genome_start
+        def __set__(self, long val):
+            self.cds_genome_start = val
+            if val is not None:
+                if self.strand == "-":
+                    self.cds_end = self._inverse_hash[val] + 1
+                else:
+                    self.cds_start = self._inverse_hash[val]
+            else:
+                if self.strand == "-":
+                    self.cds_end = None
+                else:
+                    self.cds_start = None
+
+    property cds_genome_end:
+        def __get__(self):
+            return self.cds_genome_start
+        def __set__(self, long val):
+            self.cds_genome_end = val
+            if val is not None:
+                if self.strand == "-":
+                    self.cds_start = self._inverse_hash[val] - 1
+                else:
+                    self.cds_end = self._inverse_hash[val]
+            else:
+                if self.strand == "-":
+                    self.cds_start = None
+                else:
+                    self.cds_end = None
+
+    cpdef void _update(self):
         SegmentChain._update(self)
         if self.cds_genome_start is not None:
             if self.strand == "+":
@@ -1956,6 +2479,7 @@ class Transcript(SegmentChain):
         else:
             self.cds_start = None
             self.cds_end   = None
+
 
     def get_name(self):
         """Return the name of `self`, first searching through
@@ -1997,7 +2521,7 @@ class Transcript(SegmentChain):
         |SegmentChain|
             CDS region of `self` if present, otherwise empty |SegmentChain|
         """
-        my_segmentchain = SegmentChain()
+        cdef SegmentChain my_segmentchain
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             my_segmentchain = self.get_subchain(self.cds_start,
                                                 self.cds_end,
@@ -2038,14 +2562,16 @@ class Transcript(SegmentChain):
         |SegmentChain|
             5' UTR region of `self` if present, otherwise empty |SegmentChain|
         """
-        my_segmentchain = SegmentChain()
+        cdef:
+            SegmentChain my_segmentchain = SegmentChain()
+            dict attr = {}
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             my_segmentchain = self.get_subchain(0,self.cds_start,stranded=True)
-            
-            my_segmentchain.attr["type"] = "5UTR"
-            my_segmentchain.attr["gene_id"] = self.get_gene()
-            my_segmentchain.attr["transcript_id"] = self.get_gene()
-            my_segmentchain.attr["ID"] = "%s_5UTR" % self.get_name()
+            attr["type"] = "5UTR"
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_gene()
+            attr["ID"] = "%s_5UTR" % self.get_name()
+            my_segmentchain.attr = attr
             my_segmentchain.attr.update(extra_attr)
 
         return my_segmentchain   
@@ -2073,19 +2599,22 @@ class Transcript(SegmentChain):
         |SegmentChain|
             3' UTR region of `self` if present, otherwise empty |SegmentChain|
         """
-        my_segmentchain = SegmentChain()
+        cdef:
+            SegmentChain my_segmentchain
+            dict attr = {}
+
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
-            my_segmentchain = self.get_subchain(self.cds_end,self.get_length(),
-                                                   stranded=True)
-            my_segmentchain.attr["type"] = "3UTR"
-            my_segmentchain.attr["gene_id"] = self.get_gene()
-            my_segmentchain.attr["transcript_id"] = self.get_gene()
-            my_segmentchain.attr["ID"] = "%s_3UTR" % self.get_name()
+            my_segmentchain = self.get_subchain(self.cds_end,self.length,stranded=True)
+            attr["type"] = "3UTR"
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_gene()
+            attr["ID"] = "%s_3UTR" % self.get_name()
+            my_segmentchain.attr.update(attr)
             my_segmentchain.attr.update(extra_attr)
             
         return my_segmentchain   
 
-    def as_gtf(self,feature_type="exon",escape=True,excludes=[]):
+    def as_gtf(self, str feature_type="exon", bint escape=True, list excludes=[]):
         """Format `self` as a `GTF2`_ block. |GenomicSegments| are formatted
         as `GTF2`_ `'exon'` features. Coding regions, if peresent, are formatted
         as `GTF2`_ `'CDS'` features. Stop codons are excluded in the `'CDS'` features,
@@ -2148,35 +2677,44 @@ class Transcript(SegmentChain):
             - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_        
         """
+        cdef:
+            str stmp
+            SegmentChain cds_chain_temp, start_codon_chain, stop_codon_chain
+            dict child_chain_attr
+            numpy.ndarray[LONG_t,ndim=1] cds_positions
+            GenomicSegment span = self.spanning_segment
+            my_strand = span.strand
+            my_chrom = span.chrom
+
         stmp  = SegmentChain.as_gtf(self,feature_type=feature_type,escape=escape,excludes=[])
-        cds_ivc_temp = self.get_cds()
-        if len(cds_ivc_temp) > 0:
-            child_ivc_attr  = copy.deepcopy(self.attr)
-            child_ivc_attr.pop("type")
-            cds_positions = cds_ivc_temp.get_position_list()
+        cds_chain_temp = self.get_cds()
+        if len(cds_chain_temp) > 0:
+            child_chain_attr  = copy.deepcopy(self.attr)
+            child_chain_attr.pop("type")
+            cds_positions = cds_chain_temp.get_position_list()
             
             # remove stop codons from CDS, per GTF2 spec
-            if self.spanning_segment.strand == "+":
+            if my_strand == "+":
                 cds_positions = cds_positions[:-3]
             else:
                 cds_positions = cds_positions[3:]
-            cds_ivc = SegmentChain(*positions_to_segments(self.spanning_segment.chrom,
-                                                          self.spanning_segment.strand,
-                                                          cds_positions),
-                                   type="CDS",**child_ivc_attr)
-            stmp += cds_ivc.as_gtf(feature_type="CDS",escape=escape,excludes=excludes)
+            cds_chain = SegmentChain(*positionlist_to_segments(my_chrom,
+                                                               my_strand,
+                                                               cds_positions),
+                                   type="CDS",**child_chain_attr)
+            stmp += cds_chain.as_gtf(feature_type="CDS",escape=escape,excludes=excludes)
             
-            start_codon_ivc = cds_ivc_temp.get_subchain(0, 3)
-            start_codon_ivc.attr.update(child_ivc_attr)
-            stmp += start_codon_ivc.as_gtf(feature_type="start_codon",escape=escape,excludes=excludes)
+            start_codon_chain = cds_chain_temp.get_subchain(0, 3)
+            start_codon_chain.attr.update(child_chain_attr)
+            stmp += start_codon_chain.as_gtf(feature_type="start_codon",escape=escape,excludes=excludes)
     
-            stop_codon_ivc = cds_ivc_temp.get_subchain(cds_ivc_temp.get_length()-3, cds_ivc_temp.get_length())
-            stop_codon_ivc.attr.update(child_ivc_attr)
-            stmp += stop_codon_ivc.as_gtf(feature_type="stop_codon",escape=escape,excludes=excludes)
+            stop_codon_chain = cds_chain_temp.get_subchain(cds_chain_temp.get_length()-3, cds_chain_temp.get_length())
+            stop_codon_chain.attr.update(child_chain_attr)
+            stmp += stop_codon_chain.as_gtf(feature_type="stop_codon",escape=escape,excludes=excludes)
 
         return stmp
 
-    def as_gff3(self,escape=True,excludes=[],rna_type="mRNA"):
+    def as_gff3(self, bint escape=True, list excludes=[], str rna_type="mRNA"):
         """Format a |Transcript| as a block of `GFF3`_ output, following
         the schema set out in the `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
         
@@ -2256,15 +2794,21 @@ class Transcript(SegmentChain):
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
         """
-        gene_id       = self.get_gene()
-        transcript_id = self.get_name()
-        ltmp = []
-        
-        child_attr = copy.deepcopy(self.attr)
-        keys_to_pop = ("ID",)
-        for k in keys_to_pop:
-            if k in child_attr:
-                child_attr.pop(k)
+        cdef:
+            str gene_id       = self.get_gene()
+            str transcript_id = self.get_name()
+            str ftype, chain, my_id
+            list ltmp = []
+            list parts = []
+            dict child_attr = copy.deepcopy(self.attr)
+            SegmentChain feature
+            GenomicSegment iv
+            int n
+
+#        keys_to_pop = ("ID",)
+#        for k in keys_to_pop:
+#            if k in child_attr:
+#                child_attr.pop(k)
 
         # mRNA feature
         feature = SegmentChain(self.spanning_segment,ID=transcript_id,Parent=gene_id,type=rna_type)
@@ -2275,10 +2819,10 @@ class Transcript(SegmentChain):
 
         # exon feature
         child_attr["type"] = "exon"
-        for n,iv in enumerate(self):
+        for n, seg in enumerate(self):
             my_id   = "%s:exon:%s" % (transcript_id,n)
             child_attr["ID"]   = my_id
-            feature = SegmentChain(iv,**child_attr)
+            feature = SegmentChain(seg,**child_attr)
             ltmp.append(feature.as_gff3(excludes=excludes,escape=escape))
         
         # CDS & UTRs
@@ -2287,13 +2831,13 @@ class Transcript(SegmentChain):
                      ("CDS",            self.get_cds()),
                      ("three_prime_UTR",self.get_utr3()),
                     ]
-            for ftype, ivc in parts:
+            for ftype, chain in parts:
                 child_attr["type"]   = ftype
                 child_attr["Parent"] = transcript_id
-                for n,iv in enumerate(ivc):
+                for n, seg in enumerate(self):
                     my_id   = "%s:%s:%s" % (transcript_id,ftype,n)
                     child_attr["ID"]   = my_id
-                    feature = SegmentChain(iv,**child_attr)
+                    feature = SegmentChain(seg,**child_attr)
                     ltmp.append(feature.as_gff3(excludes=excludes,escape=escape))
 
         return "".join(ltmp)
@@ -2367,7 +2911,7 @@ class Transcript(SegmentChain):
                                    extra_columns=extra_columns)
 
     @staticmethod
-    def from_bed(line,extra_columns=0):
+    def from_bed(str line,extra_columns=0):
         """Create a |Transcript| from a BED line with 4 or more columns.
         `thickstart` and `thickend` columns, if present, are assumed to specify
         CDS boundaries, a convention that, while common, is formally outside the
@@ -2395,7 +2939,6 @@ class Transcript(SegmentChain):
               - a :class:`list` of :class:`str`, it is taken to be the names
                 of the attribute columns, in order, from left to right in the file.
                 In this case, attributes in extra columns will be stored under
-                there respective names in the `attr` dict.
 
               - a :class:`list` of :class:`tuple`, each tuple is taken
                 to be a pair of `(attribute_name, formatter_func)`. In this case,
@@ -2409,9 +2952,12 @@ class Transcript(SegmentChain):
         -------
         |Transcript|
         """
-        segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
-        segments = segchain._segments
-        attr = segchain.attr
+        cdef:
+            SegmentChain segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
+            segments = segchain._segments
+            attr = segchain.attr
+            Transcript transcript
+
         attr.pop("type") # default type for SegmentChain is "exon". We want to use "mRNA"
         attr["cds_genome_start"] = attr["thickstart"]
         attr["cds_genome_end"]   = attr["thickend"]
@@ -2425,11 +2971,11 @@ class Transcript(SegmentChain):
         return transcript
     
     @staticmethod
-    def from_psl(psl_line):
-        segchain = SegmentChain.from_psl(psl_line)
-        segments = segchain._segments
-        attr = segchain.attr
+    def from_psl(str psl_line):
+        cdef:
+            SegmentChain segchain = SegmentChain.from_psl(psl_line)
+            dict attr = segchain.attr
+
         attr["cds_genome_start"] = None
         attr["cds_genome_end"] = None
-        return Transcript(*segments,**attr)
-        
+        return Transcript(*segchain,**attr)

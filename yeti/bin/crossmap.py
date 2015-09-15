@@ -196,8 +196,6 @@ def fa_to_bed(toomany_fh,k,offset=0):
         pos = int(pos) + offset
         if chrom != last_chrom:
             if last_chrom is not None:
-                #my_range = set(range(start_pos,last_pos+1))
-                #plus_chain  = SegmentChain(*positionlist_to_segments(last_chrom,"+",my_range))
                 plus_chain = SegmentChain(GenomicSegment(last_chrom,start_pos,last_pos+1,"+"))
                 minus_chain = revcomp_mask_chain(plus_chain,k,offset)
                 last_chrom = chrom
@@ -213,10 +211,8 @@ def fa_to_bed(toomany_fh,k,offset=0):
             if delta > 1:
                 plus_chain = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1,"+"))
                 minus_chain = revcomp_mask_chain(plus_chain,k,offset)
-                #my_range = set(range(start_pos,last_pos+1))
                 last_pos   = pos
                 start_pos  = pos
-                #plus_chain  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
                 yield plus_chain, minus_chain
             elif delta == 1:
                 last_pos = pos
@@ -225,8 +221,6 @@ def fa_to_bed(toomany_fh,k,offset=0):
                 raise MalformedFileError(toomany_fh,msg,line_num=n)
     
     # export final feature
-    #my_range = set(range(start_pos,last_pos+1))
-    #plus_chain  = SegmentChain(*positionlist_to_segments(chrom,"+",my_range))
     plus_chain = SegmentChain(GenomicSegment(chrom,start_pos,last_pos+1,"+"))
     minus_chain = revcomp_mask_chain(plus_chain,k,offset)
     yield plus_chain, minus_chain
