@@ -803,11 +803,15 @@ class SegmentChain(object):
         if len(segments) > 0:
             strands = set([X.strand for X in segments])
             chroms  = set([X.chrom for X in segments])
-            assert len(strands) == 1
-            assert len(chroms)  == 1
+            if len(strands) > 1:
+                raise ValueError("Incoming segments on multiple strands: %s" % (strands))
+            if len(chroms) > 1:
+                raise ValueError("Incoming segments on multiple chroms: %s" % (chroms))
             if len(self) > 0:
-                assert segments[0].chrom  == self.chrom
-                assert segments[0].strand == self.strand
+                if segments[0].chrom != self.chrom:
+                    raise ValueError("Incoming segments don't match chromosome of '%s'. Have '%s'." % (self,segments[0].chrom))
+                if segments[0].strand != self.strand:
+                    raise ValueError("Incoming segments don't match strand of '%s'. Have '%s'." % (self,segments[0].strand))
             else:
                 self.chrom  = segments[0].chrom
                 self.strand = segments[0].strand
@@ -838,11 +842,16 @@ class SegmentChain(object):
         if len(mask_segments) > 0:
             strands = set([X.strand for X in mask_segments])
             chroms  = set([X.chrom for X in mask_segments])
-            assert len(strands) == 1
-            assert len(chroms)  == 1
+            if len(strands) > 1:
+                raise ValueError("Incoming masks to SegmentChain %s are on multiple strands: %s." % (self,strands))
+            if len(chroms) > 1:
+                raise ValueError("Incoming masks to SegmentChain %s are on multiple chromosomes: %s" % (self,chroms))
             if len(self) > 0:
-                assert mask_segments[0].chrom  == self.chrom
-                assert mask_segments[0].strand == self.strand
+                if mask_segments[0].strand != self.strand:
+                    raise ValueError("Incoming masks to SegmentChain %s are on wrong strands: %s." % (self,strands))
+                if mask_segments[0].chrom  != self.chrom:
+                    raise ValueError("Incoming masks to SegmentChain %s are on wrong chromosomes: %s" % (self,chroms))
+                
             else:
                 self.chrom  = mask_segments[0].chrom
                 self.strand = mask_segments[0].strand

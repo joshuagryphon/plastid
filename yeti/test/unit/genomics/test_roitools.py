@@ -157,6 +157,8 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         defining equality as identity of position sets, strand, and
         chromosomes. Attributes are ignored.
         """
+        if ivc1.spanning_segment == None or ivc2.spanning_segment == None:
+            return False
         position_test = ivc1.get_position_set() == ivc2.get_position_set()
         strand_test   = ivc1.spanning_segment.strand == ivc2.spanning_segment.strand
         chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
@@ -757,17 +759,17 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                  GenomicSegment("chrA",250,300,strand))
 
-            pre_length = chain.length
+            pre_length = chain.get_length()
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
             chain.add_masks(mask_a,mask_b)
             self.assertEqual(chain.get_masks(),[mask_a,mask_b])
-            self.assertEqual(chain.masked_length,pre_length - len(mask_a) - len(mask_b))
+            self.assertEqual(chain.get_masked_length(),pre_length - len(mask_a) - len(mask_b))
             chain.reset_masks()
             self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
-            self.assertEqual(pre_length,chain.masked_length)
+            self.assertEqual(pre_length,chain.get_masked_length())
     
     @skip_if_abstract    
     def test_get_junctions(self):
@@ -1558,12 +1560,14 @@ class TestTranscript(AbstractSegmentChainHelper):
     @staticmethod
     def is_identical(ivc1,ivc2):
         """Test for identity between positions of two Transcripts"""
+        if TestTranscript.is_identical_no_cds(ivc1,ivc2) == False:
+            return False
  
         start_test = (getattr(ivc1,"cds_start",None) is None and getattr(ivc2,"cds_start",None) is None) or\
                      (ivc1.cds_start == ivc2.cds_start)
         end_test   = (getattr(ivc1,"cds_end",None) is None and getattr(ivc2,"cds_end",None) is None) or\
                      (ivc1.cds_end == ivc2.cds_end)
-        return start_test & end_test & TestTranscript.is_identical_no_cds(ivc1,ivc2)
+        return start_test & end_test
     
     def test_get_subregions(self):
         """Test fetching of CDS, UTR5, UTR3"""
