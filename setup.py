@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-#import plastid
+import plastid
 import sys
 import glob
 from collections import Iterable
@@ -43,38 +43,51 @@ c_paths = [os.path.join(X.replace(",",os.sep),"*.c") for X in packages]
 
 ipath = []
 setup_requires = []
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext
+import numpy
+import pysam
+setup_requires = [CYTHON_VERSION,
+                  PYSAM_VERSION,
+                  NUMPY_VERSION]
+ipath = []
+for mod in (numpy,pysam):
+    ipart = mod.get_include()
+    if isinstance(ipart,str):
+        ipath.append(ipart)
+    elif isinstance(ipart,Iterable):
+        ipath.extend(ipart)
+    else:
+        raise ValueError("Could not parse include path: %s" % ipart)
+
+    ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
+                             compiler_directives = cython_args,
+                             include_path = ipath)        
 if not on_rtd:
-    from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
-    import numpy
-    import pysam
-    setup_requires = [CYTHON_VERSION,
-                      PYSAM_VERSION,
-                      NUMPY_VERSION]
-    install_requires = [
+     install_requires = [
                         SCIPY_VERSION,
                         "pandas>=0.16.0",
                         "matplotlib>=1.3.0",
                         "biopython>=1.64",
                         "twobitreader>=3.0.0",
                         ] + setup_requires
-    ipath = []
-    for mod in (numpy,pysam):
-        ipart = mod.get_include()
-        if isinstance(ipart,str):
-            ipath.append(ipart)
-        elif isinstance(ipart,Iterable):
-            ipath.extend(ipart)
-        else:
-            raise ValueError("Could not parse include path: %s" % ipart)
-
-        ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
-                                 compiler_directives = cython_args,
-                                 include_path = ipath)        
+#    ipath = []
+#    for mod in (numpy,pysam):
+#        ipart = mod.get_include()
+#        if isinstance(ipart,str):
+#            ipath.append(ipart)
+#        elif isinstance(ipart,Iterable):
+#            ipath.extend(ipart)
+#        else:
+#            raise ValueError("Could not parse include path: %s" % ipart)
+#
+#        ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
+#                                 compiler_directives = cython_args,
+#                                 include_path = ipath)        
 else:
-    from setuptools.command import build_ext
-    ext_modules = []
-    install_requires = []
+#    from setuptools.command import build_ext
+#    ext_modules = []
+    install_requires = ["cython","numpy","pysam"]
                       #  "scipy","numpy","pandas","matplotlib","biopython","#  ]
 
 
@@ -212,7 +225,7 @@ setup(
 
     # package metadata
     name             = "plastid",
-    version          = "0.2.3", #plastid.__version__,
+    version          = plastid.__version__,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
@@ -222,7 +235,7 @@ setup(
     description      = "Convert genomic datatypes into Pythonic objects useful to the SciPy stack",
     license          = "BSD 3-Clause",
     keywords         = "ribosome profiling riboseq rna-seq sequencing genomics biology",
-    url              = "", # github link
+    url              = "https://github.com/joshuagryphon/plastid", # github link
     download_url     = "", # PyPI link
     platforms        = "OS Independent",
  

@@ -1,3 +1,6 @@
+mock
 numpydoc
 sphinxcontrib-argdoc
 sphinxcontrib-bibtex
+cython
+numpy
