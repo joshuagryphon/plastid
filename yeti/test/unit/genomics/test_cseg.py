@@ -759,13 +759,17 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                GenomicSegment("chrA",250,300,strand))
 
+            pre_length = chain.length
+
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
             
             chain.add_masks(mask_a,mask_b)
             self.assertEqual(chain.get_masks(),[mask_a,mask_b])
+            self.assertEqual(chain.masked_length,pre_length - len(mask_a) - len(mask_b))
             chain.reset_masks()
             self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
+            self.assertEqual(pre_length,chain.masked_length)
     
     @skip_if_abstract    
     def test_get_junctions(self):

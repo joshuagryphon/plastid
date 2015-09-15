@@ -14,10 +14,8 @@ cdef class SegmentChain(object):
         int  [:] _position_mask # really should be bint, but we can't use it there
         dict attr, _inverse_hash
 
-    cdef void _update(self)
-    #cdef array.array _get_position_hash(self)
+    cpdef void _update(self)
     cdef void  _get_position_hash(self)
-    #cdef dict _update_inverse_hash(self)
 
     cdef tuple check_segments(self, tuple)
     cdef c_add_segments(self, tuple)
@@ -34,8 +32,12 @@ cdef class SegmentChain(object):
     cpdef  ExBool c_richcmp(self,SegmentChain,int) except bool_exception
 
     cpdef SegmentChain get_antisense(self)
+
     cdef numpy.ndarray c_get_position_list(self,bint)
+
     cpdef set get_position_set(self)
+    cpdef set get_masked_position_set(self)
+
 
     cdef long c_get_genomic_coordinate(self, long, bint) except -1
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
@@ -43,5 +45,5 @@ cdef class SegmentChain(object):
 
 
 cdef class Transcript(SegmentChain):
-    cdef void _update(self)
+    cpdef void _update(self)
 
