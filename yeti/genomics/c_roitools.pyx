@@ -2,7 +2,7 @@
 
 import re
 import copy
-from yeti.genomics.c_common cimport Strand, forward_strand, reverse_strand, \
+from plastid.genomics.c_common cimport Strand, forward_strand, reverse_strand, \
                                     unstranded, undef_strand
 
 segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")

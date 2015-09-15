@@ -12,14 +12,14 @@ See also
 http://bowtie-bio.sourceforge.net/manual.shtml#default-bowtie-output
     Detailed description of `bowtie`_ output format
 
-:py:mod:`yeti.test.unit.genomics.test_genome_array`
+:py:mod:`plastid.test.unit.genomics.test_genome_array`
     for integrative tests of these functions
 """
 __author__ = "joshua"
 __date__ = "2011-03-18"
 
-from yeti.genomics.roitools import SegmentChain, GenomicSegment
-from yeti.util.io.filters  import AbstractReader
+from plastid.genomics.roitools import SegmentChain, GenomicSegment
+from plastid.util.io.filters  import AbstractReader
 
 
 #===============================================================================

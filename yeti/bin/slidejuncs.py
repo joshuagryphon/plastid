@@ -79,14 +79,14 @@ __author__ = "joshua"
 
 import sys
 import argparse
-from yeti.util.io.openers import opener, argsopener, get_short_name
-from yeti.util.io.filters import CommentReader, NameDateWriter
-from yeti.genomics.splicing import get_junction_tuple
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.genomics.genome_hash import GenomeHash
-from yeti.readers.bed import BED_Reader
-from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.scriptlib.argparsers import get_mask_file_parser,\
+from plastid.util.io.openers import opener, argsopener, get_short_name
+from plastid.util.io.filters import CommentReader, NameDateWriter
+from plastid.genomics.splicing import get_junction_tuple
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.genomics.genome_hash import GenomeHash
+from plastid.readers.bed import BED_Reader
+from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.scriptlib.argparsers import get_mask_file_parser,\
                                            get_genome_hash_from_mask_args,\
                                            get_sequence_file_parser,\
                                            get_seqdict_from_args

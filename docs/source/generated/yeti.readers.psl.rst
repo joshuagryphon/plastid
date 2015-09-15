@@ -1,7 +1,7 @@
-yeti.readers.psl module
+plastid.readers.psl module
 =======================
 
-.. automodule:: yeti.readers.psl
+.. automodule:: plastid.readers.psl
     :members:
     :undoc-members:
     :show-inheritance:

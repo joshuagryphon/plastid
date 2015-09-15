@@ -44,7 +44,7 @@ import sys
 import warnings
 import types
 import tempfile
-from yeti.util.services.mini2to3 import get_func_code
+from plastid.util.services.mini2to3 import get_func_code
                        
 def notimplemented(func):
     """NotImplemented annotation decorator.
@@ -463,7 +463,7 @@ def parallelize(func):
     Notes
     -----
     #. This function has been parallelized with %s processes via
-       :py:func:`yeti.util.services.decorators.parallelize`. Therefore,
+       :py:func:`plastid.util.services.decorators.parallelize`. Therefore,
        supply a lists of the function's parameter, rather than a single parameter.
     
     #. Output is not guaranteed to be sorted.
@@ -491,5 +491,5 @@ def skipdoc(func_or_class):
     object
         Wrapped function or class
     """
-    func_or_class.yeti_skipdoc = True
+    func_or_class.plastid_skipdoc = True
     return func_or_class

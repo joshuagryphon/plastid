@@ -1,7 +1,7 @@
-yeti package
+plastid package
 ============
 
-.. automodule:: yeti
+.. automodule:: plastid
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,9 +11,9 @@ Subpackages
 
 .. toctree::
 
-    yeti.bin
-    yeti.genomics
-    yeti.readers
-    yeti.test
-    yeti.util
+    plastid.bin
+    plastid.genomics
+    plastid.readers
+    plastid.test
+    plastid.util
 

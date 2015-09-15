@@ -29,9 +29,9 @@ __date__ = "2011-09-01"
 __author__ = "joshua"
 import warnings
 import itertools
-from yeti.readers.common import AssembledFeatureReader
-from yeti.genomics.roitools import SegmentChain
-from yeti.util.services.exceptions import FileFormatWarning
+from plastid.readers.common import AssembledFeatureReader
+from plastid.genomics.roitools import SegmentChain
+from plastid.util.services.exceptions import FileFormatWarning
 
 class PSL_Reader(AssembledFeatureReader): 
     """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects

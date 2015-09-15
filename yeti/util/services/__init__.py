@@ -8,13 +8,13 @@ Package overview
     ===============================================  ==============================================
     **Package module**                               **Contents**
     -----------------------------------------------  ----------------------------------------------
-    :py:mod:`~yeti.util.services.colors`             Convert colors between various representations
-    :py:mod:`~yeti.util.services.decorators`         Function decorators
-    :py:mod:`~yeti.util.services.exceptions`         Exceptions
-    :py:mod:`~yeti.util.services.lists`              Miscellaneous list operations
-    :py:mod:`~yeti.util.services.sets`               Miscellaneous set operations
-    :py:mod:`~yeti.util.services.misc`               Other miscellaneous functions
-    :py:mod:`~yeti.util.services.mini2to3`           Python 2.x/3.x compatability layer
+    :py:mod:`~plastid.util.services.colors`             Convert colors between various representations
+    :py:mod:`~plastid.util.services.decorators`         Function decorators
+    :py:mod:`~plastid.util.services.exceptions`         Exceptions
+    :py:mod:`~plastid.util.services.lists`              Miscellaneous list operations
+    :py:mod:`~plastid.util.services.sets`               Miscellaneous set operations
+    :py:mod:`~plastid.util.services.misc`               Other miscellaneous functions
+    :py:mod:`~plastid.util.services.mini2to3`           Python 2.x/3.x compatability layer
     ===============================================  ==============================================
  
 """

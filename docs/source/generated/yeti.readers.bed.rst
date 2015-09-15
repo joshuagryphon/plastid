@@ -1,7 +1,7 @@
-yeti.readers.bed module
+plastid.readers.bed module
 =======================
 
-.. automodule:: yeti.readers.bed
+.. automodule:: plastid.readers.bed
     :members:
     :undoc-members:
     :show-inheritance:

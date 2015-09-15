@@ -1,7 +1,7 @@
-yeti.genomics.splicing module
+plastid.genomics.splicing module
 =============================
 
-.. automodule:: yeti.genomics.splicing
+.. automodule:: plastid.genomics.splicing
     :members:
     :undoc-members:
     :show-inheritance:

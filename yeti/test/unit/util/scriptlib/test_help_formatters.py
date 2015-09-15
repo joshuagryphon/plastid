@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.util.scriptlib.help_formatters`"""
+"""Test suite for :py:mod:`plastid.util.scriptlib.help_formatters`"""
 from nose.tools import assert_equal, assert_not_equal, assert_true
 from nose.plugins.attrib import attr
-from yeti.util.scriptlib.help_formatters import shorten_help,\
+from plastid.util.scriptlib.help_formatters import shorten_help,\
                                                            format_module_docstring,\
                                                            pyrst_pattern,\
                                                            subst_pattern,\
@@ -12,30 +12,30 @@ from yeti.util.scriptlib.help_formatters import shorten_help,\
 class TestHelpFormatters():
     
     def test_pyrst_pattern_matches(self):
-        tests = [(":py:class:`yeti.genomics.genome_array.GenomeArray`",
+        tests = [(":py:class:`plastid.genomics.genome_array.GenomeArray`",
                   "py",
                   "class",
-                  "yeti.genomics.genome_array.GenomeArray",
+                  "plastid.genomics.genome_array.GenomeArray",
                   None),
-                 (":py:mod:`yeti.genomics.genome_array`",
+                 (":py:mod:`plastid.genomics.genome_array`",
                   "py",
                   "mod",
-                  "yeti.genomics.genome_array",
+                  "plastid.genomics.genome_array",
                   None),
                 (":py:obj:`some_obj`",
                   "py",
                  "obj",
                  "some_obj",
                   None),
-                 (":class:`yeti.genomics.genome_array.GenomeArray`",
+                 (":class:`plastid.genomics.genome_array.GenomeArray`",
                   None,
                   "class",
-                  "yeti.genomics.genome_array.GenomeArray",
+                  "plastid.genomics.genome_array.GenomeArray",
                   None),
-                 (":mod:`yeti.genomics.genome_array`",
+                 (":mod:`plastid.genomics.genome_array`",
                   None,
                   "mod",
-                  "yeti.genomics.genome_array",
+                  "plastid.genomics.genome_array",
                   None),
                 (":obj:`some_obj`",
                  None,
@@ -71,11 +71,11 @@ class TestHelpFormatters():
                  (":py:class:"),
                  ("`genome_array`"),
                  # missing one or more backticks
-                 (":py:class:`yeti.genomics.genome_array.GenomeArray"),
-                 (":py:class:yeti.genomics.genome_array.GenomeArray`"),
-                 (":py:class:yeti.genomics.genome_array.GenomeArray"),
+                 (":py:class:`plastid.genomics.genome_array.GenomeArray"),
+                 (":py:class:plastid.genomics.genome_array.GenomeArray`"),
+                 (":py:class:plastid.genomics.genome_array.GenomeArray"),
                  # malformed starting token
-                 ("py:class:`yeti.genomics.genome_array.GenomeArray`"),
+                 ("py:class:`plastid.genomics.genome_array.GenomeArray`"),
                  ]
         for test in tests:
             yield self.check_pyrst_pattern, pyrst_pattern.search(test), None, "rst pattern matches %s" % test
@@ -148,7 +148,7 @@ See also
 :py:meth:`some_method`
     A method that is useful
 
-:py:class:`yeti.genomics.genome_array.GenomeArray`
+:py:class:`plastid.genomics.genome_array.GenomeArray`
     A useful class
             
 Parameters
@@ -197,6 +197,6 @@ See also
 some_method
     A method that is useful
 
-yeti.genomics.genome_array.GenomeArray
+plastid.genomics.genome_array.GenomeArray
     A useful class
 """

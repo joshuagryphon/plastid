@@ -7,7 +7,7 @@ using the :doc:`/test_dataset`.
 Fetching sequence from |SegmentChains|
 --------------------------------------
 |SegmentChains| and |Transcripts| can fetch their own genomic sequence via
-their :meth:`~yeti.genomics.roitools.SegmentChain.get_sequence` method.
+their :meth:`~plastid.genomics.roitools.SegmentChain.get_sequence` method.
 As an argument, the method expects a dictionary-like object of string-like
 objects, where the dictionary keys correspond to chromosome names, and
 the strings correspond to the forward-strand sequence.
@@ -17,7 +17,7 @@ the strings correspond to the forward-strand sequence.
 Sequences are fully-spliced, if the |SegmentChain| contains one or more
 |GenomicSegment|::
 
-    >>> from yeti.genomics.roitools import GenomicSegment, SegmentChain
+    >>> from plastid.genomics.roitools import GenomicSegment, SegmentChain
 
     >>> little_chain = SegmentChain(GenomicSegment("chrA",10,23,"+"),
     >>>                             GenomicSegment("chrA",33,41,"+"),
@@ -37,7 +37,7 @@ For reverse-strand features, sequences are automatically reverse-complemented::
 
 
 For convenience, |SegmentChain| and |Transcript| also implement
-:meth:`~yeti.genomics.roitools.SegmentChain.get_fasta`, which formats output
+:meth:`~plastid.genomics.roitools.SegmentChain.get_fasta`, which formats output
 in `FASTA`_ format::
 
     >>> print(little_chain.get_fasta(little_genome))
@@ -55,7 +55,7 @@ Genomic sequence can be stored in a number of formats. Two of the most common ar
      genomes. Beacause `2bit <twobit>`_ files are binary and indexed, they use
      far less memory than `FASTA`_ files.
 
-:data:`yeti` doesn't implement any of its own file readers, but it is compatible
+:data:`plastid` doesn't implement any of its own file readers, but it is compatible
 with any parser that returns sequences as a dictionary-like object of string-like
 objects. This allows users to use implementations in `Biopython`_ (for `FASTA`_, 
 EMBL, & GenBank formats) and `twobitreader`_ (for `2bit <twobit>`_) files.
@@ -71,8 +71,8 @@ In `Biopython`_, nucleic acids are represented as `SeqRecord`_ objects
 rather than strings. |SegmentChain| and |Transcript| don't mind::
 
     >>> # load CMV annotations from test dataset
-    >>> from yeti.genomics.roitools import Transcript
-    >>> from yeti.readers.bed import BED_Reader
+    >>> from plastid.genomics.roitools import Transcript
+    >>> from plastid.readers.bed import BED_Reader
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
     >>> transcripts[0]
     <Transcript segments=1 bounds=merlin:1316-2398(+) name=ORFL1W_(RL1)>
@@ -82,7 +82,7 @@ rather than strings. |SegmentChain| and |Transcript| don't mind::
 
 
 Similarly, `TwoBitFile`_ objects from `twobitreader`_  can be directly passed
-to :meth:`~yeti.genomics.roitools.SegmentChain.get_sequence`, because they 
+to :meth:`~plastid.genomics.roitools.SegmentChain.get_sequence`, because they 
 inherit from :class:`dict` and return strings::
 
     >>> # load CMV genome as a 2bit file

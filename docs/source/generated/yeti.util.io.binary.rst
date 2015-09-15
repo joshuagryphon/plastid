@@ -1,7 +1,7 @@
-yeti.util.io.binary module
+plastid.util.io.binary module
 ==========================
 
-.. automodule:: yeti.util.io.binary
+.. automodule:: plastid.util.io.binary
     :members:
     :undoc-members:
     :show-inheritance:

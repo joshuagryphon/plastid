@@ -1,7 +1,7 @@
-yeti.readers.common module
+plastid.readers.common module
 ==========================
 
-.. automodule:: yeti.readers.common
+.. automodule:: plastid.readers.common
     :members:
     :undoc-members:
     :show-inheritance:

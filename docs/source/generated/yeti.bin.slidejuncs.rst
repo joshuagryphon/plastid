@@ -1,7 +1,7 @@
-yeti.bin.slidejuncs module
+plastid.bin.slidejuncs module
 ==========================
 
-.. automodule:: yeti.bin.slidejuncs
+.. automodule:: plastid.bin.slidejuncs
     :members:
     :undoc-members:
     :show-inheritance:

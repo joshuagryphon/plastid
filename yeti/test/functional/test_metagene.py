@@ -1,25 +1,25 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.metagene`"""
+"""Test suite for :py:mod:`plastid.bin.metagene`"""
 import tempfile
 import os
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
                                              MASK_OPTIONS  
-from yeti.bin.test_table_equality import main as table_test                               
-from yeti.bin.metagene import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.bin.test_table_equality import main as table_test                               
+from plastid.bin.metagene import main
+from plastid.util.services.decorators import catch_stderr
 
 #===============================================================================
 # INDEX: global constants used by tests
 #===============================================================================
 
 TEST_INFO = { "test_method"   : catch_stderr()(main),
-              "module_name"   : "yeti.bin.metagene",
-              "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+              "module_name"   : "plastid.bin.metagene",
+              "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
               "temp_file_path" : tempfile.mkdtemp(prefix="metagene"),
              }
 
@@ -91,7 +91,7 @@ tests = [
     ["","--no_header","--no_header"]
     ),
 ]
-"""Functional tests of :py:mod:`yeti.bin.metagene`.
+"""Functional tests of :py:mod:`plastid.bin.metagene`.
 
 Tests are specified as tuples of:
 

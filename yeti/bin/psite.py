@@ -22,7 +22,7 @@ Output files
         and the second the offset from the fiveprime end of that read length
         to the ribosomal P-site. This table can be supplied as the argument 
         for ``--offset`` when using ``--fiveprime_variable`` mapping in any
-        of the other scripts in :obj:`yeti.bin`
+        of the other scripts in :obj:`plastid.bin`
 
     OUTBASE_p_offsets.svg
         Plot of metagene profiles for each read length, when reads are mapped
@@ -54,12 +54,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
-from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_alignment_file_parser
-from yeti.genomics.roitools import SegmentChain
-from yeti.util.io.openers import get_short_name, argsopener, NullWriter, opener
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.genomics.roitools import SegmentChain
+from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -80,7 +80,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     ----------
     roi_table : :class:`pandas.DataFrame`
         Table specifying regions of interest, generated
-        by :py:func:`yeti.bin.metagene.do_generate`
+        by :py:func:`plastid.bin.metagene.do_generate`
     
     ga : |BAMGenomeArray|
         Count data
@@ -102,7 +102,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         Maximum read length to include
 
     printer : file-like, optional
-        filehandle to write logging info to (Default: :func:`~yeti.util.io.openers.NullWriter`)
+        filehandle to write logging info to (Default: :func:`~plastid.util.io.openers.NullWriter`)
                
     Returns
     -------

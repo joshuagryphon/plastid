@@ -47,7 +47,7 @@ of an alignment. For example:
 
  .. _mapping-rules-provided:
 
-Mapping rules in :data:`yeti`
+Mapping rules in :data:`plastid`
 -----------------------------
 The following mapping rules are provided, although users are encouraged to
 :ref:`write their own mapping rules <mapping-rules-roll-your-own>`
@@ -100,7 +100,7 @@ reads are mapped to specific locations:
 Setting mapping rules in command-line scripts
 .............................................
 
-Mapping rules may be specified to :mod:`command-line scripts <yeti.bin>` using
+Mapping rules may be specified to :mod:`command-line scripts <plastid.bin>` using
 the following command-line arguments:
 
    ======================   ====================================
@@ -136,7 +136,7 @@ The following arguments additionally influence how mapping rules behave:
                          from each end of the read before mapping.
    ====================  =======================================================
 
-See the documentation for individual :mod:`command-line scripts <yeti.bin>`
+See the documentation for individual :mod:`command-line scripts <plastid.bin>`
 for a detailed discussion of their arguments.
 
 
@@ -145,15 +145,15 @@ for a detailed discussion of their arguments.
 Setting mapping rules in interactive Python sessions
 ....................................................
 
-Mapping rules in :data:`yeti` are applied when :term:`read alignments` are imported.
+Mapping rules in :data:`plastid` are applied when :term:`read alignments` are imported.
 Read alignments are held in data structures called *GenomeArrays*
-(see :mod:`yeti.genomics.genome_array`).
+(see :mod:`plastid.genomics.genome_array`).
 
 Alignments in `BAM`_ format can be imported into a |BAMGenomeArray|.
-Mapping rules are set via :meth:`~yeti.genomics.genome_array.BAMGenomeArray.set_mapping`::
+Mapping rules are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.set_mapping`::
 
    >>> import pysam
-   >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
+   >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
    
@@ -170,7 +170,7 @@ Alignments in `bowtie`_ format can be imported into a |GenomeArray|. Because
 `bowtie`_ files are not sorted or indexed, mapping rules must be applied upon
 import, and cannot be changed afterwards::
 
-   >>> from yeti.genomics.genome_array import GenomeArray, five_prime_mp
+   >>> from plastid.genomics.genome_array import GenomeArray, five_prime_mp
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> fiveprime_alignments = GenomeArray()
@@ -187,13 +187,13 @@ Method names for the various :term:`mapping rules <mapping rule>` appear below:
 **Mapping rule**         |GenomeArray|, |SparseGenomeArray|                                |BAMGenomeArray|
 ----------------------   --------------------------------------------------------------    ---------------------------------------
 
-Fiveprime                :func:`~yeti.genomics.genome_array.five_prime_map`                  :py:func:`~yeti.genomics.genome_array.FivePrimeMapFactory`
+Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`                  :py:func:`~plastid.genomics.genome_array.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`~yeti.genomics.genome_array.variable_five_prime_map`         :py:func:`~yeti.genomics.genome_array.VariableFivePrimeMapFactory`
+Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`         :py:func:`~plastid.genomics.genome_array.VariableFivePrimeMapFactory`
 
-Threeprime               :func:`~yeti.genomics.genome_array.three_prime_map`                 :py:func:`~yeti.genomics.genome_array.ThreePrimeMapFactory`
+Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`                 :py:func:`~plastid.genomics.genome_array.ThreePrimeMapFactory`
 
-Center/entire            :func:`~yeti.genomics.genome_array.center_map`                      :py:func:`~yeti.genomics.genome_array.CenterMapFactory`
+Center/entire            :func:`~plastid.genomics.genome_array.center_map`                      :py:func:`~plastid.genomics.genome_array.CenterMapFactory`
 ======================   ==============================================================    =======================================
 
 
@@ -203,7 +203,7 @@ Center/entire            :func:`~yeti.genomics.genome_array.center_map`         
 
 Writing your own mapping rules
 ------------------------------
-Writing mapping rules in :data:`yeti` are implemented as functions. Mapping
+Writing mapping rules in :data:`plastid` are implemented as functions. Mapping
 rules for |BAMGenomeArray| require the following signatures:
 
 Parameters
@@ -325,5 +325,5 @@ See also
   - :doc:`P-site mapping </examples/p_site>` example, in which a mapping rule
     for :term:`ribosome profiling` data is derived and applied
     
-  - Module documentation for :mod:`yeti.genomics.genome_array`, which provides
+  - Module documentation for :mod:`plastid.genomics.genome_array`, which provides
     more details on |BAMGenomeArrays|, |GenomeArrays|, and mapping functions

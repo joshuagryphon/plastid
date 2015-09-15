@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Test suite for py:mod:`yeti.util.services.colors`"""
+"""Test suite for py:mod:`plastid.util.services.colors`"""
 import unittest
 import numpy
-from yeti.util.services.colors import get_rgb255_from_str, get_str_from_rgb255
+from plastid.util.services.colors import get_rgb255_from_str, get_str_from_rgb255
 from nose.plugins.attrib import attr
 
 @attr(test="unit")

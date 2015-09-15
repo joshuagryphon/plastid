@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.readers.bed`
+"""Test suite for :py:mod:`plastid.readers.bed`
 
     :py:func:`BED_to_Transcripts`
         Read BED files to Transcript objects
@@ -20,9 +20,9 @@ import pandas as pd
 
 from csv import QUOTE_NONE
 from nose.plugins.attrib import attr
-from yeti.util.services.mini2to3 import cStringIO
-from yeti.genomics.roitools import SegmentChain, GenomicSegment, Transcript
-from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
+from plastid.util.services.mini2to3 import cStringIO
+from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
+from plastid.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
 from nose.tools import assert_equal, assert_true, assert_dict_equal, assert_greater_equal
 
 warnings.simplefilter("ignore",DeprecationWarning)

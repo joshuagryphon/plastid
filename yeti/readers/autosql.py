@@ -78,7 +78,7 @@ import re
 import warnings
 from collections import OrderedDict
 from abc import abstractmethod
-from yeti.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning
 
 # regular expressions that recognize various autoSql elements
 _pattern_bits = { "start"   : r"^\s*",

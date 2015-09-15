@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.gff_parent_types`"""
+"""Test suite for :py:mod:`plastid.bin.gff_parent_types`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import REF_FILES
-from yeti.bin.gff_parent_types import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import REF_FILES
+from plastid.bin.gff_parent_types import main
+from plastid.util.services.decorators import catch_stderr
 
 
 #===============================================================================
@@ -17,8 +17,8 @@ from yeti.util.services.decorators import catch_stderr
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.gff_parent_types",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.gff_parent_types",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="test_gff_parent_types"),
 }
 
@@ -44,6 +44,6 @@ gff_parent_types_tests = [
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for :py:mod`yeti.bin.gff_parent_types`"""
+    """Perform functional test for :py:mod`plastid.bin.gff_parent_types`"""
     for x in execute_helper(test_info,gff_parent_types_tests):
         yield x

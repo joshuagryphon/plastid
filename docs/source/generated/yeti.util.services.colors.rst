@@ -1,7 +1,7 @@
-yeti.util.services.colors module
+plastid.util.services.colors module
 ================================
 
-.. automodule:: yeti.util.services.colors
+.. automodule:: plastid.util.services.colors
     :members:
     :undoc-members:
     :show-inheritance:

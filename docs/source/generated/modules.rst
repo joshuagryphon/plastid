@@ -1,7 +1,7 @@
-yeti
+plastid
 ====
 
 .. toctree::
    :maxdepth: 4
 
-   yeti
+   plastid

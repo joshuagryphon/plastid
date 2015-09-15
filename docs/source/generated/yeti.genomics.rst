@@ -1,7 +1,7 @@
-yeti.genomics package
+plastid.genomics package
 =====================
 
-.. automodule:: yeti.genomics
+.. automodule:: plastid.genomics
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,12 +11,12 @@ Submodules
 
 .. toctree::
 
-   yeti.genomics.c_roitools
-   yeti.genomics.c_segmentchain
-   yeti.genomics.genome_array
-   yeti.genomics.genome_hash
-   yeti.genomics.map_factories
-   yeti.genomics.roitools
-   yeti.genomics.seqtools
-   yeti.genomics.splicing
+   plastid.genomics.c_roitools
+   plastid.genomics.c_segmentchain
+   plastid.genomics.genome_array
+   plastid.genomics.genome_hash
+   plastid.genomics.map_factories
+   plastid.genomics.roitools
+   plastid.genomics.seqtools
+   plastid.genomics.splicing
 

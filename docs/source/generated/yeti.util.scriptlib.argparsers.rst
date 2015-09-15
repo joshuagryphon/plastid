@@ -1,7 +1,7 @@
-yeti.util.scriptlib.argparsers module
+plastid.util.scriptlib.argparsers module
 =====================================
 
-.. automodule:: yeti.util.scriptlib.argparsers
+.. automodule:: plastid.util.scriptlib.argparsers
     :members:
     :undoc-members:
     :show-inheritance:

@@ -7,15 +7,15 @@ from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_true, assert_set_equal, assert_less_equal
 from numpy import nan
 
-from yeti.util.io.filters import SkipBlankReader
-from yeti.genomics.roitools import SegmentChain, GenomicSegment
-from yeti.genomics.genome_hash import GenomeHash
-from yeti.readers.gff import GFF3_TranscriptAssembler
-from yeti.bin.metagene import window_landmark, \
+from plastid.util.io.filters import SkipBlankReader
+from plastid.genomics.roitools import SegmentChain, GenomicSegment
+from plastid.genomics.genome_hash import GenomeHash
+from plastid.readers.gff import GFF3_TranscriptAssembler
+from plastid.bin.metagene import window_landmark, \
                                      window_cds_start, \
                                      window_cds_stop, \
                                      group_regions_make_windows
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 
 _FLANKS = [(0,100),
            (50,100),

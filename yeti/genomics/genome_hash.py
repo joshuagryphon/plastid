@@ -55,12 +55,12 @@ Retrieve features overlapping a region of interest on chromosome II::
 # Memory-efficient ways to hash features across a genome
 #===============================================================================
 import copy
-from yeti.util.services.mini2to3 import cStringIO
-from yeti.util.io.openers import NullWriter
-from yeti.readers.bed import BED_Reader
-from yeti.readers.gff import GTF2_Reader, GFF3_Reader
-from yeti.readers.psl import PSL_Reader
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.util.services.mini2to3 import cStringIO
+from plastid.util.io.openers import NullWriter
+from plastid.readers.bed import BED_Reader
+from plastid.readers.gff import GTF2_Reader, GFF3_Reader
+from plastid.readers.psl import PSL_Reader
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from abc import abstractmethod
 
 DEFAULT_BIN_SIZE=20000
@@ -464,7 +464,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
             genomic regions. Increasing this number increases speed at the
             cost of increased memory use. (Default: `5`)
         """
-        from yeti.readers.bigbed import BigBedReader
+        from plastid.readers.bigbed import BigBedReader
         self.filename = filename
         self.bigbedreader = BigBedReader(filename,
                                          base_record_format=base_record_format,

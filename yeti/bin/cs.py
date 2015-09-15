@@ -83,14 +83,14 @@ See command-line help for each subprogram for details on each mode
 
 See also
 --------
-:mod:`~yeti.bin.counts_in_region` script
+:mod:`~plastid.bin.counts_in_region` script
     Count the number of :term:`read alignments <alignment>` covering arbitrary
     regions of interest -- rather than merged genes, as are counted here in
-    :mod:`~yeti.bin.cs` -- in the genome, and calculate read densities
+    :mod:`~plastid.bin.cs` -- in the genome, and calculate read densities
     (in reads per nucleotide and in :term:`RPKM`) over these regions.
 """
 
-from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_transcripts_from_args,\
                                            get_alignment_file_parser,\
                                            get_annotation_file_parser,\
@@ -98,14 +98,14 @@ from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_genome_hash_from_mask_args
 
 
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
-from yeti.genomics.roitools import positions_to_segments, SegmentChain
-from yeti.genomics.genome_hash import GenomeHash
-from yeti.util.io.openers import opener, get_short_name, argsopener
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.services.sets import merge_sets
-from yeti.util.services.decorators import skipdoc
+from plastid.genomics.roitools import positions_to_segments, SegmentChain
+from plastid.genomics.genome_hash import GenomeHash
+from plastid.util.io.openers import opener, get_short_name, argsopener
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.services.sets import merge_sets
+from plastid.util.services.decorators import skipdoc
 from scipy.misc import comb as combination
 
 import os

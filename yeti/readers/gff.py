@@ -56,16 +56,16 @@ import warnings
 import gc
 import copy
 from abc import abstractmethod
-from yeti.util.io.filters import AbstractReader, SkipBlankReader
-from yeti.util.io.openers import NullWriter
-from yeti.readers.common import add_three_for_stop_codon, \
+from plastid.util.io.filters import AbstractReader, SkipBlankReader
+from plastid.util.io.openers import NullWriter
+from plastid.readers.common import add_three_for_stop_codon, \
                                                 get_identical_attributes, \
                                                 AssembledFeatureReader
-from yeti.genomics.roitools import Transcript, SegmentChain, \
+from plastid.genomics.roitools import Transcript, SegmentChain, \
                                          GenomicSegment, \
                                          sort_segmentchains_lexically
-from yeti.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
-from yeti.util.services.exceptions import DataWarning
+from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
+from plastid.util.services.exceptions import DataWarning
 
 #===============================================================================
 # INDEX: SO v2.5.3 feature types

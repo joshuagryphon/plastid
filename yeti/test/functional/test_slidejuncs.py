@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.slidejuncs`"""
+"""Test suite for :py:mod:`plastid.bin.slidejuncs`"""
 import tempfile
 import shutil
 import os
@@ -11,11 +11,11 @@ import shlex
 from nose.tools import assert_set_equal
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.ref_files import REF_FILES
-from yeti.util.io.filters import CommentReader
-from yeti.readers.bed import BED_to_SegmentChain
-from yeti.bin.slidejuncs import main
-from yeti.util.services.decorators import catch_stderr, catch_stdout
+from plastid.test.ref_files import REF_FILES
+from plastid.util.io.filters import CommentReader
+from plastid.readers.bed import BED_to_SegmentChain
+from plastid.bin.slidejuncs import main
+from plastid.util.services.decorators import catch_stderr, catch_stdout
 
 #===============================================================================
 # INDEX: global constants
@@ -23,8 +23,8 @@ from yeti.util.services.decorators import catch_stderr, catch_stdout
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.slidejuncs",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.slidejuncs",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="slidejuncs"),
 }
 

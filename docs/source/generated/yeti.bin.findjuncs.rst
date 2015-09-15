@@ -1,7 +1,7 @@
-yeti.bin.findjuncs module
+plastid.bin.findjuncs module
 =========================
 
-.. automodule:: yeti.bin.findjuncs
+.. automodule:: plastid.bin.findjuncs
     :members:
     :undoc-members:
     :show-inheritance:

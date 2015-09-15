@@ -1,7 +1,7 @@
-yeti.readers.autosql module
+plastid.readers.autosql module
 ===========================
 
-.. automodule:: yeti.readers.autosql
+.. automodule:: plastid.readers.autosql
     :members:
     :undoc-members:
     :show-inheritance:

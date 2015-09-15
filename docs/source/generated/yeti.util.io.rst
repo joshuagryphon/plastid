@@ -1,7 +1,7 @@
-yeti.util.io package
+plastid.util.io package
 ====================
 
-.. automodule:: yeti.util.io
+.. automodule:: plastid.util.io
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,7 +11,7 @@ Submodules
 
 .. toctree::
 
-   yeti.util.io.binary
-   yeti.util.io.filters
-   yeti.util.io.openers
+   plastid.util.io.binary
+   plastid.util.io.filters
+   plastid.util.io.openers
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-"""Tests for methods in :py:mod:`yeti.bin.crossmap`
+"""Tests for methods in :py:mod:`plastid.bin.crossmap`
 """
 import unittest
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
 from Bio import SeqIO
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.util.services.exceptions import MalformedFileError
-from yeti.bin.crossmap import simulate_reads, \
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.util.services.exceptions import MalformedFileError
+from plastid.bin.crossmap import simulate_reads, \
                                      FastaNameReader, \
                                      revcomp_mask_chain, \
                                      fa_to_bed

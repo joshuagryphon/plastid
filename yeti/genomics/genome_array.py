@@ -14,7 +14,7 @@ rather than slices of `start:end`. For example, to fetch data covering nucleotdi
 
 
 More commonly, GenomeArrays are used with |SegmentChains| and |Transcripts|, which
-via their :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` methods
+via their :meth:`~plastid.genomics.roitools.SegmentChain.get_counts` methods
 can fetch arrays of data in which each array position corresponds to a position,
 moving from 5' to 3', in the spliced |SegmentChain| or |Transcript|:: 
 
@@ -162,11 +162,11 @@ import warnings
 import numpy
 import scipy.sparse
 from collections import OrderedDict
-from yeti.readers.wiggle import WiggleReader
-from yeti.readers.bowtie import BowtieReader
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.util.services.mini2to3 import xrange, ifilter
-from yeti.util.services.exceptions import DataWarning
+from plastid.readers.wiggle import WiggleReader
+from plastid.readers.bowtie import BowtieReader
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.util.services.mini2to3 import xrange, ifilter
+from plastid.util.services.exceptions import DataWarning
 
 MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
 

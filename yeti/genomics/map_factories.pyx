@@ -2,7 +2,7 @@
 
 See also
 --------
-Module documentation for :mod:`~yeti.genomics.genome_array`
+Module documentation for :mod:`~plastid.genomics.genome_array`
     For a detailed discussion of :term:`mapping rules <mapping rule>`.
 """
 
@@ -12,9 +12,9 @@ cimport numpy as np
 cimport cython
 
 from pysam.calignmentfile cimport AlignedSegment
-from yeti.genomics.c_common cimport forward_strand, reverse_strand, unstranded
-from yeti.genomics.c_roitools cimport GenomicSegment
-from yeti.util.services.exceptions import DataWarning
+from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
+from plastid.genomics.c_roitools cimport GenomicSegment
+from plastid.util.services.exceptions import DataWarning
 
 
 INT    = np.int

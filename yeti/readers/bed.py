@@ -38,10 +38,10 @@ __author__ = "joshua"
 
 import shlex
 import warnings
-from yeti.readers.common import AssembledFeatureReader
-from yeti.genomics.roitools import SegmentChain, Transcript
-from yeti.util.services.decorators import deprecated, skipdoc
-from yeti.util.services.exceptions import FileFormatWarning
+from plastid.readers.common import AssembledFeatureReader
+from plastid.genomics.roitools import SegmentChain, Transcript
+from plastid.util.services.decorators import deprecated, skipdoc
+from plastid.util.services.exceptions import FileFormatWarning
 
 @skipdoc
 @deprecated

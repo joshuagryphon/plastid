@@ -6,7 +6,7 @@ import types
 import warnings
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_true, assert_greater_equal, assert_raises, assert_set_equal, assert_not_equal
-from yeti.util.services.decorators import notimplemented, \
+from plastid.util.services.decorators import notimplemented, \
                                                  deprecated, \
                                                  parallelize, \
                                                  in_separate_process, \

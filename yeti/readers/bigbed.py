@@ -55,15 +55,15 @@ import itertools
 import sys
 import warnings
 from collections import OrderedDict
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.readers.common import add_three_for_stop_codon
-from yeti.readers.autosql import AutoSqlDeclaration
-from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
-from yeti.util.io.openers import NullWriter
-from yeti.util.unique_fifo import UniqueFIFO
-from yeti.util.services.mini2to3 import ifilter
-from yeti.util.services.decorators import skipdoc
-from yeti.util.services.exceptions import MalformedFileError, FileFormatWarning
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.readers.common import add_three_for_stop_codon
+from plastid.readers.autosql import AutoSqlDeclaration
+from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
+from plastid.util.io.openers import NullWriter
+from plastid.util.unique_fifo import UniqueFIFO
+from plastid.util.services.mini2to3 import ifilter
+from plastid.util.services.decorators import skipdoc
+from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
 
 #===============================================================================
 # INDEX: BigBedReader

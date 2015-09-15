@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-"""Test suite for filters in :py:mod:`yeti.util.io.filters`
+"""Test suite for filters in :py:mod:`plastid.util.io.filters`
 """
 import unittest
 from nose.plugins.attrib import attr
-from yeti.util.services.mini2to3 import cStringIO
-from yeti.util.io.filters import SkipBlankReader, CommentReader, FunctionReader
+from plastid.util.services.mini2to3 import cStringIO
+from plastid.util.io.filters import SkipBlankReader, CommentReader, FunctionReader
 
 
 #===============================================================================

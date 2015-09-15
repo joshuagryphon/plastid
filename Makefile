@@ -1,10 +1,10 @@
-# Makefile for yeti
+# Makefile for plastid
 #
 # Run in project folder, not source folder.
 date := $(shell date +%Y-%m-%d)
 
 help:
-	@echo "yeti make help"
+	@echo "plastid make help"
 	@echo " "
 	@echo "Please use \`make <target>\`, choosing <target> from the following:"
 	@echo "    dist        to make HTML documentation and eggs for distribution"
@@ -20,16 +20,16 @@ help:
 
 docs/source/class_substitutions.txt :
 	mkdir -p docs/source
-	docs/bin/get_class_substitutions yeti yeti
-	mv yeti_substitutions.txt docs/source/class_substitutions.txt
+	docs/bin/get_class_substitutions plastid plastid
+	mv plastid_substitutions.txt docs/source/class_substitutions.txt
 
 docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
     cp CHANGES.rst docs/source
 	$(MAKE) html -C docs
 
 docs/source/generated :
-	sphinx-apidoc -M -e -o docs/source/generated yeti
-	#rm docs/source/generated/yeti.test*rst
+	sphinx-apidoc -M -e -o docs/source/generated plastid
+	#rm docs/source/generated/plastid.test*rst
 
 docs : | docs/build/html docs/source/generated
 

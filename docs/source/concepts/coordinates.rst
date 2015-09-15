@@ -1,13 +1,13 @@
 Coordinate systems used in genomics
 ===================================
 
-:data:`yeti` automatically handles coordinate conversions from 
+:data:`plastid` automatically handles coordinate conversions from 
 various file formats into a :term:`0-indexed` and :term:`half-open`
 coordinate space, so users don't need to worry about off-by-one
 errors in their annotations.
 
 This tutorial describes various coordinate representations used
-in genomics, and what goes on under the hood in :data:`yeti`.
+in genomics, and what goes on under the hood in :data:`plastid`.
 
 
 Coordinates
@@ -57,7 +57,7 @@ In :term:`0-indexed` representation, the restriction site begins at position 11.
 In :term:`1-indexed` representation, it begins at position 12.
 
 In the context of genomics, both :term:`0- <0-indexed>` and :term:`1-indexed`
-systems are used, depending upon file format. :data:`yeti` knows which file
+systems are used, depending upon file format. :data:`plastid` knows which file
 formats use which representation, and automatically converts all coordinates
 to a :term:`0-indexed` representation, following Python idioms.
 
@@ -147,9 +147,9 @@ file contains `Wiggle`_-formatted data blocks, it is :term:`1-indexed`.
 If it contains `bedGraph`_-formatted data blocks, it is :term:`0-indexed`, 
 :term:`half-open`.
 
-Conventions used in `yeti`
+Conventions used in `plastid`
 --------------------------
-Following `Python`_ conventions, :data:`yeti` reports all coordinates in
+Following `Python`_ conventions, :data:`plastid` reports all coordinates in
 :term:`0-indexed` and :term:`half-open` representation.
 In this case, the coordinate would be::
 

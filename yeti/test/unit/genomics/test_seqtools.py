@@ -1,12 +1,12 @@
-"""Test suite for :py:mod:`yeti.genomics.seqtools`"""
+"""Test suite for :py:mod:`plastid.genomics.seqtools`"""
 import re
 import sys
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_set_equal, assert_true
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-from yeti.test.ref_files import REF_FILES
-from yeti.genomics.seqtools import seq_to_regex, mutate_seqs, random_seq,\
+from plastid.test.ref_files import REF_FILES
+from plastid.genomics.seqtools import seq_to_regex, mutate_seqs, random_seq,\
                                    _TwoBitSeqProxy, TwoBitSeqRecordAdaptor
 
 #===============================================================================

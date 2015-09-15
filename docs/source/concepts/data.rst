@@ -63,7 +63,7 @@ Generally speaking, genomics data comes in a few flavors:
 
 Formats of data
 ---------------
-One of the design goals of :data:`yeti` is to insulate users from the esoterica
+One of the design goals of :data:`plastid` is to insulate users from the esoterica
 of the various file formats used in genomics. But, two points are relevant:
 
   #. It is important for users to recognize the file types names in order to 
@@ -82,7 +82,7 @@ of the various file formats used in genomics. But, two points are relevant:
 
 .. TODO later: update when format support changes
 
-Below is a table of commonly used file formats. At present, :data:`yeti` handles
+Below is a table of commonly used file formats. At present, :data:`plastid` handles
 all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
 `Biopython`_ (`FASTA`_), or `2bitreader`_ (`2bit <twobit>`_).
 
@@ -100,7 +100,7 @@ all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
  
  
 `BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be indexed via `tabix`_.
-:data:`yeti` supports (via `pysam`_) reading of `tabix`_-compressed files too.
+:data:`plastid` supports (via `pysam`_) reading of `tabix`_-compressed files too.
 
 
 Why are there so many formats?
@@ -227,7 +227,7 @@ Similarly, given an assembled feature in Python (represented as a
 |SegmentChain|), in the absence of a schema there is ambiguity surrounding
 what types the parent |SegmentChain| and each of its children (|GenomicSegments|)
 should be rendered as in `GFF3`_ output. Due to this ambiguity, attempts to call the
-:meth:`~yeti.genomics.roitools.SegmentChain.as_gff3` method on a multi-segment
+:meth:`~plastid.genomics.roitools.SegmentChain.as_gff3` method on a multi-segment
 |SegmentChain| will raise an :py:obj:`AttributeError`.
 
  .. _data-export-gff3:
@@ -310,8 +310,8 @@ to save some time by following several practices:
 
 See also
 --------
-  - :class:`~yeti.genomics.roitools.SegmentChain` and
-    :class:`~yeti.genomics.roitools.Transcript` for details on these classes
+  - :class:`~plastid.genomics.roitools.SegmentChain` and
+    :class:`~plastid.genomics.roitools.Transcript` for details on these classes
   - The `UCSC file format FAQ`_ for details on file formats and further discussion
     of their capabilities, advantages, and disadvantages
   - The `GFF3 specification <GFF3>`_ for details on GFF3 files

@@ -58,7 +58,7 @@ Then repeat the installation:
 
 .. _distribution-error: 
 
-I get an ``ImportError`` or ``DistributionError`` when using :data:`yeti`
+I get an ``ImportError`` or ``DistributionError`` when using :data:`plastid`
 .........................................................................
 
 If you get an error like the following::
@@ -111,7 +111,7 @@ Why does `IGV`_ report way higher coverage at a given nucleotide than the file e
 When `IGV`_ calculates coverage of a nucleotide, it counts the number of alignments covering that nucleotide.
 So, a 30-nucleotide read would contribute 30 :term:`counts` to a dataset.
 
-While it is possible to write any mapping rule in :mod:`yeti`, the :term:`mapping rules <mapping rule>`
+While it is possible to write any mapping rule in :mod:`plastid`, the :term:`mapping rules <mapping rule>`
 included by default count each read only once (e.g. at their 5' end, 3' end, et c). Even when using
 *center* or *entire* mapping, each position covered by a read alignment is only incremented by :math:`1.0/\ell`,
 where :math:`\ell` is the length of the read. So, in this case, a 30-nucleotide read would only 
@@ -121,14 +121,14 @@ contribute 1 :term:`count <counts>` to a dataset. See :doc:`/concepts/mapping_ru
 
 .. _faq-cs-vs-counts-in-region:
 
-What are the differences between :mod:`~yeti.bin.counts_in_region` and :mod:`~yeti.bin.cs`?
+What are the differences between :mod:`~plastid.bin.counts_in_region` and :mod:`~plastid.bin.cs`?
 ...........................................................................................
-:mod:`~yeti.bin.counts_in_region` very simply counts read coverage (or any data) over
+:mod:`~plastid.bin.counts_in_region` very simply counts read coverage (or any data) over
 regions of interest, and reports those numbers in terms of :term:`counts` and :term:`RPKM`. It can 
 optionally take a :term:`mask file`, if there are genomic positions in the regions
 of interest which should be excluded from analysis. Otherwise, it makes no corrections.
 
-:mod:`~yeti.bin.cs` is more complex, and is principally designed to make rough estimates
+:mod:`~plastid.bin.cs` is more complex, and is principally designed to make rough estimates
 of gene expression at the gene, rather than transcript, level. In so doing, it makes several
 heuristic corrections to regions before tabulating their :term:`counts` and :term:`RPKM`. Specifically:
 
@@ -155,7 +155,7 @@ discussion.
 
 .. _faq-segmentchain-gff3:
 
-Why does :meth:`yeti.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
+Why does :meth:`plastid.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
 ..............................................................................................................
 This is due to the incredible flexibility of the `GFF3`_ file format and ambiguities that this flexibility
 necessarily induces. See :ref:`this advice <data-export-gff3>` on how to handle this.

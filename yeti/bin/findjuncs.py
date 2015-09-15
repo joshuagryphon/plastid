@@ -23,9 +23,9 @@ are exported unaltered in `BED`_ output. Examples:
 
 See also
 --------
-:py:mod:`yeti.bin.slidejuncs`
+:py:mod:`plastid.bin.slidejuncs`
     Script that makes richer comparisons between discovered and annotated
-    junctions, using genomic sequence and :py:mod:`yeti.bin.crossmap`
+    junctions, using genomic sequence and :py:mod:`plastid.bin.crossmap`
     results to classify junctions
 """
 """
@@ -49,11 +49,11 @@ import sys
 import argparse
 import inspect
 import warnings
-from yeti.genomics.roitools import SegmentChain
-from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_segmentchains_from_args
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import argsopener, get_short_name
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.genomics.roitools import SegmentChain
+from plastid.util.scriptlib.argparsers import get_annotation_file_parser, get_segmentchains_from_args
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import argsopener, get_short_name
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

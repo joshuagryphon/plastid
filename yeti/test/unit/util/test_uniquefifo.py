@@ -3,7 +3,7 @@
 import unittest
 from nose.plugins.attrib import attr
 
-from yeti.util.unique_fifo import UniqueFIFO
+from plastid.util.unique_fifo import UniqueFIFO
 from collections import Counter
 
 @attr(test="unit")

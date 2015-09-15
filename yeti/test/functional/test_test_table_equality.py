@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.test_table_equality`"""
+"""Test suite for :py:mod:`plastid.bin.test_table_equality`"""
 import os
 import shlex
 import numpy
@@ -9,11 +9,11 @@ from tempfile import NamedTemporaryFile
 from pkg_resources import cleanup_resources
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal
-from yeti.util.io.filters import CommentWriter
-from yeti.util.io.openers import NullWriter
-from yeti.genomics.roitools import GenomicSegment
-from yeti.bin.test_table_equality import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.util.io.filters import CommentWriter
+from plastid.util.io.openers import NullWriter
+from plastid.genomics.roitools import GenomicSegment
+from plastid.bin.test_table_equality import main
+from plastid.util.services.decorators import catch_stderr
 
 
 
@@ -99,7 +99,7 @@ columns=keyorder)
 
     # Define tests, as tuples of:
     #   -Test name/description
-    #   -Command-line arguments to pass to :py:mod:`yeti.bin.test_table_equality`
+    #   -Command-line arguments to pass to :py:mod:`plastid.bin.test_table_equality`
     #   -Expected exit code/returns status for :py:func:`main`
     tests = [
         ("same",
@@ -164,7 +164,7 @@ columns=keyorder)
     """ Tests to conduct, as tuples of:
 
         - Test name/description
-        - Command-line arguments to pass to :py:mod:`yeti.bin.test_table_equality`
+        - Command-line arguments to pass to :py:mod:`plastid.bin.test_table_equality`
         - Expected exit code/returns status for :py:func:`main`
     """
     for test_name, argstr, expected_exit in tests:
@@ -187,7 +187,7 @@ columns=keyorder)
     cleanup_resources()
 
 def check_exit_status(test_name,argstr,expected_exit):
-    """Verify exit status from :py:mod:`~yeti.bin.test_table_equality`
+    """Verify exit status from :py:mod:`~plastid.bin.test_table_equality`
 
     Parameters
     ----------
@@ -195,7 +195,7 @@ def check_exit_status(test_name,argstr,expected_exit):
         Name of test (for reporting purposes)
 
     argstr : str
-        Command-line arguments to pass to :py:mod:`~yeti.bin.test_table_equality`
+        Command-line arguments to pass to :py:mod:`~plastid.bin.test_table_equality`
 
     expected_exit : int
         Expected exit status

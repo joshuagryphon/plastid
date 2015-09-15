@@ -1,7 +1,7 @@
-yeti.bin.metagene module
+plastid.bin.metagene module
 ========================
 
-.. automodule:: yeti.bin.metagene
+.. automodule:: plastid.bin.metagene
     :members:
     :undoc-members:
     :show-inheritance:

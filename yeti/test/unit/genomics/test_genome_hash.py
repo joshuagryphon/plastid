@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-"""Tests for data structures defined in :py:mod:`yeti.genomics.genome_hash`
+"""Tests for data structures defined in :py:mod:`plastid.genomics.genome_hash`
 """
 import unittest
 from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
 
-from yeti.genomics.roitools import Transcript, sort_segmentchains_lexically
-from yeti.readers.bed import BED_to_Transcripts
-from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
-from yeti.util.services.decorators import skip_if_abstract
-from yeti.util.io.filters import CommentReader
-from yeti.readers.bigbed import BigBedReader
+from plastid.genomics.roitools import Transcript, sort_segmentchains_lexically
+from plastid.readers.bed import BED_to_Transcripts
+from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
+from plastid.util.services.decorators import skip_if_abstract
+from plastid.util.io.filters import CommentReader
+from plastid.readers.bigbed import BigBedReader
 
-from yeti.test.ref_files import REF_FILES
+from plastid.test.ref_files import REF_FILES
 import warnings
 warnings.simplefilter("ignore",DeprecationWarning)
 

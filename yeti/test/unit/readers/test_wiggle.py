@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.readers.wiggle`"""
+"""Test suite for :py:mod:`plastid.readers.wiggle`"""
 import unittest
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
-from yeti.readers.wiggle import WiggleReader
+from plastid.readers.wiggle import WiggleReader
 
 #===============================================================================
 # INDEX: test suites

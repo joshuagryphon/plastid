@@ -36,19 +36,19 @@ encouraged to folow along.
 Manual masking of regions
 -------------------------
 
-Genomic :term:`features <feature>` in :data:`yeti` are represented by
+Genomic :term:`features <feature>` in :data:`plastid` are represented by
 |SegmentChains| and |Transcripts|, which are constructed from zero or
 more |GenomicSegments|.
 Because masks are :term:`features <feature>`, they are also represented
 as |SegmentChains| and |GenomicSegments|. Portions of |SegmentChains|
 and |Transcripts| can be masked using their
-:meth:`~yeti.genomics.roitools.SegmentChain.add_masks` methods::
+:meth:`~plastid.genomics.roitools.SegmentChain.add_masks` methods::
 
     >>> import pysam
     >>> import numpy
-    >>> from yeti.genomics.roitools import GenomicSegment, Transcript
-    >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid.genomics.roitools import GenomicSegment, Transcript
+    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load transcripts and count data
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")],FivePrimeMapFactory(offset=14))
@@ -75,7 +75,7 @@ and |Transcripts| can be masked using their
 
 
 After masks are added, we can get a masked count vector by calling
-:meth:`~yeti.genomics.roitools.SegmentChain.get_masked_counts`. This method
+:meth:`~plastid.genomics.roitools.SegmentChain.get_masked_counts`. This method
 returns a :class:`numpy.ma.MaskedArray`, rather than a :class:`numpy.ndarray`.
 :class:`~numpy.ma.MaskedArray` objects because they contain all the values,
 but ignore masked values when performing operations::
@@ -84,7 +84,7 @@ but ignore masked values when performing operations::
     >>> demo_cds.get_masked_counts(alignments).sum()
     53.0
 
-Calling :meth:`~yeti.genomics.roitools.SegmentChain.get_counts` after adding
+Calling :meth:`~plastid.genomics.roitools.SegmentChain.get_counts` after adding
 masks will still return an *unmasked* :class:`numpy.ndarray`::
 
     >>> # count all reads
@@ -92,7 +92,7 @@ masks will still return an *unmasked* :class:`numpy.ndarray`::
     67.0
 
 Masked positions are also excluded from length measurements, if and only if
-:meth:`~yeti.genomics.roitools.SegmentChain.get_masked_length` is called::
+:meth:`~plastid.genomics.roitools.SegmentChain.get_masked_length` is called::
 
     >>> demo_cds.get_masked_length() # length, excluding masked nucleotides
     213
@@ -126,13 +126,13 @@ features cover genomic regions that should be masked from analysis.
 
  .. _masking-mask-file-interactive
 
-:mod:`GenomeHashes <yeti.genomics.genome_hash>` and :term:`mask files <mask file>` in interactive Python sessions
+:mod:`GenomeHashes <plastid.genomics.genome_hash>` and :term:`mask files <mask file>` in interactive Python sessions
 .................................................................................................................
 
 :term:`Mask files <mask file>` can be loaded into a |GenomeHash|, which
 indexes mask by location in the genome. To create a |GenomeHash|::
 
-    >>> from yeti.genomics.genome_hash import GenomeHash
+    >>> from plastid.genomics.genome_hash import GenomeHash
 
     >>> # get list of masks
     >>> mask_features = list(BED_Reader(open("merlin_start_codon_masks.bed")))
@@ -161,10 +161,10 @@ These formats can instead be loaded into |BigBedGenomeHash| and
 
  .. _masking-mask-file-command-line
 
-Using :term:`mask files <mask file>` in :mod:`command-line scripts <yeti.bin>`
+Using :term:`mask files <mask file>` in :mod:`command-line scripts <plastid.bin>`
 ..............................................................................
 
-:term:`Mask files <mask file>` can be used by :mod:`command-line scripts <yeti.bin>`
+:term:`Mask files <mask file>` can be used by :mod:`command-line scripts <plastid.bin>`
 if a user supplies the argument ``--mask_annotation_files``. For example, to 
 mask regions when creating a :term:`metagene` window file:
 
@@ -243,7 +243,7 @@ the documentation for `Jim Kent's utilities`_.
 See also
 --------
 
- - Module documentation for :mod:`yeti.genomics.genome_hash`
+ - Module documentation for :mod:`plastid.genomics.genome_hash`
  - The |crossmap| script
  - Module documentation for :mod:`numpy.ma` and :mod:`scipy.stats.mstats`
    for lists of `numpy`_ and `SciPy`_ functions that operate on 

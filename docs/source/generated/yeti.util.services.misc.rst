@@ -1,7 +1,7 @@
-yeti.util.services.misc module
+plastid.util.services.misc module
 ==============================
 
-.. automodule:: yeti.util.services.misc
+.. automodule:: plastid.util.services.misc
     :members:
     :undoc-members:
     :show-inheritance:

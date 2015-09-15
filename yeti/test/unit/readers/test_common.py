@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-"""Tests for data structures defined in :py:mod:`yeti.readers.common`
+"""Tests for data structures defined in :py:mod:`plastid.readers.common`
 """
 import unittest
 import copy
 from nose.plugins.attrib import attr
-from yeti.readers.common import add_three_for_stop_codon, \
+from plastid.readers.common import add_three_for_stop_codon, \
                                                 get_identical_attributes
-from yeti.genomics.roitools import GenomicSegment,\
+from plastid.genomics.roitools import GenomicSegment,\
                                          SegmentChain, \
                                          Transcript
 

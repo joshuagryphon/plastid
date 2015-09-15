@@ -1,7 +1,7 @@
-yeti.genomics.c_roitools module
+plastid.genomics.c_roitools module
 ===============================
 
-.. automodule:: yeti.genomics.c_roitools
+.. automodule:: plastid.genomics.c_roitools
     :members:
     :undoc-members:
     :show-inheritance:

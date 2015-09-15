@@ -1,7 +1,7 @@
-yeti.bin.phase_by_size module
+plastid.bin.phase_by_size module
 =============================
 
-.. automodule:: yeti.bin.phase_by_size
+.. automodule:: plastid.bin.phase_by_size
     :members:
     :undoc-members:
     :show-inheritance:

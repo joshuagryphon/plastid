@@ -7,14 +7,14 @@ Package overview
     =======================================  ======================================
     **Package module**                       **Contents**
     ---------------------------------------  --------------------------------------
-    :py:mod:`~yeti.util.io.binary`           Tools for unpacking binary values
+    :py:mod:`~plastid.util.io.binary`           Tools for unpacking binary values
                                              into named dictionaries 
-    :py:mod:`~yeti.util.io.filters`          Wrappers that transform input or
+    :py:mod:`~plastid.util.io.filters`          Wrappers that transform input or
                                              output during file I/O (e.g. remove
                                              comments, skip blank lines, perform
                                              arbitrary function before reading
                                              or writing).
-    :py:mod:`~yeti.util.io.openers`          Wrappers for opening and closing files
+    :py:mod:`~plastid.util.io.openers`          Wrappers for opening and closing files
     =======================================  ======================================
 
 """

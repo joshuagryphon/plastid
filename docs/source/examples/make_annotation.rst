@@ -5,7 +5,7 @@ In this tutorial, we describe how to make custom :term:`genome annotations <anno
 in `BED`_ and `GTF2`_ formats. These can then be used as any other annotation file:
 
   - to view custom regions of interest in a :term:`genome browser` like `IGV`_ or `UCSC`_
-  - to perform analyses -- using pipelines in :data:`yeti` or other programs -- on
+  - to perform analyses -- using pipelines in :data:`plastid` or other programs -- on
     :term:`genomic features <feature>` that were manually constructed (e.g. reporter genes)
     or annotated
 
@@ -22,13 +22,13 @@ potentially less error-prone process is to:
     the :term:`features <feature>` of interest, using :term:`0-indexed`,
     :term:`half-open` coordinates
     
- #. Use the :meth:`~yeti.genomics.roitools.SegmentChain.as_bed`,
-    :meth:`~yeti.genomics.roitools.SegmentChain.as_gtf`, and 
-    :meth:`~yeti.genomics.roitools.SegmentChain.as_gff3` methods to export
+ #. Use the :meth:`~plastid.genomics.roitools.SegmentChain.as_bed`,
+    :meth:`~plastid.genomics.roitools.SegmentChain.as_gtf`, and 
+    :meth:`~plastid.genomics.roitools.SegmentChain.as_gff3` methods to export
     the |SegmentChains| or |Transcripts| in the desired format. To make
     `BigBed`_ files, see :ref:`make-annotation-bigbed`.
 
-:data:`yeti` automatically handles all coordinate conversions, splicing,
+:data:`plastid` automatically handles all coordinate conversions, splicing,
 text formatting, and attribute conversion.
 
 
@@ -81,7 +81,7 @@ An analysis pipeline for this experiment might look the following:
         and :term:`half-open` (i.e. typical Python idioms). This can be done 
         interactively in Python by creating |Transcripts| describing the reporter::
 
-            >>> from yeti.genomics.roitools import GenomicSegment, SegmentChain, Transcript
+            >>> from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 
             # GFP transcript, containing 100 bp of 5' UTR and 150 bp of 3' UTR
             # 714bp coding region from bases 945-1659
@@ -161,7 +161,7 @@ Then, within a Python session, read each transcript and create TSS windows::
     >>> seq_out = open("tss_window_sequences.fa","w")
 
     >>>  # open transcripts and process one-by-one
-    >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+    >>> from plastid.readers.gff import GTF2_TranscriptAssembler
     >>>
     >>> transcripts = GTF2_TranscriptAssembler(open("gencode.v23.annotation.gtf"),sorted=True)
     >>>
@@ -197,7 +197,7 @@ Making custom :term:`BED X+Y`_ files
 
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
 in a :term:`BED 12+Y` format, pass the `extra_columns` keyword to the
-:meth:`yeti.genomics.roitools.SegmentChain.as_bed` method::
+:meth:`plastid.genomics.roitools.SegmentChain.as_bed` method::
 
     >>> attr = { "ID" : "some feature ID",
                  "extra_field_1" : 542,
@@ -266,8 +266,8 @@ See also
 --------
   - :ref:`data-annotation-format` for a brief overview of the costs & benefits
     of `BED`_, `BigBed`_, `GTF2`_ and `GFF3`_ files.
-  - :class:`~yeti.genomics.roitools.SegmentChain` and
-    :class:`~yeti.genomics.roitools.Transcript` for details on these classes
+  - :class:`~plastid.genomics.roitools.SegmentChain` and
+    :class:`~plastid.genomics.roitools.Transcript` for details on these classes
   - The `UCSC file format FAQ`_ for details on file formats and further discussion
     of their capabilities, advantages, and disadvantages
   - The `GFF3 specification <GFF3>`_ for details on GFF3 files

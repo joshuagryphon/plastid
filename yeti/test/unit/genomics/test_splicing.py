@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.genomics.splicing"""
+"""Test suite for :py:mod:`plastid.genomics.splicing"""
 
-from yeti.genomics.roitools import SegmentChain
-from yeti.genomics.splicing import get_junction_tuple#, get_junction_name, get_junction_seq
+from plastid.genomics.roitools import SegmentChain
+from plastid.genomics.splicing import get_junction_tuple#, get_junction_name, get_junction_seq
 from nose.tools import assert_equal
 from nose.plugins.attrib import attr
 

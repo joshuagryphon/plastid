@@ -14,7 +14,7 @@ Methods
     a list of numbers, a list of strings, et c)
 """
 
-from yeti.util.services.misc import guess_formatter
+from plastid.util.services.misc import guess_formatter
 
 def parse_list(inp):
     """Restore non-nested lists of Python primitives from string representation of list

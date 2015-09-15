@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import yeti
+import plastid
 import sys
 import glob
 from collections import Iterable
@@ -44,7 +44,7 @@ cython_args= {
 
 packages = find_packages()
 
-ext_paths = ["yeti/genomics/*.pyx"]
+ext_paths = ["plastid/genomics/*.pyx"]
 """Paths to Cython .pyx files"""
 
 c_paths = [os.path.join(X.replace(",",os.sep),"*.c") for X in packages]
@@ -77,8 +77,8 @@ def get_scripts():
     """
     binscripts = [X.replace(".py","") for X in filter(lambda x: x.endswith(".py") and \
                                                                 "__init__" not in x,
-                                                      os.listdir(os.path.join("yeti","bin")))]
-    return ["%s = yeti.bin.%s:main" % (X,X) for X in binscripts]
+                                                      os.listdir(os.path.join("plastid","bin")))]
+    return ["%s = plastid.bin.%s:main" % (X,X) for X in binscripts]
    
 
 class CythonBuildExtProxy(d_build_ext):
@@ -196,8 +196,8 @@ class LateCython(list):
 setup(
 
     # package metadata
-    name             = "yeti",
-    version          = yeti.__version__,
+    name             = "plastid",
+    version          = plastid.__version__,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",

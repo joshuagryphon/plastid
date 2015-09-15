@@ -1,7 +1,7 @@
-yeti.genomics.genome_hash module
+plastid.genomics.genome_hash module
 ================================
 
-.. automodule:: yeti.genomics.genome_hash
+.. automodule:: plastid.genomics.genome_hash
     :members:
     :undoc-members:
     :show-inheritance:

@@ -12,7 +12,7 @@ We will do this two ways:
  #. :ref:`Manually <gene-expression-interactive>`, in an interactive
     Python session
 
- #. Using the :mod:`~yeti.bin.counts_in_region` script to
+ #. Using the :mod:`~plastid.bin.counts_in_region` script to
     :ref:`count expression automatically <gene-expression-scripts>`.
 
 The examples below use parts 1 & 2 of the :doc:`/test_dataset` we have assembled.
@@ -43,15 +43,15 @@ Tabulating :term:`read counts <counts>` & :term:`RPKM`
 Via command-line scripts
 ........................
 
-:data:`yeti` includes two scripts for measuring gene expression:
+:data:`plastid` includes two scripts for measuring gene expression:
 
-  * :mod:`~yeti.bin.cs`, which pre-processes a genome anntation and makes
+  * :mod:`~plastid.bin.cs`, which pre-processes a genome anntation and makes
     various heuristic corrections to gene boundaries (e.g. if genes overlap)
 
-  * :mod:`~yeti.bin.counts_in_region`, which does not.
+  * :mod:`~plastid.bin.counts_in_region`, which does not.
 
 The differences between the scripts are further explained in
-:ref:`faq-cs-vs-counts-in-region`. Here we will use :mod:`~yeti.bin.counts_in_region`.
+:ref:`faq-cs-vs-counts-in-region`. Here we will use :mod:`~plastid.bin.counts_in_region`.
 
 Our first dataset is :term:`ribosome profiling`, and we will map the ribosomal
 P-site at 14 nucleotides from the 5' end of each read (approximating :cite:`Stern-Ginossar2012`).
@@ -70,7 +70,7 @@ Putting this together, the script is run from the terminal as:
                                        --annotation_files merlin_orfs.gtf \
                                        --fiveprime --offset 14
 
-:mod:`~yeti.bin.counts_in_region` will create a tab-delimited text file called
+:mod:`~plastid.bin.counts_in_region` will create a tab-delimited text file called
 ``riboprofile.txt`` containing the results. The first few lines of the file
 look like this::
 
@@ -88,7 +88,7 @@ look like this::
 
 
 For detailed documentation of the output and command-line arguments, see
-the module documentation for :mod:`~yeti.bin.counts_in_region`.
+the module documentation for :mod:`~plastid.bin.counts_in_region`.
 
 
  .. _gene-expression-interactive:
@@ -122,11 +122,11 @@ First, we need to import a few things::
     >>> import matplotlib.pyplot as plt
 
     >>> # reader for BED-format transcript annotations and Transcript object
-    >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.genomics.roitools import Transcript
+    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid.genomics.roitools import Transcript
 
     >>> # data structure that maps read alignments to genomic positions
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
 
 First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArray|::
@@ -147,7 +147,7 @@ we estimate as 14 nucleotides from the 5' end of each read::
 We will map the RNA-seq data along the entire length of each read alignment.
 Each position in each alignment will be attributed :math:`1.0 / \ell`, where 
 :math:`\ell` is the length of the read alignment.
-:func:`~yeti.genomics.genome_array.CenterMapFactory` can do this for us::
+:func:`~plastid.genomics.genome_array.CenterMapFactory` can do this for us::
 
     >>> my_datasets["RNA-seq"].set_mapping(CenterMapFactory())
 
@@ -314,7 +314,7 @@ make statistical corrections that assume -- :term:`RNA-seq` data.
 
 For :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_ in particular are popular,
 and operate directly on alignments in `BAM`_ format. These packages don't require
-:data:`yeti` at all. For further information on them packages, see their documentation.
+:data:`plastid` at all. For further information on them packages, see their documentation.
 
 
 Any :term:`high-throughput sequencing` experiment, including RNA-seq
@@ -381,7 +381,7 @@ From the output, the relevant columns can be extracted and moved to
 a single table::
 
     >>> import pandas as pd
-    >>> import yeti
+    >>> import plastid
     >>> sample_names = ["inf_rnaseq_rep1","inf_rnaseq_rep2","uninf_rnaseq_rep1","uninf_rnaseq"rep2"]
 
     >>> # load samples as DataFrames
@@ -579,7 +579,7 @@ In `R`_:
 See also
 --------
 
-  - :doc:`/concepts/mapping_rules` and :mod:`yeti.genomics.genome_array` for
+  - :doc:`/concepts/mapping_rules` and :mod:`plastid.genomics.genome_array` for
     information on mapping rules and processing read alignments
 
   - Documentation for |cs| and |counts_in_region| for further discussion 

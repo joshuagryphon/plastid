@@ -7,7 +7,7 @@ In this tutorial, we show:
     position in a transcript
 
   - :ref:`how to automate this process <examples-count-vector-script>`
-    using the :mod:`~yeti.bin.get_count_vectors` script
+    using the :mod:`~plastid.bin.get_count_vectors` script
  
 
 In the examples below, we use the :doc:`/test_dataset`.
@@ -30,20 +30,20 @@ First, we import everything we need::
     >>> import pysam
 
     >>> # data structure for mapping read alignments to genomic positions
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # reader for BED-format transcript annotations
-    >>> from yeti.readers.bed import BED_Reader
-    >>> from yeti.genomics.roitools import Transcript
+    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid.genomics.roitools import Transcript
 
 Next, load the transcripts. By default, |BED_Reader|
-and the other readers in :data:`yeti` behave as iterators. Here, we'll retrieve
+and the other readers in :data:`plastid` behave as iterators. Here, we'll retrieve
 the transcripts as a :class:`list`::
 
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
 Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
-which we'll load into a :class:`~yeti.genomics.genome_array.BAMGenomeArray`.
+which we'll load into a :class:`~plastid.genomics.genome_array.BAMGenomeArray`.
 We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
 estimating the P-site to be 14 nucleotides from the 5' end::
 
@@ -51,7 +51,7 @@ estimating the P-site to be 14 nucleotides from the 5' end::
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 Now, we're ready to count. The method
-:meth:`Transcript.get_counts <yeti.genomics.roitools.Transcript.get_counts>`, returns
+:meth:`Transcript.get_counts <plastid.genomics.roitools.Transcript.get_counts>`, returns
 a vector (:class:`numpy.ndarray`) of counts corresponding to
 each position in the transcript, from the 5' end of the transcript to the 3'
 end (i.e. for reverse-strand features, counts are reversed relative to
@@ -200,13 +200,13 @@ See also
   - :doc:`/concepts/mapping_rules` for further discussion of
     :term:`mapping rules <mapping rule>`
 
-  - :class:`~yeti.genomics.genome_array.GenomeArray` and
-    :class:`~yeti.genomics.genome_array.BAMGenomeArray` for
+  - :class:`~plastid.genomics.genome_array.GenomeArray` and
+    :class:`~plastid.genomics.genome_array.BAMGenomeArray` for
     descriptions of Genome Arrays
 
-  - :class:`~yeti.genomics.roitools.SegmentChain` and
-    :class:`~yeti.genomics.roitools.Transcript` for full documentation
+  - :class:`~plastid.genomics.roitools.SegmentChain` and
+    :class:`~plastid.genomics.roitools.Transcript` for full documentation
     of what these objects can do
 
-  - :mod:`yeti.readers` subpackage, for readers
+  - :mod:`plastid.readers` subpackage, for readers
     of other :term:`annotation` file formats

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.readers.bigbed`
+"""Test suite for :py:mod:`plastid.readers.bigbed`
 
 Notes
 -----
@@ -14,10 +14,10 @@ from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
 from collections import OrderedDict
-from yeti.genomics.roitools import SegmentChain, GenomicSegment, Transcript
-from yeti.genomics.genome_hash import GenomeHash
-from yeti.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
-from yeti.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
+from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
+from plastid.genomics.genome_hash import GenomeHash
+from plastid.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
+from plastid.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
 
 warnings.simplefilter("ignore",DeprecationWarning)
 
@@ -57,11 +57,11 @@ class test_BPlusTree(unittest.TestCase):
         cls.bedfiles = {}
         cls.bbfiles  = {}
         for col in cls.cols:
-            cls.bedfiles[col] = resource_filename("yeti","test/data/annotations/100transcripts_bed%s.bed" % col) 
-            cls.bbfiles[col]  = resource_filename("yeti","test/data/annotations/100transcripts_bed%s.bb" % col)
+            cls.bedfiles[col] = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bed" % col) 
+            cls.bbfiles[col]  = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bb" % col)
         
         cls.chrom_sizes = { }
-        for line in open(resource_filename("yeti","test/data/annotations/sacCer3.sizes")):
+        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
             chrom,size = line.strip().split("\t")
             cls.chrom_sizes[chrom] = int(size)
         
@@ -116,10 +116,10 @@ class test_RTree(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.bbfile = resource_filename("yeti","test/data/annotations/100transcripts_bed12.bb")
+        cls.bbfile = resource_filename("plastid","test/data/annotations/100transcripts_bed12.bb")
         
         cls.chrom_sizes = { }
-        for line in open(resource_filename("yeti","test/data/annotations/sacCer3.sizes")):
+        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
             chrom,size = line.strip().split("\t")
             cls.chrom_sizes[chrom] = int(size)
         
@@ -128,7 +128,7 @@ class test_RTree(unittest.TestCase):
         
         cls.bb = BigBedReader(cls.bbfile)
         
-        cls.flybbfile = resource_filename("yeti","test/data/annotations/dmel-all-no-analysis-r5.54.bb")
+        cls.flybbfile = resource_filename("plastid","test/data/annotations/dmel-all-no-analysis-r5.54.bb")
         
     def test_magic_number(self):
         self.assertEqual(self.bb.r_tree.header["magic"],0x2468ACE0)
@@ -281,11 +281,11 @@ class test_BigBedReader(unittest.TestCase):
         cls.bedfiles = {}
         cls.bbfiles  = {}
         for col in cls.cols:
-            cls.bedfiles[col] = resource_filename("yeti","test/data/annotations/100transcripts_bed%s.bed" % col) 
-            cls.bbfiles[col]  = resource_filename("yeti","test/data/annotations/100transcripts_bed%s.bb" % col)
+            cls.bedfiles[col] = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bed" % col) 
+            cls.bbfiles[col]  = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bb" % col)
         
         cls.chrom_sizes = { }
-        for line in open(resource_filename("yeti","test/data/annotations/sacCer3.sizes")):
+        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
             chrom,size = line.strip().split("\t")
             cls.chrom_sizes[chrom] = int(size)
         
@@ -315,16 +315,16 @@ class test_BigBedReader(unittest.TestCase):
         cls.shuffled_indices = list(range(len(transcripts)))
         shuffle(cls.shuffled_indices)
 
-        cls.flybbfile = resource_filename("yeti","test/data/annotations/dmel-all-no-analysis-r5.54.bb")
-        cls.flybedfile = resource_filename("yeti","test/data/annotations/dmel-all-no-analysis-r5.54.bed")
+        cls.flybbfile = resource_filename("plastid","test/data/annotations/dmel-all-no-analysis-r5.54.bb")
+        cls.flybedfile = resource_filename("plastid","test/data/annotations/dmel-all-no-analysis-r5.54.bed")
         
         # BigBed files with and without extra columns, with and without autoSql descriptions
-        cls.bb_bonuscols = { "bb4as"     : resource_filename("yeti","test/data/annotations/100transcripts_bed4plus_bonus_as.bb"),
-                             "bb12as"    : resource_filename("yeti","test/data/annotations/100transcripts_bed12plus_bonus_as.bb"),
-                             "bb4no_as"  : resource_filename("yeti","test/data/annotations/100transcripts_bed4plus_bonus_no_as.bb"),
-                             "bb12no_as" : resource_filename("yeti","test/data/annotations/100transcripts_bed12plus_bonus_no_as.bb"),
+        cls.bb_bonuscols = { "bb4as"     : resource_filename("plastid","test/data/annotations/100transcripts_bed4plus_bonus_as.bb"),
+                             "bb12as"    : resource_filename("plastid","test/data/annotations/100transcripts_bed12plus_bonus_as.bb"),
+                             "bb4no_as"  : resource_filename("plastid","test/data/annotations/100transcripts_bed4plus_bonus_no_as.bb"),
+                             "bb12no_as" : resource_filename("plastid","test/data/annotations/100transcripts_bed12plus_bonus_no_as.bb"),
                            }
-        cls.bonus_col_file = resource_filename("yeti","test/data/annotations/bonus_bed_columns.txt")
+        cls.bonus_col_file = resource_filename("plastid","test/data/annotations/bonus_bed_columns.txt")
         
     def test_parse_header(self):
         for col,my_reader in self.bbs.items():
@@ -481,7 +481,7 @@ class test_BigBedReader(unittest.TestCase):
     def test_get_autosql_str(self):
         for k in (4,12): 
             bbplus_as = BigBedReader(self.bb_bonuscols["bb%sas" % k])
-            expected_as = open(resource_filename("yeti","test/data/annotations/bed%s_bonus_bed_columns.as" % k)).read()
+            expected_as = open(resource_filename("plastid","test/data/annotations/bed%s_bonus_bed_columns.as" % k)).read()
             self.assertEqual(bbplus_as._get_autosql_str(),expected_as)
 
     def test_get_no_autosql_str(self):

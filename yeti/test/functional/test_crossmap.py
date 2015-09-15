@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.crossmap`"""
+"""Test suite for :py:mod:`plastid.bin.crossmap`"""
 import tempfile
 import os
 import subprocess
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
                                              MASK_OPTIONS  
-from yeti.bin.crossmap import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.bin.crossmap import main
+from plastid.util.services.decorators import catch_stderr
 
 
 #===============================================================================
@@ -21,8 +21,8 @@ from yeti.util.services.decorators import catch_stderr
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.crossmap",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.crossmap",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="crossmap"),
 }
 """Dictionary of global variables used in this module"""
@@ -68,9 +68,9 @@ crossmap_tests = [
 ]
 """Tests to execute, as 4-tuples of:
 
-    - command-line arguments to pass to :py:mod:`yeti.bin.crossmap`
+    - command-line arguments to pass to :py:mod:`plastid.bin.crossmap`
     - a list of reference files corresponding to reference output
-    - a list of output files made by running :py:mod:`yeti.bin.crossmap`
+    - a list of output files made by running :py:mod:`plastid.bin.crossmap`
     - a list of equality options under which comparisons between the output
       and reference files should be evaluated
 """
@@ -118,7 +118,7 @@ crossmap_tests.append([test_str,[ref_file],[test_file],[_eq_ops]])
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for yeti.bin.crossmap"""
+    """Perform functional test for plastid.bin.crossmap"""
     for x in execute_helper(test_info,crossmap_tests):
         yield x
 

@@ -1,7 +1,7 @@
-yeti.util.scriptlib.template module
+plastid.util.scriptlib.template module
 ===================================
 
-.. automodule:: yeti.util.scriptlib.template
+.. automodule:: plastid.util.scriptlib.template
     :members:
     :undoc-members:
     :show-inheritance:

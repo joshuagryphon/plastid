@@ -15,8 +15,8 @@ import inspect
 import sys
 import numpy
 import pandas as pd
-from yeti.util.io.openers import opener, get_short_name, NullWriter
-from yeti.util.io.filters import NameDateWriter, CommentReader
+from plastid.util.io.openers import opener, get_short_name, NullWriter
+from plastid.util.io.filters import NameDateWriter, CommentReader
 
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

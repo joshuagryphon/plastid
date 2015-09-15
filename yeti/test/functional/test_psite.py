@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.psite`"""
+"""Test suite for :py:mod:`plastid.bin.psite`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.util.services.decorators import catch_stderr
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.util.services.decorators import catch_stderr
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
                                              MASK_OPTIONS  
-from yeti.bin.psite import main
+from plastid.bin.psite import main
 
 #===============================================================================
 # INDEX: global constants
@@ -19,8 +19,8 @@ from yeti.bin.psite import main
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.psite",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.psite",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="psite"),
 }
 
@@ -39,7 +39,7 @@ psite_tests = [
      [""]
     ),
 ]
-"""Functional tests of :py:mod:`yeti.bin.psite`.
+"""Functional tests of :py:mod:`plastid.bin.psite`.
 
 Tests are specified as tuples of:
 
@@ -60,6 +60,6 @@ Tests are specified as tuples of:
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for :py:mod:`yeti.bin.psite`"""
+    """Perform functional test for :py:mod:`plastid.bin.psite`"""
     for x in execute_helper(test_info,psite_tests):
         yield x

@@ -14,13 +14,13 @@ and the tests that need to be run. Then create a dummy function that calls
     '''This module contains a functional test'''
 
     from module.I.want.to.test import main
-    from yeti.test.functional.base import execute_helper
-    from yeti.util.services.decorators import suppress_stderr
+    from plastid.test.functional.base import execute_helper
+    from plastid.util.services.decorators import suppress_stderr
     
     my_test_info = { 
         "test_method"    : suppress_stderr(main), # hide output from screen
         "module_name"    : "module.I.want.to.test",
-        "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+        "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
         "temp_file_path" : tempfile.mkdtemp(prefix="test_folder"),    
      }
      
@@ -43,10 +43,10 @@ import os
 import nose
 
 from nose.tools import assert_true
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name, NullWriter
-from yeti.bin.test_table_equality import main
-from yeti.util.services.decorators import skip_if_abstract, catch_stderr
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import get_short_name, NullWriter
+from plastid.bin.test_table_equality import main
+from plastid.util.services.decorators import skip_if_abstract, catch_stderr
 from pkg_resources import resource_filename, cleanup_resources
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -133,7 +133,7 @@ def execute_helper(test_info,tests):
     This is a test generator function for use with :py:obj:`nose`. To useit,
     import it into a test module, and create a test function as follows::
     
-        from yeti.test.functional.base import execute_helper
+        from plastid.test.functional.base import execute_helper
         my_test_info = { ... } # define this
         my_tests = [ ... ] # define tests. see Parameters section, below
         
@@ -271,7 +271,7 @@ def main(argv=sys.argv[1:]):
                         help="If supplied, overwrite existing files")
     
     args = parser.parse_args(argv)
-    modules   = [("yeti.bin.%s" % X).replace(".py","") \
+    modules   = [("plastid.bin.%s" % X).replace(".py","") \
                  for X in filter(lambda x: x.endswith(".py") and "__init__" not in x,
                                  os.listdir(args.bin_folder))]
     create_test_suite(modules,args.output_folder,overwrite=args.overwrite,printer=printer)
@@ -288,9 +288,9 @@ import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename
-from yeti.util.services.decorators import catch_stderr
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import REF_FILES, \\
+from plastid.util.services.decorators import catch_stderr
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import REF_FILES, \\
                                        RPATH, \\
                                        REF_FILES, \\
                                        COUNT_OPTIONS, \\
@@ -301,7 +301,7 @@ from ${MODULE} import main
 test_info = {
     "test_method"    : catch_stderr()(main),
     "module_name"    : "${MODULE}",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="${SHORT_NAME}"),
 }
 

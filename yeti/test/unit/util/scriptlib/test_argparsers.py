@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.util.scriptlib.argparsers`"""
+"""Test suite for :py:mod:`plastid.util.scriptlib.argparsers`"""
 import unittest
 import shlex
 import argparse
@@ -11,13 +11,13 @@ from pkg_resources import cleanup_resources
 from twobitreader import TwoBitFile
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true, assert_list_equal
-from yeti.test.ref_files import MINI, REF_FILES
-from yeti.util.io.filters import CommentReader
-from yeti.readers.bed import BED_to_SegmentChain
-from yeti.util.services.exceptions import MalformedFileError
-from yeti.genomics.genome_array import GenomeArray, BAMGenomeArray, SparseGenomeArray
-from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash
-from yeti.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
+from plastid.test.ref_files import MINI, REF_FILES
+from plastid.util.io.filters import CommentReader
+from plastid.readers.bed import BED_to_SegmentChain
+from plastid.util.services.exceptions import MalformedFileError
+from plastid.genomics.genome_array import GenomeArray, BAMGenomeArray, SparseGenomeArray
+from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash
+from plastid.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            get_alignment_file_parser,\
                                            get_genome_array_from_args,\
                                            get_annotation_file_parser,\
@@ -29,8 +29,8 @@ from yeti.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            get_sequence_file_parser,\
                                            get_seqdict_from_args,\
                                            _parse_variable_offset_file
-from yeti.genomics.roitools import SegmentChain, Transcript
-from yeti.util.services.mini2to3 import StringIO
+from plastid.genomics.roitools import SegmentChain, Transcript
+from plastid.util.services.mini2to3 import StringIO
 
 warnings.simplefilter("ignore")
 

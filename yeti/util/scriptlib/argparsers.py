@@ -80,12 +80,12 @@ Example
 -------     
 To add any these capabilities to your command line scripts, follow the steps
 below. In this example, we create a script that can fetch |Transcripts| from
-all of the annotation file formats supported by :data:`yeti`:
+all of the annotation file formats supported by :data:`plastid`:
 
   #. Import one of the function pairs above::
 
          import argparse
-         from yeti.util.scriptlib.argparsers import get_annotation_file_parser, get_transcripts_from_args
+         from plastid.util.scriptlib.argparsers import get_annotation_file_parser, get_transcripts_from_args
 
 
   #. Use the first function to create an  :class:`~argparse.ArgumentParser`,
@@ -124,25 +124,25 @@ See Also
 :py:mod:`argparse`
     Python documentation on argument parsing
 
-:py:mod:`~yeti.genomics.genome_array`
+:py:mod:`~plastid.genomics.genome_array`
     Data structures for import of read alignments or counts
 
-:py:mod:`~yeti.genomics.roitools`
+:py:mod:`~plastid.genomics.roitools`
     Data structures describing transcripts or genomic regions of interest
 
-:py:mod:`~yeti.genomics.genome_hash`
+:py:mod:`~plastid.genomics.genome_hash`
     Fetch feature annotations overlapping genomic regions of interest
 
-:py:obj:`yeti.bin`
+:py:obj:`plastid.bin`
     Source code of command-line scripts, for further examples
 """
 import argparse
 import warnings
 import sys
 from collections import OrderedDict
-from yeti.util.services.exceptions import MalformedFileError, ArgumentWarning
-#from yeti.genomics.roitools import SegmentChain, Transcript
-from yeti.util.io.openers import opener, NullWriter
+from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
+#from plastid.genomics.roitools import SegmentChain, Transcript
+from plastid.util.io.openers import opener, NullWriter
 
 
 #===============================================================================
@@ -340,8 +340,8 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
     """
     args = PrefixNamespaceWrapper(args,prefix)
     import pysam
-    from yeti.util.io.filters import CommentReader
-    from yeti.genomics.genome_array import GenomeArray, SparseGenomeArray,\
+    from plastid.util.io.filters import CommentReader
+    from plastid.genomics.genome_array import GenomeArray, SparseGenomeArray,\
                                                BAMGenomeArray,\
                                                SizeFilterFactory, CenterMapFactory,\
                                                FivePrimeMapFactory, ThreePrimeMapFactory,\
@@ -489,7 +489,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    from yeti.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
+    from plastid.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
                                  _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
                                  _DEFAULT_GFF3_EXON_TYPES,\
                                  _DEFAULT_GFF3_CDS_TYPES
@@ -588,7 +588,7 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
         :py:class:`~argparse.Namespace` is processed by this function    
     """
     if return_type is None:
-        from yeti.genomics.roitools import Transcript
+        from plastid.genomics.roitools import Transcript
         return_type = Transcript
 
     if prefix != "":
@@ -646,7 +646,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
         if tabix == True:
             warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",ArgumentWarning)
 
-        from yeti.readers.bigbed import BigBedReader
+        from plastid.readers.bigbed import BigBedReader
         transcripts = BigBedReader(args.annotation_files[0],
                                    return_type=return_type,
                                    cache_depth=1,
@@ -663,7 +663,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
         streams = (opener(X) for X in args.annotation_files)
 
     if args.annotation_format in ("GFF3","GTF2"):
-        from yeti.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
+        from plastid.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
         if 'sorted' not in disabled and args.sorted == False and 'tabix' not in disabled and args.tabix == False:
             msg = """Transcript assembly on %s files can require a lot of memory.
 Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
@@ -686,7 +686,7 @@ Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % ar
                                                is_sorted=args.sorted)
         
     elif args.annotation_format.lower() == "bed":
-        from yeti.readers.bed import BED_Reader
+        from plastid.readers.bed import BED_Reader
         transcripts = BED_Reader(*streams,
                                  add_three_for_stop=add_three,
                                  tabix=tabix,
@@ -694,7 +694,7 @@ Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % ar
                                  extra_columns=bed_extra_columns)
 
     elif args.annotation_format.lower() == "psl":
-        from yeti.readers.psl import PSL_Reader
+        from plastid.readers.psl import PSL_Reader
         transcripts = PSL_Reader(*streams,
                                  tabix=tabix,
                                  return_type=return_type,printer=printer)
@@ -786,7 +786,7 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
-    from yeti.genomics.roitools import SegmentChain
+    from plastid.genomics.roitools import SegmentChain
     disabled.append([prefix+"add_three"])
     return get_transcripts_from_args(args,
                                      prefix=prefix,
@@ -854,7 +854,7 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function  
     """
-    from yeti.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
+    from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
     tmp = PrefixNamespaceWrapper(args,prefix)
     if len(tmp.annotation_files) > 0:
         printer.write("Opening mask annotation file(s) %s..." % ", ".join(tmp.annotation_files))
@@ -968,7 +968,7 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     args = PrefixNamespaceWrapper(args,prefix)
     printer.write("Opening sequence file '%s'." % args.sequence_file)
     if args.sequence_format == "twobit":
-        from yeti.genomics.seqtools import TwoBitSeqRecordAdaptor
+        from plastid.genomics.seqtools import TwoBitSeqRecordAdaptor
         return TwoBitSeqRecordAdaptor(args.sequence_file)
     else:
         from Bio import SeqIO

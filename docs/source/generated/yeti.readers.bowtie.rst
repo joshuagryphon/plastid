@@ -1,7 +1,7 @@
-yeti.readers.bowtie module
+plastid.readers.bowtie module
 ==========================
 
-.. automodule:: yeti.readers.bowtie
+.. automodule:: plastid.readers.bowtie
     :members:
     :undoc-members:
     :show-inheritance:

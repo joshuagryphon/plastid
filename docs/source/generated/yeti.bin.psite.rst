@@ -1,7 +1,7 @@
-yeti.bin.psite module
+plastid.bin.psite module
 =====================
 
-.. automodule:: yeti.bin.psite
+.. automodule:: plastid.bin.psite
     :members:
     :undoc-members:
     :show-inheritance:

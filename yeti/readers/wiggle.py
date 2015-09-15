@@ -2,7 +2,7 @@
 """A single reader for fixedStep `wiggle`_, variableStep `wiggle`_, and `bedGraph`_ files.
 |WiggleReader| seldom called directly; rather, it is internally called by
 |GenomeArray| and |SparseGenomeArray|, when their
-:meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle` methods
+:meth:`~plastid.genomics.genome_array.GenomeArray.add_from_wiggle` methods
 are called.
 
 See also

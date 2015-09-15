@@ -1,7 +1,7 @@
-yeti.genomics.c_segmentchain module
+plastid.genomics.c_segmentchain module
 ===================================
 
-.. automodule:: yeti.genomics.c_segmentchain
+.. automodule:: plastid.genomics.c_segmentchain
     :members:
     :undoc-members:
     :show-inheritance:

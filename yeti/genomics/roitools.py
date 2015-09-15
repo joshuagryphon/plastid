@@ -86,16 +86,16 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
-from yeti.util.services.exceptions import DataWarning
-from yeti.util.services.decorators import skipdoc
-from yeti.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
-from yeti.readers.gff_tokens import make_GFF3_tokens, \
+from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.decorators import skipdoc
+from plastid.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
+from plastid.readers.gff_tokens import make_GFF3_tokens, \
                                     make_GTF2_tokens
-from yeti.genomics.c_roitools import GenomicSegment, \
+from plastid.genomics.c_roitools import GenomicSegment, \
                                      sort_segments_lexically, \
                                      positionlist_to_segments, \
                                      positions_to_segments
-#from yeti.genomics.c_segmentchain import SegmentChain as cSegmentChain
+#from plastid.genomics.c_segmentchain import SegmentChain as cSegmentChain
 
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 segpat  = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
@@ -1203,7 +1203,7 @@ class SegmentChain(object):
     
         extra_columns : None or list, optional
             If `None`, and the |SegmentChain| was imported using the `extra_columns`
-            keyword of :meth:`~yeti.genomics.roitools.SegmentChain.from_bed`,
+            keyword of :meth:`~plastid.genomics.roitools.SegmentChain.from_bed`,
             the |SegmentChain| will be exported in BED 12+X format, in which
             extra columns are in the same order as they were upon import. If no extra columns
             were present, the |SegmentChain| will be exported a aa BED12 line.
@@ -2324,7 +2324,7 @@ class Transcript(SegmentChain):
     
         extra_columns : None or list, optional
             If `None`, and the |Transcript| was imported using the `extra_columns`
-            keyword of :meth:`~yeti.genomics.roitools.Transcript.from_bed`,
+            keyword of :meth:`~plastid.genomics.roitools.Transcript.from_bed`,
             the |Transcript| will be exported in BED 12+X format, in which
             extra columns are in the same order as they were upon import. If no extra columns
             were present, the |Transcript| will be exported a aa BED12 line.

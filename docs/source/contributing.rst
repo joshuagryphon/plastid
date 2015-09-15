@@ -83,16 +83,16 @@ the most human-readable raw form possible. This means:
 
   - Follow :pep:`257` for docstring style
 
-  - Refer to classes defined in :data:`yeti` in docstrings using the shortcut `\|ClassName\|`
+  - Refer to classes defined in :data:`plastid` in docstrings using the shortcut `\|ClassName\|`
     rather than as `:py:class:\`package.module.ClassName\``, because the shortcuts are 
     easier to read.
 
   - Similarly, refer to command-line scripts as `\|modname\|`, where `modname`
     is the name of the module, excluding the extension. e.g. `\|metagene\|` for
-    `:mod:\`yeti.bin.metagene\``.
+    `:mod:\`plastid.bin.metagene\``.
 
   - Decorate any function that you don't want to be put in the online
-    documentation with the :func:`~yeti.util.services.decorators.skipdoc`
+    documentation with the :func:`~plastid.util.services.decorators.skipdoc`
     decorator
 
   - Module docstrings for command-line scripts should have a section called

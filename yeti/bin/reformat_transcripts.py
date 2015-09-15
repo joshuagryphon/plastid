@@ -22,11 +22,11 @@ import inspect
 import warnings
 import sys
 
-from yeti.util.scriptlib.argparsers import get_transcripts_from_args,\
+from plastid.util.scriptlib.argparsers import get_transcripts_from_args,\
                                                       get_annotation_file_parser
-from yeti.util.io.openers import argsopener, get_short_name
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.io.openers import argsopener, get_short_name
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

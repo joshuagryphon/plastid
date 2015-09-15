@@ -72,7 +72,7 @@ Glossary of terms
     count file
         A file that assigns quantitative data -- for example, read alignment
         counts, or conservation scores -- to genomic coordinates. Strictly
-        speaking, these include  `bedGraph`_ or `wiggle`_ files but :py:obj:`yeti`
+        speaking, these include  `bedGraph`_ or `wiggle`_ files but :py:obj:`plastid`
         can also treat :term:`alignment` files in `bowtie`_ or `BAM`_ format
         as count files, if a :term:`mapping rule` is applied.
 
@@ -88,7 +88,7 @@ Glossary of terms
         :term:`mask files <mask file>` are functions of genome sequence, read length, and alignment
         parameters (e.g. the number of mismatches allowed). These may be
         generated from genome sequence using the included
-        :py:mod:`~yeti.bin.crossmap` script.
+        :py:mod:`~plastid.bin.crossmap` script.
 
     factory function
         A function that produces functions
@@ -165,7 +165,7 @@ Glossary of terms
             site of the first introns of all transcripts
       
         See :doc:`/examples/metagene` and/or the module documentation for the
-        :py:mod:`~yeti.bin.metagene` script for more explanation.
+        :py:mod:`~plastid.bin.metagene` script for more explanation.
 
     multimapping
         A read that aligns equally well (or nearly-equally well) to multiple
@@ -223,7 +223,7 @@ Glossary of terms
         along a transcript.
         
         P-site offsets may be estimated from ribosome profiling data
-        using the :py:mod:`~yeti.bin.psite` script. For a detailed discussion,
+        using the :py:mod:`~plastid.bin.psite` script. For a detailed discussion,
         see :doc:`/examples/p_site`.
 
     start codon peak
@@ -282,9 +282,9 @@ Glossary of terms
           - `Narrow peak <https://genome.ucsc.edu/FAQ/FAQformat.html#format12>`_ (BED 6+4)
           - `tagAlign <https://genome.ucsc.edu/FAQ/FAQformat.html#format15>`_  (BED 3+3)
 
-        :data:`yeti` supports reading BED X+Y formats via the `extra_columns` keyword that can be
-        passed to :class:`~yeti.readers.bed.BED_Reader`, or the
-        :meth:`~yeti.genomics.roitools.SegmentChain.from_bed` method of |SegmentChain|
+        :data:`plastid` supports reading BED X+Y formats via the `extra_columns` keyword that can be
+        passed to :class:`~plastid.readers.bed.BED_Reader`, or the
+        :meth:`~plastid.genomics.roitools.SegmentChain.from_bed` method of |SegmentChain|
         and |Transcript|. It also supports writing BED 12+Y formats via the same keyword
-        passed to the :meth:`~yeti.genomics.roitools.SegmentChain.as_bed`.
+        passed to the :meth:`~plastid.genomics.roitools.SegmentChain.as_bed`.
 

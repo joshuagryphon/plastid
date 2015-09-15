@@ -1,7 +1,7 @@
 Change log
 ==========
 
-All major changes to ``yeti`` are documented here. Version numbers for the project
+All major changes to ``plastid`` are documented here. Version numbers for the project
 follow the conventions described in :pep:`440`. After release 1.0, they will 
 also follow `Semantic versioning <http://semver.org/>`_. Before then, they roughly
 follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring
@@ -15,14 +15,14 @@ the last digit.
     it was not!
     
     When we realized we would release this project extramurally, we provisionaly
-    codenamed it ``yeti``, moved some things around the package to more reasonable
+    codenamed it ``plastid``, moved some things around the package to more reasonable
     locations, changed some method names and behaviors for consistency, and reset
     the version number. At this same time, we migrated from our old SVN
     repository to a git repository.
 
 
 
-yeti [0.2.1] = [2015-09-06]
+plastid [0.2.1] = [2015-09-06]
 ---------------------------
 
 Added
@@ -45,7 +45,7 @@ Changed
   - lazy imports; giving speed improvements to command-line scripts
 
 
-yeti [0.2.0] = [2015-08-26]
+plastid [0.2.0] = [2015-08-26]
 ---------------------------
 **Big changes,** including some that are **backwards-incompatible.**
 We really think these are for the best, because they improve
@@ -77,7 +77,7 @@ Removed
   - ArrayTable class & tests
 
 
-yeti [0.1.1] = [2015-07-23]
+plastid [0.1.1] = [2015-07-23]
 ---------------------------
 
 Added
@@ -99,7 +99,7 @@ Changed
 
 Fixed
 .....
-  - Removed bug from :func:`yeti.bin.metagene.do_generate` that extended
+  - Removed bug from :func:`plastid.bin.metagene.do_generate` that extended
     maximal spanning windows past equivalence points in 3' directions.
     Added extra unit test cases to suit it.
   - GenomeHash can again accept GenomicSegments as parameters to __getitem__.
@@ -116,9 +116,9 @@ Removed
       - TagAlignReader
 
 
-yeti [0.1.0] = [2015-06-06]
+plastid [0.1.0] = [2015-06-06]
 ---------------------------
-First internal release of project under new codename, ``yeti``. Reset version 
+First internal release of project under new codename, ``plastid``. Reset version 
 number.
 
 Added
@@ -130,7 +130,7 @@ Added
 
 Changed
 .......
-  - Package renamed from ``genometools`` to its provisional codename ``yeti``
+  - Package renamed from ``genometools`` to its provisional codename ``plastid``
   - Reset version number to 0.1.0
   - Refactored existing readers to descent from AssembledFeatureReader
   - Migration from old SVN to GIT repo
@@ -143,9 +143,9 @@ Changed
         GenomicInterval                     GenomicSegment
         IVCollection                        SegmentChain
         NibbleMapFactory                    CenterMapFactory
-        genometools.genomics.ivtools        yeti.genomics.roitools
-        genometools.genomics.readers        yeti.readers
-        genometools.genomics.scriptlib      yeti.util.scriptlib
+        genometools.genomics.ivtools        plastid.genomics.roitools
+        genometools.genomics.readers        plastid.readers
+        genometools.genomics.scriptlib      plastid.util.scriptlib
         ==================================  ====================================
 
 

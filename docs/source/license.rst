@@ -2,7 +2,7 @@ The BSD 3-Clause License
 ========================
 
 
-:data:`yeti` is published under the BSD 3-Clause license:
+:data:`plastid` is published under the BSD 3-Clause license:
 
 Copyright (c) 2013, Joshua Griffin Dunn All rights reserved.
 

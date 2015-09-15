@@ -140,11 +140,11 @@ import argparse
 import inspect
 import numpy
 import pandas as pd
-from yeti.genomics.roitools import SegmentChain, positions_to_segments
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name, argsopener, NullWriter
-from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.exceptions import ArgumentWarning, DataWarning
+from plastid.genomics.roitools import SegmentChain, positions_to_segments
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import get_short_name, argsopener, NullWriter
+from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.services.exceptions import ArgumentWarning, DataWarning
 
 warnings.simplefilter("once",DataWarning)
 
@@ -816,7 +816,7 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
+    from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
                                                get_annotation_file_parser,\
                                                get_mask_file_parser
 
@@ -901,7 +901,7 @@ def main(argv=sys.argv[1:]):
     
     args = parser.parse_args(argv)
     
-    from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+    from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                get_transcripts_from_args,\
                                                get_genome_hash_from_mask_args
     # 'generate' subprogram

@@ -35,14 +35,14 @@ import pandas as pd
 import numpy
 import matplotlib
 matplotlib.use("Agg")
-from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                                       get_transcripts_from_args,\
                                                       get_alignment_file_parser,\
                                                       get_annotation_file_parser
-from yeti.util.io.openers import get_short_name, argsopener
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.exceptions import DataWarning
+from plastid.util.io.openers import get_short_name, argsopener
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.services.exceptions import DataWarning
 
 import matplotlib.pyplot as plt
 

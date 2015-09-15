@@ -12,7 +12,7 @@ Results are output as a table with the following columns:
     
     `region`                  Genomic coordinates of region, formatted as
                               described in
-                              :meth:`yeti.genomics.roitools.SegmentChain.from_str`
+                              :meth:`plastid.genomics.roitools.SegmentChain.from_str`
                               
     `counts`                  Number of reads mapping to region
     
@@ -31,7 +31,7 @@ will be excluded when tabulating counts, measuring region length, and calculatin
 
 See also
 --------
-:mod:`~yeti.bin.cs` script
+:mod:`~plastid.bin.cs` script
     Count the number of :term:`read alignments<alignment>` and calculate
     read densities (in :term:`RPKM`) specifically for genes and sub-regions
     (5\' UTR, CDS, 3\' UTR), excluding positions covered by multiple genes
@@ -43,15 +43,15 @@ import itertools
 import warnings
 import numpy
 
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import argsopener, get_short_name
-from yeti.util.scriptlib.argparsers import get_genome_array_from_args,\
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import argsopener, get_short_name
+from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_segmentchains_from_args,\
                                            get_genome_hash_from_mask_args,\
                                            get_alignment_file_parser,\
                                            get_segmentchain_file_parser,\
                                            get_mask_file_parser
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

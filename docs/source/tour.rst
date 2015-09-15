@@ -2,8 +2,8 @@ Tour
 ====
 
 This document contains a brief overview of the :ref:`tour-scripts` and
-:ref:`object types <tour-data-structures>` included in :data:`yeti`. Complete
-documentation may be found in :doc:`module documentation <generated/yeti>`.
+:ref:`object types <tour-data-structures>` included in :data:`plastid`. Complete
+documentation may be found in :doc:`module documentation <generated/plastid>`.
 
 
 .. _tour-scripts:
@@ -11,24 +11,24 @@ documentation may be found in :doc:`module documentation <generated/yeti>`.
 Command-line scripts
 --------------------
 
-:data:`yeti` includes a handful of :mod:`scripts <yeti.bin>` that perform common
+:data:`plastid` includes a handful of :mod:`scripts <plastid.bin>` that perform common
 :term:`high-throughput sequencing` and :term:`ribosome profiling` analyses.
 These include, among others:
 
-  - :doc:`Measuring read density </generated/yeti.bin.cs>` in regions
+  - :doc:`Measuring read density </generated/plastid.bin.cs>` in regions
     of interest (for example, to obtain gene expression values)
 
-  - :doc:`Determining P-site offsets </generated/yeti.bin.psite>` for
+  - :doc:`Determining P-site offsets </generated/plastid.bin.psite>` for
     :term:`ribosome profiling` experiments
 
-  - Performing :doc:`metagene analyses </generated/yeti.bin.metagene>`
+  - Performing :doc:`metagene analyses </generated/plastid.bin.metagene>`
 
-  - :doc:`Creating browser tracks </generated/yeti.bin.make_wiggle>` 
+  - :doc:`Creating browser tracks </generated/plastid.bin.make_wiggle>` 
     from `BAM`_ or `bowtie`_ files, after applying optional read :term:`mapping rules`
     to transform the alignments (e.g. for P-site assignment of 
     :term:`ribosome profiling` data) 
 
-For a complete list, see the :mod:`command-line script documentation <yeti.bin>`
+For a complete list, see the :mod:`command-line script documentation <plastid.bin>`
 
 
 
@@ -37,7 +37,7 @@ For a complete list, see the :mod:`command-line script documentation <yeti.bin>`
 Classes & data structures
 -------------------------
 
-:data:`yeti` defines a number of classes to facilitate sequencing analyses:
+:data:`plastid` defines a number of classes to facilitate sequencing analyses:
 
     =======================================================    ===============================================
     **Class**                                                  **Purpose**
@@ -115,7 +115,7 @@ in addition to continuous features (e.g. single exons).
 |GenomicSegments| and any optional keywords, which will be stored in the
 |SegmentChain|'s `attr` dictionary::
 
-    >>> from yeti.genomics.roitools import *
+    >>> from plastid.genomics.roitools import *
     >>> exon1 = GenomicSegment("chrI",129237,130487,"+")
     >>> exon2 = GenomicSegment("chrI",130531,130572,"+")
     >>> SegmentChain(exon1,exon2,ID="YAL013W",alias="DEP1")
@@ -134,9 +134,9 @@ in addition to continuous features (e.g. single exons).
 
 
 More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation`
-files (see :mod:`yeti.readers`)::
+files (see :mod:`plastid.readers`)::
  
-    >>> from yeti.readers.bed import BED_Reader
+    >>> from plastid.readers.bed import BED_Reader
 
     >>> # get an iterator over transcripts in file
     >>> reader = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
@@ -182,7 +182,7 @@ from the 5' to 3' end (relative to the chain) from |GenomeArrays| (themselves
 explained :ref:`below <tour-genome-array>`). For example, to count how many 5'
 ends of sequencing reads appear at each position in a chain::
 
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
     >>> import pysam
 
     >>> # load read alignments, and map them to 5' ends
@@ -226,7 +226,7 @@ automatically be spliced and reverse-complemented, as necessary::
 
 
 |SegmentChains| and |Transcripts| can do a lot more. For complete documentation
-see |SegmentChain| and |Transcript| in :py:mod:`yeti.genomics.roitools`.
+see |SegmentChain| and |Transcript| in :py:mod:`plastid.genomics.roitools`.
     
 -------------------------------------------------------------------------------
 
@@ -278,7 +278,7 @@ segment.end)::
 
 When importing :term:`read alignments`, users can specify a :term:`mapping rule`
 to determine the genomic position(s) at which each alignment should be counted
-:data:`yeti` already includes mapping functions to map :term:`read alignments`:
+:data:`plastid` already includes mapping functions to map :term:`read alignments`:
 
   - to their fiveprime or threeprime ends, with or without offsets from
     that end (e.g. for :term:`P-site mapping <P-site offset>` for
@@ -295,7 +295,7 @@ to determine the genomic position(s) at which each alignment should be counted
 :term:`mapping rules <mapping function>` for |BAMGenomeArrays| can be changed
 at runtime::
 
-    >>> from yeti.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
+    >>> from plastid.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
     
     >>> alignments.set_mapping(FivePrimeMapFactory())
     >>> demo_tx.get_cds().get_counts(alignments)[:50]
@@ -334,7 +334,7 @@ files for use in a :term:`genome browser`::
 
 
 `wiggle`_ or `bedGraph`_ files can be also imported into a |GenomeArray|
-using the :meth:`~yeti.genomics.genome_array.GenomeArray.add_from_wiggle`
+using the :meth:`~plastid.genomics.genome_array.GenomeArray.add_from_wiggle`
 method::
 
     >>> new_data = GenomeArray()
@@ -349,7 +349,7 @@ method::
 
 For further information, see:
 
-  - The module documentation for :py:mod:`~yeti.genomics.genome_array`
+  - The module documentation for :py:mod:`~plastid.genomics.genome_array`
 
   - In-depth discussion of :doc:`mapping rules <concepts/mapping_rules>`
 
@@ -373,7 +373,7 @@ by location. A |GenomeHash| may be created from a list or dictionary of features
 (e.g. |SegmentChains| or |Transcripts|) in memory, or directly loaded from a
 genome annotation (in `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ format)::
 
-    >>> from yeti.genomics.genome_hash import GenomeHash 
+    >>> from plastid.genomics.genome_hash import GenomeHash 
     >>> my_hash = GenomeHash(transcript_dict)
  
 Having made a |GenomeHash|, we can ask what is where in the genome. For
@@ -446,7 +446,7 @@ Does anything interesting overlap *ORFL83C_(UL29)*?
      <Transcript segments=1 bounds=merlin:37382-37898(-) name=ORFL85C_(UL30)>,
      <Transcript segments=2 bounds=merlin:35004-37403(-) name=ORFL83C_(UL29)>]
 
-For more information, see the module documentation for :mod:`~yeti.genomics.genome_hash`.
+For more information, see the module documentation for :mod:`~plastid.genomics.genome_hash`.
 
 -------------------------------------------------------------------------------
 
@@ -458,10 +458,10 @@ See also
   - Detailed :ref:`module documentation <modindex>` for complete descriptions
     of the attributes and methods of these and other data structures
 
-      - :mod:`yeti.genomics.roitools`
+      - :mod:`plastid.genomics.roitools`
 
-      - :mod:`yeti.genomics.genome_array`
+      - :mod:`plastid.genomics.genome_array`
 
-      - :mod:`yeti.genomics.genome_hash`
+      - :mod:`plastid.genomics.genome_hash`
 
-      - :mod:`yeti.readers`
+      - :mod:`plastid.readers`

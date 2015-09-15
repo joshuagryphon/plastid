@@ -17,7 +17,7 @@ Important methods
     Returns an open filehandle to the system's null location.
 """
 import os
-from yeti.util.io.filters import AbstractWriter
+from plastid.util.io.filters import AbstractWriter
 
 class NullWriter(AbstractWriter):
     """Writes to system-dependent null location.
@@ -111,7 +111,7 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     >>> get_short_name("/home/jdoe/test.py.2",terminator=".py")
     'test.py.2'
 
-    >>> get_short_name("yeti.bin.test",separator="\.",terminator="")
+    >>> get_short_name("plastid.bin.test",separator="\.",terminator="")
     'test'
     
     Parameters

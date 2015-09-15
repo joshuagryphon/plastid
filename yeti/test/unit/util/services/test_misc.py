@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""Test suite for py:mod:`yeti.util.services.misc`"""
+"""Test suite for py:mod:`plastid.util.services.misc`"""
 import numpy
 import unittest
 from nose.plugins.attrib import attr
-from yeti.util.services.misc import guess_formatter, number
+from plastid.util.services.misc import guess_formatter, number
 
 @attr(test="unit")
 class TestMisc(unittest.TestCase):

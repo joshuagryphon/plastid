@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-"""Test suites for :py:mod:`yeti.readers.autosql`"""
+"""Test suites for :py:mod:`plastid.readers.autosql`"""
 import unittest
 import itertools
 import nose.tools
 from nose.plugins.attrib import attr
 from collections import OrderedDict
-from yeti.util.services.decorators import skip_if_abstract
-from yeti.readers.autosql import AutoSqlField, SizedAutoSqlField, ValuesAutoSqlField, AutoSqlDeclaration, AbstractAutoSqlElement
+from plastid.util.services.decorators import skip_if_abstract
+from plastid.readers.autosql import AutoSqlField, SizedAutoSqlField, ValuesAutoSqlField, AutoSqlDeclaration, AbstractAutoSqlElement
 
 
 _autosql_declarations = [

@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.get_count_vectors`"""
+"""Test suite for :py:mod:`plastid.bin.get_count_vectors`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                               COUNT_OPTIONS, \
                                               ANNOTATION_OPTIONS, \
                                               MASK_OPTIONS  
-from yeti.bin.get_count_vectors import main
-from yeti.util.services.decorators import catch_stderr
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.bin.get_count_vectors import main
+from plastid.util.services.decorators import catch_stderr
+from plastid.util.services.mini2to3 import cStringIO
 
 
 #===============================================================================
@@ -21,8 +21,8 @@ from yeti.util.services.mini2to3 import cStringIO
 
 get_count_vectors_test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.get_count_vectors",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line/gen_count_vectors"),
+    "module_name"    : "plastid.bin.get_count_vectors",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line/gen_count_vectors"),
     "temp_file_path" : tempfile.mkdtemp(prefix="get_count_vectors"),
 }
 
@@ -45,7 +45,7 @@ get_count_vectors_tests = [
     ["--no_header"]*len(ref_files)
     )
  ]
-"""Functional tests of :py:mod:`yeti.bin.get_count_vectors`.
+"""Functional tests of :py:mod:`plastid.bin.get_count_vectors`.
 
 Tests are specified as tuples of:
 

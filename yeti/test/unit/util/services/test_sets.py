@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.util.services.sets`"""
+"""Test suite for :py:mod:`plastid.util.services.sets`"""
 
-from yeti.util.services.sets import merge_sets
+from plastid.util.services.sets import merge_sets
 from nose.plugins.attrib import attr
 from nose.tools import assert_set_equal
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Unit tests for functions in :py:mod:`yeti.bin.slidejuncs`
+"""Unit tests for functions in :py:mod:`plastid.bin.slidejuncs`
 """
 
 from nose.plugins.attrib import attr
@@ -7,12 +7,12 @@ from nose.tools import assert_equal, assert_set_equal, assert_greater# , assert_
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import generic_dna
-from yeti.bin.slidejuncs import find_match_range, \
+from plastid.bin.slidejuncs import find_match_range, \
                                        find_known_in_range, \
                                        find_canonicals_in_range, \
                                        covered_by_repetitive
-from yeti.genomics.roitools import SegmentChain, GenomicSegment
-from yeti.genomics.genome_hash import GenomeHash                                       
+from plastid.genomics.roitools import SegmentChain, GenomicSegment
+from plastid.genomics.genome_hash import GenomeHash                                       
 
 
 #===============================================================================

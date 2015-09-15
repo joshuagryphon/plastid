@@ -20,9 +20,9 @@ Important functions & classes
 """
 import copy
 import itertools
-from yeti.util.io.filters import AbstractReader
-from yeti.util.io.openers import NullWriter
-from yeti.genomics.roitools import GenomicSegment, SegmentChain, Transcript
+from plastid.util.io.filters import AbstractReader
+from plastid.util.io.openers import NullWriter
+from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 from abc import abstractmethod
 
 

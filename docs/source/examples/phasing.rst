@@ -59,8 +59,8 @@ First, we need to open the read alignments and transcript annotation:
  .. code-block:: python
 
     >>> import pysam
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
-    >>> from yeti.readers.bed import BED_Reader
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid.readers.bed import BED_Reader
 
     >>> # retrieve an iterator over transcripts
     >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
@@ -73,7 +73,7 @@ First, we need to open the read alignments and transcript annotation:
 phasing. So, we'll look at the most highly-phased population of reads, 33-mers. 
 To do so, we'll add a size filter:
 
-    >>> from yeti.genomics.genome_array import SizeFilterFactory
+    >>> from plastid.genomics.genome_array import SizeFilterFactory
     >>> size_filter = SizeFilterFactory(min=33,max=34)
     >>> >>> alignments.add_filter("size",size_filter)
 

@@ -1,7 +1,7 @@
-yeti.readers.gff module
+plastid.readers.gff module
 =======================
 
-.. automodule:: yeti.readers.gff
+.. automodule:: plastid.readers.gff
     :members:
     :undoc-members:
     :show-inheritance:

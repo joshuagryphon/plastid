@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.reformat_transcripts`"""
+"""Test suite for :py:mod:`plastid.bin.reformat_transcripts`"""
 import tempfile
 import os
 import itertools
@@ -8,13 +8,13 @@ import shutil
 from nose.tools import assert_equal, assert_set_equal
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.readers.bed import BED_Reader
-from yeti.readers.gff import GTF2_TranscriptAssembler
-from yeti.genomics.roitools import sort_segmentchains_lexically
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import REF_FILES, MINI
-from yeti.bin.reformat_transcripts import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.readers.bed import BED_Reader
+from plastid.readers.gff import GTF2_TranscriptAssembler
+from plastid.genomics.roitools import sort_segmentchains_lexically
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import REF_FILES, MINI
+from plastid.bin.reformat_transcripts import main
+from plastid.util.services.decorators import catch_stderr
 
 #===============================================================================
 # INDEX: global constants
@@ -22,8 +22,8 @@ from yeti.util.services.decorators import catch_stderr
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.gff_to_gtf",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.gff_to_gtf",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="reformat_transcripts"),
 }
 
@@ -89,7 +89,7 @@ def check_files_applying_sort(ref_file,test_file,infmt,outfmt):
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for :py:mod`yeti.bin.reformat_transcripts`"""
+    """Perform functional test for :py:mod`plastid.bin.reformat_transcripts`"""
     for infmt, outfmt in _in_out:
             
         my_outfilename = _outfilename + ("_%s_to_%s.%s" % (infmt.lower(),outfmt.lower(),outfmt.lower()))

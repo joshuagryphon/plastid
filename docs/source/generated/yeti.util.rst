@@ -1,7 +1,7 @@
-yeti.util package
+plastid.util package
 =================
 
-.. automodule:: yeti.util
+.. automodule:: plastid.util
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,14 +11,14 @@ Subpackages
 
 .. toctree::
 
-    yeti.util.io
-    yeti.util.scriptlib
-    yeti.util.services
+    plastid.util.io
+    plastid.util.scriptlib
+    plastid.util.services
 
 Submodules
 ----------
 
 .. toctree::
 
-   yeti.util.unique_fifo
+   plastid.util.unique_fifo
 

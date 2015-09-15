@@ -8,7 +8,7 @@ from pkg_resources import resource_filename
 # INDEX: small data set for faster/unit tests
 #===============================================================================
 
-MINI_PATH = resource_filename("yeti","test/data/mini")
+MINI_PATH = resource_filename("plastid","test/data/mini")
 MINI = {
     'vec_center_0_rc.txt'  : 'count_vectors/center_0_rc.txt',
     'vec_center_12_rc.txt' : 'count_vectors/center_12_rc.txt',
@@ -50,7 +50,7 @@ MINI = { K : os.path.join(MINI_PATH,V) for K,V in MINI.items() }
 # INDEX: big data set for functional tests
 #===============================================================================
 
-RPATH = resource_filename("yeti","test/data")
+RPATH = resource_filename("plastid","test/data")
 
 REF_FILES = { 
              # full yeast annotation

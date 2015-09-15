@@ -8,12 +8,12 @@ import pandas as pd
 from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
-from yeti.genomics.roitools import GenomicSegment
+from plastid.genomics.roitools import GenomicSegment
 
 
 # slight hack to keep imported method from being run as a test
 # can't use unittest.skip, or else no tests will never be run!
-from yeti.bin.test_table_equality import test_dataframe_equality as checkeq
+from plastid.bin.test_table_equality import test_dataframe_equality as checkeq
 checkeq.__name__   = "checkeq"
 checkeq.__module__ = "checkeq"
 
@@ -89,7 +89,7 @@ class TestTestDataframeEquality(unittest.TestCase):
         Parameters
         ----------
         special_val : numpy.nan, numpy.inf, -numpy.inf, or None
-            Value that is ignored by :py:meth:`yeti.bin.test_dataframe_equality` if it occurs in the same cells of both dataframes
+            Value that is ignored by :py:meth:`plastid.bin.test_dataframe_equality` if it occurs in the same cells of both dataframes
         """
         idx = numpy.random.randint(0,high=size,size=500)
         tmpcols = copy.deepcopy(self.cols)
@@ -113,7 +113,7 @@ class TestTestDataframeEquality(unittest.TestCase):
         Parameters
         ----------
         special_val : numpy.nan, numpy.inf, -numpy.inf, or None
-            Value that is ignored by :py:meth:`yeti.bin.test_dataframe_equality` if it occurs in the same cells of both dataframes
+            Value that is ignored by :py:meth:`plastid.bin.test_dataframe_equality` if it occurs in the same cells of both dataframes
         """
         idxA = numpy.random.randint(0,high=size,size=500)
         idxB = numpy.random.randint(0,high=size,size=500)

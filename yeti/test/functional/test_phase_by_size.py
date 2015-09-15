@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.phase_by_size`"""
+"""Test suite for :py:mod:`plastid.bin.phase_by_size`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.util.services.decorators import catch_stderr
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.util.services.decorators import catch_stderr
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
                                              MASK_OPTIONS  
-from yeti.bin.phase_by_size import main
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.bin.phase_by_size import main
+from plastid.util.services.mini2to3 import cStringIO
 
 #===============================================================================
 # INDEX: global constants
@@ -20,8 +20,8 @@ from yeti.util.services.mini2to3 import cStringIO
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.phase_by_size",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.phase_by_size",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="phase_by_size"),
 }
 
@@ -45,7 +45,7 @@ phase_by_size_tests = [
      [""]
     ),
 ]
-"""Functional tests of :py:mod:`yeti.bin.phase_by_size`.
+"""Functional tests of :py:mod:`plastid.bin.phase_by_size`.
 
 Tests are specified as tuples of:
 
@@ -67,7 +67,7 @@ Tests are specified as tuples of:
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for :py:mod:`yeti.bin.phase_by_size`"""
+    """Perform functional test for :py:mod:`plastid.bin.phase_by_size`"""
     for x in execute_helper(test_info,phase_by_size_tests):
         yield x
 

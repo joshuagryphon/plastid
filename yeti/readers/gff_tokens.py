@@ -22,7 +22,7 @@ See also
   - `The Brent lab GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
 """
 
-# Unit tests for these are in :py:mod:`yeti.test.unit.genomics.readers.test_gff`
+# Unit tests for these are in :py:mod:`plastid.test.unit.genomics.readers.test_gff`
 
 
 
@@ -30,7 +30,7 @@ import re
 import shlex
 import copy
 import warnings
-from yeti.util.services.exceptions import FileFormatWarning
+from plastid.util.services.exceptions import FileFormatWarning
 
 gtfpat = re.compile(r"^ *([^ ]*) +(.*) *$")
 

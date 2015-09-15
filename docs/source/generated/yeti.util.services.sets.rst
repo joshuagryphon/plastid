@@ -1,7 +1,7 @@
-yeti.util.services.sets module
+plastid.util.services.sets module
 ==============================
 
-.. automodule:: yeti.util.services.sets
+.. automodule:: plastid.util.services.sets
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
-yeti.bin.cs module
+plastid.bin.cs module
 ==================
 
-.. automodule:: yeti.bin.cs
+.. automodule:: plastid.bin.cs
     :members:
     :undoc-members:
     :show-inheritance:

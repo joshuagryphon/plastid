@@ -17,7 +17,7 @@ To get started with genomic analysis, one needs:
 
             Because excellent alignment tools -- `bowtie`_, `Tophat`_, and others --
             already exist, and because choosing alignment parameters involves
-            careful consideration, :data:`yeti` does not perform this step.
+            careful consideration, :data:`plastid` does not perform this step.
             
             For help on performing alignments, and a discussion of the subtleties
             involved, see the documentation for the read alignment program you use. 
@@ -32,6 +32,6 @@ To get started with genomic analysis, one needs:
     needed.
   
   - Some scientific software for data analysis. See :doc:`/installation`
-    for instructions on how to get :data:`yeti` and its dependencies, and
+    for instructions on how to get :data:`plastid` and its dependencies, and
     :doc:`/related` for resources that might be useful.
   

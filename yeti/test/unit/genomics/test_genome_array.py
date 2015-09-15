@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""Tests and validates classes from :py:mod:`yeti.genomics.genome_array`,
+"""Tests and validates classes from :py:mod:`plastid.genomics.genome_array`,
 these being |GenomeArray|, |SparseGenomeArray| and |BAMGenomeArray|,
-using test data found in yeti.test.data. 
+using test data found in plastid.test.data. 
 
 This module additionally contains utilites to generate other test datasets.
 To do, please see the documentation for :py:func:`create_dataset`. Note,
@@ -25,8 +25,8 @@ from nose.plugins.attrib import attr
 
 from Bio import SeqIO
 
-from yeti.readers.bed import BED_to_SegmentChain
-from yeti.genomics.genome_array import GenomeArray,\
+from plastid.readers.bed import BED_to_SegmentChain
+from plastid.genomics.genome_array import GenomeArray,\
                                        SparseGenomeArray,\
                                        BAMGenomeArray,\
                                        ThreePrimeMapFactory,\
@@ -35,11 +35,11 @@ from yeti.genomics.genome_array import GenomeArray,\
                                        five_prime_map,\
                                        three_prime_map,\
                                        center_map
-from yeti.genomics.roitools import GenomicSegment, SegmentChain
-from yeti.genomics.seqtools import random_seq
-from yeti.util.io.openers import NullWriter
-from yeti.util.services.decorators import skip_if_abstract
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.genomics.seqtools import random_seq
+from plastid.util.io.openers import NullWriter
+from plastid.util.services.decorators import skip_if_abstract
+from plastid.util.services.mini2to3 import cStringIO
 
 
 #===============================================================================
@@ -228,7 +228,7 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
     set_up = False
     
     @staticmethod
-    def set_class_parameters(cls,params,test_folder=resource_filename("yeti","test/data/mini"),tol=1e-8):
+    def set_class_parameters(cls,params,test_folder=resource_filename("plastid","test/data/mini"),tol=1e-8):
         """Set class parameters on the creation of the first instance.
         This is a bit of a hack because we need to set class parameters.
         We can't do this in a ``setUpClass`` method, because ``setUpClass`` only 
@@ -289,7 +289,7 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
     def __init__(self,
                  methodName='runTest',
                  params={},
-                 test_folder=resource_filename("yeti","test/data/mini"),
+                 test_folder=resource_filename("plastid","test/data/mini"),
                  tol=1e-8):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when
@@ -622,7 +622,7 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
     def __init__(self,
                  methodName='runTest',
                  params=_GENOME_ARRAY_PARAMS,
-                 test_folder=resource_filename("yeti","test/data/mini"),
+                 test_folder=resource_filename("plastid","test/data/mini"),
                  tol=1e-8):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when
@@ -1053,7 +1053,7 @@ class TestSparseGenomeArray(TestGenomeArray):
     def __init__(self,
                  methodName='runTest',
                  params=_SPARSE_GENOME_ARRAY_PARAMS,
-                 test_folder=resource_filename("yeti","test/data/mini"),
+                 test_folder=resource_filename("plastid","test/data/mini"),
                  tol=1e-8):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when
@@ -1095,7 +1095,7 @@ class FakeDict(object):
 
         map_functions : dict
             Dictionary mapping descriptive names to mapping functions,
-            such as those made by :py:func:`yeti.genomics.genome_array.FivePrimeMapFactory`
+            such as those made by :py:func:`plastid.genomics.genome_array.FivePrimeMapFactory`
         """
         self.bga = bga
         self.map_functions = map_functions
@@ -1122,7 +1122,7 @@ class TestBAMGenomeArray(AbstractGenomeArrayHelper):
 
     def __init__(self,methodName='runTest',
                  params=_BAM_GENOME_ARRAY_PARAMS,
-                 test_folder=resource_filename("yeti","test/data/mini"),
+                 test_folder=resource_filename("plastid","test/data/mini"),
                  tol=1e-8):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when

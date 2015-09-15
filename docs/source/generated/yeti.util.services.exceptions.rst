@@ -1,7 +1,7 @@
-yeti.util.services.exceptions module
+plastid.util.services.exceptions module
 ====================================
 
-.. automodule:: yeti.util.services.exceptions
+.. automodule:: plastid.util.services.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

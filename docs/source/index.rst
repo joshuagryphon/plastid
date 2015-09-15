@@ -1,4 +1,4 @@
-:data:`yeti` |version| welcome!
+:data:`plastid` |version| welcome!
 ===============================
 
 We're in beta!
@@ -13,20 +13,20 @@ in this process, should you have any.
 Introduction
 ------------
 
-:data:`yeti` is a `Python`_ library for genomic analysis -- in particular,
+:data:`plastid` is a `Python`_ library for genomic analysis -- in particular,
 :term:`high-throughput sequencing` data -- with an emphasis on simplicity for
 users. It was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
 at `UCSF <http://ucsf.edu>`_,  initially for analysis of
 :term:`ribosome profiling` and :term:`RNA-seq` data. Versions of it have been used
 in several publications.
 
-:data:`yeti`'s intended audience includes computational and traditional biologists,
+:data:`plastid`'s intended audience includes computational and traditional biologists,
 software developers, and even those who are new to sequencing analysis. It is
 released under the :doc:`BSD 3-Clause license <license>`.
 
 This package provides:
 
-  #. A set of :mod:`scripts <yeti.bin>` that implement common sequencing
+  #. A set of :mod:`scripts <plastid.bin>` that implement common sequencing
      analyses
 
   #. A :ref:`set of classes <tour-data-structures>` that create a simple,
@@ -34,22 +34,22 @@ This package provides:
      :term:`read alignments`, and quantitative data. These objects readily
      interace with existing scientific tools, like the `SciPy`_ stack.
 
-  #. :mod:`Script writing tools <yeti.util.scriptlib>` that make it easy to
-     use the :mod:`file parsers <yeti.readers>` and
-     :ref:`objects <tour-data-structures>` implemented in :data:`yeti`.
+  #. :mod:`Script writing tools <plastid.util.scriptlib>` that make it easy to
+     use the :mod:`file parsers <plastid.readers>` and
+     :ref:`objects <tour-data-structures>` implemented in :data:`plastid`.
 
   #. Extensive documentation, both in this web site and in source code
 
 
 Motivation
 ----------
-At the time of :data:`yeti`'s inception, few Python packages for genomic analysis
+At the time of :data:`plastid`'s inception, few Python packages for genomic analysis
 existed. Now, there are quite a few useful, :doc:`similar projects </related>`
 -- for example, `HTSeq`_ and `metaseq`_ -- whose design goals are
-similar to :data:`yeti`'s. Users are encouraged to look at those packages,
+similar to :data:`plastid`'s. Users are encouraged to look at those packages,
 and use the package that best suits their experimental needs.
 
-Among these, :data:`yeti` offers a number of unique features, including:
+Among these, :data:`plastid` offers a number of unique features, including:
 
   - Classes that can represent or operate on *discontinuous* genomic features,
     like transcripts or gapped alignments, in addition to their continuous components
@@ -76,11 +76,11 @@ Documentation & help are written for users at multiple levels of experience:
   - **Those new to sequencing and/or bioinformatics**, and those who are
     :term:`ribosome profiling` should start with :doc:`quickstart`, and then
     continue to the :doc:`tour` and :doc:`examples`. The
-    :mod:`description of command-line scripts <yeti.bin>` may also be helpful.
+    :mod:`description of command-line scripts <plastid.bin>` may also be helpful.
 
   - **Advanced users** might be more interested in a quick :doc:`tour` of
     the primary data structures and the
-    :doc:`module documentation <generated/yeti>`.
+    :doc:`module documentation <generated/plastid>`.
 
 --------------------------------------------------------------------------------
 
@@ -123,7 +123,7 @@ Site map
    :maxdepth: 10
    :caption: Technical documentation
    
-   Module documentation <generated/yeti>
+   Module documentation <generated/plastid>
 
 
 .. _toc-other-info:

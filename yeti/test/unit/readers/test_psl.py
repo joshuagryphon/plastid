@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.readers.blat`
+"""Test suite for :py:mod:`plastid.readers.blat`
 
 References
 ----------
@@ -7,11 +7,11 @@ http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html
 """
 import unittest
 import numpy
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
-from yeti.readers.psl import PSL_Reader, BundledPSL_Reader
-from yeti.readers.bed import BED_to_SegmentChain
-from yeti.test.ref_files import MINI
+from plastid.readers.psl import PSL_Reader, BundledPSL_Reader
+from plastid.readers.bed import BED_to_SegmentChain
+from plastid.test.ref_files import MINI
 
 @attr(test="unit")
 class TestPSL_Reader(unittest.TestCase):

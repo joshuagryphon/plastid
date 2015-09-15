@@ -22,7 +22,7 @@ their own specifications. Two of the most common are:
     and which can describe any feature ontology.
 
 In this tutorial, we discuss briefly discuss handling `GFF3`_ files
-in :data:`yeti`. We recommend that users read the `GFF3 specification <GFF3>`_
+in :data:`plastid`. We recommend that users read the `GFF3 specification <GFF3>`_
 for full discussion of the file type. In `GFF3`_:
 
   - coordinates are :term:`1-indexed` and :term:`fully-closed`
@@ -79,7 +79,7 @@ use both, even in the same file.
 
  .. _gff3-reading-overview:
 
-Reading `GFF3`_ files in :data:`yeti`
+Reading `GFF3`_ files in :data:`plastid`
 -------------------------------------
 
 Reading simple features

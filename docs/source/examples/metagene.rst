@@ -147,7 +147,7 @@ The program is called from the terminal:
                                          --downstream 200
 
 For a detailed description of these and other command-line arguments, see the
-:mod:`metagene script documentation <yeti.bin.metagene>`
+:mod:`metagene script documentation <plastid.bin.metagene>`
 
 
  .. _metagene-count:
@@ -244,13 +244,13 @@ the feature of interest (e.g. a start codon) in each individual region examined
 
 |metagene| comes with two window functions:
 
-  - :func:`~yeti.bin.metagene.window_cds_start`, for defining windows
+  - :func:`~plastid.bin.metagene.window_cds_start`, for defining windows
     surrounding start codons
 
-  - :func:`~yeti.bin.metagene.window_cds_stop`, for defining windows
+  - :func:`~plastid.bin.metagene.window_cds_stop`, for defining windows
     surrounding stop codons
 
-Once you have defined a window function, :func:`yeti.bin.metagene.group_regions_make_windows`
+Once you have defined a window function, :func:`plastid.bin.metagene.group_regions_make_windows`
 can use it to generate :term:`maximal spanning windows <maximal spanning window>`.
 
 
@@ -289,7 +289,7 @@ Window functions must return the following values, in order:
 
     |SegmentChain|
         Window surrounding feature of interest if `roi` has such a feature.
-        Otherwise, return a zero-length |SegmentChain|. :func:`yeti.bin.metagene.do_generate`
+        Otherwise, return a zero-length |SegmentChain|. :func:`plastid.bin.metagene.do_generate`
         will use these to generate maximal spanning windows.
         
     
@@ -411,7 +411,7 @@ Using your window function
 ..........................
 
 Once your window function is written, you can generate maximal spanning windows
-using :func:`yeti.bin.metagene.group_regions_make_windows`, which takes
+using :func:`plastid.bin.metagene.group_regions_make_windows`, which takes
 the following parameters:
 
     ===================  ==============================  =======================================================================
@@ -443,13 +443,13 @@ the following parameters:
 
 Here we use the ``window_biggest_spike()`` function we just wrote::
 
-    >>> from yeti.bin.metagene import do_generate
-    >>> from yeti.genomics.genome_hash import GenomeHash
-    >>> from yeti.readers.gff import GTF2_TranscriptAssembler
+    >>> from plastid.bin.metagene import do_generate
+    >>> from plastid.genomics.genome_hash import GenomeHash
+    >>> from plastid.readers.gff import GTF2_TranscriptAssembler
 
     >>> import pysam
     >>> import numpy
-    >>> from yeti.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some
@@ -470,7 +470,7 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>>                                         window_func=window_biggest_spike)
 
 
-:meth:`~yeti.bin.metagene.group_regions_make_windows` returns
+:meth:`~plastid.bin.metagene.group_regions_make_windows` returns
 a :class:`pandas.DataFrame` containing the
 :term:`maximal spanning windows <maximal spanning window>` and their
 corresponding alignment offsets. These can be saved to an `roi_file` for

@@ -7,7 +7,7 @@ Output files
 ------------
 Vectors are saved as individual line-delimited files -- one position per line --
 in a user-specified output folder. Each file is named for the ROI to which it
-corresponds. If a :term:`mask file` -- e.g. from  :py:mod:`~yeti.bin.crossmap`
+corresponds. If a :term:`mask file` -- e.g. from  :py:mod:`~plastid.bin.crossmap`
 -- is provided, masked positions will be have value `nan` in output.
 """
 import argparse
@@ -17,15 +17,15 @@ import warnings
 import sys
 import numpy
 
-from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
+from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
                                                       get_genome_array_from_args,\
                                                       get_segmentchains_from_args,\
                                                       get_segmentchain_file_parser,\
                                                       get_mask_file_parser,\
                                                       get_genome_hash_from_mask_args
-from yeti.util.io.openers import get_short_name
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.io.openers import get_short_name
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

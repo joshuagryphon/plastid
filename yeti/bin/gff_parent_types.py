@@ -3,10 +3,10 @@
 found in a `GFF3`_ file. Features with multiple parents are dumped into a category
 called `Multiple` and the feature types of their individual parents ignored.
 """
-from yeti.readers.gff import GFF3_Reader
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name, opener, argsopener
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.readers.gff import GFF3_Reader
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import get_short_name, opener, argsopener
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 from collections import Counter
 import argparse
 import sys

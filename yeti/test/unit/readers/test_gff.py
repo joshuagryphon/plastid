@@ -1,23 +1,23 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.readers.gff`
+"""Test suite for :py:mod:`plastid.readers.gff`
 
 Notes
 -----
 -  :py:func:`GTF2_to_Transcripts` and :py:func:`GFF3_to_Transcripts` are
-    tested in :py:mod:`yeti.test.unit.genomics.test_roitools`
+    tested in :py:mod:`plastid.test.unit.genomics.test_roitools`
 """
 
 import unittest
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
 from random import shuffle
-from yeti.genomics.roitools import GenomicSegment, Transcript, SegmentChain
-from yeti.readers.gff import GTF2_Reader,\
+from plastid.genomics.roitools import GenomicSegment, Transcript, SegmentChain
+from plastid.readers.gff import GTF2_Reader,\
                              GFF3_Reader,\
                              GTF2_TranscriptAssembler,\
                              GFF3_TranscriptAssembler,\
                              StopFeature
-from yeti.util.services.decorators import skip_if_abstract
+from plastid.util.services.decorators import skip_if_abstract
 
 #===============================================================================
 # INDEX: test data

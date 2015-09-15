@@ -50,13 +50,13 @@ import inspect
 import multiprocessing
 import shutil
 import functools
-from yeti.util.io.filters import NameDateWriter, AbstractReader
-from yeti.util.io.openers import get_short_name, argsopener, opener
-from yeti.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment
-from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.services.mini2to3 import xrange
-from yeti.util.services.exceptions import MalformedFileError
-from yeti.util.scriptlib.argparsers import get_sequence_file_parser, get_seqdict_from_args
+from plastid.util.io.filters import NameDateWriter, AbstractReader
+from plastid.util.io.openers import get_short_name, argsopener, opener
+from plastid.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment
+from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.services.mini2to3 import xrange
+from plastid.util.services.exceptions import MalformedFileError
+from plastid.util.scriptlib.argparsers import get_sequence_file_parser, get_seqdict_from_args
 
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

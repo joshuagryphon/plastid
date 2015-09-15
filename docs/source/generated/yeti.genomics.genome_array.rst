@@ -1,7 +1,7 @@
-yeti.genomics.genome_array module
+plastid.genomics.genome_array module
 =================================
 
-.. automodule:: yeti.genomics.genome_array
+.. automodule:: plastid.genomics.genome_array
     :members:
     :undoc-members:
     :show-inheritance:

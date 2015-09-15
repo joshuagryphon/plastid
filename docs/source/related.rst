@@ -1,7 +1,7 @@
 Related resources
 =================
 
-If you are interested in :data:`yeti`, the following projects might also
+If you are interested in :data:`plastid`, the following projects might also
 be helpful for you:
 
 
@@ -11,12 +11,12 @@ Similar projects, for interactive analysis of sequencing data
     A Python package designed for analysis of high-throughput
     sequencing data. It parses annotation files and `BAM`_
     files into objects that serve roles similar to those served
-    by  :data:`yeti`'s |GenomicSegment| and |GenomeArray|,
+    by  :data:`plastid`'s |GenomicSegment| and |GenomeArray|,
     respectively, albeit with different behaviors.
 
 `metaseq`_
     A Python package for analysis of genomics data. It is very
-    similar in intent to :data:`yeti` in that it introduces
+    similar in intent to :data:`plastid` in that it introduces
     simple, unified APIs to access genomic data of many file
     types. In addition, it includes nice plotting utilities
     for interactive analysis
@@ -40,8 +40,8 @@ Gene expression analysis
     types of :term:`high-throughput sequencing` data
     
     `DESeq`_ can be used to test for significant differences in expression
-    counts obtained using the :mod:`~yeti.bin.cs` or
-    :mod:`~yeti.bin.counts_in_region` scripts
+    counts obtained using the :mod:`~plastid.bin.cs` or
+    :mod:`~plastid.bin.counts_in_region` scripts
 
 `cufflinks`_
     A software suite for transcript assembly and differential expression
@@ -57,7 +57,7 @@ General-purpose manipulation
     Manipulate read alignments in SAM and `BAM`_ files on the command line
  
 `Pysam`_
-    Python bindings for `Samtools`_. :data:`yeti` uses `Pysam`_ internally
+    Python bindings for `Samtools`_. :data:`plastid` uses `Pysam`_ internally
     for parsing of `BAM`_ and `tabix`_-compressed files
 
 `bedtools`_

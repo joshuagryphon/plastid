@@ -1,7 +1,7 @@
-yeti.util.services.mini2to3 module
+plastid.util.services.mini2to3 module
 ==================================
 
-.. automodule:: yeti.util.services.mini2to3
+.. automodule:: plastid.util.services.mini2to3
     :members:
     :undoc-members:
     :show-inheritance:

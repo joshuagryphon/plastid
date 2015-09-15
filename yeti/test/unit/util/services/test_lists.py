@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.util.services.lists`"""
+"""Test suite for :py:mod:`plastid.util.services.lists`"""
 import unittest
 import numpy
-from yeti.util.services.lists import parse_list, flatten_nested_lists_to_generator, flatten_nested_lists_to_list
+from plastid.util.services.lists import parse_list, flatten_nested_lists_to_generator, flatten_nested_lists_to_list
 from nose.plugins.attrib import attr
 
 @attr(test="unit")

@@ -4,13 +4,13 @@ import warnings
 import copy
 from nose.tools import assert_equal, assert_not_equal
 from nose.plugins.attrib import attr
-from yeti.readers.gff_tokens import escape_GFF3, unescape_GFF3,\
+from plastid.readers.gff_tokens import escape_GFF3, unescape_GFF3,\
                                                     escape_GTF2, unescape_GTF2,\
                                                     make_GFF3_tokens,\
                                                     make_GTF2_tokens,\
                                                     parse_GFF3_tokens,\
                                                     parse_GTF2_tokens
-from yeti.util.services.decorators import catch_warnings
+from plastid.util.services.decorators import catch_warnings
 
 #===============================================================================
 # INDEX: test data

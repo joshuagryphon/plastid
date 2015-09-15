@@ -1,7 +1,7 @@
-yeti.util.services package
+plastid.util.services package
 ==========================
 
-.. automodule:: yeti.util.services
+.. automodule:: plastid.util.services
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,11 +11,11 @@ Submodules
 
 .. toctree::
 
-   yeti.util.services.colors
-   yeti.util.services.decorators
-   yeti.util.services.exceptions
-   yeti.util.services.lists
-   yeti.util.services.mini2to3
-   yeti.util.services.misc
-   yeti.util.services.sets
+   plastid.util.services.colors
+   plastid.util.services.decorators
+   plastid.util.services.exceptions
+   plastid.util.services.lists
+   plastid.util.services.mini2to3
+   plastid.util.services.misc
+   plastid.util.services.sets
 

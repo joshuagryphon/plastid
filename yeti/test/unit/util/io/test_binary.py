@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-"""Test cases for :py:mod:`yeti.util.io.binary`"""
-from yeti.util.io.binary import BinaryParserFactory, find_null_bytes
+"""Test cases for :py:mod:`plastid.util.io.binary`"""
+from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 import unittest
 import re
 from nose.plugins.attrib import attr
-from io import BytesIO #from yeti.util.services.mini2to3 import cStringIO
+from io import BytesIO #from plastid.util.services.mini2to3 import cStringIO
 
 @attr(test="unit")
 class TestBinaryParserFactory(unittest.TestCase):

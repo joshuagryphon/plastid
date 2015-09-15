@@ -1,22 +1,22 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.counts_in_region`"""
+"""Test suite for :py:mod:`plastid.bin.counts_in_region`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.util.services.decorators import catch_stderr
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.util.services.decorators import catch_stderr
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              MASK_OPTIONS                                    
-from yeti.bin.counts_in_region import main
+from plastid.bin.counts_in_region import main
 
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.counts_in_region",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.counts_in_region",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="counts_in_region"),
 }
 
@@ -46,7 +46,7 @@ counts_in_region_tests = [
      [REF_FILES["yeast_counts_in_region_no_mask"]],
      [_no_mask_outfile],
      ["--sort_keys region_name"]),]
-"""Functional tests of :py:mod:`yeti.bin.counts_in_region`.
+"""Functional tests of :py:mod:`plastid.bin.counts_in_region`.
 
 Tests are specified as tuples of:
 
@@ -63,6 +63,6 @@ Tests are specified as tuples of:
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for yeti.bin.counts_in_region"""
+    """Perform functional test for plastid.bin.counts_in_region"""
     for x in execute_helper(test_info,counts_in_region_tests):
         yield x

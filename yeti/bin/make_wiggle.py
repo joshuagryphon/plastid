@@ -17,7 +17,7 @@ Because `Wiggle`_ and `bedGraph`_ files are unstranded, two files are created:
 
 See also
 --------
-:py:mod:`~yeti.genomics.genome_array`
+:py:mod:`~plastid.genomics.genome_array`
     Explanations of mapping transformations and why they can be useful
 """
 __author__ = "joshua"
@@ -26,12 +26,12 @@ import warnings
 import inspect
 import sys
 
-from yeti.util.scriptlib.argparsers import get_alignment_file_parser,\
+from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
                                            get_genome_array_from_args
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name, argsopener
-from yeti.util.services.colors import get_rgb255_from_str
-from yeti.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import get_short_name, argsopener
+from plastid.util.services.colors import get_rgb255_from_str
+from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))

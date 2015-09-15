@@ -1,7 +1,7 @@
-yeti.util.scriptlib package
+plastid.util.scriptlib package
 ===========================
 
-.. automodule:: yeti.util.scriptlib
+.. automodule:: plastid.util.scriptlib
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,7 +11,7 @@ Submodules
 
 .. toctree::
 
-   yeti.util.scriptlib.argparsers
-   yeti.util.scriptlib.help_formatters
-   yeti.util.scriptlib.template
+   plastid.util.scriptlib.argparsers
+   plastid.util.scriptlib.help_formatters
+   plastid.util.scriptlib.template
 

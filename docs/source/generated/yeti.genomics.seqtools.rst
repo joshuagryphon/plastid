@@ -1,7 +1,7 @@
-yeti.genomics.seqtools module
+plastid.genomics.seqtools module
 =============================
 
-.. automodule:: yeti.genomics.seqtools
+.. automodule:: plastid.genomics.seqtools
     :members:
     :undoc-members:
     :show-inheritance:

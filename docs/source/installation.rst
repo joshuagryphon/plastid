@@ -5,20 +5,20 @@ Installation
  .. commented for now
     From PyPi
     ---------
-    Stable versions of :py:data:`yeti` can be fetched from `PyPi`_ using `Pip`_.
+    Stable versions of :py:data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
 
     Simply type from the terminal:
 
      .. code-block:: shell
 
-        $ sudo pip install yeti
+        $ sudo pip install plastid
 
 
     or, for a single-user install:
 
      .. code-block:: shell
 
-        $ pip install --user yeti
+        $ pip install --user plastid
 
 
     Command-line scripts will be installed wherever your system configuration dictates.
@@ -68,7 +68,7 @@ Non-Python Dependencies
 The following are required or recommended for specific functions:
 
 - Non-Python
-   - `bowtie`_ (not Bowtie 2), for :py:mod:`~yeti.bin.crossmap`
+   - `bowtie`_ (not Bowtie 2), for :py:mod:`~plastid.bin.crossmap`
    - `Jim Kent's utilities`_ for converting BED to BigBed files
 
 

@@ -1,7 +1,7 @@
-yeti.readers package
+plastid.readers package
 ====================
 
-.. automodule:: yeti.readers
+.. automodule:: plastid.readers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,13 +11,13 @@ Submodules
 
 .. toctree::
 
-   yeti.readers.autosql
-   yeti.readers.bed
-   yeti.readers.bigbed
-   yeti.readers.bowtie
-   yeti.readers.common
-   yeti.readers.gff
-   yeti.readers.gff_tokens
-   yeti.readers.psl
-   yeti.readers.wiggle
+   plastid.readers.autosql
+   plastid.readers.bed
+   plastid.readers.bigbed
+   plastid.readers.bowtie
+   plastid.readers.common
+   plastid.readers.gff
+   plastid.readers.gff_tokens
+   plastid.readers.psl
+   plastid.readers.wiggle
 

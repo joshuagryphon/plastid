@@ -1,7 +1,7 @@
-yeti.bin.crossmap module
+plastid.bin.crossmap module
 ========================
 
-.. automodule:: yeti.bin.crossmap
+.. automodule:: plastid.bin.crossmap
     :members:
     :undoc-members:
     :show-inheritance:

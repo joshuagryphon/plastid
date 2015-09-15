@@ -1,7 +1,7 @@
-yeti.readers.wiggle module
+plastid.readers.wiggle module
 ==========================
 
-.. automodule:: yeti.readers.wiggle
+.. automodule:: plastid.readers.wiggle
     :members:
     :undoc-members:
     :show-inheritance:

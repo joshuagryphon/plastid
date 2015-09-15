@@ -1,7 +1,7 @@
-yeti.util.io.filters module
+plastid.util.io.filters module
 ===========================
 
-.. automodule:: yeti.util.io.filters
+.. automodule:: plastid.util.io.filters
     :members:
     :undoc-members:
     :show-inheritance:

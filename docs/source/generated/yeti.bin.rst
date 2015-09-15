@@ -1,7 +1,7 @@
-yeti.bin package
+plastid.bin package
 ================
 
-.. automodule:: yeti.bin
+.. automodule:: plastid.bin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -11,17 +11,17 @@ Submodules
 
 .. toctree::
 
-   yeti.bin.counts_in_region
-   yeti.bin.crossmap
-   yeti.bin.cs
-   yeti.bin.findjuncs
-   yeti.bin.get_count_vectors
-   yeti.bin.gff_parent_types
-   yeti.bin.make_wiggle
-   yeti.bin.metagene
-   yeti.bin.phase_by_size
-   yeti.bin.psite
-   yeti.bin.reformat_transcripts
-   yeti.bin.slidejuncs
-   yeti.bin.test_table_equality
+   plastid.bin.counts_in_region
+   plastid.bin.crossmap
+   plastid.bin.cs
+   plastid.bin.findjuncs
+   plastid.bin.get_count_vectors
+   plastid.bin.gff_parent_types
+   plastid.bin.make_wiggle
+   plastid.bin.metagene
+   plastid.bin.phase_by_size
+   plastid.bin.psite
+   plastid.bin.reformat_transcripts
+   plastid.bin.slidejuncs
+   plastid.bin.test_table_equality
 

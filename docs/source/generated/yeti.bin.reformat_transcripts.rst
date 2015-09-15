@@ -1,7 +1,7 @@
-yeti.bin.reformat_transcripts module
+plastid.bin.reformat_transcripts module
 ====================================
 
-.. automodule:: yeti.bin.reformat_transcripts
+.. automodule:: plastid.bin.reformat_transcripts
     :members:
     :undoc-members:
     :show-inheritance:

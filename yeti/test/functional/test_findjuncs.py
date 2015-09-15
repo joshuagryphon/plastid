@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.findjuncs`"""
+"""Test suite for :py:mod:`plastid.bin.findjuncs`"""
 import tempfile
 import os
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import REF_FILES
-from yeti.bin.findjuncs import main
-from yeti.util.services.decorators import catch_stderr
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import REF_FILES
+from plastid.bin.findjuncs import main
+from plastid.util.services.decorators import catch_stderr
+from plastid.util.services.mini2to3 import cStringIO
 
 
 #===============================================================================
@@ -18,8 +18,8 @@ from yeti.util.services.mini2to3 import cStringIO
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.findjuncs",
-    "ref_file_path"  : resource_filename("yeti","test/data/"),
+    "module_name"    : "plastid.bin.findjuncs",
+    "ref_file_path"  : resource_filename("plastid","test/data/"),
     "temp_file_path" : tempfile.mkdtemp(prefix="findjuncs"),
 }
 
@@ -64,7 +64,7 @@ findjuncs_tests = [
      ["--no_header --sort_keys 3",
       "--no_header"]),
 ]
-"""Functional tests of :py:mod:`yeti.bin.findjuncs`.
+"""Functional tests of :py:mod:`plastid.bin.findjuncs`.
 
 Tests are specified as tuples of:
 
@@ -81,6 +81,6 @@ Tests are specified as tuples of:
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Perform functional test for :py:mod`yeti.bin.findjuncs`"""
+    """Perform functional test for :py:mod`plastid.bin.findjuncs`"""
     for x in execute_helper(test_info,findjuncs_tests):
         yield x

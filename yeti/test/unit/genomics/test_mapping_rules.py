@@ -3,11 +3,11 @@ import numpy
 import pysam
 import warnings
 from nose.tools import assert_true, assert_equal, assert_greater_equal
-from yeti.genomics.map_factories import FivePrimeMapFactory,\
+from plastid.genomics.map_factories import FivePrimeMapFactory,\
                                        ThreePrimeMapFactory,\
                                        CenterMapFactory,\
                                        VariableFivePrimeMapFactory
-from yeti.genomics.roitools import GenomicSegment
+from plastid.genomics.roitools import GenomicSegment
 
 
 class TestBAM_MappingRules(object):

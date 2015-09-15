@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test suite for :py:mod:`yeti.bin.make_wiggle`"""
+"""Test suite for :py:mod:`plastid.bin.make_wiggle`"""
 import tempfile
 import shutil
 import os
@@ -8,14 +8,14 @@ import nose
 
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
-from yeti.test.functional.base import execute_helper
-from yeti.test.ref_files import RPATH, REF_FILES, \
+from plastid.test.functional.base import execute_helper
+from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
                                              MASK_OPTIONS  
-from yeti.genomics.genome_array import GenomeArray                                             
-from yeti.bin.make_wiggle import main
-from yeti.util.services.decorators import catch_stderr
+from plastid.genomics.genome_array import GenomeArray                                             
+from plastid.bin.make_wiggle import main
+from plastid.util.services.decorators import catch_stderr
 
 #===============================================================================
 # INDEX: global constants used by tests
@@ -23,8 +23,8 @@ from yeti.util.services.decorators import catch_stderr
 
 test_info = {
     "test_method"    : catch_stderr()(main),
-    "module_name"    : "yeti.bin.make_wiggle",
-    "ref_file_path"  : resource_filename("yeti","test/data/command_line"),
+    "module_name"    : "plastid.bin.make_wiggle",
+    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
     "temp_file_path" : tempfile.mkdtemp(prefix="make_wiggle"),
 }
 """Constants used in tests below"""
@@ -92,7 +92,7 @@ def do_check(argstr,ref_files,test_files):
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
-    """Execute functional test for :py:mod:`yeti.bin.make_wiggle`"""
+    """Execute functional test for :py:mod:`plastid.bin.make_wiggle`"""
     for argstr, ref_files, test_files in make_wiggle_tests:
         yield do_check, argstr, ref_files, test_files
 

@@ -27,7 +27,7 @@ have been developed to handle this:
     to each copy (TODO: example?)
 
   
-:data:`yeti` is compatible with any of these approaches, but provides
+:data:`plastid` is compatible with any of these approaches, but provides
 tools specifically for masking repetitive genomic regions from analysis.
 For further information on this strategy, see :doc:`/examples/using_masks`.
 

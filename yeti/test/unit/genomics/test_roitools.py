@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for data structures defined in :py:mod:`yeti.genomics.roitools`
+"""Tests for data structures defined in :py:mod:`plastid.genomics.roitools`
 """
 import os
 import tempfile
@@ -9,7 +9,7 @@ import copy
 import numpy
 import warnings
 
-from yeti.util.services.mini2to3 import cStringIO
+from plastid.util.services.mini2to3 import cStringIO
 
 from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
@@ -18,19 +18,19 @@ from nose.plugins.attrib import attr
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import generic_dna
-from yeti.test.ref_files import MINI
-from yeti.readers.gff import GTF2_TranscriptAssembler, \
+from plastid.test.ref_files import MINI
+from plastid.readers.gff import GTF2_TranscriptAssembler, \
                              GFF3_TranscriptAssembler, \
                              GFF3_Reader
-from yeti.readers.bed import BED_Reader
+from plastid.readers.bed import BED_Reader
 
-from yeti.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
-#from yeti.genomics.c_segmentchain import SegmentChain
-from yeti.genomics.roitools import Transcript, SegmentChain
+from plastid.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
+#from plastid.genomics.c_segmentchain import SegmentChain
+from plastid.genomics.roitools import Transcript, SegmentChain
 
-from yeti.genomics.genome_array import GenomeArray
-from yeti.util.io.filters import CommentReader
-from yeti.util.services.decorators import skip_if_abstract
+from plastid.genomics.genome_array import GenomeArray
+from plastid.util.io.filters import CommentReader
+from plastid.util.services.decorators import skip_if_abstract
 
 
 warnings.simplefilter("ignore",DeprecationWarning)
@@ -41,12 +41,12 @@ warnings.simplefilter("ignore",DeprecationWarning)
 
 
 ANNOTATION_FILES = {
-                    "bed100" : resource_filename("yeti","test/data/annotations/100transcripts.bed"),
-                    "gff100" : resource_filename("yeti","test/data/annotations/100transcripts.gff"),
-                    "gtf100" : resource_filename("yeti","test/data/annotations/100transcripts.gtf"),
-                    "cds100" : resource_filename("yeti","test/data/annotations/100cds.bed"),
-                    "utr5_100" : resource_filename("yeti","test/data/annotations/100utr5s.bed"),
-                    "utr3_100" : resource_filename("yeti","test/data/annotations/100utr3s.bed"),
+                    "bed100" : resource_filename("plastid","test/data/annotations/100transcripts.bed"),
+                    "gff100" : resource_filename("plastid","test/data/annotations/100transcripts.gff"),
+                    "gtf100" : resource_filename("plastid","test/data/annotations/100transcripts.gtf"),
+                    "cds100" : resource_filename("plastid","test/data/annotations/100cds.bed"),
+                    "utr5_100" : resource_filename("plastid","test/data/annotations/100utr5s.bed"),
+                    "utr3_100" : resource_filename("plastid","test/data/annotations/100utr3s.bed"),
                     }
 
 def tearDownModule():
@@ -138,7 +138,7 @@ class TestMiscellaneous(unittest.TestCase):
 
 @attr(test="unit")
 class AbstractSegmentChainHelper(unittest.TestCase):
-    """Test suite for :py:class:`yeti.genomics.roitools.SegmentChain`"""
+    """Test suite for :py:class:`plastid.genomics.roitools.SegmentChain`"""
 
     @staticmethod
     def _to_segmentchain(transcript_list):
@@ -1139,7 +1139,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         """Test import to and from BED12 format
         
         NOTE: tests with varying numbers of BED columns (3-12) and with
-        or without extra_columns are in yeti.test.unit.readers.test_bed
+        or without extra_columns are in plastid.test.unit.readers.test_bed
         """
         for ivc_id, ivc in self.bed_dict.items():
             err_msg = "%s %s fails BED io." % (self.test_class.__name__,ivc_id)
@@ -1233,7 +1233,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
-    """Test suite for :py:class:`yeti.genomics.roitools.SegmentChain`"""
+    """Test suite for :py:class:`plastid.genomics.roitools.SegmentChain`"""
 
     @classmethod
     def setUpClass(cls):
@@ -1420,7 +1420,7 @@ chrIV    SGD    intron    254975    255044    .    -    .    Parent=YDL115C_mRNA
 
 @attr(test="unit")
 class TestTranscript(AbstractSegmentChainHelper):
-    """Test suite for :py:class:`yeti.genomics.roitools.Transcript`"""
+    """Test suite for :py:class:`plastid.genomics.roitools.Transcript`"""
 
     @classmethod
     def setUpClass(cls):

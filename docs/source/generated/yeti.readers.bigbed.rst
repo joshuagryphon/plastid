@@ -1,7 +1,7 @@
-yeti.readers.bigbed module
+plastid.readers.bigbed module
 ==========================
 
-.. automodule:: yeti.readers.bigbed
+.. automodule:: plastid.readers.bigbed
     :members:
     :undoc-members:
     :show-inheritance:

@@ -6,9 +6,9 @@ update this docstring.
 import inspect
 import sys
 import argparse
-from yeti.util.scriptlib.help_formatters import format_module_docstring
-from yeti.util.io.filters import NameDateWriter
-from yeti.util.io.openers import get_short_name
+from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.io.filters import NameDateWriter
+from plastid.util.io.openers import get_short_name
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -27,7 +27,7 @@ def main(argv=sys.argv[1:]):
     """
     # fill out command-line program here
     
-    # add parents from yeti.scriptlib.argparsers as necessary
+    # add parents from plastid.scriptlib.argparsers as necessary
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[])
