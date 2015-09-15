@@ -9,6 +9,9 @@ moving some things around inside the package so that they either make more
 sense or take lest time to get to. We welcome your feedback
 in this process, should you have any.
 
+For documentation, see `our home page <http://plastid.readthedocs.org/en/latest/>`_
+on `ReadtheDocs.org`_.
+
 
 Introduction
 ------------

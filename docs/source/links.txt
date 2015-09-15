@@ -74,5 +74,5 @@
 .. Our links
 
 .. _plastid_repo: https://github.com/joshuagryphon/plastid
-.. _plastid_issues: https://github.com/joshuagryphon/plastid
+.. _plastid_issues: https://github.com/joshuagryphon/plastid/issues
 .. _Weissman lab: http://weissmanlab.ucsf.edu
