@@ -37,6 +37,7 @@ cdef class SegmentChain(object):
 
     cpdef set get_position_set(self)
     cpdef set get_masked_position_set(self)
+    cpdef void reset_masks(self)
 
     cdef long c_get_genomic_coordinate(self, long, bint) except -1
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
@@ -45,4 +46,6 @@ cdef class SegmentChain(object):
 
 cdef class Transcript(SegmentChain):
     cpdef void _update(self)
+    cdef void _genome_to_cds_end(self)
+    cdef void _genome_to_cds_start(self)
 
