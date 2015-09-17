@@ -330,7 +330,6 @@ cdef class SegmentChain(object):
         self.sort()
         self._get_position_hash()
 
-        self._position_mask = array.clone(mask_template,0,False)
         self.reset_masks()
        
         if num_segs == 0:
@@ -1026,19 +1025,20 @@ cdef class SegmentChain(object):
     cdef c_add_segments(self, tuple segments):
         cdef:
             str my_chrom, my_strand
-            list positions = list(self.get_position_list())
+            set positions
             GenomicSegment seg
             int length = len(segments)
-            int i = 0
 
         if length > 0:
             my_chrom, my_strand = self.check_segments(segments)
             # add new positions
+            positions = self.get_position_set()
             for seg in segments:
-                positions.extend(range(seg.start,seg.end))
+                positions |= set(range(seg.start,seg.end))
             
             # reset variables
-            self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(list(set(positions))))
+            #self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(list(positions)))
+            self._segments = positions_to_segments(my_chrom,my_strand,positions)
             self._update()
 
     def add_segments(self,*segments):
@@ -1051,8 +1051,8 @@ cdef class SegmentChain(object):
         segments : |GenomicSegment|
             One or more |GenomicSegment| to add to |SegmentChain|
         """
-        if len(self._mask_segments) > 0:
-            if len(self._segments) > 0:
+        if len(segments) > 0:
+            if len(self._mask_segments) > 0:
                 warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
 
             self.c_add_segments(segments)
@@ -1077,7 +1077,7 @@ cdef class SegmentChain(object):
         """
         cdef:
             str my_chrom, my_strand
-            set positions = self.get_position_set()
+            set positions = set()
             GenomicSegment seg
             int [:] pmask = array.clone(mask_template,self.length,True)
             long i, coord
@@ -1090,6 +1090,9 @@ cdef class SegmentChain(object):
         for segment in list(mask_segments) + self._mask_segments:
             positions |= set(range(segment.start,segment.end))
          
+        # trim away non-overlapping masks
+        positions &= self.get_position_set()
+        
         # regenerate list of ivs from positions, in case some were doubly-listed
         self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
 
@@ -2654,7 +2657,7 @@ cdef class Transcript(SegmentChain):
             str stmp
             SegmentChain cds_chain_temp, start_codon_chain, stop_codon_chain
             dict child_chain_attr
-            numpy.ndarray[LONG_t,ndim=1] cds_positions
+            list cds_positions
             GenomicSegment span = self.spanning_segment
             my_strand = span.strand
             my_chrom = span.chrom
@@ -2664,7 +2667,7 @@ cdef class Transcript(SegmentChain):
         if len(cds_chain_temp) > 0:
             child_chain_attr  = copy.deepcopy(self.attr)
             child_chain_attr.pop("type")
-            cds_positions = cds_chain_temp.get_position_list()
+            cds_positions = list(cds_chain_temp.get_position_list())
             
             # remove stop codons from CDS, per GTF2 spec
             if my_strand == "+":
