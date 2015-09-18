@@ -1007,38 +1007,39 @@ cdef class SegmentChain(object):
                 my_chrom  = seg0.chrom
                 my_strand = seg0.c_strand
 
-            for seg in segments:
+            while i < length:
+                seg = segments[i]
                 if seg.chrom != my_chrom:
                     chromprob = True
                     break
                     
                 if seg.c_strand != my_strand:
-                    standprob = True
+                    strandprob = True
                     break
 
-        if strandprob == True:
-            raise ValueError("Incoming GenomicSegment '%s' mismatches strand (%s) of SegmentChain '%s'" % (seg,my_strand,str(self)))
-        if chromprob == True:
-            raise ValueError("Incoming GenomicSegment '%s' mismatches chromosome (%s) of SegmentChain '%s'" % (seg,my_chrom,str(self)))
+                i += 1
+
+            if strandprob == True:
+                raise ValueError("Incoming GenomicSegment '%s' mismatches strand (%s) of SegmentChain '%s'" % (seg,my_strand,str(self)))
+            if chromprob == True:
+                raise ValueError("Incoming GenomicSegment '%s' mismatches chromosome (%s) of SegmentChain '%s'" % (seg,my_chrom,str(self)))
         return (my_chrom,strand_to_str(my_strand))
 
     cdef c_add_segments(self, tuple segments):
         cdef:
             str my_chrom, my_strand
-            set positions
+            list positions = list(self.c_get_position_list(False))
             GenomicSegment seg
             int length = len(segments)
 
         if length > 0:
             my_chrom, my_strand = self.check_segments(segments)
             # add new positions
-            positions = self.get_position_set()
             for seg in segments:
-                positions |= set(range(seg.start,seg.end))
+                positions.extend(range(seg.start,seg.end))
             
             # reset variables
-            #self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(list(positions)))
-            self._segments = positions_to_segments(my_chrom,my_strand,positions)
+            self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(list(set(positions))))
             self._update()
 
     def add_segments(self,*segments):
