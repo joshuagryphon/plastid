@@ -43,9 +43,9 @@ cpdef positions_to_segments(str chrom, str strand, object positions):
         List of |GenomicSegments| covering `positions`
     """
     if isinstance(positions,set):
-        positions = sorted(list(positions))
+        positions = sorted(positions)
     else:
-        positions = sorted(list(set(positions)))
+        positions = sorted(set(positions))
     return positionlist_to_segments(chrom,strand,positions)
 
 cpdef positionlist_to_segments(str chrom, str strand, list positions):

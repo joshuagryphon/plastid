@@ -1041,7 +1041,7 @@ cdef class SegmentChain(object):
         -------
         int
         """
-        return self.length #_position_hash.shape[0] #sum([len(X) for X in self])
+        return self.length
 
     # TODO: deprecate
     def get_masked_length(self):
@@ -1822,7 +1822,7 @@ cdef class SegmentChain(object):
         SegmentChain.get_genomic_coordinate
         """
         cdef:
-            long [:] positions = self._position_hash
+            long [:] positions = self._position_hash # is creating the memory view more expensive than just ref directly?
             long length = self.length
             long orig_index = x
             Strand strand = self.c_strand
@@ -1883,105 +1883,7 @@ cdef class SegmentChain(object):
         chain.attr["ID"] = "%s_subchain" % self.get_name()
         return chain
 
-    # TODO: optimize
     cdef SegmentChain c_get_subchain(self, long start, long end, bint stranded):
-        """Similar to :meth:`SegmentChain.get_subchain` but does not copy `attr` dict
-        
-        Parameters
-        ----------
-        start : long
-            position of interest in SegmentChain coordinates, 0-indexed
-            
-        end : long
-            position of interest in SegmentChain coordinates, 0-indexed 
-            and half-open
-            
-        stranded : bool
-            If `True`, `start` and `end` are assumed to be in stranded space (i.e. counted from
-            5' end of chain, as one might expect for a transcript). If `False`,
-            they assumed to be counted the left end of the `self`,
-            regardless of the strand of `self`.
-
-        Returns
-        -------
-        |SegmentChain|
-            covering parent chain positions `start` to `end`
-
-        See also
-        --------
-        SegmentChain.get_subchain
-        """
-        cdef:
-             long [:] positions = self._position_hash # array.array -> tolist instead of memoryview?
-             long length = self.length
-             long tmp
-             list segs
-
-        if start is None:
-            raise TypeError('start coordinate supplied is None. Expected int')
-        elif end is None:
-            raise TypeError('end coordinate supplied is None. Expected int')
-
-        if stranded == True and self.c_strand == reverse_strand:
-            tmp = end
-            end   = length - start 
-            start = length - tmp 
-            
-        positions = positions[start:end]
-        segs = positions_to_segments(self.chrom,self.strand,positions)
-
-        return SegmentChain(*segs)
-
-    def get_subchain2(self, long start, long end, bint stranded=True, **extra_attr):
-        """Retrieves a sub-|SegmentChain| corresponding a range of positions
-        specified in coordinates relative this |SegmentChain|. Attributes in
-        `self.attr` are copied to the child SegmentChain, with the exception
-        of `ID`, to which the suffix `'subchain'` is appended.
-        
-        Parameters
-        ----------
-        start : int
-            position of interest in SegmentChain coordinates, 0-indexed
-            
-        end : int
-            position of interest in SegmentChain coordinates, 0-indexed 
-            and half-open
-            
-        stranded : bool, optional
-            If `True`, `start` and `end` are assumed to be in stranded space (i.e. counted from
-            5' end of chain, as one might expect for a transcript). If `False`,
-            they assumed to be counted the left end of the `self`,
-            regardless of the strand of `self`. (Default: `True`)
-
-        extra_attr : keyword arguments
-            Values that will be included in the subchain's `attr` dict.
-            These can be used to overwrite values already present.
-                          
-        Returns
-        -------
-        |SegmentChain|
-            covering parent chain positions `start` to `end` of `self`
-        
-        
-        Raises
-        ------
-        IndexError
-            if `start` or `end` is outside the bounds of the |SegmentChain|
-
-        TypeError
-            if `start` or `end` is None
-        """
-        cdef:
-            SegmentChain chain = self.c_get_subchain2(start,end,stranded)
-            dict old_attr = copy.deepcopy(self.attr)
-
-        old_attr.update(extra_attr)
-        chain.attr = old_attr
-        chain.attr["ID"] = "%s_subchain" % self.get_name()
-        return chain
-
-    # TODO: optimize
-    cdef SegmentChain c_get_subchain2(self, long start, long end, bint stranded):
         """Similar to :meth:`SegmentChain.get_subchain` but does not copy `attr` dict
         
         Parameters
@@ -2068,6 +1970,46 @@ cdef class SegmentChain(object):
             
         return count_array
     
+    def get_counts2(self,ga,stranded=True):
+        """Return list of counts or values at each position in `self`
+        
+        Parameters
+        ----------
+        ga : non-abstract subclass of |AbstractGenomeArray|
+            GenomeArray from which to fetch counts
+            
+        stranded : bool, optional
+            If `True` and the SegmentChain is on the minus strand,
+            count order will be reversed relative to genome so that the
+            array positions march from the 5' to 3' end of the chain.
+            (Default: `True`)
+            
+            
+        Returns
+        -------
+        numpy.ndarray
+            Array of counts from `gnd` covering `self`
+        """
+        cdef:
+            long c, cend
+            GenomicSegment seg
+            numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
+            double [:] cview = count_array
+
+        if len(self) == 0:
+            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
+
+        c = 0
+        for seg in self:
+            cend = c + len(seg)
+            cview[c:cend] = ga.__getitem__(seg,roi_order=False)
+            c = cend
+
+        if self.c_strand == reverse_strand and stranded is True:
+            count_array = count_array[::-1]
+            
+        return count_array
+
     def get_masked_counts(self,ga,stranded=True,copy=False):
         """Return counts covering `self` in dataset `gnd` as a masked array, in transcript 
         coordinates. Positions masked by :py:meth:`SegmentChain.add_mask` 
@@ -2098,21 +2040,11 @@ cdef class SegmentChain(object):
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
             numpy.ndarray[int,ndim=1] mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
 
-        print("count length: %s" % len(counts))
-        print("mask length: %s" % len(mask))
         if self.c_strand == reverse_strand:
             mask = mask[::-1]
 
         return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
-#        valid_positions = [self.get_segmentchain_coordinate(self.spanning_segment.chrom,X,
-#                                                            self.spanning_segment.strand) 
-#                           for X in self.get_masked_position_set()]
-#        for x in valid_positions:
-#            atmp.mask[x] = False
-        
-#        return atmp
-    
     def get_sequence(self,genome,stranded=True):
         """Return spliced genomic sequence of |SegmentChain| as a string
         

@@ -42,7 +42,7 @@ cdef class SegmentChain(object):
     cdef SegmentChain c_get_subchain(self,long, long, bint)
     cpdef SegmentChain get_antisense(self)
 
-
+ 
 #cdef class Transcript(SegmentChain):
 #    cpdef void _update(self)
 #    cdef void _genome_to_cds_end(self)
