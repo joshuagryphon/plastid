@@ -25,7 +25,8 @@ from plastid.readers.gff import GTF2_TranscriptAssembler, \
 from plastid.readers.bed import BED_Reader
 
 from plastid.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
-from plastid.genomics.c_segmentchain import SegmentChain, Transcript
+from plastid.genomics.c_segmentchain import SegmentChain#, Transcript
+from plastid.genomics.roitools import Transcript
 
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.io.filters import CommentReader
@@ -1231,6 +1232,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
 
 
+@unittest.skip
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
     """Test suite for :py:class:`plastid.genomics.roitools.SegmentChain`"""
