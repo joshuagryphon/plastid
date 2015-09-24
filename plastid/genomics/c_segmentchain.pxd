@@ -16,7 +16,7 @@ cdef class SegmentChain(object):
 
     # maintenance
     cdef void _update(self)
-    cdef void c_add_segments(self,tuple)
+    cdef int c_add_segments(self,tuple) except -1
     cdef void c_reset_masks(self)
 
 

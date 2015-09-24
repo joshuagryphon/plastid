@@ -58,6 +58,13 @@ FLOAT  = numpy.float
 DOUBLE = numpy.double
 LONG   = numpy.long
 
+SEGSBAD   = -1
+SEGSOK    = 0
+BADCHROM  = 1
+BADSTRAND = 2
+BADBOTH   = 3
+
+
 ctypedef numpy.int_t    INT_t
 ctypedef numpy.float_t  FLOAT_t
 ctypedef numpy.double_t DOUBLE_t
@@ -182,6 +189,7 @@ cdef tuple check_segments(SegmentChain chain, tuple segments):
         Strand my_strand = span.c_strand
         int i = 0
         int length = len(segments)
+        int retval = SEGSOK
         bint strandprob = False
         bint chromprob = False
 
@@ -195,10 +203,12 @@ cdef tuple check_segments(SegmentChain chain, tuple segments):
             seg = segments[i]
             if seg.chrom != my_chrom:
                 chromprob = True
+                retval |= BADCHROM
                 break
                 
             if seg.c_strand != my_strand:
                 strandprob = True
+                retval |= BADSTRAND
                 break
 
             i += 1
@@ -207,8 +217,8 @@ cdef tuple check_segments(SegmentChain chain, tuple segments):
             raise ValueError("Incoming GenomicSegment '%s' mismatches strand (%s) of SegmentChain '%s'" % (seg,my_strand,str(chain)))
         if chromprob == True:
             raise ValueError("Incoming GenomicSegment '%s' mismatches chromosome (%s) of SegmentChain '%s'" % (seg,my_chrom,str(chain)))
-    return (my_chrom,strand_to_str(my_strand))
 
+    return (my_chrom,strand_to_str(my_strand),retval)
 
 
 #===============================================================================
@@ -321,7 +331,7 @@ cdef class SegmentChain(object):
             self._position_hash   = array.clone(hash_template,0,False)
             self._position_mask   = array.clone(mask_template,0,False)
         else:
-            my_chrom, my_strand = check_segments(self,segments)
+            my_chrom, my_strand, code = check_segments(self,segments)
 
             # add new positions
             for seg in segments:
@@ -1054,7 +1064,7 @@ cdef class SegmentChain(object):
         """
         return self.masked_length
 
-    cdef void c_add_segments(self, tuple segments):
+    cdef int c_add_segments(self, tuple segments) except -1:
         """Add |GenomicSegments| to `self`. If there are
         already segments in the chain, the incoming segments must be 
         on the same strand and chromosome as all others present.
@@ -1072,7 +1082,10 @@ cdef class SegmentChain(object):
             int length = len(segments)
 
         if length > 0:
-            my_chrom, my_strand = check_segments(self,segments)
+            my_chrom, my_strand, code = check_segments(self,segments)
+            if code != SEGSOK:
+                return code
+
             # add new positions
             for seg in segments:
                 positions.extend(range(seg.start,seg.end))
@@ -1080,6 +1093,8 @@ cdef class SegmentChain(object):
             # reset variables
             self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
             self._update()
+
+        return SEGSOK
 
     def add_segments(self,*segments):
         """Add 1 or more |GenomicSegments| to the |SegmentChain|. If there are
@@ -1091,11 +1106,23 @@ cdef class SegmentChain(object):
         segments : |GenomicSegment|
             One or more |GenomicSegment| to add to |SegmentChain|
         """
+        cdef:
+            int retval
+            str msg
         if len(segments) > 0:
             if len(self._mask_segments) > 0:
                 warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
 
-            self.c_add_segments(segments)
+            retval = self.c_add_segments(segments)
+            if retval != 0:
+                msg = "SegmentChain.add_segments: incoming segments (%s) mismatch chain '%s'"
+                if retval & BADCHROM == BADCHROM:
+                    msg += "; wrong and/or multiple chromosomes"
+                if retval & BADSTRAND == BADSTRAND:
+                    msg += "; wrong and/or multiple strands"
+
+                msg = msg % (", ".join([str(X) for X in segments]),self)
+                raise ValueError(msg)
         
     # TODO: optimize
     def add_masks(self,*mask_segments):
@@ -1126,7 +1153,7 @@ cdef class SegmentChain(object):
             int tmpsum = 0
             dict ihash
 
-        my_chrom, my_strand = check_segments(self,mask_segments)
+        my_chrom, my_strand, code = check_segments(self,mask_segments)
            
         # add new positions to any existing masks
         for segment in list(mask_segments) + self._mask_segments:
@@ -1949,7 +1976,7 @@ cdef class SegmentChain(object):
         Returns
         -------
         numpy.ndarray
-            Array of counts from `gnd` covering `self`
+            Array of counts from `ga` covering `self`
         """
         cdef:
             long c, cend
@@ -1988,7 +2015,7 @@ cdef class SegmentChain(object):
         Returns
         -------
         numpy.ndarray
-            Array of counts from `gnd` covering `self`
+            Array of counts from `ga` covering `self`
         """
         cdef:
             long c, cend
@@ -2002,7 +2029,7 @@ cdef class SegmentChain(object):
         c = 0
         for seg in self:
             cend = c + len(seg)
-            cview[c:cend] = ga.__getitem__(seg,roi_order=False)
+            cview[c:cend] = ga.__getitem__(seg,roi_order=False).tolist()
             c = cend
 
         if self.c_strand == reverse_strand and stranded is True:
