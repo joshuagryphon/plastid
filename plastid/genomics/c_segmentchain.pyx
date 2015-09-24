@@ -1817,7 +1817,6 @@ cdef class SegmentChain(object):
 
         return self.chrom, new_x, self.strand
 
-    # TODO: optimize
     cdef long c_get_genomic_coordinate(self, long x, bint stranded) except -1:
         """Finds genomic coordinate corresponding to position `x` in `self`
         
@@ -1849,7 +1848,6 @@ cdef class SegmentChain(object):
         SegmentChain.get_genomic_coordinate
         """
         cdef:
-            long [:] positions = self._position_hash # is creating the memory view more expensive than just ref directly?
             long length = self.length
             long orig_index = x
             Strand strand = self.c_strand
@@ -1860,7 +1858,7 @@ cdef class SegmentChain(object):
         if x < 0 or x >= length:
             raise IndexError("Position %s is outside bounds [0,%s) of SegmentChain '%s'" % (orig_index, length, self.get_name()))
 
-        return positions[x]
+        return self._position_hash[x]
 
     def get_subchain(self, long start, long end, bint stranded=True, **extra_attr):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions
@@ -1957,7 +1955,6 @@ cdef class SegmentChain(object):
 
         return SegmentChain(*segs)
 
-    # TODO: test optimality vs memoryview
     def get_counts(self,ga,stranded=True):
         """Return list of counts or values at each position in `self`
         
@@ -1990,46 +1987,6 @@ cdef class SegmentChain(object):
         for seg in self:
             cend = c + len(seg)
             count_array[c:cend] = ga.__getitem__(seg,roi_order=False)
-            c = cend
-
-        if self.c_strand == reverse_strand and stranded is True:
-            count_array = count_array[::-1]
-            
-        return count_array
-    
-    def get_counts2(self,ga,stranded=True):
-        """Return list of counts or values at each position in `self`
-        
-        Parameters
-        ----------
-        ga : non-abstract subclass of |AbstractGenomeArray|
-            GenomeArray from which to fetch counts
-            
-        stranded : bool, optional
-            If `True` and the SegmentChain is on the minus strand,
-            count order will be reversed relative to genome so that the
-            array positions march from the 5' to 3' end of the chain.
-            (Default: `True`)
-            
-            
-        Returns
-        -------
-        numpy.ndarray
-            Array of counts from `ga` covering `self`
-        """
-        cdef:
-            long c, cend
-            GenomicSegment seg
-            numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
-            double [:] cview = count_array
-
-        if len(self) == 0:
-            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
-
-        c = 0
-        for seg in self:
-            cend = c + len(seg)
-            cview[c:cend] = ga.__getitem__(seg,roi_order=False).tolist()
             c = cend
 
         if self.c_strand == reverse_strand and stranded is True:
@@ -2091,7 +2048,11 @@ cdef class SegmentChain(object):
         str
             Nucleotide sequence of the |SegmentChain| extracted from `genome`
         """
-        if len(self) == 0:
+        cdef:
+            list ltmp
+            str stmp
+
+        if len(self._segments) == 0:
             warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
             return ""
 
@@ -2100,7 +2061,7 @@ cdef class SegmentChain(object):
             ltmp = [chromseq[X.start:X.end] for X in self]
             stmp = "".join([str(X.seq) if isinstance(X,SeqRecord) else X for X in ltmp])
 
-            if self.strand == "-"  and stranded is True:
+            if self.strand == "-"  and stranded == True:
                 stmp = str(Seq(stmp,generic_dna).reverse_complement())
             
         return stmp
