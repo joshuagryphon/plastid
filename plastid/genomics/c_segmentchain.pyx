@@ -182,6 +182,12 @@ def sort_segmentchains_by_name(segchain):
     return segchain.get_name()
 
 
+#===============================================================================
+# Various helpers
+# These could be static methods of SegmentChain, but are kept here to avoid
+# lookup times
+#===============================================================================
+
 cdef bint check_segments(SegmentChain chain, tuple segments) except False:
     cdef:
         GenomicSegment seg, seg0
@@ -219,6 +225,79 @@ cdef bint check_segments(SegmentChain chain, tuple segments) except False:
 
     return True
 
+cdef ExBool chain_richcmp(SegmentChain chain1, SegmentChain chain2, int cmpval) except bool_exception:
+    """Helper method for rich comparisons (==, !=, <, >, <=, >=) of |SegmentChains|
+
+    Parameters
+    ----------
+    chain1 : SegmentChain
+        First chain
+
+    chain2 : SegmentChain
+        Second chain
+
+    cmpval : int
+        Integer code for comparison (from Cython specification for ``__richcmp__()`` methods:
+
+        ========  ==============
+        **Code**  **Comparison**
+        --------  --------------
+        0         <
+        1         <=
+        2         ==
+        3         !=
+        4         >
+        5         >=
+        ========  ==============
+ 
+
+    Returns
+    -------
+    ExBool
+        true if `chain1 'comparison' chain2` is `True`, otherwise false
+    """
+    cdef:
+        sspan = chain1.spanning_segment
+        ospan = chain2.spanning_segment
+
+    if cmpval == EQ:
+        if len(chain1) == 0 or len(chain2) == 0:
+            return false
+        else:
+            if sspan.chrom == ospan.chrom and\
+               sspan.c_strand == ospan.c_strand and\
+               chain1.c_get_position_list() == chain2.c_get_position_list():
+                   return true
+            return false
+    elif cmpval == NEQ:
+        return true if chain_richcmp(chain1,chain2,EQ) == false else true
+    elif cmpval == LT:
+        if sspan < ospan:
+            return true
+        elif sspan > ospan:
+            return false
+        else:
+            slen = chain1.length
+            olen = chain2.length
+            if slen < olen:
+                return true
+            elif slen > olen:
+                return false
+            else:
+                sname = chain1.get_name()
+                oname = chain2.get_name()
+                if sname < oname:
+                    return true
+                else:
+                    return false
+    elif cmpval == LEQ:
+        return chain_richcmp(chain1,chain2,LT) or chain_richcmp(chain1,chain2,EQ)
+    elif cmpval == GT:
+        return chain_richcmp(chain2,chain1,LT)
+    elif cmpval == GEQ:
+        return chain_richcmp(chain2,chain1,LT) or chain_richcmp(chain1,chain2,EQ)
+    else:
+        raise ValueError("This operation is not defined for SegmentChains.")
 
 #===============================================================================
 # higher-order classes that handle multi-feature structures, like transcripts
@@ -615,9 +694,11 @@ cdef class SegmentChain(object):
         bool
         """
         if isinstance(other,SegmentChain):
-            return self.c_richcmp(other,cmpval) == true
+            #return self.c_richcmp(other,cmpval) == true
+            return chain_richcmp(self,other,cmpval) == true
         elif isinstance(other,SegmentChain):
-            return self.c_richcmp(SegmentChain(GenomicSegment),cmpval)
+            return chain_richcmp(self,SegmentChain(other),cmpval) == true 
+            #return self.c_richcmp(SegmentChain(GenomicSegment),cmpval)
         else:
             raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
 
