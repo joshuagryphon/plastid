@@ -43,8 +43,8 @@ cdef class SegmentChain(object):
     cpdef SegmentChain get_antisense(self)
 
  
-#cdef class Transcript(SegmentChain):
-#    cpdef void _update(self)
+cdef class Transcript(SegmentChain):
+    cdef bint _update_cds(self) except False
 #    cdef void _genome_to_cds_end(self)
 #    cdef void _genome_to_cds_start(self)
 #

@@ -342,19 +342,6 @@ cdef class SegmentChain(object):
             new_segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
             self._segments = new_segments
             num_segs = len(new_segments)
- 
-            # this should be redundant
-            if num_segs == 0:
-                self.spanning_segment = NullSegment 
-            elif num_segs == 1:
-                self.spanning_segment = new_segments[0]
-            elif num_segs >1:
-                segs = new_segments
-                seg0 = segs[0]
-                self.spanning_segment = GenomicSegment(seg0.chrom,
-                                                       seg0.start,
-                                                       segs[-1].end,
-                                                       seg0.strand)
 
             self._update()
 
@@ -591,8 +578,8 @@ cdef class SegmentChain(object):
                     return true
             return false 
         else:
-            selfpos = self.get_position_set()
-            opos    = other.get_position_set()
+            selfpos = self.c_get_position_set()
+            opos    = other.c_get_position_set()
             
             if opos & selfpos == opos:
                 myjuncs = self.get_junctions()
@@ -626,13 +613,12 @@ cdef class SegmentChain(object):
         -------
         bool
         """
-        if isinstance(other,GenomicSegment):
-            return self.__richcmp__(SegmentChain(GenomicSegment),cmpval) == true
+        if isinstance(other,SegmentChain):
+            return self.c_richcmp(other,cmpval) == true
         elif isinstance(other,SegmentChain):
-            retval = self.c_richcmp(other,cmpval)
-            if retval == bool_exception:
-                raise RuntimeError("SegmentChain eq/ineq/et c comparison failed with chain '%s' on object '%'""" % (self,other))
-            return retval == true
+            return self.c_richcmp(SegmentChain(GenomicSegment),cmpval)
+        else:
+            raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
 
     # TODO: test sorting operators
     cpdef ExBool c_richcmp(self, SegmentChain other, int cmpval) except bool_exception:
@@ -643,7 +629,7 @@ cdef class SegmentChain(object):
             else:
                 if self.chrom == other.chrom and\
                    self.c_strand == other.c_strand and\
-                   self.get_position_set() == other.get_position_set():
+                   self.c_get_position_set() == other.c_get_position_set():
                        return true
                 return false
         elif cmpval == NEQ:
@@ -676,11 +662,11 @@ cdef class SegmentChain(object):
                     else:
                         return false
         elif cmpval == LEQ:
-            return self.c_richcmp(other,LT) or self.richcmp(other,EQ)
+            return self.c_richcmp(other,LT) or self.c_richcmp(other,EQ)
         elif cmpval == GT:
             return other.c_richcmp(self,LT)
         elif cmpval == GEQ:
-            return other.c_richcmp(self,LT) or self.richcmp(other,EQ)
+            return other.c_richcmp(self,LT) or self.c_richcmp(other,EQ)
         else:
             raise ValueError("This operation is not defined for SegmentChains.")
 
@@ -745,27 +731,25 @@ cdef class SegmentChain(object):
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         cdef ExBool retval
-        if isinstance(other,GenomicSegment):
+        if isinstance(other,SegmentChain):
+            return self.c_unstranded_overlaps(other) == true
+        elif isinstance(other,GenomicSegment):
             return self.unstranded_overlaps(SegmentChain(other))
-        elif isinstance(other,SegmentChain):
-            retval = self.c_unstranded_overlaps(other)
-            if retval == bool_exception:
-                raise RuntimeError("SegmentChain.unstranded_overlaps() errored on chain '%s' and object '%s'" % (self,other))
-            return retval == true
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
-    # unoptimized
     cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
         cdef:
             set o_pos, my_pos
         if self.chrom != other.chrom:
             return false
         else:
-            my_pos = self.get_position_set()
-            o_pos  = other.get_position_set()
+            my_pos = self.c_get_position_set()
+            o_pos  = other.c_get_position_set()
+
         if len(my_pos & o_pos) > 0:
             return true
+
         return false
 
     def overlaps(self, object other):
@@ -791,10 +775,7 @@ cdef class SegmentChain(object):
         if isinstance(other,GenomicSegment):
             return self.overlaps(SegmentChain(other))
         elif isinstance(other,SegmentChain):
-            retval = self.c_overlaps(other)
-            if retval == bool_exception:
-                raise RuntimeError("SegmentChain.overlaps() errored on chain '%s' and object '%s'" % (self,other))
-            return retval == true
+            return self.c_overlaps(other) == true
         else:
             raise TypeError("SegmentChain.overlaps() is defined only for GenomicSegments and SegmentChains. Found %s." % type(other))
  
@@ -802,8 +783,10 @@ cdef class SegmentChain(object):
         cdef:
             Strand sstrand = self.c_strand
             Strand ostrand = other.c_strand
+
         if self.c_unstranded_overlaps(other) == true and self.c_strand & other.c_strand == other.c_strand:
             return true
+
         return false
     
     def antisense_overlaps(self, object other):
@@ -906,10 +889,11 @@ cdef class SegmentChain(object):
             return false
         elif self.chrom  == other.chrom and\
              self.c_strand == other.c_strand and\
-             other.get_position_set() & self.get_position_set() == other.get_position_set():
+             other.c_get_position_set() & self.c_get_position_set() == other.c_get_position_set():
             return true
         return false
     
+    # TODO: optimize. is very slow!
     cpdef SegmentChain get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
@@ -919,9 +903,13 @@ cdef class SegmentChain(object):
             |SegmentChain| antisense to `self`
         """
         cdef:
-            Strand strand = self.spanning_segment.c_strand
+            GenomicSegment span = self.spanning_segment
+            Strand strand = span.c_strand
+            str chrom = span.chrom
+            GenomicSegment seg 
             Strand new_strand
-            list new_segments
+            list new_segments = []
+            str s_strand
 
         if strand == forward_strand:
             new_strand = reverse_strand
@@ -932,7 +920,11 @@ cdef class SegmentChain(object):
         else:
             raise ValueError("Strand for SegmentChain '%s' is undefined and has no anti-sense." % self)
 
-        new_segments = [GenomicSegment(X.chrom,X.start,X.end,strand_to_str(new_strand)) for X in self._segments]
+        s_strand = strand_to_str(new_strand)
+
+        for seg in self._segments:
+            new_segments.append(GenomicSegment(chrom,seg.start,seg.end,s_strand))
+
         return SegmentChain(*new_segments)
 
     cdef list c_get_position_list(self):
@@ -988,7 +980,7 @@ cdef class SegmentChain(object):
         return set(self.c_get_position_list())
 
     cdef set c_get_position_set(self):
-        return set(self.c_get_position_list())
+        return set(self._position_hash.tolist())
    
     cpdef set get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
@@ -1070,7 +1062,6 @@ cdef class SegmentChain(object):
         """Add |GenomicSegments| to `self`. If there are
         already segments in the chain, the incoming segments must be 
         on the same strand and chromosome as all others present.
-
 
         Parameters
         ----------
@@ -1159,7 +1150,7 @@ cdef class SegmentChain(object):
             positions |= set(range(segment.start,segment.end))
          
         # trim away non-overlapping masks
-        positions &= self.get_position_set()
+        positions &= self.c_get_position_set()
         
         # regenerate list of ivs from positions, in case some were doubly-listed
         self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
@@ -1339,7 +1330,7 @@ cdef class SegmentChain(object):
 
         return "\t".join(ltmp) + "\n"
     
-    # TODO: test optimality
+    # TODO: optimize
     def as_gtf(self, str feature_type=None, bint escape=True, list excludes=[]):
         """Format |SegmentChain| as a block of `GTF2`_ output.
         
@@ -1504,7 +1495,7 @@ cdef class SegmentChain(object):
         
         return ltmp
     
-    # TODO: test optimality
+    # TODO: optimize
     def as_bed(self, thickstart=None, thickend=None, as_int=True, color=None, extra_columns=None):
         """Format |SegmentChain| as a string of BED12[+X] output.
         
@@ -1781,11 +1772,13 @@ cdef class SegmentChain(object):
         """
         cdef dict ihash = self._inverse_hash
 
-        # TODO: try-catch this
-        if self.c_strand == reverse_strand and stranded == True:
-            return self.length - ihash[genomic_x] - 1
-        else:
-            return ihash[genomic_x]
+        try:
+            if self.c_strand == reverse_strand and stranded == True:
+                return self.length - ihash[genomic_x] - 1
+            else:
+                return ihash[genomic_x]
+        except KeyError:
+            raise KeyError("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self))
 
     def get_genomic_coordinate(self,x,stranded=True):
         """Finds genomic coordinate corresponding to position `x` in `self`
@@ -2353,93 +2346,94 @@ cdef class SegmentChain(object):
         new_attr = copy.deepcopy(self.attr)
         return SegmentChain(*new_ivs,**new_attr)    
 
+ 
+cdef class Transcript(SegmentChain):
+    """Subclass of |SegmentChain| specifically for transcripts.
+    In addition to coordinate-conversion, count fetching, sequence fetching,
+    and various other methods inherited from |SegmentChain|, |Transcript|
+    provides convenience methods for fetching sub-chains corresponding to 
+    CDS features, 5' UTRs, and 3' UTRs.
 
+     .. warning::
 
-# 
-#cdef class Transcript(SegmentChain):
-#    """Subclass of |SegmentChain| specifically for transcripts.
-#    In addition to coordinate-conversion, count fetching, sequence fetching,
-#    and various other methods inherited from |SegmentChain|, |Transcript|
-#    provides convenience methods for fetching sub-chains corresponding to 
-#    CDS features, 5' UTRs, and 3' UTRs.
-#
-#     .. warning::
-#
-#        This is partially implemented! Do not use!!
-#
-#    Attributes
-#    ----------
-#    cds_genome_start : int or None
-#        Leftmost position in genomic coordinates of coding region, 0-indexed
-#
-#    cds_genome_end : int or None
-#        Rightmost position in genomic coordinates of coding region, 0-indexed
-#        and half-open
-#
-#    cds_start : int or None
-#        Stranded position relative to 5' end of transcript at which coding region starts
-#        (note: for minus-strand features this will be higher in genomic
-#        coordinates than `cds_end`).
-#
-#    cds_end : int or None
-#        Stranded position relative to 5' end of transcript at which coding region ends
-#        (note: for minus-strand features this will be lower in genomic coordinates
-#        than `cds_start`).
-#
-#    iv : |GenomicSegment|
-#        A GenomicSegment spanning the endpoints of the Transcript
-#
-#    strand : str
-#        The chromosome strand ('+', '-', or '.')
-#
-#    chrom : str
-#        The chromosome name
-#
-#    attr : dict
-#        Miscellaneous attributes
-#    """
-#    
-#    def __init__(self,*segments,**attr):
-#        """Create a |Transcript|
-#        
-#        Parameters
-#        ----------
-#        *segments : |GenomicSegment|
-#            0 or more |GenomicSegments| (exons)
-#
-#        **attr : dict
-#            keyword attributes
-#
-#        attr["cds_genome_start"] : int or None
-#            genome coordinate of CDS start, if any
-#                         
-#        attr["cds_genome_end"] : int or None
-#            genome coordinate of CDS end, if any
-#    
-#        attr["type"] : str
-#            If provided, a feature type used for GTF2/GFF3 export
-#            Otherwise, set to "mRNA"
-#        
-#        attr["ID"] : str
-#            If provided, a unique ID for the |Transcript|.
-#            Otherwise, generated from genomic coordinates
-#        
-#        attr["transcript_id"] : str
-#            If provided, a transcript_id used for `GTF2`_ export.
-#            Otherwise, generated from genomic coordinates.
-#        
-#        attr["gene_id"] : str
-#            If provided, a gene_id used for `GTF2`_ export
-#            Otherwise, generated from genomic coordinates.
-#        """
-#        if "type" not in attr:
-#            attr["type"] = "mRNA"
-#        self.attr = attr
-#           
-#        self.cds_genome_start = attr.get("cds_genome_start",None)
-#        self.cds_genome_end   = attr.get("cds_genome_end",None)
-#        self.c_add_segments(segments)
-# 
+        This is partially implemented! Do not use!!
+
+    Attributes
+    ----------
+    cds_genome_start : int or None
+        Leftmost position in genomic coordinates of coding region, 0-indexed
+
+    cds_genome_end : int or None
+        Rightmost position in genomic coordinates of coding region, 0-indexed
+        and half-open
+
+    cds_start : int or None
+        Stranded position relative to 5' end of transcript at which coding region starts
+        (note: for minus-strand features this will be higher in genomic
+        coordinates than `cds_end`).
+
+    cds_end : int or None
+        Stranded position relative to 5' end of transcript at which coding region ends
+        (note: for minus-strand features this will be lower in genomic coordinates
+        than `cds_start`).
+
+    iv : |GenomicSegment|
+        A GenomicSegment spanning the endpoints of the Transcript
+
+    strand : str
+        The chromosome strand ('+', '-', or '.')
+
+    chrom : str
+        The chromosome name
+
+    attr : dict
+        Miscellaneous attributes
+    """
+    
+    def __cinit__(self,*segments,type=None,**attr):
+        """Create a |Transcript|
+        
+        Parameters
+        ----------
+        *segments : |GenomicSegment|
+            0 or more |GenomicSegments| (exons)
+
+        **attr : dict
+            keyword attributes
+
+        attr["cds_genome_start"] : int or None
+            genome coordinate of CDS start, if any
+                         
+        attr["cds_genome_end"] : int or None
+            genome coordinate of CDS end, if any
+    
+        attr["type"] : str
+            If provided, a feature type used for GTF2/GFF3 export
+            Otherwise, set to "mRNA"
+        
+        attr["ID"] : str
+            If provided, a unique ID for the |Transcript|.
+            Otherwise, generated from genomic coordinates
+        
+        attr["transcript_id"] : str
+            If provided, a transcript_id used for `GTF2`_ export.
+            Otherwise, generated from genomic coordinates.
+        
+        attr["gene_id"] : str
+            If provided, a gene_id used for `GTF2`_ export
+            Otherwise, generated from genomic coordinates.
+        """
+        if type == None:
+            self.attr["type"] = "mRNA"
+        
+        gstart = attr.get("cds_genome_start",None) 
+        gend   = attr.get("cds_genome_end"  ,None)
+        self.cds_genome_start = gstart
+        self.cds_genome_end   = gend
+
+        if gstart is not None and gend is not None:
+            self._update_cds()
+ 
 #    # TODO; draw this out again
 #    property cds_start:
 #        def __get__(self):
@@ -2510,165 +2504,180 @@ cdef class SegmentChain(object):
 #        else:
 #            self.cds_end = None
 #
-#    cpdef void _update(self):
-#        SegmentChain._update(self)
-#        if self.cds_genome_start is not None:
-#            if self.strand == "+":
-#                self.cds_start = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_start,self.strand,stranded=True)
-#                
-#                # this is in a try-catch because if the half-open cds_end coincides
-#                # with the end of an exon, it will not be in the end-inclusive position
-#                try:
-#                    self.cds_end = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end, self.strand,stranded=True)
-#                except KeyError:
-#                    # minus one, plus one corrections because end-exclusive genome
-#                    # position will not be in position hash if it coincides with
-#                    # the end of any exon
-#                    self.cds_end   = 1 + self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end - 1, self.strand,stranded=True)
-#            else:
-#                # likewise for minus-strand
-#                # both this adjustment and the one above for plus-strand features
-#                # have been thoroughly tested by examining BED files exported
-#                # for this purpose
-#                self.cds_start = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end - 1, self.strand,stranded=True)
-#                self.cds_end   = 1 + self.get_segmentchain_coordinate(self.chrom,self.cds_genome_start,self.strand,stranded=True)
-#        else:
-#            self.cds_start = None
-#            self.cds_end   = None
-#
-#    def get_name(self):
-#        """Return the name of `self`, first searching through
-#        `self.attr` for the keys `transcript_id`, `ID`, `Name`, and `name`.
-#        If no value is found, :meth:`Transcript.__str__` is used.
-#        
-#        Returns
-#        -------
-#        str
-#            Returns in order of preference, `transcript_id`, `ID`, `Name`,
-#            or `name` from `self.attr`. If not found, returns ``str(self)``
-#        """
-#        name = self.attr.get("transcript_id",
-#               self.attr.get("ID",
-#               self.attr.get("Name",
-#               self.attr.get("name",
-#                             str(self)))))
-#        return name
-#    
-#    def get_cds(self,**extra_attr):
-#        """Retrieve |SegmentChain| covering the coding region of `self`, including the stop codon.
-#        If no coding region is present, returns an empty |SegmentChain|.
-#        
-#        The following attributes are passed from `self.attr` to the new |SegmentChain|
-#        
-#            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
-#            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-#            #. ID, generated as `"%s_CDS % self.get_name()`
-#
-#
-#        Parameters
-#        ----------
-#        extra_attr : keyword arguments
-#            Values that will be included in the CDS subchain's `attr` dict.
-#            These can be used to overwrite values already present.
-#        
-#        Returns
-#        -------
-#        |SegmentChain|
-#            CDS region of `self` if present, otherwise empty |SegmentChain|
-#        """
-#        cdef SegmentChain my_segmentchain
-#        if self.cds_genome_start is not None and self.cds_genome_end is not None:
-#            my_segmentchain = self.get_subchain(self.cds_start,
-#                                                self.cds_end,
-#                                                stranded=True,
-#                                                thickstart=self.cds_genome_start,
-#                                                thickend=self.cds_genome_end,
-#                                                cds_start=self.cds_start,
-#                                                cds_end=self.cds_end,
-#                                                cds_genome_start=self.cds_genome_start,
-#                                                cds_genome_end=self.cds_genome_end,
-#                                                ID="%s_CDS" % self.get_name(),
-#                                                transcript_id=self.get_name(),
-#                                                type="CDS",gene_id=self.get_gene())
-#            my_segmentchain.attr.update(extra_attr)
-#            
-#        return my_segmentchain   
-#    
-#    def get_utr5(self,**extra_attr):
-#        """Retrieve sub-|SegmentChain| covering 5'UTR of `self`.
-#        If no coding region, returns an empty |SegmentChain|
-#
-#        The following attributes are passed from `self.attr` to the new |SegmentChain|
-#        
-#            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
-#            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-#            #. ID, generated as `"%s_5UTR" % self.get_name()`
-#
-#
-#        Parameters
-#        ----------
-#        extra_attr : keyword arguments
-#            Values that will be included in the 5'UTR subchain's `attr` dict.
-#            These can be used to overwrite values already present.
-#
-#
-#        Returns
-#        -------
-#        |SegmentChain|
-#            5' UTR region of `self` if present, otherwise empty |SegmentChain|
-#        """
-#        cdef:
-#            SegmentChain my_segmentchain = SegmentChain()
-#            dict attr = {}
-#        if self.cds_genome_start is not None and self.cds_genome_end is not None:
-#            my_segmentchain = self.get_subchain(0,self.cds_start,stranded=True)
-#            attr["type"] = "5UTR"
-#            attr["gene_id"] = self.get_gene()
-#            attr["transcript_id"] = self.get_gene()
-#            attr["ID"] = "%s_5UTR" % self.get_name()
-#            my_segmentchain.attr = attr
-#            my_segmentchain.attr.update(extra_attr)
-#
-#        return my_segmentchain   
-#    
-#    def get_utr3(self,**extra_attr):
-#        """Retrieve sub-|SegmentChain| covering 3'UTR of `self`, excluding
-#        the stop codon. If no coding region, returns an empty |SegmentChain|
-#        
-#        The following attributes are passed from ``self.attr`` to the new |SegmentChain|
-#        
-#            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
-#            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
-#            #. ID, generated as `"%s_3UTR" % self.get_name()`
-#
-#
-#        Parameters
-#        ----------
-#        extra_attr : keyword arguments
-#            Values that will be included in the 3' UTR subchain's `attr` dict.
-#            These can be used to overwrite values already present.
-#
-#
-#        Returns
-#        -------
-#        |SegmentChain|
-#            3' UTR region of `self` if present, otherwise empty |SegmentChain|
-#        """
-#        cdef:
-#            SegmentChain my_segmentchain
-#            dict attr = {}
-#
-#        if self.cds_genome_start is not None and self.cds_genome_end is not None:
-#            my_segmentchain = self.get_subchain(self.cds_end,self.length,stranded=True)
-#            attr["type"] = "3UTR"
-#            attr["gene_id"] = self.get_gene()
-#            attr["transcript_id"] = self.get_gene()
-#            attr["ID"] = "%s_3UTR" % self.get_name()
-#            my_segmentchain.attr.update(attr)
-#            my_segmentchain.attr.update(extra_attr)
-#            
-#        return my_segmentchain   
-#
+    cdef bint _update_cds(self) except False:
+        """Generate `self.cds_start` and `self.cds_end` from `self.cds_genome_start` and `self.cds_genome_end`
+        AFTER verifying that these values are not None
+        """
+        SegmentChain._update(self)
+        if self.cds_genome_start is not None:
+            if self.strand == "+":
+                self.cds_start = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_start,self.strand,stranded=True)
+                
+                # this is in a try-catch because if the half-open cds_end coincides
+                # with the end of an exon, it will not be in the end-inclusive position
+                try:
+                    self.cds_end = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end, self.strand,stranded=True)
+                except KeyError:
+                    # minus one, plus one corrections because end-exclusive genome
+                    # position will not be in position hash if it coincides with
+                    # the end of any exon
+                    self.cds_end   = 1 + self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end - 1, self.strand,stranded=True)
+            else:
+                # likewise for minus-strand
+                # both this adjustment and the one above for plus-strand features
+                # have been thoroughly tested by examining BED files exported
+                # for this purpose
+                self.cds_start = self.get_segmentchain_coordinate(self.chrom,self.cds_genome_end - 1, self.strand,stranded=True)
+                self.cds_end   = 1 + self.get_segmentchain_coordinate(self.chrom,self.cds_genome_start,self.strand,stranded=True)
+        else:
+            self.cds_start = None
+            self.cds_end   = None
+
+        return True
+
+    def get_name(self):
+        """Return the name of `self`, first searching through
+        `self.attr` for the keys `transcript_id`, `ID`, `Name`, and `name`.
+        If no value is found, :meth:`Transcript.__str__` is used.
+        
+        Returns
+        -------
+        str
+            Returns in order of preference, `transcript_id`, `ID`, `Name`,
+            or `name` from `self.attr`. If not found, returns ``str(self)``
+        """
+        cdef str name
+        name = self.attr.get("transcript_id",
+               self.attr.get("ID",
+               self.attr.get("Name",
+               self.attr.get("name",
+                             str(self)))))
+        return name
+   
+    # FIXME: attr propagation off w/r/t cds_genome_start et c
+    def get_cds(self,**extra_attr):
+        """Retrieve |SegmentChain| covering the coding region of `self`, including the stop codon.
+        If no coding region is present, returns an empty |SegmentChain|.
+        
+        The following attributes are passed from `self.attr` to the new |SegmentChain|
+        
+            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
+            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
+            #. ID, generated as `"%s_CDS % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the CDS subchain's `attr` dict.
+            These can be used to overwrite values already present.
+        
+        Returns
+        -------
+        |SegmentChain|
+            CDS region of `self` if present, otherwise empty |SegmentChain|
+        """
+        cdef:
+            SegmentChain my_segmentchain
+            dict old_attr = {}
+
+        if self.cds_genome_start is not None and self.cds_genome_end is not None:
+            my_segmentchain = self.c_get_subchain(self.cds_start,
+                                                  self.cds_end,
+                                                  True)
+            old_attr = { "thickstart" : self.cds_genome_start,
+                         "thickend":self.cds_genome_end,
+                                                "cds_start":self.cds_start,
+                                                "cds_end":self.cds_end,
+                         "cds_genome_start" : self.cds_genome_start,
+                         "cds_genome_end"   : self.cds_genome_end,
+                         "ID"               : "%s_CDS" % self.get_name(),
+                         "transcript_id"    : self.get_name(),
+                         "type"             : "CDS",
+                         "gene_id"          : self.get_gene()
+                       }
+            my_segmentchain.attr.update(old_attr)
+            my_segmentchain.attr.update(extra_attr)
+            
+        return my_segmentchain   
+    
+    def get_utr5(self,**extra_attr):
+        """Retrieve sub-|SegmentChain| covering 5'UTR of `self`.
+        If no coding region, returns an empty |SegmentChain|
+
+        The following attributes are passed from `self.attr` to the new |SegmentChain|
+        
+            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
+            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
+            #. ID, generated as `"%s_5UTR" % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the 5'UTR subchain's `attr` dict.
+            These can be used to overwrite values already present.
+
+
+        Returns
+        -------
+        |SegmentChain|
+            5' UTR region of `self` if present, otherwise empty |SegmentChain|
+        """
+        cdef:
+            SegmentChain my_segmentchain = SegmentChain()
+            dict attr = {}
+
+        if self.cds_genome_start is not None and self.cds_genome_end is not None:
+            my_segmentchain = self.c_get_subchain(0,self.cds_start,True)
+            attr["type"] = "5UTR"
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_gene()
+            attr["ID"] = "%s_5UTR" % self.get_name()
+            my_segmentchain.attr = attr
+            my_segmentchain.attr.update(extra_attr)
+
+        return my_segmentchain   
+    
+    def get_utr3(self,**extra_attr):
+        """Retrieve sub-|SegmentChain| covering 3'UTR of `self`, excluding
+        the stop codon. If no coding region, returns an empty |SegmentChain|
+        
+        The following attributes are passed from ``self.attr`` to the new |SegmentChain|
+        
+            #. transcript_id, taken from :py:meth:`SegmentChain.get_name`
+            #. gene_id, taken from :py:meth:`SegmentChain.get_gene`
+            #. ID, generated as `"%s_3UTR" % self.get_name()`
+
+
+        Parameters
+        ----------
+        extra_attr : keyword arguments
+            Values that will be included in the 3' UTR subchain's `attr` dict.
+            These can be used to overwrite values already present.
+
+
+        Returns
+        -------
+        |SegmentChain|
+            3' UTR region of `self` if present, otherwise empty |SegmentChain|
+        """
+        cdef:
+            SegmentChain my_segmentchain
+            dict attr = {}
+
+        if self.cds_genome_start is not None and self.cds_genome_end is not None:
+
+            my_segmentchain = self.c_get_subchain(self.cds_end,self.length,True)
+            attr["type"] = "3UTR"
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_gene()
+            attr["ID"] = "%s_3UTR" % self.get_name()
+            my_segmentchain.attr.update(attr)
+            my_segmentchain.attr.update(extra_attr)
+            
+        return my_segmentchain   
+
 #    def as_gtf(self, str feature_type="exon", bint escape=True, list excludes=[]):
 #        """Format `self` as a `GTF2`_ block. |GenomicSegments| are formatted
 #        as `GTF2`_ `'exon'` features. Coding regions, if peresent, are formatted
@@ -2897,140 +2906,140 @@ cdef class SegmentChain(object):
 #
 #        return "".join(ltmp)
 #    
-#    def as_bed(self,as_int=True,color=None,extra_columns=None):
-#        """Format `self` as a BED12[+X] line, assigning CDS boundaries 
-#        to the thickstart and thickend columns from `self.attr`
-#
-#        If the |SegmentChain| was imported as a `BED`_ file with extra columns,
-#        these will be output in the same order, after the `BED`_ columns.
-#        
-#        Parameters
-#        ----------
-#        as_int : bool, optional
-#            Force "score" to integer (Default: True)
-#    
-#        color : str or None, optional
-#            Color represented as RGB hex string.
-#            If not none, overrides the color in `self.attr["color"]`
-#    
-#        extra_columns : None or list, optional
-#            If `None`, and the |Transcript| was imported using the `extra_columns`
-#            keyword of :meth:`~plastid.genomics.roitools.Transcript.from_bed`,
-#            the |Transcript| will be exported in BED 12+X format, in which
-#            extra columns are in the same order as they were upon import. If no extra columns
-#            were present, the |Transcript| will be exported a aa BED12 line.
-#
-#            If a list of attribute names, these attributes will be exported as
-#            extra columns in order, overriding whatever happened upon import. 
-#            If an attribute name is not in the `attr` dict of the |Transcript|,
-#            it will be exported with the default empty value "".
-#
-#            If an empty list, no extra columns will be exported; the |Transcript|
-#            will be formatted as a BED12 line.
-#
-#    
-#        Returns
-#        -------
-#        str
-#            Line of BED12-formatted text
-#            
-#        
-#        Notes
-#        -----
-#        BED12 columns are as follows
-#            ======== =========
-#            Column   Contains
-#            ======== =========
-#               0     Contig or chromosome
-#               1     Start of first block in feature (0-indexed)
-#               2     End of last block in feature (half-open)
-#               3     Feature name
-#               4     Feature score
-#               5     Strand
-#               6     thickstart
-#               7     thickend
-#               8     Feature color as RGB tuple
-#               9     Number of blocks in feature
-#               10    Block lengths
-#               11    Block starts, relative to start of first block
-#            ======== =========
-#
-#        Fore more information
-#            See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-#        """
-#        return SegmentChain.as_bed(self,
-#                                   thickstart=self.cds_genome_start,
-#                                   thickend=self.cds_genome_end,
-#                                   as_int=as_int,
-#                                   color=color,
-#                                   extra_columns=extra_columns)
-#
-#    @staticmethod
-#    def from_bed(str line,extra_columns=0):
-#        """Create a |Transcript| from a BED line with 4 or more columns.
-#        `thickstart` and `thickend` columns, if present, are assumed to specify
-#        CDS boundaries, a convention that, while common, is formally outside the
-#        `BED`_ specification.
-#    
-#    	See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
-#    	for more details.
-#
-#        Parameters
-#        ----------
-#        line
-#            Line from a BED file with at least 4 columns
-#
-#        extra_columns: int or list, optional
-#            Extra, non-BED columns in `BED`_ file corresponding to feature
-#            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
-#            
-#            if `extra-columns` is:
-#            
-#              - an :class:`int`: it is taken to be the
-#                number of attribute columns. Attributes will be stored in
-#                the `attr` dictionary of the |SegmentChain|, under names like
-#                `custom0`, `custom1`, ... , `customN`.
-#
-#              - a :class:`list` of :class:`str`, it is taken to be the names
-#                of the attribute columns, in order, from left to right in the file.
-#                In this case, attributes in extra columns will be stored under
-#
-#              - a :class:`list` of :class:`tuple`, each tuple is taken
-#                to be a pair of `(attribute_name, formatter_func)`. In this case,
-#                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
-#                will be set to `formatter_func(column_value)`.
-#            
-#            (Default: 0)
-#                
-#    
-#        Returns
-#        -------
-#        |Transcript|
-#        """
-#        cdef:
-#            SegmentChain segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
-#            segments = segchain._segments
-#            attr = segchain.attr
-#            Transcript transcript
-#
-#        attr.pop("type") # default type for SegmentChain is "exon". We want to use "mRNA"
-#        attr["cds_genome_start"] = attr["thickstart"]
-#        attr["cds_genome_end"]   = attr["thickend"]
-#        attr.pop("thickstart")
-#        attr.pop("thickend")
-#        if attr["cds_genome_start"] == attr["cds_genome_end"]:
-#            attr["cds_genome_start"] = attr["cds_genome_end"] = None
-#
-#        transcript = Transcript(*segments,**attr)
-#    
-#        return transcript
-#    
-#    @staticmethod
-#    def from_psl(str psl_line):
-#        cdef:
-#            SegmentChain segchain = SegmentChain.from_psl(psl_line)
-#            dict attr = segchain.attr
-#
-#        attr["cds_genome_start"] = None
-#        attr["cds_genome_end"] = None
-#        return Transcript(*segchain,**attr)
+    def as_bed(self,as_int=True,color=None,extra_columns=None):
+        """Format `self` as a BED12[+X] line, assigning CDS boundaries 
+        to the thickstart and thickend columns from `self.attr`
+
+        If the |SegmentChain| was imported as a `BED`_ file with extra columns,
+        these will be output in the same order, after the `BED`_ columns.
+        
+        Parameters
+        ----------
+        as_int : bool, optional
+            Force "score" to integer (Default: True)
+    
+        color : str or None, optional
+            Color represented as RGB hex string.
+            If not none, overrides the color in `self.attr["color"]`
+    
+        extra_columns : None or list, optional
+            If `None`, and the |Transcript| was imported using the `extra_columns`
+            keyword of :meth:`~plastid.genomics.roitools.Transcript.from_bed`,
+            the |Transcript| will be exported in BED 12+X format, in which
+            extra columns are in the same order as they were upon import. If no extra columns
+            were present, the |Transcript| will be exported a aa BED12 line.
+
+            If a list of attribute names, these attributes will be exported as
+            extra columns in order, overriding whatever happened upon import. 
+            If an attribute name is not in the `attr` dict of the |Transcript|,
+            it will be exported with the default empty value "".
+
+            If an empty list, no extra columns will be exported; the |Transcript|
+            will be formatted as a BED12 line.
+
+    
+        Returns
+        -------
+        str
+            Line of BED12-formatted text
+            
+        
+        Notes
+        -----
+        BED12 columns are as follows
+            ======== =========
+            Column   Contains
+            ======== =========
+               0     Contig or chromosome
+               1     Start of first block in feature (0-indexed)
+               2     End of last block in feature (half-open)
+               3     Feature name
+               4     Feature score
+               5     Strand
+               6     thickstart
+               7     thickend
+               8     Feature color as RGB tuple
+               9     Number of blocks in feature
+               10    Block lengths
+               11    Block starts, relative to start of first block
+            ======== =========
+
+        Fore more information
+            See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
+        """
+        return SegmentChain.as_bed(self,
+                                   thickstart=self.cds_genome_start,
+                                   thickend=self.cds_genome_end,
+                                   as_int=as_int,
+                                   color=color,
+                                   extra_columns=extra_columns)
+
+    @staticmethod
+    def from_bed(str line,extra_columns=0):
+        """Create a |Transcript| from a BED line with 4 or more columns.
+        `thickstart` and `thickend` columns, if present, are assumed to specify
+        CDS boundaries, a convention that, while common, is formally outside the
+        `BED`_ specification.
+    
+    	See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
+    	for more details.
+
+        Parameters
+        ----------
+        line
+            Line from a BED file with at least 4 columns
+
+        extra_columns: int or list, optional
+            Extra, non-BED columns in `BED`_ file corresponding to feature
+            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+            
+            if `extra-columns` is:
+            
+              - an :class:`int`: it is taken to be the
+                number of attribute columns. Attributes will be stored in
+                the `attr` dictionary of the |SegmentChain|, under names like
+                `custom0`, `custom1`, ... , `customN`.
+
+              - a :class:`list` of :class:`str`, it is taken to be the names
+                of the attribute columns, in order, from left to right in the file.
+                In this case, attributes in extra columns will be stored under
+
+              - a :class:`list` of :class:`tuple`, each tuple is taken
+                to be a pair of `(attribute_name, formatter_func)`. In this case,
+                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+                will be set to `formatter_func(column_value)`.
+            
+            (Default: 0)
+                
+    
+        Returns
+        -------
+        |Transcript|
+        """
+        cdef:
+            SegmentChain segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
+            segments = segchain._segments
+            attr = segchain.attr
+            Transcript transcript
+
+        attr.pop("type") # default type for SegmentChain is "exon". We want to use "mRNA"
+        attr["cds_genome_start"] = attr["thickstart"]
+        attr["cds_genome_end"]   = attr["thickend"]
+        attr.pop("thickstart")
+        attr.pop("thickend")
+        if attr["cds_genome_start"] == attr["cds_genome_end"]:
+            attr["cds_genome_start"] = attr["cds_genome_end"] = None
+
+        transcript = Transcript(*segments,**attr)
+    
+        return transcript
+    
+    @staticmethod
+    def from_psl(str psl_line):
+        cdef:
+            SegmentChain segchain = SegmentChain.from_psl(psl_line)
+            dict attr = segchain.attr
+
+        attr["cds_genome_start"] = None
+        attr["cds_genome_end"]   = None
+        return Transcript(*segchain,**attr)
