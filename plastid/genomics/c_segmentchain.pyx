@@ -694,63 +694,11 @@ cdef class SegmentChain(object):
         bool
         """
         if isinstance(other,SegmentChain):
-            #return self.c_richcmp(other,cmpval) == true
             return chain_richcmp(self,other,cmpval) == true
         elif isinstance(other,SegmentChain):
             return chain_richcmp(self,SegmentChain(other),cmpval) == true 
-            #return self.c_richcmp(SegmentChain(GenomicSegment),cmpval)
         else:
             raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
-
-    # TODO: test sorting operators
-    cpdef ExBool c_richcmp(self, SegmentChain other, int cmpval) except bool_exception:
-        cdef ExBool opval
-        if cmpval == EQ:
-            if len(self) == 0 or len(other) == 0:
-                return false
-            else:
-                if self.chrom == other.chrom and\
-                   self.c_strand == other.c_strand and\
-                   self.c_get_position_set() == other.c_get_position_set():
-                       return true
-                return false
-        elif cmpval == NEQ:
-            opval = self.c_richcmp(other,EQ)
-            if opval == bool_exception:
-                pass
-            elif opval == true:
-                return false
-            elif opval == false:
-                return true
-        elif cmpval == LT:
-            sspan = self.spanning_segment
-            ospan = other.spanning_segment
-            if sspan < ospan:
-                return true
-            elif sspan > ospan:
-                return false
-            else:
-                slen = self.length
-                olen = other.length
-                if slen < olen:
-                    return true
-                elif slen > olen:
-                    return false
-                else:
-                    sname = self.get_name()
-                    oname = other.get_name()
-                    if sname < oname:
-                        return true
-                    else:
-                        return false
-        elif cmpval == LEQ:
-            return self.c_richcmp(other,LT) or self.c_richcmp(other,EQ)
-        elif cmpval == GT:
-            return other.c_richcmp(self,LT)
-        elif cmpval == GEQ:
-            return other.c_richcmp(self,LT) or self.c_richcmp(other,EQ)
-        else:
-            raise ValueError("This operation is not defined for SegmentChains.")
 
     def shares_segments_with(self, object other):
         """Returns a list of |GenomicSegment| that are shared between `self` and `other`
@@ -771,8 +719,7 @@ cdef class SegmentChain(object):
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         if isinstance(other,GenomicSegment):
-            tmp = SegmentChain(other)
-            return self.shares_segments_with(tmp)
+            return self.c_shares_segments_with(SegmentChain(other))
         elif isinstance(other,SegmentChain):
             return self.c_shares_segments_with(other)
         else:
@@ -816,7 +763,7 @@ cdef class SegmentChain(object):
         if isinstance(other,SegmentChain):
             return self.c_unstranded_overlaps(other) == true
         elif isinstance(other,GenomicSegment):
-            return self.unstranded_overlaps(SegmentChain(other))
+            return self.c_unstranded_overlaps(SegmentChain(other)) == true
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
@@ -855,7 +802,7 @@ cdef class SegmentChain(object):
         """
         cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            return self.overlaps(SegmentChain(other))
+            return self.c_overlaps(SegmentChain(other)) == true
         elif isinstance(other,SegmentChain):
             return self.c_overlaps(other) == true
         else:
@@ -892,7 +839,7 @@ cdef class SegmentChain(object):
         """
         cdef ExBool retval
         if isinstance(other,GenomicSegment):
-            return self.antisense_overlaps(SegmentChain(other))
+            return self.c_antisense_overlaps(SegmentChain(other))
         elif isinstance(other,SegmentChain):
             retval = self.c_antisense_overlaps(other)
             if retval == bool_exception:
@@ -934,13 +881,10 @@ cdef class SegmentChain(object):
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
         cdef ExBool retval
-        if isinstance(other,GenomicSegment):
-            return self.covers(SegmentChain(other))
-        elif isinstance(other,SegmentChain):
-            retval = self.c_covers(other)
-            if retval == bool_exception:
-                raise RuntimeError("SegmentChain.covers() errored on chain '%s' and object '%s'" % (self,other))
-            return retval == true
+        if isinstance(other,SegmentChain):
+            return self.c_covers(other) == true
+        elif isinstance(other,GenomicSegment):
+            return self.c_covers(SegmentChain(other)) == true
         else:
             raise TypeError("SegmentChain.covers() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
  
@@ -967,15 +911,18 @@ cdef class SegmentChain(object):
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef:
+            GenomicSegment sspan = self.spanning_segment
+            GenomicSegment ospan = other.spanning_segment
         if len(self) == 0 or len(other) == 0:
             return false
-        elif self.chrom  == other.chrom and\
-             self.c_strand == other.c_strand and\
+        elif sspan.chrom  == ospan.chrom and\
+             sspan.c_strand == ospan.c_strand and\
              other.c_get_position_set() & self.c_get_position_set() == other.c_get_position_set():
             return true
         return false
     
-    # TODO: optimize. is very slow!
+    # TODO: optimize. is very slow, due to __cinit__ cost
     cpdef SegmentChain get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
@@ -1074,8 +1021,6 @@ cdef class SegmentChain(object):
             Set of genomic coordinates, as integers
         """
         cdef:
-            pbitsize = 8*self._position_hash.itemsize
-            mbitsize = 8*self._position_mask.itemsize
             numpy.ndarray[int,ndim=1] mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
             numpy.ndarray[LONG_t,ndim=1] positions = numpy.frombuffer(self._position_hash,dtype=LONG)
 

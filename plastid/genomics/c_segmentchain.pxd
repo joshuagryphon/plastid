@@ -27,8 +27,6 @@ cdef class SegmentChain(object):
     cdef  ExBool c_overlaps(self, SegmentChain) except bool_exception
     cdef  ExBool c_antisense_overlaps(self, SegmentChain) except bool_exception
     cdef  ExBool c_contains(self, SegmentChain) except bool_exception
-    cpdef  ExBool c_richcmp(self,SegmentChain,int) except bool_exception
-
 
     # position info - c impl
     cdef list c_get_position_list(self)
