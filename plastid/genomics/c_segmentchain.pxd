@@ -15,8 +15,8 @@ cdef class SegmentChain(object):
         dict attr, _inverse_hash
 
     # maintenance
-    cdef void _update(self)
-    cdef int c_add_segments(self,tuple) except -1
+    cdef bint _update(self) except False
+    cdef bint c_add_segments(self,tuple) except False
     cdef void c_reset_masks(self)
 
 

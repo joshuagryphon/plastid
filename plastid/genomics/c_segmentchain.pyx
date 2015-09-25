@@ -181,7 +181,7 @@ def sort_segmentchains_by_name(segchain):
     return segchain.get_name()
 
 
-cdef tuple check_segments(SegmentChain chain, tuple segments):
+cdef bint check_segments(SegmentChain chain, tuple segments) except False:
     cdef:
         GenomicSegment seg, seg0
         GenomicSegment span = chain.spanning_segment
@@ -189,11 +189,10 @@ cdef tuple check_segments(SegmentChain chain, tuple segments):
         Strand my_strand = span.c_strand
         int i = 0
         int length = len(segments)
-        int retval = SEGSOK
-        bint strandprob = False
-        bint chromprob = False
+        bint prob = False
 
     if length > 0:
+        msg = "SegmentChain.add_segments: incoming segments (%s) mismatch chain '%s'"
         seg0 = segments[0]
         if len(chain._segments) == 0:
             my_chrom  = seg0.chrom
@@ -202,23 +201,22 @@ cdef tuple check_segments(SegmentChain chain, tuple segments):
         while i < length:
             seg = segments[i]
             if seg.chrom != my_chrom:
-                chromprob = True
-                retval |= BADCHROM
+                msg += "; wrong and/or multiple chromosomes"
+                prob = True
                 break
                 
             if seg.c_strand != my_strand:
-                strandprob = True
-                retval |= BADSTRAND
+                msg += "; wrong and/or multiple strands"
+                prob = True
                 break
 
             i += 1
 
-        if strandprob == True:
-            raise ValueError("Incoming GenomicSegment '%s' mismatches strand (%s) of SegmentChain '%s'" % (seg,my_strand,str(chain)))
-        if chromprob == True:
-            raise ValueError("Incoming GenomicSegment '%s' mismatches chromosome (%s) of SegmentChain '%s'" % (seg,my_chrom,str(chain)))
+        if prob == True: 
+            msg = msg % (", ".join([str(X) for X in segments]),chain)
+            raise ValueError(msg)
 
-    return (my_chrom,strand_to_str(my_strand),retval)
+    return True
 
 
 #===============================================================================
@@ -331,7 +329,10 @@ cdef class SegmentChain(object):
             self._position_hash   = array.clone(hash_template,0,False)
             self._position_mask   = array.clone(mask_template,0,False)
         else:
-            my_chrom, my_strand, code = check_segments(self,segments)
+            check_segments(self,segments)
+            seg = segments[0]
+            my_chrom  = seg.chrom
+            my_strand = seg.strand
 
             # add new positions
             for seg in segments:
@@ -355,10 +356,9 @@ cdef class SegmentChain(object):
                                                        segs[-1].end,
                                                        seg0.strand)
 
-
             self._update()
 
-    cdef void _update(self):
+    cdef bint _update(self) except False:
         """Update position hashes and length measurements after |GenomicSegments|
         are added to the chain. Specifically, defines:
 
@@ -414,6 +414,8 @@ cdef class SegmentChain(object):
                                                    seg0.start,
                                                    segs[-1].end,
                                                    seg0.strand)
+
+        return True
 
     def sort(self):
         self._segments.sort()
@@ -1064,7 +1066,7 @@ cdef class SegmentChain(object):
         """
         return self.masked_length
 
-    cdef int c_add_segments(self, tuple segments) except -1:
+    cdef bint c_add_segments(self, tuple segments) except False:
         """Add |GenomicSegments| to `self`. If there are
         already segments in the chain, the incoming segments must be 
         on the same strand and chromosome as all others present.
@@ -1082,9 +1084,12 @@ cdef class SegmentChain(object):
             int length = len(segments)
 
         if length > 0:
-            my_chrom, my_strand, code = check_segments(self,segments)
-            if code != SEGSOK:
-                return code
+            check_segments(self,segments)
+            seg = segments[0]
+            my_chrom  = seg.chrom
+            my_strand = seg.strand
+            #if code != SEGSOK:
+            #    return code
 
             # add new positions
             for seg in segments:
@@ -1094,7 +1099,7 @@ cdef class SegmentChain(object):
             self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
             self._update()
 
-        return SEGSOK
+        return True
 
     def add_segments(self,*segments):
         """Add 1 or more |GenomicSegments| to the |SegmentChain|. If there are
@@ -1114,15 +1119,6 @@ cdef class SegmentChain(object):
                 warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
 
             retval = self.c_add_segments(segments)
-            if retval != 0:
-                msg = "SegmentChain.add_segments: incoming segments (%s) mismatch chain '%s'"
-                if retval & BADCHROM == BADCHROM:
-                    msg += "; wrong and/or multiple chromosomes"
-                if retval & BADSTRAND == BADSTRAND:
-                    msg += "; wrong and/or multiple strands"
-
-                msg = msg % (", ".join([str(X) for X in segments]),self)
-                raise ValueError(msg)
         
     # TODO: optimize
     def add_masks(self,*mask_segments):
@@ -1153,7 +1149,10 @@ cdef class SegmentChain(object):
             int tmpsum = 0
             dict ihash
 
-        my_chrom, my_strand, code = check_segments(self,mask_segments)
+        check_segments(self,mask_segments)
+        seg  = mask_segments[0]
+        my_chrom  = seg.chrom
+        my_strand = seg.strand
            
         # add new positions to any existing masks
         for segment in list(mask_segments) + self._mask_segments:
@@ -1239,9 +1238,12 @@ cdef class SegmentChain(object):
             (e.g. introns in the case of a transcript, or gaps in the case of
             an alignment)
         """
-        juncs = []
-        for i in range(len(self)-1):
-            seg1, seg2 = self[i], self[i+1]
+        cdef:
+            GenomicSegment seg1, seg2
+            list juncs = []
+
+        for i in range(len(self._segments)-1):
+            seg1, seg2 = self._segments[i], self._segments[i+1]
             juncs.append(GenomicSegment(seg1.chrom,
                                         seg1.end,
                                         seg2.start,
@@ -1740,12 +1742,17 @@ cdef class SegmentChain(object):
         KeyError
             if position outside bounds of |SegmentChain|
         """
+        cdef long retval
         if chrom != self.chrom:
             raise ValueError("get_segmentchain_coordinate: query chromosome '%s' does not match chain '%s'" % chrom, self)
         if strand != self.strand:
             raise ValueError("get_segmentchain_coordinate: query strand '%s' does not match chain '%s'" % strand, self)
 
-        return self.c_get_segmentchain_coordinate(genomic_x,stranded)
+        retval = self.c_get_segmentchain_coordinate(genomic_x,stranded)
+        if retval == -1:
+            raise KeyError("SegmentChain.get_segmentchain_coordinate: Genomic position %s not in SegmentChain %s." % (genomic_x,self))
+
+        return retval
 
     cdef long c_get_segmentchain_coordinate(self, long genomic_x, bint stranded) except -1:
         """Finds the |SegmentChain| coordinate corresponding to a genomic position
@@ -1774,6 +1781,7 @@ cdef class SegmentChain(object):
         """
         cdef dict ihash = self._inverse_hash
 
+        # TODO: try-catch this
         if self.c_strand == reverse_strand and stranded == True:
             return self.length - ihash[genomic_x] - 1
         else:
