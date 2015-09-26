@@ -433,6 +433,8 @@ cdef class SegmentChain(object):
 
             3. If `len(self)` > 0, all segments have the same chromosome
                and strand as `self`
+            
+            4. They are sorted
 
         Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
         and either :meth:`~plastid.genomics.c_segmentchain.SegmentChain.__cinit__`
@@ -528,11 +530,8 @@ cdef class SegmentChain(object):
             dict attr = state[2]
 
         self.attr = attr
-        print("set attr")
         self._set_segments(segs)
-        print("set segs")
-        self.add_masks(*masks)
-        print("set masks")
+        self._set_masks(masks)
 
     def sort(self):
         self._segments.sort()
@@ -1216,13 +1215,9 @@ cdef class SegmentChain(object):
         """
         cdef:
             str my_chrom, my_strand
+            GenomicSegment segment
             set positions = set()
-            GenomicSegment seg
-            array.array pmask = array.clone(mask_template,self.length,True)
-            int [:] pview = pmask
-            long i, coord
-            int tmpsum = 0
-            dict ihash
+            list new_segments
 
         if len(mask_segments) > 0:
             check_segments(self,mask_segments)
@@ -1237,18 +1232,51 @@ cdef class SegmentChain(object):
             # trim away non-overlapping masks
             positions &= self.c_get_position_set()
             
-            # regenerate list of ivs from positions, in case some were doubly-listed
-            self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
+            # regenerate list of segments from positions, in case some were doubly-listed
+            new_segments = positions_to_segments(my_chrom,my_strand,positions)
+            self._set_masks(new_segments)
+   
+    cdef bint _set_masks(self, list segments) except False:
+        """Set `self._mask_segments` and update mask hashes, assuming `segments`
+        have passed the following criteria:
 
-            ihash = self._inverse_hash
-            for i in positions:
+            1. They don't overlap
+
+            2. They all have the same chromosome and strand as `self`
+
+            3. They are sorted
+
+        Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
+        and :meth:`~plastid.genomics.c_segmentchain.SegmentChain.add_masks`
+
+        Occasionally (e.g. in the case of unpickling) it is safe (and fast)
+        to bypass these checks.
+
+        Parameters
+        ----------
+        list
+            List of |GenomicSegments|
+        """
+        cdef:
+            array.array pmask = array.clone(mask_template,self.length,True)
+            int [:] pview = pmask
+            dict ihash = self._inverse_hash
+            list new_segments
+            GenomicSegment seg
+            long i, coord
+            int tmpsum = 0
+
+        for seg in segments:
+            for i in range(seg.start,seg.end):
                 coord = ihash[i]
                 pview[coord] = 1
                 tmpsum += 1
 
-            self.masked_length = self.length - tmpsum
-            self._position_mask = pmask
-    
+        self._mask_segments = segments
+        self.masked_length = self.length - tmpsum
+        self._position_mask = pmask
+        return True
+
     # TODO: figure out how to make _mask_segments immutable
     def get_masks(self):
         """Return masked positions as a list of |GenomicSegments|
