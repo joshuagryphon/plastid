@@ -138,7 +138,7 @@ cdef str strand_to_str(Strand strand):
     elif strand == unstranded:
         return "."
     elif strand == undef_strand:
-        return "<undefined strand>"
+        return "strand undefined"
     else:
         raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'" % (forward_strand,
             reverse_strand, unstranded, strand))
@@ -154,7 +154,7 @@ cdef Strand str_to_strand(str val):
     elif val == "\x00":
         return undef_strand
     else:
-        raise ValueError("Strand must be '+', '-', or '.'")
+        raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined)")
 
 
 #==============================================================================

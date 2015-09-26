@@ -510,6 +510,30 @@ cdef class SegmentChain(object):
 
         return True
 
+    def __reduce__(self): # enable pickling
+        return (self.__class__,tuple(),self.__getstate__())
+
+    def __getstate__(self): # save state for pickling
+        cdef:
+            list segstrs  = [str(X) for X in self._segments]
+            list maskstrs = [str(X) for X in self._mask_segments]
+            dict attr = self.attr
+
+        return (segstrs,maskstrs,attr)
+
+    def __setstate__(self,state): # revive state from pickling
+        cdef:
+            list segs  = [GenomicSegment.from_str(X) for X in state[0]]
+            list masks = [GenomicSegment.from_str(X) for X in state[1]]
+            dict attr = state[2]
+
+        self.attr = attr
+        print("set attr")
+        self._set_segments(segs)
+        print("set segs")
+        self.add_masks(*masks)
+        print("set masks")
+
     def sort(self):
         self._segments.sort()
         self._mask_segments.sort()
@@ -543,11 +567,13 @@ cdef class SegmentChain(object):
         def __get__(self):
             return self.spanning_segment.c_strand
 
+    # TODO: return copy
     property _segments:
         """List of |GenomicSegments| that comprise the |SegmentChain|"""
         def __get__(self):
             return self._segments
 
+    # TODO: return copy
     property _mask_segments:
         """Trimmed |GenomicSegments| representing masked regions of the |SegmentChain|"""
         def __get__(self):
@@ -561,12 +587,15 @@ cdef class SegmentChain(object):
             self.attr = attr
 
     def __repr__(self):
-        sout = "<%s segments=%s" % (self.__class__.__name__, len(self))
+        cdef:
+            str sout = "<%s segments=%s" % (self.__class__.__name__, len(self._segments))
+            GenomicSegment span = self.spanning_segment
+
         if len(self) > 0:
-            sout += " bounds=%s:%s-%s(%s)" % (self[0].chrom,
-                                              self[0].start,
-                                              self[-1].end,
-                                              self[0].strand)
+            sout += " bounds=%s:%s-%s(%s)" % (span.chrom,
+                                              span.start,
+                                              span.end,
+                                              span.strand)
             sout += " name=%s" % self.get_name()
         sout += ">"
         return sout
@@ -1195,29 +1224,30 @@ cdef class SegmentChain(object):
             int tmpsum = 0
             dict ihash
 
-        check_segments(self,mask_segments)
-        seg  = mask_segments[0]
-        my_chrom  = seg.chrom
-        my_strand = seg.strand
-           
-        # add new positions to any existing masks
-        for segment in list(mask_segments) + self._mask_segments:
-            positions |= set(range(segment.start,segment.end))
-         
-        # trim away non-overlapping masks
-        positions &= self.c_get_position_set()
-        
-        # regenerate list of ivs from positions, in case some were doubly-listed
-        self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
+        if len(mask_segments) > 0:
+            check_segments(self,mask_segments)
+            seg  = mask_segments[0]
+            my_chrom  = seg.chrom
+            my_strand = seg.strand
+               
+            # add new positions to any existing masks
+            for segment in list(mask_segments) + self._mask_segments:
+                positions |= set(range(segment.start,segment.end))
+             
+            # trim away non-overlapping masks
+            positions &= self.c_get_position_set()
+            
+            # regenerate list of ivs from positions, in case some were doubly-listed
+            self._mask_segments = positions_to_segments(my_chrom,my_strand,positions)
 
-        ihash = self._inverse_hash
-        for i in positions:
-            coord = ihash[i]
-            pview[coord] = 1
-            tmpsum += 1
+            ihash = self._inverse_hash
+            for i in positions:
+                coord = ihash[i]
+                pview[coord] = 1
+                tmpsum += 1
 
-        self.masked_length = self.length - tmpsum
-        self._position_mask = pmask
+            self.masked_length = self.length - tmpsum
+            self._position_mask = pmask
     
     # TODO: figure out how to make _mask_segments immutable
     def get_masks(self):

@@ -1235,6 +1235,73 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertTrue((chain2.get_position_list() == numpy.array(list(range(50,100)) + list(range(120,130)))).all(),
                          "%s failed to get correct position list on minus strand." % self.test_class.__name__)
 
+    @skip_if_abstract
+    def test_pickle_simple(self):
+        chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",120,130,"+"))
+        chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
+                                 GenomicSegment("chrA",120,130,"-"))
+        self.assertEqual(chain1,pickle.loads(pickle.dumps(chain1)))
+        self.assertEqual(chain2,pickle.loads(pickle.dumps(chain2)))
+
+    @skip_if_abstract
+    def test_pickle_with_attr(self):
+        attr = { "ID"    : "some_id",
+                 "val1"  : (3,1,61,32,-1,None),
+                 "list"  : range(50),
+                 "None"  : None,
+                 "chain" : SegmentChain(GenomicSegment("chrB",200,300,"+"))
+               }
+        chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",120,130,"+"),
+                                 **attr)
+        chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
+                                 GenomicSegment("chrA",120,130,"-"),
+                                 **attr)
+        c1p = pickle.dumps(chain1)
+        c2p = pickle.dumps(chain2)
+
+        c1new = pickle.loads(pickle.dumps(chain1))
+        c2new = pickle.loads(pickle.dumps(chain2))
+
+        self.assertEqual(chain1,c1new)
+        self.assertEqual(chain2,c2new)
+
+        self.assertDictEqual(chain1.attr,c1new.attr)
+        self.assertDictEqual(chain2.attr,c2new.attr)
+
+    @skip_if_abstract
+    def test_pickle_with_masks(self):
+        attr = { "ID"    : "some_id",
+                 "val1"  : (3,1,61,32,-1,None),
+                 "list"  : range(50),
+                 "nd"    : numpy.arange(20)
+               }
+        pmasks = [GenomicSegment("chrA",50,125,"+"),GenomicSegment("chrA",128,130,"+")]
+        mmasks = [GenomicSegment("chrA",50,125,"-"),GenomicSegment("chrA",128,130,"-")]
+
+        chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
+                                 GenomicSegment("chrA",120,130,"+"),
+                                 **attr)
+        chain2 = self.test_class(GenomicSegment("chrA",50,100,"-"),
+                                 GenomicSegment("chrA",120,130,"-"),
+                                 **attr)
+
+        chain1.add_masks(*pmasks)
+        chain2.add_masks(*mmasks)
+
+        c1p = pickle.dumps(chain1)
+        c2p = pickle.dumps(chain2)
+
+        c1new = pickle.loads(pickle.dumps(chain1))
+        c2new = pickle.loads(pickle.dumps(chain2))
+
+        self.assertEqual(chain1,c1new)
+        self.assertEqual(chain2,c2new)
+
+        self.assertListEqual(chain1._mask_segments,c1new._mask_segments)
+        self.assertListEqual(chain2._mask_segments,c2new._mask_segments)
+
 
 
 
