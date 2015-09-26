@@ -26,8 +26,8 @@ from plastid.readers.gff import GTF2_TranscriptAssembler, \
 from plastid.readers.bed import BED_Reader
 
 from plastid.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
-from plastid.genomics.c_segmentchain import SegmentChain
-from plastid.genomics.roitools import Transcript
+from plastid.genomics.c_segmentchain import SegmentChain, Transcript
+#from plastid.genomics.roitools import Transcript
 
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.io.filters import CommentReader
@@ -62,6 +62,9 @@ def tearDownModule():
 class TestMiscellaneous(unittest.TestCase):
     """Test suite for miscellaneous methods"""
     def test_positions_to_segments(self):
+        # empty list
+        self.assertListEqual(positions_to_segments("ChrA","+",[]),[])
+
         # single GenomicSegment, both strands
         self.assertListEqual(positions_to_segments("chrA","+",range(100)),
                              [GenomicSegment("chrA",0,100,"+")])
@@ -101,6 +104,9 @@ class TestMiscellaneous(unittest.TestCase):
                             positions_to_segments("chrB","+",range(100)))
 
     def test_positionlist_to_segments(self):
+        # empty list
+        self.assertListEqual(positions_to_segments("ChrA","+",[]),[])
+
         # single GenomicSegment, both strands
         self.assertListEqual(positionlist_to_segments("chrA","+",list(range(100))),
                              [GenomicSegment("chrA",0,100,"+")])
@@ -214,14 +220,17 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         gtf_text.close()
 
         print("test_export_bed_gtf: able to write")
-        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=Transcript) }
+        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=self.test_class) }
+        print("test_export_bed_gtf: able to read bed")
         gtf_transcripts = {X.get_name() : X  for X in GTF2_TranscriptAssembler(open(gtf_text.name),
                                                                                add_three_for_stop=False,
-                                                                               return_type=Transcript) }
+                                                                               return_type=self.test_class) }
+        print("test_export_bed_gtf: able to read gtf")
 
         # Test equality of imported & exported keysets
         self.assertEquals(set(self.bed_dict.keys()),set(bed_transcripts.keys()))
         self.assertEquals(set(self.bed_dict.keys()),set(gtf_transcripts.keys()))
+        print("tested identity of keysets")
 
         # Test equality of re-imported exported transcripts
         for txid, tx in self.bed_dict.items():
@@ -229,6 +238,8 @@ class AbstractSegmentChainHelper(unittest.TestCase):
             self.assertTrue(self.is_identical(tx,bed_transcripts[txid]),err_msg)
             self.assertTrue(self.is_identical(tx,gtf_transcripts[txid]),err_msg)
 
+        print("tested identity of reimported transcripts")
+        
         # Test inequality of those that should be different
         c = 0
         for k1, k2 in zip(self.sorted_keys,self.shuffled_keys):
@@ -1499,13 +1510,15 @@ class TestTranscript(AbstractSegmentChainHelper):
     @classmethod
     def setUpClass(cls):
         cls.test_class = Transcript
-        
+
         #TestSegmentChain.setUp(cls)
         cls.bed_list = list(BED_Reader(CommentReader(open(ANNOTATION_FILES["bed100"])),return_type=Transcript))
         cls.gff_list = GFF3_TranscriptAssembler(open(ANNOTATION_FILES["gff100"]),
-                                        exon_types=["exon"],add_three_for_stop=False)
+                                                exon_types=["exon"],add_three_for_stop=False,
+                                                return_type=Transcript)
         # stop codon features in GTF make add_three_for_stop unnecessary
-        cls.gtf_list = GTF2_TranscriptAssembler(open(ANNOTATION_FILES["gtf100"]),add_three_for_stop=False)
+        cls.gtf_list = GTF2_TranscriptAssembler(open(ANNOTATION_FILES["gtf100"]),add_three_for_stop=False,
+                                                return_type=Transcript)
         
         cls.bed_dict = { X.get_name() : X for X in cls.bed_list }
         cls.gff_dict = { X.get_name() : X for X in cls.gff_list }
@@ -1643,36 +1656,45 @@ class TestTranscript(AbstractSegmentChainHelper):
                      (ivc1.cds_end == ivc2.cds_end)
         return start_test & end_test
     
-    def test_get_subregions(self):
+    def test_get_utr5(self):
         """Test fetching of CDS, UTR5, UTR3"""
         utr5_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr5_100"]),return_type=SegmentChain)}
-        utr3_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr3_100"]),return_type=SegmentChain)}
-        cds_dict  = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["cds100"]),return_type=SegmentChain)}
         i = 0
-        j = 0
-        k = 0
         for txid, tx in TestTranscript.bed_dict.items():
             utr5_ivc = tx.get_utr5()
-            utr3_ivc = tx.get_utr3()
-            cds_ivc  = tx.get_cds()
-            
             if utr5_ivc.get_length() > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(utr5_ivc,utr5_dict[txid]))
-            
-            if utr3_ivc.get_length() > 0:
-                j += 1
-                self.assertTrue(self.is_identical_no_cds(utr3_ivc,utr3_dict[txid]))
-            
+            else:
+                print("No utr5 for %s, %s, %s, %s" % (txid,tx,tx.cds_start,tx.cds_end))
+    
+        self.assertGreater(i,0,"test_get_utr5: No 5' UTRs tested?!")
+    
+    def test_get_cds(self):
+        """Test fetching of CDS, UTR5, UTR3"""
+        cds_dict  = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["cds100"]),return_type=Transcript)}
+        i = 0
+        for txid, tx in TestTranscript.bed_dict.items():
+            cds_ivc  = tx.get_cds()
             if cds_ivc.get_length() > 0:
-                k += 1
+                i += 1
                 self.assertTrue(self.is_identical_no_cds(cds_ivc,cds_dict[txid]))
     
-        self.assertGreater(i,0)
-        self.assertGreater(j,0)
-        self.assertGreater(k,0)
+        self.assertGreater(i,0,"test_get_cds: No CDS tested?!")
+
+    def test_get_utr3(self):
+        """Test fetching of CDS, UTR5, UTR3"""
+        utr3_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr3_100"]),return_type=SegmentChain)}
+        i = 0
+        for txid, tx in TestTranscript.bed_dict.items():
+            utr3_ivc = tx.get_utr3()
+            if utr3_ivc.get_length() > 0:
+                i += 1
+                self.assertTrue(self.is_identical_no_cds(utr3_ivc,utr3_dict[txid]))
     
-    # overridden to use Transcript.from_bed() to preserve CDS info
+        self.assertGreater(i,0,"test_get_utr3: No 3' UTRs tested?!")
+
+   # overridden to use Transcript.from_bed() to preserve CDS info
     def test_to_from_bed_identity(self):
         """Test import to and from BED12 format"""
         for ivc_id, ivc in TestTranscript.bed_dict.items():
@@ -1683,13 +1705,13 @@ class TestTranscript(AbstractSegmentChainHelper):
     def test_to_from_str_identity(self):
         """Test import to and from str representation"""
         for ivc_id, ivc in TestTranscript.bed_dict.items():
-            err_msg = "SegmentChain %s fails BED io." % ivc_id
+            err_msg = "Transcript %s fails str io." % ivc_id
             tmp = copy.deepcopy(ivc)
             tmp.cds_start = None
             tmp.cds_end = None
             tmp.cds_genome_start = None
             tmp.cds_genome_end = None
-            self.assertTrue(self.is_identical(tmp,Transcript.from_bed(tmp.as_bed())),err_msg)    
+            self.assertTrue(TestSegmentChain.is_identical(tmp,Transcript.from_str(str(tmp))),err_msg)
     
     # overriden to use is_identical_no_cds() as identity metric
     def test_get_subchain(self):
@@ -1738,6 +1760,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         self.assertTrue(nvca.covers(sub_minus))
         self.assertFalse(sub_plus.covers(nvca))
 
+    # TODO: make Transcripts ground truth objects
     def test_as_gff3(self):
         # test reimport from export, assuring equality of position sets,
         # gene IDs, transcript IDs, and coding region starts and ends
