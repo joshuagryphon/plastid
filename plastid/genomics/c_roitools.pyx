@@ -258,6 +258,9 @@ cdef class GenomicSegment:
         self.end    = end
         self.c_strand = str_to_strand(strand)
     
+    def __reduce__(self): # enables pickling
+        return (GenomicSegment,(self.chrom,self.start,self.end,self.strand))
+
     def __repr__(self):
         return "<%s %s:%s-%s strand='%s'>" % ("GenomicSegment",
                                               self.chrom,
@@ -314,7 +317,7 @@ cdef class GenomicSegment:
 
         return self._cmp_helper(other,cmptype)
 
-    # TODO: suspend type check via decorator
+    # TODO: suspend type check via decorator, since we have already done this
     cpdef bint _cmp_helper(self,GenomicSegment other,int cmptype):
         nonecheck(other,"GenomicSegment eq/neq","other")
         schrom = self.chrom
