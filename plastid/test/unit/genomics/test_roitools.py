@@ -8,6 +8,7 @@ import itertools
 import copy
 import numpy
 import warnings
+import pickle
 
 from plastid.util.services.mini2to3 import cStringIO
 
@@ -25,8 +26,8 @@ from plastid.readers.gff import GTF2_TranscriptAssembler, \
 from plastid.readers.bed import BED_Reader
 
 from plastid.genomics.c_roitools import GenomicSegment, positions_to_segments, positionlist_to_segments
-#from plastid.genomics.c_segmentchain import SegmentChain
-from plastid.genomics.roitools import Transcript, SegmentChain
+from plastid.genomics.c_segmentchain import SegmentChain
+from plastid.genomics.roitools import Transcript
 
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.io.filters import CommentReader
@@ -164,6 +165,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         chrom_test    = ivc1.spanning_segment.chrom == ivc2.spanning_segment.chrom
         return len(ivc1) > 0 and len(ivc2) > 0 and position_test and strand_test and chrom_test
     
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract
     def test_import_bed_gtf_gff(self):
         """Assert SegmentChains imported from BED, GTF2, GFF3 files are identical"""
@@ -197,6 +199,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
             
         self.assertGreater(c,0)
 
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_export_bed_gtf(self):
         """Test export to BED12 and GTF formats"""
@@ -445,6 +448,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         for line in buf.read().strip("\n").split("\n"):
             self.assertEqual(line.split("\t")[7],".")
     
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_sort(self):
         """Test sorting of intervals within a SegmentChain
@@ -1127,6 +1131,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEquals(ivc2m.get_sequence(genome),my_revcomp)
         self.assertEquals(ivc2m.get_fasta(genome),">ivc2m\n%s\n" %my_revcomp)
 
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_to_from_str_identity(self):
         """Test import to and from strings"""
@@ -1134,6 +1139,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             err_msg = "%s %s fails string io." % (self.test_class.__name__,ivc_id)
             self.assertTrue(self.is_identical(ivc,self.test_class.from_str(str(ivc))),err_msg)
 
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_to_from_bed_identity(self):
         """Test import to and from BED12 format
@@ -1145,6 +1151,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             err_msg = "%s %s fails BED io." % (self.test_class.__name__,ivc_id)
             self.assertTrue(self.is_identical(ivc,self.test_class.from_bed(ivc.as_bed())),err_msg)
  
+    # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_from_psl(self):
         ref_transcripts = { X.get_name() : X for X in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class) }
@@ -1763,6 +1770,12 @@ class TestGenomicSegment(unittest.TestCase):
         self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv6'])),self.test_dict['iv4'])
         self.assertNotEquals(self.test_class.from_str(str(self.test_dict['iv7'])),self.test_dict['iv1'])
     
+    def test_pickle(self):
+        for seg in self.test_dict.values():
+            stmp = pickle.dumps(seg)
+            newseg = pickle.loads(stmp)
+            self.assertEquals(seg,newseg,"GenomicSegment %s failed to pickle/unpickle. Got %s." % (seg,newseg))
+
     def test_len(self):
         """Test length reporting"""
         self.assertEquals(len(self.test_dict['iv1']),50)
