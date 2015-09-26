@@ -355,6 +355,7 @@ cdef class SegmentChain(object):
         and UTRs as subsegments
     """
 
+    # TODO: profile
     def __cinit__(self,*segments,**attr):
         """Create an |SegmentChain| from zero or more |GenomicSegment| objects
         
@@ -386,7 +387,6 @@ cdef class SegmentChain(object):
             ``gene_id``             A gene ID used for `GTF2`_ export
             ====================    ============================================
         """
-    def __cinit__(self, *segments, **attr):
         cdef:
             str my_chrom, my_strand
             GenomicSegment seg
@@ -417,13 +417,39 @@ cdef class SegmentChain(object):
             # add new positions
             for seg in segments:
                 positions.extend(range(seg.start,seg.end))
-            
+
             # reset variables
             new_segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
-            self._segments = new_segments
-            num_segs = len(new_segments)
 
-            self._update()
+            self._set_segments(new_segments)
+
+    cdef bint _set_segments(self, list segments) except False:
+        """Set `self._segments` and update position hashes, assuming `segments`
+        have passed the following criteria:
+
+            1. They don't overlap
+
+            2. They all have the same chromosome and strand
+
+            3. If `len(self)` > 0, all segments have the same chromosome
+               and strand as `self`
+
+        Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
+        and either :meth:`~plastid.genomics.c_segmentchain.SegmentChain.__cinit__`
+        or :meth:`~plastid.genomics.c_segmentchain.SegmentChainadd_segments`.
+
+        Occasionally (e.g. in the case of unpickling) it is safe to bypass these
+        checks.
+
+        Parameters
+        ----------
+        list
+            List of |GenomicSegments|
+        """
+        self._segments = segments
+        num_segs = len(segments)
+        self._update()
+        return True
 
     cdef bint _update(self) except False:
         """Update position hashes and length measurements after |GenomicSegments|
@@ -922,7 +948,7 @@ cdef class SegmentChain(object):
             return true
         return false
     
-    # TODO: optimize. is very slow, due to __cinit__ cost
+    # TODO: recheck speed
     cpdef SegmentChain get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
@@ -932,6 +958,7 @@ cdef class SegmentChain(object):
             |SegmentChain| antisense to `self`
         """
         cdef:
+            SegmentChain new_chain = SegmentChain()
             GenomicSegment span = self.spanning_segment
             Strand strand = span.c_strand
             str chrom = span.chrom
@@ -954,7 +981,9 @@ cdef class SegmentChain(object):
         for seg in self._segments:
             new_segments.append(GenomicSegment(chrom,seg.start,seg.end,s_strand))
 
-        return SegmentChain(*new_segments)
+        new_chain._set_segments(new_segments)
+
+        return new_chain
 
     cdef list c_get_position_list(self):
         """Retrieve a sorted **end-inclusive** numpy array of genomic coordinates in this |SegmentChain|
@@ -1114,8 +1143,7 @@ cdef class SegmentChain(object):
                 positions.extend(range(seg.start,seg.end))
             
             # reset variables
-            self._segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
-            self._update()
+            self._set_segments(positionlist_to_segments(my_chrom,my_strand,sorted(set(positions))))
 
         return True
 
@@ -1964,9 +1992,10 @@ cdef class SegmentChain(object):
         SegmentChain.get_subchain
         """
         cdef:
-             long length = self.length
-             long tmp
-             list segs
+            SegmentChain chain = SegmentChain()
+            long length = self.length
+            long tmp
+            list segs
 
         if start is None:
             raise TypeError('start coordinate supplied is None. Expected int')
@@ -1980,8 +2009,9 @@ cdef class SegmentChain(object):
             
         positions = self._position_hash[start:end].tolist()
         segs = positionlist_to_segments(self.chrom,self.strand,positions)
+        chain._set_segments(segs)
 
-        return SegmentChain(*segs)
+        return chain
 
     def get_counts(self,ga,stranded=True):
         """Return list of counts or values at each position in `self`
@@ -2517,7 +2547,7 @@ cdef class Transcript(SegmentChain):
             long cds_genome_start = self.cds_genome_start
             long cds_genome_end   = self.cds_genome_end
 
-        SegmentChain._update(self)
+#        SegmentChain._update(self)
         if strand == forward_strand:
             self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_start,True)
             
@@ -3024,9 +3054,9 @@ cdef class Transcript(SegmentChain):
         """
         cdef:
             SegmentChain segchain = SegmentChain.from_bed(line,extra_columns=extra_columns)
-            segments = segchain._segments
-            attr = segchain.attr
-            Transcript transcript
+            list segments = segchain._segments
+            dict attr = segchain.attr
+            Transcript transcript = Transcript()
 
         attr.pop("type") # default type for SegmentChain is "exon". We want to use "mRNA"
         attr["cds_genome_start"] = attr["thickstart"]
@@ -3036,16 +3066,20 @@ cdef class Transcript(SegmentChain):
         if attr["cds_genome_start"] == attr["cds_genome_end"]:
             attr["cds_genome_start"] = attr["cds_genome_end"] = None
 
-        transcript = Transcript(*segments,**attr)
+        transcript._set_segments(segments)
+        transcript.attr = attr
     
         return transcript
     
     @staticmethod
     def from_psl(str psl_line):
         cdef:
+            Transcript transcript = Transcript()
             SegmentChain segchain = SegmentChain.from_psl(psl_line)
             dict attr = segchain.attr
 
         attr["cds_genome_start"] = None
         attr["cds_genome_end"]   = None
-        return Transcript(*segchain,**attr)
+        transcript._set_segments(segchain._segments)
+
+        return transcript
