@@ -2642,18 +2642,29 @@ cdef class Transcript(SegmentChain):
             self.cds_start = None
             self.cds_end = None
  
-    def __copy__(self): 
+    def __copy__(self):  # copy info and segments; shallow copy attr
         chain2 = Transcript()
         chain2._set_segments(self._segments)
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
+        if chain2.cds_genome_start is not None:
+            chain2._update_from_cds_genome_start()
+        if chain2.cds_genome_end is not None:
+            chain2._update_from_cds_genome_end()
         chain2.attr = self.attr
         return chain2
 
-    def __deepcopy__(self,memo):
-        chain2 = Transcript(*self._segments,**copy.deepcopy(self.attr))
+    def __deepcopy__(self,memo): # deep copy everything
+        chain2 = Transcript()
+        chain2._set_segments(copy.deepcopy(self._segments))
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
+        if chain2.cds_genome_start is not None:
+            chain2._update_from_cds_genome_start()
+        if chain2.cds_genome_end is not None:
+            chain2._update_from_cds_genome_end()
+
+        chain2.attr = copy.deepcopy(self.attr)
         return chain2
 
     def __reduce__(self):
@@ -2842,13 +2853,13 @@ cdef class Transcript(SegmentChain):
             long [:] phash = self._position_hash
 
         if self.spanning_segment.c_strand == forward_strand:
-            self.cds_genome_end = phash[cds_end]
+            self.cds_genome_end = phash[cds_end - 1] + 1
         else:
-            self.cds_genome_start = phash[self.length - cds_end - 1]
+            self.cds_genome_start = phash[self.length - cds_end + 1]
             pass
 #            self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_start,True)
 
-        return False
+        return True
     
     cdef bint _update_from_cds_genome_start(self) except False:
         """Generate `self.cds_start` and `self.cds_end` from `self.cds_genome_start` and `self.cds_genome_end`

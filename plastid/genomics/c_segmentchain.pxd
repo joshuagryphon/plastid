@@ -47,6 +47,7 @@ cdef class Transcript(SegmentChain):
         object cds_genome_start, cds_genome_end, cds_start, cds_end
 
     cdef bint _update_cds(self) except False
-#    cdef void _genome_to_cds_end(self)
-#    cdef void _genome_to_cds_start(self)
-#
+    cdef bint _update_from_cds_start(self) except False
+    cdef bint _update_from_cds_end(self) except False
+    cdef bint _update_from_cds_genome_start(self) except False
+    cdef bint _update_from_cds_genome_end(self) except False

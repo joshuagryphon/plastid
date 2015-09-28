@@ -1766,9 +1766,9 @@ class TestTranscript(AbstractSegmentChainHelper):
             tx1.cds_genome_start = i
             tx2.cds_genome_start = i
             self.assertEqual(tx1.cds_start,i-10,
-                    "cds_genome_start (%s) failed to upstate cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
+                    "cds_genome_start (%s) failed to update cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
             self.assertEqual(tx2.cds_end,20-i+10,
-                    "cds_genome_start (%s) failed to upstate cds_end for minus-strand. Expected %s, got %s." % (i,20-i,tx2.cds_end))
+                    "cds_genome_start (%s) failed to update cds_end for minus-strand. Expected %s, got %s." % (i,20-i,tx2.cds_end))
 
     def test_update_from_cds_genome_start_raises_ValueError(self):
         tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
@@ -1806,9 +1806,9 @@ class TestTranscript(AbstractSegmentChainHelper):
             tx1.cds_genome_end = i
             tx2.cds_genome_end = i
             self.assertEqual(tx1.cds_end,i-20,
-                    "cds_genome_start (%s) failed to upstate cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
+                    "cds_genome_start (%s) failed to update cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
             self.assertEqual(tx2.cds_start,40-i,
-                    "cds_genome_start (%s) failed to upstate cds_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_end))
+                    "cds_genome_start (%s) failed to update cds_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_end))
 
     def test_update_from_cds_genome_start_raises_ValueError(self):
         tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
@@ -1840,14 +1840,13 @@ class TestTranscript(AbstractSegmentChainHelper):
         tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
                          cds_genome_start=15,cds_genome_end=18)
 
-        for i in range(0,10):
+        for i in range(0,8):
             tx1.cds_start = i
             tx2.cds_start = i
             self.assertEqual(tx1.cds_genome_start,10+i,
-                    "cds_start (%s) failed to upstate cds_genome_start for plus-strand. Expected %s, got %s." % (i,10+i,tx1.cds_genome_start))
-            self.assertEqual(tx2.cds_end,40-i,
-                    "cds_start (%s) failed to upstate cds_genome_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_genome_end))
-        assert False
+                    "cds_start (%s) failed to update cds_genome_start for plus-strand. Expected %s, got %s." % (i,10+i,tx1.cds_genome_start))
+            self.assertEqual(tx2.cds_genome_end,40-i,
+                    "cds_start (%s) failed to update cds_genome_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_genome_end))
 
     def test_update_from_cds_start_raises_ValueError(self):
         tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
@@ -1859,7 +1858,7 @@ class TestTranscript(AbstractSegmentChainHelper):
             t.cds_start = 19
 
         self.assertRaises(ValueError,f,tx1)
-        self.assertRaises(ValueError,f,tx1)
+        self.assertRaises(ValueError,f,tx2)
 
     def test_update_cds_start_to_none_makes_none(self):
         tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
@@ -1874,8 +1873,31 @@ class TestTranscript(AbstractSegmentChainHelper):
             self.assertTrue(tx.cds_start is None)
             self.assertTrue(tx.cds_end is None)
 
+    # TODO: make table check truth
     def test_update_from_cds_end(self):
-        assert False
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+        for i in range(15,18):
+            tx1.cds_end = i
+            tx2.cds_end = i
+            self.assertEqual(tx1.cds_genome_end,20+i,
+                    "cds_end (%s) failed to update cds_genome_end for plus-strand. Expected %s, got %s." % (i,20+i,tx1.cds_genome_end))
+            self.assertEqual(tx2.cds_genome_start,30-i+1,
+                    "cds_end (%s) failed to update cds_genome_start for minus-strand. Expected %s, got %s." % (i,30-i+1,tx2.cds_genome_start))
+ 
+    def test_update_from_cds_end_raises_ValueError(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        def f(t):
+            t.cds_end = 0
+
+        self.assertRaises(ValueError,f,tx1)
+        self.assertRaises(ValueError,f,tx2)
 
     def test_update_cds_end_to_none_makes_none(self):
         tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
@@ -1889,6 +1911,24 @@ class TestTranscript(AbstractSegmentChainHelper):
             self.assertTrue(tx.cds_genome_end is  None)
             self.assertTrue(tx.cds_start is None)
             self.assertTrue(tx.cds_end is None)
+
+    def test_copy_copies_cds(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = copy.copy(tx1)
+        self.assertEqual(tx1.cds_start,tx2.cds_start)
+        self.assertEqual(tx1.cds_genome_start,tx2.cds_genome_start)
+        self.assertEqual(tx1.cds_end,tx2.cds_end)
+        self.assertEqual(tx1.cds_genome_end,tx2.cds_genome_end)
+
+    def test_deepcopy_copies_cds(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = copy.deepcopy(tx1)
+        self.assertEqual(tx1.cds_start,tx2.cds_start)
+        self.assertEqual(tx1.cds_genome_start,tx2.cds_genome_start)
+        self.assertEqual(tx1.cds_end,tx2.cds_end)
+        self.assertEqual(tx1.cds_genome_end,tx2.cds_genome_end)
 
     def test_get_utr5(self):
         """Test fetching of CDS, UTR5, UTR3"""
