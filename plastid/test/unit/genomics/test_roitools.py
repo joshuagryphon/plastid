@@ -459,37 +459,37 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         for line in buf.read().strip("\n").split("\n"):
             self.assertEqual(line.split("\t")[7],".")
     
-    # FIXME: move ref_transcripts to list of actual Transcript objects
-    @skip_if_abstract    
-    def test_sort(self):
-        """Test sorting of intervals within a SegmentChain
-        
-        This function is typically automatic and not exposed to users.
-        We test it manually here by shuffling intervals within an 
-        SegmentChain, asserting that their order be permuted,
-        then re-sorting them, and asserting that their original order
-        be restored.
-        """
-        c = 0
-        n = 0
-        for ivc in self.bed_list:
-            if len(ivc) > 1: # can only shuffle if we have >1 interval
-                n += 1
-                shuffled_ivc = copy.deepcopy(ivc)
-                shuffle(shuffled_ivc._segments)
-                
-                # if we shuffle SegmentChains with 2 intervals,
-                # they will 50% of the time retain the same order by chance
-                # so we count how many are changed (`c`) and make sure
-                # that the total number of passing tests (`n`) exceeds
-                # this number
-                if shuffled_ivc._segments != ivc._segments:
-                    c += 1
-                    
-                shuffled_ivc.sort()
-                self.assertEquals(shuffled_ivc._segments,ivc._segments)
-        
-        self.assertGreaterEqual(n,c)
+#    # FIXME: move ref_transcripts to list of actual Transcript objects
+#    @skip_if_abstract    
+#    def test_sort(self):
+#        """Test sorting of intervals within a SegmentChain
+#        
+#        This function is typically automatic and not exposed to users.
+#        We test it manually here by shuffling intervals within an 
+#        SegmentChain, asserting that their order be permuted,
+#        then re-sorting them, and asserting that their original order
+#        be restored.
+#        """
+#        c = 0
+#        n = 0
+#        for ivc in self.bed_list:
+#            if len(ivc) > 1: # can only shuffle if we have >1 interval
+#                n += 1
+#                shuffled_ivc = copy.deepcopy(ivc)
+#                shuffle(shuffled_ivc._segments)
+#                
+#                # if we shuffle SegmentChains with 2 intervals,
+#                # they will 50% of the time retain the same order by chance
+#                # so we count how many are changed (`c`) and make sure
+#                # that the total number of passing tests (`n`) exceeds
+#                # this number
+#                if shuffled_ivc._segments != ivc._segments:
+#                    c += 1
+#                    
+#                shuffled_ivc.sort()
+#                self.assertEquals(shuffled_ivc._segments,ivc._segments)
+#        
+#        self.assertGreaterEqual(n,c)
     
     @skip_if_abstract    
     def test_len(self):
@@ -1261,7 +1261,9 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                  "val1"  : (3,1,61,32,-1,None),
                  "list"  : range(50),
                  "None"  : None,
-                 "chain" : SegmentChain(GenomicSegment("chrB",200,300,"+"))
+                 "chain" : SegmentChain(GenomicSegment("chrB",200,300,"+")),
+                 "cds_genome_start" : 55,
+                 "cds_genome_end"   : 130
                }
         chain1 = self.test_class(GenomicSegment("chrA",50,100,"+"),
                                  GenomicSegment("chrA",120,130,"+"),
@@ -1313,8 +1315,104 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertListEqual(chain1._mask_segments,c1new._mask_segments)
         self.assertListEqual(chain2._mask_segments,c2new._mask_segments)
 
+    @skip_if_abstract
+    def test_shallowcopy(self):
+        segments = [GenomicSegment("chrA",10,100,"+"),
+                    GenomicSegment("chrA",200,350,"+"),
+                    GenomicSegment("chrA",400,800,"+")]
+        attr = { "attr1" : 1,
+                 "attr2" : 2,
+                 "attr3" : [1,2,3],
+                 "attr4" : SegmentChain(*segments),
+               }
+        # make sure segments copy
+        chain1 = self.test_class(*segments,**attr)
+        chain2 = copy.copy(chain1)
+        chain3 = copy.copy(chain1)
 
+        self.assertListEqual(chain1._segments,chain2._segments,
+                "copy.copy failed: chain2 has different segments from chain1")
 
+        # make sure attributes copy
+        self.assertDictEqual(chain1.attr,chain2.attr,
+                "copy.copy failed: chain2 has different attr from chain1")
+
+        # make sure lists are independent
+        chain2.add_segments(GenomicSegment("chrA",900,1000,"+"))
+        self.assertEqual(len(chain2),4)
+        self.assertEqual(len(chain1),3,"Deepcopy failed: adding segment to chain2 lengthened chain1")
+
+        # make sure dicts are linked
+        chain2.attr["attr3"] = [4,5,6]
+        self.assertEqual(chain1.attr,chain2.attr,
+                "copy.copy failed: changing chain2 attr did not update chain1 attr")
+
+    @skip_if_abstract
+    def test_deepcopy(self):
+        segments = [GenomicSegment("chrA",10,100,"+"),
+                    GenomicSegment("chrA",200,350,"+"),
+                    GenomicSegment("chrA",400,800,"+")]
+        attr = { "attr1" : 1,
+                 "attr2" : 2,
+                 "attr3" : [1,2,3],
+                 "attr4" : SegmentChain(*segments),
+               }
+        # make sure segments copy
+        chain1 = self.test_class(*segments,**attr)
+        chain2 = copy.deepcopy(chain1)
+        chain3 = copy.deepcopy(chain1)
+
+        self.assertListEqual(chain1._segments,chain2._segments,
+                "Deepcopy failed: chain2 has different segments from chain1")
+
+        # make sure attributes copy
+        self.assertDictEqual(chain1.attr,chain2.attr,
+                "Deepcopy failed: chain2 has different attr from chain1")
+
+        # make sure lists are independent
+        chain2.add_segments(GenomicSegment("chrA",900,1000,"+"))
+        self.assertEqual(len(chain2),4)
+        self.assertEqual(len(chain1),3,"Deepcopy failed: adding segment to chain2 lengthened chain1")
+
+        # make sure dicts are independent
+        chain2.attr["attr3"] = [4,5,6]
+        self.assertNotEqual(chain1.attr,chain2.attr,"Deepcopy failed: changing chain2 attr affected chain1 attr")
+
+        # make sure subitems are also deepcopied
+        chain3.attr["attr4"].add_segments(GenomicSegment("chrA",1000,1200,"+"))
+        self.assertNotEqual(chain1.attr["attr4"],chain3.attr["attr4"],"Deepcopy failed: changing chain2 attr affected chain1 attr")
+
+    @skip_if_abstract
+    def test_get_segments_property_is_immutable(self):
+        segments = [GenomicSegment("chrA",10,100,"+"),
+                    GenomicSegment("chrA",200,350,"+"),
+                    GenomicSegment("chrA",400,800,"+")]
+        chain = self.test_class(*segments)
+
+        segments_from_chain = chain._segments
+        self.assertListEqual(segments,segments_from_chain,
+                "test_segments_property_is_immutable: segments coming from chain are different from those went in: %s vs %s." % (segments,segments_from_chain))
+        segments_from_chain.append(GenomicSegment("chrA",900,1000,"+"))
+        self.assertNotEqual(segments,segments_from_chain,
+                "test_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._segments")
+
+    @skip_if_abstract
+    def test_mask_segments_property_is_immutable(self):
+        segments = [GenomicSegment("chrA",10,100,"+"),
+                    GenomicSegment("chrA",200,350,"+"),
+                    GenomicSegment("chrA",400,800,"+")]
+        
+        masks = [GenomicSegment("chrA",300,350,"+")]
+        chain = self.test_class(*segments)
+        chain.add_masks(*masks)
+
+        segments_from_chain = chain._mask_segments
+        self.assertListEqual(masks,segments_from_chain,
+                "test_mask_segments_property_is_immutable: masks coming from chain are different from those that went in: %s vs %s." % (segments,segments_from_chain))
+        segments_from_chain.append(GenomicSegment("chrA",10,100,"+"))
+        self.assertNotEqual(segments,segments_from_chain,
+                "test_mask_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._mask_segments")
+  
 
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
@@ -1656,6 +1754,142 @@ class TestTranscript(AbstractSegmentChainHelper):
                      (ivc1.cds_end == ivc2.cds_end)
         return start_test & end_test
     
+    def test_update_from_cds_genome_start_changes_value(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        self.assertEqual(tx1.cds_start,5)
+        self.assertEqual(tx2.cds_end,15)
+        for i in range(10,15):
+            tx1.cds_genome_start = i
+            tx2.cds_genome_start = i
+            self.assertEqual(tx1.cds_start,i-10,
+                    "cds_genome_start (%s) failed to upstate cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
+            self.assertEqual(tx2.cds_end,20-i+10,
+                    "cds_genome_start (%s) failed to upstate cds_end for minus-strand. Expected %s, got %s." % (i,20-i,tx2.cds_end))
+
+    def test_update_from_cds_genome_start_raises_ValueError(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+        def func(t):
+            t.cds_genome_start = 32
+
+        self.assertRaises(ValueError,func,tx1)
+        self.assertRaises(ValueError,func,tx2)
+
+    def test_update_cds_genome_start_to_none_makes_none(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        for tx in tx1,tx2:
+            tx.cds_genome_start = None
+            self.assertTrue(tx.cds_genome_start is None)
+            self.assertTrue(tx.cds_genome_end is  None)
+            self.assertTrue(tx.cds_start is None)
+            self.assertTrue(tx.cds_end is None)
+
+    def test_update_from_cds_genome_end(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        self.assertEqual(tx1.cds_end,8)
+        self.assertEqual(tx2.cds_start,12)
+        for i in range(31,40):
+            tx1.cds_genome_end = i
+            tx2.cds_genome_end = i
+            self.assertEqual(tx1.cds_end,i-20,
+                    "cds_genome_start (%s) failed to upstate cds_start for plus-strand. Expected %s, got %s." % (i,i-10,tx1.cds_start))
+            self.assertEqual(tx2.cds_start,40-i,
+                    "cds_genome_start (%s) failed to upstate cds_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_end))
+
+    def test_update_from_cds_genome_start_raises_ValueError(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+        def func(t):
+            t.cds_genome_end = 11
+
+        self.assertRaises(ValueError,func,tx1)
+        self.assertRaises(ValueError,func,tx2)
+
+    def test_update_cds_genome_end_to_none_makes_none(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        for tx in tx1,tx2:
+            tx.cds_genome_end = None
+            self.assertTrue(tx.cds_genome_start is None)
+            self.assertTrue(tx.cds_genome_end is  None)
+            self.assertTrue(tx.cds_start is None)
+            self.assertTrue(tx.cds_end is None)
+
+    def test_update_from_cds_start(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        for i in range(0,10):
+            tx1.cds_start = i
+            tx2.cds_start = i
+            self.assertEqual(tx1.cds_genome_start,10+i,
+                    "cds_start (%s) failed to upstate cds_genome_start for plus-strand. Expected %s, got %s." % (i,10+i,tx1.cds_genome_start))
+            self.assertEqual(tx2.cds_end,40-i,
+                    "cds_start (%s) failed to upstate cds_genome_end for minus-strand. Expected %s, got %s." % (i,40-i,tx2.cds_genome_end))
+        assert False
+
+    def test_update_from_cds_start_raises_ValueError(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        def f(t):
+            t.cds_start = 19
+
+        self.assertRaises(ValueError,f,tx1)
+        self.assertRaises(ValueError,f,tx1)
+
+    def test_update_cds_start_to_none_makes_none(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        for tx in tx1,tx2:
+            tx.cds_start = None
+            self.assertTrue(tx.cds_genome_start is None)
+            self.assertTrue(tx.cds_genome_end is  None)
+            self.assertTrue(tx.cds_start is None)
+            self.assertTrue(tx.cds_end is None)
+
+    def test_update_from_cds_end(self):
+        assert False
+
+    def test_update_cds_end_to_none_makes_none(self):
+        tx1 = Transcript(GenomicSegment("chrA",10,20,"+"),GenomicSegment("chrA",30,40,"+"),
+                         cds_genome_start=15,cds_genome_end=18)
+        tx2 = Transcript(GenomicSegment("chrA",10,20,"-"),GenomicSegment("chrA",30,40,"-"),
+                         cds_genome_start=15,cds_genome_end=18)
+
+        for tx in tx1,tx2:
+            tx.cds_end = None
+            self.assertTrue(tx.cds_genome_start is None)
+            self.assertTrue(tx.cds_genome_end is  None)
+            self.assertTrue(tx.cds_start is None)
+            self.assertTrue(tx.cds_end is None)
+
     def test_get_utr5(self):
         """Test fetching of CDS, UTR5, UTR3"""
         utr5_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr5_100"]),return_type=SegmentChain)}

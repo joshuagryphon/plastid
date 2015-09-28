@@ -297,6 +297,86 @@ cdef ExBool chain_richcmp(SegmentChain chain1, SegmentChain chain2, int cmpval) 
     else:
         raise ValueError("This operation is not defined for SegmentChains.")
 
+cdef ExBool transcript_richcmp(Transcript chain1, Transcript chain2, int cmpval) except bool_exception:
+    """Helper method for rich comparisons (==, !=, <, >, <=, >=) of |Transcripts|
+
+    Parameters
+    ----------
+    chain1 : Transcript
+        First chain
+
+    chain2 : Transcript
+        Second chain
+
+    cmpval : int
+        Integer code for comparison (from Cython specification for ``__richcmp__()`` methods:
+
+        ========  ==============
+        **Code**  **Comparison**
+        --------  --------------
+        0         <
+        1         <=
+        2         ==
+        3         !=
+        4         >
+        5         >=
+        ========  ==============
+ 
+
+    Returns
+    -------
+    ExBool
+        true if `chain1 'comparison' chain2` is `True`, otherwise false
+    """
+    cdef:
+        sspan = chain1.spanning_segment
+        ospan = chain2.spanning_segment
+
+    if cmpval == EQ:
+        if len(chain1) == 0 or len(chain2) == 0:
+            return false
+        else:
+            if sspan.chrom == ospan.chrom and\
+               sspan.c_strand == ospan.c_strand and\
+               chain1.c_get_position_list() == chain2.c_get_position_list() and\
+               (
+                   (chain1.cds_genome_start is None and chain2.cds_genome_start is None and\
+                    chain1.cds_genome_end is None and chain2.cds_genome_end is None) or\
+                   (chain1.cds_genome_start == chain2.cds_genome_start and\
+                    chain1.cds_genome_end == chain2.cds_genome_end)
+                ):
+                   return true
+            return false
+    elif cmpval == NEQ:
+        return true if transcript_richcmp(chain1,chain2,EQ) == false else true
+    elif cmpval == LT:
+        if sspan < ospan:
+            return true
+        elif sspan > ospan:
+            return false
+        else:
+            slen = chain1.length
+            olen = chain2.length
+            if slen < olen:
+                return true
+            elif slen > olen:
+                return false
+            else:
+                sname = chain1.get_name()
+                oname = chain2.get_name()
+                if sname < oname:
+                    return true
+                else:
+                    return false
+    elif cmpval == LEQ:
+        return transcript_richcmp(chain1,chain2,LT) or transcript_richcmp(chain1,chain2,EQ)
+    elif cmpval == GT:
+        return transcript_richcmp(chain2,chain1,LT)
+    elif cmpval == GEQ:
+        return transcript_richcmp(chain2,chain1,LT) or transcript_richcmp(chain1,chain2,EQ)
+    else:
+        raise ValueError("This operation is not defined for SegmentChains.")
+
 #===============================================================================
 # higher-order classes that handle multi-feature structures, like transcripts
 # or alignments
@@ -566,17 +646,19 @@ cdef class SegmentChain(object):
         def __get__(self):
             return self.spanning_segment.c_strand
 
-    # TODO: return copy
     property _segments:
-        """List of |GenomicSegments| that comprise the |SegmentChain|"""
+        """Retrieve a list of |GenomicSegments| that comprise `self`.
+        Changing this list will do nothing to `self`.
+        """
         def __get__(self):
-            return self._segments
+            return copy.deepcopy(self._segments)
 
-    # TODO: return copy
     property _mask_segments:
-        """Trimmed |GenomicSegments| representing masked regions of the |SegmentChain|"""
+        """Retrieve a list of |GenomicSegments| representing regions masked in `self.`
+        Changing this list will do nothing to the masks in `self`.
+        """
         def __get__(self):
-            return self._mask_segments
+            return copy.deepcopy(self._mask_segments)
 
     property attr:
         """Dictionary of arbitrary attributes"""
@@ -749,7 +831,7 @@ cdef class SegmentChain(object):
         """
         if isinstance(other,SegmentChain):
             return chain_richcmp(self,other,cmpval) == true
-        elif isinstance(other,SegmentChain):
+        elif isinstance(other,GenomicSegment):
             return chain_richcmp(self,SegmentChain(other),cmpval) == true 
         else:
             raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
@@ -2456,8 +2538,11 @@ cdef class SegmentChain(object):
         
         return SegmentChain(*segs,**attr)        
 
-    def __copy__(self): 
-        return SegmentChain(*self,**self.attr)
+    def __copy__(self):
+        chain2 = SegmentChain()
+        chain2._set_segments(self._segments)
+        chain2.attr = self.attr
+        return chain2
 
     def __deepcopy__(self,memo):
         new_ivs  = copy.deepcopy(self._segments)
@@ -2558,80 +2643,151 @@ cdef class Transcript(SegmentChain):
             self.cds_end = None
  
     def __copy__(self): 
-        return Transcript(*self,**self.attr)
+        chain2 = Transcript()
+        chain2._set_segments(self._segments)
+        chain2.cds_genome_start = self.cds_genome_start
+        chain2.cds_genome_end = self.cds_genome_end
+        chain2.attr = self.attr
+        return chain2
 
     def __deepcopy__(self,memo):
-        new_ivs  = copy.deepcopy(self._segments)
-        new_attr = copy.deepcopy(self.attr)
-        return Transcript(*new_ivs,**new_attr)
+        chain2 = Transcript(*self._segments,**copy.deepcopy(self.attr))
+        chain2.cds_genome_start = self.cds_genome_start
+        chain2.cds_genome_end = self.cds_genome_end
+        return chain2
 
     def __reduce__(self):
-        assert False
+        return (Transcript,tuple(),self.__getstate__())
 
-    def __getstate__(self):
-        assert False
+    def __getstate__(self): # pickle state
+        cdef:
+            list segstrs  = [str(X) for X in self._segments]
+            list maskstrs = [str(X) for X in self._mask_segments]
+            dict attr = self.attr
 
-    def __setstate__(self):
-        assert False
+        return (segstrs, maskstrs, attr, self.cds_genome_start, self.cds_genome_end)
 
-    # TODO: draw this out again to figure out setter
+    def __setstate__(self,state): # revive state from pickling
+        cdef:
+            list segs  = [GenomicSegment.from_str(X) for X in state[0]]
+            list masks = [GenomicSegment.from_str(X) for X in state[1]]
+            dict attr = state[2]
+            object gstart = state[3]
+            object gend = state[4]
+
+        self.attr = attr
+        self._set_segments(segs)
+        self._set_masks(masks)
+        self.cds_genome_start = gstart
+        self.cds_genome_end = gend
+        if gstart is not None and gend is not None:
+            self._update_cds()
+        else:
+            self.cds_start = None
+            self.cds_end = None
+
+    def __richcmp__(self, object other, int cmpval):
+        """Test whether `self` and `other` are equal or unequal. Equality is defined as
+        identity of positions, chromosomes, and strands. Two |SegmentChain| with
+        zero intervals, by convention, are not equal.
+           
+        Parameters
+        ----------
+        other : |SegmentChain| or |GenomicSegment|
+        	Query feature
+        
+        Returns
+        -------
+        bool
+        """
+        if isinstance(other,Transcript):
+            return transcript_richcmp(self,other,cmpval) == true
+        elif isinstance(other,GenomicSegment):
+            return transcript_richcmp(self,SegmentChain(other),cmpval) == true 
+        else:
+            raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
+
     property cds_start:
+        """Start of coding region relative to 5' end of transcript, in direction of transcript.
+        Setting to None also sets `self.cds_end`, `self.cds_genome_start` and
+        `self.cds_genome_end` to None
+        """
         def __get__(self):
             return self.cds_start
         def __set__(self,val):
+            cdef object end = self.cds_end
+            if val is not None and end is not None:
+                if val > end:
+                    raise ValueError("Transcript '%s': cds_start (%s) must be <= cds_end (%s)" % (self,val,end))
             self.cds_start = val
+            if val is None:
+                self.cds_end = None
+                self.cds_genome_start = None
+                self.cds_genome_end = None
+            else:
+                self._update_from_cds_start()
 
-#        def __set__(self, long val):
-#            self.cds_start = val
-#            if val is None:
-#                self.cds_genome_start = None
-#            else:
-#                if self.c_strand == reverse_strand:
-#                    self.cds_genome_end = self._position_hash[self.length - val]
-#                else:
-#                    self.cds_genome_start = self._position_hash[val]
-#
-    # TODO: draw this out again to figure out setter
     property cds_end:
+        """End of coding region relative to 5' end of transcript, in direction of transcript.
+        Setting to None also sets `self.cds_start`, `self.cds_genome_start` and
+        `self.cds_genome_end` to None
+        """
         def __get__(self):
             return self.cds_end
         def __set__(self,val):
+            cdef object start = self.cds_start
+            if val is not None and start is not None:
+                if val < start:
+                    raise ValueError("Transcript '%s': cds_end (%s) must be >= cds_start (%s)" % (self,val,start))
             self.cds_end = val
-#        def __set__(self, long val):
-#            self.cds_end = val
-#            if val is None:
-#                self.cds_genome_end = None
-#            else:
-#                if self.c_strand == reverse_strand:
-#                    self.cds_genome_start = self._position_hash[self.length - val - 1]
-#                else:
-#                    self.cds_genoem_end = self._position_hash[val]
-#
+            if val is None:
+                self.cds_start = None
+                self.cds_genome_start = None
+                self.cds_genome_end = None
+            else:
+                self._update_from_cds_end()
+
     property cds_genome_start:
-        """Starting coordinate of coding region, relative to genome (i.e. leftmost; is start codon for forward-strand features, stop codon for reverse-strand features)"""
+        """Starting coordinate of coding region, relative to genome (i.e. leftmost;
+        is start codon for forward-strand features, stop codon for reverse-strand
+        features). Setting to None also sets `self.cds_start`, `self.cds_end`, and
+        `self.cds_genome_end` to None
+        """
         def __get__(self):
             return self.cds_genome_start
         def __set__(self, val):
+            cdef object end = self.cds_genome_end
+            if val is not None and end is not None:
+                if val > end:
+                    raise ValueError("Transcript '%s': cds_genome_start (%s) must be <= cds_genome_end (%s)" % (self,val,end))
             self.cds_genome_start = val
             if val is None:
                 self.cds_genome_end = None
                 self.cds_start = None
                 self.cds_end = None
             else:
-                self._update_cds()
+                self._update_from_cds_genome_start()
 
     property cds_genome_end:
-        """Ending coordinate of coding region, relative to genome (i.e. leftmost; is stop codon for forward-strand features, start codon for reverse-strand features"""
+        """Ending coordinate of coding region, relative to genome (i.e. leftmost;
+        is stop codon for forward-strand features, start codon for reverse-strand
+        features. Setting to None also sets `self.cds_start`, `self.cds_end`,
+        and `self.cds_genome_start` to None
+        """
         def __get__(self):
             return self.cds_genome_end
         def __set__(self, val):
+            cdef object start = self.cds_genome_start
+            if val is not None and start is not None:
+                if val < start:
+                    raise ValueError("Transcript '%s': cds_genome_end (%s) must be >= cds_genome_start (%s)" % (self,val,start))
             self.cds_genome_end = val
             if val is None:
                 self.cds_genome_start = None
                 self.cds_start = None
                 self.cds_end = None
             else:
-                self._update_cds()
+                self._update_from_cds_genome_end()
 
     # TODO: create explicit unit test
     cdef bint _update_cds(self) except False:
@@ -2645,7 +2801,6 @@ cdef class Transcript(SegmentChain):
             long cds_genome_start = self.cds_genome_start
             long cds_genome_end   = self.cds_genome_end
 
-#        SegmentChain._update(self)
         if strand == forward_strand:
             self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_start,True)
             
@@ -2665,6 +2820,77 @@ cdef class Transcript(SegmentChain):
             # for this purpose
             self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_end - 1,  True)
             self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_start,True)
+
+        return True
+
+    cdef bint _update_from_cds_start(self) except False:
+        cdef:
+            long cds_start = <long>self.cds_start
+            long [:] phash = self._position_hash
+
+        if self.spanning_segment.c_strand == forward_strand:
+            self.cds_genome_start = phash[cds_start]
+        else:
+            self.cds_genome_end = phash[self.length - cds_start - 1] + 1 # CHECKME
+#            self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_end - 1,  True) inverse op
+
+        return True
+    
+    cdef bint _update_from_cds_end(self) except False:
+        cdef:
+            long cds_end = <long>self.cds_end
+            long [:] phash = self._position_hash
+
+        if self.spanning_segment.c_strand == forward_strand:
+            self.cds_genome_end = phash[cds_end]
+        else:
+            self.cds_genome_start = phash[self.length - cds_end - 1]
+            pass
+#            self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_start,True)
+
+        return False
+    
+    cdef bint _update_from_cds_genome_start(self) except False:
+        """Generate `self.cds_start` and `self.cds_end` from `self.cds_genome_start` and `self.cds_genome_end`
+        AFTER verifying that these values are not None
+        """
+        cdef:
+            long cds_genome_start = <long>self.cds_genome_start
+
+        if self.spanning_segment.c_strand == forward_strand:
+            self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_start,True)
+        else:
+            self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_start,True)
+
+        return True
+
+    cdef bint _update_from_cds_genome_end(self) except False:
+        """Generate `self.cds_start` and `self.cds_end` from `self.cds_genome_start` and `self.cds_genome_end`
+        AFTER verifying that these values are not None
+        """
+        cdef:
+            GenomicSegment span = self.spanning_segment
+            Strand strand = span.c_strand
+            str chrom = span.chrom
+            long cds_genome_start = self.cds_genome_start
+            long cds_genome_end   = self.cds_genome_end
+
+        if strand == forward_strand:
+            # this is in a try-catch because if the half-open cds_end coincides
+            # with the end of an exon, it will not be in the end-inclusive position
+            try:
+                self.cds_end = self.c_get_segmentchain_coordinate(cds_genome_end,True)
+            except KeyError:
+                # minus one, plus one corrections because end-exclusive genome
+                # position will not be in position hash if it coincides with
+                # the end of any exon
+                self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_end - 1,True)
+        else:
+            # likewise for minus-strand
+            # both this adjustment and the one above for plus-strand features
+            # have been thoroughly tested by examining BED files exported
+            # for this purpose
+            self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_end - 1,  True)
 
         return True
 
@@ -2994,7 +3220,7 @@ cdef class Transcript(SegmentChain):
         cdef:
             str gene_id       = self.get_gene()
             str transcript_id = self.get_name()
-            str ftype, chain, my_id
+            str ftype, my_id
             list ltmp = []
             list parts = []
             dict child_attr = copy.deepcopy(self.attr)
@@ -3028,7 +3254,7 @@ cdef class Transcript(SegmentChain):
                      ("CDS",            self.get_cds()),
                      ("three_prime_UTR",self.get_utr3()),
                     ]
-            for ftype, chain in parts:
+            for ftype, feature in parts:
                 child_attr["type"]   = ftype
                 child_attr["Parent"] = transcript_id
                 for n, seg in enumerate(self):
