@@ -53,6 +53,8 @@ def add_three_for_stop_codon(tx):
     if tx.cds_genome_end is not None and tx.cds_genome_start is not None:
         segments  = copy.deepcopy(tx._segments)
         attr = copy.deepcopy(tx.attr)
+        attr["cds_genome_start"] = tx.cds_genome_start
+        attr["cds_genome_end"] = tx.cds_genome_end
         if tx.spanning_segment.strand == "+":
             # if cds at end of transcript, both need to grow by three
             if tx.spanning_segment.end == tx.cds_genome_end:

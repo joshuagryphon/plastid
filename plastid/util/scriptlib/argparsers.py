@@ -566,7 +566,7 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
     printer : file-like, optional
         A stream to which stderr-like info can be written (Default: |NullWriter|) 
     
-    return_type : |SegmentChain| of subclass, optional
+    return_type : |SegmentChain| or subclass, optional
         Type of object to return (Default: |Transcript|)
 
     require_sort : bool, optional
@@ -677,11 +677,13 @@ Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % ar
                                                printer=printer,
                                                add_three_for_stop=add_three,
                                                tabix=tabix,
+                                               return_type=return_type,
                                                is_sorted=args.sorted)
     elif args.annotation_format.lower() == "gtf2":
         transcripts = GTF2_TranscriptAssembler(*streams,
                                                printer=printer,
                                                tabix=tabix,
+                                               return_type=return_type,
                                                add_three_for_stop=add_three,
                                                is_sorted=args.sorted)
         
