@@ -596,7 +596,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     @skip_if_abstract    
     def test_get_length(self):
         for ivc in self.bed_list:
-            len1 = ivc.get_length()
+            len1 = ivc.length
             len2 = sum(len(X) for X in ivc)
             err_msg = "%s %s fails total length: %s != %s" % (self.test_class.__name__,ivc.get_name(),len1,len2)
             self.assertEquals(len1,len2,err_msg)
@@ -608,22 +608,22 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # add one GenomicSegment
         ivc.add_segments(self.ivs["a1p"])
         self.assertEquals(len(ivc),1)
-        self.assertEquals(ivc.get_length(),50)
+        self.assertEquals(ivc.length,50)
         
         # add an overlapping GenomicSegment
         ivc.add_segments(self.ivs["a7p"])
         self.assertEquals(len(ivc),1)
-        self.assertEquals(ivc.get_length(),75)
+        self.assertEquals(ivc.length,75)
         
         # add a non-overlapping GenomicSegment
         ivc.add_segments(self.ivs["a3p"])
         self.assertEquals(len(ivc),2)
-        self.assertEquals(ivc.get_length(),175)
+        self.assertEquals(ivc.length,175)
         
         # add two GenomicSegments
         ivc.add_segments(self.ivs["a4p"],self.ivs["a5p"])
         self.assertEquals(len(ivc),4)
-        self.assertEquals(ivc.get_length(),475)
+        self.assertEquals(ivc.length,475)
         
         # add GenomicSegment from the wrong strand
         self.assertRaises(ValueError,
@@ -742,7 +742,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             chain = SegmentChain(GenomicSegment("chrA",100,150,strand),
                                  GenomicSegment("chrA",250,300,strand))
 
-            pre_length = chain.get_length()
+            pre_length = chain.length
 
             mask_a = GenomicSegment("chrA",125,150,strand)
             mask_b = GenomicSegment("chrA",275,300,strand)
@@ -804,7 +804,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         for iv in ivc:
             for x in range(iv.start,iv.end):
                 ivc_coordinate = ivc.get_segmentchain_coordinate("chrA",x,"-",stranded=True)
-                expected = ivc.get_length()-1-c
+                expected = ivc.length-1-c
                 err_msg = "Minus-stranded segmentchain coordinate incorrect (expected %s, found %s)." % (expected,ivc_coordinate)
                 self.assertEquals(expected,ivc_coordinate,err_msg)
 
@@ -829,19 +829,19 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         # test endpoints
         self.assertEquals(ivca.get_genomic_coordinate(0,stranded=True)[1],iv1.start)
-        self.assertEquals(ivca.get_genomic_coordinate(ivca.get_length() - 1,stranded=True)[1],iv4.end - 1)
+        self.assertEquals(ivca.get_genomic_coordinate(ivca.length - 1,stranded=True)[1],iv4.end - 1)
         self.assertEquals(ivca.get_genomic_coordinate(0,stranded=False)[1],iv1.start)
-        self.assertEquals(ivca.get_genomic_coordinate(ivca.get_length() - 1,stranded=False)[1],iv4.end - 1)
+        self.assertEquals(ivca.get_genomic_coordinate(ivca.length - 1,stranded=False)[1],iv4.end - 1)
 
         self.assertEquals(nvca.get_genomic_coordinate(0,stranded=True)[1],nv4.end - 1)
-        self.assertEquals(nvca.get_genomic_coordinate(nvca.get_length()-1,stranded=True)[1],nv1.start)
+        self.assertEquals(nvca.get_genomic_coordinate(nvca.length-1,stranded=True)[1],nv1.start)
         self.assertEquals(nvca.get_genomic_coordinate(0,stranded=False)[1],nv1.start)
-        self.assertEquals(nvca.get_genomic_coordinate(nvca.get_length()-1,stranded=False)[1],nv4.end - 1)
+        self.assertEquals(nvca.get_genomic_coordinate(nvca.length-1,stranded=False)[1],nv4.end - 1)
 
         # reconstruct all IVs from individual positions
         for ivc in (ivca,nvca):
             positions = []
-            for i in range(ivc.get_length()):
+            for i in range(ivc.length):
                 positions.append(ivc.get_genomic_coordinate(i)[1])
             positions = set(positions)
             new_ivs = positions_to_segments(ivc.chrom,ivc.strand,positions)
@@ -855,7 +855,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         # make sure is inverse function of get_segmentchain_coordinate
         for ivc in (ivca,nvca):
-            for i in range(ivc.get_length()):
+            for i in range(ivc.length):
                 x = ivc.get_genomic_coordinate(i,stranded=True)[1]
                 self.assertEquals(i,ivc.get_segmentchain_coordinate(ivc.chrom,x,ivc.strand,stranded=True))
                 x = ivc.get_genomic_coordinate(i,stranded=False)[1]
@@ -876,12 +876,12 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         nvca = self.test_class(nv1,nv2,nv3,nv4)
 
         # assert that full range reproduces full transcript on plus strand
-        whole_range = ivca.get_subchain(0,ivca.get_length())
+        whole_range = ivca.get_subchain(0,ivca.length)
         self.assertTrue(self.is_identical(whole_range,ivca),"test_get_subchain: expected %s, got %s" % (ivca,whole_range))
         self.assertTrue(ivca.covers(whole_range))
 
         # assert that full range reproduces full transcript on minus strand
-        whole_range = nvca.get_subchain(0,nvca.get_length())
+        whole_range = nvca.get_subchain(0,nvca.length)
         self.assertTrue(self.is_identical(whole_range,nvca),"test_get_subchain: expected %s, got %s" % (nvca,whole_range))
         self.assertTrue(nvca.covers(whole_range))
         
@@ -963,7 +963,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc1 = SegmentChain(iv1,iv2,iv3)
         ivc2 = SegmentChain(iv1,iv2,iv3)
         
-        pre_unmask_length = ivc1.get_length()
+        pre_unmask_length = ivc1.length
         pre_mask_length = ivc1.get_masked_length()
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
@@ -971,19 +971,19 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # add real mask
         ivc1.add_masks(mask)
         
-        post_unmask_length = ivc1.get_length()
+        post_unmask_length = ivc1.length
         post_mask_length = ivc1.get_masked_length()
         self.assertEquals(post_mask_length,175)
         self.assertEquals(post_unmask_length,200)
         
         # add non-overlapping mask
-        pre_unmask_length = ivc2.get_length()
+        pre_unmask_length = ivc2.length
         pre_mask_length = ivc2.get_masked_length()
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
         
         ivc2.add_masks(non_overlap_mask)
-        post_unmask_length = ivc2.get_length()
+        post_unmask_length = ivc2.length
         post_mask_length   = ivc2.get_masked_length()
         self.assertEquals(post_unmask_length,200)
         self.assertEquals(post_mask_length,200)
@@ -1926,7 +1926,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             utr5_ivc = tx.get_utr5()
-            if utr5_ivc.get_length() > 0:
+            if utr5_ivc.length > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(utr5_ivc,utr5_dict[txid]))
             else:
@@ -1940,7 +1940,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             cds_ivc  = tx.get_cds()
-            if cds_ivc.get_length() > 0:
+            if cds_ivc.length > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(cds_ivc,cds_dict[txid]))
     
@@ -1952,7 +1952,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             utr3_ivc = tx.get_utr3()
-            if utr3_ivc.get_length() > 0:
+            if utr3_ivc.length > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(utr3_ivc,utr3_dict[txid]))
     
@@ -1992,12 +1992,12 @@ class TestTranscript(AbstractSegmentChainHelper):
         nvca = SegmentChain(nv1,nv2,nv3,nv4)
 
         # assert that full range reproduces full transcript on plus strand
-        whole_range = ivca.get_subchain(0,ivca.get_length())
+        whole_range = ivca.get_subchain(0,ivca.length)
         self.assertTrue(self.is_identical_no_cds(whole_range,ivca))
         self.assertTrue(ivca.covers(whole_range))
 
         # assert that full range reproduces full transcript on minus strand
-        whole_range = nvca.get_subchain(0,nvca.get_length())
+        whole_range = nvca.get_subchain(0,nvca.length)
         self.assertTrue(self.is_identical_no_cds(whole_range,nvca))
         self.assertTrue(nvca.covers(whole_range))
         

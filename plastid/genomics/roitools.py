@@ -205,7 +205,7 @@ def sort_segmentchains_lexically(segchain):
         Attributes of `segchain`
     """
     if isinstance(segchain,SegmentChain):
-        length = segchain.get_length()
+        length = segchain.length
         
     return (segchain.spanning_segment.chrom,
             segchain.spanning_segment.start,
@@ -440,7 +440,7 @@ class SegmentChain(object):
         elif isinstance(other,SegmentChain):        
             if len(self) == 0 or len(other) == 0:
                 return False
-            elif other.get_length() > self.get_length():
+            elif other.length > self.length:
                 return False
             elif self.chrom != other.chrom:
                 return False
@@ -1410,7 +1410,7 @@ class SegmentChain(object):
         if self._position_hash == {}:
             self._position_hash = self._get_position_hash()
         if stranded is True and self.strand == "-":
-            return self.get_length() - self._position_hash[genomic_x] - 1
+            return self.length - self._position_hash[genomic_x] - 1
         else:
             return self._position_hash[genomic_x]
     
@@ -2083,7 +2083,7 @@ class Transcript(SegmentChain):
         """
         my_segmentchain = SegmentChain()
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
-            my_segmentchain = self.get_subchain(self.cds_end,self.get_length(),
+            my_segmentchain = self.get_subchain(self.cds_end,self.length,
                                                    stranded=True)
             my_segmentchain.attr["type"] = "3UTR"
             my_segmentchain.attr["gene_id"] = self.get_gene()
@@ -2178,7 +2178,7 @@ class Transcript(SegmentChain):
             start_codon_ivc.attr.update(child_ivc_attr)
             stmp += start_codon_ivc.as_gtf(feature_type="start_codon",escape=escape,excludes=excludes)
     
-            stop_codon_ivc = cds_ivc_temp.get_subchain(cds_ivc_temp.get_length()-3, cds_ivc_temp.get_length())
+            stop_codon_ivc = cds_ivc_temp.get_subchain(cds_ivc_temp.length-3, cds_ivc_temp.length)
             stop_codon_ivc.attr.update(child_ivc_attr)
             stmp += stop_codon_ivc.as_gtf(feature_type="stop_codon",escape=escape,excludes=excludes)
 
@@ -2440,4 +2440,5 @@ class Transcript(SegmentChain):
         attr["cds_genome_start"] = None
         attr["cds_genome_end"] = None
         return Transcript(*segments,**attr)
-        
+
+from plastid.genomics.c_segmentchain import SegmentChain, Transcript

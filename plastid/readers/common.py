@@ -67,7 +67,7 @@ def add_three_for_stop_codon(tx):
             else:
                 # if new end will be end of transcript, set manually
                 # because key won't be in position hash
-                if tx.cds_end + 3 == tx.get_length():
+                if tx.cds_end + 3 == tx.length:
                     new_end = tx.spanning_segment.end
                 else:
                     # position is internal, so we fetch

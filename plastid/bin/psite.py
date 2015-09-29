@@ -139,7 +139,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         valid_mask = roi.get_masked_counts(ga).mask
         
         offset = int(round((row["alignment_offset"])))
-        assert offset + roi.get_length() <= window_size
+        assert offset + roi.length <= window_size
         
         count_vectors = {}
         for k in raw_count_dict:
@@ -162,8 +162,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
             if roi.strand == "-":
                 count_vectors[read_length] = count_vectors[read_length][::-1]
 
-            raw_count_dict[read_length][i,offset:offset+roi.get_length()]      = numpy.array(count_vectors[read_length])
-            raw_count_dict[read_length].mask[i,offset:offset+roi.get_length()] = valid_mask
+            raw_count_dict[read_length][i,offset:offset+roi.length]      = numpy.array(count_vectors[read_length])
+            raw_count_dict[read_length].mask[i,offset:offset+roi.length] = valid_mask
     
     profile_table = { "x" : numpy.arange(-upstream_flank,window_size-upstream_flank) }
     
