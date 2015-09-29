@@ -2954,14 +2954,14 @@ cdef class Transcript(SegmentChain):
 
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             chain = self.c_get_subchain(self.cds_start,
-                                                  self.cds_end,
-                                                  True)
+                                        self.cds_end,
+                                        True)
 
             transcript._set_segments(chain._segments)
             transcript.attr = chain.attr
             transcript.attr.update(extra_attr)
             transcript.cds_genome_start = self.cds_genome_start
-            transcript.cds_genome_end = self.cds_genome_end
+            transcript.cds_genome_end   = self.cds_genome_end
             transcript._update_cds()
             
         return transcript
@@ -3253,11 +3253,11 @@ cdef class Transcript(SegmentChain):
 
         # exon feature
         child_attr["type"] = "exon"
-        for n, seg in enumerate(self):
+        for n, seg in enumerate(self._segments):
             my_id   = "%s:exon:%s" % (transcript_id,n)
             child_attr["ID"]   = my_id
             feature = SegmentChain(seg,**child_attr)
-            ltmp.append(feature.as_gff3(excludes=excludes,escape=escape))
+            ltmp.append(SegmentChain.as_gff3(feature,excludes=excludes,escape=escape))
         
         # CDS & UTRs
         if self.cds_genome_start is not None:
@@ -3268,7 +3268,7 @@ cdef class Transcript(SegmentChain):
             for ftype, feature in parts:
                 child_attr["type"]   = ftype
                 child_attr["Parent"] = transcript_id
-                for n, seg in enumerate(self):
+                for n, seg in enumerate(feature):
                     my_id   = "%s:%s:%s" % (transcript_id,ftype,n)
                     child_attr["ID"]   = my_id
                     feature = SegmentChain(seg,**child_attr)
