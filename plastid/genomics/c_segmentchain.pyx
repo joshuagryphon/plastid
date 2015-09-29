@@ -22,17 +22,18 @@ from plastid.util.services.exceptions import DataWarning
 from plastid.util.services.decorators import deprecated
 from plastid.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
 from plastid.readers.gff_tokens import make_GFF3_tokens, \
-                                    make_GTF2_tokens
+                                       make_GTF2_tokens
 
 
 from plastid.genomics.c_roitools cimport GenomicSegment, \
                                       positionlist_to_segments, \
                                       positions_to_segments, \
                                       strand_to_str, str_to_strand
+
 from plastid.genomics.c_roitools import NullSegment
 from plastid.genomics.c_common cimport ExBool, true, false, bool_exception, \
-                                    Strand, forward_strand, reverse_strand,\
-                                    unstranded, undef_strand
+                                       Strand, forward_strand, reverse_strand,\
+                                       unstranded, undef_strand
 
 
 #===============================================================================
@@ -54,9 +55,6 @@ DEF EQ  = 2
 DEF NEQ = 3
 DEF GT  = 4
 DEF GEQ = 5
-
-#
-DEF NUMBERNONE = -9999999999999999
 
 # numeric types
 INT    = numpy.int
@@ -163,6 +161,9 @@ def sort_segmentchains_lexically(segchain):
     dict
         Attributes of `segchain`
     """
+    warnings.warn("sort_segmentchains_lexically() is deprecated and will be removed from future versions. "+\
+            "Instead, used use sorted(segmentchains)",DeprecationWarning)
+
     if isinstance(segchain,SegmentChain):
         length = segchain.get_length()
         
@@ -182,7 +183,7 @@ def sort_segmentchains_by_name(segchain):
 
 #===============================================================================
 # Various helpers
-# These could be static methods of SegmentChain, but are kept here to avoid
+# These could be static methods of SegmentChain, but are kept here to minimize
 # lookup times
 #===============================================================================
 
@@ -433,7 +434,6 @@ cdef class SegmentChain(object):
         and UTRs as subsegments
     """
 
-    # TODO: profile
     def __cinit__(self,*segments,**attr):
         """Create an |SegmentChain| from zero or more |GenomicSegment| objects
         
@@ -1058,7 +1058,6 @@ cdef class SegmentChain(object):
             return true
         return false
     
-    # TODO: recheck speed
     cpdef SegmentChain get_antisense(self):
         """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
@@ -1116,7 +1115,6 @@ cdef class SegmentChain(object):
         """
         return self._position_hash.tolist()
 
-    # create test
     cdef numpy.ndarray c_get_position_array(self, bint copy):
         """Retrieve a sorted end-inclusive list of genomic coordinates in this |SegmentChain|
         
@@ -1203,7 +1201,6 @@ cdef class SegmentChain(object):
             
         return gene
     
-    # TODO: deprecate
     def get_length(self):
         """Return total length, in nucleotides, of `self`
         
@@ -1211,9 +1208,11 @@ cdef class SegmentChain(object):
         -------
         int
         """
+        cdef str name = self.__class__.__name__
+        warnings.warn("%s.get_length() is deprecated and will be removed in future versions. Use %s.length property instead" % (name,name),
+                DeprecationWarning)
         return self.length
 
-    # TODO: deprecate
     def get_masked_length(self):
         """Return the total length, in nucleotides, of positions in `self`
         that have not been masked using :meth:`SegmentChain.add_masks`
@@ -1222,6 +1221,9 @@ cdef class SegmentChain(object):
         -------
         int
         """
+        cdef str name = self.__class__.__name__
+        warnings.warn("%s.get_masked_length() is deprecated and will be removed in future versions. Use %s.masked_length property instead" % (name,name),
+                DeprecationWarning)
         return self.masked_length
 
     cdef bint c_add_segments(self, tuple segments) except False:
@@ -1245,8 +1247,6 @@ cdef class SegmentChain(object):
             seg = segments[0]
             my_chrom  = seg.chrom
             my_strand = seg.strand
-            #if code != SEGSOK:
-            #    return code
 
             # add new positions
             for seg in segments:
@@ -1359,7 +1359,6 @@ cdef class SegmentChain(object):
         self._position_mask = pmask
         return True
 
-    # TODO: figure out how to make _mask_segments immutable
     def get_masks(self):
         """Return masked positions as a list of |GenomicSegments|
         
@@ -1427,6 +1426,7 @@ cdef class SegmentChain(object):
         cdef:
             GenomicSegment seg1, seg2
             list juncs = []
+            int i
 
         for i in range(len(self._segments)-1):
             seg1, seg2 = self._segments[i], self._segments[i+1]
@@ -1496,12 +1496,15 @@ cdef class SegmentChain(object):
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
         """
-        cdef dict gff_attr
-        cdef list always_excluded, ltmp
+        cdef:
+            dict gff_attr
+            list always_excluded, ltmp
+            GenomicSegment segment
+            int length = len(self._segments)
 
-        if len(self) == 0: # empty SegmentChain
+        if length == 0: # empty SegmentChain
             return ""
-        elif len(self) > 1:
+        elif length > 1:
             raise AttributeError("Attempted export of multi-interval %s" % self.__class__)
             
         gff_attr = copy.deepcopy(self.attr)
@@ -1596,15 +1599,16 @@ cdef class SegmentChain(object):
         """
         cdef:
             dict gtf_attr
+            dict attr = self.attr
             list ltmp1, ltmp2, always_excluded
 
         if len(self) == 0:
             return ""
         
-        gtf_attr = copy.deepcopy(self.attr)
-        gtf_attr["transcript_id"] = self.attr.get("transcript_id",self.get_name())
-        gtf_attr["gene_id"]       = self.attr.get("gene_id",self.get_gene())
-        feature_type = self.attr["type"] if feature_type is None else feature_type
+        gtf_attr = copy.deepcopy(attr)
+        gtf_attr["transcript_id"] = attr.get("transcript_id",self.get_name())
+        gtf_attr["gene_id"]       = attr.get("gene_id",self.get_gene())
+        feature_type = attr["type"] if feature_type is None else feature_type
         
         ltmp1 = []
         
@@ -1668,12 +1672,13 @@ cdef class SegmentChain(object):
             long segment_end   = segment.end
             long new_segment_start
             list ltmp
+            dict attr = self.attr
 
         if feature_type == "CDS":
             # use phase/frame if known for length-1 features
             # called "phase" in GFF3 conventions; "frame" in GTF2
-            if len(self) == 1 and ("phase" in self.attr or "frame" in self.attr):
-                phase = str(self.attr.get("phase",self.attr.get("frame")))
+            if len(self._segments) == 1 and ("phase" in attr or "frame" in attr):
+                phase = str(attr.get("phase",attr.get("frame")))
             # otherwise calculate
             else:
                 new_segment_start = self.get_segmentchain_coordinate(chrom,segment_start,strand,stranded=False)
@@ -2924,7 +2929,6 @@ cdef class Transcript(SegmentChain):
                              str(self)))))
         return name
    
-    # FIXME: attr propagation off w/r/t cds_genome_start et c
     def get_cds(self,**extra_attr):
         """Retrieve |SegmentChain| covering the coding region of `self`, including the stop codon.
         If no coding region is present, returns an empty |SegmentChain|.

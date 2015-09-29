@@ -458,39 +458,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         buf.seek(0)
         for line in buf.read().strip("\n").split("\n"):
             self.assertEqual(line.split("\t")[7],".")
-    
-#    # FIXME: move ref_transcripts to list of actual Transcript objects
-#    @skip_if_abstract    
-#    def test_sort(self):
-#        """Test sorting of intervals within a SegmentChain
-#        
-#        This function is typically automatic and not exposed to users.
-#        We test it manually here by shuffling intervals within an 
-#        SegmentChain, asserting that their order be permuted,
-#        then re-sorting them, and asserting that their original order
-#        be restored.
-#        """
-#        c = 0
-#        n = 0
-#        for ivc in self.bed_list:
-#            if len(ivc) > 1: # can only shuffle if we have >1 interval
-#                n += 1
-#                shuffled_ivc = copy.deepcopy(ivc)
-#                shuffle(shuffled_ivc._segments)
-#                
-#                # if we shuffle SegmentChains with 2 intervals,
-#                # they will 50% of the time retain the same order by chance
-#                # so we count how many are changed (`c`) and make sure
-#                # that the total number of passing tests (`n`) exceeds
-#                # this number
-#                if shuffled_ivc._segments != ivc._segments:
-#                    c += 1
-#                    
-#                shuffled_ivc.sort()
-#                self.assertEquals(shuffled_ivc._segments,ivc._segments)
-#        
-#        self.assertGreaterEqual(n,c)
-    
+   
     @skip_if_abstract    
     def test_len(self):
         """Test reporting of number of intervals"""
@@ -1412,7 +1380,29 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         segments_from_chain.append(GenomicSegment("chrA",10,100,"+"))
         self.assertNotEqual(segments,segments_from_chain,
                 "test_mask_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._mask_segments")
-  
+
+        @skip_if_abstract
+        def test_chains_sort_lexically(self):
+            c = self.test_class
+            c01 = c(GenomicSegment("chrA",25,100,"+"))
+            c02 = c(GenomicSegment("chrA",25,100,"-"))
+            c03 = c(GenomicSegment("chrA",50,200,"+"))
+            c04 = c(GenomicSegment("chrA",50,500,"+"))
+            c05 = c(GenomicSegment("chrA",75,200,"-"))
+            c06 = c(GenomicSegment("chrA",100,200,"+"),GenomicSegment("chrA",300,500,"+"))
+            c07 = c(GenomicSegment("chrA",100,300,"+"),GenomicSegment("chrA",400,500,"+"))
+            c08 = c(GenomicSegment("chrA",100,500,"+"))
+            c09 = c(GenomicSegment("chrA",100,500,"-"))
+            c10 = c(GenomicSegment("chrB",25,100,"+"))
+            c11 = c(GenomicSegment("chrB",50,200,"+"))
+            c12 = c(GenomicSegment("chrB",50,200,"-"))
+
+            ltmp  = [c01,c02,c03,c04,c05,c06,c08,c09,c10,c11,c12]
+            ltmp2 = copy.deepcopy(ltmp)
+            for i in range(5):
+                shuffle(ltmp2)
+                self.assertListEqual(ltmp,sorted(ltmp2),"%s did not sort lexically. Expected %s, got %s." % (c.__name__,ltmp,sorted(ltmp2)))
+ 
 
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
