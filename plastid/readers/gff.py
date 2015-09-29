@@ -62,8 +62,7 @@ from plastid.readers.common import add_three_for_stop_codon, \
                                                 get_identical_attributes, \
                                                 AssembledFeatureReader
 from plastid.genomics.roitools import Transcript, SegmentChain, \
-                                         GenomicSegment, \
-                                         sort_segmentchains_lexically
+                                         GenomicSegment
 from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
 from plastid.util.services.exceptions import DataWarning
 
@@ -815,7 +814,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
                 self.printer.write("Assembling next batch of transcripts...")
                 transcripts, rejected = self._assemble_transcripts()
                 if len(transcripts) > 0:
-                    transcripts = sorted(transcripts,key=sort_segmentchains_lexically)
+                    transcripts = sorted(transcripts)
                     self._transcript_cache = iter(transcripts)
                     self.rejected.extend(rejected)
                     self._reset()
@@ -960,7 +959,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 rejected_transcripts.append(tname)
                 warnings.warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
     
-        return sorted(transcripts,key=sort_segmentchains_lexically), rejected_transcripts
+        return sorted(transcripts), rejected_transcripts
         
     def _reset(self):
         """Release memory and reset internal hashes"""
