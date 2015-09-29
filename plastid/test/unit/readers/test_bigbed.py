@@ -303,7 +303,7 @@ class test_BigBedReader(unittest.TestCase):
             cls.tx_dict[txid]     = tx
             cds_ivc = tx.get_cds()
             cds_ivc.attr["ID"] = txid
-            if cds_ivc.get_length() > 0:
+            if cds_ivc.length > 0:
                 cls.cds_dict[txid]    = tx.get_cds()
                 cls.as_cds_dict[txid] = tx.get_cds().get_antisense()
                 cls.as_cds_dict[txid].attr["ID"] = txid

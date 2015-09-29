@@ -27,7 +27,7 @@ _FLANKS = [(0,100),
 def check_equality(roi1,roi2,err_str=""):
     """Make sure two |SegmentChain| are equal by testing equality of position sets, chromosomes, and strands"""
     assert_set_equal(roi1.get_position_set(),roi2.get_position_set(),"%s ROIs unequal: unequal position sets %s vs %s" % (err_str,str(roi1),str(roi2)))
-    if roi1.get_length() > 0:
+    if roi1.length > 0:
         assert_equal(roi1.spanning_segment.strand,roi2.spanning_segment.strand,"%s ROI strand mismatch: %s vs %s" % (err_str,roi1.spanning_segment.strand,roi2.spanning_segment.strand))
         assert_equal(roi1.spanning_segment.chrom,roi2.spanning_segment.chrom,"%s ROI chromosome mismatch: %s vs %s" % (err_str,roi1.spanning_segment.chrom,roi2.spanning_segment.chrom))
 
@@ -155,10 +155,10 @@ def check_window_landmark(ivc,landmark,flank_up=50,flank_down=100):
     # assure test roi length + offset == flank_up + flank_down
     # which it always should, unless the landmark is very close
     # to the edge of the transcript, in which case it should be smaller
-    if landmark + flank_down <= test_roi.get_length():
-        assert_equal(test_offset+test_roi.get_length(),flank_up+flank_down)
+    if landmark + flank_down <= test_roi.length:
+        assert_equal(test_offset+test_roi.length,flank_up+flank_down)
     else:
-        assert_less_equal(test_offset+test_roi.get_length(),flank_up+flank_down)
+        assert_less_equal(test_offset+test_roi.length,flank_up+flank_down)
     
     # test offset in roi is correct relative to offset and flank
     # only relevant for plus-strand

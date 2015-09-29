@@ -360,15 +360,15 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
         minus_repeat = [X for X in self.region_classes["repeat"] if X.spanning_segment.strand == "-"]
 
         
-        lengths = set([X.get_length() for X in plus_repeat + minus_repeat])
+        lengths = set([X.length for X in plus_repeat + minus_repeat])
         self.assertEqual(len(lengths),1)
 
         for k in _SAMPLE_BASES:
-            plus_vec  = numpy.zeros(plus_repeat[0].get_length())
-            minus_vec = numpy.zeros(plus_repeat[0].get_length())
+            plus_vec  = numpy.zeros(plus_repeat[0].length)
+            minus_vec = numpy.zeros(plus_repeat[0].length)
             
-            known_plus_vec  = numpy.zeros(plus_repeat[0].get_length())
-            known_minus_vec = numpy.zeros(plus_repeat[0].get_length())
+            known_plus_vec  = numpy.zeros(plus_repeat[0].length)
+            known_minus_vec = numpy.zeros(plus_repeat[0].length)
             
             for region in plus_repeat:
                 plus_vec += region.get_counts(self.gnds[k])
@@ -695,7 +695,7 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
         for seg in minuschain:
             self.assertTrue((ga._chroms[seg.chrom][seg.strand][seg.start:seg.end]==424).all())
         
-        self.assertEqual(ga.sum(),31*pluschain.get_length()+424*minuschain.get_length())
+        self.assertEqual(ga.sum(),31*pluschain.length+424*minuschain.length)
 
     def test_setitem_segmentchain_vector(self):
         ga = GenomeArray({"chrA" : 2000})
@@ -708,8 +708,8 @@ class TestGenomeArray(AbstractGenomeArrayHelper):
 
         ga = GenomeArray({"chrA" : 2000})
 
-        plusvec  = numpy.random.randint(0,high=250,size=pluschain.get_length())
-        minusvec = numpy.random.randint(0,high=250,size=minuschain.get_length())
+        plusvec  = numpy.random.randint(0,high=250,size=pluschain.length)
+        minusvec = numpy.random.randint(0,high=250,size=minuschain.length)
 
         ga[pluschain]  = plusvec
         ga[minuschain] = minusvec

@@ -526,7 +526,7 @@ def center_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     nibble = kwargs["nibble"]
-    read_length = feature.get_length()
+    read_length = feature.length
     if read_length <= 2*nibble:
         warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
                       DataWarning)
@@ -568,7 +568,7 @@ def five_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    read_length = feature.get_length()
+    read_length = feature.length
     if offset > read_length:
         warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                      DataWarning)
@@ -608,7 +608,7 @@ def three_prime_map(feature,**kwargs):
         tuples of `(GenomicSegment,float value over segment)`
     """
     offset  = kwargs.get("offset",0)
-    read_length = feature.get_length()
+    read_length = feature.length
     if offset > read_length:
         warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
                       DataWarning)
@@ -652,7 +652,7 @@ def variable_five_prime_map(feature,**kwargs):
     strand = span.strand
     value   = kwargs.get("value",1.0)
     offset  = kwargs["offset"].get(len(span),kwargs["offset"].get("default",None))
-    feature_length = feature.get_length()
+    feature_length = feature.length
     if offset is None:
         warnings.warn("No offset for reads of length %s. Ignoring." % feature_length,
                       DataWarning)
@@ -1507,7 +1507,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                 if seg.spanning_segment.strand == "-":
                     val = val[::-1]
 
-            length = seg.get_length()
+            length = seg.length
             x = 0
             for subseg in seg:
                 if isinstance(val,numpy.ndarray):
@@ -2161,7 +2161,7 @@ class SparseGenomeArray(GenomeArray):
                 if seg.spanning_segment.strand == "-":
                     val = val[::-1]
 
-            length = seg.get_length()
+            length = seg.length
             x = 0
             for subseg in seg:
                 if isinstance(val,numpy.ndarray):

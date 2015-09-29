@@ -200,13 +200,13 @@ def window_landmark(region,flank_upstream=50,flank_downstream=50,ref_delta=0,lan
         fiveprime_offset  = flank_upstream - landmark
         my_start = 0
     
-    my_end = min(region.get_length(),landmark + ref_delta + flank_downstream)
+    my_end = min(region.length,landmark + ref_delta + flank_downstream)
     roi    = region.get_subchain(my_start,my_end)
     span = region.spanning_segment
     chrom = span.chrom
     strand = span.strand
    
-    if landmark + ref_delta == region.get_length():
+    if landmark + ref_delta == region.length:
         if span.strand == "+":
             ref_point = (chrom,span.end,strand)
         else:
@@ -437,7 +437,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
             # this fails if ref point is at the 3' end of the roi, 
             # due to quirks of half-open coordinate systems
             # so we test it explicitly
-            if flank_upstream - my_offset == my_roi.get_length():
+            if flank_upstream - my_offset == my_roi.length:
                 new_offset = my_offset
             else:
                 zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
@@ -731,8 +731,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
         mask   = SegmentChain.from_str(row["masked"])
         roi.add_masks(*mask)
         offset = int(round((row["alignment_offset"])))
-        assert offset + roi.get_length() <= window_size
-        counts[i,offset:offset+roi.get_length()] = roi.get_masked_counts(ga)
+        assert offset + roi.length <= window_size
+        counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
         

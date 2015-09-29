@@ -100,7 +100,7 @@ def main(argv=sys.argv[1:]):
                 printer.write("Processed %s regions..." % n)
                 
             counts = numpy.nansum(ivc.get_masked_counts(gnd))
-            length = ivc.get_masked_length()
+            length = ivc.masked_length
             rpnt = numpy.nan if length == 0 else float(counts)/length
             rpkm = numpy.nan if length == 0 else float(counts)/length/gnd_sum * 1000 * 10**6 
             ltmp = [name,
