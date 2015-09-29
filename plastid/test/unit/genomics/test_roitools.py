@@ -749,10 +749,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             
             chain.add_masks(mask_a,mask_b)
             self.assertEqual(chain.get_masks(),[mask_a,mask_b])
-            self.assertEqual(chain.get_masked_length(),pre_length - len(mask_a) - len(mask_b))
+            self.assertEqual(chain.masked_length,pre_length - len(mask_a) - len(mask_b))
             chain.reset_masks()
             self.assertEqual(chain.get_masks(),[],"Failed to reset masks")
-            self.assertEqual(pre_length,chain.get_masked_length())
+            self.assertEqual(pre_length,chain.masked_length)
     
     @skip_if_abstract    
     def test_get_junctions(self):
@@ -964,7 +964,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc2 = SegmentChain(iv1,iv2,iv3)
         
         pre_unmask_length = ivc1.length
-        pre_mask_length = ivc1.get_masked_length()
+        pre_mask_length = ivc1.masked_length
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
 
@@ -972,19 +972,19 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         ivc1.add_masks(mask)
         
         post_unmask_length = ivc1.length
-        post_mask_length = ivc1.get_masked_length()
+        post_mask_length = ivc1.masked_length
         self.assertEquals(post_mask_length,175)
         self.assertEquals(post_unmask_length,200)
         
         # add non-overlapping mask
         pre_unmask_length = ivc2.length
-        pre_mask_length = ivc2.get_masked_length()
+        pre_mask_length = ivc2.masked_length
         self.assertEquals(pre_unmask_length,200)
         self.assertEquals(pre_mask_length,200)
         
         ivc2.add_masks(non_overlap_mask)
         post_unmask_length = ivc2.length
-        post_mask_length   = ivc2.get_masked_length()
+        post_mask_length   = ivc2.masked_length
         self.assertEquals(post_unmask_length,200)
         self.assertEquals(post_mask_length,200)
 
