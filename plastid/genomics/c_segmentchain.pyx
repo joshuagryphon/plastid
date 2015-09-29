@@ -486,6 +486,8 @@ cdef class SegmentChain(object):
         if num_segs == 0:
             self._position_hash   = array.clone(hash_template,0,False)
             self._position_mask   = array.clone(mask_template,0,False)
+        elif num_segs == 1:
+            self._set_segments(list(segments))
         else:
             check_segments(self,segments)
             seg = segments[0]
@@ -498,7 +500,6 @@ cdef class SegmentChain(object):
 
             # reset variables
             new_segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
-
             self._set_segments(new_segments)
 
     cdef bint _set_segments(self, list segments) except False:
@@ -527,7 +528,6 @@ cdef class SegmentChain(object):
             List of |GenomicSegments|
         """
         self._segments = segments
-        num_segs = len(segments)
         self._update()
         return True
 
