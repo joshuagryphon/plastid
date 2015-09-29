@@ -10,7 +10,6 @@ from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
 from plastid.readers.bed import BED_Reader
 from plastid.readers.gff import GTF2_TranscriptAssembler
-from plastid.genomics.roitools import sort_segmentchains_lexically
 from plastid.test.functional.base import execute_helper
 from plastid.test.ref_files import REF_FILES, MINI
 from plastid.bin.reformat_transcripts import main
@@ -53,8 +52,8 @@ _default_scores = { ("BED", "BED" )   : 0.0,
 
 def check_files_applying_sort(ref_file,test_file,infmt,outfmt):
     opener, args = _reader_funcs[outfmt]
-    ref_transcripts  = sorted(list(opener(open(ref_file),**args)),key=sort_segmentchains_lexically)
-    test_transcripts = sorted(list(opener(open(test_file),**args)),key=sort_segmentchains_lexically)
+    ref_transcripts  = sorted(list(opener(open(ref_file),**args)))
+    test_transcripts = sorted(list(opener(open(test_file),**args)))
     
     assert_equal(len(ref_transcripts),len(test_transcripts),"%s to %s: Length mismatch in discovered transcripts. Expected '%s'. Found '%s'" % (infmt,outfmt,len(ref_transcripts),
                                                                                                                                   len(test_transcripts)))

@@ -6,7 +6,7 @@ from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
 
-from plastid.genomics.roitools import Transcript, sort_segmentchains_lexically
+from plastid.genomics.roitools import Transcript
 from plastid.readers.bed import BED_to_Transcripts
 from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
 from plastid.util.services.decorators import skip_if_abstract
