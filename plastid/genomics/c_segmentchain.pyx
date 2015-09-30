@@ -487,9 +487,10 @@ cdef class SegmentChain(object):
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
+        self._position_mask = array.clone(mask_template,0,False)
         if num_segs == 0:
             self._position_hash   = array.clone(hash_template,0,False)
-            self._position_mask   = array.clone(mask_template,0,False)
+            #self._position_mask   = array.clone(mask_template,0,False)
         elif num_segs == 1:
             self._set_segments(list(segments))
         else:
@@ -558,7 +559,7 @@ cdef class SegmentChain(object):
         
         self._segments = segments
         self.length = length
-        self._position_mask = array.clone(mask_template,length,True)
+        #self._position_mask = array.clone(mask_template,length,True)
         self._position_hash = my_hash
         self.c_reset_masks()
 
@@ -1167,11 +1168,15 @@ cdef class SegmentChain(object):
             Set of genomic coordinates, as integers
         """
         cdef:
-            numpy.ndarray[int,ndim=1] mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
-            numpy.ndarray[LONG_t,ndim=1] positions = numpy.frombuffer(self._position_hash,dtype=LONG)
+            numpy.ndarray[int,ndim=1] mask #= numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            numpy.ndarray[LONG_t,ndim=1] positions #= numpy.frombuffer(self._position_hash,dtype=LONG)
 
-        assert len(positions) == len(mask)
-        return set(positions[mask == 0])
+        if len(self._position_mask) == 0:
+            return self.c_get_position_set()
+        else:
+            mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            positions = numpy.frombuffer(self._position_hash,dtype=LONG)
+            return set(positions[mask == 0])
     
     def get_name(self):
         """Returns the name of this |SegmentChain|, first searching through
@@ -2237,10 +2242,14 @@ cdef class SegmentChain(object):
         """
         cdef:
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
-            numpy.ndarray[int,ndim=1] mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            numpy.ndarray[int,ndim=1] mask #= numpy.frombuffer(self._position_mask,dtype=numpy.intc)
 
-        if self.c_strand == reverse_strand:
-            mask = mask[::-1]
+        if len(self._position_mask) == 0:
+            mask = numpy.zeros(len(counts),dtype=numpy.intc)
+        else:
+            mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            if self.c_strand == reverse_strand:
+                mask = mask[::-1]
 
         return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
