@@ -67,6 +67,8 @@ ctypedef numpy.float_t  FLOAT_t
 ctypedef numpy.double_t DOUBLE_t
 ctypedef numpy.long_t   LONG_t
 
+cdef class SegmentChain
+cdef class Transcript(SegmentChain)
 
 #===============================================================================
 # io functions
@@ -258,6 +260,8 @@ cdef ExBool chain_richcmp(SegmentChain chain1, SegmentChain chain2, int cmpval) 
     cdef:
         sspan = chain1.spanning_segment
         ospan = chain2.spanning_segment
+        str sname, oname
+        long slen, olen
 
     if cmpval == EQ:
         if len(chain1) == 0 or len(chain2) == 0:
@@ -517,44 +521,37 @@ cdef class SegmentChain(object):
 
         Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
         and either :meth:`~plastid.genomics.c_segmentchain.SegmentChain.__cinit__`
-        or :meth:`~plastid.genomics.c_segmentchain.SegmentChainadd_segments`.
+        or :meth:`~plastid.genomics.c_segmentchain.SegmentChain.add_segments`.
 
         Occasionally (e.g. in the case of unpickling) it is safe to bypass these
         checks.
+
+        The following properties are updated:
+
+            `self.length`
+                Length in nucleotides of `self`
+
+            `self.masked_length`
+                Length of `self` in nucleotides, excluding masked positions
+
+            `self._position_hash`
+                Array mapping |SegmentChain| positions to genomic coordinates
+
+            `self._position_mask`
+                Array in which masked positions take the value 1, others 0.
+
+            `self._inverse_hash`
+                Dicitonary mapping genomic coordinates to |SegmentChain| positions
+
+            `self.spanning_segment`
+                |GenomicSegment| spanning entire length of `self`
 
         Parameters
         ----------
         list
             List of |GenomicSegments|
         """
-        self._segments = segments
-        self._update()
-        return True
-
-    cdef bint _update(self) except False:
-        """Update position hashes and length measurements after |GenomicSegments|
-        are added to the chain. Specifically, defines:
-
-        self.length
-            Length in nucleotides of `self`
-
-        self.masked_length
-            Length of `self` in nucleotides, excluding masked positions
-
-        `self._position_hash`
-            Array mapping |SegmentChain| positions to genomic coordinates
-
-        `self._position_mask`
-            Array in which masked positions take the value 1, others 0.
-
-        `self._inverse_hash`
-            Dicitonary mapping genomic coordinates to |SegmentChain| positions
-
-        `self.spanning_segment`
-            |GenomicSegment| spanning entire length of `self`
-        """
         cdef:
-            list segments = self._segments
             int num_segs = len(segments)
             GenomicSegment segment, seg0
             long length = sum([len(X) for X in segments])
@@ -562,7 +559,8 @@ cdef class SegmentChain(object):
             array.array my_hash = array.clone(hash_template,length,False)  
             long [:] my_view = my_hash
             dict ihash = {}
-
+        
+        self._segments = segments
         self.length = length
         self._position_mask = array.clone(mask_template,length,True)
         self._position_hash = my_hash
@@ -3414,3 +3412,4 @@ cdef class Transcript(SegmentChain):
         transcript.attr = attr
 
         return transcript
+
