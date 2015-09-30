@@ -2745,6 +2745,8 @@ cdef class Transcript(SegmentChain):
             if val is not None and end is not None:
                 if val > end:
                     raise ValueError("Transcript '%s': cds_start (%s) must be <= cds_end (%s)" % (self,val,end))
+                if val < 0:
+                    raise ValueError("Transcript '%s': cds_start (%s) must be >= 0" % (self,val))
             self.cds_start = val
             if val is None:
                 self.cds_end = None
@@ -2765,6 +2767,8 @@ cdef class Transcript(SegmentChain):
             if val is not None and start is not None:
                 if val < start:
                     raise ValueError("Transcript '%s': cds_end (%s) must be >= cds_start (%s)" % (self,val,start))
+                if val > self.length:
+                    raise ValueError("Transcript '%s': cds_end (%s) must be <= self.length (%s)" % (self,val,self.length))
             self.cds_end = val
             if val is None:
                 self.cds_start = None
@@ -2858,7 +2862,6 @@ cdef class Transcript(SegmentChain):
             self.cds_genome_start = phash[cds_start]
         else:
             self.cds_genome_end = phash[self.length - cds_start - 1] + 1 # CHECKME
-#            self.cds_start = self.c_get_segmentchain_coordinate(cds_genome_end - 1,  True) inverse op
 
         return True
     
@@ -2870,9 +2873,7 @@ cdef class Transcript(SegmentChain):
         if self.spanning_segment.c_strand == forward_strand:
             self.cds_genome_end = phash[cds_end - 1] + 1
         else:
-            self.cds_genome_start = phash[self.length - cds_end + 1]
-            pass
-#            self.cds_end   = 1 + self.c_get_segmentchain_coordinate(cds_genome_start,True)
+            self.cds_genome_start = phash[self.length - cds_end]
 
         return True
     
