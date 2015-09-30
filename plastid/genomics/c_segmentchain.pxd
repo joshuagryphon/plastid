@@ -22,6 +22,7 @@ cdef class SegmentChain(object):
     cdef bint _set_segments(self,list) except False
     cdef bint _set_masks(self,list) except False
     cdef void c_reset_masks(self)
+    cdef dict _get_inverse_hash(self)
 
     # comparison operators
     cdef  list c_shares_segments_with(self, SegmentChain)

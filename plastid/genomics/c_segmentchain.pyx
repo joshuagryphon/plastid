@@ -40,8 +40,8 @@ from plastid.genomics.c_common cimport ExBool, true, false, bool_exception, \
 # constants
 #===============================================================================
 
-cdef hash_template = array.array('l',[]) 
-cdef mask_template = array.array('i',[])
+cdef hash_template = array.array('l',[]) # c signed long / python int
+cdef mask_template = array.array('i',[]) # TODO: change to c unsigned char / python int
 
 # to/from str
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
@@ -540,9 +540,6 @@ cdef class SegmentChain(object):
             `self._position_mask`
                 Array in which masked positions take the value 1, others 0.
 
-            `self._inverse_hash`
-                Dicitonary mapping genomic coordinates to |SegmentChain| positions
-
             `self.spanning_segment`
                 |GenomicSegment| spanning entire length of `self`
 
@@ -558,13 +555,11 @@ cdef class SegmentChain(object):
             long x, c
             array.array my_hash = array.clone(hash_template,length,False)  
             long [:] my_view = my_hash
-            dict ihash = {}
         
         self._segments = segments
         self.length = length
         self._position_mask = array.clone(mask_template,length,True)
         self._position_hash = my_hash
-        self._inverse_hash  = ihash
         self.c_reset_masks()
 
         c = 0
@@ -572,7 +567,6 @@ cdef class SegmentChain(object):
             x = segment.start
             while x < segment.end:
                 my_view[c] = x
-                ihash[x] = c
                 c += 1
                 x += 1
         
@@ -590,28 +584,31 @@ cdef class SegmentChain(object):
 
         return True
 
-    def __reduce__(self): # enable pickling
-        return (self.__class__,tuple(),self.__getstate__())
+    cdef dict _get_inverse_hash(self):
+        """Return dictionary mapping genomic coordinates to |SegmentChain| positions.
+        If the dictionary `self._inverse_hash` is not populated, it is populated here,
+        and only returned in subsequent calls.
 
-    def __getstate__(self): # save state for pickling
+        Returns
+        -------
+        dict
+            dictionary mapping genomic coordinates to |SegmentChain| positions
+        """
         cdef:
-            list segstrs  = [str(X) for X in self._segments]
-            list maskstrs = [str(X) for X in self._mask_segments]
-            dict attr = self.attr
+            dict ihash = self._inverse_hash
+            long [:] my_view = self._position_hash
+            long i
 
-        return (segstrs,maskstrs,attr)
+        if self.length > 0:
+            if len(ihash) > 0:
+                return ihash
+            else:
+                for i in range(self.length):
+                    ihash[my_view[i]] = i
 
-    def __setstate__(self,state): # revive state from pickling
-        cdef:
-            list segs  = [GenomicSegment.from_str(X) for X in state[0]]
-            list masks = [GenomicSegment.from_str(X) for X in state[1]]
-            dict attr = state[2]
+        return ihash
 
-        self.attr = attr
-        self._set_segments(segs)
-        self._set_masks(masks)
-
-    def sort(self):
+    def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
         self._segments.sort()
         self._mask_segments.sort()
 
@@ -642,6 +639,62 @@ cdef class SegmentChain(object):
         """
         def __get__(self):
             return copy.deepcopy(self._mask_segments)
+
+    def __reduce__(self): # enable pickling
+        return (self.__class__,tuple(),self.__getstate__())
+
+    def __getstate__(self): # save state for pickling
+        cdef:
+            list segstrs  = [str(X) for X in self._segments]
+            list maskstrs = [str(X) for X in self._mask_segments]
+            dict attr = self.attr
+
+        return (segstrs,maskstrs,attr)
+
+    def __setstate__(self,state): # revive state from pickling
+        cdef:
+            list segs  = [GenomicSegment.from_str(X) for X in state[0]]
+            list masks = [GenomicSegment.from_str(X) for X in state[1]]
+            dict attr = state[2]
+
+        self.attr = attr
+        self._set_segments(segs)
+        self._set_masks(masks)
+
+    def __copy__(self):
+        chain2 = SegmentChain()
+        chain2._set_segments(self._segments)
+        chain2._set_masks(self._mask_segments)
+        chain2.attr = self.attr
+        return chain2
+
+    def __deepcopy__(self,memo):
+        chain2 = SegmentChain()
+        chain2._set_segments(self._segments)
+        chain2._set_masks(copy.deepcopy(self._mask_segments))
+        chain2.attr = copy.deepcopy(self.attr)
+        return chain2
+
+    def __richcmp__(self, object other, int cmpval):
+        """Test whether `self` and `other` are equal or unequal. Equality is defined as
+        identity of positions, chromosomes, and strands. Two |SegmentChain| with
+        zero intervals, by convention, are not equal.
+           
+        Parameters
+        ----------
+        other : |SegmentChain| or |GenomicSegment|
+        	Query feature
+        
+        Returns
+        -------
+        bool
+        """
+        if isinstance(other,SegmentChain):
+            return chain_richcmp(self,other,cmpval) == true
+        elif isinstance(other,GenomicSegment):
+            return chain_richcmp(self,SegmentChain(other),cmpval) == true 
+        else:
+            raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
 
     def __repr__(self):
         cdef:
@@ -791,26 +844,6 @@ cdef class SegmentChain(object):
             else:
                 return false
 
-    def __richcmp__(self, object other, int cmpval):
-        """Test whether `self` and `other` are equal or unequal. Equality is defined as
-        identity of positions, chromosomes, and strands. Two |SegmentChain| with
-        zero intervals, by convention, are not equal.
-           
-        Parameters
-        ----------
-        other : |SegmentChain| or |GenomicSegment|
-        	Query feature
-        
-        Returns
-        -------
-        bool
-        """
-        if isinstance(other,SegmentChain):
-            return chain_richcmp(self,other,cmpval) == true
-        elif isinstance(other,GenomicSegment):
-            return chain_richcmp(self,SegmentChain(other),cmpval) == true 
-        else:
-            raise TypeError("SegmentChain eq/ineq/et c is only defined for other SegmentChains or GenomicSegments.")
 
     def shares_segments_with(self, object other):
         """Returns a list of |GenomicSegment| that are shared between `self` and `other`
@@ -1250,7 +1283,7 @@ cdef class SegmentChain(object):
             if len(self._mask_segments) > 0:
                 warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
 
-            retval = self.c_add_segments(segments)
+            self.c_add_segments(segments)
         
     # TODO: optimize
     def add_masks(self,*mask_segments):
@@ -1318,7 +1351,7 @@ cdef class SegmentChain(object):
         cdef:
             array.array pmask = array.clone(mask_template,self.length,True)
             int [:] pview = pmask
-            dict ihash = self._inverse_hash
+            dict ihash = self._get_inverse_hash()
             list new_segments
             GenomicSegment seg
             long i, coord
@@ -1351,7 +1384,7 @@ cdef class SegmentChain(object):
         
         SegmentChain.reset_masks
         """
-        return self._mask_segments
+        return copy.copy(self._mask_segments)
     
     def get_masks_as_segmentchain(self):
         """Return masked positions as a |SegmentChain|
@@ -1946,7 +1979,7 @@ cdef class SegmentChain(object):
         KeyError
             if position outside bounds of |SegmentChain|
         """
-        cdef dict ihash = self._inverse_hash
+        cdef dict ihash = self._get_inverse_hash()
 
         try:
             if self.c_strand == reverse_strand and stranded == True:
@@ -2519,19 +2552,6 @@ cdef class SegmentChain(object):
         
         return SegmentChain(*segs,**attr)        
 
-    def __copy__(self):
-        chain2 = SegmentChain()
-        chain2._set_segments(self._segments)
-        chain2._set_masks(self._mask_segments)
-        chain2.attr = self.attr
-        return chain2
-
-    def __deepcopy__(self,memo):
-        chain2 = SegmentChain()
-        chain2._set_segments(self._segments)
-        chain2._set_masks(copy.deepcopy(self._mask_segments))
-        chain2.attr = copy.deepcopy(self.attr)
-        return chain2
 
  
 cdef class Transcript(SegmentChain):
