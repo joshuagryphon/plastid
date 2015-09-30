@@ -617,21 +617,6 @@ cdef class SegmentChain(object):
         self._segments.sort()
         self._mask_segments.sort()
 
-    property length:
-        """Total length in nucleotides of `self`."""
-        def __get__(self):
-            return self.length
-
-    property masked_length:
-        """Length, in nucleotides, of `self`, excluding masked positions"""
-        def __get__(self):
-            return self.masked_length
-
-    property spanning_segment:
-        """|GenomicSegment| spanning entire length of `self`"""
-        def __get__(self):
-            return self.spanning_segment
-
     property chrom:
         """Chromosome the SegmentChain resides on"""
         def __get__(self):
@@ -659,13 +644,6 @@ cdef class SegmentChain(object):
         """
         def __get__(self):
             return copy.deepcopy(self._mask_segments)
-
-    property attr:
-        """Dictionary of arbitrary attributes"""
-        def __get__(self):
-            return self.attr
-        def __set__(self,attr):
-            self.attr = attr
 
     def __repr__(self):
         cdef:
@@ -2546,13 +2524,16 @@ cdef class SegmentChain(object):
     def __copy__(self):
         chain2 = SegmentChain()
         chain2._set_segments(self._segments)
+        chain2._set_masks(self._mask_segments)
         chain2.attr = self.attr
         return chain2
 
     def __deepcopy__(self,memo):
-        new_ivs  = copy.deepcopy(self._segments)
-        new_attr = copy.deepcopy(self.attr)
-        return SegmentChain(*new_ivs,**new_attr)    
+        chain2 = SegmentChain()
+        chain2._set_segments(self._segments)
+        chain2._set_masks(copy.deepcopy(self._mask_segments))
+        chain2.attr = copy.deepcopy(self.attr)
+        return chain2
 
  
 cdef class Transcript(SegmentChain):
@@ -2650,6 +2631,7 @@ cdef class Transcript(SegmentChain):
     def __copy__(self):  # copy info and segments; shallow copy attr
         chain2 = Transcript()
         chain2._set_segments(self._segments)
+        chain2._set_masks(self._mask_segments)
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
@@ -2662,6 +2644,7 @@ cdef class Transcript(SegmentChain):
     def __deepcopy__(self,memo): # deep copy everything
         chain2 = Transcript()
         chain2._set_segments(copy.deepcopy(self._segments))
+        chain2._set_masks(copy.deepcopy(self._mask_segments))
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:

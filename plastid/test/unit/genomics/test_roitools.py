@@ -1315,6 +1315,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEqual(chain1.attr,chain2.attr,
                 "copy.copy failed: changing chain2 attr did not update chain1 attr")
 
+        chain1.add_masks(GenomicSegment("chrA",225,350,"+"))
+        chain2 = copy.deepcopy(chain1)
+        self.assertListEqual(chain1._mask_segments,chain2._mask_segments,"copy.copy failed: masks did not copy")
+
     @skip_if_abstract
     def test_deepcopy(self):
         segments = [GenomicSegment("chrA",10,100,"+"),
@@ -1350,6 +1354,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         chain3.attr["attr4"].add_segments(GenomicSegment("chrA",1000,1200,"+"))
         self.assertNotEqual(chain1.attr["attr4"],chain3.attr["attr4"],"Deepcopy failed: changing chain2 attr affected chain1 attr")
 
+        chain1.add_masks(GenomicSegment("chrA",225,350,"+"))
+        chain2 = copy.deepcopy(chain1)
+        self.assertListEqual(chain1._mask_segments,chain2._mask_segments,"Deepcopy failed: masks did not copy")
+
     @skip_if_abstract
     def test_get_segments_property_is_immutable(self):
         segments = [GenomicSegment("chrA",10,100,"+"),
@@ -1361,6 +1369,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertListEqual(segments,segments_from_chain,
                 "test_segments_property_is_immutable: segments coming from chain are different from those went in: %s vs %s." % (segments,segments_from_chain))
         segments_from_chain.append(GenomicSegment("chrA",900,1000,"+"))
+        self.assertEqual(len(segments_from_chain),4)
+        self.assertEqual(len(chain._segments),3)
         self.assertNotEqual(segments,segments_from_chain,
                 "test_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._segments")
 
@@ -1378,6 +1388,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertListEqual(masks,segments_from_chain,
                 "test_mask_segments_property_is_immutable: masks coming from chain are different from those that went in: %s vs %s." % (segments,segments_from_chain))
         segments_from_chain.append(GenomicSegment("chrA",10,100,"+"))
+        self.assertEqual(len(chain._mask_segments),1)
+        self.assertEqual(len(segments_from_chain),2)
         self.assertNotEqual(segments,segments_from_chain,
                 "test_mask_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._mask_segments")
 

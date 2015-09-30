@@ -8,11 +8,14 @@ cimport numpy
 cdef class SegmentChain(object):
     cdef:
         list _segments, _mask_segments
-        GenomicSegment spanning_segment
-        long length, masked_length
+        readonly GenomicSegment spanning_segment
+        readonly long length
+        readonly long masked_length
+
         array.array _position_hash
         array.array _position_mask # really should be bint, but we can't use it there
-        dict attr, _inverse_hash
+        public dict attr
+        dict _inverse_hash
 
     # maintenance of chain internals
     cdef bint _update(self) except False
@@ -45,7 +48,6 @@ cdef class SegmentChain(object):
 cdef class Transcript(SegmentChain):
     cdef:
         object cds_genome_start, cds_genome_end, cds_start, cds_end
-
     cdef bint _update_cds(self) except False
     cdef bint _update_from_cds_start(self) except False
     cdef bint _update_from_cds_end(self) except False
