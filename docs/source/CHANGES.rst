@@ -48,6 +48,16 @@ Removed
     removed, because GenomicSegments and SegmentChains now sort
     lexically without help
 
+
+plastid [0.2.3] = [2015-09-23]
+------------------------------
+
+Changed
+.......
+  - Cython implementations of BAM mapping rules now default,
+    are 2-10x faster than Python implementations
+
+
 plastid [0.2.2] = [2015-09-15]
 ------------------------------
 First release under official name!

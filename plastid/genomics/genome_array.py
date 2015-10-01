@@ -168,329 +168,331 @@ from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
 from plastid.util.services.exceptions import DataWarning
 
+from plastid.genomics.map_factories import *
+
 MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
 
-
-#===============================================================================
-# Factories for mapping functions for BAMGenomeArray or other structures
-# Each factory returns a function that takes a list of pysam.AlignedSegments
-# and a GenomicSegment, and returns a list of pysam.AlignedSegments that mapped
-# to that interval under the mapping rules specified in that function, and
-# a corresponding vector of read counts mapping to each nucleotide position
-# in the GenomicSegment
-#===============================================================================
-
-def CenterMapFactory(nibble=0):
-    """Returns a center-mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    A user-specified number of bases is removed from each side of each
-    read alignment, and the `N` remaining bases are each apportioned `1/N`
-    of the read count, so that the entire read is counted once.
-     
-    Parameters
-    ----------
-    nibble : int, optional
-        Number of bases to remove from each side of read (Default: `0`)
-    
-    Returns
-    -------
-    function
-        Mapping function
-    """
-    # docstring of function we will return.
-    # set it up here so we can put the string substitution in it
-    docstring = """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region. %s bases are trimmed from each
-        side of the read, and each of the `N` remaining alignment positions
-        are incremented by `1/N`
-        
-        Parameters
-        ----------
-        seg : |GenomicSegment|
-            Region of interest
-        
-        reads : list of :py:class:`pysam.AlignedSegment`
-            Reads to map
-            
-        Returns
-        -------
-        :py:class:`numpy.ndarray`
-            Vector of counts at each position in `seg`
-        """ % nibble
- 
-    def map_func(reads,seg):
-        seg_start = seg.start
-        seg_end = seg.end
-        seg_positions = frozenset(range(seg_start,seg_end))
-        reads_out = []
-        count_array = numpy.zeros(seg_end - seg_start,dtype=float)
-
-        for read in reads:
-            read_positions = read.positions
-            read_length = len(read_positions)
-            if read_length <= 2*nibble:
-                warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
-                              DataWarning)
-                continue
-
-            if nibble > 0:
-                read_positions = read_positions[nibble:-nibble]
-
-            overlap = numpy.array(list(frozenset(read_positions) & seg_positions),dtype=int)
-            if len(overlap) > 0:
-                overlap -= seg_start
-                reads_out.append(read)
-                val = 1.0 / (read_length - 2*nibble)
-                count_array[overlap] += val
-
-        return reads_out, count_array
-     
-    map_func.__doc__ = docstring
-    map_func.__mapping__ = "center"
-    return map_func
- 
- 
-def FivePrimeMapFactory(offset=0):
-    """Returns a fiveprime mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
-     
-    Parameters
-    ----------
-    offset : int, optional
-        Offset from 5' end of read, in direction of 3' end, at which 
-        reads should be counted (Default: `0`)
-    
-    Returns
-    -------
-    function
-        Mapping function
-    """
-     
-    # docstring of function we will return.
-    # set it up here so we can put the string substitution in it
-    docstring = """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region, mapping reads at %s
-        from the fiveprime end of each read.
- 
-        Parameters
-        ----------
-        reads : list of :py:class:`pysam.AlignedSegment`
-            Reads to map
-            
-        seg : |GenomicSegment|
-            Region of interest
-
-            
-        Returns
-        -------
-        list
-            List of :py:class:`pysam.AlignedSegment` that map to region
-            
-        :py:class:`numpy.ndarray`
-            Vector of counts at each position in `seg`
-        """ % offset
-         
-    def map_func(reads,seg):
-        reads_out = []         
-        seg_start = seg.start
-        seg_end = seg.end
-        seg_len = seg_end - seg_start
-        count_array = numpy.zeros(seg_len)
-
-        read_offset = offset
-        if seg.strand == "-":
-            read_offset = - offset - 1
-
-        for read in reads:
-            read_positions = read.positions
-            read_length = len(read_positions)
-            if abs(offset) >= read_length:
-                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-                              DataWarning)
-                continue
-            
-            p_site = read_positions[read_offset]
-            if p_site >= seg_start and p_site < seg_end:
-                reads_out.append(read)
-                count_array[p_site - seg_start] += 1
-        return reads_out, count_array
-     
-    map_func.__doc__ = docstring
-    map_func.__mapping__ = "fiveprime"    
-    return map_func
- 
- 
-def ThreePrimeMapFactory(offset=0):
-    """Returns a threeprime mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the 3' end of the alignment,
-    in the direction of the 5' end
-     
-    Parameters
-    ----------
-    offset : int, optional
-        Offset from 3' end of read, in direction of 5' end, at which 
-        reads should be counted (Default: *0*)
-    
-    Returns
-    -------
-    function
-        Mapping function
-    """
-     
-    # docstring of function we will return.
-    # set it up here so we can put the string substitution in it
-    docstring = """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region, mapping reads at %s
-        from the threeprime end of each read.
- 
-        Parameters
-        ----------
-        seg : |GenomicSegment|
-            Region of interest
-        
-        reads : list of :py:class:`pysam.AlignedSegment`
-            Reads to map
-            
-        Returns
-        -------
-        :py:class:`numpy.ndarray`
-            Vector of counts at each position in `seg`
-        """ % offset
-    def map_func(reads,seg):
-        seg_start = seg.start
-        seg_end   = seg.end
-        seg_len   = seg_end - seg_start
-        reads_out = []
-        count_array = numpy.zeros(seg_len)
-
-        read_offset = offset
-        if seg.strand == "+":
-            read_offset = - offset - 1
-
-        for read in reads:
-            read_positions = read.positions
-            read_length = len(read_positions)
-            if offset >= read_length: 
-                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-                              DataWarning)
-                continue
-
-            p_site = read.positions[read_offset]  
-            if p_site >= seg_start and p_site < seg_end:
-                reads_out.append(read)
-                count_array[p_site - seg_start] += 1
-
-        return reads_out, count_array
-     
-    map_func.__doc__ = docstring
-    map_func.__mapping__ = "threeprime"    
-    return map_func
- 
-# JGD modified 2013-12-16
-# APF 2013-11-18
-def VariableFivePrimeMapFactory(offset_dict):
-    """Returns a fiveprime-variable mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
-    The offset for a read of a given length is supplied in `offset_dict[readlen]`
-     
-    Parameters
-    ----------
-    offset_dict : dict
-        Dictionary mapping read lengths to offsets that should be applied
-        to reads of that length during mapping. A special key, `'default'` may
-        be supplied to provide a default value for lengths not specifically
-        enumerated in `offset_dict`
-    
-    Returns
-    -------
-    function
-        Mapping function    
-    """
-     
-    # docstring of function we will return.
-    docstring = """Returns reads covering a region, and a count vector mapping reads
-        to specific positions in the region, mapping reads at possibly varying
-        offsets from the 5' end of each read.
- 
-        Parameters
-        ----------
-        seg : |GenomicSegment|
-            Region of interest
-        
-        reads : list of :py:class:`pysam.AlignedSegment`
-            Reads to map
-            
-        Returns
-        -------
-        :py:class:`numpy.ndarray`
-            Vector of counts at each position in `seg`
-        """
-         
-    def map_func(reads,seg,offset_dict=offset_dict):
-        reads_out = []         
-        count_array = numpy.zeros(len(seg))
-        for read in reads:
-            read_length = len(read.positions)
-            if read_length in offset_dict:
-                offset = offset_dict[read_length]
-            elif "default" in offset_dict:
-                offset = offset_dict["default"]
-            else:
-                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
-                              DataWarning)
-                continue
-
-            if offset >= read_length:
-                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                              DataWarning)
-                continue
-
-            if seg.strand == "+":
-                p_site = read.positions[offset]
-            else:
-                p_site = read.positions[-offset - 1]
-             
-            if p_site >= seg.start and p_site < seg.end:
-                reads_out.append(read)
-                count_array[p_site - seg.start] += 1
-
-        return reads_out, count_array
-     
-    map_func.__doc__ = docstring
-    map_func.__mapping__ = "fiveprime_variable"    
-    return map_func
- 
- 
-
-#===============================================================================
-# Factory functions to filter reads for BAMGenomeArrays
-#===============================================================================
-
-def SizeFilterFactory(min=1,max=numpy.inf):
-    """Return a function to filter reads based on length, which can be applied
-    at runtime to a |BAMGenomeArray| using :py:meth:`BAMGenomeArray.add_filter`
-    
-    Parameters
-    ----------
-    min : int, optional
-        Minimum read length to pass filter, inclusive (Default: `1`)
-    
-    max : int or numpy.inf, optional
-        Maximum read length to pass filter, inclusive (Default: infinity)
-    
-    Returns
-    -------
-    function
-    """
-    if max < min:
-        raise ValueError("Alignment size filter: max read length must be >= min read length")
-    
-    def my_func(x):
-        my_length = len(x.positions)
-        return my_length >= min and my_length <= max
-    
-    return my_func
-
-
+#
+##===============================================================================
+## Factories for mapping functions for BAMGenomeArray or other structures
+## Each factory returns a function that takes a list of pysam.AlignedSegments
+## and a GenomicSegment, and returns a list of pysam.AlignedSegments that mapped
+## to that interval under the mapping rules specified in that function, and
+## a corresponding vector of read counts mapping to each nucleotide position
+## in the GenomicSegment
+##===============================================================================
+#
+#def CenterMapFactory(nibble=0):
+#    """Returns a center-mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
+#    A user-specified number of bases is removed from each side of each
+#    read alignment, and the `N` remaining bases are each apportioned `1/N`
+#    of the read count, so that the entire read is counted once.
+#     
+#    Parameters
+#    ----------
+#    nibble : int, optional
+#        Number of bases to remove from each side of read (Default: `0`)
+#    
+#    Returns
+#    -------
+#    function
+#        Mapping function
+#    """
+#    # docstring of function we will return.
+#    # set it up here so we can put the string substitution in it
+#    docstring = """Returns reads covering a region, and a count vector mapping reads
+#        to specific positions in the region. %s bases are trimmed from each
+#        side of the read, and each of the `N` remaining alignment positions
+#        are incremented by `1/N`
+#        
+#        Parameters
+#        ----------
+#        seg : |GenomicSegment|
+#            Region of interest
+#        
+#        reads : list of :py:class:`pysam.AlignedSegment`
+#            Reads to map
+#            
+#        Returns
+#        -------
+#        :py:class:`numpy.ndarray`
+#            Vector of counts at each position in `seg`
+#        """ % nibble
+# 
+#    def map_func(reads,seg):
+#        seg_start = seg.start
+#        seg_end = seg.end
+#        seg_positions = frozenset(range(seg_start,seg_end))
+#        reads_out = []
+#        count_array = numpy.zeros(seg_end - seg_start,dtype=float)
+#
+#        for read in reads:
+#            read_positions = read.positions
+#            read_length = len(read_positions)
+#            if read_length <= 2*nibble:
+#                warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
+#                              DataWarning)
+#                continue
+#
+#            if nibble > 0:
+#                read_positions = read_positions[nibble:-nibble]
+#
+#            overlap = numpy.array(list(frozenset(read_positions) & seg_positions),dtype=int)
+#            if len(overlap) > 0:
+#                overlap -= seg_start
+#                reads_out.append(read)
+#                val = 1.0 / (read_length - 2*nibble)
+#                count_array[overlap] += val
+#
+#        return reads_out, count_array
+#     
+#    map_func.__doc__ = docstring
+#    map_func.__mapping__ = "center"
+#    return map_func
+# 
+# 
+#def FivePrimeMapFactory(offset=0):
+#    """Returns a fiveprime mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
+#    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+#     
+#    Parameters
+#    ----------
+#    offset : int, optional
+#        Offset from 5' end of read, in direction of 3' end, at which 
+#        reads should be counted (Default: `0`)
+#    
+#    Returns
+#    -------
+#    function
+#        Mapping function
+#    """
+#     
+#    # docstring of function we will return.
+#    # set it up here so we can put the string substitution in it
+#    docstring = """Returns reads covering a region, and a count vector mapping reads
+#        to specific positions in the region, mapping reads at %s
+#        from the fiveprime end of each read.
+# 
+#        Parameters
+#        ----------
+#        reads : list of :py:class:`pysam.AlignedSegment`
+#            Reads to map
+#            
+#        seg : |GenomicSegment|
+#            Region of interest
+#
+#            
+#        Returns
+#        -------
+#        list
+#            List of :py:class:`pysam.AlignedSegment` that map to region
+#            
+#        :py:class:`numpy.ndarray`
+#            Vector of counts at each position in `seg`
+#        """ % offset
+#         
+#    def map_func(reads,seg):
+#        reads_out = []         
+#        seg_start = seg.start
+#        seg_end = seg.end
+#        seg_len = seg_end - seg_start
+#        count_array = numpy.zeros(seg_len)
+#
+#        read_offset = offset
+#        if seg.strand == "-":
+#            read_offset = - offset - 1
+#
+#        for read in reads:
+#            read_positions = read.positions
+#            read_length = len(read_positions)
+#            if abs(offset) >= read_length:
+#                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+#                              DataWarning)
+#                continue
+#            
+#            p_site = read_positions[read_offset]
+#            if p_site >= seg_start and p_site < seg_end:
+#                reads_out.append(read)
+#                count_array[p_site - seg_start] += 1
+#        return reads_out, count_array
+#     
+#    map_func.__doc__ = docstring
+#    map_func.__mapping__ = "fiveprime"    
+#    return map_func
+# 
+# 
+#def ThreePrimeMapFactory(offset=0):
+#    """Returns a threeprime mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
+#    Reads are mapped at a user-specified offset from the 3' end of the alignment,
+#    in the direction of the 5' end
+#     
+#    Parameters
+#    ----------
+#    offset : int, optional
+#        Offset from 3' end of read, in direction of 5' end, at which 
+#        reads should be counted (Default: *0*)
+#    
+#    Returns
+#    -------
+#    function
+#        Mapping function
+#    """
+#     
+#    # docstring of function we will return.
+#    # set it up here so we can put the string substitution in it
+#    docstring = """Returns reads covering a region, and a count vector mapping reads
+#        to specific positions in the region, mapping reads at %s
+#        from the threeprime end of each read.
+# 
+#        Parameters
+#        ----------
+#        seg : |GenomicSegment|
+#            Region of interest
+#        
+#        reads : list of :py:class:`pysam.AlignedSegment`
+#            Reads to map
+#            
+#        Returns
+#        -------
+#        :py:class:`numpy.ndarray`
+#            Vector of counts at each position in `seg`
+#        """ % offset
+#    def map_func(reads,seg):
+#        seg_start = seg.start
+#        seg_end   = seg.end
+#        seg_len   = seg_end - seg_start
+#        reads_out = []
+#        count_array = numpy.zeros(seg_len)
+#
+#        read_offset = offset
+#        if seg.strand == "+":
+#            read_offset = - offset - 1
+#
+#        for read in reads:
+#            read_positions = read.positions
+#            read_length = len(read_positions)
+#            if offset >= read_length: 
+#                warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+#                              DataWarning)
+#                continue
+#
+#            p_site = read.positions[read_offset]  
+#            if p_site >= seg_start and p_site < seg_end:
+#                reads_out.append(read)
+#                count_array[p_site - seg_start] += 1
+#
+#        return reads_out, count_array
+#     
+#    map_func.__doc__ = docstring
+#    map_func.__mapping__ = "threeprime"    
+#    return map_func
+# 
+## JGD modified 2013-12-16
+## APF 2013-11-18
+#def VariableFivePrimeMapFactory(offset_dict):
+#    """Returns a fiveprime-variable mapping function for :py:meth:`BAMGenomeArray.set_mapping`.
+#    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+#    The offset for a read of a given length is supplied in `offset_dict[readlen]`
+#     
+#    Parameters
+#    ----------
+#    offset_dict : dict
+#        Dictionary mapping read lengths to offsets that should be applied
+#        to reads of that length during mapping. A special key, `'default'` may
+#        be supplied to provide a default value for lengths not specifically
+#        enumerated in `offset_dict`
+#    
+#    Returns
+#    -------
+#    function
+#        Mapping function    
+#    """
+#     
+#    # docstring of function we will return.
+#    docstring = """Returns reads covering a region, and a count vector mapping reads
+#        to specific positions in the region, mapping reads at possibly varying
+#        offsets from the 5' end of each read.
+# 
+#        Parameters
+#        ----------
+#        seg : |GenomicSegment|
+#            Region of interest
+#        
+#        reads : list of :py:class:`pysam.AlignedSegment`
+#            Reads to map
+#            
+#        Returns
+#        -------
+#        :py:class:`numpy.ndarray`
+#            Vector of counts at each position in `seg`
+#        """
+#         
+#    def map_func(reads,seg,offset_dict=offset_dict):
+#        reads_out = []         
+#        count_array = numpy.zeros(len(seg))
+#        for read in reads:
+#            read_length = len(read.positions)
+#            if read_length in offset_dict:
+#                offset = offset_dict[read_length]
+#            elif "default" in offset_dict:
+#                offset = offset_dict["default"]
+#            else:
+#                warnings.warn("No offset for reads of length %s in offset dict. Ignoring %s-mers." % (read_length, read_length),
+#                              DataWarning)
+#                continue
+#
+#            if offset >= read_length:
+#                warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+#                              DataWarning)
+#                continue
+#
+#            if seg.strand == "+":
+#                p_site = read.positions[offset]
+#            else:
+#                p_site = read.positions[-offset - 1]
+#             
+#            if p_site >= seg.start and p_site < seg.end:
+#                reads_out.append(read)
+#                count_array[p_site - seg.start] += 1
+#
+#        return reads_out, count_array
+#     
+#    map_func.__doc__ = docstring
+#    map_func.__mapping__ = "fiveprime_variable"    
+#    return map_func
+# 
+# 
+#
+##===============================================================================
+## Factory functions to filter reads for BAMGenomeArrays
+##===============================================================================
+#
+#def SizeFilterFactory(min=1,max=numpy.inf):
+#    """Return a function to filter reads based on length, which can be applied
+#    at runtime to a |BAMGenomeArray| using :py:meth:`BAMGenomeArray.add_filter`
+#    
+#    Parameters
+#    ----------
+#    min : int, optional
+#        Minimum read length to pass filter, inclusive (Default: `1`)
+#    
+#    max : int or numpy.inf, optional
+#        Maximum read length to pass filter, inclusive (Default: infinity)
+#    
+#    Returns
+#    -------
+#    function
+#    """
+#    if max < min:
+#        raise ValueError("Alignment size filter: max read length must be >= min read length")
+#    
+#    def my_func(x):
+#        my_length = len(x.positions)
+#        return my_length >= min and my_length <= max
+#    
+#    return my_func
+#
+#
 
 #===============================================================================
 # INDEX: Mapping functions for GenomeArray and SparseGenomeArray.
