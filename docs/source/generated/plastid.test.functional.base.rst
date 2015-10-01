@@ -1,7 +1,7 @@
-plastid.genomics.c_segmentchain module
+plastid.test.functional.base module
 ===================================
 
-.. automodule:: plastid.genomics.c_segmentchain
+.. automodule:: plastid.test.functional.base
     :members:
     :undoc-members:
     :show-inheritance:

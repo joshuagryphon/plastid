@@ -1,5 +1,5 @@
 plastid.readers package
-====================
+=======================
 
 .. automodule:: plastid.readers
     :members:

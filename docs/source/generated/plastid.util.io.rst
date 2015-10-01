@@ -1,5 +1,5 @@
 plastid.util.io package
-====================
+=======================
 
 .. automodule:: plastid.util.io
     :members:

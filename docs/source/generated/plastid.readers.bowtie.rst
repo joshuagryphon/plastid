@@ -1,5 +1,5 @@
 plastid.readers.bowtie module
-==========================
+=============================
 
 .. automodule:: plastid.readers.bowtie
     :members:

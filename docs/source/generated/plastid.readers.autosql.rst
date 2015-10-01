@@ -1,5 +1,5 @@
 plastid.readers.autosql module
-===========================
+==============================
 
 .. automodule:: plastid.readers.autosql
     :members:

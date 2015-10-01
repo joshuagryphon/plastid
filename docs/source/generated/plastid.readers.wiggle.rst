@@ -1,5 +1,5 @@
 plastid.readers.wiggle module
-==========================
+=============================
 
 .. automodule:: plastid.readers.wiggle
     :members:

@@ -1,5 +1,5 @@
 plastid.bin.crossmap module
-========================
+===========================
 
 .. automodule:: plastid.bin.crossmap
     :members:

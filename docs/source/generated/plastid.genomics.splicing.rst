@@ -1,5 +1,5 @@
 plastid.genomics.splicing module
-=============================
+================================
 
 .. automodule:: plastid.genomics.splicing
     :members:

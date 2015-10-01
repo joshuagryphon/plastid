@@ -1,5 +1,5 @@
 plastid.genomics.genome_array module
-=================================
+====================================
 
 .. automodule:: plastid.genomics.genome_array
     :members:

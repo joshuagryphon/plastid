@@ -1,5 +1,5 @@
 plastid.util.scriptlib package
-===========================
+==============================
 
 .. automodule:: plastid.util.scriptlib
     :members:

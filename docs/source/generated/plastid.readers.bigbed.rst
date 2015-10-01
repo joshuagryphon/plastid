@@ -1,5 +1,5 @@
 plastid.readers.bigbed module
-==========================
+=============================
 
 .. automodule:: plastid.readers.bigbed
     :members:

@@ -4,8 +4,7 @@ Change log
 All major changes to ``plastid`` are documented here. Version numbers for the project
 follow the conventions described in :pep:`440`. After release 1.0, they will 
 also follow `Semantic versioning <http://semver.org/>`_. Before then, they roughly
-follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring
-the last digit.
+follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring the last digit.
 
  .. note::
  
@@ -24,8 +23,8 @@ the last digit.
     the confusion!
 
 
-Unreleased
-----------
+plastid [0.3.0] = [2015-10-01]
+------------------------------
 
 Changed
 .......

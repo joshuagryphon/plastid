@@ -1,5 +1,5 @@
 plastid.genomics.genome_hash module
-================================
+===================================
 
 .. automodule:: plastid.genomics.genome_hash
     :members:

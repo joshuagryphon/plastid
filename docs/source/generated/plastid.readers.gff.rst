@@ -1,5 +1,5 @@
 plastid.readers.gff module
-=======================
+==========================
 
 .. automodule:: plastid.readers.gff
     :members:
