@@ -13,7 +13,7 @@ cimport cython
 
 from pysam.calignmentfile cimport AlignedSegment
 from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
-from plastid.genomics.c_roitools cimport GenomicSegment
+from plastid.genomics.roitools cimport GenomicSegment
 from plastid.util.services.exceptions import DataWarning
 
 

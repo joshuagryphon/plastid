@@ -23,7 +23,30 @@ the last digit.
     Anyway, we don't plan on changing the name again anytime soon. Please pardon
     the confusion!
 
+Unreleased
+----------
 
+Changed
+.......
+  - Cython implementations of SegmentChain and Transcript provide
+    massive speedups
+  - Transcript.cds_start, cds_genome_start, cds_end, cds_genome_end
+    are now managed properties and update each other to maintain
+    synchrony
+  - SegmentChain._segments and SegmentChain._mask_segments are now
+    read-only
+
+Deprecated
+..........
+  - SegmentChain.get_length() and SegmentChain.get_masked_length()
+    are replaced by properties SegmentChain.length and
+    SegmentChain.masked_length
+
+Removed
+.......
+  - sort_segments_lexically and sort_segmentchains_lexically
+    removed, because GenomicSegments and SegmentChains now sort
+    lexically without help
 
 plastid [0.2.2] = [2015-09-15]
 ------------------------------

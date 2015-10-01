@@ -25,7 +25,7 @@ from plastid.readers.gff import GTF2_TranscriptAssembler, \
                              GFF3_Reader
 from plastid.readers.bed import BED_Reader
 
-from plastid.genomics.c_roitools import GenomicSegment, \
+from plastid.genomics.roitools import GenomicSegment, \
     SegmentChain, Transcript, positions_to_segments, positionlist_to_segments
 
 from plastid.genomics.genome_array import GenomeArray
