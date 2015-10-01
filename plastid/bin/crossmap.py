@@ -29,7 +29,7 @@ to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
 (from the terminal)::
 
     $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\
-                     cut -f2,3 | sed -e "s/\([^ ]\) [^\t]*/\1/" | >OUTFILE.sizes
+                     cut -f2,3 | sed -e "s/\([^ ]\+\).*\t/\1\t/" | >OUTFILE.sizes
     $ sort -k1,1 -k2,2n OUTBASE.bed > OUTBASE_sorted.bed
     $ bedToBigBed OUTBASE_sorted.bed OUTBASE.sizes OUTBASE_sorted.bb
 

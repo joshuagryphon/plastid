@@ -87,7 +87,7 @@ def main(argv=sys.argv[1:]):
     
     with argsopener("%s.bed" % args.outbase,args,"w") as bed_out:
         if args.export_tophat == True:
-            tophat_out = argsopener("%s.juncs" % args.outbase,args,"w")
+            tophat_out = open("%s.juncs" % args.outbase,"w")
     
         printer.write("params: " +" ".join(argv))
         printer.write("Detecting & comparing junctions...")
