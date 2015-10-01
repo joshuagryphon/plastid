@@ -335,8 +335,8 @@ start sites::
     >>>         new_segment_start = roi.get_genomic_coordinate(flank_downstream)[1]
     >>>         # need to add one for half-open coordinate end positions
     >>>         new_segment_end = tx_start_genome + flank_upstream + 1
-    >>>         if roi.get_length() < flank_downstream:
-    >>>             offset = flank_downstream - roi.get_length()
+    >>>         if roi.length < flank_downstream:
+    >>>             offset = flank_downstream - roi.length
     >>>         else:
     >>>             offset = 0
     >>> 
@@ -396,8 +396,8 @@ scope:
     >>>             new_chain_start = 0
     >>> 
     >>>         # if new end is outside region, set it to end of region
-    >>>         if new_chain_end > roi.get_length():
-    >>>             new_chain_end = roi.get_length()
+    >>>         if new_chain_end > roi.length:
+    >>>             new_chain_end = roi.length
     >>> 
     >>>         new_chain = roi.get_subchain(new_chain_start,new_chain_end)
     >>>     else:

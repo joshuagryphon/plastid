@@ -200,7 +200,7 @@ while; you might want to get some coffee):
     >>>     # Iterate over these sub-regions for each transcript
     >>>     for region,subchain in my_dict.items():
     >>>         # Save the length for each sub-region
-    >>>         my_data["%s_length" % region].append(subchain.get_length())
+    >>>         my_data["%s_length" % region].append(subchain.length)
     >>>         my_data["%s_chain"  % region].append(str(subchain))
 
     >>>         # Iterate over each sample, getting the counts over each region
@@ -208,7 +208,7 @@ while; you might want to get some coffee):
     >>>             # subchain.get_counts() fetches a list of counts at each position
     >>>             # here we just want the sum
     >>>             counts = sum(subchain.get_counts(sample_data))
-    >>>             rpkm   = float(counts) / subchain.get_length() * 1000 * 1e6 / sample_data.sum()
+    >>>             rpkm   = float(counts) / subchain.length * 1000 * 1e6 / sample_data.sum()
     >>>             my_data["%s_%s_counts" % (sample_name,region)].append(counts)
     >>>             my_data["%s_%s_rpkm"   % (sample_name,region)].append(rpkm)
 

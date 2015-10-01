@@ -9,10 +9,7 @@ Similar projects, for interactive analysis of sequencing data
 -------------------------------------------------------------
 `HTSeq`_
     A Python package designed for analysis of high-throughput
-    sequencing data. It parses annotation files and `BAM`_
-    files into objects that serve roles similar to those served
-    by  :data:`plastid`'s |GenomicSegment| and |GenomeArray|,
-    respectively, albeit with different behaviors.
+    sequencing data.
 
 `metaseq`_
     A Python package for analysis of genomics data. It is very
@@ -21,15 +18,13 @@ Similar projects, for interactive analysis of sequencing data
     types. In addition, it includes nice plotting utilities
     for interactive analysis
 
-
-Short read aligners
--------------------
-`bowtie`_
-    A fast short-read aligner for ungapped alignments
-
-`TopHat`_
-    A short read aligner built atop `bowtie`_ that can perform gapped alignments
-    and discover splice junctions
+`riboseqr`_
+    A toolkit for analysis of :term:`ribosome profiling` data,
+    written in `R`_. It implements many standard workflows.
+   
+`ribogalaxy`_
+    A web-based platform for analysis of :term:`ribosome profiling`
+    data, integrating `riboseqr`_, `galaxy`_, and other tools.
 
 
 Gene expression analysis

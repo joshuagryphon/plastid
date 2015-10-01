@@ -56,7 +56,7 @@ and |Transcripts| can be masked using their
 
     >>> #this is ribosome profiling data, so we'll look at a coding region
     >>> demo_cds = transcripts[39].get_cds()
-    >>> demo_cds_length = demo_cds.get_length()
+    >>> demo_cds_length = demo_cds.length
 
     >>> # Now, add masks. We'll mask out the first and last 5 codons.
     >>> # we can fetch these as subchains of the cds
@@ -94,10 +94,10 @@ masks will still return an *unmasked* :class:`numpy.ndarray`::
 Masked positions are also excluded from length measurements, if and only if
 :meth:`~plastid.genomics.roitools.SegmentChain.get_masked_length` is called::
 
-    >>> demo_cds.get_masked_length() # length, excluding masked nucleotides
+    >>> demo_cds.masked_length # length, excluding masked nucleotides
     213
 
-    >>> demo_cds.get_length() # total length
+    >>> demo_cds.length # total length
     243
 
 

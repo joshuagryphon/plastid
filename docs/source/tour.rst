@@ -242,7 +242,7 @@ sparse implementation is provided by |SparseGenomeArray|. A |BAMGenomeArray|
 is provided for :term:`read alignments` in `BAM`_ format.
 
 |GenomeArrays| can be indexed by |GenomicSegments| or |SegmentChains|. 
-Doing so returns a vector of counts at each positionin the |GenomicSegment|
+Doing so returns a vector of counts at each position in the |GenomicSegment|
 or |SegmentChain|, with 5' to 3' coordinates relative to the chain (i.e.
 for reverse-strand features, position 0 of the vector corresponds to
 segment.end)::
@@ -277,7 +277,7 @@ segment.end)::
     True
 
 When importing :term:`read alignments`, users can specify a :term:`mapping rule`
-to determine the genomic position(s) at which each alignment should be counted
+to determine the genomic position(s) at which each alignment should be counted.
 :data:`plastid` already includes mapping functions to map :term:`read alignments`:
 
   - to their fiveprime or threeprime ends, with or without offsets from
@@ -363,7 +363,7 @@ For further information, see:
 Often one needs to know whether any features overlap a specific region in the
 genome, for example, to find transcripts that overlap one another.
 
-But, it is be inefficient to scan an entire file to find overlapping features,
+But, it would be inefficient to scan an entire file to find overlapping features,
 or to test whether two features overlap if we already know from their genomic
 coordinates that they cannot.
 

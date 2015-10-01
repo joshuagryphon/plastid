@@ -66,7 +66,7 @@ genomic coordinates), accounting for splicing of exons::
     # they should be identical
     >>> my_transcript = transcripts[53]
     >>> my_vector = count_vectors[53]
-    >>> my_transcript.get_length(), len(my_vector)
+    >>> my_transcript.length, len(my_vector)
     (1571, 1571)
 
     # get total counts over entire vector
@@ -134,7 +134,7 @@ This makes the following figure:
 Using the |get_count_vectors| script
 ------------------------------------
 The analysis above is implemented by the command-line script |get_count_vectors|.
-|get_count_vector| requires the same data types as above:
+|get_count_vectors| requires the same data types as above:
 
  #. An :term:`annotation` of genomic :term:`features <feature>`
     (e.g. transcripts for :term:`ribosome profiling`,
