@@ -166,6 +166,15 @@ _MASK_PARSER_DESCRIPTION = """Add mask file(s) that annotate regions that should
 _DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
 _DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
 
+
+GFF_SORT_MESSAGE = """Sort and index your GTF2/GFF with Tabix as follows:
+
+    $ sort -k1,1 -k4,4n my_file.FORMAT | bgzip > my_file_sorted.FORMAT.gz
+    $ tabix -p gff my_file_sorted.FORMAT.gz
+
+See http://www.htslib.org/doc/tabix.html for download and documentation of tabix and bgzip."""
+
+
 #===============================================================================
 # INDEX: Alignment/count file parser, and helper functions
 #===============================================================================
@@ -609,12 +618,7 @@ See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 for download & documentation of Kent utilities""")
                 sys.exit(1)
             else:
-                printer.write("""Index your GTF2/GFF with Tabix as follows:
-
-    $ sort -k1,1 -k4,4n my_file | bgzip > sorted.%s.gz
-    $ tabix -p gff sorted.%s.gz
-
-See http://www.htslib.org/doc/tabix.html for download and documentation of tabix and bgzip.""" % (args.annotation_format.lower(),args.annotation_format.lower()))
+                printer.write(GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format.lower()))
                 sys.exit(1)
 
     printer.write("Parsing features in %s..." % ", ".join(args.annotation_files))
@@ -664,9 +668,12 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
 
     if args.annotation_format in ("GFF3","GTF2"):
         from plastid.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
-        if 'sorted' not in disabled and args.sorted == False and 'tabix' not in disabled and args.tabix == False:
-            msg = """Transcript assembly on %s files can require a lot of memory.
-Consider using a sorted file with '--sorted' or a tabix-compressed file.""" % args.annotation_format
+        if 'sorted' not in disabled and args.sorted == False and \
+           'tabix' not in disabled and args.tabix == False:
+            msg = """Transcript assembly on FORMAT files can require a lot of memory.
+Consider using a sorted file with the '--sorted' flag and/or tabix-compression.
+"""
+            msg += GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format.lower())
             warnings.warn(msg,ArgumentWarning)
     
     if args.annotation_format.lower() == "gff3":

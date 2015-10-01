@@ -25,7 +25,7 @@ Generate
         adding nucleotide positions in transcript coordinates to the growing
         window in both 5' and 3' directions until either:
         
-            - the next nucleotide position added is no longer corresponds to 
+            - the next nucleotide position added no longer corresponds to 
               the same genomic position in all transcripts
             
             - the window reaches the maximum user-specified size
@@ -321,7 +321,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
         and growing the window in the 5' and 3' directions along all regions
         until either:
         
-            - the next nucleotide position added is no longer corresponds to 
+            - the next nucleotide position added no longer corresponds to 
               the same genomic position in all regions 
             
             - the window reaches the maximum size specified by`flank_upstream`
@@ -862,9 +862,9 @@ def main(argv=sys.argv[1:]):
     gparser.add_argument("--downstream",type=int,default=50,
                          help="Nucleotides to include downstream of landmark (Default: 50)")
     gparser.add_argument("--group_by",type=str,default="gene_id",
-                         help="Attribute by which regions will be grouped "+ \
-                              "before maximal spanning windows are "+ \
-                              "generated (Default: 'gene_id', explicit or inferred)")
+                         help="Attribute (e.g. in GTF2/GFF3 column 9) by which to group regions "+ \
+                              "before generating maximal spanning windows "+ \
+                              "(Default: group transripts by gene using 'gene_id' attribute from GTF2, or 'Parent' attribute in GFF3)")
     gparser.add_argument("outbase",type=str,
                          help="Basename for output files")
     

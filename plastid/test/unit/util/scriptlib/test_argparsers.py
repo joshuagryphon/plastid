@@ -10,13 +10,20 @@ import warnings
 from pkg_resources import cleanup_resources
 from twobitreader import TwoBitFile
 from nose.plugins.attrib import attr
-from nose.tools import assert_equal, assert_greater, assert_raises,  assert_in, assert_not_in, assert_true, assert_list_equal
+from nose.tools import assert_equal, assert_greater, assert_raises,  \
+    assert_in, assert_not_in, assert_true, assert_list_equal
+
 from plastid.test.ref_files import MINI, REF_FILES
 from plastid.util.io.filters import CommentReader
 from plastid.readers.bed import BED_to_SegmentChain
 from plastid.util.services.exceptions import MalformedFileError
-from plastid.genomics.genome_array import GenomeArray, BAMGenomeArray, SparseGenomeArray
+from plastid.genomics.roitools import SegmentChain, Transcript
+from plastid.genomics.map_factories import FivePrimeMapFactory,\
+    ThreePrimeMapFactory, CenterMapFactory, VariableFivePrimeMapFactory
+from plastid.genomics.genome_array import GenomeArray, BAMGenomeArray, \
+    SparseGenomeArray
 from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash
+
 from plastid.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            get_alignment_file_parser,\
                                            get_genome_array_from_args,\
@@ -29,7 +36,7 @@ from plastid.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
                                            get_sequence_file_parser,\
                                            get_seqdict_from_args,\
                                            _parse_variable_offset_file
-from plastid.genomics.roitools import SegmentChain, Transcript
+
 from plastid.util.services.mini2to3 import StringIO
 
 warnings.simplefilter("ignore")
@@ -360,10 +367,20 @@ def check_bam_mapping(mapping,offset_or_nibble):
         argstr += ("--nibble %s" % offset_or_nibble)
     else:
         argstr += ("--offset %s" % offset_or_nibble)
+
+    mapdict = {
+        "fiveprime" : FivePrimeMapFactory,
+        "threeprime" : ThreePrimeMapFactory,
+        "center" : CenterMapFactory,
+        "fiveprime_variable" : VariableFivePrimeMapFactory,
+    }
     
     args = alignment_file_parser.parse_args(shlex.split(argstr))
     ga = get_genome_array_from_args(args)
-    assert_equal(mapping,ga.map_fn.__mapping__)
+    #assert_equal(mapping,ga.map_fn.__mapping__)a
+
+    assert_true(isinstance(ga.map_fn,mapdict[mapping]))
+
     # assure correct mapping function was applied
     # by comparing counts loaded from a bowtie file
     # under those map rules to a vector corresponding
