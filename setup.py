@@ -1,68 +1,106 @@
 #!/usr/bin/env python
 import os
-#import plastid
 import sys
 import glob
 from collections import Iterable
-
-from distutils.command.build_ext import build_ext as d_build_ext
 from setuptools import setup, find_packages, Extension, Command
-
-#===============================================================================
-# Constants/variables used below
-#===============================================================================
-
-
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-packages = find_packages()
-
-with open("README.rst") as f:
-    long_description = f.read()
-
+from setuptools.command.build_ext import build_ext
+from setuptools.command.install import install
 
 NUMPY_VERSION  = "numpy>=1.9"
 SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
 PYSAM_VERSION  = "pysam>=0.8.3"
 
-cython_args= {
-    "embedsignature" : True,
-    "language_level" : sys.version_info[0],
+# at present, setup/build can't proceed without Cython, numpy, & Pysam
+# adding these to setup_requires and/or install_requires doesn't work,
+# because they are needed before them.
+try:
+#    from Cython.Build import cythonize
+#    from Cython.Distutils import build_ext
+    import numpy
+    import pysam
+except ImportError:
+    print("""plastid setup requires %s, %s, and %s to be installed. Please
+install these via pip, and retry:
 
-    # enable/disable these for development/release
-    "linetrace" : True, # requires passing CYTHON_TRACE=1 to C compiler
-    "profile"   : True,
-}
-"""Cython compiler options"""
+    $ pip install cython numpy pysam
+""" % (CYTHON_VERSION,NUMPY_VERSION,PYSAM_VERSION))
+    sys.exit(1)
 
-ext_paths = ["plastid/genomics/*.pyx"]
+
+#===============================================================================
+# Constants/variables used below
+#===============================================================================
+
+use_cython = False
+
+setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
+packages = find_packages()
+
+with open("README.rst") as f:
+    long_description = f.read()
+
+
+base_path = os.getcwd()
+
+
+pyx_paths = [os.path.join(base_path,"plastid","genomics","*.pyx")]
 """Paths to Cython .pyx files"""
 
-c_paths = [os.path.join(X.replace(",",os.sep),"*.c") for X in packages]
-"""Potential paths to cythonized .c files files"""
+c_paths = glob.glob(os.path.join(base_path,"plastid","genomics","*.c"))
+"""Potential path to cythonized .c files"""
 
-ipath = []
-setup_requires = []
-from Cython.Build import cythonize
-from Cython.Distutils import build_ext
-import numpy
-import pysam
-setup_requires = [CYTHON_VERSION,
-                  PYSAM_VERSION,
-                  NUMPY_VERSION]
+# append numpy & pysam headers to include path for gcc & Cython compilers
 ipath = []
 for mod in (numpy,pysam):
     ipart = mod.get_include()
     if isinstance(ipart,str):
         ipath.append(ipart)
-    elif isinstance(ipart,Iterable):
+    elif isinstance(ipart,(list,tuple)):
         ipath.extend(ipart)
     else:
         raise ValueError("Could not parse include path: %s" % ipart)
 
-    ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
+# define extensions for .c files
+ext_modules = [Extension(X.replace(base_path+os.sep,"").replace(".c","").replace(os.sep,"."),
+                        [X],include_dirs=ipath) for X in c_paths]
+
+#ext_modules = [Extension("plastid.genomics.c_common",[base+"/plastid/genomics/c_common.c"],include_dirs=ipath),
+#Extension("plastid.genomics.roitools",[base+"/plastid/genomics/roitools.c"],include_dirs=ipath),
+#Extension("plastid.genomics.map_factories",[base+"/plastid/genomics/map_factories.c"],include_dirs=ipath),
+#]
+
+# if using Cython to regenerate c files:
+if use_cython == True:
+    from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
+    import numpy
+    import pysam
+
+    # required for setup.py to run
+    setup_requires = [CYTHON_VERSION,
+                      PYSAM_VERSION,
+                      NUMPY_VERSION]
+
+    cython_args= {
+        "embedsignature" : True,
+        "language_level" : sys.version_info[0],
+
+        # enable/disable these for development/release
+        #"linetrace" : True, # requires passing CYTHON_TRACE=1 to C compiler
+        #"profile"   : True,
+    }
+    """Cython compiler options"""
+
+    ext_modules = cythonize([Extension("*",pyx_paths,include_dirs = ipath)],
                              compiler_directives = cython_args,
                              include_path = ipath)        
+
+# if on doc server, only require Cython, numpy, pysam. Everything else
+# is simulated via mock
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 if not on_rtd:
      install_requires = [
                         SCIPY_VERSION,
@@ -71,24 +109,8 @@ if not on_rtd:
                         "biopython>=1.64",
                         "twobitreader>=3.0.0",
                         ] + setup_requires
-#    ipath = []
-#    for mod in (numpy,pysam):
-#        ipart = mod.get_include()
-#        if isinstance(ipart,str):
-#            ipath.append(ipart)
-#        elif isinstance(ipart,Iterable):
-#            ipath.extend(ipart)
-#        else:
-#            raise ValueError("Could not parse include path: %s" % ipart)
-#
-#        ext_modules = cythonize([Extension("*",ext_paths,include_dirs = ipath)],
-#                                 compiler_directives = cython_args,
-#                                 include_path = ipath)        
 else:
-#    from setuptools.command import build_ext
-#    ext_modules = []
     install_requires = ["cython","numpy","pysam"]
-                      #  "scipy","numpy","pandas","matplotlib","biopython","#  ]
 
 
 #===============================================================================
@@ -220,12 +242,17 @@ def get_scripts():
 # Program body 
 #===============================================================================
 
+class install_after_build(install):
+    def run(self):
+        self.run_command("build_ext")
+
+        return setuptools.command.install.install.run(self)
 
 setup(
 
     # package metadata
     name             = "plastid",
-    version          = "0.2.3", #plastid.__version__,
+    version          = "0.3.0", #plastid.__version__,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
@@ -235,8 +262,8 @@ setup(
     description      = "Convert genomic datatypes into Pythonic objects useful to the SciPy stack",
     license          = "BSD 3-Clause",
     keywords         = "ribosome profiling riboseq rna-seq sequencing genomics biology",
-    url              = "https://github.com/joshuagryphon/plastid", # github link
-    download_url     = "", # PyPI link
+    url              = "https://github.com/joshuagryphon/plastid",
+    download_url     = "https://pypi.python.org/pypi/plastid/",
     platforms        = "OS Independent",
  
     classifiers      = [
@@ -261,27 +288,23 @@ setup(
 
     # packaging info
     packages             = packages,
-    include_package_data = True,
-    package_data         = {
+    #include_package_data = True,
+    package_data         = { "" : ["*.pyx","*.pxd","*.c"], },
+#    exclude_package_data = { "" : ["*.c"], },
 #    "": ["*.*"],#
 #     "": ["*.bam","*.bai","*.bed","*.bb","*.gtf","*.gff","*.gz","*.tbi","*.psl",
 #          "*.bowtie","*.fa","*.wig","*.juncs","*.positions","*.sizes","*.as","*.txt"],
-                           },
 
     # dependencies, entrypoints, ext modules, et c
     entry_points     = { "console_scripts" : get_scripts()
                        },
 
-    # the following defer import of Cython, numpy, and pysam
-    # until after setup() has processed `setup_requires`
-
-    #ext_modules = LateCython(ext_paths,cython_args),
     ext_modules = ext_modules,
     cmdclass    = {
                     #'build_ext' : CythonBuildExtProxy,
                     'build_ext' : build_ext,
+                    #'install' : install_after_build,
                    },
-
 
     setup_requires   = setup_requires,
     install_requires = install_requires,
