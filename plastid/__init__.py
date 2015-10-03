@@ -30,5 +30,5 @@ plastid is divided into the following subpackages:
     ==============    =========================================================
      
 """
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __author__  = "Joshua Griffin Dunn"

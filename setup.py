@@ -293,7 +293,7 @@ setup(
          'Topic :: Scientific/Engineering :: Bio-Informatics',
          'Topic :: Software Development :: Libraries',
 
-         'Intended Audience :: Intended Audience :: Science/Research',
+         'Intended Audience :: Science/Research',
          'Intended Audience :: Developers',
 
          'License :: OSI Approved :: BSD License',
