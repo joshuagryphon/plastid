@@ -1,5 +1,5 @@
 Welcome to `plastid`!
-====================
+=====================
 
 For documentation, see `our home page <http://plastid.readthedocs.org/en/latest/>`_
 on `ReadtheDocs.org <http://readthedocs.org>`_.
