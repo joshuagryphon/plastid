@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Exports a table of parent-child feature relationships for all feature types
 found in a `GFF3`_ file. Features with multiple parents are dumped into a category
-called `Multiple` and the feature types of their individual parents ignored.
+called 'Multiple' and the feature types of their individual parents ignored.
 """
 from plastid.readers.gff import GFF3_Reader
 from plastid.util.io.filters import NameDateWriter
