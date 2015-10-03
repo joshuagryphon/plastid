@@ -193,6 +193,7 @@ mock_modules = [
     'numpy',
     'numpy.ma',
     'numpy.random',
+    'numpy.dtype',
     'pandas',
     'scipy',
     'scipy.misc',
@@ -204,6 +205,7 @@ mock_modules = [
     'Bio.Seq',
     'Bio.SeqRecord',
     'pysam',
+    'twobitreader'
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)

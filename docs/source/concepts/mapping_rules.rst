@@ -48,7 +48,7 @@ of an alignment. For example:
  .. _mapping-rules-provided:
 
 Mapping rules in :data:`plastid`
------------------------------
+--------------------------------
 The following mapping rules are provided, although users are encouraged to
 :ref:`write their own mapping rules <mapping-rules-roll-your-own>`
 as needed. These include:

@@ -148,7 +148,7 @@ If it contains `bedGraph`_-formatted data blocks, it is :term:`0-indexed`,
 :term:`half-open`.
 
 Conventions used in `plastid`
---------------------------
+-----------------------------
 Following `Python`_ conventions, :data:`plastid` reports all coordinates in
 :term:`0-indexed` and :term:`half-open` representation.
 In this case, the coordinate would be::

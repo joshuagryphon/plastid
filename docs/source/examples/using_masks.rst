@@ -127,7 +127,7 @@ features cover genomic regions that should be masked from analysis.
  .. _masking-mask-file-interactive
 
 :mod:`GenomeHashes <plastid.genomics.genome_hash>` and :term:`mask files <mask file>` in interactive Python sessions
-.................................................................................................................
+....................................................................................................................
 
 :term:`Mask files <mask file>` can be loaded into a |GenomeHash|, which
 indexes mask by location in the genome. To create a |GenomeHash|::
@@ -162,7 +162,7 @@ These formats can instead be loaded into |BigBedGenomeHash| and
  .. _masking-mask-file-command-line
 
 Using :term:`mask files <mask file>` in :mod:`command-line scripts <plastid.bin>`
-..............................................................................
+.................................................................................
 
 :term:`Mask files <mask file>` can be used by :mod:`command-line scripts <plastid.bin>`
 if a user supplies the argument ``--mask_annotation_files``. For example, to 

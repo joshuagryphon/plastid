@@ -80,7 +80,7 @@ use both, even in the same file.
  .. _gff3-reading-overview:
 
 Reading `GFF3`_ files in :data:`plastid`
--------------------------------------
+----------------------------------------
 
 Reading simple features
 .......................

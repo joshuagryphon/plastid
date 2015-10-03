@@ -136,7 +136,7 @@ class BED_Reader(AssembledFeatureReader):
         Attributes declared in track line, if any
     
     extra_columns : int or list, optional
-        Extra, non-BED columns in :term:`BED X+Y`_ format file corresponding to feature
+        Extra, non-BED columns in :term:`BED X+Y` format file corresponding to feature
         attributes. This is common in `ENCODE`_-specific `BED`_ variants.
         
         if `extra_columns` is:
