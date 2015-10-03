@@ -3,49 +3,46 @@ Change log
 
 All major changes to ``plastid`` are documented here. Version numbers for the project
 follow the conventions described in :pep:`440`. After release 1.0, they will 
-also follow `Semantic versioning <http://semver.org/>`_. Before then, they roughly
-follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.' and ignoring
-the last digit.
+also follow `Semantic versioning <http://semver.org/>`_. Until then, they roughly
+follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
 
  .. note::
  
     This project was initially developed internally under the provisional
-    name ``genometools``. At that point, we didn't expect to release the project,
-    so we didn't check to see whether the name was free. It turns out, 
-    it was not!
+    name ``genometools``, and then later under the codename ``yeti``.
     
-    When we realized we would release this project extramurally, we provisionaly
-    codenamed it ``yeti``, moved some things around the package to more reasonable
-    locations, changed some method names and behaviors for consistency, and reset
-    the version number. At this same time, we migrated from our old SVN
-    repository to a git repository.
 
-    Anyway, we don't plan on changing the name again anytime soon. Please pardon
-    the confusion!
-
-Unreleased
-----------
+plastid [0.3.2] = [2015-10-01]
+------------------------------
 
 Changed
 .......
-  - Cython implementations of SegmentChain and Transcript provide
+  - Important docstring updates: removed outdated warnings and descriptions
+
+
+plastid [0.3.0] = [2015-10-01]
+------------------------------
+
+Changed
+.......
+  - Cython implementations of ``SegmentChain`` and ``Transcript`` provide
     massive speedups
-  - Transcript.cds_start, cds_genome_start, cds_end, cds_genome_end
+  - ``Transcript.cds_start``, ``cds_genome_start``, ``cds_end``, ``cds_genome_end``
     are now managed properties and update each other to maintain
     synchrony
-  - SegmentChain._segments and SegmentChain._mask_segments are now
+  - ``SegmentChain._segments`` and ``SegmentChain._mask_segments`` are now
     read-only
 
 Deprecated
 ..........
-  - SegmentChain.get_length() and SegmentChain.get_masked_length()
-    are replaced by properties SegmentChain.length and
-    SegmentChain.masked_length
+  - Methods ``SegmentChain.get_length()`` and ``SegmentChain.get_masked_length()``
+    are replaced by properties ``SegmentChain.length`` and
+    ``SegmentChain.masked_length``
 
 Removed
 .......
-  - sort_segments_lexically and sort_segmentchains_lexically
-    removed, because GenomicSegments and SegmentChains now sort
+  - ``sort_segments_lexically()`` and ``sort_segmentchains_lexically()``
+    removed, because ``GenomicSegment`` and ``SegmentChain`` now sort
     lexically without help
 
 
@@ -70,7 +67,7 @@ Changed
 .......
   - Reimplemented mapping rules and some internals in Cython,
     giving 2-10x speedup for some operations
-  - GenomicSegment now sorts lexically. Properties are read-only
+  - ``GenomicSegment`` now sorts lexically. Properties are read-only
 
 
 yeti [0.2.1] = [2015-09-06]
