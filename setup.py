@@ -95,7 +95,7 @@ if not on_rtd:
                         "twobitreader>=3.0.0",
                         ] + setup_requires
 else:
-    install_requires = ["cython","numpy","pysam"]
+    install_requires = ["cython","numpy","pysam","biopython"]
 
 
 
