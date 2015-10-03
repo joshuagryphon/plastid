@@ -2,4 +2,7 @@ mock
 numpydoc
 sphinxcontrib-argdoc
 sphinxcontrib-bibtex
+numpy>=1.9
+cython>=0.22
+pysam>=0.8.3
 biopython
