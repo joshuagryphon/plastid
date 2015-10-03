@@ -71,3 +71,5 @@ cdef class Transcript(SegmentChain):
     cdef bint _update_from_cds_end(self) except False
     cdef bint _update_from_cds_genome_start(self) except False
     cdef bint _update_from_cds_genome_end(self) except False
+
+cdef GenomicSegment NullSegment

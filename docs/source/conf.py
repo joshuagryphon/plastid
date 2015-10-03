@@ -190,21 +190,21 @@ mock_modules = [
     'matplotlib',
     'matplotlib.cm',
     'matplotlib.pyplot',
-    'numpy',
-    'numpy.ma',
-    'numpy.random',
-    'numpy.dtype',
+#    'numpy',
+#    'numpy.ma',
+#    'numpy.random',
+#    'numpy.dtype',
     'pandas',
     'scipy',
     'scipy.misc',
     'scipy.optimize',
     'scipy.stats',
     'scipy.sparse',
-    'Bio',
-    'Bio.Alphabet',
-    'Bio.Seq',
-    'Bio.SeqRecord',
-    'pysam',
+#    'Bio',
+#    'Bio.Alphabet',
+#    'Bio.Seq',
+#    'Bio.SeqRecord',
+#    'pysam',
     'twobitreader'
 ]
 
@@ -216,13 +216,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 def setup(app):
     """Activate custom event handlers for autodoc"""
     app.connect("autodoc-skip-member",autodoc_skip_member)
-    #if on_rtd:
     app.add_stylesheet('css/custom.css')
-
-
-
-
-
 
 # ------------------------------------------------------------------------------
 
