@@ -1,42 +1,43 @@
 Installation
 ============
 
+From PyPi
+---------
+Stable versions of :py:data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
+Due to some quirks in Python packaging `numpy`_ and `pysam`_ must be installed
+first:
 
- .. commented for now
-    From PyPi
-    ---------
-    Stable versions of :py:data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
+Simply type from the terminal:
 
-    Simply type from the terminal:
+ .. code-block:: shell
 
-     .. code-block:: shell
-
-        $ sudo pip install plastid
-
-
-    or, for a single-user install:
-
-     .. code-block:: shell
-
-        $ pip install --user plastid
+    $ sudo pip install numpy pysam
+    $ sudo pip install plastid
 
 
-    Command-line scripts will be installed wherever your system configuration dictates.
-    Typically the install path for command line scripts for users appears in
-    ``~/bin`` or ``~/.local/bin``. For system-wide installs, they would be
-    in ``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
-    adding to your ``.bashrc``, or ``.profile``:
+or, for a single-user install:
 
-     .. code-block:: shell
+ .. code-block:: shell
 
-       export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
+    $ pip install --user numpy pysam
+    $ pip install --user plastid
 
 
-Get the Beta release
+Command-line scripts will be installed wherever your system configuration dictates.
+Typically the install path for command line scripts for users appears in
+``~/bin`` or ``~/.local/bin``. For system-wide installs, they would be
+in ``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
+adding to your ``.bashrc``, or ``.profile``:
+
+ .. code-block:: shell
+
+   export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
+
+
+Development versions
 --------------------
-We're in beta right now, so we haven't put anything on `PyPI`_ yet. To get
-the development version, clone it from `our github repository <plastid_repo>`_.
-From the terminal:
+To fetch the latest development versions, clone it from
+`our github repository <plastid_repo>`_. From the terminal:
 
  .. code-block:: shell
 
@@ -50,14 +51,7 @@ From the terminal:
     # get cython & numpy first
     $ pip install --user --upgrade cython numpy
 
-    # then get scipy & the rest of the requirements
-    $ pip install --user -r plastid/requirements.txt
-
     # build the cython extensions
-    $ cd plastid
-    $ python setup.py build_ext --inplace
-
-    # install for a single user
     $ python setup.py develop --user
 
 
@@ -67,8 +61,8 @@ Non-Python Dependencies
 
 The following are required or recommended for specific functions:
 
-- Non-Python
    - `bowtie`_ (not Bowtie 2), for :py:mod:`~plastid.bin.crossmap`
+
    - `Jim Kent's utilities`_ for converting BED to BigBed files
 
 

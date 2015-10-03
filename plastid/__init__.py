@@ -23,12 +23,12 @@ plastid is divided into the following subpackages:
     Package           Contents
     --------------    ---------------------------------------------------------
     |bin|             Command-line scripts
-    |genomics|        APIs and object types to model genome annotations, alignments, and quantitative data
+    |genomics|        Classes and functions to manipulate genome annotations, alignments, and quantitative data
     |readers|         Parsers for various file formats
     |util|            Utilities (e.g. function decorators, exceptions, argument parsers)
-    |test|            Unit and functional tests
+    |test|            Unit and functional tests (requires download of test datasets)
     ==============    =========================================================
      
 """
-__version__ = "0.2.3"
+__version__ = "0.3.0"
 __author__  = "Joshua Griffin Dunn"

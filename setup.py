@@ -15,12 +15,12 @@
        it only installs absolutely necessary build dependencies, which are
        numpy and pysam.
 """
-
+__author__ = "Joshua Griffin Dunn"
 
 import os
 import sys
 import glob
-#import plastid
+import plastid
 from collections import Iterable
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.build_ext import build_ext
@@ -33,20 +33,19 @@ SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
 PYSAM_VERSION  = "pysam>=0.8.3"
 
-# at present, setup/build can't proceed without Cython, numpy, & Pysam
+# at present, setup/build can't proceed without numpy & Pysam
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before them.
 try:
-    from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
     import numpy
     import pysam
 except ImportError:
-    print("""plastid setup requires %s, %s, and %s to be installed. Please
+    print("""plastid setup requires %s and %s to be preinstalled. Please
 install these via pip, and retry:
 
-    $ pip install cython numpy pysam
-""" % (CYTHON_VERSION,NUMPY_VERSION,PYSAM_VERSION))
+    $ pip install numpy pysam
+    $ pip install plastid
+""" % (NUMPY_VERSION,PYSAM_VERSION))
     sys.exit(1)
 
 
@@ -57,7 +56,7 @@ install these via pip, and retry:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = "0.3.0" # plastid.__version__
+version = plastid.__version__ # "0.3.0" # plastid.__version__
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
 packages = find_packages()
 
@@ -108,7 +107,7 @@ else:
 # .c files are compiled into .so files or .dlls
 #===============================================================================
 
-
+# options for compilation ------------------------------------------------------
 
 CYTHONIZE_COMMAND = "recythonize" # command-class command from setup.py
 CYTHONIZE_ARG = "recythonize"     # '--recythonize', passable to sdist, build_ext et c
@@ -136,7 +135,7 @@ CYTHON_DEFAULTS = [False]
 
 
 
-# set up include paths for C compilation; this requires numpy & pysam
+# add headers from numpy & pysam to include paths for pyx, c files
 INCLUDE_PATH = []
 for mod in (numpy,pysam):
     ipart = mod.get_include()
@@ -163,7 +162,7 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".c","").replace
                     [x],include_dirs=INCLUDE_PATH) for x in C_PATHS]
 
 
-
+# classes & functions for compilation -----------------------------------------
 
 def wrap_command_classes(baseclass):
     """Add custom command-line Cython options to setup command classes
@@ -197,15 +196,13 @@ def wrap_command_classes(baseclass):
 
         def run(self):
             have_all = all([os.access(X,os.F_OK) for X in C_PATHS])
-            if have_all == True:
-                print("I have them all!")
             if have_all == False:
                 print("Could not find .c files. Regenerating via recythonize.")
                 setattr(self,CYTHONIZE_ARG,True)
+                self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
             
             if getattr(self,CYTHONIZE_ARG) == True:
                 print("Cythonizing")
-                self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
                 self.run_command(CYTHONIZE_COMMAND)
 
             return baseclass.run(self)
@@ -308,14 +305,11 @@ setup(
 
     # packaging info
     packages             = packages,
-    #include_package_data = True,
     package_data         = { "" : ["*.pyx","*.pxd","*.c"], },
-#    "": ["*.*"],#
-#     "": ["*.bam","*.bai","*.bed","*.bb","*.gtf","*.gff","*.gz","*.tbi","*.psl",
-#          "*.bowtie","*.fa","*.wig","*.juncs","*.positions","*.sizes","*.as","*.txt"],
 
     entry_points     = { "console_scripts" : get_scripts()
                        },
+
     ext_modules = ext_modules,
     cmdclass    = {
                     CYTHONIZE_COMMAND : build_c_from_pyx,
@@ -324,8 +318,6 @@ setup(
                     'install'   : wrap_command_classes(install),
                     'develop'   : wrap_command_classes(develop),
                     'clean'     : clean_c_files,
-
-                    #'install' : install_after_build,
                    },
 
     setup_requires   = setup_requires,
