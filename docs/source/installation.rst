@@ -42,18 +42,15 @@ To fetch the latest development versions, clone it from
  .. code-block:: shell
 
     # get the source
-    $ cd <some folder where you want to put plastid>
     $ git clone git://github.com/joshuagryphon/plastid.git
 
-    # Install prereqs. Due to install peculiarities of numpy & scipy,
-    # this takes a few more steps than we'd like:
+    # Do to a quirk in Python setup scripts, numpy,
+    # and pysam must must be installed first:
+    $ pip install --user --upgrade numpy pysam
 
-    # get cython & numpy first
-    $ pip install --user --upgrade cython numpy
-
-    # build the cython extensions
+    # Install in develop mode
+    $ cd plastid
     $ python setup.py develop --user
-
 
 
 Non-Python Dependencies

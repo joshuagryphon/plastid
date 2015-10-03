@@ -21,39 +21,29 @@ in the main package in order to keep the download small.
 Install fails midway
 ....................
 
-This is a due to a `known bug <https://github.com/numpy/numpy/issues/2434>`_ 
-with `NumPy`_, `SciPy`_, and `matplotlib`_ installation under setuptools.
-As a workaround. Just install `NumPy`_ first. Starting in the folder
-where you cloned :data:`plastid`:
+This is a due to a `known quirk <https://github.com/numpy/numpy/issues/2434>`_ 
+with `NumPy`_ and `SciPy`_ installation in Python.
+As a workaround. Just install `NumPy`_ and `pysam`_ first.
+Starting in the folder where you cloned :data:`plastid`:
 
 .. code-block:: shell
 
-    $ pip install numpy cython # get these first
-    $ pip install -r requirements.txt  # get everything else
+    $ pip install numpy pysam # get these first
 
 You can your installations by running unit tests:
 
 .. code-block:: shell
 
-    (venv)$ python -c "import numpy; numpy.test()"
-    (venv)$ python -c "import scipy; scipy.test()"
-
-
-And make sure other packages are just importable:
-
-.. code-block:: shell
-
-    (venv)$ python -c "import matplotlib"
-    (venv)$ python -c "import pysam"
-
+    $ python -c "import numpy; numpy.test()"
 
 Then repeat the installation:
 
 .. code-block:: shell
 
-    $ python setup.py build_ext --inplace # build plastid extensions
-    $ python setup.py install --user # install
+    $ pip install plastid
 
+
+If you have further problems, please file a `bug report <plastid_issues>`_.
 
 
 .. _distribution-error: 
