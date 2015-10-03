@@ -1,20 +1,11 @@
 Welcome to `plastid`!
 ====================
 
-We're in beta!
---------------
-Welcome! ``plastid`` is still in beta. This means that the package
-is functional, but we're adding speed/memory optimizations, and considering
-moving some things around inside the package so that they either make more
-sense or take lest time to get to. We welcome your feedback
-in this process, should you have any.
-
 For documentation, see `our home page <http://plastid.readthedocs.org/en/latest/>`_
 on `ReadtheDocs.org <http://readthedocs.org>`_.
 
 To run the tests, download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack
 it into ``plastid/test``.
-
 
 
 Introduction
@@ -39,12 +30,15 @@ This package provides:
   #. A set of classes that create a simple,
      intuitive interfaces to genomic features,
      read alignments, and quantitative data. These objects readily
-     interace with existing scientific tools, like the SciPy stack.
+     interface with existing scientific tools, like the SciPy stack,
+     to facilitate interactive or exploratory data analysis.
 
   #. Script writing tools that make it easy to use the objects
      implemented in ``plastid``.
 
-  #. Extensive documentation, both in source code and at readthedocs
+  #. Extensive documentation, both in source code and at 
+     `our home page <http://plastid.readthedocs.org/en/latest/>`_
+     on `ReadtheDocs.org <http://readthedocs.org>`_.
 
 
 Installation
