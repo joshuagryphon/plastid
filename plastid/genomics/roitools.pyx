@@ -2995,9 +2995,6 @@ cdef class Transcript(SegmentChain):
     provides convenience methods for fetching sub-chains corresponding to 
     CDS features, 5' UTRs, and 3' UTRs.
 
-     .. warning::
-
-        This is partially implemented! Do not use!!
 
     Attributes
     ----------
