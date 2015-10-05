@@ -2,16 +2,11 @@
 """Constants, functions, and classes used by multiple readers in this subpackage
 
 
-Important functions & classes
------------------------------
-:func:`add_three_for_stop_codon`
-    Extend an annotated CDS region, if present, by three nucleotides.
-
+Functions & classes
+-------------------
 :func:`get_identical_attributes`
     Return a dictionary of all key-value pairs that are common to all `attr`
     dictionaries in a set of |SegmentChains|
-    
-    
     
 |AssembledFeatureReader|
     Base class for readers that assemble high-level features (e.g. gapped
@@ -22,84 +17,13 @@ import copy
 import itertools
 from plastid.util.io.filters import AbstractReader
 from plastid.util.io.openers import NullWriter
-from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
+from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript, add_three_for_stop_codon
 from abc import abstractmethod
 
 
 #===============================================================================
 # INDEX: helper functions
 #===============================================================================
-
-def add_three_for_stop_codon(tx):
-    """Extend an annotated CDS region, if present, by three nucleotides
-    at the threeprime end. Use in cases when annotation files exclude the stop
-    codon from the annotated CDS.
-    
-    Parameters
-    ----------
-    tx : |Transcript|
-        query transcript
-        
-    Returns
-    -------
-    |Transcript|
-        |Transcript| with same attributes as `tx`, but with a longer CDS
-    
-    Raises
-    ------
-    IndexError
-        if a three prime UTR is defined that terminates before the complete stop codon
-    """
-    if tx.cds_genome_end is not None and tx.cds_genome_start is not None:
-        segments  = copy.deepcopy(tx._segments)
-        attr = copy.deepcopy(tx.attr)
-        attr["cds_genome_start"] = tx.cds_genome_start
-        attr["cds_genome_end"] = tx.cds_genome_end
-        if tx.spanning_segment.strand == "+":
-            # if cds at end of transcript, both need to grow by three
-            if tx.spanning_segment.end == tx.cds_genome_end:
-                old_seg = segments[-1]
-                new_seg = GenomicSegment(old_seg.chrom,old_seg.start,old_seg.end +3,old_seg.strand)
-                segments[-1] = new_seg
-                #segments[-1] = GenomicSegment
-                #segments[-1].end += 3
-                attr["cds_genome_end"] = tx.cds_genome_end + 3
-            else:
-                # if new end will be end of transcript, set manually
-                # because key won't be in position hash
-                if tx.cds_end + 3 == tx.length:
-                    new_end = tx.spanning_segment.end
-                else:
-                    # position is internal, so we fetch
-                    new_end = tx.get_genomic_coordinate(tx.cds_end+3)[1]
-                    # correct for rare cases in which stop codons and at the end
-                    # of a given exon interval, and are falsely mapped to first position
-                    # of next exon. Instead, we should map to 1 + the genomic position
-                    # of the end of the given exon.
-                    for n,segment in enumerate(tx):
-                        if new_end == segment.start:
-                            new_end = tx[n-1].end
-                    
-                attr["cds_genome_end"] = new_end
-            return Transcript(*segments,**attr)
-        else:
-            # if cds starts at beginning of transcript, both need to grow by three
-            if tx.spanning_segment.start == tx.cds_genome_start:
-                old_seg = segments[0]
-                new_seg = GenomicSegment(old_seg.chrom,old_seg.start - 3, old_seg.end,old_seg.strand)
-                segments[0] = new_seg
-                #segments[0].start -= 3
-                attr["cds_genome_start"] = tx.cds_genome_start - 3
-            else:
-                # otherwise, fetch
-                # minus one here might look funny, but is due to minus-strand
-                # feature-ness
-                new_start = tx.get_genomic_coordinate(tx.cds_end + 3 - 1)[1]
-                attr["cds_genome_start"] = new_start
-            return Transcript(*segments,**attr)
-    else:
-        return tx
-
 
 def get_identical_attributes(features,exclude=set()):
     """Return a dictionary of all key-value pairs that are identical for all |SegmentChains| in `features`

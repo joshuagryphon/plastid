@@ -21,13 +21,14 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import generic_dna
 from plastid.test.ref_files import MINI
 from plastid.readers.gff import GTF2_TranscriptAssembler, \
-                             GFF3_TranscriptAssembler, \
-                             GFF3_Reader
+                                GFF3_TranscriptAssembler, \
+                                GFF3_Reader
 from plastid.readers.bed import BED_Reader
-
 from plastid.genomics.roitools import GenomicSegment, \
-    SegmentChain, Transcript, positions_to_segments, positionlist_to_segments
-
+                                      SegmentChain, Transcript,\
+                                      positions_to_segments, \
+                                      positionlist_to_segments, \
+                                      add_three_for_stop_codon
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.io.filters import CommentReader
 from plastid.util.services.decorators import skip_if_abstract
@@ -56,6 +57,149 @@ def tearDownModule():
 #===============================================================================
 # INDEX: Tests for miscellaneous functions
 #===============================================================================
+
+@attr(test="unit")
+class TestAddThreeForStopCodon(unittest.TestCase):
+    """Tests :py:func:`add_three_for_stop_codon`"""
+    
+    def test_noncoding_plus_strand(self):
+        iv1p = GenomicSegment("chrA",100,190,"+")
+        iv2p = GenomicSegment("chrA",200,203,"+")
+        
+        tx = add_three_for_stop_codon(Transcript(iv1p,iv2p))
+        self.assertTrue(tx.cds_genome_start is None)
+        self.assertTrue(tx.cds_start is None)
+        self.assertTrue(tx.cds_genome_end is None)
+        self.assertTrue(tx.cds_end is None)
+
+    def test_noncoding_minus_strand(self):
+        iv1m = GenomicSegment("chrA",100,190,"-")
+        iv2m = GenomicSegment("chrA",200,203,"-")
+        
+        tx = add_three_for_stop_codon(Transcript(iv1m,iv2m))
+        self.assertTrue(tx.cds_genome_start is None)
+        self.assertTrue(tx.cds_start is None)
+        self.assertTrue(tx.cds_genome_end is None)
+        self.assertTrue(tx.cds_end is None)
+                
+    def test_no_autogrow_plus_strand(self):
+        iv1p = GenomicSegment("chrA",100,190,"+")
+        iv2p = GenomicSegment("chrA",200,203,"+")
+        iv3p = GenomicSegment("chrA",200,201,"+")
+        iv4p = GenomicSegment("chrA",204,206,"+")
+        iv5p = GenomicSegment("chrA",220,250,"+")
+        
+        tests = [
+            # new end is at end of only exon
+            (Transcript(iv1p,cds_genome_start=100,cds_genome_end=187),190),
+            
+            # old end at end of first exon; new end is at end of final exon
+            (Transcript(iv1p,iv2p,cds_genome_start=100,cds_genome_end=190),203),
+
+            # old end at end of first exon; new end is at end of second of three exons
+            (Transcript(iv1p,iv2p,iv3p,cds_genome_start=100,cds_genome_end=190),203),
+
+            # old end at end of first exon; new end is at end of second of three exons
+            # but end is listed in transcript-relative coordinates
+            (Transcript(iv1p,iv2p,iv3p,cds_genome_start=100,cds_genome_end=200),203),
+
+            
+            # old end at end of first exon; new end at end of third/final exon
+            (Transcript(iv1p,iv3p,iv4p,cds_genome_start=100,cds_genome_end=190),206),
+
+            # old end at end of first exon; new end at end of third of four exons,
+            # but position not actually in transcript
+            #
+            # stop codon split across exons 2 and 3
+            (Transcript(iv1p,iv3p,iv4p,iv5p,cds_genome_start=100,cds_genome_end=190),206),
+
+            
+            # old end inside first exon; new end in third exon            
+            (Transcript(iv1p,iv3p,iv4p,cds_genome_start=100,cds_genome_end=189),205),
+            
+            # old end inside first exon; new end at end of second exon
+            # but position not actually in transcript
+            # stop codon split across exons 1 and 2
+            (Transcript(iv1p,iv3p,iv4p,cds_genome_start=100,cds_genome_end=188),201),       
+            ]
+        
+        for tx, expected_end in tests:
+            new_tx = add_three_for_stop_codon(tx)
+            self.assertEquals(new_tx.cds_genome_end,expected_end)
+            self.assertEquals(new_tx.cds_end,tx.cds_end+3)
+    
+    def test_autogrow_plus_strand(self):
+        iv1p = GenomicSegment("chrA",100,190,"+")
+        iv2p = GenomicSegment("chrA",200,203,"+")
+        iv3p = GenomicSegment("chrA",200,201,"+")
+        iv4p = GenomicSegment("chrA",204,206,"+")
+        
+        tests = [
+            # new end will be 193. tx will need to grow by 3. unspliced
+            (Transcript(iv1p,cds_genome_start=100,cds_genome_end=190),193),
+            
+            # new end will be 206, spliced
+            (Transcript(iv1p,iv2p,cds_genome_start=100,cds_genome_end=203),206),
+            
+            # new end will be 206, spliced
+            (Transcript(iv1p,iv3p,cds_genome_start=100,cds_genome_end=201),204),
+
+            # new end will be 209, spliced in stop codon
+            (Transcript(iv1p,iv3p,iv4p,cds_genome_start=100,cds_genome_end=206),209),            
+            ]
+
+        for tx, expected_end in tests:
+            new_tx = add_three_for_stop_codon(tx)
+            self.assertEquals(new_tx.cds_genome_end,expected_end)
+            self.assertEquals(new_tx.cds_end,tx.cds_end+3)
+
+    def test_no_autogrow_minus_strand(self):
+        iv1m = GenomicSegment("chrA",100,190,"-")
+        iv2m = GenomicSegment("chrA",90,93,"-")
+        iv3m = GenomicSegment("chrA",90,92,"-")
+        iv4m = GenomicSegment("chrA",80,81,"-")
+        
+        tests = [
+            # new start is at start of only exon
+            (Transcript(iv1m,cds_genome_start=103,cds_genome_end=190),100),
+            
+            # old start at start of second exon; new start is start of first exon
+            (Transcript(iv2m,iv1m,cds_genome_start=100,cds_genome_end=190),90),
+            
+            # old start at start of third exon; new start at start of first exon
+            (Transcript(iv4m,iv3m,iv1m,cds_genome_start=100,cds_genome_end=190),80),
+            
+            # old in third exon; new start in second exon
+            (Transcript(iv4m,iv3m,iv1m,cds_genome_start=101,cds_genome_end=190),90),
+            
+            # old end in third exon; new end at beginning of third exon
+            # but position not actually in transcript
+            (Transcript(iv4m,iv3m,iv1m,cds_genome_start=102,cds_genome_end=190),91),            
+            ]
+        
+        for tx, expected_start in tests:
+            new_tx = add_three_for_stop_codon(tx)
+            self.assertEquals(new_tx.cds_genome_start,expected_start)
+            #self.assertEquals(new_tx.cds_end,tx.cds_end + 3)
+            
+    def test_autogrow_minus_strand(self):
+        iv1m = GenomicSegment("chrA",100,190,"-")
+        iv2m = GenomicSegment("chrA",90,93,"-")
+        iv3m = GenomicSegment("chrA",90,92,"-")
+        iv4m = GenomicSegment("chrA",90,91,"-")
+        
+        tests = [
+            (Transcript(iv1m,cds_genome_start=100,cds_genome_end=190),97),
+            (Transcript(iv2m,iv1m,cds_genome_start=90,cds_genome_end=190),87),
+            (Transcript(iv3m,iv1m,cds_genome_start=90,cds_genome_end=190),87),
+            (Transcript(iv4m,iv1m,cds_genome_start=90,cds_genome_end=190),87),            
+            ]
+
+        for tx, expected_start in tests:
+            new_tx = add_three_for_stop_codon(tx)
+            self.assertEquals(new_tx.cds_genome_start,expected_start)
+            self.assertEquals(new_tx.cds_start,0)
+
 
 @attr(test="unit")
 class TestMiscellaneous(unittest.TestCase):
@@ -151,7 +295,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         """Convert a list of Transcript objects to SegmentChains"""
         ltmp = []
         for tx in transcript_list:
-            ltmp.append(SegmentChain(*tx._segments,ID=tx.get_name()))
+            ltmp.append(SegmentChain(*tx.segments,ID=tx.get_name()))
         
         assert len(ltmp) == len(transcript_list)
         
@@ -462,7 +606,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     def test_len(self):
         """Test reporting of number of intervals"""
         for ivc in self.bed_list:
-            self.assertEquals(len(ivc),len(ivc._segments))
+            self.assertEquals(len(ivc),len(ivc.segments))
     
     @skip_if_abstract    
     def test_identity(self):
@@ -1279,8 +1423,8 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEqual(chain1,c1new)
         self.assertEqual(chain2,c2new)
 
-        self.assertListEqual(chain1._mask_segments,c1new._mask_segments)
-        self.assertListEqual(chain2._mask_segments,c2new._mask_segments)
+        self.assertListEqual(chain1.mask_segments,c1new.mask_segments)
+        self.assertListEqual(chain2.mask_segments,c2new.mask_segments)
 
     @skip_if_abstract
     def test_shallowcopy(self):
@@ -1297,7 +1441,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         chain2 = copy.copy(chain1)
         chain3 = copy.copy(chain1)
 
-        self.assertListEqual(chain1._segments,chain2._segments,
+        self.assertListEqual(chain1.segments,chain2.segments,
                 "copy.copy failed: chain2 has different segments from chain1")
 
         # make sure attributes copy
@@ -1316,7 +1460,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         chain1.add_masks(GenomicSegment("chrA",225,350,"+"))
         chain2 = copy.deepcopy(chain1)
-        self.assertListEqual(chain1._mask_segments,chain2._mask_segments,"copy.copy failed: masks did not copy")
+        self.assertListEqual(chain1.mask_segments,chain2.mask_segments,"copy.copy failed: masks did not copy")
 
     @skip_if_abstract
     def test_deepcopy(self):
@@ -1333,7 +1477,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         chain2 = copy.deepcopy(chain1)
         chain3 = copy.deepcopy(chain1)
 
-        self.assertListEqual(chain1._segments,chain2._segments,
+        self.assertListEqual(chain1.segments,chain2.segments,
                 "Deepcopy failed: chain2 has different segments from chain1")
 
         # make sure attributes copy
@@ -1355,7 +1499,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         chain1.add_masks(GenomicSegment("chrA",225,350,"+"))
         chain2 = copy.deepcopy(chain1)
-        self.assertListEqual(chain1._mask_segments,chain2._mask_segments,"Deepcopy failed: masks did not copy")
+        self.assertListEqual(chain1.mask_segments,chain2.mask_segments,"Deepcopy failed: masks did not copy")
 
     @skip_if_abstract
     def test_get_segments_property_is_immutable(self):
@@ -1364,14 +1508,14 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                     GenomicSegment("chrA",400,800,"+")]
         chain = self.test_class(*segments)
 
-        segments_from_chain = chain._segments
+        segments_from_chain = chain.segments
         self.assertListEqual(segments,segments_from_chain,
                 "test_segments_property_is_immutable: segments coming from chain are different from those went in: %s vs %s." % (segments,segments_from_chain))
         segments_from_chain.append(GenomicSegment("chrA",900,1000,"+"))
         self.assertEqual(len(segments_from_chain),4)
-        self.assertEqual(len(chain._segments),3)
+        self.assertEqual(len(chain.segments),3)
         self.assertNotEqual(segments,segments_from_chain,
-                "test_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._segments")
+                "test_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self.segments")
 
     @skip_if_abstract
     def test_mask_segments_property_is_immutable(self):
@@ -1383,14 +1527,14 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         chain = self.test_class(*segments)
         chain.add_masks(*masks)
 
-        segments_from_chain = chain._mask_segments
+        segments_from_chain = chain.mask_segments
         self.assertListEqual(masks,segments_from_chain,
                 "test_mask_segments_property_is_immutable: masks coming from chain are different from those that went in: %s vs %s." % (segments,segments_from_chain))
         segments_from_chain.append(GenomicSegment("chrA",10,100,"+"))
-        self.assertEqual(len(chain._mask_segments),1)
+        self.assertEqual(len(chain.mask_segments),1)
         self.assertEqual(len(segments_from_chain),2)
         self.assertNotEqual(segments,segments_from_chain,
-                "test_mask_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self._mask_segments")
+                "test_mask_segments_property_is_immutable: GenomicSegment added to supposedly immutable list self.mask_segments")
 
         @skip_if_abstract
         def test_chains_sort_lexically(self):

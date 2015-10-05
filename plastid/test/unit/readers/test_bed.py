@@ -405,7 +405,7 @@ _TEST_SEGMENTCHAINS = [
 ]
 
 # same data, as transcripts
-_TEST_TRANSCRIPTS = [Transcript(*X._segments,**X.attr) for X in _TEST_SEGMENTCHAINS]
+_TEST_TRANSCRIPTS = [Transcript(*X.segments,**X.attr) for X in _TEST_SEGMENTCHAINS]
 
 
 _BED_HEADER = """browser position chrA:100-1100
