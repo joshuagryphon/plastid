@@ -5,11 +5,11 @@
        to add a "--recythonize" flag, which causes Cython to regenerate
        ".c" files from ".pyx" files before the commands are run.
 
-    2.  These commands *also* invoke Cython if the ".c" filses cannot be found.
+    2.  These commands *also* invoke Cython if the ".c" files cannot be found.
 
-    3. a `recythonize` command was also created to do this, and only this
+    3. a `recythonize` command class was also created to do this, and only this
 
-    4. a `clean` command was added to wipe old ".c" files
+    4. a `clean` command class was added to wipe old ".c" files
 
     5. Separately, if the package is being installed on readthedocs.org,
        it only installs absolutely necessary build dependencies, which are
