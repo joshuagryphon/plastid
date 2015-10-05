@@ -446,7 +446,7 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
             masks = mask_hash.get_overlapping_features(new_roi)
             mask_segs = []
             for mask in masks:
-                mask_segs.extend(mask._segments)
+                mask_segs.extend(mask.segments)
             
             new_roi.add_masks(*mask_segs)
 

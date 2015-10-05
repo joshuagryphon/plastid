@@ -58,11 +58,10 @@ import copy
 from abc import abstractmethod
 from plastid.util.io.filters import AbstractReader, SkipBlankReader
 from plastid.util.io.openers import NullWriter
-from plastid.readers.common import add_three_for_stop_codon, \
-                                                get_identical_attributes, \
-                                                AssembledFeatureReader
+from plastid.readers.common import get_identical_attributes, \
+                                   AssembledFeatureReader
 from plastid.genomics.roitools import Transcript, SegmentChain, \
-                                         GenomicSegment
+                                      GenomicSegment, add_three_for_stop_codon
 from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
 from plastid.util.services.exceptions import DataWarning
 

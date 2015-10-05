@@ -79,7 +79,7 @@ def main(args=sys.argv[1:]):
         # mask out overlapping masked regions
         overlapping = mask_hash.get_overlapping_features(tx)
         for feature in overlapping:
-            tx.add_masks(*feature._segments)
+            tx.add_masks(*feature.segments)
          
         count_vec = tx.get_masked_counts(ga)
         numpy.savetxt(full_filename,count_vec,fmt=args.format)
