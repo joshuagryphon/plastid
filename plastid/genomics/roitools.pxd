@@ -8,8 +8,9 @@ cimport numpy
 cdef str strand_to_str(Strand)
 cdef Strand str_to_strand(str) #except undef_strand
 
-cpdef positions_to_segments(str,str,object)
-cpdef positionlist_to_segments(str,str,list)
+cpdef list positions_to_segments(str,str,object)
+cpdef list positionlist_to_segments(str,str,list)
+cpdef Transcript add_three_for_stop_codon(Transcript)
 
 
 cdef class GenomicSegment(object):

@@ -204,7 +204,7 @@ def _format_transcript(Transcript tx):
 # Exported helper functions e.g. for sorting or building |GenomicSegments|
 #==============================================================================
 
-cpdef positions_to_segments(str chrom, str strand, object positions):
+cpdef list positions_to_segments(str chrom, str strand, object positions):
     """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
 
     Parameters
@@ -230,7 +230,7 @@ cpdef positions_to_segments(str chrom, str strand, object positions):
         positions = sorted(set(positions))
     return positionlist_to_segments(chrom,strand,positions)
 
-cpdef positionlist_to_segments(str chrom, str strand, list positions):
+cpdef list positionlist_to_segments(str chrom, str strand, list positions):
     """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
 
     Parameters
@@ -276,6 +276,90 @@ cpdef positionlist_to_segments(str chrom, str strand, list positions):
         segments.append(GenomicSegment(chrom,start,last_pos+1,strand))
 
     return segments
+
+
+cpdef Transcript add_three_for_stop_codon(Transcript tx):
+    """Extend an annotated CDS region, if present, by three nucleotides
+    at the threeprime end. Use in cases when annotation files exclude the stop
+    codon from the annotated CDS.
+    
+    Parameters
+    ----------
+    tx : |Transcript|
+        query transcript
+        
+    Returns
+    -------
+    |Transcript|
+        |Transcript| with same attributes as `tx`, but with CDS extended by one codon
+    
+    Raises
+    ------
+    IndexError
+        if a three prime UTR is defined that terminates before the complete stop codon
+    """
+    cdef:
+        long start, end, new_start, new_end
+        int n
+        GenomicSegment span, new_seg, old_seg
+        list segments
+        dict attr
+        Transcript new_tx
+
+    if tx.cds_genome_end is not None and tx.cds_genome_start is not None:
+        new_start = start = <long>tx.cds_genome_start
+        new_end = end = <long>tx.cds_genome_end
+        segments  = copy.copy(tx._segments)
+        attr = copy.deepcopy(tx.attr)
+        span = tx.spanning_segment
+        chrom = span.chrom
+        if span.c_strand == forward_strand:
+            # if cds at end of transcript, both need to grow by three
+            if span.end == end:
+                new_end = end + 3
+                old_seg = segments[-1]
+                new_seg = GenomicSegment(chrom,old_seg.start,new_end,span.strand)
+                segments[-1] = new_seg
+            else:
+                # if new end will be end of transcript, set manually
+                # because key won't be in position hash
+                if tx.cds_end + 3 == tx.length:
+                    new_end = span.end
+                else:
+                    # position is internal, so we fetch
+                    new_end = tx.c_get_genomic_coordinate(tx.cds_end+3,True)
+                    # correct for rare cases in which stop codons and at the end
+                    # of a given exon interval, and are falsely mapped to first position
+                    # of next exon. Instead, we should map to 1 + the genomic position
+                    # of the end of the given exon.
+                    for n,segment in enumerate(tx):
+                        if new_end == segment.start:
+                            new_end = tx[n-1].end
+        else:
+            # if cds starts at beginning of transcript, both need to grow by three
+            if span.start == start:
+                new_start = start - 3
+                old_seg = segments[0]
+                new_seg = GenomicSegment(chrom,new_start,old_seg.end,span.strand)
+                segments[0] = new_seg
+            else:
+                # otherwise, fetch
+                # minus one here might look funny, but is due to minus-strand
+                # feature-ness
+                new_start = tx.c_get_genomic_coordinate(tx.cds_end + 3 - 1,True)
+
+        # since `segments` come from an existing transcript, we know they
+        # non-overlapping. So, we can bypass checks in __cinit__ and go through
+        # faster set_segments()
+        new_tx = Transcript()
+        new_tx._set_segments(segments)
+        new_tx.attr = attr
+        new_tx.cds_genome_start = new_start
+        new_tx.cds_genome_end = new_end
+        new_tx._update_cds()
+        return new_tx
+    else:
+        return tx
 
 
 #==============================================================================
@@ -1052,15 +1136,15 @@ cdef class SegmentChain(object):
         def __get__(self):
             return self.spanning_segment.c_strand
 
-    property _segments:
-        """Retrieve a list of |GenomicSegments| that comprise `self`.
+    property segments:
+        """Copy of list of |GenomicSegments| that comprise `self`.
         Changing this list will do nothing to `self`.
         """
         def __get__(self):
             return copy.deepcopy(self._segments)
 
-    property _mask_segments:
-        """Retrieve a list of |GenomicSegments| representing regions masked in `self.`
+    property mask_segments:
+        """Copy of list of |GenomicSegments| representing regions masked in `self.`
         Changing this list will do nothing to the masks in `self`.
         """
         def __get__(self):
