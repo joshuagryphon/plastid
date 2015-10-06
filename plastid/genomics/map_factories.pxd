@@ -12,5 +12,5 @@ cdef class VariableFivePrimeMapFactory:
     cdef int [10000] reverse_offsets
 
 cdef class SizeFilterFactory:
-    cdef float min_, max_
+    cdef int min_, max_
 

@@ -335,9 +335,11 @@ cdef class VariableFivePrimeMapFactory:
     """
 
     def __cinit__(self, dict offset_dict not None):
-        cdef int [:] fw_view = self.forward_offsets
-        cdef int [:] rc_view = self.reverse_offsets
-        cdef int offset
+        cdef:
+            int [:] fw_view = self.forward_offsets
+            int [:] rc_view = self.reverse_offsets
+            int offset
+            object read_length # can be int or str
         fw_view [:] = -1
         rc_view [:] = 1
 
@@ -448,30 +450,24 @@ cdef class SizeFilterFactory:
     function
     """
 
-    def __cinit__(self,float min = 1, float max = np.inf):
+    def __cinit__(self,int min = 1, int max = -1):
         """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
         using ::meth:`BAMGenomeArray.add_filter`
         
         Parameters
         ----------
-        min : float >= 1, optional
+        min : int >= 1, optional
             Minimum read length to pass filter, inclusive (Default: `1`)
         
-        max : float or numpy.inf >= `min`, optional
-            Maximum read length to pass filter, inclusive (Default: infinity)
+        max : int, optional
+            Maximum read length to pass filter, inclusive. If `-1`, then
+            there is no maximum length filter. (Default: `-1`, no filter.)
         
         Returns
         -------
         function
-
-         .. note::
-            
-            `min` and `max` are typed as floats only to allow `max`
-            to be `numpy.inf` by default. Fractional values and
-            numbers less than 1 are nonsensical, and will raise
-            :class:`ValueError`
         """
-        if max < min:
+        if max != -1 and max < min:
             raise ValueError("Alignment size filter: max read length must be >= min read length")
 
         if min < 1:
@@ -482,5 +478,5 @@ cdef class SizeFilterFactory:
         
     def __call__(self,AlignedSegment read not None):
         cdef unsigned int my_length = len(read.positions)
-        return my_length >= self.min_ and my_length <= self.max_
+        return my_length >= self.min_ and (my_length <= self.max_ or self.max_ == -1)
 
