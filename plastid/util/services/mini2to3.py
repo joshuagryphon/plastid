@@ -5,8 +5,8 @@ Various objects are aliased as follows:
     ===================    ===========================   =======================
     **Exported object**     **Points to in 2.x**         **Points to 3.x**
     -------------------    ---------------------------   -----------------------
-    ``cStringIO``          :mod:`StringIO`               :mod:`io`
-    ``StringIO``           :mod:`cStringIO`              :mod:`io`
+    ``cStringIO``          :mod:`cStringIO`              :mod:`io`
+    ``StringIO``           :mod:`StringIO`               :mod:`io`
     ``xrange``             :func:`xrange`                :func:`range`
     ``quote``              :func:`urllib.quote`          :func:`urllib.parse.quote`
     ``unquote``            :func:`urllib.quote`          :func:`urllib.parse.unquote`
