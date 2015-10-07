@@ -141,13 +141,13 @@ the method :meth:`BAMGenomeArray.set_mapping`:
 **Mapping rule**         |GenomeArray|, |SparseGenomeArray|      |BAMGenomeArray|
 ----------------------   ------------------------------------    ---------------------------------------------------------------------
 
-Fiveprime                :func:`five_prime_map`                  :class:`~plastid.genomics.mapping_rules.FivePrimeMapFactory`
+Fiveprime                :func:`five_prime_map`                  :class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`variable_five_prime_map`         :class:`~plastid.genomics.mapping_rules.VariableFivePrimeMapFactory`
+Fiveprime variable       :func:`variable_five_prime_map`         :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 
-Threeprime               :func:`three_prime_map`                 :class:`~plastid.genomics.mapping_rules.ThreePrimeMapFactory`
+Threeprime               :func:`three_prime_map`                 :class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
 
-Center/entire/nibble     :func:`center_map`                      :class:`~plastid.genomics.mapping_rules.CenterMapFactory`
+Center/entire/nibble     :func:`center_map`                      :class:`~plastid.genomics.map_factories.CenterMapFactory`
 ======================   ====================================    =====================================================================
 
 
@@ -901,16 +901,16 @@ class BAMGenomeArray(AbstractGenomeArray):
 
         See also
         --------
-        plastid.genomics.mapping_rules.FivePrimeMapFactory
+        plastid.genomics.map_factories.FivePrimeMapFactory
             map reads to 5' ends, with or without applying an offset
         
-        plastid.genomics.mapping_rules.VariableFivePrimeMapFactory
+        plastid.genomics.map_factories.VariableFivePrimeMapFactory
             map reads to 5' ends, choosing an offset determined by read length
         
-        plastid.genomics.mapping_rules.ThreePrimeMapFactory
+        plastid.genomics.map_factories.ThreePrimeMapFactory
             map reads to 3' ends, with or without applying an offset
         
-        plastid.genomics.mapping_rules.CenterMapFactory
+        plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.bamfiles     = bamfiles
@@ -968,7 +968,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         See also
         --------
-        plastid.genomics.mapping_rules.SizeFilterFactory
+        plastid.genomics.map_factories.SizeFilterFactory
             generate filter functions that gate read alignments on size
         """
         self._filters[name] = func
@@ -1160,16 +1160,16 @@ class BAMGenomeArray(AbstractGenomeArray):
             
         See also
         --------
-        plastid.genomics.mapping_rules.FivePrimeMapFactory
+        plastid.genomics.map_factories.FivePrimeMapFactory
             map reads to 5' ends, with or without applying an offset
         
-        plastid.genomics.mapping_rules.VariableFivePrimeMapFactory
+        plastid.genomics.map_factories.VariableFivePrimeMapFactory
             map reads to 5' ends, choosing an offset determined by read length
         
-        plastid.genomics.mapping_rules.ThreePrimeMapFactory
+        plastid.genomics.map_factories.ThreePrimeMapFactory
             map reads to 3' ends, with or without applying an offset
         
-        plastid.genomics.mapping_rules.CenterMapFactory
+        plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.map_fn = mapping_function

@@ -183,18 +183,18 @@ import, and cannot be changed afterwards::
 
 Method names for the various :term:`mapping rules <mapping rule>` appear below:
 
-======================   ==============================================================    =======================================
+======================   ==============================================================    =======================================================================
 **Mapping rule**         |GenomeArray|, |SparseGenomeArray|                                |BAMGenomeArray|
-----------------------   --------------------------------------------------------------    ---------------------------------------
+----------------------   --------------------------------------------------------------    -----------------------------------------------------------------------
 
-Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`                  :py:func:`~plastid.genomics.map_factories.FivePrimeMapFactory`
+Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`             :py:func:`~plastid.genomics.map_factories.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`         :py:func:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
+Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`    :py:func:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 
-Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`                 :py:func:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
+Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`            :py:func:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
 
-Center/entire            :func:`~plastid.genomics.genome_array.center_map`                      :py:func:`~plastid.genomics.map_factories.CenterMapFactory`
-======================   ==============================================================    =======================================
+Center/entire            :func:`~plastid.genomics.genome_array.center_map`                 :py:func:`~plastid.genomics.map_factories.CenterMapFactory`
+======================   ==============================================================    =======================================================================
 
 
 ----------------------------------------------------

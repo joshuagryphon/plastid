@@ -1931,7 +1931,7 @@ cdef class SegmentChain(object):
 
         For futher information, see
             - `GFF3 file format specification <http://www.sequenceontology.org/gff3.shtml>`_
-            - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`
+            - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
         """

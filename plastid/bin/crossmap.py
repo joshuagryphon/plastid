@@ -27,7 +27,7 @@ where:
 
   - `OUTBASE` is a name meaningful to the user
   - `READLENGTH` is the k-mer length chosen by the user
-  ` `MISMATCHES` is the number of mismatches permitted during alignment,
+  - `MISMATCHES` is the number of mismatches permitted during alignment,
     also set by the user.
 
 

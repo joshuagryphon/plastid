@@ -8,7 +8,7 @@ This package contains parsers for the following file types:
     ======================================    ===================================
     **Annotation files**
     -----------------------------------------------------------------------------
-    :py:mod:`plastid.readers.bed`             `BED`_ and `BED X+Y`_ formats
+    :py:mod:`plastid.readers.bed`             `BED`_ and `BED X+Y <BED extended format>`_ formats
     :py:mod:`plastid.readers.bigbed`          `BigBed`_                      
     :py:mod:`plastid.readers.gff`             `GTF2`_ and `GFF3`_            
     :py:mod:`plastid.readers.psl`             `PSL`_ (BLAT format)           
