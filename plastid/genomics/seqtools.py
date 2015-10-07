@@ -123,7 +123,7 @@ class _TwoBitSeqProxy(object):
     """Adaptor class that fetches :class:`Bio.SeqRecord.SeqRecord`
     objects from :class:`twobitreader.TwoBitSequence` objects
 
-    Defines 'seq' property and reverse_complement() method
+    Defines `seq` property and :meth:`~_TwoBitSeqProxy.reverse_complement` method
     """
     def __init__(self,twobitseq):
         """

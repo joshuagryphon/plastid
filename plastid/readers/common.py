@@ -64,7 +64,7 @@ class AssembledFeatureReader(AbstractReader):
       
       - deciding how many subfeatures to hold in memory
       
-      - defining ``self._assemble``
+      - overloading :meth:`~AssembledFeatureReader._assemble`
       
     
     Attributes

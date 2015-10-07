@@ -55,7 +55,7 @@ Genomic sequence can be stored in a number of formats. Two of the most common ar
      genomes. Beacause `2bit <twobit>`_ files are binary and indexed, they use
      far less memory than `FASTA`_ files.
 
-:data:`plastid` doesn't implement any of its own file readers, but it is compatible
+:data:`plastid` doesn't implement any of its own sequence file readers, but it is compatible
 with any parser that returns sequences as a dictionary-like object of string-like
 objects. This allows users to use implementations in `Biopython`_ (for `FASTA`_, 
 EMBL, & GenBank formats) and `twobitreader`_ (for `2bit <twobit>`_) files.

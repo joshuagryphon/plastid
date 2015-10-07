@@ -2015,7 +2015,7 @@ cdef class SegmentChain(object):
 
         For futher information, see
             - `GFF3 file format specification <http://www.sequenceontology.org/gff3.shtml>`_
-            - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`
+            - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
         """
@@ -2822,7 +2822,7 @@ cdef class SegmentChain(object):
 
     @staticmethod
     def from_str(str inp):
-        """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.str`:
+        """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.__str__`:
            
             `chrom:start-end^start-end(strand)`
            
@@ -2834,7 +2834,7 @@ cdef class SegmentChain(object):
         Parameters
         ----------
         inp : str
-			String formatted in manner of :py:meth:`SegmentChain.str`
+			String formatted in manner of :py:meth:`SegmentChain.__str__`
           
           
         Returns
@@ -3013,14 +3013,14 @@ cdef class SegmentChain(object):
     @staticmethod
     def from_psl(psl_line):
         """Create a |SegmentChain| from a line from a `PSL`_ (BLAT) file
+
+        See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
         
         Parameters
         ----------
         psl_line : str
             Line from a `PSL`_ file
-        
-        See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
-        
+
         Returns
         -------
         |SegmentChain|

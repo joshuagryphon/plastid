@@ -137,18 +137,18 @@ method :meth:`~GenomeArray.add_from_bowtie`. For |BAMGenomeArray|, a function
 is generated from one of the :term:`factories <factory>` below, and passed to
 the method :meth:`BAMGenomeArray.set_mapping`:
 
-======================   ====================================    =======================================
+======================   ====================================    =====================================================================
 **Mapping rule**         |GenomeArray|, |SparseGenomeArray|      |BAMGenomeArray|
-----------------------   ------------------------------------    ---------------------------------------
+----------------------   ------------------------------------    ---------------------------------------------------------------------
 
-Fiveprime                :func:`five_prime_map`                  :py:func:`FivePrimeMapFactory`
+Fiveprime                :func:`five_prime_map`                  :class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`variable_five_prime_map`         :py:func:`VariableFivePrimeMapFactory`
+Fiveprime variable       :func:`variable_five_prime_map`         :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 
-Threeprime               :func:`three_prime_map`                 :py:func:`ThreePrimeMapFactory`
+Threeprime               :func:`three_prime_map`                 :class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
 
-Center/entire/nibble     :func:`center_map`                      :py:func:`CenterMapFactory`
-======================   ====================================    =======================================
+Center/entire/nibble     :func:`center_map`                      :class:`~plastid.genomics.map_factories.CenterMapFactory`
+======================   ====================================    =====================================================================
 
 
 """
@@ -748,7 +748,7 @@ class AbstractGenomeArray(object):
         
         See also
         --------
-        SegmentChain.get_counts
+        plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
         pass
@@ -899,18 +899,18 @@ class BAMGenomeArray(AbstractGenomeArray):
             somewhere in the middle. Factories to produce such functions are provided.
             See references below. (Default: :func:`CenterMapFactory`)
 
-        See Also
+        See also
         --------
-        FivePrimeMapFactory
+        plastid.genomics.map_factories.FivePrimeMapFactory
             map reads to 5' ends, with or without applying an offset
         
-        VariableFivePrimeMapFactory
+        plastid.genomics.map_factories.VariableFivePrimeMapFactory
             map reads to 5' ends, choosing an offset determined by read length
         
-        ThreePrimeMapFactory
+        plastid.genomics.map_factories.ThreePrimeMapFactory
             map reads to 3' ends, with or without applying an offset
         
-        CenterMapFactory
+        plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.bamfiles     = bamfiles
@@ -968,7 +968,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         See also
         --------
-        SizeFilterFactory
+        plastid.genomics.map_factories.SizeFilterFactory
             generate filter functions that gate read alignments on size
         """
         self._filters[name] = func
@@ -1131,7 +1131,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         See also
         --------
-        SegmentChain.get_counts
+        plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
         if isinstance(roi,SegmentChain):
@@ -1158,18 +1158,18 @@ class BAMGenomeArray(AbstractGenomeArray):
             See references below.
 
             
-        See Also
+        See also
         --------
-        FivePrimeMapFactory
+        plastid.genomics.map_factories.FivePrimeMapFactory
             map reads to 5' ends, with or without applying an offset
         
-        VariableFivePrimeMapFactory
+        plastid.genomics.map_factories.VariableFivePrimeMapFactory
             map reads to 5' ends, choosing an offset determined by read length
         
-        ThreePrimeMapFactory
+        plastid.genomics.map_factories.ThreePrimeMapFactory
             map reads to 3' ends, with or without applying an offset
         
-        CenterMapFactory
+        plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
         self.map_fn = mapping_function
@@ -1443,7 +1443,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         
         See also
         --------
-        SegmentChain.get_counts
+        plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
         if isinstance(roi,SegmentChain):

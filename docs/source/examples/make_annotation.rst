@@ -79,7 +79,9 @@ An analysis pipeline for this experiment might look the following:
      #. Create a custom annotation describing the coordinates of the reporter gene
         with respect to the vector sequence. Coordinates should be :term:`0-indexed`
         and :term:`half-open` (i.e. typical Python idioms). This can be done 
-        interactively in Python by creating |Transcripts| describing the reporter::
+        interactively in Python by creating |Transcripts| describing the reporter:
+
+         .. code-block:: python
 
             >>> from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 
@@ -150,7 +152,9 @@ From the terminal:
     $ wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/hg38Patch3/hg38Patch3.2bit
 
 
-Then, within a Python session, read each transcript and create TSS windows::
+Then, within a Python session, read each transcript and create TSS windows:
+
+ .. code-block:: python
 
     >>> # open genome sequence
     >>> from twobitreader import TwoBitFile
@@ -190,14 +194,17 @@ The `fasta`_ file of sequences can then be processed with any pipeline, and the
 TSS windows viewed in a :term:`genome browser`, like `IGV`_ or the `UCSC genome browser`_.
 
 
+
  .. _make-annotation-bed-xplusy:
 
-Making custom :term:`BED X+Y`_ files
-------------------------------------
+Making custom :term:`BED X+Y` files
+-----------------------------------
 
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
 in a :term:`BED 12+Y` format, pass the `extra_columns` keyword to the
-:meth:`plastid.genomics.roitools.SegmentChain.as_bed` method::
+:meth:`plastid.genomics.roitools.SegmentChain.as_bed` method:
+
+ .. code-block:: python
 
     >>> attr = { "ID" : "some feature ID",
                  "extra_field_1" : 542,
@@ -213,10 +220,14 @@ in a :term:`BED 12+Y` format, pass the `extra_columns` keyword to the
     >>> my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"])
     chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,    542    some extra field
 
-If an attribute is not defined, the column will be left empty ""::
+If an attribute is not defined, the column will be left empty "":
+
+ .. code-block:: python
 
     >>> my_chain.as_bed(extra_columns=["extra_field_1","nonexistent_field","extra_field_2"])
     chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,    542        some extra field
+
+
 
 
 

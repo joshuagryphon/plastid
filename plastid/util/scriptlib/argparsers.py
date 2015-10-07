@@ -1,86 +1,34 @@
 #!/usr/bin/env python
-"""This module contains pairs of functions that enable command-line scripts
-to open and process various types of data. For each argument parser, one 
-function creates the parser; the other parses it into an object.
+"""This module contains pairs of functions that encapsulate and automate
+opening various types of genomic data, so that command-line scripts can
+be agnostic of the underlying file type.
+
+For each data type, a parser-building function returns an :class:`argparse.ArgumentParser`
+to parse command-line arguments, and an argument-parsing function 
+converts the parsed arguments into Python objects.
 
 ===========================================================   ======================================  =======================================   ===========================================================
-**Capability**                                                **Parser building function**            **Argument parsing function**             **Return type**
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ------------------------------------------------------------ 
-Open read alignments or count files                           :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
-(`BAM`_, `Bowtie`_, `bedGraph`_, `Wiggle`_ formats)
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ------------------------------------------------------------ 
-Open and assemble transcript models                           :func:`get_annotation_file_parser`      :func:`get_transcripts_from_args`         iterator over |Transcripts|
-(`BED`_, `BigBed`_, `GTF2`_, `GFF3`_, `PSL`_)
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ------------------------------------------------------------ 
-Open and assemble arbitrary genomic features                  :func:`get_segmentchain_file_parser`    :func:`get_segmentchains_from_args`       iterator over |SegmentChains|
-(`BED`_, `BigBed`_, `GTF2`_, `GFF3`_, `PSL`_)
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ------------------------------------------------------------ 
-Open sequence files                                           :func:`get_sequence_file_parser`        :func:`get_seqdict_from_args`             dict-like of :class:`Bio.SeqRecord.SeqRecord` objects
-(`fasta`_, `fastq`_, `twobit`_, genbank, embl)
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ------------------------------------------------------------ 
-Hash genomic features by position                             :func:`get_mask_file_parser`            :func:`get_mask_hash_from_args`           |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
-(`BED`_, `BigBed`_, `GTF2`_, `GFF3`_, `PSL`_)
+**Data type**                                                 **Parser building function**            **Argument parsing function**             **Return type**
+-----------------------------------------------------------   --------------------------------------  ---------------------------------------   ----------------------------------------------------------- 
+:term:`Read alignments` or :term:`count files <count file>`       :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
+
+
+Assembled transcript models                                   :func:`get_annotation_file_parser`      :func:`get_transcripts_from_args`         iterator over |Transcripts|
+
+
+Assembled |SegmentChains|                                     :func:`get_segmentchain_file_parser`    :func:`get_segmentchains_from_args`       iterator over |SegmentChains|
+
+
+Genomic sequence files                                        :func:`get_sequence_file_parser`        :func:`get_seqdict_from_args`             dict-like of :class:`Bio.SeqRecord.SeqRecord`-like
+
+
+:term:`Mask files <mask file>`                                :func:`get_mask_file_parser`            :func:`get_genome_hash_from_mask_args`      |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
 ===========================================================   ======================================  =======================================   ===========================================================
 
-
- .. TODO remove this passage or decide on formatting
-
-    Capabilities provided include:
-
-        Importing read alignments or counts
-            :func:`get_alignment_file_parser`
-                Get :class:`~argparse.ArgumentParser` that opens alignment or
-                count data in `BAM`_, `Bowtie`_, `Wiggle`_, and `bedGraph`_ files
-        
-            :func:`get_genome_array_from_args`
-                Return a |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|,
-                from command-line arguments parsed by a parser created with 
-                :func:`get_alignment_file_parser`,
-
-        Importing transcript models
-            :func:`get_annotation_file_parser`
-                Get :class:`~argparse.ArgumentParser` for opening transcript models
-                from `GTF2`_, `GFF3`_, `BigBed`_, and `BED`_ format annotation files
-                
-            :func:`get_transcripts_from_args`
-                Return |Transcripts| from command-line arguments parsed
-                by a parser created with :func:`get_annotation_file_parser`
-
-        Importing arbitrary regions of interest
-            :func:`get_segmentchain_file_parser`
-                Get :class:`~argparse.ArgumentParser` for opening regions of interest
-                as |SegmentChains| from `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, and `PSL`_
-                format annotation files
-
-            :func:`get_segmentchains_from_args`
-                Return |SegmentChains| from arguments parsed by a parser created with
-                :func:`get_segmentchain_file_parser`
-
-        Opening sequence files
-            :func:`get_sequence_file_parser`
-                Get :class:`~argparse.ArgumentParser` for opening files of
-                nucleic acid sequence
-
-            :func:`get_seqdict_from_args`
-                Return a dict-like object of SeqRecords of sequences from 
-                a parser mad with :func:`get_sequence_file_parser`
-
-
-        Hashing regions of the genome that should be excluded from analyses
-            :func:`get_mask_file_parser`
-                Get :class:`~argparse.ArgumentParser` to open a :term:`mask file` 
-                in `GTF2`_, `GFF3`_, `BigBed`_, `BED`_, or `PSL`_ format.
-                 
-            :func:`get_genome_hash_from_mask_args`
-                Return a |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
-                of genomic regions to mask from analyses from a parser made with
-                :func:`get_mask_file_parser`
 
 Example
 -------     
-To add any these capabilities to your command line scripts, follow the steps
-below. In this example, we create a script that can fetch |Transcripts| from
-all of the annotation file formats supported by :data:`plastid`:
+To use any of these in your own command line scripts, follow these steps:
 
   #. Import one of the function pairs above::
 

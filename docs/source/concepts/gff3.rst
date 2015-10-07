@@ -119,7 +119,9 @@ The reader behaves as an iterator, which assembles groups of transcripts lazily:
     >>>     pass # do something
 
 Any malformed/unparsable `GFF3`_ lines are kept in the `rejected`
-attribute::
+attribute:
+
+ .. code-block:: python
 
     >>> reader.rejected
     [] # list of strings, corresponding to bad GFF3 lines

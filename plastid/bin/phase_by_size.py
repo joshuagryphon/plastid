@@ -17,12 +17,12 @@ Output files
     OUTBASE_phasing.svg
         Plot of phasing by read length
 
-where ${OUTBASE} is supplied by the user.
+where `OUTBASE` is supplied by the user.
 
-Notes
------
-To avoid double-counting of codons, users should supply an :term:`annotation`
-file that includes only one transcript isoform per gene.
+ .. note::
+
+    To avoid double-counting of codons, users should supply an :term:`annotation`
+    file that includes only one transcript isoform per gene.
 
 """
 import sys

@@ -307,7 +307,9 @@ Window function examples
 .........................
 
 Here is a window function that produces windows surrounding transcription
-start sites::
+start sites:
+
+ .. code-block:: python
 
     >>> def window_transcript_start(roi,flank_upstream,flank_downstream,ref_delta=0):
     >>>     """Window function for metagenes surrounding transcription start sites
@@ -351,11 +353,11 @@ start sites::
     >>>     return new_chain, offset, new_chain.get_genomic_coordinate(flank_upstream)
 
 
- .. _metagene-big-spike:
-
 Here is a window function that produces windows surrounding the highest spike
 in read density in a transcript. Note, it uses data structures in the global
 scope:
+
+ .. _metagene-big-spike:
 
  .. code-block:: python
  
@@ -443,12 +445,11 @@ the following parameters:
 
 Here we use the ``window_biggest_spike()`` function we just wrote::
 
-    >>> from plastid.bin.metagene import do_generate
+    >>> from plastid.bin.metagene import group_regions_make_windows
     >>> from plastid.genomics.genome_hash import GenomeHash
     >>> from plastid.readers.gff import GTF2_TranscriptAssembler
 
     >>> import pysam
-    >>> import numpy
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # window_biggest_spike() needs read alignments stored in a variable

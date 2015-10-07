@@ -8,11 +8,13 @@ Output files
 ------------
 Because `Wiggle`_ and `bedGraph`_ files are unstranded, two files are created:
 
-    ${OUTBASE}_fw.wig
+    OUTBASE_fw.wig
         Counts at each position for the plus/forward strand of each chromosome
     
-    ${OUTBASE}_rc.wig
+    OUTBASE_rc.wig
         Counts at each position for the minus/reverse strand of each chromosome
+
+where `OUTBASE` is given by the user.
 
 
 See also

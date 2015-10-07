@@ -7,17 +7,19 @@ feature can be assembled from several component features; each component
 feature having its own record on its own line -- two interfaces for reading
 `GTF2`_/`GFF3`_ files are included:
 
- #. |GTF2_Reader| and |GFF3_Reader| provide a low-level interface. 
-    They read `GTF2`_/`GFF3`_ files line-by-line, and yield a |SegmentChain|
-    for each line. These |SegmentChains| will represent things like individual
-    exons, stop codons, SNPs, genes, et c. Complex features (e.g. multi-exon
-    transcripts) may be assembled from these individual |SegmentChains| by the user.  
+    Low-level parsing of simple features
+        |GTF2_Reader| and |GFF3_Reader| read `GTF2`_/`GFF3`_ files line-by-line, and yield a |SegmentChain|
+        for each line. These |SegmentChains| will represent things like individual
+        exons, stop codons, SNPs, genes, et c. Complex features (e.g. multi-exon
+        transcripts) may be assembled from these individual |SegmentChains| by the user.  
 
- #. In contrast, |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler|
-    collect individual exon and CDS features, and assemble these into 
-    |Transcripts|. They do this by reading `GTF2`_/`GFF3`_ files, and only
-    yield a |Transcript| when they know they have parsed a sufficient number
-    of lines of the  `GTF2`_/`GFF3`_ to assemble it.
+    Assembly of exons, cds, & UTRs into full |Transcripts|
+        |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler|
+        collect individual exon and CDS features, and assemble these into 
+        |Transcripts|. They do this by reading `GTF2`_/`GFF3`_ files, keeping
+        track of `transcript_id`, `gene_id` and or `Parent` attributes, and
+        yielding an assembled |Transcript| only when they know they have
+        collected all of its component features.
 
 
 Examples
@@ -1029,8 +1031,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
     Identity relationships between elements vary between `GFF3`_ files
         Also, different `GFF3`_ files specify discontiguous features differently. For example,
-        in `Flybase <http://flybase.org>`_, different exons of a transcript will have unique IDs, but will share
-        the same `'Parent'` attribute in column 9 of the GFF. In Wormbase, however, different
+        in `Flybase`_, different exons of a transcript will have unique IDs, but will share
+        the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
         exons of the same transcript will share the same ID. Here, we first
         check for the Flybase style (by Parent), then fall back to Wormbase
         style (by shared ID).
