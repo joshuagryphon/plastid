@@ -8,6 +8,7 @@ from plastid.genomics.map_factories import FivePrimeMapFactory,\
                                        CenterMapFactory,\
                                        VariableFivePrimeMapFactory
 from plastid.genomics.roitools import GenomicSegment
+from plastid.util.services.mini2to3 import cStringIO
 
 
 class TestBAM_MappingRules(object):
@@ -101,6 +102,33 @@ class TestBAM_MappingRules(object):
             msg = "Failed fiveprime variable mapping for test %s(%s)" % (name,strand)
             assert_true((count_array==expected).all(),msg)
 
+    def test_fiveprime_variable_from_file(self):
+        offset_dicts = {}
+        fancy = { X : X//2 for X in range (25,40) }
+        fancy_reads = { X : numpy.zeros(2000) for X in self.strands }
+        for read in self.reads["+"]:
+            fancy_reads["+"][read.positions[fancy[len(read.positions)]]] += 1
+        for read in self.reads["-"]:
+            fancy_reads["-"][read.positions[-fancy[len(read.positions)]-1]] += 1
+
+        fancy_plus  = numpy.zeros(2000)
+        fancy_minus = numpy.zeros(2000)
+
+
+        offset_dicts[("default_only","+")] = ({ "default" : 0 },
+                                               self.expected[("fiveprime",0,"+")])
+        offset_dicts[("default_only","-")] = ({ "default" : 0 },
+                                               self.expected[("fiveprime",0,"-")])
+        offset_dicts[("fancy","+")       ] = (fancy,fancy_reads["+"])
+        offset_dicts[("fancy","-")       ] = (fancy,fancy_reads["-"])
+                                             
+        for (name, strand), (dict_, expected) in offset_dicts.items():
+            fhlike = cStringIO.StringIO("\n".join(["%s\t%s" % (K,V) for K,V in dict_.items()]))
+            fn = VariableFivePrimeMapFactory.from_file(fhlike)
+            reads_out, count_array = fn(self.reads[strand],self.segs[strand])
+            msg = "Failed fiveprime variable mapping for test %s(%s)" % (name,strand)
+            assert_true((count_array==expected).all(),msg)
+
     def check_unmappable_raises_warnings(self,test_name,map_param,strand):
         map_factory = self.map_factories[test_name]
         msg = "Map function '%s' failed to raise warning for unmappable reads on strand '%s'" % (test_name,strand)
@@ -144,4 +172,7 @@ class TestBAM_MappingRules(object):
             expected_num_reads = expected_num[test_name]
             for strand in self.strands:
                 yield self.check_unmappable_not_mapped_in_vector_or_returned, test_name, map_param, expected_num_reads, strand 
+
+
+
 

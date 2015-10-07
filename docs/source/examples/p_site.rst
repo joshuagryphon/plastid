@@ -155,30 +155,25 @@ by |psite| to the ``--offset`` parameter. For example, from the terminal:
 In interactive sessions
 .......................
 
-In interactive sessions, we first need to load the offset file::
-
-    >>> offset_dict = {}
-
-    >>> with open("SRR609197_riboprofile_p_offsets_adjusted.txt") as fin:
-    >>>     for line in fin: 
-    >>>         if not line.startswith("#"): # ignore comments & metadata
-    >>>             length, offset = line.strip("\n").split("\t")
-    >>>             offset_dict[length] = int(offset)
-
-
-And then pass it to the appropriate mapping rule. For alignments in `BAM`_
-format, use |BAMGenomeArray|::
+The mapping rule can be constructed by passing the offset file from |psite| to the 
+:meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
+method of |VariableFivePrimeMapFactory|::
 
     >>> import pysam
     >>> from plastid.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
+
+    >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
     
     >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907.bam","rb")])
-    >>> alignments.set_mapping(VariableFivePrimeMapFactory(offset_dict))
+    >>> alignments.set_mapping(maprule)
 
 
-For alignments in `bowtie`_-format use |GenomeArray|::
+For alignments in `bowtie`_-format use |GenomeArray| and
+:func:`~plastid.genomics.genome_array.variable_five_prime_map`::
 
     >>> from plastid.genomics.genome_array import GenomeArray, variable_five_prime_map
+    >>> from plastid.genomics.util.scriptlib import _parse_variable_offset_file as pvof
+    >>> offset_dict = pvof(open("SRR609197_riboprofile_p_offsets_adjusted.txt"))
 
     >>> alignments = GenomeArray()
     >>> alignments.add_from_bowtie("some_file.bowtie",variable_five_prime_map,offset=offset_dict)

@@ -15,6 +15,8 @@ from pysam.calignmentfile cimport AlignedSegment
 from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
 from plastid.genomics.roitools cimport GenomicSegment
 from plastid.util.services.exceptions import DataWarning
+from plastid.util.io.filters import CommentReader
+from plastid.util.scriptlib.argparsers import _parse_variable_offset_file
 
 
 INT    = np.int
@@ -356,6 +358,39 @@ cdef class VariableFivePrimeMapFactory:
                     continue
                 fw_view[read_length] = offset
                 rc_view[read_length] = - offset - 1
+    
+    @staticmethod
+    def from_file(object fn_or_fh):
+        """Create a :class:`VariableFivePrimeMapFactory` from a text file.
+
+        The text file should be formatted as by the :mod:`~plastid.bin.psite`
+        script: a tab-delimited two-column text file in which the first column
+        is a read length (or the special word 'default'), and the second column
+        an offset from the 5' end of the read corresponding to that read length.
+        For example::
+
+            25      12
+            26      12
+            27      13
+            28      13
+            29      14
+            30      14
+            default 14
+
+
+        Parameters
+        ----------
+        fn_or_fh : str or open file-like
+            If str, it should be a path to the text file. If file-like, it 
+            should be an open file-like object pointing to the data that
+            would be in the text file.
+        """
+        if isinstance(fn_or_fh,str):
+            fh = CommentReader(open(str))
+        else:
+            fh = CommentReader(fn_or_fh)
+
+        return VariableFivePrimeMapFactory(_parse_variable_offset_file(fh))
          
     def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
