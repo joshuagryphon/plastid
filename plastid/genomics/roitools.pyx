@@ -2738,7 +2738,7 @@ cdef class SegmentChain(object):
 
     @staticmethod
     def from_str(str inp):
-        """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.str`:
+        """Create a |SegmentChain| from a string formatted by :py:meth:`SegmentChain.__str__`:
            
             `chrom:start-end^start-end(strand)`
            
@@ -2750,7 +2750,7 @@ cdef class SegmentChain(object):
         Parameters
         ----------
         inp : str
-			String formatted in manner of :py:meth:`SegmentChain.str`
+			String formatted in manner of :py:meth:`SegmentChain.__str__`
           
           
         Returns
@@ -2929,14 +2929,14 @@ cdef class SegmentChain(object):
     @staticmethod
     def from_psl(psl_line):
         """Create a |SegmentChain| from a line from a `PSL`_ (BLAT) file
+
+        See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
         
         Parameters
         ----------
         psl_line : str
             Line from a `PSL`_ file
-        
-        See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
-        
+
         Returns
         -------
         |SegmentChain|

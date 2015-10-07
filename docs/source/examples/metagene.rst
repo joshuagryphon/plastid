@@ -353,14 +353,11 @@ start sites:
     >>>     return new_chain, offset, new_chain.get_genomic_coordinate(flank_upstream)
 
 
-
-
-
- .. _metagene-big-spike:
-
 Here is a window function that produces windows surrounding the highest spike
 in read density in a transcript. Note, it uses data structures in the global
 scope:
+
+ .. _metagene-big-spike:
 
  .. code-block:: python
  

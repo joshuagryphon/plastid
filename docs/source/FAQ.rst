@@ -52,8 +52,6 @@ I get an ``ImportError`` or ``DistributionError`` when using :data:`plastid`
 
 If you get an error like the following::
 
- .. code-block:: shell
-
     Traceback (most recent call last):
        File "/home/user/Rib_prof/venv/bin/crossmap", line 5, in <module>
          from pkg_resources import load_entry_point

@@ -402,7 +402,7 @@ def in_separate_process(func):
     See Also
     --------
     multiprocessing
-        Python :py:mod:`multiprocessing` module
+        Python multiprocessing module, for writing parallel programs
     """
     @functools.wraps(func)
     def new_func(*args,**kwargs):
@@ -445,7 +445,7 @@ def parallelize(func):
     See Also
     --------
     multiprocessing
-        Python :py:mod:`multiprocessing` module
+        Python multiprocessing module, for writing parallel programs
     """
     @functools.wraps(func)
     def new_func(args,processes=4,chunksize=None,**kwargs):

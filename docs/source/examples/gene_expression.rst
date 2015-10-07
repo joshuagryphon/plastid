@@ -415,15 +415,15 @@ a single table:
 The second table contains the *experimental design*. This can be created
 in any text editor and saved as a tab-delimited text file. In this example,
 the we have two conditions, "infected" and "uninfected", and two replicates
-of each condition::
+of each condition:
+
+ .. code-block :: shell
 
     sample_name        condition
     inf_rnaseq_1       infected
     inf_rnaseq_2       infected
     uninf_rnaseq_1     uninfected
     uninf_rnaseq_2     uninfected
-
-
 
 
  .. _examples-deseq-equation:

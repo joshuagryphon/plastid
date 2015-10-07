@@ -72,7 +72,9 @@ than a transcript:
     
     OUTBASE_untouched.bed
         Query junctions reported without changes (steps 4 and 6 above)
-    
+
+where `OUTBASE` is given by the user.
+
 """
 __date__ =  "Aug 23, 2011"
 __author__ = "joshua"

@@ -2,20 +2,20 @@
 """Convert transcripts from `BED`_, `BigBed`_, `GTF2`_, `GFF3`_, or `PSL`_ format
 to `BED`_ or `GTF2`_ format.
 
-Notes
------
-GFF3 schemas vary
-    Different GFF3s have different schemas of hierarchy. We deal with that here
-    by allowing users to supply `transcript_types` and `exon_types`, to indicate
-    which sorts of features should be included.
+ .. note::
 
-Identity relationships between elements vary between GFF3 files
-    Also, different GFF3s specify discontiguous features differently. For example,
-    in Flybase, different exons of a transcript will have unique IDs, but will share
-    the same "Parent" attribute in column 9 of the GFF. In Wormbase, however, different
-    exons of the same transcript will share the same ID. Here, we treat GFFs as if
-    they are written in the Flybase style. We may support alternate formats in the future.    
+    GFF3 schemas vary
+        Different GFF3s have different schemas of hierarchy. We deal with that
+        here by allowing users to supply `transcript_types` and `exon_types`,
+        to indicate which sorts of features should be included.
 
+    Identity relationships between elements vary between GFF3 files
+        Also, different GFF3s specify discontiguous features differently. For
+        example, in Flybase, different exons of a transcript will have unique
+        IDs, but will share the same `Parent` attribute in column 9 of the GFF.
+        In Wormbase, however, different exons of the same transcript will share
+        the same ID. Here, both schemes are accepted, although what happens
+        if they conflict within a single transcript is undefined.
 """
 import argparse
 import inspect

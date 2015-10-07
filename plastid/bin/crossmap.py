@@ -13,32 +13,41 @@ the genome. These regions are exported in a `BED`_ file.
 
 Output files
 ------------
-    ${OUTBASE}_crossmap.bed
+The following files are made:
+
+    OUTBASE_READLENGTH_MISMATCHES_crossmap.bed
         Final :term:`mask file` annotation, in `BED`_ format
     
-    ${OUTBASE}_${CHROMOSOME}_kmers.fa
-        :term:`K-mers <k-mer>` derived from each chromosome. These files can
+    OUTBASE_READLENGTH_MISMATCHES_CHROMOSOME_kmers.fa
+        :term:`K-mers <k-mer>` derived from chromosome `CHROMOSOME`. These files can
         be reused in subsequent runs allowing a different number of mismatches,
         using the ``--have_kmers`` option
 
+where:
 
-Notes
------
-For large genomes, it is highly recommended to convert the `BED`_-format output
-to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
-(from the terminal)::
-
-    $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\\
-                     cut -f2,3 | sed -e "s/\([^ ]\+\).*\\t/\\1\\t/" | >OUTFILE.sizes
-    $ sort -k1,1 -k2,2n OUTBASE.bed > OUTBASE_sorted.bed
-    $ bedToBigBed OUTBASE_sorted.bed OUTBASE.sizes OUTBASE_sorted.bb
+  - `OUTBASE` is a name meaningful to the user
+  - `READLENGTH` is the k-mer length chosen by the user
+  ` `MISMATCHES` is the number of mismatches permitted during alignment,
+    also set by the user.
 
 
-For small genomes (e.g. yeast, E. coli), this is unnecessary, and comes at a
-cost in speed.
+ .. note::
 
-See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
-for download & documentation of Kent utilities
+    For large genomes, it is highly recommended to convert the `BED`_-format output
+    to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
+    (from the terminal)::
+
+        $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\\
+                         cut -f2,3 | sed -e "s/\([^ ]\+\).*\\t/\\1\\t/"  >OUTFILE.sizes
+        $ sort -k1,1 -k2,2n OUTBASE.bed > OUTBASE_sorted.bed
+        $ bedToBigBed OUTBASE_sorted.bed OUTBASE.sizes OUTBASE_sorted.bb
+
+
+    For small genomes (e.g. yeast, E. coli), this is unnecessary, and comes at a
+    cost in speed.
+
+    See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
+    for download & documentation of Kent utilities
 """
 __author__ = "joshua"
 import argparse
@@ -68,7 +77,8 @@ BigBedMessage = """Crossmap complete and saved as 'OUTFILE.bed'.
     the BED-format output to a BigBed file, using Jim Kent's bedToBigBed
     utility as follows (from the terminal):
     
-        $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence | cut -f2,3 >OUTFILE.sizes
+        $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\\
+                         cut -f2,3 | sed -e "s/\\([^ ]\+\\).*\\t/\\1\\t/"  >OUTFILE.sizes
         $ sort -k1,1 -k2,2n OUTFILE.bed > OUTFILE_sorted.bed
         $ bedToBigBed OUTFILE_sorted.bed OUTFILE.sizes OUTFILE_sorted.bb
     

@@ -73,6 +73,8 @@ First, we need to open the read alignments and transcript annotation:
 phasing. So, we'll look at the most highly-phased population of reads, 33-mers. 
 To do so, we'll add a size filter:
 
+ .. code-block:: python
+
     >>> from plastid.genomics.genome_array import SizeFilterFactory
     >>> size_filter = SizeFilterFactory(min=33,max=34)
     >>> >>> alignments.add_filter("size",size_filter)

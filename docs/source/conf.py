@@ -173,6 +173,9 @@ intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         "pysam"  : ("http://pysam.readthedocs.org/en/latest",None),
                         "pandas" : ("http://pandas-docs.github.io/pandas-docs-travis/",None),
                         "HTSeq"  : ("http://www-huber.embl.de/users/anders/HTSeq/doc",None),
+                        "matplotlib"   : ("http://matplotlib.org/",None),
+                        "twobitreader" : ("https://pythonhosted.org/twobitreader/",None),
+                        "cython"       : ("http://docs.cython.org",None),
                         }
 
 # -- Mocking of imports ------------------------------------------------
