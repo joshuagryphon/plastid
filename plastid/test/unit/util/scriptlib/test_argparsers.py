@@ -15,7 +15,7 @@ from nose.tools import assert_equal, assert_greater, assert_raises,  \
 
 from plastid.test.ref_files import MINI, REF_FILES
 from plastid.util.io.filters import CommentReader
-from plastid.readers.bed import BED_to_SegmentChain
+from plastid.readers.bed import BED_Reader
 from plastid.util.services.exceptions import MalformedFileError
 from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.genomics.map_factories import FivePrimeMapFactory,\
@@ -142,7 +142,7 @@ offset_file    = REF_FILES["yeast_psite"]
 bamfilename    = MINI["bamfile"]
 bowtiefilename = MINI["bowtie_file"]
 wigglefilename = MINI["wig_bedgraph"]
-regions = list(BED_to_SegmentChain(open(MINI["bed_file"])))
+regions = list(BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain))
 spliced_regions = [X for X in regions if len(X) > 1] # set(filter(lambda x: len(x) > 1, regions))
 unique_regions  = [X for X in regions if "repeat" not in X.get_name()] #set(filter(lambda x: "repeat" not in x.get_name(), regions))
 introns = [X for X in regions if "intron" not in X.get_name()] #set(filter(lambda x: "intron" in x.get_name(),regions))

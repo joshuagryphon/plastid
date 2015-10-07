@@ -25,7 +25,7 @@ from nose.plugins.attrib import attr
 
 from Bio import SeqIO
 
-from plastid.readers.bed import BED_to_SegmentChain
+from plastid.readers.bed import BED_Reader
 from plastid.genomics.genome_array import GenomeArray,\
                                        SparseGenomeArray,\
                                        BAMGenomeArray,\
@@ -147,7 +147,7 @@ def fetch_regions():
     -------
     list<SegmentChain>
     """
-    return list(BED_to_SegmentChain(cStringIO.StringIO(TEST_CHR_BED)))
+    return list(BED_Reader(cStringIO.StringIO(TEST_CHR_BED),return_type=SegmentChain))
 
 def _read_count_vectors(base_folder):
     """Read count vectors from a synthetic datasets

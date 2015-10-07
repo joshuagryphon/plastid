@@ -13,7 +13,8 @@ from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
 from plastid.test.ref_files import REF_FILES
 from plastid.util.io.filters import CommentReader
-from plastid.readers.bed import BED_to_SegmentChain
+from plastid.readers.bed import BED_Reader
+from plastid.genomics.roitools import SegmentChain
 from plastid.bin.slidejuncs import main
 from plastid.util.services.decorators import catch_stderr, catch_stdout
 
@@ -56,7 +57,7 @@ def get_junction_names_from_file(filename):
     set
         Set of splice junction names found in ``filename``    
     """
-    return set([X.spanning_segment.chrom for X in BED_to_SegmentChain(CommentReader(open(filename)))])
+    return set([X.spanning_segment.chrom for X in BED_Reader(CommentReader(open(filename)),return_type=SegmentChain)])
     
 def get_junction_names_from_category(cat):
     """Helper function to deduce names of splice junctions/genes in each

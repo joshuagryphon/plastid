@@ -16,7 +16,7 @@ from nose.plugins.attrib import attr
 from collections import OrderedDict
 from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from plastid.genomics.genome_hash import GenomeHash
-from plastid.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
+from plastid.readers.bed import BED_Reader
 from plastid.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
 
 warnings.simplefilter("ignore",DeprecationWarning)
@@ -293,7 +293,7 @@ class test_BigBedReader(unittest.TestCase):
 
         # comparisons against genome hash
         cls.binsize = 10000
-        transcripts    = list(BED_to_Transcripts(open(cls.bedfiles[12])))
+        transcripts    = list(BED_Reader(open(cls.bedfiles[12]),return_type=Transcript))
 
         cls.tx_dict     = {}
         cls.cds_dict    = {}
@@ -369,7 +369,7 @@ class test_BigBedReader(unittest.TestCase):
         # implicitly tests iterate_over_chunk over all bed files, too
         for col in self.cols:
             bigbed = self.bbs[col]
-            bed    = BED_to_Transcripts(open(self.bedfiles[col]))
+            bed    = BED_Reader(open(self.bedfiles[col]),return_type=Transcript)
                
             for n, (tx1, tx2) in enumerate(zip(bed,bigbed)):
                 self.assertTrue(transcript_identical(tx1,tx2))
@@ -377,7 +377,7 @@ class test_BigBedReader(unittest.TestCase):
             self.assertEqual(n,100-1)
          
         flybb  = BigBedReader(self.flybbfile,return_type=Transcript)
-        flybed = BED_to_Transcripts(open(self.flybedfile))
+        flybed = BED_Reader(open(self.flybedfile),return_type=Transcript)
         for n, (tx1,tx2) in enumerate(zip(flybb,flybed)):
             self.assertTrue(transcript_identical(tx1,tx2))
          

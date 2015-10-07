@@ -43,46 +43,6 @@ from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.services.decorators import deprecated, skipdoc
 from plastid.util.services.exceptions import FileFormatWarning
 
-@skipdoc
-@deprecated
-def BED_to_Transcripts(stream,add_three_for_stop=False):
-    """Reads BED files line by line into |Transcript| objects
-    
-    Parameters
-    ----------
-    stream : file-like
-        Stream of BED4-BED12 format data
-
-    add_three_for_stop : bool, optional
-        Some annotation files exclude the stop codon from CDS annotations. If set to
-        True, three nucleotides will be added to the threeprime end of each
-        CDS annotation. Default: False
-    
-    Yields
-    ------
-    |Transcript|
-    """
-    reader = BED_Reader(stream,return_type=Transcript,add_three_for_stop=add_three_for_stop)
-    for ivc in reader:
-        yield ivc
-
-@skipdoc
-@deprecated
-def BED_to_SegmentChain(stream):
-    """Reads `BED`_ files line by line into |SegmentChain| objects
-    
-    Parameters
-    ----------
-    stream : file-like
-        Stream of BED4-BED12 format data
-    
-    Yields
-    ------
-    |SegmentChain|
-    """
-    reader = BED_Reader(stream,return_type=SegmentChain)
-    for ivc in reader:
-        yield ivc
 
 bed_x_formats = {
     "bedDetail" : [("ID",str),

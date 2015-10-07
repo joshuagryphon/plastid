@@ -9,15 +9,16 @@ import unittest
 import numpy
 from plastid.util.services.mini2to3 import cStringIO
 from nose.plugins.attrib import attr
+from plastid.genomics.roitools import SegmentChain
 from plastid.readers.psl import PSL_Reader, BundledPSL_Reader
-from plastid.readers.bed import BED_to_SegmentChain
+from plastid.readers.bed import BED_Reader
 from plastid.test.ref_files import MINI
 
 @attr(test="unit")
 class TestPSL_Reader(unittest.TestCase):
      
     def test_iter_finds_all(self):
-        bed_transcripts = [X for X in BED_to_SegmentChain(open(MINI["bed_file"])) if "intron" not in X.get_name()]
+        bed_transcripts = [X for X in BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain) if "intron" not in X.get_name()]
         bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
         psl_transcripts = [X for X in PSL_Reader(open(MINI["psl_file"])) if "repeat" not in X.get_name()]
         
@@ -25,7 +26,7 @@ class TestPSL_Reader(unittest.TestCase):
         self.assertGreater(len(bed_transcripts),0)
 
     def test_iter_reads_correct(self):
-        bed_transcripts = [X for X in BED_to_SegmentChain(open(MINI["bed_file"])) if "intron" not in X.get_name()]
+        bed_transcripts = [X for X in BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain) if "intron" not in X.get_name()]
         bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
         psl_transcripts = [X for X in PSL_Reader(open(MINI["psl_file"])) if "repeat" not in X.get_name()]        
         for bed, psl in zip(bed_transcripts,psl_transcripts):

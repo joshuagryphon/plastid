@@ -7,7 +7,7 @@ from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
 
 from plastid.genomics.roitools import Transcript
-from plastid.readers.bed import BED_to_Transcripts
+from plastid.readers.bed import BED_Reader
 from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
 from plastid.util.services.decorators import skip_if_abstract
 from plastid.util.io.filters import CommentReader
@@ -190,9 +190,9 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         """Set up test data for `TestGenomeHash`"""
         cls.binsize = 10000
 
-        cls.transcripts    = list(BED_to_Transcripts(CommentReader(open(REF_FILES["100transcripts_bed"]))))
-        cls.coding_regions = list(BED_to_Transcripts(CommentReader(open(REF_FILES["100cds_bed"]))))
-        cls.coding_antisense = list(BED_to_Transcripts(CommentReader(open(REF_FILES["100cds_antisense_bed"]))))
+        cls.transcripts    = list(BED_Reader(CommentReader(open(REF_FILES["100transcripts_bed"])),return_type=Transcript))
+        cls.coding_regions = list(BED_Reader(CommentReader(open(REF_FILES["100cds_bed"])),return_type=Transcript))
+        cls.coding_antisense = list(BED_Reader(CommentReader(open(REF_FILES["100cds_antisense_bed"])),return_type=Transcript))
 
         cls.tx_dict  = { X.get_name() : X for X in cls.transcripts }
         cls.cds_dict = { X.get_name() : X for X in cls.coding_regions }

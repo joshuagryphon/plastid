@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 """Test suite for :py:mod:`plastid.readers.bed`
 
-    :py:func:`BED_to_Transcripts`
-        Read BED files to Transcript objects
-    
-    :py:func:`BED_to_SegmentChain`
-        Reads BED files to SegmentChain objects
-    
     :py:class:`BED_Reader`
         Reads BED files to SegmentChain objects
 
@@ -22,7 +16,7 @@ from csv import QUOTE_NONE
 from nose.plugins.attrib import attr
 from plastid.util.services.mini2to3 import cStringIO
 from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
-from plastid.readers.bed import BED_to_Transcripts, BED_to_SegmentChain, BED_Reader
+from plastid.readers.bed import BED_Reader
 from nose.tools import assert_equal, assert_true, assert_dict_equal, assert_greater_equal
 
 warnings.simplefilter("ignore",DeprecationWarning)
@@ -258,9 +252,7 @@ class TestBED():
 
     def test_bed_import_3to12_columns(self):
         tx_reader = functools.partial(BED_Reader,return_type=Transcript)
-        tests = [(BED_to_SegmentChain,_TEST_SEGMENTCHAINS,"tosegmentchain,segmentchain"),
-                 (BED_to_Transcripts,_TEST_TRANSCRIPTS,"totranscripts_transcript"),
-                 (BED_Reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
+        tests = [(BED_Reader,_TEST_SEGMENTCHAINS,"reader_segmentchain"),
                  (tx_reader,_TEST_TRANSCRIPTS,"reader_transcript"),
                 ]
         for reader_fn, known_set, name in tests:
