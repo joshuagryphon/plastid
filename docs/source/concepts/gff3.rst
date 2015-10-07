@@ -125,6 +125,10 @@ attribute::
     [] # list of strings, corresponding to bad GFF3 lines
 
 
+
+
+
+
  .. _gff3-assembly-consequences:
 
 Consequences of assembly

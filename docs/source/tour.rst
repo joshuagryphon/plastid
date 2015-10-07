@@ -245,7 +245,7 @@ is provided for :term:`read alignments` in `BAM`_ format.
 Doing so returns a vector of counts at each position in the |GenomicSegment|
 or |SegmentChain|, with 5' to 3' coordinates relative to the chain (i.e.
 for reverse-strand features, position 0 of the vector corresponds to
-segment.end)::
+`segment.end`)::
 
     >>> # genomic segment
     >>> seg = GenomicSegment("merlin",1500,1600,"+")

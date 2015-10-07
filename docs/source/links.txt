@@ -50,6 +50,7 @@
 .. _RefSeq: http://www.ncbi.nlm.nih.gov/refseq/ 
 .. _SGD: http://www.yeastgenome.org
 .. _Flybase: http://flybase.org
+.. _Wormbase: http://www.wormbase.org
 .. _ENCODE: https://www.encodeproject.org/
 .. _GENCODE: www.gencodegenes.org 
 .. _galaxy: https://galaxyproject.org/

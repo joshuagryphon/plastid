@@ -170,7 +170,7 @@ Alignments in `bowtie`_ format can be imported into a |GenomeArray|. Because
 `bowtie`_ files are not sorted or indexed, mapping rules must be applied upon
 import, and cannot be changed afterwards::
 
-   >>> from plastid.genomics.genome_array import GenomeArray, five_prime_mp
+   >>> from plastid.genomics.genome_array import GenomeArray, five_prime_map
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> fiveprime_alignments = GenomeArray()
@@ -187,13 +187,13 @@ Method names for the various :term:`mapping rules <mapping rule>` appear below:
 **Mapping rule**         |GenomeArray|, |SparseGenomeArray|                                |BAMGenomeArray|
 ----------------------   --------------------------------------------------------------    ---------------------------------------
 
-Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`                  :py:func:`~plastid.genomics.genome_array.FivePrimeMapFactory`
+Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`                  :py:func:`~plastid.genomics.map_factories.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`         :py:func:`~plastid.genomics.genome_array.VariableFivePrimeMapFactory`
+Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`         :py:func:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 
-Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`                 :py:func:`~plastid.genomics.genome_array.ThreePrimeMapFactory`
+Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`                 :py:func:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
 
-Center/entire            :func:`~plastid.genomics.genome_array.center_map`                      :py:func:`~plastid.genomics.genome_array.CenterMapFactory`
+Center/entire            :func:`~plastid.genomics.genome_array.center_map`                      :py:func:`~plastid.genomics.map_factories.CenterMapFactory`
 ======================   ==============================================================    =======================================
 
 

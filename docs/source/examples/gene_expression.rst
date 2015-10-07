@@ -271,7 +271,9 @@ Making this estimate from the calculations above is simple::
     >>> df["translation_efficiency"] = df["ribosome_profiling_CDS_rpkm"] / df["RNA-seq_exon_rpkm"]
 
 Then, we can compare the effects of transcriptional and translational
-control::
+control:
+
+ .. code-block:: python
 
     >>> plt.loglog()
     >>> plot_df = copy.deepcopy(df)
@@ -290,16 +292,14 @@ control::
     >>> plt.show()
 
 
+
+
+
  .. figure:: /_static/images/demo_gene_expr_teff_vs_tx.png
 
     :class: captionfigure
     :caption: Translation efficiency vs transcription levels
     :alt: Translation efficiency vs transcription levels
-
-
- .. TODO::
-
-    Consider adding information about GTI-Seq or other TE estimates
 
 
 
@@ -352,12 +352,12 @@ As input, `DESeq`_ and `DESeq2`_ take two tables and an equation:
       - the value in a each cell corresponds ot the number of counts
         in the corresponding genomic region and sample
 
- #. An :ref:`sample design table <examples-deseq-design-table>`
+ #. A :ref:`sample design table <examples-deseq-design-table>`
     describing the properties of each sample
     (e.g. if any are technical or biological replicates, or any treatments
     or conditions that differ between samples)
 
- #. An :ref:`design equation <examples-deseq-equation>`, describing how
+ #. A :ref:`design equation <examples-deseq-equation>`, describing how
     the samples or treatments relate to one another
 
     
@@ -384,7 +384,9 @@ on each biological sample to obtain counts:
 
  .. TODO: include output
 From the output, the relevant columns can be extracted and moved to
-a single table::
+a single table:
+
+ .. code-block:: python
 
     >>> import pandas as pd
     >>> import plastid
@@ -404,6 +406,10 @@ a single table::
     >>> combined_df.savecsv("combined_counts.txt",sep="\t",header=True,index=False)
 
 
+
+
+
+
  .. _examples-deseq-design-table:
 
 The second table contains the *experimental design*. This can be created
@@ -416,6 +422,8 @@ of each condition::
     inf_rnaseq_2       infected
     uninf_rnaseq_1     uninfected
     uninf_rnaseq_2     uninfected
+
+
 
 
  .. _examples-deseq-equation:
@@ -471,7 +479,7 @@ Differential translation efficiency
 
 Tests for differential translation efficiency can also be implemented within
 `DESeq`_/`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
-Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_.
+Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_).
 
 We use an sample table similar to that above, but include a `sample_type`
 column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries::

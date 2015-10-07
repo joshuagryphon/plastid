@@ -58,7 +58,7 @@ Generally speaking, genomics data comes in a few flavors:
         that converts the reads to :term:`counts`. For example, one could count
         the number of 5' ends of reads that align to each position in a genome. For
         an in-depth discussion of :term:`mapping rules <mapping rule>`, see
-        :doc:`concepts/mapping_rules`.
+        :doc:`/concepts/mapping_rules`.
 
 
 Formats of data
@@ -84,7 +84,7 @@ of the various file formats used in genomics. But, two points are relevant:
 
 Below is a table of commonly used file formats. At present, :data:`plastid` handles
 all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
-`Biopython`_ (`FASTA`_), or `2bitreader`_ (`2bit <twobit>`_).
+`Biopython`_ (`FASTA`_), or `twobitreader`_ (`2bit <twobit>`_).
 
     =====================   ===================================   ===================
     **Data type**           **Unindexed formats**                 **Indexed formats**

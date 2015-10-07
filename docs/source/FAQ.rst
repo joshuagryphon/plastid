@@ -14,14 +14,13 @@ Installation and runtime
 
 The tests won't run
 ...................
-In order to run the tests, you need to download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack it into ``plastid/test/``. We didn't include this 
-in the main package in order to keep the download small.
+In order to run the tests, you need to download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack it into ``plastid/test/``. We decided not to include the test data in the main package in order to keep the download small.
 
 
 Install fails midway
 ....................
 
-This is a due to a `known quirk <https://github.com/numpy/numpy/issues/2434>`_ 
+This can be due to a `known quirk <https://github.com/numpy/numpy/issues/2434>`_ 
 with `NumPy`_ and `SciPy`_ installation in Python.
 As a workaround. Just install `NumPy`_ and `pysam`_ first.
 Starting in the folder where you cloned :data:`plastid`:

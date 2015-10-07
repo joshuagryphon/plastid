@@ -25,7 +25,7 @@ to keep logical records of everything.
 Create a fork
 .............
 Rather than push changes to our main repository, create a fork, and, if appropriate,
-a topic branch. Build & test your changes there, merge into the master branch of
+a topic branch. Build & test your changes there, merge into the ``develop`` branch of
 your fork, then submit a pull request.
 
 
@@ -64,7 +64,8 @@ Document
 Submit
 ......
 Send a pull request referring to the ticket above, along with a description
-of your pathc.
+of your patch. We'll merge it into ``develop``, and add you to the list
+of contributors.
 
 
 Document formatting

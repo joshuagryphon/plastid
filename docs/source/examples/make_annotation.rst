@@ -190,10 +190,11 @@ The `fasta`_ file of sequences can then be processed with any pipeline, and the
 TSS windows viewed in a :term:`genome browser`, like `IGV`_ or the `UCSC genome browser`_.
 
 
+
  .. _make-annotation-bed-xplusy:
 
-Making custom :term:`BED X+Y`_ files
-------------------------------------
+Making custom :term:`BED X+Y` files
+-----------------------------------
 
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
 in a :term:`BED 12+Y` format, pass the `extra_columns` keyword to the
@@ -217,6 +218,8 @@ If an attribute is not defined, the column will be left empty ""::
 
     >>> my_chain.as_bed(extra_columns=["extra_field_1","nonexistent_field","extra_field_2"])
     chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,    542        some extra field
+
+
 
 
 
