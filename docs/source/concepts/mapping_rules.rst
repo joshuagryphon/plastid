@@ -152,10 +152,9 @@ Read alignments are held in data structures called *GenomeArrays*
 Alignments in `BAM`_ format can be imported into a |BAMGenomeArray|.
 Mapping rules are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.set_mapping`::
 
-   >>> import pysam
    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
-   >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=5))
@@ -270,7 +269,7 @@ to mapping functions. To specify an offset, use a wrapper function::
     >>>
     >>>    return new_func
 
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
     >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 

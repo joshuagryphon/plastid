@@ -44,14 +44,13 @@ as |SegmentChains| and |GenomicSegments|. Portions of |SegmentChains|
 and |Transcripts| can be masked using their
 :meth:`~plastid.genomics.roitools.SegmentChain.add_masks` methods::
 
-    >>> import pysam
     >>> import numpy
     >>> from plastid.genomics.roitools import GenomicSegment, Transcript
     >>> from plastid.readers.bed import BED_Reader
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load transcripts and count data
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")],FivePrimeMapFactory(offset=14))
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"],FivePrimeMapFactory(offset=14))
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
     >>> #this is ribosome profiling data, so we'll look at a coding region

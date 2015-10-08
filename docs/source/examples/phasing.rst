@@ -58,7 +58,6 @@ First, we need to open the read alignments and transcript annotation:
 
  .. code-block:: python
 
-    >>> import pysam
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
     >>> from plastid.readers.bed import BED_Reader
 
@@ -66,7 +65,7 @@ First, we need to open the read alignments and transcript annotation:
     >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
 
     >>> # open read alignments and map to P-sites
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 :term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit variable

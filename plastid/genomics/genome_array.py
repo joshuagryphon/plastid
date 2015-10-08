@@ -161,6 +161,7 @@ import copy
 import warnings
 import numpy
 import scipy.sparse
+import pysam
 from collections import OrderedDict
 from plastid.readers.wiggle import WiggleReader
 from plastid.readers.bowtie import BowtieReader
@@ -889,8 +890,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         Parameters
         ----------
         bamfile : list
-            An list of open :py:class:`pysam.AlignmentFile` s. Note: the
-            corresponding `BAM`_ files must be sorted and indexed by `samtools`_. 
+            A list of filenames of `BAM`_ files, or a list of open :py:class:`pysam.AlignmentFile` 
+            objects. Note: the corresponding `BAM`_ files must be sorted and indexed by `samtools`_. 
         
         mapping : func
             :term:`mapping function` that determines how each read alignment is mapped to a 
@@ -913,6 +914,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
+        bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
         self.map_fn       = mapping
         self._strands     = ("+","-")

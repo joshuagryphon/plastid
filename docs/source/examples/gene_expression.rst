@@ -112,9 +112,6 @@ First, we need to import a few things::
 
     >>> import copy
 
-    >>> # opens BAM files
-    >>> import pysam
-
     >>> # spreadsheet-like holder for data
     >>> import pandas as pd
 
@@ -135,7 +132,7 @@ First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArr
     >>>                 "RNA-seq"            : "SRR592963_rnaseq.bam",
     >>>               }
 
-    >>> my_datasets = { K : BAMGenomeArray([pysam.Samfile(V)]) for K,V in my_datasets.items() }
+    >>> my_datasets = { K : BAMGenomeArray([V]) for K,V in my_datasets.items() }
 
  
 Next, we tell the |BAMGenomeArrays| which :term:`mapping rule` to use. We

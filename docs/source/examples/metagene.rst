@@ -449,12 +449,11 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
     >>> from plastid.genomics.genome_hash import GenomeHash
     >>> from plastid.readers.gff import GTF2_TranscriptAssembler
 
-    >>> import pysam
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some
-    >>> ALIGNMENTS = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+    >>> ALIGNMENTS = BAMGenomeArray(["SRR609197_riboprofile.bam")])
     >>> ALIGNMENTS.set_mapping(FivePrimeMapFactory(offset=14))
 
     >>> # skip masking out any repetitive regions for purpose of demo

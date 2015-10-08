@@ -159,12 +159,11 @@ The mapping rule can be constructed by passing the offset file from |psite| to t
 :meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
 method of |VariableFivePrimeMapFactory|::
 
-    >>> import pysam
     >>> from plastid.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
 
     >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
     
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR1562907.bam","rb")])
+    >>> alignments = BAMGenomeArray(["SRR1562907.bam"])
     >>> alignments.set_mapping(maprule)
 
 

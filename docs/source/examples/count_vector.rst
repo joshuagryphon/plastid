@@ -26,9 +26,6 @@ To count :term:`read alignments` along a transcript, we need two types of data:
 
 First, we import everything we need::
 
-    >>> # reader for BAM files
-    >>> import pysam
-
     >>> # data structure for mapping read alignments to genomic positions
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
 
@@ -47,7 +44,7 @@ which we'll load into a :class:`~plastid.genomics.genome_array.BAMGenomeArray`.
 We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
 estimating the P-site to be 14 nucleotides from the 5' end::
 
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam")])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 Now, we're ready to count. The method

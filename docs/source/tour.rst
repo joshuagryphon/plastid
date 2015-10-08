@@ -183,10 +183,9 @@ explained :ref:`below <tour-genome-array>`). For example, to count how many 5'
 ends of sequencing reads appear at each position in a chain::
 
     >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
-    >>> import pysam
 
     >>> # load read alignments, and map them to 5' ends
-    >>> alignments = BAMGenomeArray([pysam.Samfile("SRR609197_riboprofile.bam","rb")])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
     >>> alignments.set_mapping(FivePrimeMapFactory())
 
     >>> # fetch the number of 5' ends of alignments at positions 300-320
