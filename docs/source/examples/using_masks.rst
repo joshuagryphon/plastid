@@ -45,9 +45,8 @@ and |Transcripts| can be masked using their
 :meth:`~plastid.genomics.roitools.SegmentChain.add_masks` methods::
 
     >>> import numpy
-    >>> from plastid.genomics.roitools import GenomicSegment, Transcript
-    >>> from plastid.readers.bed import BED_Reader
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid import GenomicSegment, Transcript, BED_Reader, \
+                            BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load transcripts and count data
     >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"],FivePrimeMapFactory(offset=14))
@@ -131,7 +130,7 @@ features cover genomic regions that should be masked from analysis.
 :term:`Mask files <mask file>` can be loaded into a |GenomeHash|, which
 indexes mask by location in the genome. To create a |GenomeHash|::
 
-    >>> from plastid.genomics.genome_hash import GenomeHash
+    >>> from plastid import GenomeHash
 
     >>> # get list of masks
     >>> mask_features = list(BED_Reader(open("merlin_start_codon_masks.bed")))

@@ -115,7 +115,7 @@ in addition to continuous features (e.g. single exons).
 |GenomicSegments| and any optional keywords, which will be stored in the
 |SegmentChain|'s `attr` dictionary::
 
-    >>> from plastid.genomics.roitools import *
+    >>> from plastid import GenomicSegment, SegmentChain, Transcript
     >>> exon1 = GenomicSegment("chrI",129237,130487,"+")
     >>> exon2 = GenomicSegment("chrI",130531,130572,"+")
     >>> SegmentChain(exon1,exon2,ID="YAL013W",alias="DEP1")
@@ -136,7 +136,7 @@ in addition to continuous features (e.g. single exons).
 More often, |SegmentChains| and |Transcripts| are loaded from :term:`annotation`
 files (see :mod:`plastid.readers`)::
  
-    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid import BED_Reader
 
     >>> # get an iterator over transcripts in file
     >>> reader = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
@@ -182,7 +182,7 @@ from the 5' to 3' end (relative to the chain) from |GenomeArrays| (themselves
 explained :ref:`below <tour-genome-array>`). For example, to count how many 5'
 ends of sequencing reads appear at each position in a chain::
 
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid import BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load read alignments, and map them to 5' ends
     >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
@@ -294,7 +294,7 @@ to determine the genomic position(s) at which each alignment should be counted.
 :term:`mapping rules <mapping function>` for |BAMGenomeArrays| can be changed
 at runtime::
 
-    >>> from plastid.genomics.genome_array import FivePrimeMapFactory, ThreePrimeMapFactory
+    >>> from plastid import FivePrimeMapFactory, ThreePrimeMapFactory
     
     >>> alignments.set_mapping(FivePrimeMapFactory())
     >>> demo_tx.get_cds().get_counts(alignments)[:50]
@@ -372,7 +372,7 @@ by location. A |GenomeHash| may be created from a list or dictionary of features
 (e.g. |SegmentChains| or |Transcripts|) in memory, or directly loaded from a
 genome annotation (in `BED`_, `GTF2`_, `GFF3`_, or `PSL`_ format)::
 
-    >>> from plastid.genomics.genome_hash import GenomeHash 
+    >>> from plastid import GenomeHash 
     >>> my_hash = GenomeHash(transcript_dict)
  
 Having made a |GenomeHash|, we can ask what is where in the genome. For

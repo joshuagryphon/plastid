@@ -83,7 +83,7 @@ An analysis pipeline for this experiment might look the following:
 
          .. code-block:: python
 
-            >>> from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
+            >>> from plastid import GenomicSegment, SegmentChain, Transcript
 
             # GFP transcript, containing 100 bp of 5' UTR and 150 bp of 3' UTR
             # 714bp coding region from bases 945-1659
@@ -165,7 +165,7 @@ Then, within a Python session, read each transcript and create TSS windows:
     >>> seq_out = open("tss_window_sequences.fa","w")
 
     >>>  # open transcripts and process one-by-one
-    >>> from plastid.readers.gff import GTF2_TranscriptAssembler
+    >>> from plastid import GTF2_TranscriptAssembler
     >>>
     >>> transcripts = GTF2_TranscriptAssembler(open("gencode.v23.annotation.gtf"),sorted=True)
     >>>

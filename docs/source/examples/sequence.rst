@@ -17,7 +17,7 @@ the strings correspond to the forward-strand sequence.
 Sequences are fully-spliced, if the |SegmentChain| contains one or more
 |GenomicSegment|::
 
-    >>> from plastid.genomics.roitools import GenomicSegment, SegmentChain
+    >>> from plastid import GenomicSegment, SegmentChain
 
     >>> little_chain = SegmentChain(GenomicSegment("chrA",10,23,"+"),
     >>>                             GenomicSegment("chrA",33,41,"+"),
@@ -71,8 +71,8 @@ In `Biopython`_, nucleic acids are represented as `SeqRecord`_ objects
 rather than strings. |SegmentChain| and |Transcript| don't mind::
 
     >>> # load CMV annotations from test dataset
-    >>> from plastid.genomics.roitools import Transcript
-    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid import Transcript, BED_Reader
+
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
     >>> transcripts[0]
     <Transcript segments=1 bounds=merlin:1316-2398(+) name=ORFL1W_(RL1)>
