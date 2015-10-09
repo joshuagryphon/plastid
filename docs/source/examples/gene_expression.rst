@@ -111,19 +111,10 @@ In this example, we separately caclulate read density over:
 First, we need to import a few things::
 
     >>> import copy
-
-    >>> # spreadsheet-like holder for data
     >>> import pandas as pd
-
-    >>> # plotting functions
     >>> import matplotlib.pyplot as plt
-
-    >>> # reader for BED-format transcript annotations and Transcript object
-    >>> from plastid.readers.bed import BED_Reader
-    >>> from plastid.genomics.roitools import Transcript
-
-    >>> # data structure that maps read alignments to genomic positions
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
+    >>> from plastid import Transcript BED_Reader, \
+                            BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
 
 First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArray|::
@@ -386,7 +377,6 @@ a single table:
  .. code-block:: python
 
     >>> import pandas as pd
-    >>> import plastid
     >>> sample_names = ["inf_rnaseq_rep1","inf_rnaseq_rep2","uninf_rnaseq_rep1","uninf_rnaseq"rep2"]
 
     >>> # load samples as DataFrames

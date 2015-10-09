@@ -446,10 +446,8 @@ the following parameters:
 Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> from plastid.bin.metagene import group_regions_make_windows
-    >>> from plastid.genomics.genome_hash import GenomeHash
-    >>> from plastid.readers.gff import GTF2_TranscriptAssembler
-
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid import GenomeHash, GTF2_TranscriptAssembler, \
+                            BAMGenomeArray, FivePrimeMapFactory
 
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some

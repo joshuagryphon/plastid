@@ -58,8 +58,7 @@ First, we need to open the read alignments and transcript annotation:
 
  .. code-block:: python
 
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
-    >>> from plastid.readers.bed import BED_Reader
+    >>> from plastid import Transcript, BED_Reader, BAMGenomeArray, FivePrimeMapFactory
 
     >>> # retrieve an iterator over transcripts
     >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
@@ -74,7 +73,7 @@ To do so, we'll add a size filter:
 
  .. code-block:: python
 
-    >>> from plastid.genomics.genome_array import SizeFilterFactory
+    >>> from plastid import SizeFilterFactory
     >>> size_filter = SizeFilterFactory(min=33,max=34)
     >>> >>> alignments.add_filter("size",size_filter)
 

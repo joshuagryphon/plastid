@@ -27,15 +27,12 @@ To count :term:`read alignments` along a transcript, we need two types of data:
 First, we import everything we need::
 
     >>> # data structure for mapping read alignments to genomic positions
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory
+    >>> from plastid import BAMGenomeArray, FivePrimeMapFactory, \
+                            BED_Reader, Transcript
 
-    >>> # reader for BED-format transcript annotations
-    >>> from plastid.readers.bed import BED_Reader
-    >>> from plastid.genomics.roitools import Transcript
-
-Next, load the transcripts. By default, |BED_Reader|
-and the other readers in :data:`plastid` behave as iterators. Here, we'll retrieve
-the transcripts as a :class:`list`::
+Next, load the transcripts. By default, |BED_Reader| and the other readers
+in :data:`plastid` behave as iterators. Here, we'll retrieve the transcripts
+as a :class:`list`::
 
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 

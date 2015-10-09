@@ -20,7 +20,6 @@ __author__ = "Joshua Griffin Dunn"
 import os
 import sys
 import glob
-import plastid
 from collections import Iterable
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.build_ext import build_ext
@@ -56,7 +55,7 @@ install these via pip, and retry:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = plastid.__version__ # "0.3.0" # plastid.__version__
+version = "0.3.2"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
 packages = find_packages()
 

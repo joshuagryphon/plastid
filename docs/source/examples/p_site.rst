@@ -159,7 +159,7 @@ The mapping rule can be constructed by passing the offset file from |psite| to t
 :meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
 method of |VariableFivePrimeMapFactory|::
 
-    >>> from plastid.genomics.genome_array import BAMGenomeArray, VariableFivePrimeMapFactory
+    >>> from plastid import BAMGenomeArray, VariableFivePrimeMapFactory
 
     >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
     
@@ -170,7 +170,7 @@ method of |VariableFivePrimeMapFactory|::
 For alignments in `bowtie`_-format use |GenomeArray| and
 :func:`~plastid.genomics.genome_array.variable_five_prime_map`::
 
-    >>> from plastid.genomics.genome_array import GenomeArray, variable_five_prime_map
+    >>> from plastid import GenomeArray, variable_five_prime_map
     >>> from plastid.genomics.util.scriptlib import _parse_variable_offset_file as pvof
     >>> offset_dict = pvof(open("SRR609197_riboprofile_p_offsets_adjusted.txt"))
 
