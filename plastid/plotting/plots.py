@@ -281,7 +281,7 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
 
 
 
-def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,line={},bar={}):
+def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,fig={},line={},bar={}):
     """Phasing plot for ribosome profiling
 
     Creates a two-panel plot:
@@ -310,13 +310,16 @@ def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,line={},bar={}):
     cmap : :class:`matplotlib.colors.Colormap`, optional
         Colormap from which to generate bar colors. If supplied, will override
         any `color` attribute in `**kwargs`.
+
+    fig : dict
+        Keyword arguments to :func:`matplotlib.pylot.figure`
         
     line : dict
-        Other keyword arguments to pass to :func:`matplotlib.pyplot.plot`
+        Keyword arguments to pass to :func:`matplotlib.pyplot.plot`
         in top panel
 
     bar : dict
-        Other keyword arguments to pass to :func:`matplotlib.pyplot.bar`
+        Keyword arguments to pass to :func:`matplotlib.pyplot.bar`
         in bottom panel
 
 
@@ -329,7 +332,7 @@ def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,line={},bar={}):
         Tuple of :class:`matplotlib.axes.Axes`; the first corresponding 
         to the line graph (top panel), the second, the bar graph (bottom).
     """
-    fig, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,sharex=True,squeeze=True)
+    fig, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,sharex=True,**fig)
 
     totals = counts.sum(1)
     phases = (counts.astype(float).T/totals).T

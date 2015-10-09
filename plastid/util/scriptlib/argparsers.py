@@ -991,6 +991,31 @@ class PrefixNamespaceWrapper(object):
         """
         return getattr(self.namespace,"%s%s" % (self.prefix,k))
 
+#===============================================================================
+# INDEX: plotting
+#===============================================================================
+
+def get_plotting_parser(prefix="",disabled=[],printer=NullWriter()):
+    """Create an argument parser for simple plotting functions.
+    """
+    import matplotlib.style
+    if len(prefix) > 0:
+        prefix += "_"
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--%stitle" % prefix,default=None,type=str,
+        help="Use this chart title")
+    parser.add_argument("--%sstylesheet" % prefix,default=None,choices=matplotlib.style.available,
+        help="Use this matplotlib stylesheet instead of matplotlibrc params")
+    parser.add_argument("--%sfigformat" % prefix,default="svg",type=str,
+        help="Save pots in this format (e.g. svg, pdf, jpg, png, eps; Default: svg)")
+    parser.add_argument("--%sfigsize" % prefix,nargs=2,default=None,type=float,
+        help="Figure width and height, in inches. (Default: use matplotlibrc params)",metavar="N")
+    parser.add_argument("--%sdpi" % prefix,type=int,default=150,
+        help="dpi resolution for figure")
+
+    return parser
+
 
 #===============================================================================
 # INDEX: Utility functions
