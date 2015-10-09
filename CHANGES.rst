@@ -10,7 +10,21 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
  
     This project was initially developed internally under the provisional
     name ``genometools``, and then later under the codename ``yeti``.
+
+Unreleased
+----------
+
+Added
+.....
+  - Logical imports- the following commonly-used data structures can
+    now be directly imported from the parent package ``plastid``, 
+    instead of subpackages/submodules:
     
+      - ``GenomicSegment``, ``SegmentChain``, and ``Transcript``
+      - All GenomeHashes and GenomeArrays
+      - All file readers
+
+
 
 plastid [0.3.2] = [2015-10-01]
 ------------------------------
