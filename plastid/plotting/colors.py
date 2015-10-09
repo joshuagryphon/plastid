@@ -6,6 +6,8 @@ from 0.0 to 255.
 import numpy
 from matplotlib.colors import colorConverter
 
+process_black = "#222222"
+
 def get_rgb255(inp):
     """Fetch `r,g,b` values where `r,g,b` are integers ranging from 0 to 255
 
