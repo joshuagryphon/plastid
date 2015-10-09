@@ -13,6 +13,8 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
 
 Unreleased
 ----------
+Changes here are all backwards-compatible, and are mostly aesthetic changes
+aimed at making the library easier to use with less typing
 
 Added
 .....
@@ -23,6 +25,23 @@ Added
       - ``GenomicSegment``, ``SegmentChain``, and ``Transcript``
       - All GenomeHashes and GenomeArrays
       - All file readers
+
+  - ``VariableFivePrimeMapFactory`` can now be created from static method ``from_file()``,
+    so no need to manually parse text files or create dictionaries
+
+  - ``BAMGenomeArray`` can now be initialized with a list of paths to BAM files,
+    in addition or instead of a list of ``pysam.AlignmentFiles``
+
+Changed
+.......
+  - ``add_three_for_stop_codon()`` reimplemented in Cython, resulting in 2-fold speedup.
+    Moved from ``plastid.readers.common`` to ``plastid.genomics.roitools`` (though previosu
+    import path still works)
+
+Removed
+.......
+  - Removed deprecated functions ``BED_to_Transcripts()`` and ``BED_to_SegmentChains``,
+    for which ``BED_Reader`` serves as a drop-in replacement
 
 
 
