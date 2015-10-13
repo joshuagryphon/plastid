@@ -12,6 +12,7 @@ as well as some specific plots used by :mod:`plastid`. For example:
 """
 import copy
 import numpy
+import matplotlib
 import matplotlib.pyplot as plt
 from plastid.plotting.colors import lighten, process_black
 
@@ -41,6 +42,7 @@ def _plot_helper(axes):
 
     return fig, ax
 
+# TODO: figure out figure buffer
 def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_ax_kwargs={},
                 other_ax_kwargs={}):
     """Split the spaces taken by one axes into one or more panes. The original axes is made invisible.
@@ -73,48 +75,64 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
     ax.set_visible(False)
     rects = {}
     axes = { "orig" : ax }
+    mplrc = matplotlib.rcParams
 
-    main_height = 1.0 - bottom_height - top_height
-    main_width  = 1.0 - left_width - right_width
+    buf_left  = mplrc["figure.subplot.left"]
+    buf_bot   = mplrc["figure.subplot.bottom"]
+    buf_right = 1.0 - mplrc["figure.subplot.right"] 
+    buf_top   = 1.0 - mplrc["figure.subplot.top"]
 
-    main_top = bottom_height + main_height
-    main_right = left_width + main_width
-        
+    hscale = 1.0 - buf_top - buf_bot
+    wscale = 1.0 - buf_left - buf_right
+
+    main_height = (1.0 - bottom_height - top_height)*hscale
+    main_width  = (1.0 - left_width - right_width)*wscale
+
+    bottom_height *= hscale
+    top_height    *= hscale
+    left_width    *= wscale
+    right_width   *= wscale
+
+    main_left  = buf_left + left_width
+    main_right = main_left + main_width
+    main_bot   = buf_bot + bottom_height
+    main_top   = main_bot + main_height
+
+
     # each rect is left,bottom,width,height
     rects = {}
-    rects["main"] = [left_width,
-                     bottom_height,
+    rects["main"] = [main_left,
+                     main_bot,
                      main_width,
                      main_height]
     if left_width > 0:
-        rects["left"] = [0,
-                         bottom_height,
+        rects["left"] = [buf_left,
+                         main_bot,
                          left_width,
                          main_height]
     if right_width > 0:
         rects["right"] = [main_right,
-                          bottom_height,
+                          main_bot,
                           right_width,
                           main_height]
     if bottom_height > 0:
-        rects["bottom"] = [left_width,
-                           0,
+        rects["bottom"] = [main_left,
+                           main_bot,
                            main_width,
                            bottom_height]
     if top_height > 0:
-        rects["top"] = [left_width,
+        rects["top"] = [main_left,
                         main_top,
                         main_width,
                         top_height]
 
-    axes["main"] = fig.add_axes(rects["main"],transform=ax.transAxes,zorder=100,**main_ax_kwargs)
+    axes["main"] = fig.add_axes(rects["main"],zorder=100,**main_ax_kwargs)
 
     for axes_name, rect in rects.items():
         if axes_name == "main":
             pass
         else:
             ax_kwargs = other_ax_kwargs
-
             if axes_name in ("right","left"):
                 ax_kwargs["sharey"] = axes["main"]
                 if "sharex" in ax_kwargs:
@@ -124,7 +142,7 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
                 if "sharey" in ax_kwargs:
                     ax_kwargs.pop["sharey"]
 
-            axes[axes_name] = fig.add_axes(rect,transform=ax.transAxes,zorder=50,**ax_kwargs)
+            axes[axes_name] = fig.add_axes(rect,zorder=50,**ax_kwargs)
 
     return axes
 
@@ -521,7 +539,7 @@ def metagene_profile(data,profile,x=None,axes=None,sort_fn=sort_metagene_max_pos
     plot_kwargs = copy.deepcopy(plot_args)
     im_args     = copy.deepcopy(im_args)
     im_args["aspect"] = "auto"
-    im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]
+    im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
     im_args["origin"] = "upper"
 
     axes["top"].plot(x,profile,**plot_args)
@@ -529,14 +547,14 @@ def metagene_profile(data,profile,x=None,axes=None,sort_fn=sort_metagene_max_pos
     axes["top"].set_xlim(x.min(),x.max())
     axes["top"].set_yticks([])
     axes["top"].xaxis.tick_bottom()
-    for spine in axes["top"].spines.values():
-        spine.set_visible(False)
+    axes["top"].set_frame_on(False)
 
     axes["main"].xaxis.tick_bottom()
-    axes["main"].imshow(data[sort_indices],
+    axes["main"].imshow(data[sort_indices,:],
                         vmin=numpy.nanmin(data),
                         vmax=numpy.nanmax(data),
                         **im_args)
+#    axes["main"].set_ylim(0,data.shape[0])
 
     return fig, axes
 
