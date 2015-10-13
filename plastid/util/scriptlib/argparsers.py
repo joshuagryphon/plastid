@@ -1053,7 +1053,11 @@ def get_colors_from_args(args,num_colors):
 
     if figcolors is not None:
         import numpy
-        colors = matplotlib.cm.get_cmap(figcolors)(numpy.linspace(0,1.0,num_colors))
+        cmap = matplotlib.cm.get_cmap(figcolors) 
+        if num_colors > 1:
+            colors = cmap(numpy.linspace(0,1.0,num_colors))
+        else:
+            colors = [cmap(0.5)]
     else:
         import matplotlib.style
         from itertools import cycle

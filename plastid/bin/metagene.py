@@ -145,6 +145,15 @@ from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import ArgumentWarning, DataWarning
+from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
+                                              get_transcripts_from_args,\
+                                              get_genome_hash_from_mask_args,\
+                                              get_colors_from_args,\
+                                              get_alignment_file_parser,\
+                                              get_annotation_file_parser,\
+                                              get_mask_file_parser,\
+                                              get_plotting_parser
+
 
 warnings.simplefilter("once",DataWarning)
 
@@ -751,8 +760,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
                                 )
     return counts, norm_counts, profile_table
 
-def do_chart(sample_dict,landmark="landmark",title=None):
-    """Plot metagene profiles
+def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=None):
+    """Plot metagene profiles against one another
     
     Parameters
     ----------
@@ -773,27 +782,48 @@ def do_chart(sample_dict,landmark="landmark",title=None):
     """
     import matplotlib
     matplotlib.use("Agg")
+    import matplotlib.style
     import matplotlib.pyplot as plt
 
-    fig = plt.figure()
+    if len(args.labels) == len(args.infiles):
+        samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
+    else:
+        if len(args.labels) > 0:
+            warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
+        samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
+     
+    if args.stylesheet is not None:
+        matplotlib.style.use(args.stylesheet)
+
+    title = args.title
+    colors = get_colors_from_args(args,len(args.infiles))
+
+    fargs = {}
+    if args.figsize is not None:
+        fargs["figsize"] = args.figsize
+
+    fig = plt.figure(**fargs)
+    ax = plt.gca()
     min_x = numpy.inf
     max_x = -numpy.inf
-    for k, v in sample_dict.items():
-        plt.plot(v["x"],v["metagene_average"],label=k)
+    for n, (k, v) in enumerate(samples.items()):
+        plt.plot(v["x"],v["metagene_average"],label=k,color=colors[n])
         min_x = min(min_x,min(v["x"]))
         max_x = max(max_x,max(v["x"]))
     
     plt.xlim(min_x,max_x)
-    ylim = plt.gca().get_ylim()
+    ylim = ax.get_ylim()
     plt.ylim(0,ylim[1])
     
-    plt.xlabel("Distance from %s (nt)" % landmark)
+    plt.xlabel("Distance from %s (nt)" % args.landmark)
     plt.ylabel("Normalized read density (au)")
     
     if title is not None:
         plt.title(title)
     
     plt.legend(bbox_to_anchor=(1.02,1.02),loc="upper left",borderaxespad=0)
+    printer.write("Saving to %s..." % args.outfile)
+    fig.savefig(args.outfile)
     
     return fig
         
@@ -816,13 +846,10 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
-                                               get_annotation_file_parser,\
-                                               get_mask_file_parser
-
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
     annotation_file_parser = get_annotation_file_parser()
     mask_file_parser = get_mask_file_parser()
+    plotting_parser = get_plotting_parser()
     
     generator_help = "Create ROI file from genome annotation"
     generator_desc = format_module_docstring(group_regions_make_windows.__doc__)
@@ -851,6 +878,7 @@ def main(argv=sys.argv[1:]):
     pparser    = subparsers.add_parser("chart",
                                        help=chart_help,
                                        description=chart_desc,
+                                       parents=[plotting_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
     
     # generate subprogram options
@@ -893,17 +921,12 @@ def main(argv=sys.argv[1:]):
                          )
     pparser.add_argument("--labels",type=str,nargs="+",default=[],
                          help="Sample names for each metagene profile (optional).")
-    pparser.add_argument("--title",type=str,default=None,
-                         help="Title for chart (optional)")
     pparser.add_argument("--landmark",type=str,default=None,
                          help="Name of landmark at zero point (e.g. 'CDS start' or 'CDS stop'; optional)")
 
     
     args = parser.parse_args(argv)
     
-    from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                               get_transcripts_from_args,\
-                                               get_genome_hash_from_mask_args
     # 'generate' subprogram
     if args.program == "generate":
         printer.write("Generating ROI file...")
@@ -994,16 +1017,7 @@ def main(argv=sys.argv[1:]):
     # 'plot' subprogram
     elif args.program == "chart":
         assert len(args.labels) in (0,len(args.infiles))
-        if len(args.labels) == len(args.infiles):
-            samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
-        else:
-            if len(args.labels) > 0:
-                warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
-            samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
-         
-        figure = do_chart(samples,title=args.title,landmark=args.landmark)
-        printer.write("Saving to %s..." % args.outfile)
-        figure.savefig(args.outfile)
+        do_chart(args,printer)
 
     printer.write("Done.")
 
