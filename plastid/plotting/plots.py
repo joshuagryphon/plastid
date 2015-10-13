@@ -111,6 +111,8 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
         heights.shape
         bottoms += heights
     
+    ax.set_xlim(-0.5,rows+0.5)
+
     return fig, ax
 
 
@@ -281,7 +283,7 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
 
 
 
-def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,fig={},line={},bar={}):
+def phase_plot(counts,labels=None,cmap=None,color=None,lighten_by=0.2,fig={},line={},bar={}):
     """Phasing plot for ribosome profiling
 
     Creates a two-panel plot:
@@ -311,6 +313,9 @@ def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,fig={},line={},bar={}
         Colormap from which to generate bar colors. If supplied, will override
         any `color` attribute in `**kwargs`.
 
+    color : matplotlib colorspec, or list of these
+        Colors to use in plot. Overridden if `cmap` is supplied.
+
     fig : dict
         Keyword arguments to :func:`matplotlib.pylot.figure`
         
@@ -337,7 +342,7 @@ def phase_plot(counts,labels=None,cmap=None,lighten_by=0.2,fig={},line={},bar={}
     totals = counts.sum(1)
     phases = (counts.astype(float).T/totals).T
     
-    stacked_bar(phases,axes=ax2,labels=labels,lighten_by=lighten_by,cmap=cmap,**bar)
+    stacked_bar(phases,axes=ax2,labels=labels,lighten_by=lighten_by,cmap=cmap,color=color,**bar)
     ax2.set_xlabel("Read length (nt)")
     ax2.set_ylabel("Fraction in each phase")
     x = numpy.arange(len(totals)) + 0.5

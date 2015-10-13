@@ -40,7 +40,8 @@ from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                               get_transcripts_from_args,\
                                               get_alignment_file_parser,\
                                               get_annotation_file_parser,\
-                                              get_plotting_parser
+                                              get_plotting_parser,\
+                                              get_colors_from_args
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -184,11 +185,13 @@ def main(argv=sys.argv[1:]):
     if args.figsize is not None:
         fig["figsize"] = tuple(args.figsize)
 
+    colors = get_colors_from_args(args,len(read_lengths))
+
     fn = "%s_phasing.%s" % (args.outbase,args.figformat)
     printer.write("Plotting to %s ..." % fn)
     plot_counts = numpy.vstack([V for (_,V) in sorted(phase_sums.items())])
     fig, (ax1,ax2) = phase_plot(plot_counts,labels=read_lengths,lighten_by=0.3,
-                                fig=fig)
+                                cmap=None,color=colors,fig=fig)
 
     if args.title is not None:
         ax1.set_title(args.title)
@@ -196,7 +199,6 @@ def main(argv=sys.argv[1:]):
         ax1.set_title("Phasing stats for %s" % args.outbase)
 
     fig.savefig(fn,dpi=args.dpi)
-
     
 
 if __name__ == "__main__":
