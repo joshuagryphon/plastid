@@ -49,13 +49,16 @@ import warnings
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.style
 import numpy
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                                      get_alignment_file_parser
+                                              get_alignment_file_parser,\
+                                              get_plotting_parser,\
+                                              get_colors_from_args
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
@@ -204,10 +207,12 @@ def main(argv=sys.argv[1:]):
     """
     alignment_file_parser = get_alignment_file_parser(disabled=disabled_args,
                                                       input_choices=["BAM"])
-    
+    plotting_parser = get_plotting_parser()
+
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[alignment_file_parser])
+                                     parents=[alignment_file_parser,
+                                              plotting_parser])
     
     parser.add_argument("--min_counts",type=int,default=10,metavar="N",
                          help="Minimum counts required in normalization region "+
@@ -238,8 +243,17 @@ def main(argv=sys.argv[1:]):
     args.mapping = "fiveprime"
     args.offset  = 0
     args.nibble  = 0
+
     
     # process arguments
+    min_len = args.min_length
+    max_len = args.max_length
+    profiles = max_len + 1 - min_len
+    lengths = list(range(min_len,max_len+1))
+    outbase = args.outbase
+    title  = "Fiveprime read offsets by length" if args.title is None else args.title
+    colors = get_colors_from_args(args,profiles)
+ 
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
         roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
@@ -247,91 +261,133 @@ def main(argv=sys.argv[1:]):
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
     ga = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
+
     
     # remove default size filters
     my_filters = ga._filters.keys()
     for f in my_filters:
         ga.remove_filter(f)
 
+    # count
     count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
                                                              ga,
                                                              args.norm_region[0],
                                                              args.norm_region[1],
                                                              args.min_counts,
-                                                             args.min_length,
-                                                             args.max_length,
+                                                             min_len,
+                                                             max_len,
                                                              printer=printer)
     
-    profile_fn = "%s_metagene_profiles.txt" % args.outbase
+    # save counts
+    profile_fn = "%s_metagene_profiles.txt" % outbase
     with argsopener(profile_fn,args,"w") as metagene_out:
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
                                 header=0,
                                 index=False,
                                 na_rep="nan",
-                                columns=["x"]+["%s-mers" % X for X in range(args.min_length,
-                                                                            args.max_length+1)])
+                                columns=["x"]+["%s-mers" % X for X in lengths])
         metagene_out.close()
 
+    printer.write("Saving raw and normalized counts...")
     for k in count_dict:
-        count_fn     = "%s_%s_rawcounts.txt"  % (args.outbase,k)
-        normcount_fn = "%s_%s_normcounts.txt" % (args.outbase,k)
+        count_fn     = "%s_%s_rawcounts.txt"  % (outbase,k)
+        normcount_fn = "%s_%s_normcounts.txt" % (outbase,k)
         numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
         numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
         
-    # find max offset, plot, write dict
+    
+    # plotting & offsets
+    printer.write("Plotting and determining offsets...")
     offset_dict = OrderedDict() 
-    profiles = args.max_length+1 - args.min_length
-    colors = matplotlib.cm.get_cmap("hsv")(numpy.linspace(0,1.0,profiles))
-    offset_dict = OrderedDict()
-    max_y = -numpy.inf
 
-    figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
-    fig, axes  = plt.subplots(nrows=profiles,sharex=True,figsize=(7.5,figheight))
-    fig.suptitle("Fiveprime read offsets by length")
-    axes[-1].set_xlabel("nt from CDS start (5' end mapping)")
-    plt.suptitle("Fiveprime read offsets by length")
+    # Determine scaling factor for plotting metagene profiles
+    max_y = numpy.nan 
+    with warnings.catch_warnings():
+        # ignore warnings for slices that contain only NaNs
+        warnings.simplefilter("ignore",category=RuntimeWarning)
+        for k in lengths:
+            max_y = numpy.nanmax([max_y,
+                                  numpy.nanmax(metagene_profile["%s-mers"% k].values)])
+
+    if numpy.isnan(max_y):
+        max_y = 1.0
+
+
+    # parse arguments & set styles
+    if args.stylesheet is not None:
+        matplotlib.style.use(args.stylesheet)
+
+    mplrc = matplotlib.rcParams
+
+    fargs = {}
+    if args.figsize is not None:
+        fargs["figsize"] = args.figsize
+    else:
+        figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
+        fargs["figsize"] = (7.5,figheight)
+
+    plt_incr  = 1.2
+
+    fig = plt.figure(**fargs)
+    ax = plt.gca()
+    plt.title(title)
+    plt.xlabel("Distance from CDS start, (nt; 5' end mapping)")
+    plt.ylabel("Median normalized read density (au)")
+    plt.axvline(0.0,color=mplrc["axes.edgecolor"],dashes=[3,2])
+
     x = metagene_profile["x"]
-    mask = numpy.tile(True,len(x)) if args.require_upstream is False else (x <= 0)
+    xmin = x.min()
+    xmax = x.max()
+    mask = numpy.tile(True,len(x)) if args.require_upstream == False else (x <= 0)
 
-    for n,k in enumerate(range(args.min_length,args.max_length+1)):
-        ax = axes[n]
-        ax.yaxis.set_visible(False)
+    for n,k in enumerate(lengths):
         color = colors[n]
-        ax.text(0.0,0.8,"%s-mers" % k,
+        baseline = plt_incr*n
+        y = metagene_profile["%s-mers" % k].values
+        if numpy.isnan(y).all():
+            plot_y = numpy.zeros_like(x)
+        else:
+            plot_y = y
+ 
+        # plot metagene profiles on common scale, offset by baseline from bottom to top
+        ax.plot(x,baseline + (plot_y/max_y),color=color)
+        ax.text(xmin,baseline,"%s-mers" % k,
                 ha="left",
-                va="top",
-                transform=matplotlib.transforms.offset_copy(ax.transAxes,fig,
-                                                            x=6.0,y=6.0,units="points"))
-        y = metagene_profile["%s-mers" % k]
-        # if y is nans or zeros, no offset is found
-        if mask.sum() == numpy.isnan(y[mask]).sum() or y[mask].sum() == 0:
+                va="bottom",
+                color=color,
+                transform=matplotlib.transforms.offset_copy(ax.transData,fig,
+                                                            x=6.0,y=3.0,units="points"))
+
+        # find & label offset, if present
+        ym = y[mask]
+        ymax = baseline + ym.max()
+        if mask.sum() == numpy.isnan(ym).sum() or ym.sum() == 0:
             offset = args.default
         else:
-            offset = -x[y[mask].argmax()]
+            offset = -x[ym.argmax()]
             
         offset_dict[k] = offset
-        if not numpy.isnan(y.max()):
-            lines = ax.plot(x,y,color=color)
-            ax.text(-offset,
-                     y[mask].max(),
+        if not numpy.isnan(ymax):
+            yadj = ymax - 0.2 * plt_incr
+
+            ax.plot([-offset,0],[yadj,yadj],color=color,dashes=[3,2])
+            ax.text(-offset / 2.0,
+                     yadj,
                      "%s nt" % (offset),
                      color=color,
                      ha="center",
+                     va="bottom",
                      transform=matplotlib.transforms.offset_copy(ax.transData,fig,
-                                                                 x=3.0,y=3.0,units="points")
+                                                                 x=0.0,y=3.0,units="points")
                     )   
 
-        max_y = max(max_y,ax.get_ylim()[1])
-
-    plt.xlim(x.min(),x.max())
-
-    # put axes on common scale
-    for ax in axes:
-        ax.set_ylim(0,max_y)
+    plt.xlim(xmin,xmax)
+    plt.ylim(-0.1,plt_incr+baseline)
+    ax.yaxis.set_ticks([])
 
     # save data as p-site offset table
-    fn = "%s_p_offsets.txt" % args.outbase
+    fn = "%s_p_offsets.txt" % outbase
     fout = argsopener(fn,args)
     fout.write("length\tp_offset\n")
     for k in offset_dict:
@@ -342,7 +398,7 @@ def main(argv=sys.argv[1:]):
     fout.close()
 
     # save plot
-    plt.savefig("%s_p_offsets.svg" % args.outbase)
+    plt.savefig("%s_p_offsets.%s" % (outbase,args.figformat))
 
     printer.write("Done.")
 
