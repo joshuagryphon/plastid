@@ -1011,11 +1011,59 @@ def get_plotting_parser(prefix="",disabled=[],printer=NullWriter()):
         help="Save pots in this format (e.g. svg, pdf, jpg, png, eps; Default: svg)")
     parser.add_argument("--%sfigsize" % prefix,nargs=2,default=None,type=float,
         help="Figure width and height, in inches. (Default: use matplotlibrc params)",metavar="N")
+    parser.add_argument("--%scmap" % prefix,type=str,default=None,
+        help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)")
     parser.add_argument("--%sdpi" % prefix,type=int,default=150,
         help="dpi resolution for figure")
 
     return parser
 
+def get_colors_from_args(args,num_colors):
+    """Return a list of colors from arguments
+
+    If a matplotlib colormap is specified in `args.figcolors`, colors will be
+    generated from that map.
+
+    Otherwise, if a stylesheet is specified, colors will be fetched from 
+    the stylesheet's color cycle.
+    
+    Otherwise, colors will be chosen from the default color cycle specified
+    ``matplotlibrc``.
+
+
+    Parameters
+    ----------
+    args : :class:`argparse.Namespace`
+        Namespace object from :func:`get_plotting_parser`
+
+    num_colors : int
+        Number of colors to fetch
+    
+
+    Returns
+    -------
+    list
+        List of matplotlib colors
+    """
+    import matplotlib
+    import matplotlib.cm
+
+    figcolors  = getattr(args,"cmap",None)
+    stylesheet = getattr(args,"stylesheet",None)
+
+    if figcolors is not None:
+        import numpy
+        colors = matplotlib.cm.get_cmap(figcolors)(numpy.linspace(0,1.0,num_colors))
+    else:
+        import matplotlib.style
+        from itertools import cycle
+        if stylesheet is not None:
+            matplotlib.style.use(stylesheet)
+
+        color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
+        colors = [next(color_cycle) for _ in range(num_colors)]
+
+    return colors
 
 #===============================================================================
 # INDEX: Utility functions
