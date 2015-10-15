@@ -744,7 +744,11 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     ga = get_genome_array_from_args(args,printer=printer,disabled=["normalize"])
     window_size    = roi_table["window_size"][0]
     upstream_flank = roi_table["zero_point"][0]
-    counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
+    cshape = (len(roi_table),window_size)
+
+    # by default, mask everything
+    counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,cshape),
+                                  mask=numpy.tile(True,cshape))
     
     for i,row in roi_table.iterrows():
         if i % 1000 == 1:
@@ -755,16 +759,22 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         roi.add_masks(*mask)
         offset = int(round((row["alignment_offset"])))
         assert offset + roi.length <= window_size
-        counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
+
+        # FIXME: this is probably the problem
+        # take away from masked array
+        mvec = roi.get_masked_counts(ga)
+        counts.data[i,offset:offset+roi.length] = mvec.data
+        counts.mask[i,offset:offset+roi.length] = mvec.mask
+        #counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
     printer.write("Saving counts to %s..." % count_fn)
     numpy.savetxt(count_fn,counts,delimiter="\t",fmt='%.8f')
          
-    denominator = numpy.nansum(counts[:,norm_start:norm_end],1)
+    denominator = numpy.nansum(counts[:,norm_start:norm_end],axis=1)
     row_select = denominator >= min_counts
 
-    norm_counts = (1.0*counts.T / denominator).T
+    norm_counts = (counts.T.astype(float) / denominator).T
     norm_counts = numpy.ma.masked_invalid(norm_counts)
 
     printer.write("Saving normalized counts to %s..." % normcount_fn)
@@ -818,10 +828,10 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     title = args.title if args.title is not None else "Metagene overview for %s" % outbase
     fig.suptitle(title)
 
-    ax["orig"].set_ylabel("Row-normalized ribosome density (au)")
+    ax["main"].set_ylabel("Row-normalized ribosome density (au)")
     landmark = args.landmark
     if args.landmark is not None:
-        ax["main"].set_xlabel("Distance (nt) from %s)" % landmark)
+        ax["main"].set_xlabel("Distance (nt) from %s" % landmark)
 
     printer.write("Saving image to %s..." % fig_fn)
     fig.savefig(fig_fn)
