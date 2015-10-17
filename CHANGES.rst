@@ -24,6 +24,8 @@ Added
     so no need to manually parse text files or create dictionaries
   - ``BAMGenomeArray`` can now be initialized with a list of paths to BAM files,
     in addition or instead of a list of ``pysam.AlignmentFiles``
+  - nicer plotting: support for matplotlib stylesheets, user specification of colormaps,
+    command-line specification of plot parameters
 
 Changed
 .......
