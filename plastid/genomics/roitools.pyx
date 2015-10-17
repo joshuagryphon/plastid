@@ -93,7 +93,7 @@ from Bio.Alphabet import generic_dna
 
 from plastid.util.services.exceptions import DataWarning
 from plastid.util.services.decorators import deprecated
-from plastid.util.services.colors import get_str_from_rgb255, get_rgb255_from_str
+from plastid.plotting.colors import get_str_from_rgb255, get_str_from_rgb, get_rgb255
 from plastid.readers.gff_tokens import make_GFF3_tokens, \
                                        make_GTF2_tokens
 
@@ -2304,8 +2304,18 @@ cdef class SegmentChain(object):
                 score = 0
             
             try:
-                color = get_rgb255_from_str(self.attr.get("color","#000000")) if color is None else color
-                color = str(color).strip("(").strip(")").replace(" ","")
+                color = self.attr.get("color","#000000")
+                if isinstance(color,str):
+                    color = "%s,%s,%s" % tuple(get_rgb255(color))
+                else:
+                    # is a tuple or sequence
+                    if all(isinstance(X,float) for X in color) and \
+                       all(X < 1 for X in color) and \
+                       all(X > 0 for X in color):
+                       color = "%s,%s,%s" % (int(round(255*X)) for X in color)
+                    else:
+                       color = "%s,%s,%s" % tuple(color)
+
             except ValueError:
                 color = self.attr.get("color","0,0,0") if color is None else color
             

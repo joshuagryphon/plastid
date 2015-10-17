@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Test suite for py:mod:`plastid.util.services.colors`"""
+"""Test suite for py:mod:`plastid.plotting.colors`"""
 import unittest
 import numpy
-from plastid.util.services.colors import get_rgb255_from_str, get_str_from_rgb255
+from plastid.plotting.colors import get_rgb255, get_str_from_rgb255
 from nose.plugins.attrib import attr
 
 @attr(test="unit")
@@ -32,23 +32,23 @@ class TestColors(unittest.TestCase):
                             ("#GG0011",(0.5,3,2)) # float
                            ] 
 
-    def test_get_rgb255_from_str_match(self):
+    def test_get_rgb255_match(self):
         # test correct conversions
         for my_str, my_tup in self.valid_colors:
-            self.assertEqual(get_rgb255_from_str(my_str),my_tup)
+            self.assertEqual(tuple(get_rgb255(my_str)),my_tup)
 
-    def test_get_rgb255_from_str_notmatch(self):
+    def test_get_rgb255_notmatch(self):
         # assert not incorrect conversions
         randidx = numpy.random.randint(0,high=len(self.valid_colors),size=len(self.valid_colors))
         for i,(my_str,_) in zip(randidx,self.valid_colors):
             if self.valid_colors[i][0].upper() != my_str.upper():
-                self.assertNotEqual(get_rgb255_from_str(my_str),
+                self.assertNotEqual(tuple(get_rgb255(my_str)),
                                     self.valid_colors[i][0])
 
-    def test_get_rgb255_from_str_knownfail(self):
+    def test_get_rgb255_knownfail(self):
         # assert invalid colors cause problems
         for my_str, _ in self.error_colors:
-            self.assertRaises(ValueError,get_rgb255_from_str,my_str)
+            self.assertRaises(ValueError,get_rgb255,my_str)
 
     def test_get_str_from_rgb255_match(self):
         # test correct conversions

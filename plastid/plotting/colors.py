@@ -11,13 +11,20 @@ process_black = "#222222"
 def get_rgb255(inp):
     """Fetch `r,g,b` values where `r,g,b` are integers ranging from 0 to 255
 
+    Parameters
+    ----------
+    inp : *RGB* or *RGBA* sequence or str
+        Can be color hex string, like "#007ADF", a matplotlib color letter like "r",
+        a matplotlib color name like "black, et c."
+        See :meth:`matplotlib.colors.colorConverter.to_rgb`
+
     Returns
     -------
     :class:`numpy.ndarray`
         Numpy array of `r,g,b` tuples where `r,g,b` take integer values from 0 to 255
     """
-    data = colorConverter(inp)
-    data = (255*data[:,-1]).round().astype(int)
+    data = colorConverter.to_rgba_array(inp)
+    data = (255*data[:,:3]).round().astype(int).ravel()
 
     return data
 
