@@ -727,8 +727,8 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     from plastid.plotting.plots import metagene_profile
 
     outbase = args.outbase
-    count_fn     = "%s_rawcounts.txt" % outbase
-    normcount_fn = "%s_normcounts.txt" % outbase
+    count_fn     = "%s_rawcounts.txt.gz" % outbase
+    normcount_fn = "%s_normcounts.txt.gz" % outbase
     profile_fn   = "%s_metagene_profile.txt" % outbase
     fig_fn       = "%s_metagene_overview.%s" % (outbase,args.figformat)
 
@@ -760,7 +760,6 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         offset = int(round((row["alignment_offset"])))
         assert offset + roi.length <= window_size
 
-        # FIXME: this is probably the problem
         # take away from masked array
         mvec = roi.get_masked_counts(ga)
         counts.data[i,offset:offset+roi.length] = mvec.data
@@ -768,7 +767,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         #counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
-    printer.write("Saving counts to %s..." % count_fn)
+    printer.write("Saving counts to %s ..." % count_fn)
     numpy.savetxt(count_fn,counts,delimiter="\t",fmt='%.8f')
          
     denominator = numpy.nansum(counts[:,norm_start:norm_end],axis=1)
@@ -777,7 +776,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     norm_counts = (counts.T.astype(float) / denominator).T
     norm_counts = numpy.ma.masked_invalid(norm_counts)
 
-    printer.write("Saving normalized counts to %s..." % normcount_fn)
+    printer.write("Saving normalized counts to %s ..." % normcount_fn)
     numpy.savetxt(normcount_fn,norm_counts,delimiter="\t")
      
     profile   = numpy.ma.median(norm_counts[row_select],axis=0)
@@ -788,7 +787,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
                                   }
                                 )
 
-    printer.write("Saving metagene profile to %s..." % profile_fn)
+    printer.write("Saving metagene profile to %s ..." % profile_fn)
     with argsopener(profile_fn,args,"w") as profile_out:
         profile_table.to_csv(profile_out,
                              sep="\t",
