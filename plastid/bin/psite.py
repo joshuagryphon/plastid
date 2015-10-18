@@ -291,8 +291,8 @@ def main(argv=sys.argv[1:]):
 
     printer.write("Saving raw and normalized counts...")
     for k in count_dict:
-        count_fn     = "%s_%s_rawcounts.txt"  % (outbase,k)
-        normcount_fn = "%s_%s_normcounts.txt" % (outbase,k)
+        count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
+        normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
         numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
         numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
         
@@ -336,7 +336,7 @@ def main(argv=sys.argv[1:]):
     plt.ylabel("Median normalized read density (au)")
     plt.axvline(0.0,color=mplrc["axes.edgecolor"],dashes=[3,2])
 
-    x = metagene_profile["x"]
+    x = metagene_profile["x"].values
     xmin = x.min()
     xmax = x.max()
     mask = numpy.tile(True,len(x)) if args.require_upstream == False else (x <= 0)
@@ -345,13 +345,15 @@ def main(argv=sys.argv[1:]):
         color = colors[n]
         baseline = plt_incr*n
         y = metagene_profile["%s-mers" % k].values
+        ymask = y[mask]
+
         if numpy.isnan(y).all():
             plot_y = numpy.zeros_like(x)
         else:
-            plot_y = y
+            plot_y = y / max_y
  
         # plot metagene profiles on common scale, offset by baseline from bottom to top
-        ax.plot(x,baseline + (plot_y/max_y),color=color)
+        ax.plot(x,baseline + plot_y,color=color)
         ax.text(xmin,baseline,"%s-mers" % k,
                 ha="left",
                 va="bottom",
@@ -359,16 +361,18 @@ def main(argv=sys.argv[1:]):
                 transform=matplotlib.transforms.offset_copy(ax.transData,fig,
                                                             x=6.0,y=3.0,units="points"))
 
-        # find & label offset, if present
-        ym = y[mask]
-        ymax = baseline + ym.max()
-        if mask.sum() == numpy.isnan(ym).sum() or ym.sum() == 0:
+
+        ymax = baseline + plot_y.max()
+
+        if mask.sum() == numpy.isnan(ymask).sum() or ymask.sum() == 0:
             offset = args.default
+            usedefault = True
         else:
-            offset = -x[ym.argmax()]
-            
+            offset = -x[ymask.argmax()]
+            usedefault = False
+
         offset_dict[k] = offset
-        if not numpy.isnan(ymax):
+        if usedefault == False:
             yadj = ymax - 0.2 * plt_incr
 
             ax.plot([-offset,0],[yadj,yadj],color=color,dashes=[3,2])
@@ -389,6 +393,7 @@ def main(argv=sys.argv[1:]):
     # save data as p-site offset table
     fn = "%s_p_offsets.txt" % outbase
     fout = argsopener(fn,args)
+    printer.write("Writing offset table to %s..." % fn)
     fout.write("length\tp_offset\n")
     for k in offset_dict:
         fout.write("%s\t%s\n" % (k,offset_dict[k]))
@@ -398,7 +403,9 @@ def main(argv=sys.argv[1:]):
     fout.close()
 
     # save plot
-    plt.savefig("%s_p_offsets.%s" % (outbase,args.figformat))
+    plot_fn ="%s_p_offsets.%s" % (outbase,args.figformat) 
+    printer.write("Saving plot to %s ..." % plot_fn)
+    plt.savefig(plot_fn)
 
     printer.write("Done.")
 
