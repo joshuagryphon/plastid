@@ -3,18 +3,38 @@
 as well as some specific plots used by :mod:`plastid`. For example:
 
     :func:`stacked_bar`
-        Create a stacked bar graph.
+        Create a stacked bar graph
+
+    :func:`scatterhist_x`, :func:`scatterhist_y`, and :func:`scatterhist_xy`
+        Create scatter plots with kernel density estimates of the marginal 
+        distributions along side them
+
+    :func:`profile_heatmap`
+        Plot a heatmap, with a columnwise median (or other profile summarizing
+        the heatmap) in an upper panel above it, with aligned coordinates
 
     :func:`triangle_plot`
         Plot data lying on the plane x + y + z = k (e.g. codon phasing)
         in a homogeneous 2D representation
+
+In addition, there are several utility functions:
+
+    :func:`split_axes`
+        Split a :class:`matplotlib.axes.Axes` into one or more panels,
+        with tied x and y axes. Also hides overlapping tick labels
+
+    :func:`remove_invalid`
+        Remove pairs of values from two arrays of data if either 
+        element in the pair is `nan` or `inf`. Used to prepare data
+        for histogram or violin plots; as even masked `nan`s and `inf`s
+        are not handled by these functions.
 
 """
 import copy
 import numpy
 import matplotlib
 import matplotlib.pyplot as plt
-from plastid.plotting.colors import lighten, process_black
+from plastid.plotting.colors import lighten, darken, process_black
 
 
 def _plot_helper(axes):
@@ -42,7 +62,6 @@ def _plot_helper(axes):
 
     return fig, ax
 
-# TODO: figure out figure buffer
 def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_ax_kwargs={},
                 other_ax_kwargs={}):
     """Split the spaces taken by one axes into one or more panes. The original axes is made invisible.
@@ -140,11 +159,66 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
             if axes_name in ("top","bottom"):
                 ax_kwargs["sharex"] = axes["main"]
                 if "sharey" in ax_kwargs:
-                    ax_kwargs.pop["sharey"]
+                    ax_kwargs.pop("sharey")
 
             axes[axes_name] = fig.add_axes(rect,zorder=50,**ax_kwargs)
 
+    if "top" in axes:
+        axes["top"].xaxis.tick_top()
+        # prevent tick collisions
+        axes["top"].yaxis.get_ticklabels()[0].set_visible(False)
+
+    if "bottom" in axes:
+        axes["bottom"].xaxis.tick_bottom()
+        for t in axes["main"].xaxis.get_ticklabels():
+            t.set_visible(False)
+
+    if "left" in axes:
+        axes["left"].yaxis.tick_left()
+        axes["left"].xaxis.get_ticklabels()[-1].set_visible(False)
+        for t in axes["main"].yaxis.get_ticklabels():
+            t.set_visible(False)
+
+    if "right" in axes:
+        axes["right"].yaxis.tick_right()
+        axes["right"].xaxis.get_ticklabels()[0].set_visible(False)
+        
+
     return axes
+
+def remove_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
+    """Remove corresponding values from x and y when one or both of those is nan or inf,
+    and optionally truncate values to minima and maxima
+
+    Parameters
+    ----------
+    x, y : :class:`numpy.ndarray` or list
+        Pair arrays or lists of corresponding numbers
+
+    min_x, min_y, max_x, max_y : number, optional
+        If supplied, set values below `min_x` to `min_x`, values larger
+        than `max_x` to `max_x` and so for `min_y` and `max-y`
+
+    Returns
+    -------
+    :class:`numpy.ndarray
+        A shortened version of `x`, excluding invalid values
+
+    :class:`numpy.ndarray
+        A shortened version of `y`, excluding invalid values
+    """
+    x = numpy.array(x).astype(float)
+    y = numpy.array(y).astype(float)
+    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y) 
+    x = x[~newmask]
+    y = y[~newmask]
+    x[x < min_x] = min_x
+    x[x > max_x] = max_x
+    y[y < min_y] = min_y
+    y[y > max_y] = max_y
+
+    return x,y 
+
 
 #==============================================================================
 # Stacked bar
@@ -384,6 +458,446 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
     return fig, ax
 
 
+#==============================================================================
+# Heatmaps with profiles on top
+#==============================================================================
+
+def sort_max_position(data):
+    """Generate indices that sort rows in `data` by column in which
+    the row's maximal value is attained
+
+    Parameters
+    ----------
+    data : :class:`numpy.ndarray`
+
+    Returns
+    -------
+    :class:`numpy.ndarray`
+        Indices of rows that sort data by max position
+    """
+    maxvals = numpy.nanmax(data,1)
+    maxidx  = numpy.zeros(len(maxvals))
+    for i,maxval in enumerate(maxvals):
+        maxidx[i] = (data[i,:] == maxval).argmax()
+
+    return numpy.argsort(maxidx)
+
+def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position,
+                    im_args={},plot_args={}):
+    """Create a dual-paned plot in which `profile` is displayed in a top
+    panel, above a heatmap showing the intensities of each row of `data`,
+    optionally sorted top-to-bottom by `sort_fn`.
+
+    Parameters
+    ----------
+    data : :class:`numpy.ndarray`
+        Array of data, in which each row is an individual aligned vector of data
+        for region of interest, and each column a position in that vector
+
+    profile : :class:`numpy.ndarray` or None
+        Reduced profile of data, often a column-wise median. If not
+        supplied, it will be calculated.
+
+    x : :class:`numpy.ndarray`
+        Array of values for X-axis
+
+    axes : :class:`matplotlib.axes.Axes` or `None`, optional
+        Axes in which to place plot. If `None`, a new figure is generated.
+        (Default: `None`)
+       
+    sort_fn : function, optional
+        Sort rows in `data` by this function before plotting
+        (Default: sort by ascending argmax of each row)
+
+    im_args : dict
+        Keyword arguments to pass to :func:`matplotlib.pyplot.imshow`
+
+    plot_args : dict
+        Keyword arugments to pass to :func:`matplotlib.pyplot.plot`
+        for plotting metagene average
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Parent figure of axes
+    
+    dict
+        Dictionary of :class:`matplotlib.axes.Axes`. "top" refers to the 
+        panel containing the summary profile. "main" refers to the heatmap
+        of individual values
+    """
+    fig, ax = _plot_helper(axes)
+    axes = split_axes(ax,top_height=0.2)
+
+    if sort_fn is None:
+        sort_indices = numpy.arange(data.shape[0])
+    else:
+        sort_indices = sort_fn(data)
+
+    if x is None:
+        x = numpy.arange(0,data.shape[1])
+
+    if profile is None:
+        profile = numpy.nanmedian(data,axes=0)
+    
+    plot_kwargs = copy.deepcopy(plot_args)
+    im_args     = copy.deepcopy(im_args)
+    im_args["aspect"] = "auto"
+    im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
+    im_args["origin"] = "upper"
+
+    axes["top"].plot(x,profile,**plot_args)
+    axes["top"].set_ylim(0,profile.max())
+    axes["top"].set_xlim(x.min(),x.max())
+    axes["top"].set_yticks([])
+    axes["top"].xaxis.tick_bottom()
+    axes["top"].set_frame_on(False)
+
+    axes["main"].xaxis.tick_bottom()
+    axes["main"].imshow(data[sort_indices,:],
+                        vmin=numpy.nanmin(data),
+                        vmax=numpy.nanmax(data),
+                        **im_args)
+
+    return fig, axes
+
+
+#==============================================================================
+# Scatter plots with marginal distributions
+#==============================================================================
+
+
+plastid_default_scatter = {
+    "marker"    : "o",
+    "alpha"     : 0.7,
+    "facecolor" : "none",
+    "s"         : 8,
+}
+"""Default parameters for scatter plots"""
+
+
+plastid_default_marginalplot = {
+    "showextrema" : False,
+}
+
+
+def _scatterhist_help(axes=None,
+                      top_height=0,left_width=0,right_width=0,bottom_height=0,
+                      ):
+    """Create a scatter plot with the marginal distribution for `x`
+    plotted in a separate pain as a kernel density estimate.
+
+    Parameters
+    ----------
+    x : list or :class:`numpy.ndarray`
+        x values
+
+    y : list or :class:`numpy.ndarray`
+        y values
+
+    color : matplotlib colorspec, or None, optional
+        Color to plot data series
+
+    axes : :class:`matplotlib.axes.Axes`, dict, or `None`, optional
+        If a :class:`matplotlib.axes.Axes`, an axes in which to place plot.
+        This axes will be split into relevant panels.
+
+        If a dict, this is expected to be a group of pre-split axes.
+
+        If `None`, a new figure is generated, and axes are split.
+        (Default: `None`)
+       
+    scargs : dict
+        Keyword arguments to pass to :func:`~matplotlib.pyplot.scatter`
+        Default: :obj:`plastid_default_scatter`)
+
+    args : dict
+        Keyword arguments to pass to :func:`~matplotlib.pyplot.violinplot`,
+        which draws the marginal distributions
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Parent figure of axes
+    
+    dict of :class:`matplotlib.axes.Axes`
+        axes containing plot space
+    """
+    if axes is None:
+        do_setup = True
+        fig = plt.figure()
+        axes = plt.gca()
+    if isinstance(axes,matplotlib.axes.Axes):
+        fig = axes.figure
+        axes = split_axes(axes,top_height=top_height,left_width=left_width,
+                          right_width=right_width,bottom_height=bottom_height)
+    elif isinstance(axes,dict):
+        fig = axes["main"].figure
+        if left_width > 0:
+            assert "left" in axes
+        if right_width > 0:
+            assert "right" in axes
+        if bottom_height > 0:
+            assert "bottom" in axes
+        if top_height > 0:
+            assert "top" in axes
+
+    return fig, axes
+
+
+def scatterhist_x(x,y,color=None,axes=None,
+                  top_height=0.2,mask_invalid=True,
+                  log="",
+                  min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
+                  scargs=plastid_default_scatter,
+                  vargs=plastid_default_marginalplot,valpha=0.7):
+    """Produce a scatter plot with a kernel density estimate of the marginal `x` distribution
+
+    Parameters
+    ----------
+    x, y : :class:`numpy.ndarray` or list
+        Pair arrays or lists of corresponding numbers
+
+    color : matplotlib colorspec, optional
+        Color to use in plot
+
+    top_height : float, optional
+        fraction of `axes` height to use in top panel containing
+        marginal distribution (Default: 0.2)
+
+    mask_invalid : bool, optional
+        If `True` mask out any `nan`s or `inf`s, as these mess up kernel density
+        estimates and histograms in matplotlib, even if in masked arrays
+
+    min_x, min_y, max_x, max_y : number, optional
+        If supplied, set values below `min_x` to `min_x`, values larger
+        than `max_x` to `max_x` and so for `min_y` and `max-y`
+
+    log : str, "", "x", "xy", or "xy", optional
+        Plot these axes on a log scale (Default: "" for no log axes)
+
+    scargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.scatter`
+        (Default: :obj:`plastid_default_scatter`)
+
+    vargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
+        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
+
+    valpha : float, optional
+        Alpha level (transparency) for marginal distributions (Default: 0.7)
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Figure
+
+    dict
+        Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
+        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+    """
+    fig, axes = _scatterhist_help(axes=axes,top_height=top_height)
+
+    if "x" in log:
+        axes["main"].semilogx()
+        axes["top"].semilogx()
+
+    if "y" in log:
+        axes["main"].semilogy()
+
+    if color is None:
+        color = next(axes["main"]._get_lines.color_cycle)
+    
+    if mask_invalid == True:
+       x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+
+    axes["main"].scatter(x,y,edgecolor=color,**scargs)
+    vdict = axes["top"].violinplot(x,positions=[0],vert=False,**vargs)
+
+    violins = vdict["bodies"][0]
+    violins.set_facecolor(color)
+    violins.set_edgecolor(darken(color))
+    violins.set_alpha(valpha)
+    axes["top"].set_ylim(0.0,0.5)
+    axes["top"].yaxis.set_ticklabels([])
+
+    return fig, axes
+
+def scatterhist_y(x,y,color=None,axes=None,
+                  right_width=0.2,mask_invalid=True,log="xy",
+                  min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
+                  scargs=plastid_default_scatter,
+                  vargs=plastid_default_marginalplot,valpha=0.7):
+    """Produce a scatter plot with a kernel density estimate of the marginal `y` distribution
+
+    Parameters
+    ----------
+    x, y : :class:`numpy.ndarray` or list
+        Pair arrays or lists of corresponding numbers
+
+    color : matplotlib colorspec, optional
+        Color to use in plot
+
+    right_width : float, optional
+        fraction of `axes` width to use in right panel containing
+        marginal distribution (Default: 0.2)
+
+    mask_invalid : bool, optional
+        If `True` mask out any `nan`s or `inf`s, as these mess up kernel density
+        estimates and histograms in matplotlib, even if in masked arrays
+
+    min_x, min_y, max_x, max_y : number, optional
+        If supplied, set values below `min_x` to `min_x`, values larger
+        than `max_x` to `max_x` and so for `min_y` and `max-y`
+
+    log : str, "", "x", "xy", or "xy", optional
+        Plot these axes on a log scale (Default: "" for no log axes)
+
+    scargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.scatter`
+        (Default: :obj:`plastid_default_scatter`)
+
+    vargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
+        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
+
+    valpha : float, optional
+        Alpha level (transparency) for marginal distributions (Default: 0.7)
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Figure
+
+    dict
+        Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
+        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+    """
+    fig, axes = _scatterhist_help(axes=axes,right_width=right_width)
+
+    if "x" in log:
+        axes["main"].semilogx()
+
+    if "y" in log:
+        axes["main"].semilogy()
+        axes["right"].semilogy()
+        
+    if color is None:
+        color = next(axes["main"]._get_lines.color_cycle)
+    
+    if mask_invalid == True:
+        x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+
+    axes["main"].scatter(x,y,edgecolor=color,**scargs)
+    vdict = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
+
+    violins = vdict["bodies"][0]
+    violins.set_facecolor(color)
+    violins.set_edgecolor(darken(color))
+    violins.set_alpha(valpha)
+    axes["right"].set_xlim(0,0.5)
+
+
+    return fig, axes
+
+def scatterhist_xy(x,y,color=None,axes=None,
+                   top_height=0.2,right_width=0.2,mask_invalid=True,log="xy",
+                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
+                   scargs=plastid_default_scatter,
+                   vargs=plastid_default_marginalplot,valpha=0.7):
+    """Produce a scatter plot with kernel density estimate of the marginal `x` and `y` distributions
+
+    Parameters
+    ----------
+    x, y : :class:`numpy.ndarray` or list
+        Pair arrays or lists of corresponding numbers
+
+    color : matplotlib colorspec, optional
+        Color to use in plot
+
+    top_height : float, optional
+        fraction of `axes` height to use in top panel containing
+        marginal distribution (Default: 0.2)
+        
+    right_width : float, optional
+        fraction of `axes` width to use in right panel containing
+        marginal distribution (Default: 0.2)
+
+    mask_invalid : bool, optional
+        If `True` mask out any `nan`s or `inf`s, as these mess up kernel density
+        estimates and histograms in matplotlib, even if in masked arrays
+
+    min_x, min_y, max_x, max_y : number, optional
+        If supplied, set values below `min_x` to `min_x`, values larger
+        than `max_x` to `max_x` and so for `min_y` and `max-y`
+
+    log : str, "", "x", "xy", or "xy", optional
+        Plot these axes on a log scale (Default: "" for no log axes)
+
+    scargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.scatter`
+        (Default: :obj:`plastid_default_scatter`)
+
+    vargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
+        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
+
+    valpha : float, optional
+        Alpha level (transparency) for marginal distributions (Default: 0.7)
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Figure
+
+    dict
+        Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
+        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+    """
+    fig, axes = _scatterhist_help(axes=axes,top_height=top_height,right_width=right_width)
+
+
+    if "x" in log:
+        axes["main"].semilogx()
+        axes["top"].semilogx()
+
+    if "y" in log:
+        axes["main"].semilogy()
+        axes["right"].semilogy()
+
+    if color is None:
+        color = next(axes["main"]._get_lines.color_cycle)
+    
+    if mask_invalid == True:
+        x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+
+    axes["main"].scatter(x,y,edgecolor=color,**scargs)
+    vdictx = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
+    vdicty = axes["top"].violinplot(x,positions=[0],vert=False,**vargs)
+
+    vix = vdictx["bodies"][0]
+    vix.set_facecolor(color)
+    vix.set_edgecolor(darken(color))
+    vix.set_alpha(valpha)
+
+    viy = vdicty["bodies"][0]
+    viy.set_facecolor(color)
+    viy.set_edgecolor(darken(color))
+    viy.set_alpha(valpha)
+
+    axes["right"].set_xlim(0,0.5)
+    axes["top"].set_ylim(0,0.5)
+
+
+    return fig, axes
+
+
+
 
 #==============================================================================
 # Plots specific for genomics
@@ -461,101 +975,5 @@ def phase_plot(counts,labels=None,cmap=None,color=None,lighten_by=0.2,fig={},lin
     ax1.set_ylabel("Fraction of reads")
     
     return fig, (ax1,ax2)
-
-
-#==============================================================================
-# Metagene plots
-#==============================================================================
-
-def sort_metagene_max_position(data):
-    """Sort data by position where maximal value is attained
-
-    @param data    MxN numpy array, in which rows are individuals
-
-    @return list<numpy.array>  Indices of rows that sort data by max position
-    """
-    maxvals = numpy.nanmax(data,1)
-    maxidx  = numpy.zeros(len(maxvals))
-    for i,maxval in enumerate(maxvals):
-        maxidx[i] = (data[i,:] == maxval).argmax()
-
-    return numpy.argsort(maxidx)
-
-def metagene_profile(data,profile,x=None,axes=None,sort_fn=sort_metagene_max_position,
-                     im_args={},plot_args={}):
-    """Create a dual-paned plot in which `profile` is displayed in a top
-    panel, above a heatmap showing the intensities of each row of `data`,
-    optionally sorted top-to-bottom by `sort_fn`.
-
-    Parameters
-    ----------
-    data : :class:`numpy.ndarray`
-        Array of data, in which each row is an individual aligned vector of data
-        for region of interest, and each column a position in that vector
-
-    profile : :class:`numpy.ndarray`
-        Reduced profile of data, often a column-wise median
-
-    x : :class:`numpy.ndarray`
-        Array of values for X-axis
-
-    axes : :class:`matplotlib.axes.Axes` or `None`, optional
-        Axes in which to place plot. If `None`, a new figure is generated.
-        (Default: `None`)
-       
-    sort_fn : function, optional
-        Sort rows in `data` by this function before plotting
-        (Default: sort by ascending argmax of each row)
-
-    im_args : dict
-        Keyword arguments to pass to :func:`matplotlib.pyplot.imshow`
-
-    plot_args : dict
-        Keyword arugments to pass to :func:`matplotlib.pyplot.plot`
-        for plotting metagene average
-
-
-    Returns
-    -------
-    :class:`matplotlib.figure.Figure`
-        Parent figure of axes
-    
-    dict
-        Dictionary of :class:`matplotlib.axes.Axes`. "top" refers to the 
-        panel containing the summary profile. "main" refers to the heatmap
-        of individual values
-    """
-    fig, ax = _plot_helper(axes)
-    axes = split_axes(ax,top_height=0.2)
-
-    if sort_fn is None:
-        sort_indices = numpy.arange(data.shape[0])
-    else:
-        sort_indices = sort_fn(data)
-
-    if x is None:
-        x = numpy.arange(0,data.shape[1])
-    
-    plot_kwargs = copy.deepcopy(plot_args)
-    im_args     = copy.deepcopy(im_args)
-    im_args["aspect"] = "auto"
-    im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
-    im_args["origin"] = "upper"
-
-    axes["top"].plot(x,profile,**plot_args)
-    axes["top"].set_ylim(0,profile.max())
-    axes["top"].set_xlim(x.min(),x.max())
-    axes["top"].set_yticks([])
-    axes["top"].xaxis.tick_bottom()
-    axes["top"].set_frame_on(False)
-
-    axes["main"].xaxis.tick_bottom()
-    axes["main"].imshow(data[sort_indices,:],
-                        vmin=numpy.nanmin(data),
-                        vmax=numpy.nanmax(data),
-                        **im_args)
-#    axes["main"].set_ylim(0,data.shape[0])
-
-    return fig, axes
 
 

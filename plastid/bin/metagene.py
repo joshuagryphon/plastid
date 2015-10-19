@@ -725,7 +725,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     matplotlib.use("Agg")
     import matplotlib.style
     import matplotlib.pyplot as plt
-    from plastid.plotting.plots import metagene_profile
+    from plastid.plotting.plots import profile_heatmap
 
     outbase = args.outbase
     count_fn     = "%s_rawcounts.txt.gz" % outbase
@@ -816,11 +816,11 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
 
     fig = get_figure_from_args(args)
     ax = plt.gca()
-    fig, ax = metagene_profile(norm_counts[row_select],
-                               profile_table["metagene_average"],
-                               axes=ax,
-                               x=profile_table["x"],
-                               im_args=im_args,plot_args=plot_args)
+    fig, ax = profile_heatmap(norm_counts[row_select],
+                              profile=profile_table["metagene_average"],
+                              axes=ax,
+                              x=profile_table["x"],
+                              im_args=im_args,plot_args=plot_args)
 
     title = args.title if args.title is not None else "Metagene overview for %s" % outbase
     fig.suptitle(title)
