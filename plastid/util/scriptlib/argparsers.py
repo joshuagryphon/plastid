@@ -10,7 +10,7 @@ converts the parsed arguments into Python objects.
 ===========================================================   ======================================  =======================================   ===========================================================
 **Data type**                                                 **Parser building function**            **Argument parsing function**             **Return type**
 -----------------------------------------------------------   --------------------------------------  ---------------------------------------   ----------------------------------------------------------- 
-:term:`Read alignments` or :term:`count files <count file>`       :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
+:term:`Read alignments` or :term:`count files <count file>`   :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
 
 
 Assembled transcript models                                   :func:`get_annotation_file_parser`      :func:`get_transcripts_from_args`         iterator over |Transcripts|
@@ -22,7 +22,7 @@ Assembled |SegmentChains|                                     :func:`get_segment
 Genomic sequence files                                        :func:`get_sequence_file_parser`        :func:`get_seqdict_from_args`             dict-like of :class:`Bio.SeqRecord.SeqRecord`-like
 
 
-:term:`Mask files <mask file>`                                :func:`get_mask_file_parser`            :func:`get_genome_hash_from_mask_args`      |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
+:term:`Mask files <mask file>`                                :func:`get_mask_file_parser`            :func:`get_genome_hash_from_mask_args`    |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
 ===========================================================   ======================================  =======================================   ===========================================================
 
 
@@ -1000,6 +1000,43 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
         help="Figure resolution (Default: %(default)s)")
 
     return parser
+
+def get_figure_from_args(args,**kwargs):
+    """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
+
+    A new figure is created with parameters specified in `args`. If these are 
+    not found, values found in **kwargs will instead be used. If these are 
+    not found, we fall back to matplotlibrc values.
+
+    Parameters
+    ----------
+    args : :class:`argparse.Namespace`
+        Namespace object from :func:`get_plotting_parser`
+
+    **kwargs : keyword arguments
+        Fallback arguments for items not defined in `args`, plus any other
+        keyword arguments.
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Matplotlib figure
+    """
+    import matplotlib.pyplot as plt
+
+    fargs = {}
+    # keep this loop in place in case we add additional command line attributes as fig properties later
+    for attr in ("figsize"): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
+        v = getattr(args,attr,None)
+        if v is None:
+            v = getattr(kwargs,attr,None)
+        if v is not None:
+            fargs[attr] = v
+
+    # copy values from fargs
+    kwargs.update(fargs)
+
+    return plt.figure(**kwargs)
 
 def get_colors_from_args(args,num_colors):
     """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`

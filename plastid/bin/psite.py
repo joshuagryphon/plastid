@@ -58,7 +58,8 @@ from collections import OrderedDict
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                               get_alignment_file_parser,\
                                               get_plotting_parser,\
-                                              get_colors_from_args
+                                              get_colors_from_args,\
+                                              get_figure_from_args
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
@@ -324,17 +325,14 @@ def main(argv=sys.argv[1:]):
         matplotlib.style.use(args.stylesheet)
 
     mplrc = matplotlib.rcParams
-
-    fargs = {}
-    if args.figsize is not None:
-        fargs["figsize"] = args.figsize
-    else:
-        figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
-        fargs["figsize"] = (7.5,figheight)
-
     plt_incr  = 1.2
 
-    fig = plt.figure(**fargs)
+    # use this figsize if not specified on command line
+    figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
+    default_figsize = (7.5,figheight)
+
+    fig = get_figure_from_args(args,figsize=default_figsize)
+
     ax = plt.gca()
     plt.title(title)
     plt.xlabel("Distance from CDS start, (nt; 5' end mapping)")
