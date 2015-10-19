@@ -178,9 +178,14 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     
         norm_counts = numpy.ma.masked_invalid(norm_count_dict[read_length])
     
-        with warnings.catch_warnings(): # ignore numpy mean of empty slice warning
+        with warnings.catch_warnings():
+            # ignore numpy mean of empty slice warning, given by numpy in Python 2.7-3.4
             warnings.filterwarnings("ignore",".*mean of empty.*",RuntimeWarning)
-            profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+            try:
+                profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+            # in numpy under Python3.5, this is an IndexError instead of a warning
+            except IndexError:
+                profile = numpy.zeros_like(profile_table["x"],dtype=float)
 
         num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0) 
         
@@ -361,7 +366,6 @@ def main(argv=sys.argv[1:]):
                 transform=matplotlib.transforms.offset_copy(ax.transData,fig,
                                                             x=6.0,y=3.0,units="points"))
 
-
         ymax = baseline + plot_y.max()
 
         if mask.sum() == numpy.isnan(ymask).sum() or ymask.sum() == 0:
@@ -405,7 +409,7 @@ def main(argv=sys.argv[1:]):
     # save plot
     plot_fn ="%s_p_offsets.%s" % (outbase,args.figformat) 
     printer.write("Saving plot to %s ..." % plot_fn)
-    plt.savefig(plot_fn)
+    plt.savefig(plot_fn,dpi=args.dpi)
 
     printer.write("Done.")
 
