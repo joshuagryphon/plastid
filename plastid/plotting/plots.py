@@ -17,213 +17,14 @@ as well as some specific plots used by :mod:`plastid`. For example:
         Plot data lying on the plane x + y + z = k (e.g. codon phasing)
         in a homogeneous 2D representation
 
-In addition, there are several utility functions:
-
-    :func:`split_axes
-        Split a :class:`matplotlib.axes.Axes` into one or more panels,
-        with tied x and y axes. Also hides overlapping tick labels
-
-    :func:`clean_invalid`
-        Remove pairs of values from two arrays of data if either 
-        element in the pair is `nan` or `inf`. Used to prepare data
-        for histogram or violin plots; as even masked `nan`s and `inf`s
-        are not handled by these functions.
-
 """
 import copy
 import numpy
+import scipy.stats
 import matplotlib
 import matplotlib.pyplot as plt
 from plastid.plotting.colors import lighten, darken, process_black
-
-
-def _plot_helper(axes):
-    """Helper function - performs setup for plotting funcs below.
-
-    Parameters
-    ----------
-    axes : :class:`matplotlib.axes.Axes` or `None`
-        Axes in which to place plot. If `None`, a new figure is generated.
-
-    Returns
-    -------
-    :class:`matplotlib.figure.Figure`
-        Parent figure of axes
-    
-    :class:`matplotlib.axes.Axes`
-        Axes containing plot
-    """
-    if axes is None:
-        fig = plt.figure()
-        ax = plt.gca()
-    else:
-        ax = axes
-        fig = ax.figure
-
-    return fig, ax
-
-def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_ax_kwargs={},
-                other_ax_kwargs={}):
-    """Split the spaces taken by one axes into one or more panes. The original axes is made invisible.
-
-    Parameters
-    ----------
-    ax : :class:`matplotlib.axes.Axes`
-        Axes to split
-
-    top_height, left_width, right_width, bottom_height : float, optional
-        If not `None`, a panel on the corresponding side of the `ax` will be created, using
-        whatever fraction is specified (e.g. 0.1 -> 10% of total height).
-
-    main_ax_kwargs : dict
-        Dictionary of keyword arguments for central panes, passed
-        to :meth:`matplotlib.figure.Figure.add_axes`
-
-    other_ax_kwargs : dict
-        Dictionary of keyword arguments for peripheral panes, passed
-        to :meth:`matplotlib.figure.Figure.add_axes`
-
-
-    Returns
-    -------
-    dict
-        Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
-        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
-    """
-    fig = ax.figure
-    ax.set_visible(False)
-    rects = {}
-    axes = { "orig" : ax }
-    mplrc = matplotlib.rcParams
-
-    buf_left  = mplrc["figure.subplot.left"]
-    buf_bot   = mplrc["figure.subplot.bottom"]
-    buf_right = 1.0 - mplrc["figure.subplot.right"] 
-    buf_top   = 1.0 - mplrc["figure.subplot.top"]
-
-    hscale = 1.0 - buf_top - buf_bot
-    wscale = 1.0 - buf_left - buf_right
-
-    main_height = (1.0 - bottom_height - top_height)*hscale
-    main_width  = (1.0 - left_width - right_width)*wscale
-
-    bottom_height *= hscale
-    top_height    *= hscale
-    left_width    *= wscale
-    right_width   *= wscale
-
-    main_left  = buf_left + left_width
-    main_right = main_left + main_width
-    main_bot   = buf_bot + bottom_height
-    main_top   = main_bot + main_height
-
-
-    # each rect is left,bottom,width,height
-    rects = {}
-    rects["main"] = [main_left,
-                     main_bot,
-                     main_width,
-                     main_height]
-    if left_width > 0:
-        rects["left"] = [buf_left,
-                         main_bot,
-                         left_width,
-                         main_height]
-    if right_width > 0:
-        rects["right"] = [main_right,
-                          main_bot,
-                          right_width,
-                          main_height]
-    if bottom_height > 0:
-        rects["bottom"] = [main_left,
-                           main_bot,
-                           main_width,
-                           bottom_height]
-    if top_height > 0:
-        rects["top"] = [main_left,
-                        main_top,
-                        main_width,
-                        top_height]
-
-    axes["main"] = fig.add_axes(rects["main"],zorder=100,**main_ax_kwargs)
-
-    for axes_name, rect in rects.items():
-        if axes_name == "main":
-            pass
-        else:
-            ax_kwargs = other_ax_kwargs
-            if axes_name in ("right","left"):
-                ax_kwargs["sharey"] = axes["main"]
-                if "sharex" in ax_kwargs:
-                    ax_kwargs.pop("sharex")
-            if axes_name in ("top","bottom"):
-                ax_kwargs["sharex"] = axes["main"]
-                if "sharey" in ax_kwargs:
-                    ax_kwargs.pop("sharey")
-
-            axes[axes_name] = fig.add_axes(rect,zorder=50,**ax_kwargs)
-
-    if "top" in axes:
-        axes["top"].xaxis.tick_top()
-        axes["main"].xaxis.tick_bottom()
-        # prevent tick collisions
-        axes["top"].yaxis.get_ticklabels()[0].set_visible(False)
-
-    if "bottom" in axes:
-        axes["bottom"].xaxis.tick_bottom()
-        for t in axes["main"].xaxis.get_ticklabels():
-            t.set_visible(False)
-
-    if "left" in axes:
-        axes["left"].yaxis.tick_left()
-        axes["left"].xaxis.get_ticklabels()[-1].set_visible(False)
-        for t in axes["main"].yaxis.get_ticklabels():
-            t.set_visible(False)
-
-    if "right" in axes:
-        axes["right"].yaxis.tick_right()
-        axes["main"].yaxis.tick_left()
-        axes["right"].xaxis.get_ticklabels()[0].set_visible(False)
-        
-
-    return axes
-
-def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
-    """Remove corresponding values from x and y when one or both of those is nan or inf,
-    and optionally truncate values to minima and maxima
-
-    Parameters
-    ----------
-    x, y : :class:`numpy.ndarray` or list
-        Pair arrays or lists of corresponding numbers
-
-    min_x, min_y, max_x, max_y : number, optional
-        If supplied, set values below `min_x` to `min_x`, values larger
-        than `max_x` to `max_x` and so for `min_y` and `max-y`
-
-    Returns
-    -------
-    :class:`numpy.ndarray
-        A shortened version of `x`, excluding invalid values
-
-    :class:`numpy.ndarray
-        A shortened version of `y`, excluding invalid values
-    """
-    x = numpy.array(x).astype(float)
-    y = numpy.array(y).astype(float)
-
-    x[x < min_x] = min_x
-    x[x > max_x] = max_x
-    y[y < min_y] = min_y
-    y[y > max_y] = max_y
-    
-    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y) 
-    x = x[~newmask]
-    y = y[~newmask]
-
-
-    return x,y 
-
+from plastid.plotting.plotutils import _plot_helper, split_axes, clean_invalid, get_kde
 
 #==============================================================================
 # Stacked bar
@@ -583,6 +384,7 @@ plastid_default_scatter = {
 """Default parameters for scatter plots"""
 
 
+
 plastid_default_marginalplot = {
     "showextrema" : False,
 }
@@ -658,8 +460,8 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
                   top_height=0.2,mask_invalid=True,
                   log="",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
-                  scargs=plastid_default_scatter,
-                  vargs=plastid_default_marginalplot,valpha=0.7):
+                  scargs=plastid_default_scatter,bw_method="scott",
+                  valpha=0.7):
     """Produce a scatter plot with a kernel density estimate of the marginal `x` distribution
 
     Parameters
@@ -710,6 +512,10 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
     valpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
+    bw_method : str
+        Bandwith estimation method. See documentation for
+        :obj:`scipy.stats.gaussian_kde`. (Default: "scott")
+
 
     Returns
     -------
@@ -721,13 +527,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
         Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
     """
     fig, axes = _scatterhist_help(axes=axes,top_height=top_height)
-
-    if "x" in log:
-        axes["main"].semilogx()
-        axes["top"].semilogx()
-
-    if "y" in log:
-        axes["main"].semilogy()
+    xlog = False
 
     if color is None:
         color = next(axes["main"]._get_lines.color_cycle)
@@ -739,23 +539,34 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
         scargs = copy.deepcopy(scargs)
         scargs["label"] = label
 
-    axes["main"].scatter(x,y,edgecolor=color,**scargs)
-    vdict = axes["top"].violinplot(x,positions=[0],vert=False,**vargs)
+    if "x" in log:
+        axes["main"].semilogx()
+        axes["top"].semilogx()
+        xlog = True
+        xmask = x > 0
+    else:
+        xmask = numpy.tile(True,x.shape)
 
-    violins = vdict["bodies"][0]
-    violins.set_facecolor(color)
-    violins.set_edgecolor(darken(color))
-    violins.set_alpha(valpha)
-    axes["top"].set_ylim(0.0,0.5)
-    axes["top"].yaxis.set_ticklabels([])
+    if "y" in log:
+        axes["main"].semilogy()
+
+
+    axes["main"].scatter(x,y,edgecolor=color,**scargs)
+    if xmask.sum() > 0:
+        top_x, top_y = get_kde(x[xmask],log=xlog,base=10,bw_method=bw_method)
+        top_y /= top_y.sum()
+        axes["top"].fill_between(top_x,top_y,0,
+                                 facecolor=lighten(color),edgecolor=color,
+                                 alpha=valpha)
 
     return fig, axes
+
 
 def scatterhist_y(x,y,color=None,axes=None,label=None,
                   right_width=0.2,mask_invalid=True,log="xy",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
-                  scargs=plastid_default_scatter,
-                  vargs=plastid_default_marginalplot,valpha=0.7):
+                  scargs=plastid_default_scatter,bw_method="scott",
+                  valpha=0.7):
     """Produce a scatter plot with a kernel density estimate of the marginal `y` distribution
 
     Parameters
@@ -798,14 +609,12 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-
-    vargs : Keyword arguments, optional
-        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
-        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
-
     valpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
+    bw_method : str
+        Bandwith estimation method. See documentation for
+        :obj:`scipy.stats.gaussian_kde`. (Default: "scott")
 
     Returns
     -------
@@ -817,14 +626,8 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
         Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
     """
     fig, axes = _scatterhist_help(axes=axes,right_width=right_width)
+    ylog = False
 
-    if "x" in log:
-        axes["main"].semilogx()
-
-    if "y" in log:
-        axes["main"].semilogy()
-        axes["right"].semilogy()
-        
     if color is None:
         color = next(axes["main"]._get_lines.color_cycle)
 
@@ -835,22 +638,34 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
     if mask_invalid == True:
         x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
 
+    if "x" in log:
+        axes["main"].semilogx()
+
+    if "y" in log:
+        axes["main"].semilogy()
+        axes["right"].semilogy()
+        ylog = True
+        ymask = y > 0
+    else:
+        ymask = numpy.tile(True,y.shape)
+
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
-    vdict = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
 
-    violins = vdict["bodies"][0]
-    violins.set_facecolor(color)
-    violins.set_edgecolor(darken(color))
-    violins.set_alpha(valpha)
-    axes["right"].set_xlim(0,0.5)
-
+    # kernel density
+    if ymask.sum() > 0:
+        right_y,right_x = get_kde(y[ymask],log=ylog,base=10,points=500,bw_method=bw_method)
+        right_x /= right_x.sum()
+        axes["right"].fill_betweenx(right_y,right_x,0,
+                                    facecolor=lighten(color),edgecolor=color,
+                                    alpha=valpha)
     return fig, axes
+
 
 def scatterhist_xy(x,y,color=None,axes=None,label=None,
                    top_height=0.2,right_width=0.2,mask_invalid=True,log="xy",
                    min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                    scargs=plastid_default_scatter,
-                   vargs=plastid_default_marginalplot,valpha=0.7):
+                   valpha=0.7,bw_method="scott"):
     """Produce a scatter plot with kernel density estimate of the marginal `x` and `y` distributions
 
     Parameters
@@ -899,14 +714,12 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-
-    vargs : Keyword arguments, optional
-        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
-        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
-
     valpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
+    bw_method : str
+        Bandwith estimation method. See documentation for
+        :obj:`scipy.stats.gaussian_kde`. (Default: "scott")
 
     Returns
     -------
@@ -918,15 +731,7 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
         Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
     """
     fig, axes = _scatterhist_help(axes=axes,top_height=top_height,right_width=right_width)
-
-
-    if "x" in log:
-        axes["main"].semilogx()
-        axes["top"].semilogx()
-
-    if "y" in log:
-        axes["main"].semilogy()
-        axes["right"].semilogy()
+    xlog = ylog = False
 
     if color is None:
         color = next(axes["main"]._get_lines.color_cycle)
@@ -938,23 +743,37 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
         scargs = copy.deepcopy(scargs)
         scargs["label"] = label
 
+    if "x" in log:
+        axes["main"].semilogx()
+        axes["top"].semilogx()
+        xlog = True
+        xmask = x > 0
+    else:
+        xmask = numpy.tile(True,x.shape)
+
+    if "y" in log:
+        axes["main"].semilogy()
+        axes["right"].semilogy()
+        ylog = True
+        ymask = y > 0
+    else:
+        ymask = numpy.tile(True,y.shape)
+        
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
-    vdictx = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
-    vdicty = axes["top"].violinplot(x,positions=[0],vert=False,**vargs)
+    
+    if ymask.sum() > 0:
+        right_y,right_x = get_kde(y[ymask],log=ylog,base=10,points=500,bw_method=bw_method)
+        right_x /= right_x.sum()
+        axes["right"].fill_betweenx(right_y,right_x,0,
+                                    facecolor=lighten(color),edgecolor=color,
+                                    alpha=valpha)
 
-    vix = vdictx["bodies"][0]
-    vix.set_facecolor(color)
-    vix.set_edgecolor(darken(color))
-    vix.set_alpha(valpha)
-
-    viy = vdicty["bodies"][0]
-    viy.set_facecolor(color)
-    viy.set_edgecolor(darken(color))
-    viy.set_alpha(valpha)
-
-    axes["right"].set_xlim(0,0.5)
-    axes["top"].set_ylim(0,0.5)
-
+    if xmask.sum() > 0:
+        top_x, top_y = get_kde(x[xmask],log=xlog,base=10,bw_method=bw_method)
+        top_y /= top_y.sum()
+        axes["top"].fill_between(top_x,top_y,0,
+                                 facecolor=lighten(color),edgecolor=color,
+                                 alpha=valpha)
 
     return fig, axes
 
@@ -969,7 +788,7 @@ def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=
             right_width=0.2,log="xy",
             min_x=-numpy.inf,max_x=numpy.inf,min_y=-numpy.inf,max_y=numpy.inf,
             scargs=plastid_default_scatter,mask_invalid=True,
-            vargs=plastid_default_marginalplot,valpha=0.7):
+            valpha=0.7):
     """Plot fold changes (:math:`\log_{2} (y/x)`) as a function of the mean of x and y (:math:`0.5*(x+y)`).
 
     Parameters
@@ -1017,11 +836,6 @@ def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=
         Arguments to pass to :func:`~matplotlib.pyplot.scatter`
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
-
-
-    vargs : Keyword arguments, optional
-        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
-        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
 
     valpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
