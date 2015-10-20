@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """Sommon common plots that are not directly implemented in :mod:`matplotlib`,
-as well as some specific plots used by :mod:`plastid`. For example:
+as well as some specific plots used by :mod:`plastid`.
 
+General plots
+-------------
     :func:`stacked_bar`
         Create a stacked bar graph
 
@@ -20,6 +22,18 @@ as well as some specific plots used by :mod:`plastid`. For example:
         Plot data lying on the plane x + y + z = k (e.g. codon phasing)
         in a homogeneous 2D representation
 
+
+Plots for genomics
+------------------
+    :func:`ma_plot`
+        Plot fold changes between `x` and `y` (:math:`\log_{2} (y/x)`) as
+        a function of the mean of x and y (:math:`0.5*(x+y)`).
+
+    :func:`phase_plot`
+        For ribosome profiling. Plot sub-codon phasing of ribosome-protected
+        foorpints stratified by read length, as well as the fraction of total
+        reads represented by each length.
+
 """
 import copy
 import numpy
@@ -32,18 +46,17 @@ from plastid.plotting.plotutils import get_fig_axes, split_axes, clean_invalid, 
 
 
 #==============================================================================
-# Default keyword arguments
+# Default keyword arguments for plots or subplots
 #==============================================================================
 
 plastid_default_scatter = {
-    "marker"    : "o",
-    "alpha"     : 0.7,
-    "facecolor" : "none",
-    "s"         : 8,
+    "marker"     : "o",
+    "alpha"      : 0.7,
+    "facecolor"  : "none",
+    "s"          : 8,
     "rasterized" : True,
 }
 """Default parameters for scatter plots"""
-
 
 
 
@@ -72,7 +85,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
     
     cmap : :class:`matplotlib.colors.Colormap`, optional
         Colormap from which to generate bar colors. If supplied, will override
-        any `color` attribute in `**kwargs`.
+        any `color` attribute in `**kwargs`. (Default: `None`)
         
     **kwargs : keyword arguments
         Other keyword arguments to pass to :func:`matplotlib.pyplot.bar`
@@ -195,6 +208,7 @@ def kdeplot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
 
     return fig, axes
 
+
 #==============================================================================
 # Triangle plot
 #==============================================================================
@@ -215,14 +229,15 @@ _triverts = numpy.array([[1.0,0.0],
 
 
 def trianglize(data):
-    """Convert points from triangular space to Cartesian space for plotting
+    """Convert points from triangular space to Cartesian space for plotting.
+    Called internally by :func:`triangle_plot`.
 
     Parameters
     ----------
     data : class:`numpy.ndarray`
-        Nx2 or Nx3 list or array of points in triangular space, where
+        Mx2 or Mx3 list or array of points in triangular space, where
         the first column is the first coordinate, the second column
-        the second, and the third, if supplied, the third
+        the second, and the third, the third.
     
     Returns
     -------
@@ -235,6 +250,7 @@ def trianglize(data):
         data = _triTA.dot(numpy.hstack([data,numpy.ones((data.shape[0],1))]).T).T
     else:
         data = _triT.dot(data[:,(0,2)].T).T 
+
     return data
 
 def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=True,do_setup=True,**kwargs):
@@ -243,7 +259,9 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
     Parameters
     ----------
     data : :class:`numpy.ndarray`
-        Array of data, in which each row is a stack, each column a value in that stack.
+        Mx2 or Mx3 list or array of points in triangular space, where
+        the first column is the first coordinate, the second column
+        the second, and the third, the third.
 
     axes : :class:`matplotlib.axes.Axes` or `None`, optional
         Axes in which to place plot. If `None`, a new figure is generated.

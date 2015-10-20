@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-This module contains utility functions for plotting:
+"""This module contains utility functions for plotting:
 
     :func:`get_fig_axes`
         Helper function to check arguments of plotting functions.
