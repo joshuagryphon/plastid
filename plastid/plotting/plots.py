@@ -5,6 +5,9 @@ as well as some specific plots used by :mod:`plastid`. For example:
     :func:`stacked_bar`
         Create a stacked bar graph
 
+    :func:`kde_plot`
+        Plot a kernel density estimate (continuous histogram) of data
+
     :func:`scatterhist_x`, :func:`scatterhist_y`, and :func:`scatterhist_xy`
         Create scatter plots with kernel density estimates of the marginal 
         distributions along side them
@@ -24,7 +27,25 @@ import scipy.stats
 import matplotlib
 import matplotlib.pyplot as plt
 from plastid.plotting.colors import lighten, darken, process_black
-from plastid.plotting.plotutils import _plot_helper, split_axes, clean_invalid, get_kde
+from plastid.plotting.plotutils import get_fig_axes, split_axes, clean_invalid, get_kde
+
+
+
+#==============================================================================
+# Default keyword arguments
+#==============================================================================
+
+plastid_default_scatter = {
+    "marker"    : "o",
+    "alpha"     : 0.7,
+    "facecolor" : "none",
+    "s"         : 8,
+    "rasterized" : True,
+}
+"""Default parameters for scatter plots"""
+
+
+
 
 #==============================================================================
 # Stacked bar
@@ -64,7 +85,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
     :class:`matplotlib.axes.Axes`
         Axes containing plot
     """
-    fig, ax = _plot_helper(axes)
+    fig, ax = get_fig_axes(axes)
     rows, cols = data.shape
     labels = labels if labels is not None else range(rows)
     defaults = [("align","center"),
@@ -99,6 +120,80 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
 
     return fig, ax
 
+
+#==============================================================================
+# Kernel density estimate
+#==============================================================================
+
+def kdeplot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
+            log=False,base=10,points=500,bw_method="scott"):
+    """Plot a kernel density estimate of `data` on `axes`.
+
+    Parameters
+    ----------
+    data : :class:`numpy.ndarray`
+        Array of data
+
+    axes : :class:`matplotlib.axes.Axes` or `None`, optional
+        Axes in which to place plot. If `None`, a new figure is generated.
+        (Default: `None`)
+        
+    color : matplotlib colorspec, optional
+        Color to use for plotting (Default: use next in matplotlibrc)
+
+    label : str, optional
+        Name of data series (used for legend; default: none)
+
+    alpha : float, optional
+        Amount of alpha transparency to use (Default: 0.7)
+
+    vert : bool, optional
+        If true, plot kde vertically
+
+    log : bool, optional
+        If `True`, `data` is log-transformed before the kde is estimated.
+        Data are converted back to non-log space afterwards.
+
+    base : 2, 10, or :obj:`numpy.e`, optional
+        If `log` is `True`, this serves as the base of the log space.
+        If `log` is `False`, this is ignored. (Default: 2)
+
+    points : int
+        Number of points over which to evaluate kde. (Default: 100)
+
+    bw_method : str
+        Bandwith estimation method. See documentation for
+        :obj:`scipy.stats.gaussian_kde`. (Default: "scott")    
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Parent figure of axes
+    
+    :class:`matplotlib.axes.Axes`
+        Axes containing plot
+    """
+    fig, axes = get_fig_axes(axes)
+
+    if color is None:
+        color = next(axes._get_lines.color_cycle)
+
+    a, b = get_kde(data,log=log,base=base,points=points,bw_method=bw_method)
+
+    fbargs = { "alpha" : alpha,
+               "facecolor" : lighten(color),
+               "edgecolor" : color
+             }
+    if label is not None:
+        fbargs["label"] = label
+
+    if vert == True:
+        axes.fill_betweenx(a,b,0,**fbargs)
+    else:
+        axes.fill_between(a,b,0,**fbargs)
+
+    return fig, axes
 
 #==============================================================================
 # Triangle plot
@@ -189,7 +284,7 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
         Axes containing plot
 
     """
-    fig, ax = _plot_helper(axes)
+    fig, ax = get_fig_axes(axes)
     mplrc = matplotlib.rcParams
 
     if do_setup == True:
@@ -289,7 +384,7 @@ def sort_max_position(data):
     return numpy.argsort(maxidx)
 
 def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position,
-                    im_args={},plot_args={}):
+                    cmap=None,im_args={},plot_args={}):
     """Create a dual-paned plot in which `profile` is displayed in a top
     panel, above a heatmap showing the intensities of each row of `data`,
     optionally sorted top-to-bottom by `sort_fn`.
@@ -312,14 +407,19 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
         (Default: `None`)
        
     sort_fn : function, optional
-        Sort rows in `data` by this function before plotting
+        Sort rows in `data` by this function before plotting. Function must
+        return a :class:`numpy.ndarray` of indices corresponding to rows in `data`
         (Default: sort by ascending argmax of each row)
+
+    cmap : :class:`~matplotlib.colors.Colormap`, optional
+        Colormap to use in heatmap. It not `None`, overrides any value
+        in `im_args`. (Default: None) 
 
     im_args : dict
         Keyword arguments to pass to :func:`matplotlib.pyplot.imshow`
 
     plot_args : dict
-        Keyword arugments to pass to :func:`matplotlib.pyplot.plot`
+        Keyword arguments to pass to :func:`matplotlib.pyplot.plot`
         for plotting metagene average
 
 
@@ -333,7 +433,7 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
         panel containing the summary profile. "main" refers to the heatmap
         of individual values
     """
-    fig, ax = _plot_helper(axes)
+    fig, ax = get_fig_axes(axes)
     axes = split_axes(ax,top_height=0.2)
 
     if sort_fn is None:
@@ -352,6 +452,9 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
     im_args["aspect"] = "auto"
     im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
     im_args["origin"] = "upper"
+
+    if cmap is not None:
+        im_args["cmap"] = cmap
 
     axes["top"].plot(x,profile,**plot_args)
     axes["top"].set_ylim(0,profile.max())
@@ -374,22 +477,6 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
 #==============================================================================
 
 
-plastid_default_scatter = {
-    "marker"    : "o",
-    "alpha"     : 0.7,
-    "facecolor" : "none",
-    "s"         : 8,
-    "rasterized" : True,
-}
-"""Default parameters for scatter plots"""
-
-
-
-plastid_default_marginalplot = {
-    "showextrema" : False,
-}
-
-
 def _scatterhist_help(axes=None,
                       top_height=0,left_width=0,right_width=0,bottom_height=0,
                       ):
@@ -398,12 +485,6 @@ def _scatterhist_help(axes=None,
 
     Parameters
     ----------
-    x : list or :class:`numpy.ndarray`
-        x values
-
-    y : list or :class:`numpy.ndarray`
-        y values
-
     color : matplotlib colorspec, or None, optional
         Color to plot data series
 
@@ -415,15 +496,11 @@ def _scatterhist_help(axes=None,
 
         If `None`, a new figure is generated, and axes are split.
         (Default: `None`)
-       
-    scargs : dict
-        Keyword arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        (Default: :obj:`plastid_default_scatter`). We highly recommend
-        setting `rasterized` to `True`!
-
-    args : dict
-        Keyword arguments to pass to :func:`~matplotlib.pyplot.violinplot`,
-        which draws the marginal distributions
+      
+    top_height, left_width, right_width, bottom_height : float, optional
+        If not `None`, a panel on the corresponding side of the `ax` will
+        be created, using whatever fraction is specified (e.g. 0.1 to use
+        10% of total height).    
 
 
     Returns
@@ -461,7 +538,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
                   log="",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                   scargs=plastid_default_scatter,bw_method="scott",
-                  valpha=0.7):
+                  kdalpha=0.7):
     """Produce a scatter plot with a kernel density estimate of the marginal `x` distribution
 
     Parameters
@@ -504,12 +581,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-
-    vargs : Keyword arguments, optional
-        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
-        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
-
-    valpha : float, optional
+    kdalpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
     bw_method : str
@@ -552,12 +624,15 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
 
 
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
+
+    # kernel densities
+    kargs = { "color" : color,
+              "alpha" : kdalpha,
+              "bw_method" : bw_method,
+             }
+
     if xmask.sum() > 0:
-        top_x, top_y = get_kde(x[xmask],log=xlog,base=10,bw_method=bw_method)
-        top_y /= top_y.sum()
-        axes["top"].fill_between(top_x,top_y,0,
-                                 facecolor=lighten(color),edgecolor=color,
-                                 alpha=valpha)
+        kdeplot(x[xmask],log=xlog,axes=axes["top"],**kargs)
 
     return fig, axes
 
@@ -566,7 +641,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
                   right_width=0.2,mask_invalid=True,log="xy",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                   scargs=plastid_default_scatter,bw_method="scott",
-                  valpha=0.7):
+                  kdalpha=0.7):
     """Produce a scatter plot with a kernel density estimate of the marginal `y` distribution
 
     Parameters
@@ -609,7 +684,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-    valpha : float, optional
+    kdalpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
     bw_method : str
@@ -652,12 +727,14 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
 
     # kernel density
+    kargs = { "color" : color,
+              "alpha" : kdalpha,
+              "bw_method" : bw_method,
+             }
+             
     if ymask.sum() > 0:
-        right_y,right_x = get_kde(y[ymask],log=ylog,base=10,points=500,bw_method=bw_method)
-        right_x /= right_x.sum()
-        axes["right"].fill_betweenx(right_y,right_x,0,
-                                    facecolor=lighten(color),edgecolor=color,
-                                    alpha=valpha)
+        kdeplot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
+
     return fig, axes
 
 
@@ -665,7 +742,7 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
                    top_height=0.2,right_width=0.2,mask_invalid=True,log="xy",
                    min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                    scargs=plastid_default_scatter,
-                   valpha=0.7,bw_method="scott"):
+                   kdalpha=0.7,bw_method="scott"):
     """Produce a scatter plot with kernel density estimate of the marginal `x` and `y` distributions
 
     Parameters
@@ -714,7 +791,7 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-    valpha : float, optional
+    kdalpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
     bw_method : str
@@ -760,23 +837,20 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
         ymask = numpy.tile(True,y.shape)
         
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
+
+    # kernel densities
+    kargs = { "color" : color,
+              "alpha" : kdalpha,
+              "bw_method" : bw_method,
+             }
     
     if ymask.sum() > 0:
-        right_y,right_x = get_kde(y[ymask],log=ylog,base=10,points=500,bw_method=bw_method)
-        right_x /= right_x.sum()
-        axes["right"].fill_betweenx(right_y,right_x,0,
-                                    facecolor=lighten(color),edgecolor=color,
-                                    alpha=valpha)
+        kdeplot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
 
     if xmask.sum() > 0:
-        top_x, top_y = get_kde(x[xmask],log=xlog,base=10,bw_method=bw_method)
-        top_y /= top_y.sum()
-        axes["top"].fill_between(top_x,top_y,0,
-                                 facecolor=lighten(color),edgecolor=color,
-                                 alpha=valpha)
+        kdeplot(x[xmask],log=xlog,axes=axes["top"],**kargs)
 
     return fig, axes
-
 
 
 
@@ -784,11 +858,11 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
 # Plots specific for genomics
 #==============================================================================
 
-def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=None,
+def ma_plot(x,y,axes=None,color=None,label=None,xlabel=None,ylabel=None,title=None,
             right_width=0.2,log="xy",
             min_x=-numpy.inf,max_x=numpy.inf,min_y=-numpy.inf,max_y=numpy.inf,
             scargs=plastid_default_scatter,mask_invalid=True,
-            valpha=0.7):
+            kdalpha=0.7):
     """Plot fold changes (:math:`\log_{2} (y/x)`) as a function of the mean of x and y (:math:`0.5*(x+y)`).
 
     Parameters
@@ -802,10 +876,10 @@ def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=
     label : str or None, optional
         If not `None`, a label for plotting
 
-    label_x : str or None, optional
+    xlabel : str or None, optional
         If not `None`, an x-axis label
 
-    label_y : str or None, optional
+    ylabel : str or None, optional
         If not `None`, a y-axis label
         
     right_width : float, optional
@@ -837,7 +911,7 @@ def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=
         (Default: :obj:`plastid_default_scatter`). We highly recommend
         setting `rasterized` to `True`!
 
-    valpha : float, optional
+    kdalpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
 
 
@@ -863,19 +937,19 @@ def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=
                                 min_y=min_y,max_y=max_y,
                                 log=log,right_width=right_width,
                                 color=color,mask_invalid=mask_invalid,
-                                label=label,valpha=valpha)
+                                label=label,kdalpha=kdalpha)
 
     if do_setup == True:
         axdict["main"].axhline(1,color=process_black,zorder=-5,linewidth=1)
         axdict["right"].axhline(1,color=process_black,zorder=-5,linewidth=1)
         axdict["right"].xaxis.set_ticklabels([])
 
-        if label_y is None:
-            label_y = "log2 fold change"
+        if ylabel is None:
+            ylabel = "log2 fold change"
 
-        axdict["main"].set_ylabel(label_y)
-        if label_x is not None:
-            axdict["main"].set_xlabel(label_x)
+        axdict["main"].set_ylabel(ylabel)
+        if xlabel is not None:
+            axdict["main"].set_xlabel(xlabel)
 
         if title is not None:
             plt.suptitle(title)

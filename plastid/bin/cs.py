@@ -777,8 +777,7 @@ def get_short_samplename(inp):
     """
     return get_short_name(inp,separator=os.path.sep,terminator=".txt")
 
-
-def do_scatter(x,y,count_mask,args,pearsonr=None,label_x=None,label_y=None,title=None,min_x=10**-3,min_y=10**-3):
+def do_scatter(x,y,count_mask,args,pearsonr=None,xlabel=None,ylabel=None,title=None,min_x=10**-3,min_y=10**-3):
     """Scatter plot helper for cs `chart` subprogram
     
     Parameters
@@ -788,6 +787,18 @@ def do_scatter(x,y,count_mask,args,pearsonr=None,label_x=None,label_y=None,title
 
     count_mask : :class:`numpy.ndarray`
         Threshold mask
+
+    args : :class:`~argparse.Namespace`
+        Command-line arguments
+
+    pearsonr : float
+        Pearson's r of the two samples
+
+    xlabel : str or None, optional
+        If not `None`, an x-axis label
+
+    ylabel : str or None, optional
+        If not `None`, a y-axis label    
 
     min_x,min_y : float
         value to which low x- or y-values will respectively be truncated
@@ -819,11 +830,11 @@ def do_scatter(x,y,count_mask,args,pearsonr=None,label_x=None,label_y=None,title
         mainax.text(0.02,0.9,"Pearson r**2 >= 128: %0.4e" % pearsonr**2,
                             **text_kwargs)
     
-    if label_x is not None:
-        mainax.set_xlabel(label_x)
+    if xlabel is not None:
+        mainax.set_xlabel(xlabel)
 
-    if label_y is not None:
-        mainax.set_ylabel(label_y)
+    if ylabel is not None:
+        mainax.set_ylabel(ylabel)
 
     if title is not None:
         plt.suptitle(title)
@@ -923,8 +934,8 @@ correlation coefficients as a function of summed read counts in both samples
                 # ma plot
                 ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
                 fig, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
-                                      valpha=0.2,title=ma_title)
-                _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",valpha=0.8)
+                                      kdalpha=0.2,title=ma_title)
+                _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",kdalpha=0.8)
 
                 mainax = axdict["main"]
                 mainax.set_xlabel("%s %s" % (ki,metric))
@@ -952,7 +963,7 @@ correlation coefficients as a function of summed read counts in both samples
                 scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
                 fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
                                  count_mask,args,pearsonr=pearsonr,
-                                 label_x=ki,label_y=kj,title=scatter_title)
+                                 xlabel=ki,ylabel=kj,title=scatter_title)
 
                 plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat))
                 plt.close()

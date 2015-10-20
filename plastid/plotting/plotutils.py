@@ -2,6 +2,11 @@
 """
 This module contains utility functions for plotting:
 
+    :func:`get_fig_axes`
+        Helper function to check arguments of plotting functions.
+        Retrieve figure and axes from `axes`. If `axes` is None,
+        create figure and axes, and return those.
+
     :func:`split_axes`
         Split a :class:`matplotlib.axes.Axes` into one or more panels,
         with tied x and y axes. Also hides overlapping tick labels
@@ -25,13 +30,17 @@ import matplotlib.pyplot as plt
 from plastid.plotting.colors import lighten, darken, process_black
 
 
-def _plot_helper(axes):
-    """Helper function - performs setup for plotting funcs below.
+def get_fig_axes(axes):
+    """Retrive fiegure and axes from `axes`. If `axes` is None, create figure and axes
+    This is predominantly used as a helper function to check arguments
+    of the plotting functions defined in :mod:`plastid.plotting.plots`.
+
 
     Parameters
     ----------
     axes : :class:`matplotlib.axes.Axes` or `None`
         Axes in which to place plot. If `None`, a new figure is generated.
+
 
     Returns
     -------
@@ -60,8 +69,9 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
         Axes to split
 
     top_height, left_width, right_width, bottom_height : float, optional
-        If not `None`, a panel on the corresponding side of the `ax` will be created, using
-        whatever fraction is specified (e.g. 0.1 -> 10% of total height).
+        If not `None`, a panel on the corresponding side of the `ax` will
+        be created, using whatever fraction is specified (e.g. 0.1 to use
+        10% of total height).
 
     main_ax_kwargs : dict
         Dictionary of keyword arguments for central panes, passed
