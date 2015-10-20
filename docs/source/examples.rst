@@ -53,6 +53,8 @@ Cookbook
 
 :doc:`/examples/phasing`                                                        Estimate :term:`read phasing (triplet periodicity) <sub-codon phasing>`
                                                                                 of :term:`ribosome profiling` data
+
+:doc:`/examples/z_plotting`                                                     Demos of plotting tools in :mod:`plastid.plotting`
 ============================================================================    ===========================================================================================
 
 
