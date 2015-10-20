@@ -985,19 +985,25 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     parser   = argparse.ArgumentParser(add_help=False)
     plotargs = parser.add_argument_group(title=title)
 
-    plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
-        help="Use this chart title")
-    plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
-        help="Use this matplotlib stylesheet instead of matplotlibrc params")
-    plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
-        choices=filetypes,
-        help="File format for figure(s); Default: %(default)s)")
-    plotargs.add_argument("--%sfigsize" % prefix,nargs=2,default=None,type=float,
-        help="Figure width and height, in inches. (Default: use matplotlibrc params)",metavar="N")
-    plotargs.add_argument("--%scmap" % prefix,type=str,default=None,
-        help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)")
-    plotargs.add_argument("--%sdpi" % prefix,type=int,default=150,
-        help="Figure resolution (Default: %(default)s)")
+    if "title" not in disabled:
+        plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
+            help="Use this chart title")
+    if "stylesheet" not in disabled:
+        plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
+            help="Use this matplotlib stylesheet instead of matplotlibrc params")
+    if "figformat" not in disabled:
+        plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
+            choices=filetypes,
+            help="File format for figure(s); Default: %(default)s)")
+    if "figsize" not in disabled:
+        plotargs.add_argument("--%sfigsize" % prefix,nargs=2,default=None,type=float,
+            help="Figure width and height, in inches. (Default: use matplotlibrc params)",metavar="N")
+    if "cmap" not in disabled:
+        plotargs.add_argument("--%scmap" % prefix,type=str,default=None,
+            help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)")
+    if "dpi" not in disabled:
+        plotargs.add_argument("--%sdpi" % prefix,type=int,default=150,
+            help="Figure resolution (Default: %(default)s)")
 
     return parser
 
