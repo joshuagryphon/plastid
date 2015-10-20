@@ -89,13 +89,33 @@ See also
     :mod:`~plastid.bin.cs` -- in the genome, and calculate read densities
     (in reads per nucleotide and in :term:`RPKM`) over these regions.
 """
+import os
+import sys
+import argparse
+import itertools
+import copy
+import inspect
+import gc
+import warnings
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.style
+import matplotlib.pyplot as plt
+import numpy
+import pandas as pd
+import scipy.optimize
+import scipy.stats
 
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                            get_transcripts_from_args,\
                                            get_alignment_file_parser,\
                                            get_annotation_file_parser,\
                                            get_mask_file_parser,\
-                                           get_genome_hash_from_mask_args
+                                           get_genome_hash_from_mask_args,\
+                                           get_plotting_parser,\
+                                           get_figure_from_args,\
+                                           get_colors_from_args
 
 
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -107,19 +127,9 @@ from plastid.util.io.filters import NameDateWriter
 from plastid.util.services.sets import merge_sets
 from plastid.util.services.decorators import skipdoc
 from scipy.misc import comb as combination
-
-import os
-import sys
-import numpy
-import pandas as pd
-import scipy.optimize
-import argparse
-import scipy.stats
-import itertools
-import copy
-import inspect
-import gc
-import warnings
+import numpy.ma as ma
+from plastid.plotting.plots import scatterhist_xy, ma_plot, clean_invalid
+from plastid.plotting.colors import process_black
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -767,54 +777,63 @@ def get_short_samplename(inp):
     """
     return get_short_name(inp,separator=os.path.sep,terminator=".txt")
 
-@skipdoc
-def gaussian(mu,sigma):
-    """Returns a function that calculates a Gaussian specified by `mu` and `sigma`
-    for an arbitrary X
-    
-    Parameters
-    ----------
-    mu : float
-        mean of Gaussian
-        
-    sigma : float
-        standard deviation of Gaussian
-    
-    Returns
-    -------
-    function
-        Gaussian probability density function
-    """
-    coeff = (2*numpy.pi*(sigma**2))**-0.5
-    def f(x):
-        return coeff*numpy.e**( -(x-mu)**2 / (2*(sigma**2)) )
-    return f
 
-@skipdoc
-def fit_gaussian(my_x,my_y):
-    """Fits a Gaussian to data
+def do_scatter(x,y,count_mask,args,pearsonr=None,label_x=None,label_y=None,title=None,min_x=10**-3,min_y=10**-3):
+    """Scatter plot helper for cs `chart` subprogram
     
     Parameters
     ----------
-    my_x : numpy.ndarray
-        vector of x-values
-        
-    my_y : numpy.ndarray
-        vector of y-values
-        
+    x, y : :class:`numpy.ndarray`
+        Data to plot
+
+    count_mask : :class:`numpy.ndarray`
+        Threshold mask
+
+    min_x,min_y : float
+        value to which low x- or y-values will respectively be truncated
+
     Returns
     -------
-    float
-        mean from Gaussian fit
-    
-    float
-        standard deviation from Gaussian fit
+    :class:`matplotlib.figure.Figure`
+        Formatted figure
     """
-    fitfunc = lambda x, mu, sigma2: (2*numpy.pi*sigma2)**-0.5 * numpy.exp( -(x-mu)**2 / (2*sigma2) )
-    p0 = [0.0, 0.05]
-    params, _ = scipy.optimize.curve_fit(fitfunc,my_x,my_y,p0=p0[:])
-    return tuple(params)
+    fig = get_figure_from_args(args)
+    ax = plt.gca()
+
+    xm = x[count_mask]
+    ym = y[count_mask]
+
+    xb, yb = clean_invalid(x[~count_mask],y[~count_mask],min_x=min_x,min_y=min_y)
+
+    _, axdict = scatterhist_xy(xm,ym,log="xy",label=">= 128 counts")
+    _, _ = scatterhist_xy(xb,yb,axes=axdict,color=process_black,label="< 128 counts",mask_invalid=False)
     
+    text_kwargs = { "horizontalalignment" : "left",
+                    "verticalalignment" : "baseline",
+                    "transform" : axdict["main"].transAxes }
+    
+    plt.legend(loc="lower right",frameon=False)
+    mainax = axdict["main"]
+
+    if pearsonr is not None:
+        mainax.text(0.02,0.9,"Pearson r**2 >= 128: %0.4e" % pearsonr**2,
+                            **text_kwargs)
+    
+    if label_x is not None:
+        mainax.set_xlabel(label_x)
+
+    if label_y is not None:
+        mainax.set_ylabel(label_y)
+
+    if title is not None:
+        plt.suptitle(title)
+
+    mainax.set_xlim(min_x/5.0,mainax.get_xlim()[1])
+    mainax.set_ylim(min_y/5.0,mainax.get_ylim()[1])
+
+    return fig
+
+
 def do_chart(args):
     """Produce log-2 fold change histograms and scatter plots for :term:`count`
 and :term:`RPKM` values between two samples, as well as a chart plotting
@@ -825,14 +844,16 @@ correlation coefficients as a function of summed read counts in both samples
     args : :py:class:`argparse.Namespace`
         command-line arguments for ``chart`` subprogram       
     """
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import matplotlib.cm as cm
-    import numpy.ma as ma
+
         
-    bins = numpy.array(args.bins)    
-    scatter_kwargs = { "marker" : "o", "s" : 0.5 }
+    if args.stylesheet is not None:
+        matplotlib.style.use(args.stylesheet)
+
+    outbase = args.outbase
+    bins = numpy.array(args.bins)
+    figformat = args.figformat
+    dpi = args.dpi
+
     
     # read input files
     printer.write("Reading input files: %s..." % ", ".join(args.infiles))
@@ -840,25 +861,18 @@ correlation coefficients as a function of summed read counts in both samples
     samples = { get_short_samplename(X) : read_count_file(opener(X),list_of_genes)\
                                           for X in args.infiles }
     
-    # set up chart colors
-    num_colors = combination(len(args.infiles),2)
-    if num_colors > 1:
-        color_incr = 1.0/(num_colors - 1)
-        my_cm = cm.get_cmap("Spectral")
-        colors = itertools.cycle([my_cm(X) for X in numpy.arange(0.0,1.0+color_incr,color_incr)])
-    else:
-        colors = itertools.cycle(["#000000"])
-    
-    # binkeys = list of keys on which binning will be performed
-    binkeys      = tuple(["%s_reads" % k for k in args.regions])
+
+    # Define some variables for later
     sample_names = sorted(samples.keys())    
-    comparisons  = filter(lambda x: x[0] != x[1],
-                          list(itertools.combinations(sample_names,2)))
-    
+    comparisons  = [X for X in itertools.combinations(sample_names,2) if X[0] != X[1]]
+    colors = get_colors_from_args(args,len(comparisons))
+    binkeys      = tuple(["%s_reads" % k for k in args.regions])
+   
     comparison_labels      = sorted(["%s_vs_%s" % (X,Y) for X,Y in comparisons]) 
     bigtable               = {}.fromkeys(comparison_labels)
     corrcoef_by_bin_table  = {}.fromkeys(comparison_labels)
     
+
     # ki, kj = names of samples i and j
     # vi, vj = data of samples i and j    
     for ki, kj in comparisons:
@@ -866,6 +880,7 @@ correlation coefficients as a function of summed read counts in both samples
             assert (samples[ki]["region"] == samples[kj]["region"]).all()
         except AssertionError:
             printer.write("Mismatched line entries for samples %s and %s." % (ki,kj))
+
         vi = samples[ki]
         vj = samples[kj]
         printer.write("Comparing %s to %s:" % (ki,kj))
@@ -881,105 +896,78 @@ correlation coefficients as a function of summed read counts in both samples
         
         for region in args.regions:
             region_counts = "%s_reads" % region            
-            summed_counts = vi[region_counts] + vj[region_counts]
+            count_mask = (vi[region_counts].values + vj[region_counts].values >= 128)
             
             for metric in args.metrics:                                        
                 region_metric = "%s_%s" % (region,metric)
                 printer.write("    -%s across %s for all >=128..." % (metric,region))
                 
-                # divide into regions >=128 and <128 an calcu
-                vi_128plus = vi[region_metric][summed_counts >= 128]
-                vj_128plus = vj[region_metric][summed_counts >= 128]
-                pearsonr  = scipy.stats.pearsonr(vi_128plus,vj_128plus)[0]
-                spearmanr = scipy.stats.spearmanr(vi_128plus,vj_128plus)[0]
-                
-                # need to mask out zeros before plotting, because matplotlib
-                # assigns zeros values in order to (erroneously) plot on loglog
-                # also need to remove zeros for log2 fold-changes (below)
+                # divide into regions >=128 and <128 and plot
+                viover = vi[region_metric][count_mask].values
+                vjover = vj[region_metric][count_mask].values
 
-                nonzero_mask = get_nonzero_either_mask(vi[region_metric],vj[region_metric])
-                
-                vi_128plus_nonzero  = vi[region_metric][(summed_counts >= 128) & nonzero_mask]
-                vj_128plus_nonzero  = vj[region_metric][(summed_counts >= 128) & nonzero_mask]
-                vi_128minus_nonzero = vi[region_metric][(summed_counts < 128) & nonzero_mask]
-                vj_128minus_nonzero = vj[region_metric][(summed_counts < 128) & nonzero_mask]
+                viunder = vi[region_metric][~count_mask].values
+                vjunder = vj[region_metric][~count_mask].values
 
-                # scatter plot
-                scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                plt.figure()                    
-                plt.loglog()
-                plt.scatter(vi_128minus_nonzero,vj_128minus_nonzero,
-                            color="#FF0000",label="< 128 reads",**scatter_kwargs)                    
-                plt.scatter(vi_128plus_nonzero,vj_128plus_nonzero,
-                            color="#000000",label=">= 128 reads",**scatter_kwargs)                    
-
-                text_kwargs = { "horizontalalignment" : "left",
-                                "transform" : plt.gca().transAxes }
-                plt.text(0.02,0.9,"spearman r**2 >= 128: %0.05f" % spearmanr**2,**text_kwargs)
-                plt.text(0.02,0.86,"pearson rho**2 >= 128: %0.05f" % pearsonr**2,**text_kwargs)
+                pearsonr  = scipy.stats.pearsonr(viover,vjover)[0]
+                spearmanr = scipy.stats.spearmanr(viover,vjover)[0]
                 
-                plt.xlabel(ki)
-                plt.ylabel(kj)
-                plt.title(scatter_title)                    
-                plt.legend(loc="lower right")
-                plt.savefig("%s_scatter_%s_%s_%s.%s" % (args.outbase, label, region, metric, args.format))
+                # log2 fold change stats
+                log2_ratios = numpy.log2(numpy.ma.masked_invalid(vjover/viover))
+                log2_mean = log2_ratios.mean()
+                log2_std = log2_ratios.std()
+                min_diff = 2**(3*log2_std)
+                num_genes_log2 = (~log2_ratios.mask).sum()
+
+
+                # ma plot
+                ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
+                fig, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
+                                      valpha=0.2,title=ma_title)
+                _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",valpha=0.8)
+
+                mainax = axdict["main"]
+                mainax.set_xlabel("%s %s" % (ki,metric))
+                mainax.legend(loc="upper right",frameon=False)
+
+                text_kwargs = { "horizontalalignment" : "right",
+                                "verticalalignment" : "baseline",
+                                "linespacing" : 1.6,
+                                "transform" : mainax.transAxes,
+                                }
+
+                plot_text = "\n".join(["sample mean: %0.3e" % log2_mean,
+                                       "sample stdev: %0.3e" % log2_std,
+                                       "3-sigma fold change: %0.2f" % min_diff,
+                                       "regions_counted: %s" % count_mask.sum(),
+                                       ])
+
+                mainax.text(0.96,0.04,plot_text,**text_kwargs)
+
+                plt.savefig("%s_ma_%s_%s_%s.%s" % (outbase, label, region, metric, figformat))
                 plt.close()
                 
                 
-                # log2 fold-change histogram
-                log2_ratios = numpy.log2(vj_128plus_nonzero/vi_128plus_nonzero)
-                log2_mean   = numpy.mean(log2_ratios)
-                log2_std    = numpy.std(log2_ratios)
-                min_diff    = 2**(3*log2_std)
-                
-                plt.figure()
-                n,hbins,_ = plt.hist(log2_ratios,bins=50,normed=True)
-                hbins_centered = numpy.convolve(hbins,numpy.array([0.5,0.5]),"valid")
-                
-                # fit a gaussian
-                fit_mu,fit_sigma2 = fit_gaussian(hbins_centered,n)
-                fit_min_diff = 2**(3*fit_sigma2**0.5)
-                plt.bar(hbins[:-1],n,width=hbins[1]-hbins[0],align='edge')
-                my_min = numpy.min(log2_ratios)
-                my_max = numpy.max(log2_ratios)
-                
-                # gaussian from calculated parameters                
-                x =  numpy.arange(my_min,my_max,0.01)
-                norm = [gaussian(log2_mean,log2_std)(X) for X in x]
-#                normfit = [gaussian(fit_mu,fit_sigma2**0.5)(X) for X in x]
+                # scatter plot
+                scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
+                fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
+                                 count_mask,args,pearsonr=pearsonr,
+                                 label_x=ki,label_y=kj,title=scatter_title)
 
-                # plot both
-                plt.plot(x,norm,'r-',linewidth=1,label="Sample")
-#                plt.plot(x,normfit,'r.',linewidth=1,label="Fit")
-                plt.legend()
+                plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat))
+                plt.close()
+
                 
-                text_kwargs = { "horizontalalignment" : "left",
-                                "transform" : plt.gca().transAxes }
-                plt.text(0.02,0.9, "sample mean : %0.5f" % log2_mean,**text_kwargs)
-                plt.text(0.02,0.87,"sample stdev : %0.5f" % log2_std,**text_kwargs)
-                plt.text(0.02,0.81,"3-std fold change: %0.2f" % min_diff,**text_kwargs)
-#                plt.text(0.02,0.78, "fit mean : %0.5f" % fit_mu,**text_kwargs)
-#                plt.text(0.02,0.75,"fit stdev : %0.5f" % fit_sigma2**0.5,**text_kwargs)
-#                plt.text(0.02,0.72,"fit fold change : %0.5f" % fit_min_diff,**text_kwargs)                    
-                plt.text(0.02,0.69,"genes counted : %s" % len(log2_ratios),**text_kwargs)
-                plt.title("log2-fold %s %s change in %s/%s" % (region, metric, kj, ki))
-                plt.xlabel("log2-fold change of %s/%s" % (kj,ki))
-                plt.ylabel("Frequency")
-                plt.savefig("%s_log2hist_%s_%s_%s.%s" % (args.outbase, label, region, metric, args.format))
-                
-                
+                # TODO: make these tables into dataframes. this scheme is insane
+
                 # add entries to bigtable for export later
                 bigtable[label][region_counts][metric]["pearsonr"]          = pearsonr
                 bigtable[label][region_counts][metric]["spearmanr"]         = spearmanr
                 bigtable[label][region_counts][metric]["log2_mean"]         = log2_mean
                 bigtable[label][region_counts][metric]["log2_std"]          = log2_std
-                bigtable[label][region_counts][metric]["min_diff"]          = min_diff
-                bigtable[label][region_counts][metric]["fit_log2_mean"]     = fit_mu
-                bigtable[label][region_counts][metric]["fit_log2_std"]      = fit_sigma2**0.5
-                bigtable[label][region_counts][metric]["fit_min_diff"]      = fit_min_diff
-                bigtable[label][region_counts][metric]["num_genes_128plus"] = len(vi_128plus)
-                bigtable[label][region_counts][metric]["num_genes_log2"]    = len(vi_128plus_nonzero)
-
+                bigtable[label][region_counts][metric]["2**3sigma"]          = 2**(3*log2_std)
+                bigtable[label][region_counts][metric]["num_genes_128plus"] = count_mask.sum()
+                bigtable[label][region_counts][metric]["num_genes_log2"]    = num_genes_log2
                 
                 # do bin-by-bin counting
                 printer.write("    -%s across %s by bin..." % (metric,region))                    
@@ -1029,10 +1017,8 @@ correlation coefficients as a function of summed read counts in both samples
              "num_genes_log2",     # 3
              "log2_mean",          # 4
              "log2_std",           # 5
-             "min_diff",           # 6
-             "fit_log2_mean",      # 7 
-             "fit_log2_std",       # 8
-             "fit_min_diff")       # 9
+             "2**3sigma",          # 6
+             )
     
     header = ["#region","metric","statistic"]
     header += [X for X in comparison_labels]
@@ -1074,7 +1060,7 @@ correlation coefficients as a function of summed read counts in both samples
         region_counts = "%s_reads" % region
         bintable_out.write("%s\n\n" % region_metric)
         
-        for label in comparison_labels:
+        for n,label in enumerate(comparison_labels):
             corrcoefs = []
             bintable_out.write("%s\t\t\t\t\t\t\t\t" % label)
             bintable_out.write("\n")
@@ -1090,9 +1076,9 @@ correlation coefficients as a function of summed read counts in both samples
             plt.plot(bins[~corrcoefs.mask],
                      corrcoefs[~corrcoefs.mask],
                      label=label,
-                     color=next(colors))
+                     color=colors[n])
         plt.legend(loc="lower right")
-        plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (args.outbase,region_metric,label,args.format))
+        plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (outbase,region_metric,label,figformat))
 
         bintable_out.write("\n\n")
     bintable_out.close()
@@ -1122,6 +1108,7 @@ def main(argv=sys.argv[1:]):
     alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
     annotation_file_parser = get_annotation_file_parser()
     mask_file_parser = get_mask_file_parser()
+    plotting_parser = get_plotting_parser(disabled=["title"])
     
     generator_help = "Create unambiguous position file from GFF3 annotation"
     generator_desc = format_module_docstring(do_generate.__doc__)
@@ -1153,6 +1140,7 @@ def main(argv=sys.argv[1:]):
     pparser    = subparsers.add_parser("chart",
                                        help=chart_help,
                                        description=chart_desc,
+                                       parents=[plotting_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     gparser.add_argument("outbase",metavar="outbase",type=str,
@@ -1173,8 +1161,6 @@ def main(argv=sys.argv[1:]):
     pparser.add_argument("--metrics",nargs="+",type=str,
                          default=("rpkm","reads"),
                          help="Metrics to compare (default: rpkm, reads)")
-    pparser.add_argument("--format",default="pdf",choices=("pdf","svg","png"),
-                         help="Output format for charts (default: pdf)")
     pparser.add_argument("list_of_regions",type=str,metavar='gene_list.txt',
                          help="File listing regions (genes or transcripts), one per line, to include in count")
     pparser.add_argument("outbase",type=str,

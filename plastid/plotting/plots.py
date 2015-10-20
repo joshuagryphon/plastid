@@ -19,11 +19,11 @@ as well as some specific plots used by :mod:`plastid`. For example:
 
 In addition, there are several utility functions:
 
-    :func:`split_axes`
+    :func:`split_axes
         Split a :class:`matplotlib.axes.Axes` into one or more panels,
         with tied x and y axes. Also hides overlapping tick labels
 
-    :func:`remove_invalid`
+    :func:`clean_invalid`
         Remove pairs of values from two arrays of data if either 
         element in the pair is `nan` or `inf`. Used to prepare data
         for histogram or violin plots; as even masked `nan`s and `inf`s
@@ -165,6 +165,7 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
 
     if "top" in axes:
         axes["top"].xaxis.tick_top()
+        axes["main"].xaxis.tick_bottom()
         # prevent tick collisions
         axes["top"].yaxis.get_ticklabels()[0].set_visible(False)
 
@@ -181,12 +182,13 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
 
     if "right" in axes:
         axes["right"].yaxis.tick_right()
+        axes["main"].yaxis.tick_left()
         axes["right"].xaxis.get_ticklabels()[0].set_visible(False)
         
 
     return axes
 
-def remove_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
+def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
     """Remove corresponding values from x and y when one or both of those is nan or inf,
     and optionally truncate values to minima and maxima
 
@@ -209,13 +211,16 @@ def remove_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=n
     """
     x = numpy.array(x).astype(float)
     y = numpy.array(y).astype(float)
-    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y) 
-    x = x[~newmask]
-    y = y[~newmask]
+
     x[x < min_x] = min_x
     x[x > max_x] = max_x
     y[y < min_y] = min_y
     y[y > max_y] = max_y
+    
+    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y) 
+    x = x[~newmask]
+    y = y[~newmask]
+
 
     return x,y 
 
@@ -573,6 +578,7 @@ plastid_default_scatter = {
     "alpha"     : 0.7,
     "facecolor" : "none",
     "s"         : 8,
+    "rasterized" : True,
 }
 """Default parameters for scatter plots"""
 
@@ -610,7 +616,8 @@ def _scatterhist_help(axes=None,
        
     scargs : dict
         Keyword arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        Default: :obj:`plastid_default_scatter`)
+        (Default: :obj:`plastid_default_scatter`). We highly recommend
+        setting `rasterized` to `True`!
 
     args : dict
         Keyword arguments to pass to :func:`~matplotlib.pyplot.violinplot`,
@@ -647,7 +654,7 @@ def _scatterhist_help(axes=None,
     return fig, axes
 
 
-def scatterhist_x(x,y,color=None,axes=None,
+def scatterhist_x(x,y,color=None,axes=None,label=None,
                   top_height=0.2,mask_invalid=True,
                   log="",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
@@ -662,6 +669,18 @@ def scatterhist_x(x,y,color=None,axes=None,
 
     color : matplotlib colorspec, optional
         Color to use in plot
+
+    label : str, or None
+        If not None, a label for plotting
+
+    axes : :class:`matplotlib.axes.Axes`, dict, or `None`, optional
+        If a :class:`matplotlib.axes.Axes`, an axes in which to place plot.
+        This axes will be split into relevant panels.
+
+        If a dict, this is expected to be a group of pre-split axes.
+
+        If `None`, a new figure is generated, and axes are split.
+        (Default: `None`)
 
     top_height : float, optional
         fraction of `axes` height to use in top panel containing
@@ -680,7 +699,9 @@ def scatterhist_x(x,y,color=None,axes=None,
 
     scargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        (Default: :obj:`plastid_default_scatter`)
+        (Default: :obj:`plastid_default_scatter`). We highly recommend
+        setting `rasterized` to `True`!
+
 
     vargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
@@ -712,7 +733,11 @@ def scatterhist_x(x,y,color=None,axes=None,
         color = next(axes["main"]._get_lines.color_cycle)
     
     if mask_invalid == True:
-       x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+       x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+
+    if label is not None:
+        scargs = copy.deepcopy(scargs)
+        scargs["label"] = label
 
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
     vdict = axes["top"].violinplot(x,positions=[0],vert=False,**vargs)
@@ -726,7 +751,7 @@ def scatterhist_x(x,y,color=None,axes=None,
 
     return fig, axes
 
-def scatterhist_y(x,y,color=None,axes=None,
+def scatterhist_y(x,y,color=None,axes=None,label=None,
                   right_width=0.2,mask_invalid=True,log="xy",
                   min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                   scargs=plastid_default_scatter,
@@ -740,6 +765,18 @@ def scatterhist_y(x,y,color=None,axes=None,
 
     color : matplotlib colorspec, optional
         Color to use in plot
+
+    label : str, or None
+        If not None, a label for plotting
+
+    axes : :class:`matplotlib.axes.Axes`, dict, or `None`, optional
+        If a :class:`matplotlib.axes.Axes`, an axes in which to place plot.
+        This axes will be split into relevant panels.
+
+        If a dict, this is expected to be a group of pre-split axes.
+
+        If `None`, a new figure is generated, and axes are split.
+        (Default: `None`)
 
     right_width : float, optional
         fraction of `axes` width to use in right panel containing
@@ -758,7 +795,9 @@ def scatterhist_y(x,y,color=None,axes=None,
 
     scargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        (Default: :obj:`plastid_default_scatter`)
+        (Default: :obj:`plastid_default_scatter`). We highly recommend
+        setting `rasterized` to `True`!
+
 
     vargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
@@ -788,9 +827,13 @@ def scatterhist_y(x,y,color=None,axes=None,
         
     if color is None:
         color = next(axes["main"]._get_lines.color_cycle)
+
+    if label is not None:
+        scargs = copy.deepcopy(scargs)
+        scargs["label"] = label
     
     if mask_invalid == True:
-        x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+        x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
 
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
     vdict = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
@@ -801,10 +844,9 @@ def scatterhist_y(x,y,color=None,axes=None,
     violins.set_alpha(valpha)
     axes["right"].set_xlim(0,0.5)
 
-
     return fig, axes
 
-def scatterhist_xy(x,y,color=None,axes=None,
+def scatterhist_xy(x,y,color=None,axes=None,label=None,
                    top_height=0.2,right_width=0.2,mask_invalid=True,log="xy",
                    min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf,
                    scargs=plastid_default_scatter,
@@ -819,13 +861,27 @@ def scatterhist_xy(x,y,color=None,axes=None,
     color : matplotlib colorspec, optional
         Color to use in plot
 
-    top_height : float, optional
+    label : str, or None
+        If not None, a label for plotting    top_height : float, optional
         fraction of `axes` height to use in top panel containing
         marginal distribution (Default: 0.2)
         
     right_width : float, optional
         fraction of `axes` width to use in right panel containing
         marginal distribution (Default: 0.2)
+
+    top_height : float, optional
+        fraction of `axes` height to use in top panel containing
+        marginal distribution (Default: 0.2)
+
+    axes : :class:`matplotlib.axes.Axes`, dict, or `None`, optional
+        If a :class:`matplotlib.axes.Axes`, an axes in which to place plot.
+        This axes will be split into relevant panels.
+
+        If a dict, this is expected to be a group of pre-split axes.
+
+        If `None`, a new figure is generated, and axes are split.
+        (Default: `None`)
 
     mask_invalid : bool, optional
         If `True` mask out any `nan`s or `inf`s, as these mess up kernel density
@@ -840,7 +896,9 @@ def scatterhist_xy(x,y,color=None,axes=None,
 
     scargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        (Default: :obj:`plastid_default_scatter`)
+        (Default: :obj:`plastid_default_scatter`). We highly recommend
+        setting `rasterized` to `True`!
+
 
     vargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
@@ -874,7 +932,11 @@ def scatterhist_xy(x,y,color=None,axes=None,
         color = next(axes["main"]._get_lines.color_cycle)
     
     if mask_invalid == True:
-        x, y = remove_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+        x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+
+    if label is not None:
+        scargs = copy.deepcopy(scargs)
+        scargs["label"] = label
 
     axes["main"].scatter(x,y,edgecolor=color,**scargs)
     vdictx = axes["right"].violinplot(y,positions=[0],vert=True,**vargs)
@@ -902,6 +964,110 @@ def scatterhist_xy(x,y,color=None,axes=None,
 #==============================================================================
 # Plots specific for genomics
 #==============================================================================
+
+def ma_plot(x,y,axes=None,color=None,label=None,label_x=None,label_y=None,title=None,
+            right_width=0.2,log="xy",
+            min_x=-numpy.inf,max_x=numpy.inf,min_y=-numpy.inf,max_y=numpy.inf,
+            scargs=plastid_default_scatter,mask_invalid=True,
+            vargs=plastid_default_marginalplot,valpha=0.7):
+    """Plot fold changes (:math:`\log_{2} (y/x)`) as a function of the mean of x and y (:math:`0.5*(x+y)`).
+
+    Parameters
+    ----------
+    x, y : :class:`numpy.ndarray` or list
+        Pair arrays or lists of corresponding numbers
+
+    color : matplotlib colorspec, optional
+        Color to use in plot
+
+    label : str or None, optional
+        If not `None`, a label for plotting
+
+    label_x : str or None, optional
+        If not `None`, an x-axis label
+
+    label_y : str or None, optional
+        If not `None`, a y-axis label
+        
+    right_width : float, optional
+        fraction of `axes` width to use in right panel containing
+        marginal distribution (Default: 0.2)
+
+    axes : :class:`matplotlib.axes.Axes`, dict, or `None`, optional
+        If a :class:`matplotlib.axes.Axes`, an axes in which to place plot.
+        This axes will be split into relevant panels.
+
+        If a dict, this is expected to be a group of pre-split axes.
+
+        If `None`, a new figure is generated, and axes are split.
+        (Default: `None`)
+
+    mask_invalid : bool, optional
+        If `True` mask out any `nan`s or `inf`s, as these mess up kernel density
+        estimates and histograms in matplotlib, even if in masked arrays
+
+    min_x, min_y, max_x, max_y : number, optional
+        If supplied, set values below `min_x` to `min_x`, values larger
+        than `max_x` to `max_x` and so for `min_y` and `max-y`
+
+    log : str, "", "x", "xy", or "xy", optional
+        Plot these axes on a log scale (Default: "xy")
+
+    scargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.scatter`
+        (Default: :obj:`plastid_default_scatter`). We highly recommend
+        setting `rasterized` to `True`!
+
+
+    vargs : Keyword arguments, optional
+        Arguments to pass to :func:`~matplotlib.pyplot.violinplot`, which draws
+        the marginal distributions (Default : :obj:`plastid_default_marginalplot`)
+
+    valpha : float, optional
+        Alpha level (transparency) for marginal distributions (Default: 0.7)
+
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Figure
+
+    dict
+        Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
+        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+    """
+
+    do_setup = axes is None
+    logs = numpy.ma.masked_invalid(numpy.log2(y/x))
+    imask = ~logs.mask
+
+    ratio = y/x
+    mean = 0.5*(x+y)
+
+    fig, axdict = scatterhist_y(mean[imask],ratio[imask],axes=axes,
+                                min_x=min_x,max_x=max_x,
+                                min_y=min_y,max_y=max_y,
+                                log=log,right_width=right_width,
+                                color=color,mask_invalid=mask_invalid,
+                                label=label,valpha=valpha)
+
+    if do_setup == True:
+        axdict["main"].axhline(1,color=process_black,zorder=-5,linewidth=1)
+        axdict["right"].axhline(1,color=process_black,zorder=-5,linewidth=1)
+        axdict["right"].xaxis.set_ticklabels([])
+
+        if label_y is None:
+            label_y = "log2 fold change"
+
+        axdict["main"].set_ylabel(label_y)
+        if label_x is not None:
+            axdict["main"].set_xlabel(label_x)
+
+        if title is not None:
+            plt.suptitle(title)
+
+    return fig, axdict
+
 
 def phase_plot(counts,labels=None,cmap=None,color=None,lighten_by=0.2,fig={},line={},bar={}):
     """Phasing plot for ribosome profiling
