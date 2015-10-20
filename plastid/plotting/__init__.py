@@ -16,4 +16,4 @@ not found in matplotlib.
     :mod:`plastid.plotting.plotutil`          Utility functions for preprocessing data or manipulating
                                               axes
     ======================================    =========================================================
-
+"""
