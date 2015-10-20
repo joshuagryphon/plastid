@@ -40,6 +40,7 @@ import numpy
 import scipy.stats
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.artist import Artist
 from plastid.plotting.colors import lighten, darken, process_black
 from plastid.plotting.plotutils import get_fig_axes, split_axes, clean_invalid, get_kde
 
@@ -138,7 +139,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
 # Kernel density estimate
 #==============================================================================
 
-def kdeplot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
+def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
             log=False,base=10,points=500,bw_method="scott"):
     """Plot a kernel density estimate of `data` on `axes`.
 
@@ -155,7 +156,7 @@ def kdeplot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
         Color to use for plotting (Default: use next in matplotlibrc)
 
     label : str, optional
-        Name of data series (used for legend; default: none)
+        Name of data series (used for legend; default: `None`)
 
     alpha : float, optional
         Amount of alpha transparency to use (Default: 0.7)
@@ -203,8 +204,14 @@ def kdeplot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
 
     if vert == True:
         axes.fill_betweenx(a,b,0,**fbargs)
+        axes.plot(b,a,color=color,alpha=alpha,label=label) # this is a bit of a hack to get labels to print; fill_between doesn't work with legends
+        if log == True:
+            axes.semilogy()
     else:
         axes.fill_between(a,b,0,**fbargs)
+        axes.plot(a,b,color=color,alpha=alpha,label=label)
+        if log == True:
+            axes.semilogx()
 
     return fig, axes
 
@@ -340,6 +347,7 @@ def triangle_plot(data,axes=None,fn="scatter",vertex_labels=None,grid=None,clip=
         # add gridlines
         grid_kwargs = { K.replace("grid.","") : V for (K,V) in mplrc.items() if K.startswith("grid") }
         if grid is not None:
+            grid = numpy.array(grid)
             remainders = (1.0 - grid)/2
             for i, r in zip(grid,remainders):
                 if i >= 1.0/3:
@@ -463,13 +471,18 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
         x = numpy.arange(0,data.shape[1])
 
     if profile is None:
-        profile = numpy.nanmedian(data,axes=0)
+        profile = numpy.nanmedian(data,axis=0)
     
     plot_kwargs = copy.deepcopy(plot_args)
     im_args     = copy.deepcopy(im_args)
     im_args["aspect"] = "auto"
     im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
     im_args["origin"] = "upper"
+
+    if "vmin" not in im_args:
+        im_args["vmin"] = numpy.nanmin(data)
+    if "vmax" not in im_args:
+        im_args["vmax"] = numpy.nanmax(data)
 
     if cmap is not None:
         im_args["cmap"] = cmap
@@ -483,8 +496,6 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
 
     axes["main"].xaxis.tick_bottom()
     axes["main"].imshow(data[sort_indices,:],
-                        vmin=numpy.nanmin(data),
-                        vmax=numpy.nanmax(data),
                         **im_args)
 
     return fig, axes
@@ -650,7 +661,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
              }
 
     if xmask.sum() > 0:
-        kdeplot(x[xmask],log=xlog,axes=axes["top"],**kargs)
+        kde_plot(x[xmask],log=xlog,axes=axes["top"],**kargs)
 
     return fig, axes
 
@@ -751,7 +762,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
              }
              
     if ymask.sum() > 0:
-        kdeplot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
+        kde_plot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
 
     return fig, axes
 
@@ -863,10 +874,10 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
              }
     
     if ymask.sum() > 0:
-        kdeplot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
+        kde_plot(y[ymask],log=ylog,axes=axes["right"],vert=True,**kargs)
 
     if xmask.sum() > 0:
-        kdeplot(x[xmask],log=xlog,axes=axes["top"],**kargs)
+        kde_plot(x[xmask],log=xlog,axes=axes["top"],**kargs)
 
     return fig, axes
 

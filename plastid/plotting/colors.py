@@ -109,10 +109,8 @@ def lighten(data,amt=0.10,is255=False):
     numpy.ndarray
         Lightened version of data
     """
-    #data = unkcolortype_to_ndarray(data,is255=is255)
     data = colorConverter.to_rgba_array(data)
 
-    rows, cols = data.shape
     new_colors = data + amt*(1.0-data)
     if is255:
         new_colors = (255*new_colors).round()
@@ -138,15 +136,13 @@ def darken(data,amt=0.10,is255=False):
     numpy.ndarray
         Lightened version of data
     """
-    #data = unkcolortype_to_ndarray(data,is255=is255)
     data = colorConverter.to_rgba_array(data)
 
-
-    rows, cols = data.shape
     new_colors = (1.0-amt)*data
-    new_colors[:,-1] = new_colors[:,-1]
     if is255:
         new_colors = (255*new_colors).round()
+
+    new_colors[:,-1] = data[:,-1]
 
     return new_colors
 
