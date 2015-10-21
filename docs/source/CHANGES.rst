@@ -9,8 +9,52 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
  .. note::
  
     This project was initially developed internally under the provisional
-    name ``genometools``, and then later under the codename ``yeti``.
-    
+    name ``genometools``, and then later under the codename ``yeti``. The
+    current name, ``plastid`` will not change.
+
+
+Unreleased
+----------
+This release primarily focuses on user interfaces: mainly, it is a lot easier
+to do things with fewer lines of code. Imports have been shortened, plotting
+tools have been added, and scripts now produce more informative output.
+
+Added
+.....
+  - ``VariableFivePrimeMapFactory`` can now be created from static method ``from_file()``,
+    so no need to manually parse text files or create dictionaries
+  - ``BAMGenomeArray`` can now be initialized with a list of paths to BAM files,
+    in addition or instead of a list of ``pysam.AlignmentFiles``
+  - **Plotting improvements**
+
+      - ``plastid.plotting`` package, which includes tools for making MA plots,
+        scatter plots with marginal histograms, metagene profiles, et c
+
+      - more informative plots made in ``metagene``, ``psite``, ``phase_by_size``,
+        and ``cs`` scripts
+
+      - support for matplotlib stylesheets, colormaps, et c in all command-line scripts
+
+  - nicer plotting: support for matplotlib stylesheets, user specification of colormaps,
+    command-line specification of plot parameters
+
+Changed
+.......
+  - ``add_three_for_stop_codon()`` reimplemented in Cython, resulting in 2-fold speedup.
+    Moved from ``plastid.readers.common`` to ``plastid.genomics.roitools`` (though previosu
+    import path still works)
+
+Fixed
+.....
+  - Fixed IndexError in ``psite`` that arose when running with the latest release of numpy,
+    when generating a read profile over an empty array
+
+Removed
+.......
+  - Removed deprecated functions ``BED_to_Transcripts()`` and ``BED_to_SegmentChains``,
+    for which ``BED_Reader`` serves as a drop-in replacement
+
+
 
 plastid [0.3.2] = [2015-10-01]
 ------------------------------
