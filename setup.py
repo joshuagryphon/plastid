@@ -32,6 +32,13 @@ SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
 PYSAM_VERSION  = "pysam>=0.8.3"
 
+# require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
+version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
+ver = sys.version_info
+if ver < (2,7) or ver[0] == 3 and ver[1] < 3:
+    raise RuntimeError(version_message)
+
+
 # at present, setup/build can't proceed without numpy & Pysam
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before them.
@@ -55,7 +62,7 @@ install these via pip, and retry:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = "0.3.2"  #plastid.__version__ 
+version = "0.4.0"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
 packages = find_packages()
 
@@ -288,6 +295,7 @@ setup(
          'Programming Language :: Python :: 2.7',
          'Programming Language :: Python :: 3.3',
          'Programming Language :: Python :: 3.4',
+         'Programming Language :: Python :: 3.5',
 
          'Topic :: Scientific/Engineering :: Bio-Informatics',
          'Topic :: Software Development :: Libraries',
