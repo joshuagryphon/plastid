@@ -12,16 +12,18 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
     name ``genometools``, and then later under the codename ``yeti``. The
     current name, ``plastid`` will not change.
 
-Unreleased
-----------
-This release primarily focuses on user interfaces: mainly, it is a lot easier
+
+
+plastid [0.4.0] = [2015-10-21]
+------------------------------
+This release primarily focuses on ease of use: mainly, it is a lot easier
 to do things with fewer lines of code. Imports have been shortened, plotting
 tools have been added, and scripts now produce more informative output.
 
 
 Added
 .....
-  - Logical imports- the following commonly-used data structures can
+  - Logical imports: the following commonly-used data structures can
     now be directly imported from the parent package ``plastid``, 
     instead of subpackages/submodules:
     
@@ -56,6 +58,8 @@ Fixed
 .....
   - Fixed IndexError in ``psite`` that arose when running with the latest release of numpy,
     when generating a read profile over an empty array
+
+  - Legends/text no longer get cut off in plots
 
 Removed
 .......

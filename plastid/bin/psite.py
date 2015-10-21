@@ -407,7 +407,7 @@ def main(argv=sys.argv[1:]):
     # save plot
     plot_fn ="%s_p_offsets.%s" % (outbase,args.figformat) 
     printer.write("Saving plot to %s ..." % plot_fn)
-    plt.savefig(plot_fn,dpi=args.dpi)
+    plt.savefig(plot_fn,dpi=args.dpi,bbox_inches="tight")
 
     printer.write("Done.")
 

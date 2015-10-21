@@ -955,7 +955,9 @@ correlation coefficients as a function of summed read counts in both samples
 
                 mainax.text(0.96,0.04,plot_text,**text_kwargs)
 
-                plt.savefig("%s_ma_%s_%s_%s.%s" % (outbase, label, region, metric, figformat))
+                plt.savefig("%s_ma_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
+                            bbox_inches="tight"
+                           )
                 plt.close()
                 
                 
@@ -965,7 +967,8 @@ correlation coefficients as a function of summed read counts in both samples
                                  count_mask,args,pearsonr=pearsonr,
                                  xlabel=ki,ylabel=kj,title=scatter_title)
 
-                plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat))
+                plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
+                            bbox_inches="tight")
                 plt.close()
 
                 
@@ -1089,7 +1092,8 @@ correlation coefficients as a function of summed read counts in both samples
                      label=label,
                      color=colors[n])
         plt.legend(loc="lower right")
-        plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (outbase,region_metric,label,figformat))
+        plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (outbase,region_metric,label,figformat),
+                    bbox_inches="tight")
 
         bintable_out.write("\n\n")
     bintable_out.close()

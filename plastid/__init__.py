@@ -31,7 +31,7 @@ plastid is divided into the following subpackages:
     ==============    =========================================================
      
 """
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 __author__  = "Joshua Griffin Dunn"
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript
 from plastid.genomics.genome_array import BAMGenomeArray, GenomeArray, SparseGenomeArray, variable_five_prime_map, five_prime_map, center_map, three_prime_map

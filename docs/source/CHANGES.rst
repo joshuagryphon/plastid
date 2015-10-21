@@ -13,18 +13,30 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
     current name, ``plastid`` will not change.
 
 
-Unreleased
-----------
-This release primarily focuses on user interfaces: mainly, it is a lot easier
+
+plastid [0.4.0] = [2015-10-21]
+------------------------------
+This release primarily focuses on ease of use: mainly, it is a lot easier
 to do things with fewer lines of code. Imports have been shortened, plotting
 tools have been added, and scripts now produce more informative output.
 
+
 Added
 .....
+  - Logical imports: the following commonly-used data structures can
+    now be directly imported from the parent package ``plastid``, 
+    instead of subpackages/submodules:
+    
+      - ``GenomicSegment``, ``SegmentChain``, and ``Transcript``
+      - All GenomeHashes and GenomeArrays
+      - All file readers
+
   - ``VariableFivePrimeMapFactory`` can now be created from static method ``from_file()``,
     so no need to manually parse text files or create dictionaries
+
   - ``BAMGenomeArray`` can now be initialized with a list of paths to BAM files,
     in addition or instead of a list of ``pysam.AlignmentFiles``
+
   - **Plotting improvements**
 
       - ``plastid.plotting`` package, which includes tools for making MA plots,
@@ -35,8 +47,6 @@ Added
 
       - support for matplotlib stylesheets, colormaps, et c in all command-line scripts
 
-  - nicer plotting: support for matplotlib stylesheets, user specification of colormaps,
-    command-line specification of plot parameters
 
 Changed
 .......
@@ -48,6 +58,8 @@ Fixed
 .....
   - Fixed IndexError in ``psite`` that arose when running with the latest release of numpy,
     when generating a read profile over an empty array
+
+  - Legends/text no longer get cut off in plots
 
 Removed
 .......

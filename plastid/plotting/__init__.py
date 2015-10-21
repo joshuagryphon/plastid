@@ -17,3 +17,10 @@ not found in matplotlib. For demos, see :doc:`/examples/z_plotting`.
                                               axes
     ======================================    =========================================================
 """
+from plastid.plotting.plots import profile_heatmap, \
+                                   scatterhist_x, scatterhist_y, scatterhist_xy, \
+                                   ma_plot, phase_plot, \
+                                   profile_heatmap, \
+                                   triangle_plot, \
+                                   stacked_bar, \
+                                   kde_plot

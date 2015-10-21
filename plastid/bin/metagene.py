@@ -831,7 +831,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         ax["main"].set_xlabel("Distance (nt) from %s" % landmark)
 
     printer.write("Saving image to %s..." % fig_fn)
-    fig.savefig(fig_fn,dpi=args.dpi)
+    fig.savefig(fig_fn,dpi=args.dpi,bbox_inches="tight")
 
     return counts, norm_counts, profile_table
 
@@ -891,7 +891,7 @@ def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=
 
     fn = "%s.%s" % (args.outbase, args.figformat)
     printer.write("Saving to %s ..." % fn)
-    fig.savefig(fn,dpi=args.dpi)
+    fig.savefig(fn,dpi=args.dpi,bbox_inches="tight")
     
     return fig
         

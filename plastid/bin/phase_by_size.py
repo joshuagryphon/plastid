@@ -198,7 +198,7 @@ def main(argv=sys.argv[1:]):
     else:
         ax1.set_title("Phasing stats for %s" % args.outbase)
 
-    fig.savefig(fn,dpi=args.dpi)
+    fig.savefig(fn,dpi=args.dpi,bbox_inches="tight")
     
 
 if __name__ == "__main__":
