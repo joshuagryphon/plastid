@@ -24,6 +24,7 @@ plastid is divided into the following subpackages:
     --------------    ---------------------------------------------------------
     |bin|             Command-line scripts
     |genomics|        Classes and functions to manipulate genome annotations, alignments, and quantitative data
+    |plotting|        Tools for plotting
     |readers|         Parsers for various file formats
     |util|            Utilities (e.g. function decorators, exceptions, argument parsers)
     |test|            Unit and functional tests (requires download of test datasets)

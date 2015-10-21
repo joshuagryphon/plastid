@@ -14,6 +14,7 @@ Subpackages
     plastid.bin
     plastid.genomics
     plastid.readers
-    plastid.test
+    plastid.plotting
     plastid.util
+    plastid.test
 

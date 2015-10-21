@@ -13,13 +13,19 @@
  .. |AbstractGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.AbstractGenomeHash`
  .. |AbstractGenomeHashs| replace:: :py:class:`AbstractGenomeHashs <plastid.genomics.genome_hash.AbstractGenomeHash>`
  .. |BigBedGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.BigBedGenomeHash`
- .. |BigBedGenomeHashs| replace:: :py:class:`BigBedGenomeHashs <plastid.genomics.genome_hash.BigBedGenomeHash>`
+ .. |BigBedGenomeHashes| replace:: :py:class:`BigBedGenomeHashes <plastid.genomics.genome_hash.BigBedGenomeHash>`
  .. |GenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.GenomeHash`
- .. |GenomeHashs| replace:: :py:class:`GenomeHashs <plastid.genomics.genome_hash.GenomeHash>`
+ .. |GenomeHashes| replace:: :py:class:`GenomeHashes <plastid.genomics.genome_hash.GenomeHash>`
  .. |TabixGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.TabixGenomeHash`
- .. |TabixGenomeHashs| replace:: :py:class:`TabixGenomeHashs <plastid.genomics.genome_hash.TabixGenomeHash>`
+ .. |TabixGenomeHashes| replace:: :py:class:`TabixGenomeHashes <plastid.genomics.genome_hash.TabixGenomeHash>`
  .. |GenomicSegment| replace:: :py:class:`~plastid.genomics.roitools.GenomicSegment`
  .. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.roitools.GenomicSegment>`
+ .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.pyx.SegmentChain`
+ .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.pyx.SegmentChain>`
+ .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.pyx.Transcript`
+ .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.pyx.Transcript>`
+ .. |Transcript(SegmentChain)| replace:: :py:class:`~plastid.genomics.roitools.pyx.Transcript(SegmentChain)`
+ .. |Transcript(SegmentChain)s| replace:: :py:class:`Transcript(SegmentChain)s <plastid.genomics.roitools.pyx.Transcript(SegmentChain)>`
  .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
  .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
  .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
@@ -87,15 +93,17 @@
  .. |AbstractGenomeHashHelper| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper`
  .. |AbstractGenomeHashHelpers| replace:: :py:class:`AbstractGenomeHashHelpers <plastid.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper>`
  .. |TestBigBedGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash`
- .. |TestBigBedGenomeHashs| replace:: :py:class:`TestBigBedGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash>`
+ .. |TestBigBedGenomeHashs| replace:: :py:class:`TestBigBedGenomeHashes <plastid.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash>`
  .. |TestGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestGenomeHash`
- .. |TestGenomeHashs| replace:: :py:class:`TestGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestGenomeHash>`
+ .. |TestGenomeHashs| replace:: :py:class:`TestGenomeHashes <plastid.test.unit.genomics.test_genome_hash.TestGenomeHash>`
  .. |TestTabixGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestTabixGenomeHash`
  .. |TestTabixGenomeHashs| replace:: :py:class:`TestTabixGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestTabixGenomeHash>`
  .. |TestBAM_MappingRules| replace:: :py:class:`~plastid.test.unit.genomics.test_mapping_rules.TestBAM_MappingRules`
  .. |TestBAM_MappingRuless| replace:: :py:class:`TestBAM_MappingRuless <plastid.test.unit.genomics.test_mapping_rules.TestBAM_MappingRules>`
  .. |AbstractSegmentChainHelper| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.AbstractSegmentChainHelper`
  .. |AbstractSegmentChainHelpers| replace:: :py:class:`AbstractSegmentChainHelpers <plastid.test.unit.genomics.test_roitools.AbstractSegmentChainHelper>`
+ .. |TestAddThreeForStopCodon| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestAddThreeForStopCodon`
+ .. |TestAddThreeForStopCodons| replace:: :py:class:`TestAddThreeForStopCodons <plastid.test.unit.genomics.test_roitools.TestAddThreeForStopCodon>`
  .. |TestGenomicSegment| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestGenomicSegment`
  .. |TestGenomicSegments| replace:: :py:class:`TestGenomicSegments <plastid.test.unit.genomics.test_roitools.TestGenomicSegment>`
  .. |TestMiscellaneous| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestMiscellaneous`
@@ -122,8 +130,6 @@
  .. |test_BPlusTrees| replace:: :py:class:`test_BPlusTrees <plastid.test.unit.readers.test_bigbed.test_BPlusTree>`
  .. |test_RTree| replace:: :py:class:`~plastid.test.unit.readers.test_bigbed.test_RTree`
  .. |test_RTrees| replace:: :py:class:`test_RTrees <plastid.test.unit.readers.test_bigbed.test_RTree>`
- .. |TestAddThreeForStopCodon| replace:: :py:class:`~plastid.test.unit.readers.test_common.TestAddThreeForStopCodon`
- .. |TestAddThreeForStopCodons| replace:: :py:class:`TestAddThreeForStopCodons <plastid.test.unit.readers.test_common.TestAddThreeForStopCodon>`
  .. |TestGetIdenticalAttributes| replace:: :py:class:`~plastid.test.unit.readers.test_common.TestGetIdenticalAttributes`
  .. |TestGetIdenticalAttributess| replace:: :py:class:`TestGetIdenticalAttributess <plastid.test.unit.readers.test_common.TestGetIdenticalAttributes>`
  .. |AbstractTestAssembler| replace:: :py:class:`~plastid.test.unit.readers.test_gff.AbstractTestAssembler`
@@ -200,6 +206,8 @@
  .. |NullWriters| replace:: :py:class:`NullWriters <plastid.util.io.openers.NullWriter>`
  .. |PrefixNamespaceWrapper| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper`
  .. |PrefixNamespaceWrappers| replace:: :py:class:`PrefixNamespaceWrappers <plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper>`
+ .. |w| replace:: :py:class:`~plastid.util.scriptlib..w`
+ .. |ws| replace:: :py:class:`ws <plastid.util.scriptlib..w>`
  .. |ArgumentWarning| replace:: :py:class:`~plastid.util.services.exceptions.ArgumentWarning`
  .. |ArgumentWarnings| replace:: :py:class:`ArgumentWarnings <plastid.util.services.exceptions.ArgumentWarning>`
  .. |DataWarning| replace:: :py:class:`~plastid.util.services.exceptions.DataWarning`

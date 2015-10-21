@@ -68,8 +68,8 @@ tests = [
     ],
     [
         _basename+"_cds_start_metagene_profile.txt",
-        _basename+"_cds_start_normcounts.txt",
-        _basename+"_cds_start_rawcounts.txt"
+        _basename+"_cds_start_normcounts.txt.gz",
+        _basename+"_cds_start_rawcounts.txt.gz"
     ],
     ["","--no_header","--no_header"]
     ),
@@ -85,8 +85,8 @@ tests = [
     ],
     [
         _basename+"_cds_stop_metagene_profile.txt",
-        _basename+"_cds_stop_normcounts.txt",
-        _basename+"_cds_stop_rawcounts.txt"
+        _basename+"_cds_stop_normcounts.txt.gz",
+        _basename+"_cds_stop_rawcounts.txt.gz"
     ],
     ["","--no_header","--no_header"]
     ),

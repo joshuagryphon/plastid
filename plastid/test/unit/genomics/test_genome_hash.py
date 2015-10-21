@@ -32,14 +32,14 @@ class AbstractGenomeHashHelper(unittest.TestCase):
    
     @skip_if_abstract
     def test_getitem_genomicsegment(self):
-        """test getitem
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature cannot fetch its own antisense subregion
-        
-        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
-        """             
+#        """test getitem
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature cannot fetch its own antisense subregion
+#        
+#        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
+#        """             
         # make sure we can fetch each transcript's own CDS
         u = 0
         for txid,tx in self.tx_dict.items():
@@ -72,14 +72,14 @@ class AbstractGenomeHashHelper(unittest.TestCase):
 
     @skip_if_abstract
     def test_getitem_segmentchain(self):
-        """test getitem
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature cannot fetch its own antisense subregion
-        
-        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
-        """             
+#        """test getitem
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature cannot fetch its own antisense subregion
+#        
+#        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
+#        """             
         # make sure we can fetch each transcript's own CDS
         u = 0
         for txid,tx in self.tx_dict.items():
@@ -111,14 +111,14 @@ class AbstractGenomeHashHelper(unittest.TestCase):
    
     @skip_if_abstract
     def test_overlap_stranded(self):
-        """test get_overlapping_features with strand
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature cannot fetch its own antisense subregion
-        
-        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
-        """             
+#        """test get_overlapping_features with strand
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature cannot fetch its own antisense subregion
+#        
+#        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
+#        """             
         # make sure we can fetch each transcript's own CDS
         u = 0
         for txid,tx in self.tx_dict.items():
@@ -149,14 +149,14 @@ class AbstractGenomeHashHelper(unittest.TestCase):
     
     @skip_if_abstract
     def test_overlap_unstranded(self):
-        """est get_overlapping_features unstranded
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature can fetch its own antisense subregion
-        
-        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
-        """        
+#        """test get_overlapping_features unstranded
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature can fetch its own antisense subregion
+#        
+#        3.  Make sure that a 5' UTR cannot fetch its corresponding CDS
+#        """        
         u = 0
         for txid,tx in self.tx_dict.items():
             # make sure we can fetch each transcript's own CDS from both sense and antisense
@@ -206,7 +206,7 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         shuffle(cls.shuffled_indices)
     
     def test_genomehash_create_from_dict(self):
-        """Test creation `GenomeHash`es from dictionaries without loss of information"""
+#        """Test creation `GenomeHash`es from dictionaries without loss of information"""
         gh = GenomeHash(self.tx_dict,do_copy=True)
         
         found    = sorted(list(gh.feature_dict.values()),key=_name_sort)
@@ -217,7 +217,7 @@ class TestGenomeHash(AbstractGenomeHashHelper):
                           "Features lost in creation of GenomeHash from dict")
         
     def test_genomehash_create_from_list(self):
-        """Test creation `GenomeHash`es from lists without loss of information"""
+#        """Test creation `GenomeHash`es from lists without loss of information"""
         gh = GenomeHash(self.transcripts,do_copy=True)
         found    = sorted(list(gh.feature_dict.values()),key=_name_sort)
         expected = sorted(list(self.tx_dict.values()),key=_name_sort)
@@ -235,12 +235,12 @@ class TestGenomeHash(AbstractGenomeHashHelper):
             self.assertEquals(my_range,set(self.tx_hash._get_hash_bins(ivc)))
     
     def test_genomehash_update_from_dict(self):
-        """Test addition to a `GenomeHash` from a dictionary without loss of features
-        
-        1. Add features to an empty dictionary
-        
-        2. Add features to a non-empty dictionary
-        """
+#        """Test addition to a `GenomeHash` from a dictionary without loss of features
+#        
+#        1. Add features to an empty dictionary
+#        
+#        2. Add features to a non-empty dictionary
+#        """
         tuple_sort = lambda x: _name_sort(x[1])
         gh = GenomeHash({},do_copy=True)
         tx_items  = sorted(list(self.tx_dict.items()),key=tuple_sort)
@@ -263,12 +263,12 @@ class TestGenomeHash(AbstractGenomeHashHelper):
                           "Features lost in second update of non-empty GenomeHash from dict")
     
     def test_genomehash_update_from_list(self):
-        """Test addition to a `GenomeHash` from a list without loss of features
-        
-        1. Add features to an empty dictionary
-        
-        2. Add features to a non-empty dictionary
-        """
+#        """Test addition to a `GenomeHash` from a list without loss of features
+#        
+#        1. Add features to an empty dictionary
+#        
+#        2. Add features to a non-empty dictionary
+#        """
         gh = GenomeHash({},do_copy=True)
         tx_list = sorted(list(self.tx_dict.values()),key=_name_sort)
         self.assertGreater(len(tx_list),0)
@@ -284,16 +284,16 @@ class TestGenomeHash(AbstractGenomeHashHelper):
                           "Features lost in update of non-empty GenomeHash from list")
 
     def test_nearby_feature_names_stranded(self):
-        """Test fetching of nearby feature names
-        
-        1.  Make sure each feature can fetch its own name from its own neighborhood
-        
-        2.  Make sure each feature cannot fetch its own name from antisense neighorhood
-        
-        2.  Make sure transcripts that are not on the same chromosome, not on
-            the same strand, or that are too far apart on the same chromosome
-            and strand, do not fetch each other.
-        """
+#        """Test fetching of nearby feature names
+#        
+#        1.  Make sure each feature can fetch its own name from its own neighborhood
+#        
+#        2.  Make sure each feature cannot fetch its own name from antisense neighorhood
+#        
+#        2.  Make sure transcripts that are not on the same chromosome, not on
+#            the same strand, or that are too far apart on the same chromosome
+#            and strand, do not fetch each other.
+#        """
         # make sure we can fetch each transcript's own CDS
         for txid,tx in self.tx_dict.items():
             nearby_names = self.cds_hash.get_nearby_feature_names(tx,stranded=True)
@@ -330,15 +330,15 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         self.assertNotEqual(c,len(self.tx_dict))
 
     def test_nearby_feature_names_unstranded(self):
-        """Test fetching of nearby feature names, disregarding strand
-        
-        1.  Make sure each feature can fetch its own name from its own sense neighborhood
-        
-        2.  Make sure each feature can fetch its own name from antisense neighorhood
-        
-        2.  Make sure transcripts that are not on the same chromosome, or that are too
-            far apart on the same chromosome, do not fetch each other.
-        """ 
+#        """Test fetching of nearby feature names, disregarding strand
+#        
+#        1.  Make sure each feature can fetch its own name from its own sense neighborhood
+#        
+#        2.  Make sure each feature can fetch its own name from antisense neighorhood
+#        
+#        2.  Make sure transcripts that are not on the same chromosome, or that are too
+#            far apart on the same chromosome, do not fetch each other.
+#        """ 
         # make sure we can fetch each transcript's own CDS from both sense asd antisense
         for txid,tx in self.tx_dict.items():
             nearby_names = self.cds_hash.get_nearby_feature_names(tx,stranded=False)
@@ -371,16 +371,16 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         self.assertNotEqual(c,len(self.tx_dict))            
             
     def test_nearby_features_stranded(self):
-        """Test fetching of nearby features
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature cannot fetch its own antisense subregion
-        
-        3.  Make sure fatures that are not on the same chromosome, not on
-            the same strand, or that are too far apart on the same chromosome
-            and strand, do not fetch each other.
-        """
+#        """Test fetching of nearby features
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature cannot fetch its own antisense subregion
+#        
+#        3.  Make sure fatures that are not on the same chromosome, not on
+#            the same strand, or that are too far apart on the same chromosome
+#            and strand, do not fetch each other.
+#        """
         # make sure we can fetch each transcript's own CDS
         for txid,tx in self.tx_dict.items():
             nearby_features = self.cds_hash.get_nearby_features(tx)
@@ -417,15 +417,15 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         self.assertNotEqual(c,len(self.tx_dict))
 
     def test_nearby_feature_unstranded(self):
-        """Test fetching of nearby features, disregarding strand
-        
-        1.  Make sure each feature can fetch its own subregion from its own neighborhood
-        
-        2.  Make sure each feature can fetch its own antisense subregion
-        
-        3.  Make sure fatures that are not on the same chromosome, or that are too far
-            apart on the same chromosome, do not fetch each other.
-        """        
+#        """Test fetching of nearby features, disregarding strand
+#        
+#        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+#        
+#        2.  Make sure each feature can fetch its own antisense subregion
+#        
+#        3.  Make sure fatures that are not on the same chromosome, or that are too far
+#            apart on the same chromosome, do not fetch each other.
+#        """        
         # make sure we can fetch each transcript's own CDS from both sense asd antisense
         for txid,tx in self.tx_dict.items():
             nearby_features = self.cds_hash.get_nearby_features(tx,stranded=False)

@@ -9,8 +9,8 @@ converts the parsed arguments into Python objects.
 
 ===========================================================   ======================================  =======================================   ===========================================================
 **Data type**                                                 **Parser building function**            **Argument parsing function**             **Return type**
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ----------------------------------------------------------- 
-:term:`Read alignments` or :term:`count files <count file>`       :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
+-----------------------------------------------------------   --------------------------------------  ---------------------------------------   -----------------------------------------------------------
+:term:`Read alignments` or :term:`count files <count file>`   :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
 
 
 Assembled transcript models                                   :func:`get_annotation_file_parser`      :func:`get_transcripts_from_args`         iterator over |Transcripts|
@@ -22,7 +22,7 @@ Assembled |SegmentChains|                                     :func:`get_segment
 Genomic sequence files                                        :func:`get_sequence_file_parser`        :func:`get_seqdict_from_args`             dict-like of :class:`Bio.SeqRecord.SeqRecord`-like
 
 
-:term:`Mask files <mask file>`                                :func:`get_mask_file_parser`            :func:`get_genome_hash_from_mask_args`      |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
+:term:`Mask files <mask file>`                                :func:`get_mask_file_parser`            :func:`get_genome_hash_from_mask_args`    |GenomeHash|, |TabixGenomeHash|, or |BigBedGenomeHash|
 ===========================================================   ======================================  =======================================   ===========================================================
 
 
@@ -113,6 +113,8 @@ _MASK_PARSER_DESCRIPTION = """Add mask file(s) that annotate regions that should
 
 _DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
 _DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
+
+_DEFAULT_PLOTTING_TITLE = "Plotting options"
 
 
 GFF_SORT_MESSAGE = """Sort and index your GTF2/GFF with Tabix as follows:
@@ -218,17 +220,17 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                                                         default=0,
                                                         metavar="N",
                                                         help="For use with `--center` only. nt to remove from each "+
-                                                             "end of read before mapping (Default: 0)")),
+                                                             "end of read before mapping (Default: %(default)s)")),
                             ("min_length"       , dict(type=int,
                                                        default=25,
                                                        metavar="N",
                                                        help="Minimum read length required to be included"+
-                                                            " (Default: 25)")),
+                                                            " (Default: %(default)s)")),
                             ("max_length"       , dict(type=int,
                                                        default=100,
                                                        metavar="N",
                                                        help="Maximum read length permitted to be included"+
-                                                            " (Default: 100)")),
+                                                            " (Default: %(default)s)")),
                             ])
 
         for k,v in filter(lambda x: x[0] not in disabled,map_option_dict.items()):
@@ -241,7 +243,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                                                   help="One or more count or alignment file(s) from a single sample or set of samples to be pooled.")),
                         ("countfile_format", dict(choices=input_choices,
                                                   default="BAM",
-                                                  help="Format of file containing alignments or counts (default: BAM)")),
+                                                  help="Format of file containing alignments or counts (Default: %(default)s)")),
                         ("big_genome"       , dict(action="store_true",
                                                    default=False,
                                                    help="Use slower but memory-efficient implementation "+
@@ -249,7 +251,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                                                         "for BAM files), or for memory-limited computers")),
                         ("normalize"        , dict(action="store_true",
                                                    help="Whether counts should be normalized"+
-                                                        " to counts per million (usually not. default: False)",
+                                                        " to counts per million (usually not. default: %(default)s)",
                                                    default=False)),
                         ])
 
@@ -462,7 +464,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                                   help="Zero or more annotation files (max 1 file if BigBed)")),                               
                     ("annotation_format"   , dict(choices=input_choices,
                                                   default="GTF2",
-                                                  help="Format of %sannotation_files (default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file." % prefix)),    
+                                                  help="Format of %sannotation_files (Default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file." % prefix)),    
                     ("add_three"           , dict(default=False,
                                                   action="store_true",
                                                   help="If supplied, coding regions will be extended by 3 nucleotides at their 3\' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS.")),
@@ -478,7 +480,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         option_dict["bed_extra_columns"] = dict(default=0,
                                                 nargs="+",
                                                 help="Number of extra columns in BED file (e.g. in custom ENCODE formats) "+
-                                                     "or list of names for those columns. (Default: 0).")
+                                                     "or list of names for those columns. (Default: %(default)s).")
     if "GFF3" in input_choices:
         option_dict["gff_transcript_types"] = dict(type=str,
                                                   default=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
@@ -723,7 +725,7 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),
         (Default: ``[]``)
                 
     printer : file-like
-        A stream to which stderr-like info can be written (default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|) 
     
     require_sort : bool, optional
         If True, quit if the annotation file(s) are not sorted or indexed
@@ -796,7 +798,7 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
         (Default: "mask_")
     
     printer : file-like
-        A stream to which stderr-like info can be written (default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|) 
 
 
     Returns
@@ -887,7 +889,7 @@ def get_sequence_file_parser(input_choices=["fasta","fastq","twobit","genbank","
                                                 help="A file of DNA sequence")),                               
                     ("sequence_format"   , dict(choices=input_choices,
                                                 default="fasta",
-                                                help="Format of %ssequence_file (default: fasta)." % prefix)),    
+                                                help="Format of %ssequence_file (Default: fasta)." % prefix)),    
                    ])
 
     for k,v in filter(lambda x: x[0] not in disabled,option_dict.items()):
@@ -914,7 +916,7 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
         :func:`Bio.SeqIO.to_dict` (Default: `True`)
         
     printer : file-like
-        A stream to which stderr-like info can be written (default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|) 
 
     Returns
     -------
@@ -933,6 +935,166 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
             return SeqIO.index(args.sequence_file,args.sequence_format)
         else:
             return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))
+
+
+#===============================================================================
+# INDEX: plotting
+#===============================================================================
+
+
+def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
+    """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
+
+    Parameters
+    ----------
+        
+    disabled : list, optional
+        list of parameter names that should be disabled from parser
+        without preceding dashes
+
+    prefix : str, optional
+        string prefix to add to default argument options (Default: `''`)
+    
+    title : str, optional
+        title for option group (used in command-line help screen)
+        
+    description : str, optional
+        description of parser (used in command-line help screen)
+    
+   
+    Returns
+    -------
+    :class:`argparse.ArgumentParser`
+    
+    
+    See also
+    --------
+    get_colors_from_args
+        parse colors and/or colormaps from this argument parser
+    """
+    import matplotlib.style
+    from matplotlib.backend_bases import FigureCanvasBase as fcb
+
+    if len(prefix) > 0:
+        prefix += "_"
+
+    filetypes = sorted(fcb.get_supported_filetypes().keys())
+    default_ftype = fcb.get_default_filetype()
+    stylesheets = matplotlib.style.available
+
+    parser   = argparse.ArgumentParser(add_help=False)
+    plotargs = parser.add_argument_group(title=title)
+
+    if "title" not in disabled:
+        plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
+            help="Use this chart title")
+    if "stylesheet" not in disabled:
+        plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
+            help="Use this matplotlib stylesheet instead of matplotlibrc params")
+    if "figformat" not in disabled:
+        plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
+            choices=filetypes,
+            help="File format for figure(s); Default: %(default)s)")
+    if "figsize" not in disabled:
+        plotargs.add_argument("--%sfigsize" % prefix,nargs=2,default=None,type=float,
+            help="Figure width and height, in inches. (Default: use matplotlibrc params)",metavar="N")
+    if "cmap" not in disabled:
+        plotargs.add_argument("--%scmap" % prefix,type=str,default=None,
+            help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)")
+    if "dpi" not in disabled:
+        plotargs.add_argument("--%sdpi" % prefix,type=int,default=150,
+            help="Figure resolution (Default: %(default)s)")
+
+    return parser
+
+def get_figure_from_args(args,**kwargs):
+    """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
+
+    A new figure is created with parameters specified in `args`. If these are 
+    not found, values found in `**kwargs` will instead be used. If these are 
+    not found, we fall back to matplotlibrc values.
+
+    Parameters
+    ----------
+    args : :class:`argparse.Namespace`
+        Namespace object from :func:`get_plotting_parser`
+
+    kwargs : keyword arguments
+        Fallback arguments for items not defined in `args`, plus any other
+        keyword arguments.
+
+    Returns
+    -------
+    :class:`matplotlib.figure.Figure`
+        Matplotlib figure
+    """
+    import matplotlib.pyplot as plt
+
+    fargs = {}
+    # keep this loop in place in case we add additional command line attributes as fig properties later
+    for attr in ("figsize"): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
+        v = getattr(args,attr,None)
+        if v is None:
+            v = getattr(kwargs,attr,None)
+        if v is not None:
+            fargs[attr] = v
+
+    # copy values from fargs
+    kwargs.update(fargs)
+
+    return plt.figure(**kwargs)
+
+def get_colors_from_args(args,num_colors):
+    """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
+
+    If a matplotlib colormap is specified in `args.figcolors`, colors will be
+    generated from that map.
+
+    Otherwise, if a stylesheet is specified, colors will be fetched from 
+    the stylesheet's color cycle.
+    
+    Otherwise, colors will be chosen from the default color cycle specified
+    ``matplotlibrc``.
+
+
+    Parameters
+    ----------
+    args : :class:`argparse.Namespace`
+        Namespace object from :func:`get_plotting_parser`
+
+    num_colors : int
+        Number of colors to fetch
+    
+
+    Returns
+    -------
+    list
+        List of matplotlib colors
+    """
+    import matplotlib
+    import matplotlib.cm
+
+    figcolors  = getattr(args,"cmap",None)
+    stylesheet = getattr(args,"stylesheet",None)
+
+    if figcolors is not None:
+        import numpy
+        cmap = matplotlib.cm.get_cmap(figcolors) 
+        if num_colors > 1:
+            colors = cmap(numpy.linspace(0,1.0,num_colors))
+        else:
+            colors = [cmap(0.5)]
+    else:
+        import matplotlib.style
+        from itertools import cycle
+        if stylesheet is not None:
+            matplotlib.style.use(stylesheet)
+
+        color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
+        colors = [next(color_cycle) for _ in range(num_colors)]
+
+    return colors
+
 
 #===============================================================================
 # INDEX: Utility classes
@@ -991,11 +1153,9 @@ class PrefixNamespaceWrapper(object):
         """
         return getattr(self.namespace,"%s%s" % (self.prefix,k))
 
-
 #===============================================================================
 # INDEX: Utility functions
 #===============================================================================
-
 
 def _parse_variable_offset_file(fh):
     """Read a variable-offset text file into a dictionary.

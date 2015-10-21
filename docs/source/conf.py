@@ -189,25 +189,13 @@ class Mock(mock.Mock):
     def __getattr__(cls, name):
             return Mock()
 
-mock_modules = [
-    'matplotlib',
-    'matplotlib.cm',
-    'matplotlib.pyplot',
-#    'numpy',
-#    'numpy.ma',
-#    'numpy.random',
-#    'numpy.dtype',
+mock_modules = [ # can't mock matplotlib, numpy, or pysam
     'pandas',
     'scipy',
     'scipy.misc',
     'scipy.optimize',
     'scipy.stats',
     'scipy.sparse',
-#    'Bio',
-#    'Bio.Alphabet',
-#    'Bio.Seq',
-#    'Bio.SeqRecord',
-#    'pysam',
     'twobitreader'
 ]
 

@@ -34,17 +34,20 @@ import warnings
 import pandas as pd
 import numpy
 import matplotlib
+import matplotlib.style
 matplotlib.use("Agg")
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                                      get_transcripts_from_args,\
-                                                      get_alignment_file_parser,\
-                                                      get_annotation_file_parser
+                                              get_transcripts_from_args,\
+                                              get_alignment_file_parser,\
+                                              get_annotation_file_parser,\
+                                              get_plotting_parser,\
+                                              get_colors_from_args
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import DataWarning
+from plastid.plotting.plots import phase_plot
 
-import matplotlib.pyplot as plt
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -69,11 +72,13 @@ def main(argv=sys.argv[1:]):
                                                                 "spliced_bowtie_files"],
                                                       input_choices=["BAM"])
     annotation_file_parser = get_annotation_file_parser()
-    
+    plotting_parser = get_plotting_parser()
+
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[annotation_file_parser,
-                                              alignment_file_parser])
+                                              alignment_file_parser,
+                                              plotting_parser])
     
     parser.add_argument("--codon_buffer",type=int,default=5,
                         help="Codons before and after start codon to ignore (Default: 5)")
@@ -173,21 +178,27 @@ def main(argv=sys.argv[1:]):
                       )
         fh.close()
     
-    # plot
-    # TODO: plot color next to line
-    #       or change to bar graphs
-    fn = "%s_phasing.svg" % args.outbase
+    if args.stylesheet is not None:
+        matplotlib.style.use(args.stylesheet)
+
+    fig = {}
+    if args.figsize is not None:
+        fig["figsize"] = tuple(args.figsize)
+
+    colors = get_colors_from_args(args,len(read_lengths))
+
+    fn = "%s_phasing.%s" % (args.outbase,args.figformat)
     printer.write("Plotting to %s ..." % fn)
-    plt.figure()
-    plt.xlabel("Codon position")
-    plt.ylabel("Fraction of reads")
-    for i in range(len(dtmp)):
-        l = dtmp["read_length"][i]
-        phasing = phase_vectors[l]
-        plt.plot(phasing,label="%smers" % l)
-        
-    plt.legend()
-    plt.savefig(fn)
+    plot_counts = numpy.vstack([V for (_,V) in sorted(phase_sums.items())])
+    fig, (ax1,ax2) = phase_plot(plot_counts,labels=read_lengths,lighten_by=0.3,
+                                cmap=None,color=colors,fig=fig)
+
+    if args.title is not None:
+        ax1.set_title(args.title)
+    else:
+        ax1.set_title("Phasing stats for %s" % args.outbase)
+
+    fig.savefig(fn,dpi=args.dpi)
     
 
 if __name__ == "__main__":

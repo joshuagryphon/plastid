@@ -32,7 +32,7 @@ from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
                                            get_genome_array_from_args
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener
-from plastid.util.services.colors import get_rgb255_from_str
+from plastid.plotting.colors import get_rgb255
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
@@ -83,7 +83,7 @@ def main(argv=sys.argv[1:]):
         name = args.track_name
     
     if args.color is not None:
-        fw_color = rc_color = str(get_rgb255_from_str(args.color))[1:-1].replace(" ","")
+        fw_color = rc_color = "%s,%s,%s" % tuple(get_rgb255(args.color))
     else:
         fw_color = rc_color = "0,0,0"
     
