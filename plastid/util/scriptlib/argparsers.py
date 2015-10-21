@@ -9,7 +9,7 @@ converts the parsed arguments into Python objects.
 
 ===========================================================   ======================================  =======================================   ===========================================================
 **Data type**                                                 **Parser building function**            **Argument parsing function**             **Return type**
------------------------------------------------------------   --------------------------------------  ---------------------------------------   ----------------------------------------------------------- 
+-----------------------------------------------------------   --------------------------------------  ---------------------------------------   -----------------------------------------------------------
 :term:`Read alignments` or :term:`count files <count file>`   :func:`get_alignment_file_parser`       :func:`get_genome_array_from_args`        |GenomeArray|, |BAMGenomeArray|, or |SparseGenomeArray|
 
 
@@ -1011,7 +1011,7 @@ def get_figure_from_args(args,**kwargs):
     """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
 
     A new figure is created with parameters specified in `args`. If these are 
-    not found, values found in **kwargs will instead be used. If these are 
+    not found, values found in `**kwargs` will instead be used. If these are 
     not found, we fall back to matplotlibrc values.
 
     Parameters
@@ -1019,7 +1019,7 @@ def get_figure_from_args(args,**kwargs):
     args : :class:`argparse.Namespace`
         Namespace object from :func:`get_plotting_parser`
 
-    **kwargs : keyword arguments
+    kwargs : keyword arguments
         Fallback arguments for items not defined in `args`, plus any other
         keyword arguments.
 

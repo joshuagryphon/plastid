@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """This subpackage contains plotting utilities to build some compound plots
-not found in matplotlib.
+not found in matplotlib. For demos, see :doc:`/examples/z_plotting`.
 
 
     ======================================    =========================================================

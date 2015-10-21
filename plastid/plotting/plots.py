@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Sommon common plots that are not directly implemented in :mod:`matplotlib`,
-as well as some specific plots used by :mod:`plastid`.
+as well as some specific plots used by :mod:`plastid`. Demos of these appear
+in :doc:`/examples/z_plotting`.
 
 General plots
 -------------
