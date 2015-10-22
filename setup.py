@@ -62,7 +62,7 @@ install these via pip, and retry:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = "0.4.0"  #plastid.__version__ 
+version = "0.4.1"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
 packages = find_packages()
 

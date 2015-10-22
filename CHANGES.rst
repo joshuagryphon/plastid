@@ -13,6 +13,12 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
     current name, ``plastid`` will not change.
 
 
+plastid [0.4.2] = [2015-10-22]
+------------------------------
+No change in codebase vs 0.4.0. Updated required matplotlib version to 1.4.0.
+Made some changes in sphinx doc config for readthedocs.org
+
+
 
 plastid [0.4.0] = [2015-10-21]
 ------------------------------
