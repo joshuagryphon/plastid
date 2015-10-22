@@ -978,10 +978,11 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
 
     try:
         filetypes = sorted(fcb.get_supported_filetypes().keys())
+        default_ftype = fcb.get_default_filetype()
     except: # matplotlib < 1.4.0
         filetypes = ["eps","jpeg","pdf","png","svg"]
+        default_ftype = "pdf"
 
-    default_ftype = fcb.get_default_filetype()
     parser   = argparse.ArgumentParser(add_help=False)
     plotargs = parser.add_argument_group(title=title)
     if "title" not in disabled:

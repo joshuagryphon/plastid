@@ -935,45 +935,51 @@ correlation coefficients as a function of summed read counts in both samples
 
 
                 # ma plot
-                ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                fig, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
-                                      kdalpha=0.2,title=ma_title)
-                _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",kdalpha=0.8)
+                try:
+                    ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
+                    fig, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
+                                          kdalpha=0.2,title=ma_title)
+                    _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",kdalpha=0.8)
 
-                mainax = axdict["main"]
-                mainax.set_xlabel("%s %s" % (ki,metric))
-                mainax.legend(loc="upper right",frameon=False)
+                    mainax = axdict["main"]
+                    mainax.set_xlabel("%s %s" % (ki,metric))
+                    mainax.legend(loc="upper right",frameon=False)
 
-                text_kwargs = { "horizontalalignment" : "right",
-                                "verticalalignment" : "baseline",
-                                "linespacing" : 1.6,
-                                "transform" : mainax.transAxes,
-                                }
+                    text_kwargs = { "horizontalalignment" : "right",
+                                    "verticalalignment" : "baseline",
+                                    "linespacing" : 1.6,
+                                    "transform" : mainax.transAxes,
+                                    }
 
-                plot_text = "\n".join(["sample mean: %0.3e" % log2_mean,
-                                       "sample stdev: %0.3e" % log2_std,
-                                       "3-sigma fold change: %0.2f" % min_diff,
-                                       "regions_counted: %s" % count_mask.sum(),
-                                       ])
+                    plot_text = "\n".join(["sample mean: %0.3e" % log2_mean,
+                                           "sample stdev: %0.3e" % log2_std,
+                                           "3-sigma fold change: %0.2f" % min_diff,
+                                           "regions_counted: %s" % count_mask.sum(),
+                                           ])
 
-                mainax.text(0.96,0.04,plot_text,**text_kwargs)
+                    mainax.text(0.96,0.04,plot_text,**text_kwargs)
 
-                plt.savefig("%s_ma_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
-                            bbox_inches="tight"
-                           )
-                plt.close()
+                    plt.savefig("%s_ma_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
+                                bbox_inches="tight"
+                               )
+                    plt.close()
+                except ValueError as e:
+                    printer.write("Could not make MA plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message))
                 
                 
                 # scatter plot
-                scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
-                                 count_mask,args,pearsonr=pearsonr,
-                                 xlabel=ki,ylabel=kj,title=scatter_title)
+                try:
+                    scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
+                    fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
+                                     count_mask,args,pearsonr=pearsonr,
+                                     xlabel=ki,ylabel=kj,title=scatter_title)
 
-                plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
-                            bbox_inches="tight")
-                plt.close()
-
+                    plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
+                                bbox_inches="tight")
+                    plt.close()
+                except ValueError as e:
+                    printer.write("Could not make scatter plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message))
+ 
                 
                 # TODO: make these tables into dataframes. this scheme is insane
 
