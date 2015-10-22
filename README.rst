@@ -24,14 +24,12 @@ released under the BSD 3-Clause license.
 
 This package provides:
 
-  #. A set of scripts that implement common sequencing
-     analyses
+  #. A set of scripts that implement common sequencing analyses,
 
-  #. A set of classes that create a simple,
-     intuitive interfaces to genomic features,
-     read alignments, and quantitative data. These objects readily
-     interface with existing scientific tools, like the SciPy stack,
-     to facilitate interactive or exploratory data analysis.
+  #. A set of classes that create simple, intuitive interfaces to complex
+     genomic features, read alignments, and quantitative data. These objects
+     readily interface with existing scientific tools, like the SciPy stack,
+     to facilitate interactive / exploratory data analysis.
 
   #. Script writing tools that make it easy to use the objects
      implemented in ``plastid``.
@@ -43,24 +41,33 @@ This package provides:
 
 Installation
 ------------
-We're in development, so this takes a few extra steps:
+``plastid`` can be installed directly from PyPI.
 
-    1. Make sure you have numpy and cython installed::
+    1. First make sure you have numpy and pysam installed::
 
-        pip install numpy cython
+        pip install numpy pysam
 
-    2. Clone this repo::
+    2. Then::
         
-        git clone https://github.com/joshuagryphon/plastid.git
+        pip install plastid
 
-    3. Install dependencies::
+    3. If when running you get any warnings about numpy versions having changed,
+       regenerate the c files to match your numpy headers by typing:
 
-        cd plastid && pip install -r requirements.txt
+       pip install cython
+       pip install plastid --recythonize
 
-    4. Build extensions::
 
-        python setup.py build_ext --inplace
+Links & help
+------------
 
-    5. Install beta::
+  - `Documentation <http://plastid.readthedocs.org>`_
 
-        python setup.py develop --user
+  - `Our github repo <https://github.com/joshuagryphon/plastid`_
+
+  - Subscribe to our mailing list by emailing ``listserv@listserv.ucsf.edu``
+    with the message *subscribe plastidinfo firstname lastname* and
+    an empty subject line.
+
+  - Test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
+    for developers or validating installs
