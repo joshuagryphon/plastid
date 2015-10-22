@@ -197,7 +197,6 @@ mock_modules = [ # can't mock matplotlib, numpy, or pysam
     'scipy.stats',
     'scipy.sparse',
     'twobitreader',
-    'matplotlib.style', # at present RTD has matplotlib < 1.4.0
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
