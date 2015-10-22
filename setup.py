@@ -96,7 +96,7 @@ if not on_rtd:
      install_requires = [
                         SCIPY_VERSION,
                         "pandas>=0.16.0",
-                        "matplotlib>=1.3.0",
+                        "matplotlib>=1.4.0",
                         "biopython>=1.64",
                         "twobitreader>=3.0.0",
                         ] + setup_requires
