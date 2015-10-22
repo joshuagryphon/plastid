@@ -16,7 +16,8 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
 plastid [0.4.2] = [2015-10-22]
 ------------------------------
 No change in codebase vs 0.4.0. Updated required matplotlib version to 1.4.0.
-Made some changes in sphinx doc config for readthedocs.org
+Made some changes in sphinx doc config for readthedocs.org, which is still
+at matplotlib 1.3.0.
 
 
 
