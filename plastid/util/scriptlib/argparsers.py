@@ -976,14 +976,17 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     if len(prefix) > 0:
         prefix += "_"
 
-    filetypes = sorted(fcb.get_supported_filetypes().keys())
+    try:
+        filetypes = sorted(fcb.get_supported_filetypes().keys())
+    except: # matplotlib < 1.4.0
+        filetypes = ["eps","jpeg","pdf","png","svg"]
+
     default_ftype = fcb.get_default_filetype()
     parser   = argparse.ArgumentParser(add_help=False)
     plotargs = parser.add_argument_group(title=title)
     if "title" not in disabled:
         plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
             help="Use this chart title")
-
 
     try:
         import matplotlib.style
@@ -994,6 +997,7 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
                 help="Use this matplotlib stylesheet instead of matplotlibrc params")
     except ImportError: # matplotlib < 1.4.0
         pass
+
     if "figformat" not in disabled:
         plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
             choices=filetypes,
