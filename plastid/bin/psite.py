@@ -49,7 +49,6 @@ import warnings
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.style
 import numpy
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -321,8 +320,12 @@ def main(argv=sys.argv[1:]):
 
 
     # parse arguments & set styles
-    if args.stylesheet is not None:
-        matplotlib.style.use(args.stylesheet)
+    try:
+        import matplotlib.style
+        if getattr(args,"stylesheet",None) is not None:
+            matplotlib.style.use(args.stylesheet)
+    except ImportError:
+        pass
 
     mplrc = matplotlib.rcParams
     plt_incr  = 1.2

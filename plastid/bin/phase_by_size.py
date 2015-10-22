@@ -34,7 +34,6 @@ import warnings
 import pandas as pd
 import numpy
 import matplotlib
-import matplotlib.style
 matplotlib.use("Agg")
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
                                               get_transcripts_from_args,\
@@ -178,8 +177,12 @@ def main(argv=sys.argv[1:]):
                       )
         fh.close()
     
-    if args.stylesheet is not None:
-        matplotlib.style.use(args.stylesheet)
+    try:
+        import matplotlib.style
+        if getattr(args,"stylesheet",None) is not None:
+            matplotlib.style.use(args.stylesheet)
+    except ImportError:
+        pass
 
     fig = {}
     if args.figsize is not None:

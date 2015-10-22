@@ -972,25 +972,28 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     get_colors_from_args
         parse colors and/or colormaps from this argument parser
     """
-    import matplotlib.style
     from matplotlib.backend_bases import FigureCanvasBase as fcb
-
     if len(prefix) > 0:
         prefix += "_"
 
     filetypes = sorted(fcb.get_supported_filetypes().keys())
     default_ftype = fcb.get_default_filetype()
-    stylesheets = matplotlib.style.available
-
     parser   = argparse.ArgumentParser(add_help=False)
     plotargs = parser.add_argument_group(title=title)
-
     if "title" not in disabled:
         plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
             help="Use this chart title")
-    if "stylesheet" not in disabled:
-        plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
-            help="Use this matplotlib stylesheet instead of matplotlibrc params")
+
+
+    try:
+        import matplotlib.style
+        stylesheets = matplotlib.style.available
+
+        if "stylesheet" not in disabled:
+            plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
+                help="Use this matplotlib stylesheet instead of matplotlibrc params")
+    except ImportError: # matplotlib < 1.4.0
+        pass
     if "figformat" not in disabled:
         plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
             choices=filetypes,
@@ -1085,10 +1088,13 @@ def get_colors_from_args(args,num_colors):
         else:
             colors = [cmap(0.5)]
     else:
-        import matplotlib.style
         from itertools import cycle
-        if stylesheet is not None:
-            matplotlib.style.use(stylesheet)
+        try:
+            import matplotlib.style
+            if stylesheet is not None:
+                matplotlib.style.use(stylesheet)
+        except ImportError:
+            pass
 
         color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
         colors = [next(color_cycle) for _ in range(num_colors)]

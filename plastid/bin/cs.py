@@ -100,7 +100,6 @@ import warnings
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.style
 import matplotlib.pyplot as plt
 import numpy
 import pandas as pd
@@ -857,8 +856,12 @@ correlation coefficients as a function of summed read counts in both samples
     """
 
         
-    if args.stylesheet is not None:
-        matplotlib.style.use(args.stylesheet)
+    try:
+        import matplotlib.style
+        if getattr(args,"stylesheet",None) is not None:
+            matplotlib.style.use(args.stylesheet)
+    except ImportError:
+        pass
 
     outbase = args.outbase
     bins = numpy.array(args.bins)

@@ -723,7 +723,6 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
     """
     import matplotlib
     matplotlib.use("Agg")
-    import matplotlib.style
     import matplotlib.pyplot as plt
     from plastid.plotting.plots import profile_heatmap
 
@@ -801,8 +800,12 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
 
     # plot
     printer.write("Plotting to %s ..." % fig_fn)
-    if args.stylesheet is not None:
-        matplotlib.style.use(args.stylesheet)
+    try:
+        import matplotlib.style
+        if getattr(args,"stylesheet",None) is not None:
+            matplotlib.style.use(args.stylesheet)
+    except ImportError:
+        pass
 
 
     im_args = {
@@ -852,7 +855,6 @@ def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=
     """
     import matplotlib
     matplotlib.use("Agg")
-    import matplotlib.style
     import matplotlib.pyplot as plt
 
     if len(args.labels) == len(args.infiles):
@@ -862,8 +864,12 @@ def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=
             warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
         samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
      
-    if args.stylesheet is not None:
-        matplotlib.style.use(args.stylesheet)
+    try:
+        import matplotlib.style
+        if getattr(args,"stylesheet",None) is not None:
+            matplotlib.style.use(args.stylesheet)
+    except ImportError:
+        printer.write("Could not import matplotlib.style. Consider upgrading to matplotlib >=1.4.0")
 
     title = args.title
     colors = get_colors_from_args(args,len(args.infiles))
