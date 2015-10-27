@@ -27,6 +27,7 @@ __date__ = "2011-03-18"
 import warnings
 import inspect
 import sys
+import argparse
 
 from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
                                            get_genome_array_from_args
@@ -51,11 +52,10 @@ def main(argv=sys.argv[1:]):
 
         Default: sys.argv[1:] (actually command-line arguments)
     """
-    import argparse
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[get_alignment_file_parser()])
-    parser.add_argument("-o","--out",dest="output_file",type=str,required=True,
+    parser.add_argument("-o","--out",dest="outbase",type=str,required=True,
                         metavar="FILENAME",
                         help="Base name for output files")
     parser.add_argument("--window_size",default=100000,metavar="N",type=int,
@@ -92,14 +92,19 @@ def main(argv=sys.argv[1:]):
     elif args.output_format == "variable_step":
         outfn = gnd.to_variable_step
 
-    with argsopener("%s_fw.wig" % args.output_file,args,"w") as fw_out:
-        printer.write("Writing forward strand wiggle...")
-        outfn(fw_out,"%s_fw" % name,"+",window_size=args.window_size,color=fw_color)
+    track_fw = "%s_fw.wig" % args.outbase
+    track_rc = "%s_rc.wig" % args.outbase
+
+    with argsopener(track_fw,args,"w") as fw_out:
+        printer.write("Writing forward strand track to %s ..." % track_fw)
+        outfn(fw_out,"%s_fw" % name,"+",window_size=args.window_size,color=fw_color,
+                printer=printer)
         fw_out.close()
 
-    with argsopener("%s_rc.wig" % args.output_file,args,"w") as rc_out:
-        printer.write("Writing reverse strand wiggle...")
-        outfn(rc_out,"%s_rc" % name,"-",window_size=args.window_size,color=rc_color)
+    with argsopener(track_rc,args,"w") as rc_out:
+        printer.write("Writing reverse strand track to %s ..." % track_rc)
+        outfn(rc_out,"%s_rc" % name,"-",window_size=args.window_size,color=rc_color,
+                printer=printer)
         rc_out.close()
     
     printer.write("Done!")

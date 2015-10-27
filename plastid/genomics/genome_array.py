@@ -168,6 +168,7 @@ from plastid.readers.bowtie import BowtieReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
 from plastid.util.services.exceptions import DataWarning
+from plastid.util.io.openers import NullWriter
 
 from plastid.genomics.map_factories import *
 
@@ -1202,7 +1203,7 @@ class BAMGenomeArray(AbstractGenomeArray):
 
         return ga
 
-    def to_variable_step(self,fh,trackname,strand,window_size=100000,**kwargs):
+    def to_variable_step(self,fh,trackname,strand,window_size=100000,printer=NullWriter(),**kwargs):
         """Write the contents of the |BAMGenomeArray| to a variableStep `Wiggle`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1223,6 +1224,9 @@ class BAMGenomeArray(AbstractGenomeArray):
             Size of chromosome/contig to process at a time.
             Larger values are faster but less memory-efficient
         
+        printer : file-like, optional
+            Something implementing a write() method for output
+
         **kwargs
             Any other key-value pairs to include in track definition line
         """
@@ -1234,6 +1238,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         fh.write("\n")
 
         for chrom in sorted(self.chroms()):
+            printer.write("Writing chromosome %s..." % chrom)
             fh.write("variableStep chrom=%s span=1\n" % chrom)
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
             for i in range(len(window_starts)):
@@ -1252,7 +1257,7 @@ class BAMGenomeArray(AbstractGenomeArray):
 
             
         
-    def to_bedgraph(self,fh,trackname,strand,window_size=100000,**kwargs):
+    def to_bedgraph(self,fh,trackname,strand,window_size=100000,printer=NullWriter(),**kwargs):
         """Write the contents of the |BAMGenomeArray| to a `bedGraph`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1273,7 +1278,10 @@ class BAMGenomeArray(AbstractGenomeArray):
         window_size : int
             Size of chromosome/contig to process at a time.
             Larger values are faster but less memory-efficient
-        
+         
+        printer : file-like, optional
+            Something implementing a write() method for output
+
         **kwargs
             Any other key-value pairs to include in track definition line
         """
@@ -1287,6 +1295,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         fh.write("\n")
         
         for chrom in sorted(self.chroms()):
+            printer.write("Writing chromosome %s..." % chrom)
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
             for i in range(len(window_starts)):
                 my_start = window_starts[i]
@@ -1930,7 +1939,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         self._sum = None
         
-    def to_variable_step(self,fh,trackname,strand,**kwargs):
+    def to_variable_step(self,fh,trackname,strand,printer=NullWriter(),**kwargs):
         """Export the contents of the GenomeArray to a variable step
         `Wiggle`_ file. For sparse data, `bedGraph`_ can be more efficient format.
         
@@ -1948,6 +1957,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         strand : str
             Strand to export. `'+'`, `'-'`, or `'.'`
         
+        printer : file-like, optional
+            Something implementing a write() method for output
+            
         **kwargs
             Any other key-value pairs to include in track definition line
         """
@@ -1959,13 +1971,14 @@ class GenomeArray(MutableAbstractGenomeArray):
         fh.write("\n")
         nonzero = self.nonzero()
         for chrom in sorted(nonzero):
+            printer.write("Writing chromosome %s..." % chrom)
             fh.write("variableStep chrom=%s span=1\n" % chrom)
             indices = nonzero[chrom][strand]
             for idx in indices:
                 val = self._chroms[chrom][strand][self._slicewrap(idx)]
                 fh.write("%s\t%s\n" % (idx+1, val))
                 
-    def to_bedgraph(self,fh,trackname,strand,**kwargs):
+    def to_bedgraph(self,fh,trackname,strand,printer=NullWriter(),**kwargs):
         """Write the contents of the GenomeArray to a `bedGraph`_ file
         
         See the `bedGraph spec <https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html>`_
@@ -1981,7 +1994,10 @@ class GenomeArray(MutableAbstractGenomeArray):
         
         strand : str
             Strand to export. `'+'`, `'-'`, or `'.'`
-        
+
+        printer : file-like, optional
+            Something implementing a write() method for output       
+
         **kwargs
             Any other key-value pairs to include in track definition line
         """
@@ -1993,6 +2009,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         fh.write("\n")
         nonzero = self.nonzero()
         for chrom in sorted(nonzero):
+            printer.write("Writing chromosome %s..." % chrom)
             if self._chroms[chrom][strand].sum() > 0:
                 last_val = 0
                 last_x   = 0
