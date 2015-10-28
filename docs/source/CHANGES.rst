@@ -12,6 +12,14 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
     name ``genometools``, and then later under the codename ``yeti``. The
     current name, ``plastid`` will not change.
 
+plastid [0.4.3] = [2015-10-28]
+------------------------------
+
+Fixed
+.....
+ - Fixed bug in `crossmap` script when run on 2bit files
+
+
 
 plastid [0.4.2] = [2015-10-22]
 ------------------------------
