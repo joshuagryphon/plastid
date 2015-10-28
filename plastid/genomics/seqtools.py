@@ -119,20 +119,28 @@ def random_seq(size,nucleotides="ACTG"):
     return seq
 
 
+def revive(twobitreader,seqname):
+    _TwoBitSeqProxy(twobitreader[seqname],twobitreader)
+
 class _TwoBitSeqProxy(object):
     """Adaptor class that fetches :class:`Bio.SeqRecord.SeqRecord`
     objects from :class:`twobitreader.TwoBitSequence` objects
 
     Defines `seq` property and :meth:`~_TwoBitSeqProxy.reverse_complement` method
     """
-    def __init__(self,twobitseq):
+    def __init__(self,twobitfile,key):
         """
         Parameters
         ----------
-        twobitseq : :class:`twobitreader.TwoBitSequence`
+        twobitseq : :class:`twobitfile.TwoBitSequence`
         """
-        self.twobitseq = twobitseq
+        self._key = key
+        self._twobitfile = twobitfile
+        self.twobitseq = twobitfile[key]
         self._seq = None
+
+    def __reduce__(self):
+        return (_TwoBitSeqProxy,(self._twobitfile,self._key))
 
     def __getitem__(self,slice_):
         return SeqRecord(Seq(self.twobitseq.get_slice(min_=slice_.start,max_=slice_.stop),generic_dna))
@@ -168,7 +176,11 @@ class TwoBitSeqRecordAdaptor(object):
     """
     def __init__(self,fh):
         self.twobitfile = TwoBitFile(fh)
-        self._chroms = { K : _TwoBitSeqProxy(V) for K,V in self.twobitfile.items() }
+        self._filename = fh
+        self._chroms = { K : _TwoBitSeqProxy(self.twobitfile,K) for K in self.twobitfile }
+
+    def __reduce__(self):
+        return (TwoBitSeqRecordAdaptor, (self._filename,))
 
     def __getitem__(self,key):
         return self._chroms[key]

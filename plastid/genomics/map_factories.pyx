@@ -94,12 +94,12 @@ cdef class CenterMapFactory:
         cdef long seg_start = seg.start
         cdef long seg_end   = seg.end
         cdef long seg_len   = seg_end - seg_start
+        cdef unsigned int nibble = self.nibble
 
         # count array we will return
         cdef np.ndarray[DOUBLE_t,ndim=1] count_array = np.zeros(seg_len,dtype=DOUBLE)
         cdef double [:] count_view = count_array
 
-        # replace by cpp vector?
         cdef list reads_out = []
         cdef list read_positions
  
@@ -112,13 +112,13 @@ cdef class CenterMapFactory:
         for read in reads:
             read_positions = <list>read.positions
             read_length = len(read_positions)
-            map_length = read_length - 2*self.nibble
+            map_length = read_length - 2*nibble
             if map_length < 0:
                 do_warn = 1
                 continue
             elif map_length > 0:
                 val = 1.0 / map_length
-                for i in range(self.nibble,read_length - self.nibble):
+                for i in range(nibble,read_length - nibble):
                     coord = <long>(read_positions[i]) - seg_start
                     if coord >= 0 and coord < seg_len:
                         count_view[coord] += val
@@ -126,7 +126,7 @@ cdef class CenterMapFactory:
                 reads_out.append(read)
 
         if do_warn == 1:
-            warnings.warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*self.nibble,
+            warnings.warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*nibble,
                   DataWarning)
         
         return reads_out, count_array
