@@ -815,6 +815,9 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
                 self.printer.write("Assembling next batch of transcripts...")
                 transcripts, rejected = self._assemble_transcripts()
                 if len(transcripts) > 0:
+                    del self._transcript_cache
+                    gc.collect()
+                    del gc.garbage[:]
                     transcripts = sorted(transcripts)
                     self._transcript_cache = iter(transcripts)
                     self.rejected.extend(rejected)
@@ -959,8 +962,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
                 warnings.warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
-    
-        return sorted(transcripts), rejected_transcripts
+        transcripts.sort() 
+        return transcripts, rejected_transcripts
         
     def _reset(self):
         """Release memory and reset internal hashes"""

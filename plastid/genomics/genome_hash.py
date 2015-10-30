@@ -130,7 +130,7 @@ class GenomeHash(AbstractGenomeHash):
     Because all features are stored in memory, for large genomes, a |TabixGenomeHash|
     or |BigBedGenomeHash| is much more memory-efficient. 
     """
-    def __init__(self,features=[],binsize=DEFAULT_BIN_SIZE,do_copy=False):
+    def __init__(self,features=None,binsize=DEFAULT_BIN_SIZE,do_copy=False):
         """Create a |GenomeHash|
         
          Parameters
@@ -153,6 +153,7 @@ class GenomeHash(AbstractGenomeHash):
         self.feature_dict = {}
         self._id_to_names = {}
         self.binsize = binsize
+        features = [] if features is None else features
         self.update(features)
     
     def __repr__(self):
@@ -443,7 +444,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
        |BigBedReader| connecting to BigBed file 
     """
     
-    def __init__(self,filename,base_record_format="III",return_type=SegmentChain,cache_depth=5):
+    def __init__(self,filename,base_record_format="III",return_type=None,cache_depth=5):
         """Create a |BigBedGenomeHash|
         
         Parameters
@@ -466,6 +467,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
         """
         from plastid.readers.bigbed import BigBedReader
         self.filename = filename
+        return_type = SegmentChain if return_type is None else return_type
         self.bigbedreader = BigBedReader(filename,
                                          base_record_format=base_record_format,
                                          return_type=return_type,
@@ -548,7 +550,7 @@ class TabixGenomeHash(AbstractGenomeHash):
                  "PSL"  : PSL_Reader,
                 }
     
-    def __init__(self,filenames,data_format,printer=NullWriter()):
+    def __init__(self,filenames,data_format,printer=None):
         """Create a |BigBedGenomeHash|
         
         Parameters
@@ -562,7 +564,7 @@ class TabixGenomeHash(AbstractGenomeHash):
         """
         from pysam import Tabixfile
         self.filenames = filenames
-        self.printer = printer
+        self.printer = NullWriter() if printer is None else printer
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
         except ValueError:

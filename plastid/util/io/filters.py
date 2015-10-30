@@ -424,7 +424,7 @@ class AbstractWriter(object):
 
 class NameDateWriter(AbstractWriter):
     """Prepend date and program name to each line of output"""
-    def __init__(self,name,line_delimiter="\n",stream=sys.stderr):
+    def __init__(self,name,line_delimiter="\n",stream=None):
         """Create a NameDateWriter
         
         Parameters
@@ -440,6 +440,7 @@ class NameDateWriter(AbstractWriter):
         """
         self.name = name
         self.delimiter = line_delimiter
+        stream = sys.stderr if stream is None else stream
         AbstractWriter.__init__(self,stream)
     
     def filter(self,line):

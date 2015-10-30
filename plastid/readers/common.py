@@ -25,13 +25,16 @@ from abc import abstractmethod
 # INDEX: helper functions
 #===============================================================================
 
-def get_identical_attributes(features,exclude=set()):
+def get_identical_attributes(features,exclude=None):
     """Return a dictionary of all key-value pairs that are identical for all |SegmentChains| in `features`
     
     Parameters
     ----------
     features : list 
         list of |SegmentChains|
+
+    exclude : set
+        attributes to exclude from identity criteria
     
     Returns
     -------
@@ -39,6 +42,7 @@ def get_identical_attributes(features,exclude=set()):
         Dictionary of all key-value pairs that have identical values in all the
         `attr` dictionaries of all the features in `features`
     """
+    exclude = [] if exclude is None else exclude
     common_keys = set(features[0].attr.keys())
     for feature in features:
         common_keys &= set(feature.attr.keys())

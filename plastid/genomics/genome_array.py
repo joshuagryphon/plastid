@@ -162,7 +162,9 @@ import warnings
 import numpy
 import scipy.sparse
 import pysam
+
 from collections import OrderedDict
+
 from plastid.readers.wiggle import WiggleReader
 from plastid.readers.bowtie import BowtieReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
@@ -680,10 +682,12 @@ def variable_five_prime_map(feature,**kwargs):
 # GenomeArray classes
 #===============================================================================
 
+_DEFAULT_STRANDS = ("+","-")
+
 class AbstractGenomeArray(object):
     """Abstract base class for all |GenomeArray|-like objects"""
     
-    def __init__(self,chr_lengths=None,strands=("+","-")):
+    def __init__(self,chr_lengths=None,strands=None):
         """
         Parameters
         ----------
@@ -698,7 +702,7 @@ class AbstractGenomeArray(object):
             Strands for the |AbstractGenomeArray|. (Default: `("+","-")`)
         """
         self._chroms       = {}
-        self._strands      = strands
+        self._strands      = _DEFAULT_STRANDS if strands is None else Strands
         self._sum          = None
         self._normalize    = False
 
@@ -885,14 +889,15 @@ class BAMGenomeArray(AbstractGenomeArray):
     |GenomeArray| or |SparseGenomeArray| via :meth:`~BAMGenomeArray.to_genome_array`
     """
     
-    def __init__(self,bamfiles,mapping=CenterMapFactory()):
+    def __init__(self,bamfiles,mapping=None):
         """Create a |BAMGenomeArray|
         
         Parameters
         ----------
         bamfile : list
-            A list of filenames of `BAM`_ files, or a list of open :py:class:`pysam.AlignmentFile` 
-            objects. Note: the corresponding `BAM`_ files must be sorted and indexed by `samtools`_. 
+            A list of `BAM`_ filenames, or a list of open
+            :py:class:`pysam.AlignmentFile`  objects. Note: all `BAM`_ files must be
+            sorted and indexed by `samtools`_. 
         
         mapping : func
             :term:`mapping function` that determines how each read alignment is mapped to a 
@@ -917,7 +922,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
-        self.map_fn       = mapping
+        self.map_fn       = CenterMapFactory() if mapping is None else mapping
         self._strands     = ("+","-")
         self._normalize   = False
         
@@ -925,7 +930,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         for bamfile in self.bamfiles:
             for k,v in zip(bamfile.references,bamfile.lengths):
                 self._chr_lengths[k] = max(self._chr_lengths.get(k,0),v)
-                
+        
+        self._chroms = sorted(list(self._chr_lengths.keys()))
+
         self._filters     = OrderedDict()
         self._update()
 
@@ -998,9 +1005,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         Returns
         -------
         list
-            chromosome names as strings
+            sorted chromosome names as strings
         """
-        return self._chr_lengths.keys()
+        return self._chroms
 
     def lengths(self):
         """Returns a dictionary mapping chromosome names to lengths. 
@@ -1140,7 +1147,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         if isinstance(roi,SegmentChain):
             return roi.get_counts(self)
 
-        _, count_array = self.get_reads_and_counts(roi,roi_order=roi_order)
+        reads, count_array = self.get_reads_and_counts(roi,roi_order=roi_order)
+
         return count_array
 
     def get_mapping(self):
@@ -1203,7 +1211,7 @@ class BAMGenomeArray(AbstractGenomeArray):
 
         return ga
 
-    def to_variable_step(self,fh,trackname,strand,window_size=100000,printer=NullWriter(),**kwargs):
+    def to_variable_step(self,fh,trackname,strand,window_size=100000,printer=None,**kwargs):
         """Write the contents of the |BAMGenomeArray| to a variableStep `Wiggle`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1231,6 +1239,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             Any other key-value pairs to include in track definition line
         """
         assert strand in self.strands()
+        printer = NullWriter() if printer is None else printer
         fh.write("track type=wiggle_0 name=%s" % trackname)
         if kwargs is not None:
             for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
@@ -1238,12 +1247,12 @@ class BAMGenomeArray(AbstractGenomeArray):
         fh.write("\n")
 
         for chrom in sorted(self.chroms()):
+            my_size = self.lengths()[chrom]
             printer.write("Writing chromosome %s..." % chrom)
             fh.write("variableStep chrom=%s span=1\n" % chrom)
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
-            for i in range(len(window_starts)):
-                my_start = window_starts[i]
-                my_end   = window_starts[i+1] if i + 1 < len(window_starts) else int(self._chr_lengths[chrom])
+            for my_start in window_starts:
+                my_end = min(my_start + window_size,my_size)
                 my_counts = self.__getitem__(GenomicSegment(chrom,
                                                             my_start,
                                                             my_end,
@@ -1255,9 +1264,7 @@ class BAMGenomeArray(AbstractGenomeArray):
                         val = my_counts[idx]
                         fh.write("%s\t%s\n" % (genomic_x + 1,val))
 
-            
-        
-    def to_bedgraph(self,fh,trackname,strand,window_size=100000,printer=NullWriter(),**kwargs):
+    def to_bedgraph(self,fh,trackname,strand,window_size=100000,printer=None,**kwargs):
         """Write the contents of the |BAMGenomeArray| to a `bedGraph`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1287,6 +1294,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         assert strand in self.strands()
         assert window_size > 0
+        printer = NullWriter() if printer is None else printer
         # write header
         fh.write("track type=bedGraph name=%s" % trackname)
         if kwargs is not None:
@@ -1297,13 +1305,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         for chrom in sorted(self.chroms()):
             printer.write("Writing chromosome %s..." % chrom)
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
-            for i in range(len(window_starts)):
-                my_start = window_starts[i]
-                my_end   = window_starts[i+1] if i + 1 < len(window_starts) else int(self._chr_lengths[chrom])
-                my_reads, my_counts = self.get_reads_and_counts(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
+            my_size = self.lengths()[chrom]
+            for my_start in window_starts:
+                my_end   = min(my_start + window_size,my_size) 
+                my_counts = self.__getitem__(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
                 
-                if len(my_reads) > 0:
-                    genomic_start_x = window_starts[i]
+                if my_counts.sum() > 0:
+                    genomic_start_x = my_start
                     last_val        = my_counts[0]
 
                     for x, val in enumerate(my_counts[1:]):
@@ -1323,7 +1331,7 @@ class BAMGenomeArray(AbstractGenomeArray):
                         fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,
                                                        my_end,
                                                        last_val))
-        return
+
 
 
 class GenomeArray(MutableAbstractGenomeArray):
@@ -1337,7 +1345,7 @@ class GenomeArray(MutableAbstractGenomeArray):
     are nucleotide positions.
     """
     
-    def __init__(self,chr_lengths=None,strands=("+","-"),
+    def __init__(self,chr_lengths=None,strands=None,
                  min_chr_size=MIN_CHR_SIZE):
         """Create a |GenomeArray|
         
@@ -1362,7 +1370,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """
         self._chroms       = {}
-        self._strands      = strands
+        self._strands      = _DEFAULT_STRANDS if strands is None else strands
         self.min_chr_size  = min_chr_size
         self._sum          = None
         self._normalize    = False
@@ -1939,7 +1947,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         self._sum = None
         
-    def to_variable_step(self,fh,trackname,strand,printer=NullWriter(),**kwargs):
+    def to_variable_step(self,fh,trackname,strand,printer=None,**kwargs):
         """Export the contents of the GenomeArray to a variable step
         `Wiggle`_ file. For sparse data, `bedGraph`_ can be more efficient format.
         
@@ -1964,6 +1972,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Any other key-value pairs to include in track definition line
         """
         assert strand in self.strands()
+        printer = NullWriter() if printer is None else printer
         fh.write("track type=wiggle_0 name=%s" % trackname)
         if kwargs is not None:
             for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
@@ -1978,7 +1987,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                 val = self._chroms[chrom][strand][self._slicewrap(idx)]
                 fh.write("%s\t%s\n" % (idx+1, val))
                 
-    def to_bedgraph(self,fh,trackname,strand,printer=NullWriter(),**kwargs):
+    def to_bedgraph(self,fh,trackname,strand,printer=None,**kwargs):
         """Write the contents of the GenomeArray to a `bedGraph`_ file
         
         See the `bedGraph spec <https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html>`_
@@ -2002,6 +2011,7 @@ class GenomeArray(MutableAbstractGenomeArray):
             Any other key-value pairs to include in track definition line
         """
         assert strand in self.strands()
+        printer = NullWriter() if printer is None else printer
         fh.write("track type=bedGraph name=%s" % trackname)
         if kwargs is not None:
             for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
@@ -2052,7 +2062,7 @@ class SparseGenomeArray(GenomeArray):
     Note, savings in memory may come at a cost in performance when repeatedly
     getting/setting values, compared to a |GenomeArray|.
     """
-    def __init__(self,chr_lengths=None,strands=("+","-"),min_chr_size=MIN_CHR_SIZE):
+    def __init__(self,chr_lengths=None,strands=None,min_chr_size=MIN_CHR_SIZE):
         """Create a |SparseGenomeArray|
 
         Parameters
@@ -2077,7 +2087,7 @@ class SparseGenomeArray(GenomeArray):
             Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """ % MIN_CHR_SIZE
         self._chroms       = {}
-        self._strands      = strands
+        self._strands      = _DEFAULT_STRANDS if strands is None else strands
         self._sum          = None
         self._normalize    = False
         self.min_chr_size = min_chr_size

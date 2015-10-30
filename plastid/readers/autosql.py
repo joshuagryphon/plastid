@@ -330,7 +330,7 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
                                          self.attr.get("type",self.__class__.__name__),
                                          ",".join(self.field_formatters.keys()))
         
-    def __call__(self,text,rec=OrderedDict()):
+    def __call__(self,text,rec=None):
         """Parse an OrderedDict matching ``self.autosql`` from a block of delimited text
         
         Parameters
@@ -350,6 +350,7 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
             Dictionary mapping field names to their values
         """
         items = text.split(self.delim)
+        rec = OrderedDict() if rec is None else rec
         obj = OrderedDict()
         for item, (field_name,formatter) in zip(items,self.field_formatters.items()):
             obj[field_name] = formatter(item,rec=obj)

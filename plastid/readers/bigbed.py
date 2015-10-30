@@ -157,11 +157,11 @@ class BigBedReader(object):
     def __init__(self,
                  filename,
                  base_record_format="III",
-                 return_type=SegmentChain,
+                 return_type=None,
                  memorize_r_tree=False,
                  add_three_for_stop=False,
                  cache_depth=5,
-                 printer=NullWriter()
+                 printer=None,
                  ):
         """Create a BigBedReader
         
@@ -200,7 +200,7 @@ class BigBedReader(object):
         if return_type == str:
             self.return_type = _FromBED_StrAdaptor 
         else:
-            self.return_type = return_type
+            self.return_type = SegmentChain if return_type is None else return_type
 
         self.base_record_format = base_record_format
         self.add_three_for_stop = add_three_for_stop

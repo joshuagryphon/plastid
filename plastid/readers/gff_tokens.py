@@ -18,6 +18,7 @@ Important methods
 
 See also
 --------
+
   - `The Sequence Ontology GFF3 specification <http://www.sequenceontology.org/gff3.shtml>`_
   - `The Brent lab GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
 """
@@ -334,7 +335,7 @@ def unescape_GTF2(inp):
 # INDEX: attribute token formatting and parsing
 #===============================================================================
 
-def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
+def _make_generic_tokens(attr,excludes=None,join_pat='%s %s; ',escape=None):
     """Helper function to convert the `attr` dict of a |SegmentChain|
     into the string representation used in GFF files. This includes
     URL escaping of keys and values, and catenating lists with `','`
@@ -364,6 +365,9 @@ def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
         esc = lambda inp: inp
     else:
         esc = lambda inp: escape(str(inp))
+
+    excludes = [] if excludes is None else excludes
+
     ltmp = []
     for key, val in filter(f,attr.items()):
         if isinstance(val,list):
@@ -371,10 +375,10 @@ def _make_generic_tokens(attr,excludes=[],join_pat='%s %s; ',escape=None):
         else:
             val = esc(val)
         ltmp.append(join_pat % (esc(key),val))
-    #ltmp = [join_pat % (esc(key),esc(val)) for (key,val) in filter(f,attr.items())]
+    
     return ''.join(ltmp)
 
-def make_GFF3_tokens(attr,excludes=[],escape=True):
+def make_GFF3_tokens(attr,excludes=None,escape=True):
     """Helper function to convert the `attr` dict of a |SegmentChain|
     into the string representation used in `GFF3`_ files. This includes
     URL escaping of special characters, and catenating lists with '`,`'
@@ -400,10 +404,10 @@ def make_GFF3_tokens(attr,excludes=[],escape=True):
     attr : dict
         Dictionary of key-value pairs to export
         
-    excludes : list<str>
+    excludes : list, optional
         List of keys to exclude from string
         
-    escape : bool
+    escape : bool, optional
         If True, special characters in output are `GFF3`_-escaped (Default: `True`)
         
     Returns
@@ -411,14 +415,12 @@ def make_GFF3_tokens(attr,excludes=[],escape=True):
     str
         Data formatted for *attributes* column of `GFF3`_ (column 9)
     """
-    if escape == True:
-        escape = escape_GFF3
-    else:
-        escape = None
-    
+    escape = escape_GFF3 if escape == True else None
+    excludes = [] if excludes is None else excludes
+
     return _make_generic_tokens(attr,excludes=excludes,join_pat="%s=%s;",escape=escape)
 
-def make_GTF2_tokens(attr,excludes=[],escape=True):
+def make_GTF2_tokens(attr,excludes=None,escape=True):
     """Helper function to convert the `attr` dict  of a |SegmentChain|
     into the string representation used in `GTF2`_ files. By default, special
     characters defined in the `GFF3`_ spec will be URL-escaped.
@@ -440,10 +442,10 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
     attr : dict
         Dictionary of key-value pairs to export
         
-    excludes : list<str>
+    excludes : list, optional
         List of keys to exclude from string
         
-    escape : bool
+    escape : bool, optional
         If True, special characters in output are `GTF2`_-escaped (Default: `True`)
         
     Returns
@@ -451,6 +453,7 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
     str
         Data formatted for *attributes* column of `GTF2`_ (column 9)
     """
+    excludes = [] if excludes is None else excludes
     excludes.extend(["transcript_id","gene_id"])    
     stmp = 'gene_id "%s"; transcript_id "%s"; ' % (attr.get("gene_id"),
                                                    attr.get("transcript_id")) 
@@ -462,7 +465,7 @@ def make_GTF2_tokens(attr,excludes=[],escape=True):
 
     return stmp + _make_generic_tokens(attr,excludes=excludes,join_pat='%s "%s"; ',escape=escape).strip(" ")
 
-def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
+def parse_GFF3_tokens(inp,list_types=None):
     """Helper function to parse tokens in the final column of a `GFF3`_ file
     into a dictionary of attributes. Because, the following attributes are
     permitted to have multiple values in the `GFF3`_ spec, their values, if present
@@ -492,7 +495,7 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
     inp : str
         Ninth column of `GFF3`_ entry
     
-    list_types : str
+    list_types : list, optional
         Names of attributes that should be returned as lists
         (Default: %s)
          
@@ -500,6 +503,9 @@ def parse_GFF3_tokens(inp,list_types=_GFF3_DEFAULT_LISTS):
     -------
     dict : key-value pairs
     """ % ",".join(_GFF3_DEFAULT_LISTS)
+    if list_types is None:
+        list_types = _GFF3_DEFAULT_LISTS
+
     d = {}
     items = inp.strip("\n").strip(";").split(";")
     for item in items:

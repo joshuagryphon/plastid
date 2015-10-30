@@ -1960,7 +1960,7 @@ cdef class SegmentChain(object):
         return juncs
     
     # TODO: test optimality
-    def as_gff3(self, str feature_type=None, bint escape=True, list excludes=[]):
+    def as_gff3(self, str feature_type=None, bint escape=True, list excludes=None):
         """Format a length-1 |SegmentChain| as a line of `GFF3`_ output.
         
         Because `GFF3`_ files permit many schemas of parent-child hierarchy,
@@ -2025,6 +2025,7 @@ cdef class SegmentChain(object):
             GenomicSegment segment
             int length = len(self._segments)
 
+        excludes = [] if excludes is None else excludes
         if length == 0: # empty SegmentChain
             return ""
         elif length > 1:
@@ -2052,7 +2053,7 @@ cdef class SegmentChain(object):
         return "\t".join(ltmp) + "\n"
     
     # TODO: optimize
-    def as_gtf(self, str feature_type=None, bint escape=True, list excludes=[]):
+    def as_gtf(self, str feature_type=None, bint escape=True, list excludes=None):
         """Format |SegmentChain| as a block of `GTF2`_ output.
         
         The `frame` or `phase` attribute (`GTF2`_ column 8) is valid only for `'CDS'`
@@ -2127,6 +2128,8 @@ cdef class SegmentChain(object):
 
         if len(self) == 0:
             return ""
+
+        excludes = [] if excludes is None else excludes
         
         gtf_attr = copy.deepcopy(attr)
         gtf_attr["transcript_id"] = attr.get("transcript_id",self.get_name())
@@ -3579,7 +3582,7 @@ cdef class Transcript(SegmentChain):
         else:
             return SegmentChain()
 
-    def as_gtf(self, str feature_type="exon", bint escape=True, list excludes=[]):
+    def as_gtf(self, str feature_type="exon", bint escape=True, list excludes=None):
         """Format `self` as a `GTF2`_ block. |GenomicSegments| are formatted
         as `GTF2`_ `'exon'` features. Coding regions, if peresent, are formatted
         as `GTF2`_ `'CDS'` features. Stop codons are excluded in the `'CDS'` features,
@@ -3651,6 +3654,8 @@ cdef class Transcript(SegmentChain):
             Strand my_strand = span.c_strand
             my_chrom = span.chrom
 
+        excludes = [] if excludes is None else excludes
+
         stmp  = SegmentChain.as_gtf(self,feature_type=feature_type,escape=escape,excludes=[])
         cds_chain_temp = self.get_cds()
         if len(cds_chain_temp) > 0:
@@ -3679,7 +3684,7 @@ cdef class Transcript(SegmentChain):
 
         return stmp
 
-    def as_gff3(self, bint escape=True, list excludes=[], str rna_type="mRNA"):
+    def as_gff3(self, bint escape=True, list excludes=None, str rna_type="mRNA"):
         """Format a |Transcript| as a block of `GFF3`_ output, following
         the schema set out in the `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
         
@@ -3769,6 +3774,8 @@ cdef class Transcript(SegmentChain):
             SegmentChain feature
             GenomicSegment iv
             int n
+
+        excludes = [] if excludes is None else excludes
 
         keys_to_pop = ("ID",)
         for k in keys_to_pop:
