@@ -211,7 +211,8 @@ def main(argv=sys.argv[1:]):
         invoked from the command line
     """
     alignment_file_parser = get_alignment_file_parser(disabled=disabled_args,
-                                                      input_choices=["BAM"])
+                                                      input_choices=["BAM"],
+                                                      map_desc="")
     plotting_parser = get_plotting_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),

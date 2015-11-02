@@ -135,6 +135,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                               prefix="",
                               title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
                               description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
+                              map_desc=_MAPPING_RULE_DESCRIPTION,
                               return_subparsers=False):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
@@ -182,7 +183,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
     subparsers = { }
     if len({ "BAM", "bowtie" } & set(input_choices)) > 0:
         subparsers["mapping"] = alignment_file_parser.add_argument_group(title=title,
-                                                           description=_MAPPING_RULE_DESCRIPTION)
+                                                                         description=map_desc)
         
         # dictionary of options for mapping. Defined initially as a dict
         # so we can disable anything programmatically above
