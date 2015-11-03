@@ -131,7 +131,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
 
 
 def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
-                              disabled=[],
+                              disabled=None,
                               prefix="",
                               title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
                               description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
@@ -177,6 +177,9 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
         function that parses the :py:class:`~argparse.Namespace`
         returned by this :py:class:`~argparse.ArgumentParser`
     """
+    if disabled is None:
+        disabled = []
+
     alignment_file_parser = argparse.ArgumentParser(description=description,
                                                     add_help=False)
 
@@ -189,10 +192,10 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
         # so we can disable anything programmatically above
         map_option_dict = OrderedDict([
                             ("fiveprime_variable" , dict(action="store_const",
-                                                        const="fiveprime_variable",
-                                                        dest="%smapping" % prefix,
-                                                        help="Map read alignment to a variable offset from 5' position of read, "+
-                                                             "with offset determined by read length. Requires `--offset` below")),
+                                                         const="fiveprime_variable",
+                                                         dest="%smapping" % prefix,
+                                                         help="Map read alignment to a variable offset from 5' position of read, "+
+                                                              "with offset determined by read length. Requires `--offset` below")),
                             ("fiveprime"        , dict(action="store_const",
                                                         const="fiveprime",
                                                         dest="%smapping" % prefix,
@@ -265,7 +268,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
         return alignment_file_parser
 
 
-def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
+def get_genome_array_from_args(args,prefix="",disabled=None,printer=None):
     """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
     from arguments parsed by :py:func:`get_alignment_file_parser`
     
@@ -299,6 +302,12 @@ def get_genome_array_from_args(args,prefix="",disabled=[],printer=NullWriter()):
         :py:class:`~argparse.Namespace` is processed by this function        
     """
     args = PrefixNamespaceWrapper(args,prefix)
+    if disabled is None:
+        disabled = []
+
+    if printer is None:
+        printer = NullWriter()
+
     import pysam
     from plastid.util.io.filters import CommentReader
     from plastid.genomics.genome_array import GenomeArray, SparseGenomeArray,\

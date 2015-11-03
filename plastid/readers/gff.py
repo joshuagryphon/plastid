@@ -57,6 +57,8 @@ import itertools
 import warnings
 import gc
 import copy
+import sys
+import time
 from abc import abstractmethod
 from plastid.util.io.filters import AbstractReader, SkipBlankReader
 from plastid.util.io.openers import NullWriter
@@ -804,6 +806,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         except StopIteration:
             # read GTF2/GFF3, populating feature_cache and building transcripts
             # only after termination triggers (StopFeature or EOF)
+            sys.exc_traceback = None
             try: # if GTF2/GFF3 features, collect until StopIteration
                 for feature in self.stream:
                     self.counter += 1
@@ -812,7 +815,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
                     else:
                         self._collect(feature)
             except StopIteration: # end of GTF2/GFF3 feature stream, assemble transcripts
-                self.printer.write("Assembling next batch of transcripts...")
+                self.printer.write("Assembling next batch of transcripts ...")
                 transcripts, rejected = self._assemble_transcripts()
                 if len(transcripts) > 0:
                     del self._transcript_cache
@@ -822,6 +825,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
                     self._transcript_cache = iter(transcripts)
                     self.rejected.extend(rejected)
                     self._reset()
+
                 else: # happens when we get two StopFeatures in a row
                     return self.__next__()
             return self._finalize(next(self._transcript_cache))
@@ -915,6 +919,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                     self._feature_cache[feature_class][tname].append(feature)
                 except KeyError:
                     self._feature_cache[feature_class][tname] = [feature]
+                    sys.exc_traceback = None
 
     def _assemble_transcripts(self):
         """Assemble |Transcript| objects from `self._feature_cache`,
@@ -927,21 +932,21 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         rejected_transcripts = []
         transcripts = []
         for tname in set(self._feature_cache["exon_like"].keys()) | set(self._feature_cache["CDS_like"].keys()):
-            exons = self._feature_cache["exon_like"].get(tname,[])
-            cds = self._feature_cache["CDS_like"].get(tname,[])
+            exons = self._feature_cache["exon_like"].pop(tname,[])
+            cds = self._feature_cache["CDS_like"].pop(tname,[])
             if len(exons) > 0:
-                exons = sorted(exons,key = lambda x: x.spanning_segment.start)
+                exons = sorted(exons)
                 exon_segments = [X.spanning_segment for X in exons]
             elif len(cds) > 0:
                 # if cds but no exons, create exons since they are implied
-                exons = sorted(cds,key = lambda x: x.spanning_segment.start)
+                exons = sorted(cds)
                 exon_segments = [X.spanning_segment for X in exons]
             
             # propagate attributes that are the same in all exons/cds
             # to parent. This should include `gene_id` and `transcript_id`
             attr = get_identical_attributes(exons + cds)
             if len(cds) > 0:
-                cds = sorted(cds,key = lambda x: x.spanning_segment.start)
+                cds = sorted(cds)
                 attr["cds_genome_end"]   = cds[-1].spanning_segment.end
                 attr["cds_genome_start"] = cds[0].spanning_segment.start
             
@@ -962,7 +967,9 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
                 warnings.warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
-        transcripts.sort() 
+        transcripts.sort()
+        sys.exc_traceback = None
+
         return transcripts, rejected_transcripts
         
     def _reset(self):
@@ -1129,6 +1136,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                 self._tx_features[feature_name].append(feature)
             except KeyError:
                 self._tx_features[feature_name] = [feature]
+                sys.exc_traceback = None
         
         elif feature.attr["type"] in self.transcript_components:
             # assume parent is transcript ID.
@@ -1145,6 +1153,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     self._feature_cache[feature.attr["type"]][tname].append(feature)
                 except KeyError:
                     self._feature_cache[feature.attr["type"]][tname] = [feature]
+                    sys.exc_traceback = None
                                     
     def _assemble_transcripts(self):
         """Assemble |Transcript| s from components in `self._feature_cache`
@@ -1207,16 +1216,10 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             if len(exon_segments) + len(cds_segments) > 0:
                 # transcript with child features
                 if len(cds) > 0:
-                    cds   = sorted(cds,key = lambda x: x.spanning_segment.start)
+                    cds   = sorted(cds)
                     attr["cds_genome_start"] = cds[0].spanning_segment.start
                     attr["cds_genome_end"]   = cds[-1].spanning_segment.end
         
-                    #exons = sorted(exons,key = lambda x: x.spanning_segment.start)
-                    # correct exon boundaries that don't include entire CDS
-                    #if cds[0].spanning_segment.start < exons[0].spanning_segment.start:
-                    #    exons[0].spanning_segment.start = cds[0].spanning_segment.start
-                    #if cds[-1].spanning_segment.end > exons[-1].spanning_segment.end:
-                    #    exons[-1].spanning_segment.end = cds[-1].spanning_segment.end
                 try:
                     my_tx = Transcript(*tuple(exon_segments+cds_segments),**attr)
                     if self.add_three_for_stop == True:
@@ -1241,6 +1244,9 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                 segments  = [X.spanning_segment for X in self._tx_features[tname]]
                 my_tx = Transcript(*tuple(segments),**attr)
                 transcripts.append(my_tx)
+            
+            sys.exc_traceback = None
+
         
         return transcripts, rejected
         
