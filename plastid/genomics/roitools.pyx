@@ -1092,8 +1092,6 @@ cdef class SegmentChain(object):
                                                    segs[-1].end,
                                                    seg0.strand)
 
-        my_view = None
-
         return True
 
     cdef dict _get_inverse_hash(self):
@@ -1118,7 +1116,6 @@ cdef class SegmentChain(object):
                 for i in range(self.length):
                     ihash[my_view[i]] = i
 
-        my_view = None
         return ihash
 
     def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
@@ -1884,8 +1881,6 @@ cdef class SegmentChain(object):
         self.masked_length = self.length - tmpsum
         self._position_mask = pmask
 
-        pview = None
-
         return True
 
     def get_masks(self):
@@ -1929,8 +1924,6 @@ cdef class SegmentChain(object):
         pmask [:] = 0
         self._mask_segments = []
         self.masked_length = self.length
-
-        pmask = None
 
     def reset_masks(self):
         """Removes masks added by :py:meth:`add_masks`
@@ -3390,7 +3383,6 @@ cdef class Transcript(SegmentChain):
         else:
             self.cds_genome_end = phash[self.length - cds_start - 1] + 1 # CHECKME
 
-        phash = None
         return True
     
     cdef bint _update_from_cds_end(self) except False:
@@ -3402,8 +3394,6 @@ cdef class Transcript(SegmentChain):
             self.cds_genome_end = phash[cds_end - 1] + 1
         else:
             self.cds_genome_start = phash[self.length - cds_end]
-
-        phash = None
 
         return True
     

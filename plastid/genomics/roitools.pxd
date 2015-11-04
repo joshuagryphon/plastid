@@ -13,27 +13,27 @@ cpdef list positionlist_to_segments(str,str,list)
 cpdef Transcript add_three_for_stop_codon(Transcript)
 
 
-cdef class GenomicSegment(object):
+cdef class GenomicSegment(object):                      # 20 bytes + str
     cdef str chrom
-    cdef long start
-    cdef long end
-    cdef Strand c_strand
+    cdef long start                                     # 8 bytes
+    cdef long end                                       # 8 bytes
+    cdef Strand c_strand                                # 4 bytes if int
     cpdef bint contains(self,GenomicSegment)
     cpdef bint overlaps(self,GenomicSegment)
     cpdef bint _cmp_helper(self,GenomicSegment,int)
     cpdef str as_igv_str(self)
 
-cdef class SegmentChain(object):
+cdef class SegmentChain(object):                       # >= 836 bytes
     cdef:
-        list _segments, _mask_segments
-        readonly GenomicSegment spanning_segment
-        readonly long length
-        readonly long masked_length
+        list _segments, _mask_segments                 # 72 bytes/each -> 144 + contents
+        readonly GenomicSegment spanning_segment       # 20 bytes + str
+        readonly long length                           # 8 bytes
+        readonly long masked_length                    # 8 bytes
 
-        array.array _position_hash
+        array.array _position_hash                     # 56 + contents
         array.array _position_mask # really should be bint, but we can't use it there
-        public dict attr
-        dict _inverse_hash
+        public dict attr                               # 280 bytes + contents
+        dict _inverse_hash                             # 280 bytes + contents
 
     # maintenance of chain internals
     cdef bint c_add_segments(self,tuple) except False
