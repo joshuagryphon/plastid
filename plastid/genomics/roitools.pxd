@@ -45,9 +45,9 @@ cdef class SegmentChain(object):                       # >= 836 bytes
     # comparison operators
     cdef  list c_shares_segments_with(self, SegmentChain)
     cdef  ExBool c_covers(self ,SegmentChain) except bool_exception
+    cdef  ExBool c_antisense_overlaps(self, SegmentChain) except bool_exception
     cdef  ExBool c_unstranded_overlaps(self, SegmentChain) except bool_exception 
     cdef  ExBool c_overlaps(self, SegmentChain) except bool_exception
-    cdef  ExBool c_antisense_overlaps(self, SegmentChain) except bool_exception
     cdef  ExBool c_contains(self, SegmentChain) except bool_exception
 
     # position info - c impl

@@ -1356,6 +1356,7 @@ cdef class SegmentChain(object):
             bint found
             GenomicSegment sspan = self.spanning_segment
             GenomicSegment ospan = other.spanning_segment
+            list mine = self._segments
 
         if len(self) == 0 or len(other) == 0:
             return false
@@ -1365,33 +1366,37 @@ cdef class SegmentChain(object):
             return false
         elif other.length > self.length:
             return false
-        elif len(other) == 1:
-            for segment in self:
-                if segment.contains(other[0]):
-                    return true
-            return false 
-        else:
-            selfpos = self.c_get_position_set()
-            opos    = other.c_get_position_set()
-            
-            if opos & selfpos == opos:
-                myjuncs = self.get_junctions()
-                ojuncs  = other.get_junctions()
-    
-                found = False
-                for i, myjunc in enumerate(myjuncs):
-                    if ojuncs[0] == myjunc:
-                        mystart = i
-                        found   = True
-                        break
-            else:
-                return false
-            
-            if found == True:
-                return true if ojuncs == myjuncs[mystart:mystart+len(ojuncs)] else false
-            else:
-                return false
+        if mine == merge_segments(mine + other._segments):
+            return true
 
+        return false
+
+#        elif len(other) == 1:
+#            for segment in self:
+#                if segment.contains(other[0]):
+#                    return true
+#            return false 
+#        else:
+#            selfpos = self.c_get_position_set()
+#            opos    = other.c_get_position_set()
+#            
+#            if opos & selfpos == opos:
+#                myjuncs = self.get_junctions()
+#                ojuncs  = other.get_junctions()
+#    
+#                found = False
+#                for i, myjunc in enumerate(myjuncs):
+#                    if ojuncs[0] == myjunc:
+#                        mystart = i
+#                        found   = True
+#                        break
+#            else:
+#                return false
+#            
+#            if found == True:
+#                return true if ojuncs == myjuncs[mystart:mystart+len(ojuncs)] else false
+#            else:
+#                return false
 
     def shares_segments_with(self, object other):
         """Returns a list of |GenomicSegment| that are shared between `self` and `other`
@@ -1425,6 +1430,7 @@ cdef class SegmentChain(object):
         if self.chrom != other.chrom or self.c_strand != other.c_strand:
             return []
         else:
+#            return sorted(list(set(self._segments) & set(other._segments)))
             shared = []
             for segment in other:
                 if segment in self._segments:
@@ -1460,19 +1466,19 @@ cdef class SegmentChain(object):
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
-    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
-        cdef:
-            set o_pos, my_pos
-        if self.chrom != other.chrom:
-            return false
-        else:
-            my_pos = self.c_get_position_set()
-            o_pos  = other.c_get_position_set()
-
-        if len(my_pos & o_pos) > 0:
-            return true
-
-        return false
+#    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
+#        cdef:
+#            set o_pos, my_pos
+#        if self.chrom != other.chrom:
+#            return false
+#        else:
+#            my_pos = self.c_get_position_set()
+#            o_pos  = other.c_get_position_set()
+#
+#        if len(my_pos & o_pos) > 0:
+#            return true
+#
+#        return false
 
     def overlaps(self, object other):
         """Return `True` if `self` and `other` share genomic positions on the same strand
@@ -1510,7 +1516,20 @@ cdef class SegmentChain(object):
             return true
 
         return false
-    
+
+    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            list insegs, outsegs
+        if self.chrom != other.chrom:
+            return false
+        else:
+            insegs = self._segments + other._segments
+            outsegs = merge_segments(insegs)
+            if len(outsegs) < len(insegs):
+                return true
+
+        return false
+
     def antisense_overlaps(self, object other):
         """Returns `True` if `self` and `other` share genomic positions on opposite strands
         
