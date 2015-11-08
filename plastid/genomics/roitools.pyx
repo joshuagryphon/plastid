@@ -1039,7 +1039,7 @@ cdef class SegmentChain(object):
         self.attr = attr
         self._mask_segments = []
         self._segments      = []
-        self._inverse_hash  = {}
+        self._inverse_hash  = None
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
@@ -1148,9 +1148,10 @@ cdef class SegmentChain(object):
             long i
 
         if self.length > 0:
-            if len(ihash) > 0:
+            if ihash is not None:
                 return ihash
             else:
+                ihash = self._inverse_hash = {}
                 for i in range(self.length):
                     ihash[my_view[i]] = i
 
