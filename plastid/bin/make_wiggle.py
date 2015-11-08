@@ -78,7 +78,7 @@ def main(argv=sys.argv[1:]):
     gnd  = get_genome_array_from_args(args,printer=printer)
     
     if args.track_name is None:
-        name = args.output_file
+        name = args.outbase
     else:
         name = args.track_name
     
