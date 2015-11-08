@@ -28,7 +28,8 @@ from plastid.genomics.roitools import GenomicSegment, \
                                       SegmentChain, Transcript,\
                                       positions_to_segments, \
                                       positionlist_to_segments, \
-                                      add_three_for_stop_codon
+                                      add_three_for_stop_codon, \
+                                      merge_segments
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.io.filters import CommentReader
 from plastid.util.services.decorators import skip_if_abstract
@@ -280,6 +281,58 @@ class TestMiscellaneous(unittest.TestCase):
 
         self.assertNotEqual(positionlist_to_segments("chrA","+",list(range(100))),
                             positionlist_to_segments("chrB","+",list(range(100))))
+
+    def test_merge_segments(self):
+        seg0 = GenomicSegment("chrA",0,100,"+")
+        seg1 = GenomicSegment("chrA",50,200,"+")
+        seg2 = GenomicSegment("chrA",250,300,"+")
+        seg3 = GenomicSegment("chrA",300,330,"+")
+        seg4 = GenomicSegment("chrA",500,550,"+")
+        seg5 = GenomicSegment("chrA",525,575,"+")
+        seg6 = GenomicSegment("chrA",570,590,"+")
+        seg7 = GenomicSegment("chrA",575,580,"+")
+
+        seg01 = GenomicSegment("chrA",0,200,"+")
+        seg23 = GenomicSegment("chrA",250,330,"+")
+        seg456 = GenomicSegment("chrA",500,590,"+")
+
+
+        # two overlapping
+        self.assertEqual(merge_segments([seg0,seg1]),[seg01])
+        self.assertEqual(merge_segments([seg1,seg0]),[seg01])
+
+        # two non-overlapping
+        self.assertEqual(merge_segments([seg0,seg2]),[seg0,seg2])
+        self.assertEqual(merge_segments([seg2,seg0]),[seg0,seg2])
+       
+        # two adjacent
+        self.assertEqual(merge_segments([seg2,seg3]),[seg23])
+        self.assertEqual(merge_segments([seg3,seg2]),[seg23])
+
+        # multiple overlapping and not
+        self.assertEqual(merge_segments([seg0,seg1,seg2,seg3,seg4]),
+                         [seg01,seg23,seg4])
+        self.assertEqual(merge_segments([seg4,seg1,seg3,seg2,seg0]),
+                         [seg01,seg23,seg4])
+
+        # three overlapping
+        self.assertEqual(merge_segments([seg4,seg5,seg6]),[seg456])
+        self.assertEqual(merge_segments([seg4,seg6,seg5]),[seg456])
+
+        # one internal
+        self.assertEqual(merge_segments([seg6,seg7]),[seg6])
+        self.assertEqual(merge_segments([seg7,seg6]),[seg6])
+
+        # three overlapping plus one internal
+        self.assertEqual(merge_segments([seg4,seg5,seg7,seg6]),[seg456])
+        self.assertEqual(merge_segments([seg7,seg4,seg6,seg5]),[seg456])
+
+        # one segment
+        self.assertEqual(merge_segments([seg0]),[seg0])
+        self.assertEqual(merge_segments([seg0,seg0,seg0]),[seg0])
+
+        # zero segments
+        self.assertEqual(merge_segments([]),[])
 
 #===============================================================================
 # INDEX: Tests for SegmentChain and Transcript
@@ -750,35 +803,35 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         
         # add one GenomicSegment
         ivc.add_segments(self.ivs["a1p"])
-        self.assertEquals(len(ivc),1)
+        self.assertEquals(len(ivc),1,"Failed adding one segment %s" % self.ivs["a1p"])
         self.assertEquals(ivc.length,50)
         
         # add an overlapping GenomicSegment
         ivc.add_segments(self.ivs["a7p"])
-        self.assertEquals(len(ivc),1)
+        self.assertEquals(len(ivc),1,"Failed adding one overlapping segment %s" % self.ivs["a7p"])
         self.assertEquals(ivc.length,75)
         
         # add a non-overlapping GenomicSegment
         ivc.add_segments(self.ivs["a3p"])
-        self.assertEquals(len(ivc),2)
+        self.assertEquals(len(ivc),2,"Failed adding one extra non-overlapping segment %s. Have %s" % (self.ivs["a3p"],ivc))
         self.assertEquals(ivc.length,175)
         
         # add two GenomicSegments
         ivc.add_segments(self.ivs["a4p"],self.ivs["a5p"])
-        self.assertEquals(len(ivc),4)
+        self.assertEquals(len(ivc),4,"Failed adding two segments")
         self.assertEquals(ivc.length,475)
         
         # add GenomicSegment from the wrong strand
         self.assertRaises(ValueError,
-                          ivc.add_segments,self.ivs["a3m"])
+                          ivc.add_segments,self.ivs["a3m"],"Failed to raise error adding segment from wrong strand")
         
         # add GenomicSegment from the wrong chromosome
         self.assertRaises(ValueError,
-                          ivc.add_segments,self.ivs["b3p"])
+                          ivc.add_segments,self.ivs["b3p"],"Failed to raise error adding segment from wrong chromosome")
 
-        # add GenomicSegment from the wrong chromosome
+        # add GenomicSegment from the wrong chromosome and strand
         self.assertRaises(ValueError,
-                          ivc.add_segments,self.ivs["b3m"])
+                          ivc.add_segments,self.ivs["b3m"],"Failed to raise error adding segment from wrong chromosome and strand")
     
     @skip_if_abstract    
     def test_add_masks(self):

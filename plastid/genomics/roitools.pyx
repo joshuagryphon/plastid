@@ -204,6 +204,57 @@ def _format_transcript(Transcript tx):
 # Exported helper functions e.g. for sorting or building |GenomicSegments|
 #==============================================================================
 
+cpdef list merge_segments(list segments):
+    """Merge all overlapping |GenomicSegments| in `segments`, so that all segments
+    returned are guaranteed to be sorted and non-overlapping.
+
+    .. note::
+
+        All segments are assumed to be on the same strand and chromosome.
+
+
+    Parameters
+    ----------
+    segments : list
+        List of |GenomicSegments|, all on the same strand and chromosome
+
+    Returns
+    -------
+    list
+        List of sorted, non-overlapping |GenomicSegments|
+    """
+    cdef:
+        GenomicSegment left
+        GenomicSegment right
+        str chrom
+        str strand
+        list new_segments = []
+        list ssegments
+        int i = 0
+        int length = len(segments)
+
+    if length < 2:
+        return segments
+
+    ssegments = sorted(segments)
+    left = ssegments[0]
+    chrom = left.chrom
+    strand = left.strand
+
+    while i < length - 1:
+        right = ssegments[i+1]
+        if right.start > left.end:
+            new_segments.append(left)
+            left = right
+        else:
+            left = GenomicSegment(chrom,left.start,max(left.end,right.end),strand)
+            
+        i += 1
+
+    new_segments.append(left)
+
+    return new_segments
+
 cpdef list positions_to_segments(str chrom, str strand, object positions):
     """Construct |GenomicSegments| from a chromosome name, a strand, and a list of chromosomal positions
 
@@ -979,12 +1030,8 @@ cdef class SegmentChain(object):
             ====================    ============================================
         """
         cdef:
-            str my_chrom, my_strand
-            GenomicSegment seg
-            list positions = []
             int num_segs = len(segments)
             list new_segments
-            long total_length
 
         if "type" not in attr:
             attr["type"] = "exon"
@@ -1004,16 +1051,7 @@ cdef class SegmentChain(object):
             self._set_segments(list(segments))
         else:
             check_segments(self,segments)
-            seg = segments[0]
-            my_chrom  = seg.chrom
-            my_strand = seg.strand
-
-            # add new positions
-            for seg in segments:
-                positions.extend(range(seg.start,seg.end))
-
-            # reset variables
-            new_segments = positionlist_to_segments(my_chrom,my_strand,sorted(set(positions)))
+            new_segments = merge_segments(list(segments))
             self._set_segments(new_segments)
 
     cdef bint _set_segments(self, list segments) except False:
@@ -1677,8 +1715,8 @@ cdef class SegmentChain(object):
             Set of genomic coordinates, as integers
         """
         cdef:
-            numpy.ndarray[int,ndim=1] mask #= numpy.frombuffer(self._position_mask,dtype=numpy.intc)
-            numpy.ndarray[LONG_t,ndim=1] positions #= numpy.frombuffer(self._position_hash,dtype=LONG)
+            numpy.ndarray[int,ndim=1] mask 
+            numpy.ndarray[LONG_t,ndim=1] positions
 
         if len(self._position_mask) == 0:
             return self.c_get_position_set()
@@ -1760,23 +1798,14 @@ cdef class SegmentChain(object):
             Tuple of |GenomicSegments|
         """
         cdef:
-            str my_chrom, my_strand
-            list positions = self.c_get_position_list()
-            GenomicSegment seg
             int length = len(segments)
+            list new_segments
 
         if length > 0:
             check_segments(self,segments)
-            seg = segments[0]
-            my_chrom  = seg.chrom
-            my_strand = seg.strand
-
-            # add new positions
-            for seg in segments:
-                positions.extend(range(seg.start,seg.end))
-            
-            # reset variables
-            self._set_segments(positionlist_to_segments(my_chrom,my_strand,sorted(set(positions))))
+            new_segments = list(segments)
+            new_segments = merge_segments(new_segments + self._segments)
+            self._set_segments(new_segments)
 
         return True
 
@@ -1790,12 +1819,9 @@ cdef class SegmentChain(object):
         segments : |GenomicSegment|
             One or more |GenomicSegment| to add to |SegmentChain|
         """
-        cdef:
-            int retval
-            str msg
         if len(segments) > 0:
             if len(self._mask_segments) > 0:
-                warnings.warn("Segmentchain: adding segments to %s will reset its masks!",UserWarning)
+                warnings.warn("Segmentchain: adding segments to %s will reset its masks!" % (self),UserWarning)
 
             self.c_add_segments(segments)
         
@@ -2020,18 +2046,19 @@ cdef class SegmentChain(object):
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_            
         """
-        cdef:
-            dict gff_attr
-            list always_excluded, ltmp
-            GenomicSegment segment
-            int length = len(self._segments)
+        cdef int length = len(self._segments)
 
-        excludes = [] if excludes is None else excludes
         if length == 0: # empty SegmentChain
             return ""
         elif length > 1:
             raise AttributeError("Attempted export of multi-interval %s" % self.__class__)
-            
+
+        cdef:
+            dict gff_attr
+            list always_excluded, ltmp
+            GenomicSegment segment
+        
+        excludes = [] if excludes is None else excludes
         gff_attr = copy.deepcopy(self.attr)
         feature_type = self.attr["type"] if feature_type is None else feature_type
         
@@ -2045,7 +2072,7 @@ cdef class SegmentChain(object):
                            "type",
                            "_bedx_column_order"]
 
-        for segment in self:
+        for segment in self._segments:
             ltmp = self._get_8_gff_columns(segment,feature_type) +\
                    [make_GFF3_tokens(gff_attr,
                                      excludes=always_excluded+excludes,
@@ -2122,16 +2149,15 @@ cdef class SegmentChain(object):
             - `GTF2 file format specification <http://mblab.wustl.edu/GTF22.html>`_
             - `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_           
         """
+        if len(self) == 0:
+            return ""
+
         cdef:
             dict gtf_attr
             dict attr = self.attr
             list ltmp1, ltmp2, always_excluded
-
-        if len(self) == 0:
-            return ""
-
-        excludes = [] if excludes is None else excludes
         
+        excludes = [] if excludes is None else excludes
         gtf_attr = copy.deepcopy(attr)
         gtf_attr["transcript_id"] = attr.get("transcript_id",self.get_name())
         gtf_attr["gene_id"]       = attr.get("gene_id",self.get_gene())

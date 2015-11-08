@@ -11,7 +11,7 @@ cdef Strand str_to_strand(str) #except undef_strand
 cpdef list positions_to_segments(str,str,object)
 cpdef list positionlist_to_segments(str,str,list)
 cpdef Transcript add_three_for_stop_codon(Transcript)
-
+cpdef list merge_segments(list)
 
 cdef class GenomicSegment(object):                      # 20 bytes + str
     cdef str chrom
