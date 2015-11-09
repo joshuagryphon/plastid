@@ -1431,7 +1431,6 @@ cdef class SegmentChain(object):
         if self.chrom != other.chrom or self.c_strand != other.c_strand:
             return []
         else:
-#            return sorted(list(set(self._segments) & set(other._segments)))
             shared = []
             for segment in other:
                 if segment in self._segments:
@@ -1466,6 +1465,20 @@ cdef class SegmentChain(object):
             return self.c_unstranded_overlaps(SegmentChain(other)) == true
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
+
+
+    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            list insegs, outsegs
+        if self.chrom != other.chrom:
+            return false
+        else:
+            insegs = self._segments + other._segments
+            outsegs = merge_segments(insegs)
+            if len(outsegs) < len(insegs):
+                return true
+
+        return false
 
 #    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
 #        cdef:
@@ -1518,19 +1531,6 @@ cdef class SegmentChain(object):
 
         return false
 
-    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
-        cdef:
-            list insegs, outsegs
-        if self.chrom != other.chrom:
-            return false
-        else:
-            insegs = self._segments + other._segments
-            outsegs = merge_segments(insegs)
-            if len(outsegs) < len(insegs):
-                return true
-
-        return false
-
     def antisense_overlaps(self, object other):
         """Returns `True` if `self` and `other` share genomic positions on opposite strands
         
@@ -1566,7 +1566,7 @@ cdef class SegmentChain(object):
             Strand sstrand = self.c_strand
             Strand ostrand = other.c_strand
         if self.c_unstranded_overlaps(other) == true:
-            if sstrand == unstranded or ostrand == unstranded or sstrand != ostrand:
+            if unstranded in (sstrand,ostrand) or sstrand != ostrand:
                 return true
         return false
 
@@ -1897,7 +1897,10 @@ cdef class SegmentChain(object):
 
             3. They are sorted
 
-        Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
+            4. They are trimmed to the exon boundaries of `self`.
+
+        Ordinarily, these criteria are jointly enforced by
+        :func:`~plastid.genomics.c_segmentchain.check_segments`
         and :meth:`~plastid.genomics.c_segmentchain.SegmentChain.add_masks`
 
         Occasionally (e.g. in the case of unpickling) it is safe (and fast)
@@ -1917,6 +1920,7 @@ cdef class SegmentChain(object):
             long i, coord
             int tmpsum = 0
 
+        # TODO: skip _inverse_hash() for this
         for seg in segments:
             for i in range(seg.start,seg.end):
                 coord = ihash[i]
@@ -2811,9 +2815,10 @@ cdef class SegmentChain(object):
         """
         cdef:
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
-            numpy.ndarray[int,ndim=1] mask #= numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            numpy.ndarray[int,ndim=1] mask
 
         if len(self._position_mask) == 0:
+            # TODO: check if this line is actually necessary
             mask = numpy.zeros(len(counts),dtype=numpy.intc)
         else:
             mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
@@ -2913,8 +2918,8 @@ cdef class SegmentChain(object):
             segs = []
             for piece in middle.split("^"):
                 sstart,send = piece.split("-")
-                start = long(sstart)
-                end = long(send)
+                start = <long>long(sstart)
+                end = <long>long(send)
                 segs.append(GenomicSegment(chrom,start,end,strand))
             return SegmentChain(*segs)
         
@@ -3292,7 +3297,7 @@ cdef class Transcript(SegmentChain):
         -------
         bool
         """
-        if isinstance(other,Transcript):
+        if isinstance(other,(Transcript,SegmentChain)):
             return transcript_richcmp(self,other,cmpval) == true
         elif isinstance(other,GenomicSegment):
             return transcript_richcmp(self,SegmentChain(other),cmpval) == true 
