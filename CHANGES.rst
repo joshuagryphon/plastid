@@ -22,6 +22,7 @@ Changed
  - Speed boosts in ``SegmentChain.overlaps()``, ``SegmentChain.covers()``
    and other comparison methods
  - Memory optimizations to ``SegmentChain``
+ - ``GenomicSegment`` is now hashable, e.g. can be used in sets or dict keys 
 
 Fixed
 .....
