@@ -742,7 +742,12 @@ cdef class GenomicSegment:
     
     def __str__(self):
         return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, self.strand)
-    
+   
+    def __hash__(self):
+        # generate unique hash from a tuple, which are hashable
+        # and already implement hashing for us
+        return hash((self.__class__.__name__,self.chrom,self.start,self.end,self.strand))
+
     @staticmethod
     def from_str(str inp):
         """Construct a |GenomicSegment| from its ``str()`` representation
@@ -789,7 +794,6 @@ cdef class GenomicSegment:
 
         return self._cmp_helper(other,cmptype)
 
-    # TODO: suspend type check via decorator, since we have already done this
     cpdef bint _cmp_helper(self,GenomicSegment other,int cmptype):
         nonecheck(other,"GenomicSegment eq/neq","other")
         schrom = self.chrom

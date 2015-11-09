@@ -12,6 +12,23 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
     name ``genometools``, and then later under the codename ``yeti``. The
     current name, ``plastid`` will not change.
 
+
+
+Unreleased
+----------
+
+Changed
+.......
+ - Speed boosts in ``SegmentChain.overlaps()``, ``SegmentChain.covers()``
+   and other comparison methods
+ - Memory optimizations to ``SegmentChain``
+ - ``GenomicSegment`` is now hashable, e.g. can be used in sets or dict keys 
+
+Fixed
+.....
+ - Track naming bug in `make_wiggle`
+
+
 plastid [0.4.3] = [2015-10-28]
 ------------------------------
 
