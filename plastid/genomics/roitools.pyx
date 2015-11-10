@@ -1047,10 +1047,9 @@ cdef class SegmentChain(object):
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
-        self._position_mask = array.clone(mask_template,0,False)
+        self._position_mask = None #array.clone(mask_template,0,False) # TODO: be lazy
         if num_segs == 0:
             self._position_hash   = array.clone(hash_template,0,False)
-            #self._position_mask   = array.clone(mask_template,0,False)
         elif num_segs == 1:
             self._set_segments(list(segments))
         else:
@@ -1110,7 +1109,6 @@ cdef class SegmentChain(object):
         
         self._segments = segments
         self.length = length
-        #self._position_mask = array.clone(mask_template,length,True)
         self._position_hash = my_hash
         self.c_reset_masks()
 
@@ -1742,7 +1740,7 @@ cdef class SegmentChain(object):
             numpy.ndarray[int,ndim=1] mask 
             numpy.ndarray[LONG_t,ndim=1] positions
 
-        if len(self._position_mask) == 0:
+        if self._position_mask is None:
             return self.c_get_position_set()
         else:
             mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
@@ -1924,7 +1922,6 @@ cdef class SegmentChain(object):
             long i, coord
             int tmpsum = 0
 
-        # TODO: skip _inverse_hash() for this
         for seg in segments:
             for i in range(seg.start,seg.end):
                 coord = ihash[i]
@@ -1974,6 +1971,9 @@ cdef class SegmentChain(object):
         return SegmentChain(*self._mask_segments)
     
     cdef void c_reset_masks(self):
+        if self._position_mask is None:
+            pass
+            
         cdef int [:] pmask = self._position_mask
         pmask [:] = 0
         self._mask_segments = []
@@ -2821,7 +2821,7 @@ cdef class SegmentChain(object):
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
             numpy.ndarray[int,ndim=1] mask
 
-        if len(self._position_mask) == 0:
+        if self._position_mask is None:
             # TODO: check if this line is actually necessary
             mask = numpy.zeros(len(counts),dtype=numpy.intc)
         else:
