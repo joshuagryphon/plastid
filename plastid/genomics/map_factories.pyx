@@ -202,7 +202,7 @@ cdef class FivePrimeMapFactory:
             int read_offset = self.offset
 
         if seg.c_strand == reverse_strand:
-             read_offset = -read_offset - 1 
+            read_offset = -read_offset - 1 
 
         for read in reads:
             read_positions = <list>read.positions
@@ -293,7 +293,7 @@ cdef class ThreePrimeMapFactory:
             int read_offset = self.offset
 
         if seg.c_strand != reverse_strand:
-             read_offset = -read_offset - 1 
+            read_offset = -read_offset - 1 
 
         for read in reads:
             read_positions = <list>read.positions

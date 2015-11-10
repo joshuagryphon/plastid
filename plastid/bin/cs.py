@@ -103,7 +103,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy
 import pandas as pd
-import scipy.optimize
 import scipy.stats
 
 from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
@@ -125,7 +124,6 @@ from plastid.util.io.openers import opener, get_short_name, argsopener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.services.sets import merge_sets
 from plastid.util.services.decorators import skipdoc
-from scipy.misc import comb as combination
 import numpy.ma as ma
 from plastid.plotting.plots import scatterhist_xy, ma_plot, clean_invalid
 from plastid.plotting.colors import process_black
@@ -550,8 +548,6 @@ def do_generate(args):
                          "masked_bed"      : [],
                         })
 
-    keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
-
     # data
     is_sorted = (args.sorted == True) or \
                 (args.tabix == True) or \
@@ -562,7 +558,6 @@ def do_generate(args):
     # loop conditions
     last_chrom = None
     do_loop = True
-    z = 0
 
     # to save memory, we process one chromosome at a time if input file is sorted
     # knowing that at that moment all transcript parts are assembled
@@ -808,8 +803,6 @@ def do_scatter(x,y,count_mask,args,pearsonr=None,xlabel=None,ylabel=None,title=N
         Formatted figure
     """
     fig = get_figure_from_args(args)
-    ax = plt.gca()
-
     xm = x[count_mask]
     ym = y[count_mask]
 

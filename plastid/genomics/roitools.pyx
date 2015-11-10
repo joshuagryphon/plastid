@@ -530,7 +530,7 @@ cdef ExBool chain_richcmp(SegmentChain chain1, SegmentChain chain2, int cmpval) 
             if sspan.chrom == ospan.chrom and\
                sspan.c_strand == ospan.c_strand and\
                chain1.c_get_position_list() == chain2.c_get_position_list():
-                   return true
+                    return true
             return false
     elif cmpval == NEQ:
         return true if chain_richcmp(chain1,chain2,EQ) == false else true
@@ -609,7 +609,7 @@ cdef ExBool transcript_richcmp(Transcript chain1, Transcript chain2, int cmpval)
                    (chain1.cds_genome_start == chain2.cds_genome_start and\
                     chain1.cds_genome_end == chain2.cds_genome_end)
                 ):
-                   return true
+                    return true
         return false
     elif cmpval == NEQ:
         return true if transcript_richcmp(chain1,chain2,EQ) == false else true
@@ -884,7 +884,7 @@ cdef class GenomicSegment:
         if self.chrom == other.chrom and self.c_strand == other.c_strand:
             if (self.start >= other.start and self.start < other.end) or\
                (other.start >= self.start and other.start < self.end):
-                   return True
+                    return True
 
         return False
 
@@ -2362,9 +2362,9 @@ cdef class SegmentChain(object):
                     if all(isinstance(X,float) for X in color) and \
                        all(X < 1 for X in color) and \
                        all(X > 0 for X in color):
-                       color = "%s,%s,%s" % (int(round(255*X)) for X in color)
+                        color = "%s,%s,%s" % (int(round(255*X)) for X in color)
                     else:
-                       color = "%s,%s,%s" % tuple(color)
+                        color = "%s,%s,%s" % tuple(color)
 
             except ValueError:
                 color = self.attr.get("color","0,0,0") if color is None else color
