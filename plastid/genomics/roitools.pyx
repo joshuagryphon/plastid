@@ -1190,7 +1190,7 @@ cdef class SegmentChain(object):
         Changing this list will do nothing to the masks in `self`.
         """
         def __get__(self):
-            if self.mask_segments is None:
+            if self._mask_segments is None:
                 return []
 
             return copy.deepcopy(self._mask_segments)
@@ -1201,11 +1201,13 @@ cdef class SegmentChain(object):
     def __getstate__(self): # save state for pickling
         cdef:
             list segstrs  = [str(X) for X in self._segments]
-            if mask_segments is None:
-                maskstrs = []
-            else:
-                list maskstrs = [str(X) for X in self._mask_segments]
+            list maskstrs
             dict attr = self.attr
+
+        if self._mask_segments is None:
+            maskstrs = []
+        else:
+            maskstrs = [str(X) for X in self._mask_segments]
 
         return (segstrs,maskstrs,attr)
 
@@ -1889,7 +1891,7 @@ cdef class SegmentChain(object):
 
             segs = list(mask_segments)
             if self._mask_segments is not None:
-                list += self._mask_segments
+                segs += self._mask_segments
                
             # add new positions to any existing masks
             for segment in segs:
@@ -1965,7 +1967,9 @@ cdef class SegmentChain(object):
         SegmentChain.reset_masks
         """
         warnings.warn("SegmentChain.get_masks() is deprecated and will soon be removed from `plastid`. Use SegmentChain.mask_segments instead",UserWarning)
-        return self.mask_segments
+        if self._mask_segments is None:
+            return []
+        return self._mask_segments
     
     def get_masks_as_segmentchain(self):
         """Return masked positions as a |SegmentChain|
@@ -3250,7 +3254,8 @@ cdef class Transcript(SegmentChain):
     def __copy__(self):  # copy info and segments; shallow copy attr
         chain2 = Transcript()
         chain2._set_segments(self._segments)
-        chain2._set_masks(self.mask_segments)
+        if self._mask_segments is not None:
+            chain2._set_masks(self._mask_segments)
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
@@ -3263,7 +3268,10 @@ cdef class Transcript(SegmentChain):
     def __deepcopy__(self,memo): # deep copy everything
         chain2 = Transcript()
         chain2._set_segments(copy.deepcopy(self._segments))
-        chain2._set_masks(copy.deepcopy(self.mask_segments))
+        print("Segments copied")
+        if self._mask_segments is not None:
+            chain2._set_masks(copy.deepcopy(self._mask_segments))
+        print("Masks copied")
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
@@ -3280,7 +3288,7 @@ cdef class Transcript(SegmentChain):
     def __getstate__(self): # pickle state
         cdef:
             list segstrs  = [str(X) for X in self._segments]
-            list maskstrs = [str(X) for X in self._mask_segments]
+            list maskstrs = [str(X) for X in self.mask_segments]
             dict attr = self.attr
 
         return (segstrs, maskstrs, attr, self.cds_genome_start, self.cds_genome_end)
@@ -3295,7 +3303,8 @@ cdef class Transcript(SegmentChain):
 
         self.attr = attr
         self._set_segments(segs)
-        self._set_masks(masks)
+        if len(masks) > 0:
+            self._set_masks(masks)
         self.cds_genome_start = gstart
         self.cds_genome_end = gend
         if gstart is not None and gend is not None:
