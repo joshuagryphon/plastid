@@ -742,7 +742,12 @@ cdef class GenomicSegment:
     
     def __str__(self):
         return "%s:%s-%s(%s)" % (self.chrom, self.start, self.end, self.strand)
-    
+   
+    def __hash__(self):
+        # generate unique hash from a tuple, which are hashable
+        # and already implement hashing for us
+        return hash((self.__class__.__name__,self.chrom,self.start,self.end,self.strand))
+
     @staticmethod
     def from_str(str inp):
         """Construct a |GenomicSegment| from its ``str()`` representation
@@ -789,7 +794,6 @@ cdef class GenomicSegment:
 
         return self._cmp_helper(other,cmptype)
 
-    # TODO: suspend type check via decorator, since we have already done this
     cpdef bint _cmp_helper(self,GenomicSegment other,int cmptype):
         nonecheck(other,"GenomicSegment eq/neq","other")
         schrom = self.chrom
@@ -1037,16 +1041,15 @@ cdef class SegmentChain(object):
             attr["type"] = "exon"
 
         self.attr = attr
-        self._mask_segments = []
+        self._mask_segments = None 
         self._segments      = []
         self._inverse_hash  = None
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
-        self._position_mask = array.clone(mask_template,0,False)
+        self._position_mask = None #array.clone(mask_template,0,False) # TODO: be lazy
         if num_segs == 0:
             self._position_hash   = array.clone(hash_template,0,False)
-            #self._position_mask   = array.clone(mask_template,0,False)
         elif num_segs == 1:
             self._set_segments(list(segments))
         else:
@@ -1106,7 +1109,6 @@ cdef class SegmentChain(object):
         
         self._segments = segments
         self.length = length
-        #self._position_mask = array.clone(mask_template,length,True)
         self._position_hash = my_hash
         self.c_reset_masks()
 
@@ -1159,7 +1161,8 @@ cdef class SegmentChain(object):
 
     def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
         self._segments.sort()
-        self._mask_segments.sort()
+        if self._mask_segments is not None:
+            self._mask_segments.sort()
 
     property chrom:
         """Chromosome the SegmentChain resides on"""
@@ -1187,6 +1190,9 @@ cdef class SegmentChain(object):
         Changing this list will do nothing to the masks in `self`.
         """
         def __get__(self):
+            if self.mask_segments is None:
+                return []
+
             return copy.deepcopy(self._mask_segments)
 
     def __reduce__(self): # enable pickling
@@ -1195,7 +1201,10 @@ cdef class SegmentChain(object):
     def __getstate__(self): # save state for pickling
         cdef:
             list segstrs  = [str(X) for X in self._segments]
-            list maskstrs = [str(X) for X in self._mask_segments]
+            if mask_segments is None:
+                maskstrs = []
+            else:
+                list maskstrs = [str(X) for X in self._mask_segments]
             dict attr = self.attr
 
         return (segstrs,maskstrs,attr)
@@ -1212,16 +1221,18 @@ cdef class SegmentChain(object):
 
     def __copy__(self):
         chain2 = SegmentChain()
-        chain2._set_segments(self._segments)
-        chain2._set_masks(self._mask_segments)
         chain2.attr = self.attr
+        chain2._set_segments(self._segments)
+        if self._mask_segments is not None:
+            chain2._set_masks(self._mask_segments)
         return chain2
 
     def __deepcopy__(self,memo):
         chain2 = SegmentChain()
-        chain2._set_segments(self._segments)
-        chain2._set_masks(copy.deepcopy(self._mask_segments))
         chain2.attr = copy.deepcopy(self.attr)
+        chain2._set_segments(self._segments)
+        if self._mask_segments is not None:
+            chain2._set_masks(copy.deepcopy(self._mask_segments))
         return chain2
 
     def __richcmp__(self, object other, int cmpval):
@@ -1431,7 +1442,6 @@ cdef class SegmentChain(object):
         if self.chrom != other.chrom or self.c_strand != other.c_strand:
             return []
         else:
-#            return sorted(list(set(self._segments) & set(other._segments)))
             shared = []
             for segment in other:
                 if segment in self._segments:
@@ -1466,6 +1476,20 @@ cdef class SegmentChain(object):
             return self.c_unstranded_overlaps(SegmentChain(other)) == true
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
+
+
+    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
+        cdef:
+            list insegs, outsegs
+        if self.chrom != other.chrom:
+            return false
+        else:
+            insegs = self._segments + other._segments
+            outsegs = merge_segments(insegs)
+            if len(outsegs) < len(insegs):
+                return true
+
+        return false
 
 #    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
 #        cdef:
@@ -1518,19 +1542,6 @@ cdef class SegmentChain(object):
 
         return false
 
-    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
-        cdef:
-            list insegs, outsegs
-        if self.chrom != other.chrom:
-            return false
-        else:
-            insegs = self._segments + other._segments
-            outsegs = merge_segments(insegs)
-            if len(outsegs) < len(insegs):
-                return true
-
-        return false
-
     def antisense_overlaps(self, object other):
         """Returns `True` if `self` and `other` share genomic positions on opposite strands
         
@@ -1566,7 +1577,7 @@ cdef class SegmentChain(object):
             Strand sstrand = self.c_strand
             Strand ostrand = other.c_strand
         if self.c_unstranded_overlaps(other) == true:
-            if sstrand == unstranded or ostrand == unstranded or sstrand != ostrand:
+            if unstranded in (sstrand,ostrand) or sstrand != ostrand:
                 return true
         return false
 
@@ -1738,7 +1749,7 @@ cdef class SegmentChain(object):
             numpy.ndarray[int,ndim=1] mask 
             numpy.ndarray[LONG_t,ndim=1] positions
 
-        if len(self._position_mask) == 0:
+        if self._position_mask is None:
             return self.c_get_position_set()
         else:
             mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
@@ -1840,7 +1851,7 @@ cdef class SegmentChain(object):
             One or more |GenomicSegment| to add to |SegmentChain|
         """
         if len(segments) > 0:
-            if len(self._mask_segments) > 0:
+            if self._mask_segments is not None and len(self._mask_segments) > 0:
                 warnings.warn("Segmentchain: adding segments to %s will reset its masks!" % (self),UserWarning)
 
             self.c_add_segments(segments)
@@ -1868,16 +1879,20 @@ cdef class SegmentChain(object):
             str my_chrom, my_strand
             GenomicSegment segment
             set positions = set()
-            list new_segments
+            list new_segments, segs
 
         if len(mask_segments) > 0:
             check_segments(self,mask_segments)
             seg  = mask_segments[0]
             my_chrom  = seg.chrom
             my_strand = seg.strand
+
+            segs = list(mask_segments)
+            if self._mask_segments is not None:
+                list += self._mask_segments
                
             # add new positions to any existing masks
-            for segment in list(mask_segments) + self._mask_segments:
+            for segment in segs:
                 positions |= set(range(segment.start,segment.end))
              
             # trim away non-overlapping masks
@@ -1897,7 +1912,10 @@ cdef class SegmentChain(object):
 
             3. They are sorted
 
-        Ordinarily, these criteria are checked by :func:`~plastid.genomics.c_segmentchain.check_segments`
+            4. They are trimmed to the exon boundaries of `self`.
+
+        Ordinarily, these criteria are jointly enforced by
+        :func:`~plastid.genomics.c_segmentchain.check_segments`
         and :meth:`~plastid.genomics.c_segmentchain.SegmentChain.add_masks`
 
         Occasionally (e.g. in the case of unpickling) it is safe (and fast)
@@ -1917,6 +1935,7 @@ cdef class SegmentChain(object):
             long i, coord
             int tmpsum = 0
 
+        pview [:] = 0
         for seg in segments:
             for i in range(seg.start,seg.end):
                 coord = ihash[i]
@@ -1945,7 +1964,8 @@ cdef class SegmentChain(object):
         
         SegmentChain.reset_masks
         """
-        return copy.copy(self._mask_segments)
+        warnings.warn("SegmentChain.get_masks() is deprecated and will soon be removed from `plastid`. Use SegmentChain.mask_segments instead",UserWarning)
+        return self.mask_segments
     
     def get_masks_as_segmentchain(self):
         """Return masked positions as a |SegmentChain|
@@ -1962,13 +1982,18 @@ cdef class SegmentChain(object):
         SegmentChain.add_masks
 
         SegmentChain.reset_masks
-        """        
+        """
+        if self._mask_segments is None:
+            return SegmentChain()
+
         return SegmentChain(*self._mask_segments)
     
     cdef void c_reset_masks(self):
-        cdef int [:] pmask = self._position_mask
-        pmask [:] = 0
-        self._mask_segments = []
+        if self._mask_segments is None:
+            pass
+            
+        self._position_mask = None
+        self._mask_segments = None 
         self.masked_length = self.length
 
     def reset_masks(self):
@@ -2811,9 +2836,10 @@ cdef class SegmentChain(object):
         """
         cdef:
             numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
-            numpy.ndarray[int,ndim=1] mask #= numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            numpy.ndarray[int,ndim=1] mask
 
-        if len(self._position_mask) == 0:
+        if self._position_mask is None:
+            # TODO: check if this line is actually necessary
             mask = numpy.zeros(len(counts),dtype=numpy.intc)
         else:
             mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
@@ -2913,8 +2939,8 @@ cdef class SegmentChain(object):
             segs = []
             for piece in middle.split("^"):
                 sstart,send = piece.split("-")
-                start = long(sstart)
-                end = long(send)
+                start = <long>long(sstart)
+                end = <long>long(send)
                 segs.append(GenomicSegment(chrom,start,end,strand))
             return SegmentChain(*segs)
         
@@ -3224,7 +3250,7 @@ cdef class Transcript(SegmentChain):
     def __copy__(self):  # copy info and segments; shallow copy attr
         chain2 = Transcript()
         chain2._set_segments(self._segments)
-        chain2._set_masks(self._mask_segments)
+        chain2._set_masks(self.mask_segments)
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
@@ -3237,7 +3263,7 @@ cdef class Transcript(SegmentChain):
     def __deepcopy__(self,memo): # deep copy everything
         chain2 = Transcript()
         chain2._set_segments(copy.deepcopy(self._segments))
-        chain2._set_masks(copy.deepcopy(self._mask_segments))
+        chain2._set_masks(copy.deepcopy(self.mask_segments))
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
@@ -3292,7 +3318,7 @@ cdef class Transcript(SegmentChain):
         -------
         bool
         """
-        if isinstance(other,Transcript):
+        if isinstance(other,(Transcript,SegmentChain)):
             return transcript_richcmp(self,other,cmpval) == true
         elif isinstance(other,GenomicSegment):
             return transcript_richcmp(self,SegmentChain(other),cmpval) == true 
