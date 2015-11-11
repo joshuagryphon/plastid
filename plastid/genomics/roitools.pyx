@@ -1043,7 +1043,8 @@ cdef class SegmentChain(object):
         self.attr = attr
         self._mask_segments = None 
         self._segments      = []
-        self._inverse_hash  = None
+        #self._inverse_hash  = None 
+        self._endmap = array.clone(mask_template,0,False)
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
@@ -1103,9 +1104,13 @@ cdef class SegmentChain(object):
             int num_segs = len(segments)
             GenomicSegment segment, seg0
             long length = sum([len(X) for X in segments])
+            long cumlength = 0
             long x, c
             array.array my_hash = array.clone(hash_template,length,False)  
+            array.array end_hash = array.clone(hash_template,2*num_segs,False)
+            long [:] my_endview = end_hash
             long [:] my_view = my_hash
+            int i, my_end
         
         self._segments = segments
         self.length = length
@@ -1113,12 +1118,20 @@ cdef class SegmentChain(object):
         self.c_reset_masks()
 
         c = 0
-        for segment in segments:
+        for i, segment in enumerate(segments):
+            my_end = segment.end
             x = segment.start
+            cumlength += (my_end - x)
+            my_endview[i] = my_end
+            my_endview[i+num_segs] = cumlength
             while x < segment.end:
                 my_view[c] = x
                 c += 1
                 x += 1
+        
+        self.length = length
+        self._endmap = end_hash
+        print(zip(segments,my_endview[:num_segs],my_endview[num_segs:]))
         
         if num_segs == 0:
             self.spanning_segment = NullSegment
@@ -1134,30 +1147,29 @@ cdef class SegmentChain(object):
 
         return True
 
-    cdef dict _get_inverse_hash(self):
-        """Return dictionary mapping genomic coordinates to |SegmentChain| positions.
-        If the dictionary `self._inverse_hash` is not populated, it is populated here,
-        and only returned in subsequent calls.
-
-        Returns
-        -------
-        dict
-            dictionary mapping genomic coordinates to |SegmentChain| positions
-        """
-        cdef:
-            dict ihash = self._inverse_hash
-            long [:] my_view = self._position_hash
-            long i
-
-        if self.length > 0:
-            if ihash is not None:
-                return ihash
-            else:
-                ihash = self._inverse_hash = {}
-                for i in range(self.length):
-                    ihash[my_view[i]] = i
-
-        return ihash
+#    cdef dict _get_inverse_hash(self):
+#        """Return dictionary mapping genomic coordinates to |SegmentChain| positions.
+#        If the dictionary `self._inverse_hash` is not populated, it is populated here,
+#        and only returned in subsequent calls.
+#
+#        Returns
+#        -------
+#        dict
+#            dictionary mapping genomic coordinates to |SegmentChain| positions
+#        """
+#        cdef:
+#            dict ihash = self._inverse_hash
+#            long [:] my_view = self._position_hash
+#            long i
+#
+#        if self.length > 0:
+#            if len(ihash) > 0:
+#                return ihash
+#            else:
+#                for i in range(self.length):
+#                    ihash[my_view[i]] = i
+#
+#        return ihash
 
     def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
         self._segments.sort()
@@ -1944,7 +1956,7 @@ cdef class SegmentChain(object):
         cdef:
             array.array pmask = array.clone(mask_template,self.length,True)
             int [:] pview = pmask
-            dict ihash = self._get_inverse_hash()
+            #dict ihash = self._get_inverse_hash()
             list new_segments
             GenomicSegment seg
             long i, coord
@@ -1953,7 +1965,8 @@ cdef class SegmentChain(object):
         pview [:] = 0
         for seg in segments:
             for i in range(seg.start,seg.end):
-                coord = ihash[i]
+                #coord = ihash[i]
+                coord = self.c_get_segmentchain_coordinate(i,True)
                 pview[coord] = 1
                 tmpsum += 1
 
@@ -2526,7 +2539,7 @@ cdef class SegmentChain(object):
             return "\t".join(str(X) for X in ltmp) + "\n"
         except KeyError:
             raise AttributeError("SegmentChains only support PSL output if all PSL attributes are defined in self.attr: match_length, mismatches, rep_matches, N, query_gap_count, query_gap_bases, strand, query_length, query_start, query_end, target_name, target_length, target_start, target_end")
-        
+    
     def get_segmentchain_coordinate(self, str chrom, long genomic_x, str strand, bint stranded = True):
         """Finds the |SegmentChain| coordinate corresponding to a genomic position
         
@@ -2595,15 +2608,38 @@ cdef class SegmentChain(object):
         KeyError
             if position outside bounds of |SegmentChain|
         """
-        cdef dict ihash = self._get_inverse_hash()
+        cdef:
+            int i = 0
+            int num_segs = len(self._segments)
+            long [:] endmap = self._endmap
+            long retval
+            long chrom_end
+            GenomicSegment span = self.spanning_segment
 
-        try:
-            if self.c_strand == reverse_strand and stranded == True:
-                return self.length - ihash[genomic_x] - 1
-            else:
-                return ihash[genomic_x]
-        except KeyError:
-            raise KeyError("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self))
+        if genomic_x < span.start:
+            return -1
+
+        while i < num_segs:
+            chrom_end = endmap[i]
+            if genomic_x < chrom_end:
+                retval = endmap[i+num_segs] - chrom_end + genomic_x
+                if span.c_strand == reverse_strand and stranded == True:
+                    retval = self.length - retval - 1
+                return retval
+            
+            i += 1
+
+        return -1 # raise error
+
+#        cdef dict ihash = self._get_inverse_hash()
+#
+#        try:
+#            if self.c_strand == reverse_strand and stranded == True:
+#                return self.length - ihash[genomic_x] - 1
+#            else:
+#                return ihash[genomic_x]
+#        except KeyError:
+#            raise KeyError("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self))
 
     def get_genomic_coordinate(self,x,stranded=True):
         """Finds genomic coordinate corresponding to position `x` in `self`

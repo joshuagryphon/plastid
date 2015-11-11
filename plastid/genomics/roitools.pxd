@@ -32,15 +32,16 @@ cdef class SegmentChain(object):                       # >= 836 bytes
 
         array.array _position_hash                     # 56 + contents
         array.array _position_mask # really should be bint, but we can't use it there
+        array.array _endmap
         public dict attr                               # 280 bytes + contents
-        dict _inverse_hash                             # 280 bytes + contents
+        #dict _inverse_hash                             # 280 bytes + contents
 
     # maintenance of chain internals
     cdef bint c_add_segments(self,tuple) except False
     cdef bint _set_segments(self,list) except False
     cdef bint _set_masks(self,list) except False
     cdef void c_reset_masks(self)
-    cdef dict _get_inverse_hash(self)
+    #cdef dict _get_inverse_hash(self)
 
     # comparison operators
     cdef  list c_shares_segments_with(self, SegmentChain)
