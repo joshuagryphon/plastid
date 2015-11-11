@@ -1131,7 +1131,6 @@ cdef class SegmentChain(object):
         
         self.length = length
         self._endmap = end_hash
-        print(zip(segments,my_endview[:num_segs],my_endview[num_segs:]))
         
         if num_segs == 0:
             self.spanning_segment = NullSegment
@@ -2618,11 +2617,10 @@ cdef class SegmentChain(object):
 
         if genomic_x < span.start:
             raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
-            return -1
 
+        # TODO: settle on a representation - endmap or iterate over segments
         while i < num_segs:
             chrom_end = endmap[i]
-            print("%s-%s: %s" % (chrom_end,self._segments[i].start,genomic_x))
             if genomic_x < chrom_end and genomic_x >= self._segments[i].start:
                 retval = endmap[i+num_segs] - chrom_end + genomic_x
                 if span.c_strand == reverse_strand and stranded == True:
@@ -2632,7 +2630,6 @@ cdef class SegmentChain(object):
             i += 1
 
         raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
-        return -1 # raise error
 
 #        cdef dict ihash = self._get_inverse_hash()
 #
@@ -3320,10 +3317,8 @@ cdef class Transcript(SegmentChain):
     def __deepcopy__(self,memo): # deep copy everything
         chain2 = Transcript()
         chain2._set_segments(copy.deepcopy(self._segments))
-        print("Segments copied")
         if self._mask_segments is not None:
             chain2._set_masks(copy.deepcopy(self._mask_segments))
-        print("Masks copied")
         chain2.cds_genome_start = self.cds_genome_start
         chain2.cds_genome_end = self.cds_genome_end
         if chain2.cds_genome_start is not None:
