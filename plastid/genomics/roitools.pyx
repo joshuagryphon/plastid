@@ -1479,17 +1479,30 @@ cdef class SegmentChain(object):
         else:
             raise TypeError("SegmentChain.unstranded_overlaps() is only defined for GenomicSegments and SegmentChains. Found %s." % type(other))
 
-
     cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
         cdef:
-            list insegs, outsegs
+            GenomicSegment left
+            GenomicSegment right
+            str chrom = self.chrom
+            list segments
+            int i = 0
+            int length
+
         if self.chrom != other.chrom:
             return false
-        else:
-            insegs = self._segments + other._segments
-            outsegs = merge_segments(insegs)
-            if len(outsegs) < len(insegs):
-                return true
+
+        segments = sorted(self._segments + other._segments)
+        length = len(segments)
+        if len(segments) > 0:
+            left = segments[0]
+
+            while i < length - 1:
+                right = segments[i+1]
+                if right.start < left.end:
+                    return true
+
+                left = right
+                i += 1
 
         return false
 
@@ -1539,7 +1552,7 @@ cdef class SegmentChain(object):
             Strand sstrand = self.c_strand
             Strand ostrand = other.c_strand
 
-        if self.c_unstranded_overlaps(other) == true and self.c_strand & other.c_strand == other.c_strand:
+        if self.c_unstranded_overlaps(other) == true and self.c_strand & other.c_strand > 0:
             return true
 
         return false
