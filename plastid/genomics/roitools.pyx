@@ -2617,11 +2617,13 @@ cdef class SegmentChain(object):
             GenomicSegment span = self.spanning_segment
 
         if genomic_x < span.start:
+            raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
             return -1
 
         while i < num_segs:
             chrom_end = endmap[i]
-            if genomic_x < chrom_end:
+            print("%s-%s: %s" % (chrom_end,self._segments[i].start,genomic_x))
+            if genomic_x < chrom_end and genomic_x >= self._segments[i].start:
                 retval = endmap[i+num_segs] - chrom_end + genomic_x
                 if span.c_strand == reverse_strand and stranded == True:
                     retval = self.length - retval - 1
@@ -2629,6 +2631,7 @@ cdef class SegmentChain(object):
             
             i += 1
 
+        raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
         return -1 # raise error
 
 #        cdef dict ihash = self._get_inverse_hash()
