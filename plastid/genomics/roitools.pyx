@@ -1043,13 +1043,13 @@ cdef class SegmentChain(object):
         self.attr = attr
         self._mask_segments = None 
         self._segments      = []
-        #self._inverse_hash  = None 
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
         self._position_mask = None #array.clone(mask_template,0,False) # TODO: be lazy
+        self._position_hash = None
         if num_segs == 0:
-            self._position_hash   = array.clone(hash_template,0,False)
+            pass #self._position_hash   = array.clone(hash_template,0,False)
         elif num_segs == 1:
             self._set_segments(list(segments))
         else:
@@ -1058,8 +1058,7 @@ cdef class SegmentChain(object):
             self._set_segments(new_segments)
 
     cdef bint _set_segments(self, list segments) except False:
-        """Set `self._segments` and update position hashes, assuming `segments`
-        have passed the following criteria:
+        """Set `self._segments` assuming `segments` have passed the following criteria:
 
             1. They don't overlap
 
@@ -1082,14 +1081,8 @@ cdef class SegmentChain(object):
             `self.length`
                 Length in nucleotides of `self`
 
-            `self.masked_length`
-                Length of `self` in nucleotides, excluding masked positions
-
-            `self._position_hash`
-                Array mapping |SegmentChain| positions to genomic coordinates
-
-            `self._position_mask`
-                Array in which masked positions take the value 1, others 0.
+            `self._segments`
+                |GenomicSegments| in `self`
 
             `self.spanning_segment`
                 |GenomicSegment| spanning entire length of `self`
@@ -1103,22 +1096,22 @@ cdef class SegmentChain(object):
             int num_segs = len(segments)
             GenomicSegment segment, seg0
             long length = sum([len(X) for X in segments])
-            long x, c
-            array.array my_hash = array.clone(hash_template,length,False)  
-            long [:] my_view = my_hash
+        #    long x, c
+        #    array.array my_hash = array.clone(hash_template,length,False)  
+        #    long [:] my_view = my_hash
         
         self._segments = segments
         self.length = length
-        self._position_hash = my_hash
+        self._position_hash = None
         self.c_reset_masks()
 
-        c = 0
-        for segment in segments:
-            x = segment.start
-            while x < segment.end:
-                my_view[c] = x
-                c += 1
-                x += 1
+        #c = 0
+        #for segment in segments:
+        #    x = segment.start
+        #    while x < segment.end:
+        #        my_view[c] = x
+        #        c += 1
+        #        x += 1
         
         if num_segs == 0:
             self.spanning_segment = NullSegment
@@ -1133,6 +1126,42 @@ cdef class SegmentChain(object):
                                                    seg0.strand)
 
         return True
+
+    cdef array.array _get_position_hash(self):
+        """Populate hash mapping coordinates in `self` to corresponding genomic coordinates,
+        leftmost first (i.e. position 0 is that with the lowest corresponding genomic coordinate, 
+        regardless of `self.strand`).
+
+        Results are saved in `self._position_hash`. If `self._position_hash` is not `None`,
+        it will be returned instead of being repopulated. To force repopulation, first set
+        `self._position_hash` to `None`.
+
+        Returns
+        -------
+        :class:`array.array`
+            Array of `length(self)`, mapping coordinates in `self` to genomic coordinates,
+            leftmost first (i.e. in genomic order, not transcript order).
+        """
+        if self._position_hash is not None:
+            return self._position_hash
+
+        cdef:
+            GenomicSegment segment
+            long x, c
+            array.array my_hash = array.clone(hash_template,self.length,False)  
+            long [:] my_view = my_hash
+        
+        self._position_hash = my_hash
+
+        c = 0
+        for segment in self._segments:
+            x = segment.start
+            while x < segment.end:
+                my_view[c] = x
+                c += 1
+                x += 1            
+
+        return self._position_hash
 
     def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
         self._segments.sort()
@@ -1176,13 +1205,13 @@ cdef class SegmentChain(object):
     def __getstate__(self): # save state for pickling
         cdef:
             list segstrs  = [str(X) for X in self._segments]
-            list maskstrs
+            list maskstrs = []
             dict attr = self.attr
 
-        if self._mask_segments is None:
-            maskstrs = []
-        else:
+        if self._mask_segments is not None:
             maskstrs = [str(X) for X in self._mask_segments]
+
+        print("Sending masks %s" % ", ".join(maskstrs))
 
         return (segstrs,maskstrs,attr)
 
@@ -1192,6 +1221,8 @@ cdef class SegmentChain(object):
             list masks = [GenomicSegment.from_str(X) for X in state[1]]
             dict attr = state[2]
 
+        print("Got maskstr %s" % state[1])
+        print("Got masks: %s" % ", ".join([str(X) for X in masks]))
         self.attr = attr
         self._set_segments(segs)
         self._set_masks(masks)
@@ -1666,7 +1697,7 @@ cdef class SegmentChain(object):
         list
             Genomic coordinates in `self`, as integers, in genomic order
         """
-        return self._position_hash.tolist()
+        return self._get_position_hash().tolist()
 
     def get_position_list(self):
         """Retrieve a sorted **end-inclusive** numpy array of genomic coordinates in this |SegmentChain|
@@ -1677,7 +1708,7 @@ cdef class SegmentChain(object):
         list
             Genomic coordinates in `self`, as integers, in genomic order
         """
-        return self._position_hash.tolist()
+        return self._get_position_hash().tolist()
 
     cdef numpy.ndarray c_get_position_array(self, bint copy):
         """Retrieve a sorted end-inclusive list of genomic coordinates in this |SegmentChain|
@@ -1693,7 +1724,7 @@ cdef class SegmentChain(object):
         :class:`numpy.ndarray`
             Ggenomic coordinates in `self`, as integers, in genomic order
         """
-        cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._position_hash,dtype=long) 
+        cdef numpy.ndarray[LONG_t,ndim=1] positions = numpy.asarray(self._get_position_hash(),dtype=long) 
         if copy == False:
             return positions
         else:
@@ -1710,7 +1741,7 @@ cdef class SegmentChain(object):
         return set(self.c_get_position_list())
 
     cdef set c_get_position_set(self):
-        return set(self._position_hash.tolist())
+        return set(self._get_position_hash().tolist())
    
     cpdef set get_masked_position_set(self):
         """Returns a set of genomic coordinates corresponding to positions in 
@@ -1729,7 +1760,7 @@ cdef class SegmentChain(object):
             return self.c_get_position_set()
         else:
             mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
-            positions = numpy.frombuffer(self._position_hash,dtype=LONG)
+            positions = numpy.frombuffer(self._get_position_hash(),dtype=LONG)
             return set(positions[mask == 0])
     
     def get_name(self):
@@ -1920,6 +1951,7 @@ cdef class SegmentChain(object):
                 tmpsum += 1
 
         self._mask_segments = segments
+        print("Set masks to %s" % ", ".join([str(X) for X in segments]))
         self.masked_length = self.length - tmpsum
         self._position_mask = pmask
 
@@ -1968,6 +2000,8 @@ cdef class SegmentChain(object):
         return SegmentChain(*self._mask_segments)
     
     cdef void c_reset_masks(self):
+        """Resets all masks and hashes that depend on them to empty values
+        """
         if self._mask_segments is None:
             pass
             
@@ -2683,36 +2717,25 @@ cdef class SegmentChain(object):
             raise IndexError(msg)
 
         if self.c_strand == reverse_strand and stranded == True:
-            x = length -x - 1
+            x = length - x - 1
 
-        while i < num_segs:
-            seg = self._segments[i]
-            cumlength += len(seg)
-            if x < cumlength:
-                if x >= lastlength:
-                    retval = x - lastlength + seg.start
-                    
-                    return retval
-                raise IndexError(msg)
+        if self._position_hash is None:
+            while i < num_segs:
+                seg = self._segments[i]
+                cumlength += len(seg)
+                if x < cumlength:
+                    if x >= lastlength:
+                        retval = x - lastlength + seg.start
+                        
+                        return retval
+                    raise IndexError(msg)
 
-            lastlength = cumlength
-            i += 1
+                lastlength = cumlength
+                i += 1
+        else:
+            return self._position_hash[x]
         
         raise IndexError(msg)
-
-#        cdef:
-#            long length = self.length
-#            long orig_index = x
-#            Strand strand = self.c_strand
-#            str msg
-
-#        if strand == reverse_strand and stranded == True:
-#            x = length - x - 1
-#
-#        if x < 0 or x >= length:
-#            raise IndexError(msg)
-#
-#        return self._position_hash[x]
 
     def get_subchain(self, long start, long end, bint stranded=True, **extra_attr):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions
@@ -2808,7 +2831,7 @@ cdef class SegmentChain(object):
             end   = length - start 
             start = length - tmp 
             
-        positions = self._position_hash[start:end].tolist()
+        positions = self._get_position_hash()[start:end].tolist()
         segs = positionlist_to_segments(self.chrom,self.strand,positions)
         chain._set_segments(segs)
 
@@ -3327,8 +3350,10 @@ cdef class Transcript(SegmentChain):
     def __getstate__(self): # pickle state
         cdef:
             list segstrs  = [str(X) for X in self._segments]
-            list maskstrs = [str(X) for X in self.mask_segments]
+            list maskstrs = []
             dict attr = self.attr
+        if self._mask_segments is not None:
+            maskstrs = [str(X) for X in self._mask_segments]
 
         return (segstrs, maskstrs, attr, self.cds_genome_start, self.cds_genome_end)
 
@@ -3496,7 +3521,7 @@ cdef class Transcript(SegmentChain):
     cdef bint _update_from_cds_start(self) except False:
         cdef:
             long cds_start = <long>self.cds_start
-            long [:] phash = self._position_hash
+            long [:] phash = self._get_position_hash()
 
         if self.spanning_segment.c_strand == forward_strand:
             self.cds_genome_start = phash[cds_start]
@@ -3508,7 +3533,7 @@ cdef class Transcript(SegmentChain):
     cdef bint _update_from_cds_end(self) except False:
         cdef:
             long cds_end = <long>self.cds_end
-            long [:] phash = self._position_hash
+            long [:] phash = self._get_position_hash()
 
         if self.spanning_segment.c_strand == forward_strand:
             self.cds_genome_end = phash[cds_end - 1] + 1

@@ -39,6 +39,7 @@ cdef class SegmentChain(object):                       # >= 836 bytes
     # maintenance of chain internals
     cdef bint c_add_segments(self,tuple) except False
     cdef bint _set_segments(self,list) except False
+    cdef array.array _get_position_hash(self)
     cdef bint _set_masks(self,list) except False
     cdef void c_reset_masks(self)
     #cdef dict _get_inverse_hash(self)
