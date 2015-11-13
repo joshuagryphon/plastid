@@ -17,16 +17,24 @@ follow `Semantic versioning <http://semver.org/>`_, with a prepended '0.'
 Unreleased
 ----------
 
+
+Added
+.....
+ - Fast `merge_segments()` function in `roitools` module.
+
+
 Changed
 .......
  - Speed boosts in ``SegmentChain.overlaps()``, ``SegmentChain.covers()``
    and other comparison methods
- - Memory optimizations to ``SegmentChain``
+ - ~4-fold reduction in memory consumed by ``SegmentChain`` objects.
+   All position & mask hashes now lazily evaluated
  - ``GenomicSegment`` is now hashable, e.g. can be used in sets or dict keys 
 
 Fixed
 .....
  - Track naming bug in `make_wiggle`
+
 
 
 plastid [0.4.3] = [2015-10-28]

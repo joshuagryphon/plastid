@@ -1087,6 +1087,10 @@ cdef class SegmentChain(object):
             `self.spanning_segment`
                 |GenomicSegment| spanning entire length of `self`
 
+        And :meth:`SegmentChain.c_reset_masks` is called to invalidate/remove
+        any masks.
+
+
         Parameters
         ----------
         list
@@ -1096,22 +1100,11 @@ cdef class SegmentChain(object):
             int num_segs = len(segments)
             GenomicSegment segment, seg0
             long length = sum([len(X) for X in segments])
-        #    long x, c
-        #    array.array my_hash = array.clone(hash_template,length,False)  
-        #    long [:] my_view = my_hash
         
         self._segments = segments
         self.length = length
         self._position_hash = None
         self.c_reset_masks()
-
-        #c = 0
-        #for segment in segments:
-        #    x = segment.start
-        #    while x < segment.end:
-        #        my_view[c] = x
-        #        c += 1
-        #        x += 1
         
         if num_segs == 0:
             self.spanning_segment = NullSegment
@@ -1936,7 +1929,6 @@ cdef class SegmentChain(object):
         cdef:
             array.array pmask = array.clone(mask_template,self.length,True)
             int [:] pview = pmask
-            #dict ihash = self._get_inverse_hash()
             list new_segments
             GenomicSegment seg
             long i, coord
@@ -1945,7 +1937,6 @@ cdef class SegmentChain(object):
         pview [:] = 0
         for seg in segments:
             for i in range(seg.start,seg.end):
-                #coord = ihash[i]
                 coord = self.c_get_segmentchain_coordinate(i,False)
                 pview[coord] = 1
                 tmpsum += 1
@@ -2623,16 +2614,6 @@ cdef class SegmentChain(object):
 
         raise KeyError(msg)
 
-#        cdef dict ihash = self._get_inverse_hash()
-#
-#        try:
-#            if self.c_strand == reverse_strand and stranded == True:
-#                return self.length - ihash[genomic_x] - 1
-#            else:
-#                return ihash[genomic_x]
-#        except KeyError:
-#            raise KeyError("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self))
-
     def get_genomic_coordinate(self,x,stranded=True):
         """Finds genomic coordinate corresponding to position `x` in `self`
         
@@ -3014,7 +2995,7 @@ cdef class SegmentChain(object):
         
     # TODO: optimize
     @staticmethod
-    def from_bed(str line, extra_columns=0):
+    def from_bed(str line, object extra_columns=0):
         """Create a |SegmentChain| from a line from a `BED`_ file.
         The `BED`_ line may contain 4 to 12 columns, per the specification.
         These will be auto-detected and parsed appropriately.
@@ -3055,16 +3036,17 @@ cdef class SegmentChain(object):
         |SegmentChain|
         """
         cdef:
-            int num_bed_columns, num_extra_columns
-            dict attr
+            int num_bed_columns, num_extra_columns, i
+            dict attr, bed_columns
             list frags = []
             list items = line.strip("\n").split("\t")
+            str default_id, strand, chrom, key, KEY
+            long chrom_start, chrom_end, frag_start, frag_end, thickstart, thickend
+            list frag_sizes, frag_offsets
+            set types
+            tuple tup
 
-            #list column_formatters, frag_sizes, frag_offsets
-            #set types
-            #int num_extra_columns, i
-            #long chrom_start, chrom_end
-            #str chrom, default_id, k
+            #list column_formatters
             #dict base_columns, attr
         
         if isinstance(extra_columns,int):
@@ -3072,7 +3054,7 @@ cdef class SegmentChain(object):
                 raise ValueError("Cannot make SegmentChain from BED input: if an integer, extra_columns must be non-negative.")
             num_extra_columns = extra_columns
             column_formatters = [("custom%s" % X,str) for X in range(extra_columns)]
-        elif isinstance(extra_columns,list):
+        elif isinstance(extra_columns,(list,tuple)):
             num_extra_columns = len(extra_columns)
             types = set([type(X) for X in extra_columns])
             if len(types) > 1:
@@ -3102,8 +3084,8 @@ cdef class SegmentChain(object):
         bed_columns = { 3 :  ("ID",         default_id,    str),
                         4 :  ("score",      numpy.nan,     float),
                         #5 :  ("strand",    ".", strand),
-                        6 :  ("thickstart", None,          int),
-                        7 :  ("thickend",   None,          int),
+                        6 :  ("thickstart", -1,          long),
+                        7 :  ("thickend",   -1,          long),
                         8 :  ("color",      "0,0,0",       str),
                         9 :  ("blocks",     "1",             int),
                         10 : ("blocksizes", str(chrom_end - chrom_start),str),
@@ -3142,25 +3124,25 @@ cdef class SegmentChain(object):
             attr["color"] = "#000000"
     
         # sanity check on thickstart and thickend
-        if attr["thickstart"] == attr["thickend"]: # if coding region is 0 length, RNA is non-coding
-            attr["thickstart"] = attr["thickend"] = chrom_start
-        elif any([attr["thickstart"] is None, attr["thickend"] is None]):
-            attr["thickstart"] = attr["thickend"] = chrom_start
-        elif attr["thickstart"] < 0 or attr["thickend"] < 0:
+        thickstart = attr["thickstart"]
+        thickend = attr["thickend"]
+
+        if thickstart == thickend or None in (thickstart, thickend) \
+        or thickstart < 0 or thickend < 0:
             attr["thickstart"] = attr["thickend"] = chrom_start
         
         # convert blocks to GenomicSegments
         num_frags    = int(attr["blocks"])
-        frag_sizes   = [int(X) for X in attr["blocksizes"].strip(",").split(",")[:num_frags]]
-        frag_offsets = [int(X) for X in attr["blockstarts"].strip(",").split(",")[:num_frags]]
+        frag_sizes   = attr["blocksizes"].strip(",").split(",")
+        frag_offsets = attr["blockstarts"].strip(",").split(",")
         for i in range(0,num_frags):
-            frag_start = chrom_start + frag_offsets[i]
-            frag_end   = frag_start  + frag_sizes[i]
+            frag_start = chrom_start + int(frag_offsets[i])
+            frag_end   = frag_start  + int(frag_sizes[i])
             frags.append(GenomicSegment(chrom,frag_start,frag_end,strand))
 
         # clean up attr
-        for k in ("blocks","blocksizes","blockstarts"):
-            attr.pop(k)
+        for key in ("blocks","blocksizes","blockstarts"):
+            attr.pop(key)
     
         return SegmentChain(*frags,**attr)
     
@@ -3182,10 +3164,13 @@ cdef class SegmentChain(object):
         cdef:
             list items = psl_line.strip().split("\t")        
             list segs = []
-            list block_starts, q_starts, t_starts
             dict attr = {}
             long t_start, block_size
+            str st, sb
             GenomicSegment seg
+            list block_sizes, sq_starts, st_starts
+            list t_starts = []
+            list q_starts = []
 
         attr["type"]             = "alignment"
         attr["query_name"]       = items[9]
@@ -3208,20 +3193,24 @@ cdef class SegmentChain(object):
         attr["ID"]               = attr["query_name"]
         #block_count           = int(items[17])
 
-        block_sizes = [int(X) for X in items[18].strip(",").split(",")]
-        q_starts    = [int(X) for X in items[19].strip(",").split(",")]
-        t_starts    = [int(X) for X in items[20].strip(",").split(",")]        
+        block_sizes = items[18].strip(",").split(",")
+        sq_starts    = items[19].strip(",").split(",")
+        st_starts    = items[20].strip(",").split(",")        
 
-        attr["q_starts"] = q_starts
-        attr["t_starts"] = t_starts
-        
-        for t_start, block_size in zip(t_starts,block_sizes):
+        for st, sb, sq in zip(st_starts,block_sizes,sq_starts):
+            t_start = long(st)
+            block_size = long(sb)
+            t_starts.append(t_start)
+            q_starts.append(long(sq))
             seg = GenomicSegment(attr["target_name"],
                                  t_start,
                                  t_start + block_size,
                                  attr["strand"])
             segs.append(seg)
         
+        attr["t_starts"] = t_starts 
+        attr["q_starts"] = q_starts
+
         return SegmentChain(*segs,**attr)        
 
 
