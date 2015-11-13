@@ -1044,7 +1044,6 @@ cdef class SegmentChain(object):
         self._mask_segments = None 
         self._segments      = []
         #self._inverse_hash  = None 
-        self._endmap = array.clone(mask_template,0,False)
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
@@ -1104,13 +1103,9 @@ cdef class SegmentChain(object):
             int num_segs = len(segments)
             GenomicSegment segment, seg0
             long length = sum([len(X) for X in segments])
-            long cumlength = 0
             long x, c
             array.array my_hash = array.clone(hash_template,length,False)  
-            array.array end_hash = array.clone(hash_template,2*num_segs,False)
-            long [:] my_endview = end_hash
             long [:] my_view = my_hash
-            int i, my_end
         
         self._segments = segments
         self.length = length
@@ -1118,19 +1113,12 @@ cdef class SegmentChain(object):
         self.c_reset_masks()
 
         c = 0
-        for i, segment in enumerate(segments):
-            my_end = segment.end
+        for segment in segments:
             x = segment.start
-            cumlength += (my_end - x)
-            my_endview[i] = my_end
-            my_endview[i+num_segs] = cumlength
             while x < segment.end:
                 my_view[c] = x
                 c += 1
                 x += 1
-        
-        self.length = length
-        self._endmap = end_hash
         
         if num_segs == 0:
             self.spanning_segment = NullSegment
@@ -1145,30 +1133,6 @@ cdef class SegmentChain(object):
                                                    seg0.strand)
 
         return True
-
-#    cdef dict _get_inverse_hash(self):
-#        """Return dictionary mapping genomic coordinates to |SegmentChain| positions.
-#        If the dictionary `self._inverse_hash` is not populated, it is populated here,
-#        and only returned in subsequent calls.
-#
-#        Returns
-#        -------
-#        dict
-#            dictionary mapping genomic coordinates to |SegmentChain| positions
-#        """
-#        cdef:
-#            dict ihash = self._inverse_hash
-#            long [:] my_view = self._position_hash
-#            long i
-#
-#        if self.length > 0:
-#            if len(ihash) > 0:
-#                return ihash
-#            else:
-#                for i in range(self.length):
-#                    ihash[my_view[i]] = i
-#
-#        return ihash
 
     def sort(self): # this should never need to be called, now that _segments and _mask_segments are managed
         self._segments.sort()
@@ -1391,37 +1355,34 @@ cdef class SegmentChain(object):
             return false
         elif other.length > self.length:
             return false
-        if mine == merge_segments(mine + other._segments):
-            return true
 
-        return false
-
-#        elif len(other) == 1:
-#            for segment in self:
-#                if segment.contains(other[0]):
-#                    return true
-#            return false 
-#        else:
-#            selfpos = self.c_get_position_set()
-#            opos    = other.c_get_position_set()
-#            
-#            if opos & selfpos == opos:
-#                myjuncs = self.get_junctions()
-#                ojuncs  = other.get_junctions()
-#    
-#                found = False
-#                for i, myjunc in enumerate(myjuncs):
-#                    if ojuncs[0] == myjunc:
-#                        mystart = i
-#                        found   = True
-#                        break
-#            else:
-#                return false
-#            
-#            if found == True:
-#                return true if ojuncs == myjuncs[mystart:mystart+len(ojuncs)] else false
-#            else:
-#                return false
+        # TODO: better algorithm here
+        elif len(other) == 1:
+            for segment in self:
+                if segment.contains(other[0]):
+                    return true
+            return false 
+        else:
+            selfpos = self.c_get_position_set()
+            opos    = other.c_get_position_set()
+            
+            if opos & selfpos == opos:
+                myjuncs = self.get_junctions()
+                ojuncs  = other.get_junctions()
+    
+                found = False
+                for i, myjunc in enumerate(myjuncs):
+                    if ojuncs[0] == myjunc:
+                        mystart = i
+                        found   = True
+                        break
+            else:
+                return false
+            
+            if found == True:
+                return true if ojuncs == myjuncs[mystart:mystart+len(ojuncs)] else false
+            else:
+                return false
 
     def shares_segments_with(self, object other):
         """Returns a list of |GenomicSegment| that are shared between `self` and `other`
@@ -1516,20 +1477,6 @@ cdef class SegmentChain(object):
                 i += 1
 
         return false
-
-#    cdef ExBool c_unstranded_overlaps(self, SegmentChain other) except bool_exception:
-#        cdef:
-#            set o_pos, my_pos
-#        if self.chrom != other.chrom:
-#            return false
-#        else:
-#            my_pos = self.c_get_position_set()
-#            o_pos  = other.c_get_position_set()
-#
-#        if len(my_pos & o_pos) > 0:
-#            return true
-#
-#        return false
 
     def overlaps(self, object other):
         """Return `True` if `self` and `other` share genomic positions on the same strand
@@ -1664,12 +1611,15 @@ cdef class SegmentChain(object):
         cdef:
             GenomicSegment sspan = self.spanning_segment
             GenomicSegment ospan = other.spanning_segment
+            list mine = self._segments
+
         if len(self) == 0 or len(other) == 0:
             return false
         elif sspan.chrom  == ospan.chrom and\
              sspan.c_strand == ospan.c_strand and\
-             other.c_get_position_set() & self.c_get_position_set() == other.c_get_position_set():
+             mine == merge_segments(mine + other._segments):
             return true
+
         return false
     
     cpdef SegmentChain get_antisense(self):
@@ -1965,7 +1915,7 @@ cdef class SegmentChain(object):
         for seg in segments:
             for i in range(seg.start,seg.end):
                 #coord = ihash[i]
-                coord = self.c_get_segmentchain_coordinate(i,True)
+                coord = self.c_get_segmentchain_coordinate(i,False)
                 pview[coord] = 1
                 tmpsum += 1
 
@@ -2610,26 +2560,34 @@ cdef class SegmentChain(object):
         cdef:
             int i = 0
             int num_segs = len(self._segments)
-            long [:] endmap = self._endmap
+            long cumlength = 0
             long retval
             long chrom_end
             GenomicSegment span = self.spanning_segment
+            GenomicSegment seg
+            str msg
+
+        msg = "SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'.\n" % (genomic_x,self)
 
         if genomic_x < span.start:
-            raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
+            raise KeyError(msg)
 
-        # TODO: settle on a representation - endmap or iterate over segments
         while i < num_segs:
-            chrom_end = endmap[i]
-            if genomic_x < chrom_end and genomic_x >= self._segments[i].start:
-                retval = endmap[i+num_segs] - chrom_end + genomic_x
-                if span.c_strand == reverse_strand and stranded == True:
-                    retval = self.length - retval - 1
-                return retval
-            
+            seg = self._segments[i]
+            chrom_end = seg.end
+            cumlength += len(seg)
+            if genomic_x < chrom_end:
+                if genomic_x >= self._segments[i].start:
+                    retval = cumlength  - chrom_end + genomic_x
+                    if span.c_strand == reverse_strand and stranded == True:
+                        retval = self.length - retval - 1
+                    return retval
+                # because segments are sorted, if < end but not >= start,
+                # key must be outside bounds of chain
+                raise KeyError(msg) 
             i += 1
 
-        raise KeyError(("SegmentChain.get_segmentchain_coordinate: genomic position '%s' is not in chain '%s'." % (genomic_x,self)))
+        raise KeyError(msg)
 
 #        cdef dict ihash = self._get_inverse_hash()
 #
@@ -2710,17 +2668,51 @@ cdef class SegmentChain(object):
         SegmentChain.get_genomic_coordinate
         """
         cdef:
+            int i = 0
+            int num_segs = len(self._segments)
+            long retval
+            long lastlength = 0
+            long cumlength = 0
             long length = self.length
-            long orig_index = x
-            Strand strand = self.c_strand
+            GenomicSegment seg
+            str msg
 
-        if strand == reverse_strand and stranded == True:
-            x = length - x - 1
-
+        msg = "Position %s is outside bounds [0,%s) of SegmentChain '%s'" % \
+              (x, length, self.get_name())
         if x < 0 or x >= length:
-            raise IndexError("Position %s is outside bounds [0,%s) of SegmentChain '%s'" % (orig_index, length, self.get_name()))
+            raise IndexError(msg)
 
-        return self._position_hash[x]
+        if self.c_strand == reverse_strand and stranded == True:
+            x = length -x - 1
+
+        while i < num_segs:
+            seg = self._segments[i]
+            cumlength += len(seg)
+            if x < cumlength:
+                if x >= lastlength:
+                    retval = x - lastlength + seg.start
+                    
+                    return retval
+                raise IndexError(msg)
+
+            lastlength = cumlength
+            i += 1
+        
+        raise IndexError(msg)
+
+#        cdef:
+#            long length = self.length
+#            long orig_index = x
+#            Strand strand = self.c_strand
+#            str msg
+
+#        if strand == reverse_strand and stranded == True:
+#            x = length - x - 1
+#
+#        if x < 0 or x >= length:
+#            raise IndexError(msg)
+#
+#        return self._position_hash[x]
 
     def get_subchain(self, long start, long end, bint stranded=True, **extra_attr):
         """Retrieves a sub-|SegmentChain| corresponding a range of positions

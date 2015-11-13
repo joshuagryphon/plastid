@@ -855,9 +855,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             
             # don't add opposite-strand masks
             self.assertRaises(ValueError,ivc.add_masks,opp_mask_a)
-            print "first add"
             self.assertEqual(ivc.get_masks(),[])
-            print "first equal"
 
             # don't add opposite-strand masks
             self.assertRaises(ValueError,ivc.add_masks,opp_mask_a,opp_mask_b,opp_mask_c)
@@ -873,7 +871,6 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             
             # add a single mask
             ivc.add_masks(mask_a)
-            print("added single")
             self.assertEqual(ivc.get_masks(),[mask_a],"Failure to add single mask")
 
             # add a single mask again, make sure doesn't change
@@ -1106,7 +1103,73 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
                           set(sorted(nvca.get_position_list()[::-1][2:27])))
         self.assertTrue(nvca.covers(sub_minus))
         self.assertFalse(sub_plus.covers(nvca))
-    
+   
+    @skip_if_abstract
+    def test_get_masked_counts_plus(self):
+        ga = GenomeArray({"chrA":2000})
+        ga[GenomicSegment("chrA",100,200,"+")] = 1
+        ga[GenomicSegment("chrA",250,350,"+")] = 5
+        
+        seg1 = GenomicSegment("chrA",100,150,"+")
+        seg2 = GenomicSegment("chrA",150,200,"+")
+        seg3 = GenomicSegment("chrA",250,350,"+")
+
+        mask = GenomicSegment("chrA",50,125,"+")
+        non_overlap_mask = GenomicSegment("chrA",400,500,"+")
+
+        chain1 = self.test_class(seg1,seg2,seg3)
+        unmasked_counts = numpy.zeros(chain1.length)
+        unmasked_counts[:100] = 1
+        unmasked_counts[100:200] = 5
+
+        found_unmasked = chain1.get_masked_counts(ga)
+        self.assertTrue((found_unmasked == unmasked_counts).all())
+
+        chain1.add_masks(non_overlap_mask)
+        self.assertTrue((found_unmasked == unmasked_counts).all())
+
+        chain1.add_masks(mask)
+        mask = numpy.tile(False,chain1.length)
+        mask[:25] = True
+        mc = numpy.ma.MaskedArray(unmasked_counts,mask=mask)
+        
+        found_masked = chain1.get_masked_counts(ga)
+        self.assertTrue((mc.mask == found_masked.mask).all())
+        self.assertTrue((mc.data == found_masked.data).all())
+
+    @skip_if_abstract
+    def test_get_masked_counts_minus(self):
+        ga = GenomeArray({"chrA":2000})
+        ga[GenomicSegment("chrA",100,200,"-")] = 1
+        ga[GenomicSegment("chrA",250,350,"-")] = 5
+        
+        seg1 = GenomicSegment("chrA",100,150,"-")
+        seg2 = GenomicSegment("chrA",150,200,"-")
+        seg3 = GenomicSegment("chrA",250,350,"-")
+
+        mask = GenomicSegment("chrA",50,125,"-")
+        non_overlap_mask = GenomicSegment("chrA",400,500,"-")
+
+        chain1 = self.test_class(seg1,seg2,seg3)
+        unmasked_counts = numpy.zeros(chain1.length)
+        unmasked_counts[-100:] = 1
+        unmasked_counts[-200:-100] = 5
+
+        found_unmasked = chain1.get_masked_counts(ga)
+        self.assertTrue((found_unmasked == unmasked_counts).all())
+
+        chain1.add_masks(non_overlap_mask)
+        self.assertTrue((found_unmasked == unmasked_counts).all())
+
+        chain1.add_masks(mask)
+        mask = numpy.tile(False,chain1.length)
+        mask[-25:] = True
+        mc = numpy.ma.MaskedArray(unmasked_counts,mask=mask)
+        
+        found_masked = chain1.get_masked_counts(ga)
+        self.assertTrue((mc.mask == found_masked.mask).all())
+        self.assertTrue((mc.data == found_masked.data).all())
+        
     @skip_if_abstract    
     def test_get_counts(self):
         """Test `get_counts()`, `get_masked_counts()`, and `add_masks()`"""
@@ -1535,18 +1598,15 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
 
         self.assertListEqual(chain1.segments,chain2.segments,
                 "Deepcopy failed: chain2 has different segments from chain1")
-        print("list equal")
 
         # make sure attributes copy
         self.assertDictEqual(chain1.attr,chain2.attr,
                 "Deepcopy failed: chain2 has different attr from chain1")
-        print("list equal 2")
 
         # make sure lists are independent
         chain2.add_segments(GenomicSegment("chrA",900,1000,"+"))
         self.assertEqual(len(chain2),4)
         self.assertEqual(len(chain1),3,"Deepcopy failed: adding segment to chain2 lengthened chain1")
-        print("after add")
 
         # make sure dicts are independent
         chain2.attr["attr3"] = [4,5,6]
@@ -1555,14 +1615,10 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         # make sure subitems are also deepcopied
         chain3.attr["attr4"].add_segments(GenomicSegment("chrA",1000,1200,"+"))
         self.assertNotEqual(chain1.attr["attr4"],chain3.attr["attr4"],"Deepcopy failed: changing chain2 attr affected chain1 attr")
-        print("after attr")
 
         chain1.add_masks(GenomicSegment("chrA",225,350,"+"))
-        print("after add masks")
         chain2 = copy.deepcopy(chain1)
-        print("after mask copy")
         self.assertListEqual(chain1.mask_segments,chain2.mask_segments,"Deepcopy failed: masks did not copy")
-        print("after mask comparison")        
 
     @skip_if_abstract
     def test_get_segments_property_is_immutable(self):
