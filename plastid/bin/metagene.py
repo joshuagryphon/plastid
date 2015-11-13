@@ -675,7 +675,7 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
             transcripts.append(tx)
 
     df = pd.DataFrame(dtmp)
-    df.sort(columns=["region_id"],inplace=True)
+    df.sort_values(["region_id"],inplace=True)
     printer.write("Processed %s genes total. Included %s." % (c+1,len(df)))
 
     return df

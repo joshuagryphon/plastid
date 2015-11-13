@@ -477,10 +477,10 @@ def process_partial_group(transcripts,mask_hash,printer):
         transcript_table[k] = [str(X) for X in transcript_table[k]]
     
     gene_df = pd.DataFrame(gene_table)
-    gene_df.sort(columns=["region"],inplace=True)
+    gene_df.sort_values(["region"],inplace=True)
 
     transcript_df = pd.DataFrame(transcript_table)
-    transcript_df.sort(columns=["region"],inplace=True)
+    transcript_df.sort_values(["region"],inplace=True)
 
     return gene_df, transcript_df, merged_genes
 

@@ -174,7 +174,7 @@ from plastid.util.io.openers import NullWriter
 
 from plastid.genomics.map_factories import *
 
-MIN_CHR_SIZE = 10*1e6 # 10 Mb minimum size for unspecified chromosomes 
+MIN_CHR_SIZE = int(10*1e6) # 10 Mb minimum size for unspecified chromosomes 
 
 #
 ##===============================================================================

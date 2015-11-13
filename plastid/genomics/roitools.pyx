@@ -529,7 +529,7 @@ cdef ExBool chain_richcmp(SegmentChain chain1, SegmentChain chain2, int cmpval) 
         else:
             if sspan.chrom == ospan.chrom and\
                sspan.c_strand == ospan.c_strand and\
-               chain1.c_get_position_list() == chain2.c_get_position_list():
+               chain1._segments == chain2._segments:
                     return true
             return false
     elif cmpval == NEQ:
@@ -799,10 +799,10 @@ cdef class GenomicSegment:
         schrom = self.chrom
         ochrom = other.chrom
         if cmptype == EQ:
-            return schrom         == ochrom and\
-                   self.c_strand  == other.c_strand and\
-                   self.start     == other.start and\
-                   self.end       == other.end
+            return self.start     == other.start and\
+                   self.end       == other.end and\
+                   schrom         == ochrom and\
+                   self.c_strand  == other.c_strand
         elif cmptype == NEQ:
             return self._cmp_helper(other,EQ) == False
         elif cmptype == LT:
@@ -1046,10 +1046,10 @@ cdef class SegmentChain(object):
         self.length         = 0
         self.masked_length  = 0
         self.spanning_segment = NullSegment
-        self._position_mask = None #array.clone(mask_template,0,False) # TODO: be lazy
+        self._position_mask = None
         self._position_hash = None
         if num_segs == 0:
-            pass #self._position_hash   = array.clone(hash_template,0,False)
+            pass
         elif num_segs == 1:
             self._set_segments(list(segments))
         else:
@@ -1288,7 +1288,7 @@ cdef class SegmentChain(object):
             sout = "na"
         return sout
 
-    def __getitem__(self,index):
+    def __getitem__(self,int index):
         """Fetch a |GenomicSegment| from the |SegmentChain|
         
         Parameters
@@ -2025,14 +2025,17 @@ cdef class SegmentChain(object):
         cdef:
             GenomicSegment seg1, seg2
             list juncs = []
+            GenomicSegment span = self.spanning_segment
+            str strand = self.strand
+            str chrom = self.chrom
             int i
 
         for i in range(len(self._segments)-1):
             seg1, seg2 = self._segments[i], self._segments[i+1]
-            juncs.append(GenomicSegment(seg1.chrom,
+            juncs.append(GenomicSegment(chrom,
                                         seg1.end,
                                         seg2.start,
-                                        seg1.strand))
+                                        strand))
         return juncs
     
     # TODO: test optimality
@@ -2368,11 +2371,11 @@ cdef class SegmentChain(object):
         """
         cdef:
             list ltmp
-            GenomicSegment span
+            GenomicSegment span = self.spanning_segment
+            long spanstart = span.start
             
         if len(self) > 0:
             score = self.attr.get("score",0)
-            span = self.spanning_segment
             try:
                 score = float(score)
                 if as_int is True:
@@ -2398,11 +2401,11 @@ cdef class SegmentChain(object):
             except ValueError:
                 color = self.attr.get("color","0,0,0") if color is None else color
             
-            thickstart = self.attr.get("thickstart",span.start) if thickstart is None else thickstart
-            thickend   = self.attr.get("thickend",span.start)   if thickend   is None else thickend
+            thickstart = self.attr.get("thickstart",spanstart) if thickstart is None else thickstart
+            thickend   = self.attr.get("thickend",spanstart)   if thickend   is None else thickend
             
             ltmp = [span.chrom,
-                    span.start,
+                    spanstart,
                     span.end,
                     self.get_name(),
                     score,
