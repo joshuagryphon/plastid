@@ -30,7 +30,7 @@ from setuptools.command.develop import develop
 NUMPY_VERSION  = "numpy>=1.9"
 SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
-PYSAM_VERSION  = "pysam>=0.8.3"
+PYSAM_VERSION  = "pysam>=0.8.4"
 
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
@@ -270,6 +270,19 @@ class build_c_from_pyx(build_ext):
 #===============================================================================
 # Program body 
 #===============================================================================
+
+FAIL_MSG = """Setup failed. If this is due to a compiler error,
+try rebuilding the Cython sources. If installing via pip, make
+sure all dependencies are already pre-installed, then separately
+run:
+
+    $ pip install --upgrade --install-option="--recythonize" plastid
+
+
+Or, if installing manually via setup.py:
+
+    $ python setup.py install --recythonize
+"""
 
 setup(
 

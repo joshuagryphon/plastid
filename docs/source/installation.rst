@@ -11,9 +11,8 @@ Simply type from the terminal:
 
  .. code-block:: shell
 
-    $ sudo pip install numpy pysam
+    $ sudo pip install numpy pysam cython
     $ sudo pip install plastid
-
 
 or, for a single-user install:
 
@@ -21,6 +20,24 @@ or, for a single-user install:
 
     $ pip install --user numpy pysam
     $ pip install --user plastid
+
+Test your installation within Python:
+
+    >>> import plastid
+
+If you get an error saying an object in `numpy`_ or `pysam`_
+is the wrong size, you need to regenerate the included C
+files from the original Cython code, so they can be 
+linked against your version of `numpy`_ or `pysam`_. To
+do so, first make sure all the dependencies are installed.
+Then type:
+
+ .. code-block:: shell
+
+    $ pip install --user --install-option="--recythonize" plastid
+
+And then re-test the installation. If you continue to
+get errors, please report them on our `issue tracker <plastid_issues>`_.
 
 
 Command-line scripts will be installed wherever your system configuration dictates.
@@ -49,8 +66,12 @@ To fetch the latest development versions, clone it from
     $ pip install --user --upgrade numpy pysam
 
     # Install in develop mode
+    # Use `--recythonize` flag to link code against your
+    # versions of numpy and pysam, if they are different
+    # from ours
+
     $ cd plastid
-    $ python setup.py develop --user
+    $ python setup.py develop --user --recythonize
 
 
 Non-Python Dependencies

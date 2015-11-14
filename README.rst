@@ -45,17 +45,19 @@ Installation
 
     1. First make sure you have numpy and pysam installed::
 
-        pip install numpy pysam
+        $ pip install numpy pysam
 
     2. Then::
         
-        pip install plastid
+        $ pip install plastid
 
-    3. If when running you get any warnings about numpy versions having changed,
-       regenerate the c files to match your numpy headers by typing:
+    3. If you get any warnings about numpy versions having changed,
+       or about a missing module in Pysam, or about some object
+       being the wrong size, try regenerating the included C source
+       files from the original Cython code. To do this type::
 
-       pip install cython
-       pip install plastid --recythonize
+       $ pip install cython
+       $ pip install --upgrade --install-option="--recythonize" plastid
 
 
 Links & help
