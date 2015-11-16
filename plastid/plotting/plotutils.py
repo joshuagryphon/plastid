@@ -89,7 +89,6 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
     """
     fig = ax.figure
     ax.set_visible(False)
-    rects = {}
     axes = { "orig" : ax }
     mplrc = matplotlib.rcParams
 

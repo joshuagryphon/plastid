@@ -8,7 +8,6 @@ Package overview
     ===============================================  ==============================================
     **Package module**                               **Contents**
     -----------------------------------------------  ----------------------------------------------
-    :py:mod:`~plastid.util.services.colors`             Convert colors between various representations
     :py:mod:`~plastid.util.services.decorators`         Function decorators
     :py:mod:`~plastid.util.services.exceptions`         Exceptions
     :py:mod:`~plastid.util.services.lists`              Miscellaneous list operations

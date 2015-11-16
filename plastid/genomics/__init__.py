@@ -7,10 +7,9 @@ Package overview
     =============================================  ==================================================================
     **Submodule**                                   **Description**
     ---------------------------------------------  ------------------------------------------------------------------
-    :py:mod:`~plastid.genomics.genome_array`         Dictionary-like objects that associate read alignments
-                                                     and/or quantitative data with genomic positions
-                                                   
-    :py:mod:`~plastid.genomics.genome_hash`          Dictionary-like objects associate genomic features
+    :py:mod:`~plastid.genomics.genome_array`         Array-like objects indexed by chromosome, position, and strand
+                                                     
+    :py:mod:`~plastid.genomics.genome_hash`          Dictionary-like objects associate features
                                                      with genomic positions, allowing fast query of which
                                                      features overlap a region or nucleotide
 

@@ -859,8 +859,6 @@ correlation coefficients as a function of summed read counts in both samples
     outbase = args.outbase
     bins = numpy.array(args.bins)
     figformat = args.figformat
-    dpi = args.dpi
-
     
     # read input files
     printer.write("Reading input files: %s..." % ", ".join(args.infiles))

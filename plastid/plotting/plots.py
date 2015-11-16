@@ -542,7 +542,6 @@ def _scatterhist_help(axes=None,
         axes containing plot space
     """
     if axes is None:
-        do_setup = True
         fig = plt.figure()
         axes = plt.gca()
     if isinstance(axes,matplotlib.axes.Axes):
@@ -635,7 +634,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
         color = next(axes["main"]._get_lines.color_cycle)
     
     if mask_invalid == True:
-       x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
+        x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
 
     if label is not None:
         scargs = copy.deepcopy(scargs)

@@ -26,7 +26,6 @@ where `OUTBASE` is supplied by the user.
 
 """
 import sys
-import warnings
 import argparse
 import inspect
 import warnings

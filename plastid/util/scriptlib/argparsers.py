@@ -458,10 +458,9 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    from plastid.readers.gff import _DEFAULT_GFF3_GENE_TYPES,\
-                                 _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
-                                 _DEFAULT_GFF3_EXON_TYPES,\
-                                 _DEFAULT_GFF3_CDS_TYPES
+    from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
+                                    _DEFAULT_GFF3_EXON_TYPES,\
+                                    _DEFAULT_GFF3_CDS_TYPES
 
     annotation_file_parser = argparse.ArgumentParser(add_help=False)
     """Open genome annotation files in %s format""" % ", ".join(input_choices)

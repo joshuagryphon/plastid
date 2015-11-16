@@ -58,7 +58,6 @@ import warnings
 import gc
 import copy
 import sys
-import time
 from abc import abstractmethod
 from plastid.util.io.filters import AbstractReader, SkipBlankReader
 from plastid.util.io.openers import NullWriter
@@ -1168,7 +1167,6 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         tx_features_counted = []
 
         # names of transcripts in transcript_types
-        tnames = set(self._tx_features.keys())
         tnames = set([])
 
         # find parents of exons & cds that are not present

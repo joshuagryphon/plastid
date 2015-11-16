@@ -60,7 +60,7 @@ import multiprocessing
 import shutil
 import functools
 from plastid.util.io.filters import NameDateWriter, AbstractReader
-from plastid.util.io.openers import get_short_name, argsopener, opener
+from plastid.util.io.openers import get_short_name, argsopener
 from plastid.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.mini2to3 import xrange

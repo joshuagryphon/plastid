@@ -40,7 +40,6 @@ import shlex
 import warnings
 from plastid.readers.common import AssembledFeatureReader
 from plastid.genomics.roitools import SegmentChain, Transcript
-from plastid.util.services.decorators import deprecated, skipdoc
 from plastid.util.services.exceptions import FileFormatWarning
 
 

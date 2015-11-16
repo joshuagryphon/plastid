@@ -58,7 +58,6 @@ from collections import OrderedDict
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, add_three_for_stop_codon
 from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
-from plastid.util.io.openers import NullWriter
 from plastid.util.unique_fifo import UniqueFIFO
 from plastid.util.services.mini2to3 import ifilter
 from plastid.util.services.decorators import skipdoc
@@ -161,7 +160,7 @@ class BigBedReader(object):
                  memorize_r_tree=False,
                  add_three_for_stop=False,
                  cache_depth=5,
-                 printer=None,
+                 **kwargs
                  ):
         """Create a BigBedReader
         

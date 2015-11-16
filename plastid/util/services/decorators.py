@@ -43,7 +43,6 @@ import fcntl
 import sys
 import warnings
 import types
-import tempfile
 from plastid.util.services.mini2to3 import get_func_code
                        
 def notimplemented(func):

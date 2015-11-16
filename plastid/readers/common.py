@@ -13,7 +13,6 @@ Functions & classes
     alignments or transcripts) from one or more sub-features in an annotation file
 
 """
-import copy
 import itertools
 from plastid.util.io.filters import AbstractReader
 from plastid.util.io.openers import NullWriter
