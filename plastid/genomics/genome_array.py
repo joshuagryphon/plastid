@@ -702,7 +702,7 @@ class AbstractGenomeArray(object):
             Strands for the |AbstractGenomeArray|. (Default: `("+","-")`)
         """
         self._chroms       = {}
-        self._strands      = _DEFAULT_STRANDS if strands is None else Strands
+        self._strands      = _DEFAULT_STRANDS if strands is None else strands
         self._sum          = None
         self._normalize    = False
 
