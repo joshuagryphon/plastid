@@ -16,6 +16,7 @@
  .. |bin|  replace:: :py:obj:`plastid.bin`
  .. |genomics|  replace:: :py:obj:`plastid.genomics`
  .. |readers|  replace:: :py:obj:`plastid.readers`
+ .. |plotting| replace:: :py:obj:`plastid.plotting`
  .. |scriptlib|  replace:: :py:obj:`plastid.util.scriptlib`
  .. |util|  replace:: :py:obj:`plastid.util`
  .. |test|  replace:: :py:obj:`plastid.test`
