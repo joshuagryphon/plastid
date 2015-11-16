@@ -335,7 +335,7 @@ setup(
     cmdclass    = {
                     CYTHONIZE_COMMAND : build_c_from_pyx,
                     'build_ext' : wrap_command_classes(build_ext),
-                    'sdist'     : wrap_command_classes(sdist),
+                    #'sdist'     : wrap_command_classes(sdist),
                     'install'   : wrap_command_classes(install),
                     'develop'   : wrap_command_classes(develop),
                     'clean'     : clean_c_files,
