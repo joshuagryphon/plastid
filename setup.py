@@ -171,7 +171,8 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".c","").replace
 # classes & functions for compilation -----------------------------------------
 
 def wrap_command_classes(baseclass):
-    """Add custom command-line Cython options to setup command classes
+    """Add custom command-line `--recythonize` options to distutils/setuptools
+    command classes
     
     Parameters
     ----------
