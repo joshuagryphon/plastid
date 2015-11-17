@@ -27,10 +27,14 @@ from setuptools.command.install import install
 from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
 
-NUMPY_VERSION  = "numpy>=1.9"
+
+PYSAM_VER_NUM = (0,8,4)
+NUMPY_VER_NUM = (1,9,0)
+
+NUMPY_VERSION  = "numpy>=%s.%s.%s" % NUMPY_VER_NUM
 SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=0.22"
-PYSAM_VERSION  = "pysam>=0.8.4"
+PYSAM_VERSION  = "pysam>=%s.%s.%s" % PYSAM_VER_NUM
 
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
@@ -38,20 +42,29 @@ ver = sys.version_info
 if ver < (2,7) or ver[0] == 3 and ver[1] < 3:
     raise RuntimeError(version_message)
 
-
 # at present, setup/build can't proceed without numpy & Pysam
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before them.
 try:
     import numpy
     import pysam
+    pysamver = tuple([int(X) for X in pysam.__version__.split(".")])
+    if pysamver < PYSAM_VER_NUM:
+        raise ImportError()
 except ImportError:
-    print("""plastid setup requires %s and %s to be preinstalled. Please
+    print("""
+    
+*** IMPORTANT INSTALLATION INFORMATION ***
+
+plastid setup requires %s, %s, and %s to be preinstalled. Please
 install these via pip, and retry:
 
-    $ pip install numpy pysam
+    $ pip install --upgrade numpy pysam
     $ pip install plastid
-""" % (NUMPY_VERSION,PYSAM_VERSION))
+
+
+
+""" % (NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION))
     sys.exit(1)
 
 
@@ -63,8 +76,9 @@ with open("README.rst") as f:
     long_description = f.read()
 
 version = "0.4.4"  #plastid.__version__ 
-setup_requires = [NUMPY_VERSION,PYSAM_VERSION]
+setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
 packages = find_packages()
+
 
 def get_scripts():
     """Detect command-line scripts automatically
@@ -326,7 +340,7 @@ setup(
 
     # packaging info
     packages             = packages,
-    package_data         = { "" : ["*.pyx","*.pxd"],}, #,"*.c"], },
+    package_data         = { "" : ["*.pyx","*.pxd"] }, #,"*.c"], },
 
     entry_points     = { "console_scripts" : get_scripts()
                        },
