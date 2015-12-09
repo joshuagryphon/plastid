@@ -1204,7 +1204,6 @@ cdef class SegmentChain(object):
         if self._mask_segments is not None:
             maskstrs = [str(X) for X in self._mask_segments]
 
-        print("Sending masks %s" % ", ".join(maskstrs))
 
         return (segstrs,maskstrs,attr)
 
@@ -1214,8 +1213,6 @@ cdef class SegmentChain(object):
             list masks = [GenomicSegment.from_str(X) for X in state[1]]
             dict attr = state[2]
 
-        print("Got maskstr %s" % state[1])
-        print("Got masks: %s" % ", ".join([str(X) for X in masks]))
         self.attr = attr
         self._set_segments(segs)
         self._set_masks(masks)
@@ -1942,7 +1939,6 @@ cdef class SegmentChain(object):
                 tmpsum += 1
 
         self._mask_segments = segments
-        print("Set masks to %s" % ", ".join([str(X) for X in segments]))
         self.masked_length = self.length - tmpsum
         self._position_mask = pmask
 
