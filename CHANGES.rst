@@ -17,7 +17,35 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 
 Unreleased
 ----------
-  - Revamped argparsers; now much easier to use and more concise
+
+Added
+.....
+  - Argument parsing classes that replace methods deprecated below:
+  
+      - ``AlignmentParser``
+      - ``AnnotationParser``
+      - ``SequenceParser``
+      - ``PlottingParser``
+
+Changed
+.......
+
+  - ``deprecated`` function decorator can now take parameters indicating
+    in which version deprecated features will be removed, and what feature
+    to use instead
+
+Deprecated
+..........
+  - Argument parsing methods:
+  
+      - ``get_alignment_file_parser()`` & ``get_genome_array_from_args()``
+      - ``get_annotation_file_parser()`` & ``get_transcripts_from_args()``
+      - ``get_segmentchain_file_parser()`` & ``get_segmentchains_from_args()``
+      - ``get_mask_file_parser()`` & ``get_genome_hash_from_mask_args()``
+      - ``get_sequence_file_parser()`` & ``get_seqdict_from_args()``
+      - ``get_plotting_parser()``, ``get_figure-from_args()``, & ``get_colors_from_args``
+      
+
 
 
 plastid [0.4.4] = [2105-11-16]

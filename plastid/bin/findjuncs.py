@@ -50,7 +50,7 @@ import argparse
 import inspect
 import warnings
 from plastid.genomics.roitools import SegmentChain
-from plastid.util.scriptlib.argparsers import get_annotation_file_parser, get_segmentchains_from_args
+from plastid.util.scriptlib.argparsers import AnnotationParser
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -73,7 +73,8 @@ def main(argv=sys.argv[1:]):
 
         Default: sys.argv[1:] (actually command-line arguments)
     """
-    annotation_file_parser = get_annotation_file_parser(input_choices=_ANNOTATION_INPUT_CHOICES)
+    ap = AnnotationParser(input_choices=_ANNOTATION_INPUT_CHOICES)
+    annotation_file_parser = ap.get_parser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -83,7 +84,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("outbase",type=str,help="Basename for output files")
 
     args = parser.parse_args(argv)
-    transcripts = get_segmentchains_from_args(args,printer=printer)
+    transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
     
     with argsopener("%s.bed" % args.outbase,args,"w") as bed_out:
         if args.export_tophat == True:

@@ -248,6 +248,16 @@ class AlignmentParser(Parser):
             ("countfile_format", dict(choices=input_choices,
                                       default="BAM",
                                       help="Format of file containing alignments or counts (Default: %(default)s)")),
+            ("min_length"       , dict(type=int,
+                                       default=25,
+                                       metavar="N",
+                                       help="Minimum read length required to be included"+
+                                            " (Default: %(default)s)")),
+            ("max_length"       , dict(type=int,
+                                       default=100,
+                                       metavar="N",
+                                       help="Maximum read length permitted to be included"+
+                                            " (Default: %(default)s)")),
             ("big_genome"       , dict(action="store_true",
                                        default=False,
                                        help="Use slower but memory-efficient implementation "+
@@ -297,16 +307,6 @@ class AlignmentParser(Parser):
                                             metavar="N",
                                             help="For use with `--center` only. nt to remove from each "+
                                                  "end of read before mapping (Default: %(default)s)")),
-                ("min_length"       , dict(type=int,
-                                           default=25,
-                                           metavar="N",
-                                           help="Minimum read length required to be included"+
-                                                " (Default: %(default)s)")),
-                ("max_length"       , dict(type=int,
-                                           default=100,
-                                           metavar="N",
-                                           help="Maximum read length permitted to be included"+
-                                                " (Default: %(default)s)")),
                 ]
             
             # TODO: implement
@@ -625,6 +625,10 @@ class AnnotationParser(Parser):
         return parser           
 
     def get_transcripts_from_args(self,args,printer=None,return_type=None,require_sort=False):
+        from plastid.genomics.roitools import Transcript
+        return self.get_segmentchains_from_args(args, printer=printer, return_type=Transcript, require_sort=require_sort)
+
+    def get_segmentchains_from_args(self,args,printer=None,return_type=None,require_sort=False):
         """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
         
         Parameters
@@ -660,8 +664,8 @@ class AnnotationParser(Parser):
             printer = NullWriter()
             
         if return_type is None:
-            from plastid.genomics.roitools import Transcript
-            return_type = Transcript
+            from plastid.genomics.roitools import SegmentChain
+            return_type = SegmentChain
     
         args = PrefixNamespaceWrapper(args,self.prefix)
         disabled = self.disabled

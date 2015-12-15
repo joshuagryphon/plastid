@@ -22,8 +22,7 @@ import inspect
 import warnings
 import sys
 
-from plastid.util.scriptlib.argparsers import get_transcripts_from_args,\
-                                                      get_annotation_file_parser
+from plastid.util.scriptlib.argparsers import AnnotationParser
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -43,7 +42,8 @@ def main(argv=sys.argv[1:]):
 
         Default: sys.argv[1:] (actually command-line arguments)
     """
-    annotation_parser = get_annotation_file_parser()
+    ap = AnnotationParser()
+    annotation_parser = ap.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      parents=[annotation_parser],
@@ -58,7 +58,7 @@ def main(argv=sys.argv[1:]):
 
     with argsopener(args.outfile,args,"w") as fout:
         c = 0
-        transcripts = get_transcripts_from_args(args)
+        transcripts = ap.get_transcripts_from_args(args)
         
         for transcript in transcripts:
             if args.output_format == "GTF2":

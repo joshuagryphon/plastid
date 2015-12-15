@@ -6,10 +6,9 @@ import os
 from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
 from plastid.test.functional.base import execute_helper
-from plastid.test.ref_files import RPATH, REF_FILES, \
-                                             COUNT_OPTIONS, \
-                                             ANNOTATION_OPTIONS, \
-                                             MASK_OPTIONS  
+from plastid.test.ref_files import COUNT_OPTIONS, \
+                                   ANNOTATION_OPTIONS, \
+                                   MASK_OPTIONS  
 from plastid.bin.cs import main
 
 from plastid.util.services.decorators import catch_stderr

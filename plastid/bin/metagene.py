@@ -149,15 +149,9 @@ from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import ArgumentWarning, DataWarning
-from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                              get_transcripts_from_args,\
-                                              get_genome_hash_from_mask_args,\
-                                              get_colors_from_args,\
-                                              get_figure_from_args,\
-                                              get_alignment_file_parser,\
-                                              get_annotation_file_parser,\
-                                              get_mask_file_parser,\
-                                              get_plotting_parser
+from plastid.util.scriptlib.argparsers import AnnotationParser, AlignmentParser,\
+                                              MalformedFileError, PlottingParser,\
+                                              MaskParser
 
 
 warnings.simplefilter("once",DataWarning)
@@ -680,7 +674,7 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
 
     return df
 
-def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_counts,printer=NullWriter()):
+def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
     
@@ -741,7 +735,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         fh.close()
     
     # open count files
-    ga = get_genome_array_from_args(args,printer=printer,disabled=["normalize"])
+    ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
     window_size    = roi_table["window_size"][0]
     upstream_flank = roi_table["zero_point"][0]
     cshape = (len(roi_table),window_size)
@@ -815,9 +809,9 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
         im_args["cmap"] = args.cmap
 
     plot_args = {}
-    plot_args["color"] = get_colors_from_args(args,1)[0]
+    plot_args["color"] = plot_parser.get_colors_from_args(args,1)[0]
 
-    fig = get_figure_from_args(args)
+    fig = plot_parser.get_figure_from_args(args)
     ax = plt.gca()
     fig, ax = profile_heatmap(norm_counts[row_select],
                               profile=profile_table["metagene_average"],
@@ -838,7 +832,7 @@ def do_count(args,printer=NullWriter()): #roi_table,ga,norm_start,norm_end,min_c
 
     return counts, norm_counts, profile_table
 
-def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=None):
+def do_chart(args,plot_parser,printer=NullWriter()): #sample_dict,landmark="landmark",title=None):
     """Plot metagene profiles against one another
     
     Parameters
@@ -872,9 +866,9 @@ def do_chart(args,printer=NullWriter()): #sample_dict,landmark="landmark",title=
         printer.write("Could not import matplotlib.style. Consider upgrading to matplotlib >=1.4.0")
 
     title = args.title
-    colors = get_colors_from_args(args,len(args.infiles))
+    colors = plot_parser.get_colors_from_args(args,len(args.infiles))
 
-    fig = get_figure_from_args(args)
+    fig = plot_parser.get_figure_from_args(args)
     ax = plt.gca()
     min_x = numpy.inf
     max_x = -numpy.inf
@@ -920,10 +914,15 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
-    annotation_file_parser = get_annotation_file_parser()
-    mask_file_parser = get_mask_file_parser()
-    plotting_parser = get_plotting_parser()
+    al = AlignmentParser(disabled=["normalize"])
+    an = AnnotationParser()
+    pp = PlottingParser()
+    mp = MaskParser()
+    
+    alignment_file_parser  = al.get_parser()
+    annotation_file_parser = an.get_parser()
+    mask_file_parser = mp.get_parser()
+    plotting_parser = pp.get_parser()
     
     generator_help = "Create ROI file from genome annotation"
     generator_desc = format_module_docstring(group_regions_make_windows.__doc__)
@@ -1017,9 +1016,8 @@ def main(argv=sys.argv[1:]):
             
         # open annotations
         printer.write("Opening annotation files: %s..." % ", ".join(args.annotation_files))
-        transcripts = get_transcripts_from_args(args,printer=printer)
-        
-        mask_hash = get_genome_hash_from_mask_args(args)
+        transcripts = an.get_transcripts_from_args(args,printer=printer)
+        mask_hash = mp.get_genome_hash_from_args(args)
         
         # get ROIs
         printer.write("Generating regions of interest...")   
@@ -1053,12 +1051,12 @@ def main(argv=sys.argv[1:]):
     
     # 'count' subprogram
     elif args.program == "count":
-        do_count(args,printer)
+        do_count(args,al,pp,printer)
 
     # 'plot' subprogram
     elif args.program == "chart":
         assert len(args.labels) in (0,len(args.infiles))
-        do_chart(args,printer)
+        do_chart(args,pp,printer)
 
     printer.write("Done.")
 
