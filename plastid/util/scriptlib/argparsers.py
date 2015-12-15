@@ -66,7 +66,6 @@ Your script will then be able process various sorts  of count/alignment and anno
 from the arguments.
 
 
-
 See Also
 --------
 :py:mod:`argparse`
@@ -90,9 +89,6 @@ import sys
 import pkg_resources
 import pysam
 
-
-from abc import abstractmethod
-from collections import OrderedDict
 from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
 #from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
@@ -163,13 +159,6 @@ class Parser(object):
         
         # define in __init__ of subclass
         self.arguments = []
-    
-    @abstractmethod
-    def process_args(self,args):
-        """Method for process :class:`argparse.Namespace` object into
-        appropriate return type. Must be implemented in subclasses
-        """
-        pass
     
     def get_parser(self,parser=None,groupname=None,arglist=None,title=None,description=None,**kwargs):
         """Create an populate :class:`argparse.ArgumentParser` with arguments
@@ -676,7 +665,7 @@ class AnnotationParser(Parser):
     for download & documentation of Kent utilities""")
                     sys.exit(1)
                 else:
-                    printer.write(GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format.lower()))
+                    printer.write(GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format))
                     sys.exit(1)
     
         printer.write("Parsing features in %s..." % ", ".join(args.annotation_files))
@@ -730,7 +719,8 @@ class AnnotationParser(Parser):
                 msg = """Transcript assembly on FORMAT files can require a lot of memory.
     Consider using a sorted file with the '--sorted' flag and/or tabix-compression.
     """
-                msg += GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format.lower())
+                msg += GFF_SORT_MESSAGE
+                msg = msg.replace("FORMAT",args.annotation_format)
                 warnings.warn(msg,ArgumentWarning)
         
         if args.annotation_format.lower() == "gff3":
@@ -829,15 +819,250 @@ class AnnotationParser(Parser):
 #===============================================================================
         
 class SequenceParser(AnnotationParser):
-    pass
+    """Parser for sequence files"""
+    
+    def __init__(self,
+                 groupname="sequence_options",
+                 prefix="",
+                 disabled=None,
+                 input_choices=("fasta","fastq","twobit","genbank","embl"),
+                 ):
+        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        self.input_choices = input_choices
+        self.arguments = [
+                ("sequence_file"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),
+                                            type=str,
+                                            help="A file of DNA sequence")),                               
+                ("sequence_format"   , dict(choices=input_choices,
+                                            default="fasta",
+                                            help="Format of %ssequence_file (Default: fasta)." % prefix)),    
+            ]
+        
+    def get_parser(self,
+                   title=_DEFAULT_SEQUENCE_PARSER_TITLE,
+                   description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
+        """Return an :py:class:`~argparse.ArgumentParser` that opens sequence files
+         
+        Parameters
+        ----------
+        
+        title : str, optional
+            title for option group (used in command-line help screen)
+            
+        description : str, optional
+            description of parser (used in command-line help screen)
+        
+       
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
+        
+        
+        See also
+        --------
+        get_seqdict_from_args
+            function that parses the :py:class:`~argparse.Namespace` returned
+            by this :py:class:`~argparse.ArgumentParser`
+        """        
+        
+        return Parser.get_parser(self,title=title,description=description)
+
+    def get_seqdict_from_args(self,args,index=True,printer=None):
+        """Retrieve a dictionary-like object of sequences
+    
+        Parameters
+        ----------
+        args : :py:class:`argparse.Namespace`
+            Namespace object from :py:func:`get_sequence_file_parser`
+        
+        index : bool, optional
+            If sequence format is anything other than twobit, open with
+            lazily-evaluating :func:`Bio.SeqIO.index` instead of
+            :func:`Bio.SeqIO.to_dict` (Default: `True`)
+            
+        printer : file-like
+            A stream to which stderr-like info can be written (Default: |NullWriter|) 
+    
+        Returns
+        -------
+        dict-like
+            Dictionary-like object mapping chromosome names to
+            :class:`Bio.SeqRecord.SeqRecord`-like objects
+        """
+        if printer is None:
+            printer = NullWriter()
+            
+        args = PrefixNamespaceWrapper(args,self.prefix)
+        printer.write("Opening sequence file '%s'." % args.sequence_file)
+        if args.sequence_format == "twobit":
+            from plastid.genomics.seqtools import TwoBitSeqRecordAdaptor
+            return TwoBitSeqRecordAdaptor(args.sequence_file)
+        else:
+            from Bio import SeqIO
+            if index == True:
+                return SeqIO.index(args.sequence_file,args.sequence_format)
+            else:
+                return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))    
 
 #===============================================================================
 # INDEX: Plotting parser
 #===============================================================================
 
 class PlottingParser(Parser):
-    pass
+    """Parser for plotting options"""
 
+    def __init__(self,
+                 groupname="plotting_options",
+                 prefix="",
+                 disabled=None,
+                 **kwargs):
+        Parser.__init__(self,prefix=prefix,disabled=disabled,**kwargs)
+        from matplotlib.backend_bases import FigureCanvasBase as fcb
+        if len(prefix) > 0:
+            prefix += "_"
+    
+        try:
+            filetypes = sorted(fcb.get_supported_filetypes().keys())
+            default_ftype = fcb.get_default_filetype()
+        except: # matplotlib < 1.4.0
+            filetypes = ["eps","jpeg","pdf","png","svg"]
+            default_ftype = "pdf"
+        
+        self.arguments = [
+                ("figformat",dict(default=default_ftype,type=str,choices=filetypes,
+                                  help="File format for figure(s); Default: %(default)s)")),
+                ("figsize",  dict(nargs=2,default=None,type=float,metavar="N",
+                                  help="Figure width and height, in inches. (Default: use matplotlibrc params)"
+                                  )),
+                ("cmap",     dict(type=str,default=None,
+                                  help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)"
+                                  )),
+                ("dpi",      dict(type=int,default=150,
+                                  help="Figure resolution (Default: %(default)s)")),
+            ]
+        
+        try:
+            import matplotlib.style
+            stylesheets = matplotlib.style.available
+    
+            if "stylesheet" not in disabled:
+                self.arguments.append(("stylesheet",
+                                       dict(default=None,choices=stylesheets,
+                                            help="Use this matplotlib stylesheet instead of matplotlibrc params")
+                                     ))
+        except ImportError: # matplotlib < 1.4.0
+            pass
+            
+    def get_parser(self,title=_DEFAULT_PLOTTING_TITLE,description=None):
+        """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
+    
+        Parameters
+        ----------
+            
+        title : str, optional
+            title for option group (used in command-line help screen)
+            
+        description : str, optional
+            description of parser (used in command-line help screen)
+        
+       
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
+        """
+        return Parser.get_parser(self,title=title,description=description)
+
+    def get_figure_from_args(self,args,**kwargs):
+        """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
+    
+        A new figure is created with parameters specified in `args`. If these are 
+        not found, values found in `**kwargs` will instead be used. If these are 
+        not found, we fall back to matplotlibrc values.
+    
+        Parameters
+        ----------
+        args : :class:`argparse.Namespace`
+            Namespace object from :func:`get_plotting_parser`
+    
+        kwargs : keyword arguments
+            Fallback arguments for items not defined in `args`, plus any other
+            keyword arguments.
+    
+        Returns
+        -------
+        :class:`matplotlib.figure.Figure`
+            Matplotlib figure
+        """
+        import matplotlib.pyplot as plt
+        args = PrefixNamespaceWrapper(args,self.prefix)
+    
+        fargs = {}
+        # keep this loop in place in case we add additional command line attributes as fig properties later
+        for attr in ("figsize",): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
+            v = getattr(args,attr,None)
+            if v is None:
+                v = getattr(kwargs,attr,None)
+            if v is not None:
+                fargs[attr] = v
+    
+        # copy values from fargs
+        kwargs.update(fargs)
+        return plt.figure()
+        #return plt.figure(**kwargs)
+
+    def get_colors_from_args(self,args,num_colors):
+        """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
+    
+        If a matplotlib colormap is specified in `args.figcolors`, colors will be
+        generated from that map.
+    
+        Otherwise, if a stylesheet is specified, colors will be fetched from 
+        the stylesheet's color cycle.
+        
+        Otherwise, colors will be chosen from the default color cycle specified
+        ``matplotlibrc``.
+    
+    
+        Parameters
+        ----------
+        args : :class:`argparse.Namespace`
+            Namespace object from :func:`get_plotting_parser`
+    
+        num_colors : int
+            Number of colors to fetch
+        
+    
+        Returns
+        -------
+        list
+            List of matplotlib colors
+        """
+        import matplotlib.cm
+        args = PrefixNamespaceWrapper(args,self.prefix)
+    
+        figcolors  = getattr(args,"cmap",None)
+        stylesheet = getattr(args,"stylesheet",None)
+    
+        if figcolors is not None:
+            import numpy
+            cmap = matplotlib.cm.get_cmap(figcolors) 
+            if num_colors > 1:
+                colors = cmap(numpy.linspace(0,1.0,num_colors))
+            else:
+                colors = [cmap(0.5)]
+        else:
+            from itertools import cycle
+            try:
+                import matplotlib.style
+                if stylesheet is not None:
+                    matplotlib.style.use(stylesheet)
+            except ImportError:
+                pass
+    
+            color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
+            colors = [next(color_cycle) for _ in range(num_colors)]
+    
+        return colors
 
 
 
@@ -1581,11 +1806,11 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
 # INDEX: Sequence file parser
 #===============================================================================
 
-def get_sequence_file_parser(input_choices=["fasta","fastq","twobit","genbank","embl"],
-                               disabled=[],
-                               prefix="",
-                               title=_DEFAULT_SEQUENCE_PARSER_TITLE,
-                               description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
+def get_sequence_file_parser(input_choices=("fasta","fastq","twobit","genbank","embl"),
+                             disabled=(),
+                             prefix="",
+                             title=_DEFAULT_SEQUENCE_PARSER_TITLE,
+                             description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
      
@@ -1620,22 +1845,24 @@ def get_sequence_file_parser(input_choices=["fasta","fastq","twobit","genbank","
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    sequence_file_parser = argparse.ArgumentParser(add_help=False)
-    """Open sequence file in %s formats""" % ", ".join(input_choices)
-
-    option_dict = OrderedDict([
-                    ("sequence_file"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),
-                                                type=str,
-                                                help="A file of DNA sequence")),                               
-                    ("sequence_format"   , dict(choices=input_choices,
-                                                default="fasta",
-                                                help="Format of %ssequence_file (Default: fasta)." % prefix)),    
-                   ])
-
-    for k,v in filter(lambda x: x[0] not in disabled,option_dict.items()):
-        sequence_file_parser.add_argument("--%s%s" % (prefix,k),**v)
-    
-    return sequence_file_parser
+    tmp = SequenceParser(disabled=disabled,prefix=prefix,input_choices=input_choices)
+    return tmp.get_parser(title=title,description=description)
+#     sequence_file_parser = argparse.ArgumentParser(add_help=False)
+#     """Open sequence file in %s formats""" % ", ".join(input_choices)
+# 
+#     option_dict = OrderedDict([
+#                     ("sequence_file"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),
+#                                                 type=str,
+#                                                 help="A file of DNA sequence")),                               
+#                     ("sequence_format"   , dict(choices=input_choices,
+#                                                 default="fasta",
+#                                                 help="Format of %ssequence_file (Default: fasta)." % prefix)),    
+#                    ])
+# 
+#     for k,v in filter(lambda x: x[0] not in disabled,option_dict.items()):
+#         sequence_file_parser.add_argument("--%s%s" % (prefix,k),**v)
+#     
+#     return sequence_file_parser
 
 def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
@@ -1664,17 +1891,19 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
         Dictionary-like object mapping chromosome names to
         :class:`Bio.SeqRecord.SeqRecord`-like objects
     """
-    args = PrefixNamespaceWrapper(args,prefix)
-    printer.write("Opening sequence file '%s'." % args.sequence_file)
-    if args.sequence_format == "twobit":
-        from plastid.genomics.seqtools import TwoBitSeqRecordAdaptor
-        return TwoBitSeqRecordAdaptor(args.sequence_file)
-    else:
-        from Bio import SeqIO
-        if index == True:
-            return SeqIO.index(args.sequence_file,args.sequence_format)
-        else:
-            return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))
+    tmp = SequenceParser(prefix=prefix)
+    return tmp.get_seqdict_from_args(args, index=index, printer=printer)
+#     args = PrefixNamespaceWrapper(args,prefix)
+#     printer.write("Opening sequence file '%s'." % args.sequence_file)
+#     if args.sequence_format == "twobit":
+#         from plastid.genomics.seqtools import TwoBitSeqRecordAdaptor
+#         return TwoBitSeqRecordAdaptor(args.sequence_file)
+#     else:
+#         from Bio import SeqIO
+#         if index == True:
+#             return SeqIO.index(args.sequence_file,args.sequence_format)
+#         else:
+#             return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))
 
 
 #===============================================================================
@@ -1712,33 +1941,35 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     get_colors_from_args
         parse colors and/or colormaps from this argument parser
     """
+#    tmp = PlottingParser(prefix=prefix,disabled=disabled)
+#    return tmp.get_parser(title=title)
     from matplotlib.backend_bases import FigureCanvasBase as fcb
     if len(prefix) > 0:
         prefix += "_"
-
+ 
     try:
         filetypes = sorted(fcb.get_supported_filetypes().keys())
         default_ftype = fcb.get_default_filetype()
     except: # matplotlib < 1.4.0
         filetypes = ["eps","jpeg","pdf","png","svg"]
         default_ftype = "pdf"
-
+ 
     parser   = argparse.ArgumentParser(add_help=False)
     plotargs = parser.add_argument_group(title=title)
     if "title" not in disabled:
         plotargs.add_argument("--%stitle" % prefix,default=None,type=str,
             help="Use this chart title")
-
+ 
     try:
         import matplotlib.style
         stylesheets = matplotlib.style.available
-
+ 
         if "stylesheet" not in disabled:
             plotargs.add_argument("--%sstylesheet" % prefix,default=None,choices=stylesheets,
                 help="Use this matplotlib stylesheet instead of matplotlibrc params")
     except ImportError: # matplotlib < 1.4.0
         pass
-
+ 
     if "figformat" not in disabled:
         plotargs.add_argument("--%sfigformat" % prefix,default=default_ftype,type=str,
             choices=filetypes,
@@ -1752,7 +1983,7 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     if "dpi" not in disabled:
         plotargs.add_argument("--%sdpi" % prefix,type=int,default=150,
             help="Figure resolution (Default: %(default)s)")
-
+ 
     return parser
 
 def get_figure_from_args(args,**kwargs):
@@ -1776,20 +2007,22 @@ def get_figure_from_args(args,**kwargs):
     :class:`matplotlib.figure.Figure`
         Matplotlib figure
     """
+#    tmp = PlottingParser()
+#    return tmp.get_figure_from_args(args,**kwargs)
     import matplotlib.pyplot as plt
-
+  
     fargs = {}
     # keep this loop in place in case we add additional command line attributes as fig properties later
-    for attr in ("figsize"): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
+    for attr in ("figsize",): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
         v = getattr(args,attr,None)
         if v is None:
             v = getattr(kwargs,attr,None)
         if v is not None:
             fargs[attr] = v
-
+  
     # copy values from fargs
     kwargs.update(fargs)
-
+  
     return plt.figure(**kwargs)
 
 def get_colors_from_args(args,num_colors):
@@ -1819,12 +2052,14 @@ def get_colors_from_args(args,num_colors):
     list
         List of matplotlib colors
     """
-    import matplotlib
+#    tmp = PlottingParser()
+#    return tmp.get_colors_from_args(args,num_colors)
+      
     import matplotlib.cm
-
+   
     figcolors  = getattr(args,"cmap",None)
     stylesheet = getattr(args,"stylesheet",None)
-
+   
     if figcolors is not None:
         import numpy
         cmap = matplotlib.cm.get_cmap(figcolors) 
@@ -1840,10 +2075,10 @@ def get_colors_from_args(args,num_colors):
                 matplotlib.style.use(stylesheet)
         except ImportError:
             pass
-
+   
         color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
         colors = [next(color_cycle) for _ in range(num_colors)]
-
+   
     return colors
 
 
