@@ -362,7 +362,7 @@ class AlignmentParser(Parser):
                  "center",
                  ]
         
-        plugins = set(list(self.bamfuncs.keys() + list(self.bowtiefuncs.keys())))
+        plugins = set(list(self.bamfuncs.keys()) + list(self.bowtiefuncs.keys()))
         rules.extend(sorted(plugins))
         
         rules = ["`--%s`" % X for X in rules]
