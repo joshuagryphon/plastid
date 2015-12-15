@@ -152,53 +152,76 @@ def catch_warnings(simple_filter="ignore"):
     
     return decorator
 
-def deprecated(func_or_class):
+def deprecated(func=None,version=None,instead=None):
     """Deprecation annotation decorator for functions or classes. Wrapped
     functions or classes will raise FutureWarnings with called or instantiated,
     respectively.
     
     Parameters
     ----------
-    func_or_class : function or class
-        Function or class to deprecate
+    func : function or class, optional
+        Function or class to deprecate. This is just a hack to main backward
+        compatibility with non-keyword accepting versions of `deprecated`.
+
+    version : str, optional
+        If not `None`, version by which deprecated function or class will be removed
+    
+    instead : str, optional
+        If not `None`, users will be told to use this function or class instead 
 
     Returns
     -------
     object
         wrapped function or class
-    """
-    # Based on useful hints from http://wiki.python.org/moin/PythonDecoratorLibrary
-    if isinstance(func_or_class,types.FunctionType):
-        @functools.wraps(func_or_class)
-        def new_func(*args,**kwargs):
-            message = "Call to deprecated function %s() which will be removed from future versions of module %s" % (func_or_class.__name__,
-                                                                                                                    func_or_class.__module__)
-            func_code = get_func_code(func_or_class)
-            warnings.warn_explicit(message,
-                                   category = DeprecationWarning,
-                                   filename = func_code.co_filename,
-                                   lineno = func_code.co_firstlineno + 1)
-            return func_or_class(*args,**kwargs)
+    """    
+    
+    def decorator(func_or_class):
+        message = "is deprecated and will be removed from module %s in " % func_or_class.__module__
+        if version is not None:
+            message += ("plastid version %s." % version)
+        else:
+            message += "future versions of plastid."
+            
+        if instead is not None:
+            message += " Use %s instead." % instead
         
-        return new_func
-    # two tests here. Top line for Python 2.7. Bottom for 3.x
-    elif (sys.version_info <= (3,) and (isinstance(func_or_class,types.ClassType) or isinstance(func_or_class,types.TypeType))) \
-          or isinstance(func_or_class,type):
-        old_init = func_or_class.__init__
-        @functools.wraps(func_or_class.__init__)
-        def new_func(self,*args,**kwargs):
-            message = "Instantiation of deprecated class %s which will be removed from future versions of module %s" % (func_or_class.__name__,
-                                                                                                                        func_or_class.__module__)
-            warnings.warn_explicit(message,
-                                   category = DeprecationWarning,
-                                   filename = sys._getframe(1).f_globals["__name__"],
-                                   lineno = sys._getframe(1).f_lineno )
-            return old_init(self,*args,**kwargs)
-        
-        func_or_class.__init__ = new_func
-        return func_or_class
-    else:
-        raise TypeError("Attempt to deprecate '%s', a %s. Only functions and classes can be deprecated." % (func_or_class.__name__,type(func_or_class)))
+        message = "%s '%s' " + message
+        # Based on useful hints from http://wiki.python.org/moin/PythonDecoratorLibrary
+        if isinstance(func_or_class,types.FunctionType):
+            message = message % ("Function", func_or_class.__name__)
+            @functools.wraps(func_or_class)
+            def new_func(*args,**kwargs):
+                func_code = get_func_code(func_or_class)
+                warnings.warn_explicit(message,
+                                       category = DeprecationWarning,
+                                       filename = func_code.co_filename,
+                                       lineno = func_code.co_firstlineno + 1)
+                return func_or_class(*args,**kwargs)
+            
+            return new_func
+        # two tests here. Top line for Python 2.7. Bottom for 3.x
+        elif (sys.version_info <= (3,) and (isinstance(func_or_class,types.ClassType) or isinstance(func_or_class,types.TypeType))) \
+              or isinstance(func_or_class,type):
+            old_init = func_or_class.__init__
+            message = message % ("Class", func_or_class.__name__)
+            @functools.wraps(func_or_class.__init__)
+            def new_func(self,*args,**kwargs):
+                warnings.warn_explicit(message,
+                                       category = DeprecationWarning,
+                                       filename = sys._getframe(1).f_globals["__name__"],
+                                       lineno = sys._getframe(1).f_lineno )
+                return old_init(self,*args,**kwargs)
+            
+            func_or_class.__init__ = new_func
+            return func_or_class
+        else:
+            raise TypeError("Attempt to deprecate '%s', a %s. Only functions and classes can be deprecated." % (func_or_class.__name__,type(func_or_class)))
+
+    if func is not None:
+        return decorator(func)
+
+    return decorator
+
 
 def skip_if_abstract(func):
     """Decorator function to keep :py:mod:`unittest` from running methods
