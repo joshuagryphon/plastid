@@ -89,12 +89,13 @@ from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
 # INDEX: String constants used in parsers below
 #===============================================================================
 
+_MAPPING_RULE_TITLE = "alignment mapping options (BAM & bowtie files only)"
 _MAPPING_RULE_DESCRIPTION = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
-(`fiveprime_variable`, `fiveprime`, `threeprime`, or `center`) is required.
+(%s) is required.
 `--offset`, `--nibble`, `--min_length` and `--max_length` are optional."""
 
 _DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = "Open alignment or count files and optionally set mapping rules"
-_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "alignment mapping rules (for BAM & bowtie files)"
+_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "count & alignment file options"
 
 _DEFAULT_ANNOTATION_PARSER_DESCRIPTION = "Open one or more genome annotation files"
 _DEFAULT_ANNOTATION_PARSER_TITLE = "annotation file options (one or more annotation files required)"
@@ -355,13 +356,25 @@ class AlignmentParser(Parser):
         :class:`argparse.ArgumentParser`
         """        
         parser = Parser.get_parser(self,title=title,description=description,**kwargs)
+        rules = ["fiveprime",
+                 "fiveprime_variable",
+                 "threeprime",
+                 "center",
+                 ]
+        
+        plugins = set(list(self.bamfuncs.keys() + list(self.bowtiefuncs.keys())))
+        rules.extend(sorted(plugins))
+        
+        rules = ["`--%s`" % X for X in rules]
+        rulestr = ", ".join(rules)
+        
         if self.allow_mapping == True:
             Parser.get_parser(self,
                               parser=parser,
                               groupname="mapping_options",
                               arglist=self.map_arguments,
-                              title=title,
-                              description=_MAPPING_RULE_DESCRIPTION,
+                              title=_MAPPING_RULE_TITLE,
+                              description=_MAPPING_RULE_DESCRIPTION % rulestr,
                               )
         
         return parser
@@ -605,7 +618,7 @@ class AnnotationParser(Parser):
             if arglist is not None:            
                 Parser.get_parser(self,
                                   parser=parser,
-                                  groupname="%s_options" % k,
+                                  groupname="%s_%s_options" % (self.groupname,k),
                                   title="%s-specific options" % k,
                                   arglist=arglist)
         
@@ -807,11 +820,75 @@ class AnnotationParser(Parser):
                 elif tmp.tabix == True:
                     return TabixGenomeHash(tmp.annotation_files,tmp.annotation_format,printer=printer)
                 else:
-                    hash_ivcs = get_segmentchains_from_args(args,prefix=prefix,printer=printer)
+                    hash_ivcs = self.get_transcripts_from_args(args,printer=printer)
                     return GenomeHash(hash_ivcs)
         else:
             return GenomeHash()
 
+
+
+class MaskParser(AnnotationParser):
+
+    def __init__(self,
+                 prefix="mask_",
+                 disabled=None,
+                 groupname="mask_options",
+                 input_choices=("BED","BigBed","GTF2","GFF3","PSL")
+                ):
+        """Create a parser for genomic features in an annotation file
+        
+    `   Parameters
+        ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
+        prefix : str, optional
+            string prefix to add to default argument options (Default: "")
+
+        disabled : list, optional
+            list of parameter names that should be disabled from parser,
+            without preceding dashes
+
+        input_choices : list, optional
+            list of permitted alignment file type choices for input
+        
+        allow_mapping : bool, optional
+            Enable/disable user configuration of mapping rules (default: True)
+        """
+        AnnotationParser.__init__(self,
+                                  prefix=prefix,
+                                  disabled=disabled,
+                                  groupname=groupname,
+                                  input_choices=("BED","BigBed","GTF2","GFF3","PSL"))
+
+    def get_parser(self,
+                   title=_MASK_PARSER_TITLE,
+                   description=_MASK_PARSER_DESCRIPTION,
+                   **kwargs):
+        """Return an :py:class:`~argparse.ArgumentParser` that opens
+        alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+         
+        In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
+        rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
+        read length filters
+        
+        
+        Parameters
+        ----------
+        title : str, optional
+            title for option group (used in command-line help screen)
+                
+        description : str, optional
+            description of parser (used in command-line help screen)
+            
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
+        """        
+        return AnnotationParser.get_parser(self,title=title,description=description,**kwargs)
+        
 #===============================================================================
 # INDEX: Sequence parser
 #===============================================================================
