@@ -90,6 +90,7 @@ import pkg_resources
 import pysam
 
 from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
+from plastid.util.services.decorators import deprecated
 #from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
 from plastid.util.io.filters import CommentReader
@@ -1072,6 +1073,7 @@ class PlottingParser(Parser):
 #===============================================================================
 
 
+@deprecated(version="0.5.0",instead="AlignmentParser")
 def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
                               disabled=None,
                               prefix="",
@@ -1211,7 +1213,7 @@ def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
 #     else:
 #         return alignment_file_parser
 
-
+@deprecated(version="0.5.0",instead="AlignmentParser.get_genome_array_from_args()")
 def get_genome_array_from_args(args,prefix="",disabled=None,printer=None):
     """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
     from arguments parsed by :py:func:`get_alignment_file_parser`
@@ -1349,7 +1351,7 @@ def get_genome_array_from_args(args,prefix="",disabled=None,printer=None):
 # INDEX: Annotation file parser, and helper functions
 #===============================================================================
 
-
+@deprecated(version="0.5.0",instead="AnnotationParser")
 def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
                                disabled=[],
                                prefix="",
@@ -1454,6 +1456,7 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
 #     else:
 #         return annotation_file_parser
 
+@deprecated(version="0.5.0",instead="AnnotationParser.get_transcripts_from_args()")
 def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=None,require_sort=False):
     """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
     
@@ -1617,7 +1620,7 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
 #                                  return_type=return_type,printer=printer)
 #         
 #     return transcripts
-
+@deprecated(version="0.5.0",instead="AnnotationParser.get_parser()")
 def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PSL"],
                                  disabled=[],
                                  prefix="",
@@ -1663,6 +1666,7 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
                                       disabled=disabled,
                                       description=description)
 
+@deprecated(version="0.5.0",instead="AnnotationParser.get_transcripts_from_args()")
 def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),require_sort=False):
     """Return a list of |SegmentChain| objects from arguments parsed by an
     :py:class:`~argparse.ArgumentParser` created by :py:func:`get_segmentchain_file_parser`
@@ -1806,6 +1810,7 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
 # INDEX: Sequence file parser
 #===============================================================================
 
+@deprecated(version="0.5.0",instead="SequenceParser")
 def get_sequence_file_parser(input_choices=("fasta","fastq","twobit","genbank","embl"),
                              disabled=(),
                              prefix="",
@@ -1864,6 +1869,7 @@ def get_sequence_file_parser(input_choices=("fasta","fastq","twobit","genbank","
 #     
 #     return sequence_file_parser
 
+@deprecated(version="0.5.0",instead="SequenceParser.get_seqdict_from_args()")
 def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
 
