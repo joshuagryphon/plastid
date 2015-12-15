@@ -122,6 +122,7 @@ See http://www.htslib.org/doc/tabix.html for download and documentation of tabix
 #===============================================================================
 
 class Parser(object):
+    """Base class for argument parser factories used below"""
     
     def __init__(self,groupname=None,prefix="",disabled=None,**kwargs):
         """Create a parser
@@ -214,6 +215,11 @@ class AlignmentParser(Parser):
         
     `   Parameters
         ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group. 
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -333,6 +339,11 @@ class AlignmentParser(Parser):
         
         Parameters
         ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
         title : str, optional
             title for option group (used in command-line help screen)
                 
@@ -501,6 +512,11 @@ class AnnotationParser(Parser):
         
     `   Parameters
         ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -680,8 +696,8 @@ class AnnotationParser(Parser):
         if args.annotation_format.lower() == "bigbed":
             if len(args.annotation_files) > 1:
                 printer.write("Bad arguments: we can only process one BigBed file.")
-            if tabix == True:
                 sys.exit(2)
+            if tabix == True:
                 warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",ArgumentWarning)
     
             from plastid.readers.bigbed import BigBedReader
@@ -752,11 +768,6 @@ class AnnotationParser(Parser):
         args : :py:class:`argparse.Namespace`
             Namespace object from :py:func:`get_mask_file_parser`
         
-        prefix : str, optional
-            string prefix to add to default argument options.
-            Must be same prefix that was added in call to :py:func:`get_mask_file_parser`
-            (Default: "mask_")
-        
         printer : file-like
             A stream to which stderr-like info can be written (Default: |NullWriter|) 
     
@@ -814,6 +825,25 @@ class SequenceParser(AnnotationParser):
                  disabled=None,
                  input_choices=("fasta","fastq","twobit","genbank","embl"),
                  ):
+        """Create a parser for genomic sequence
+        
+    `   Parameters
+        ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
+        prefix : str, optional
+            string prefix to add to default argument options (Default: "")
+
+        disabled : list, optional
+            list of parameter names that should be disabled from parser,
+            without preceding dashes
+
+        input_choices : list, optional
+            list of permitted alignment file type choices for input
+        """
         Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
         self.input_choices = input_choices
         self.arguments = [
@@ -895,7 +925,6 @@ class SequenceParser(AnnotationParser):
 # INDEX: Plotting parser
 #===============================================================================
 
-# FIXME: not working for some reason
 class PlottingParser(Parser):
     """Parser for plotting options"""
 
@@ -903,6 +932,22 @@ class PlottingParser(Parser):
                  groupname="plotting_options",
                  prefix="",
                  disabled=None):
+        """Create a parser for plotting arguments
+        
+    `   Parameters
+        ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
+        prefix : str, optional
+            string prefix to add to default argument options (Default: "")
+
+        disabled : list, optional
+            list of parameter names that should be disabled from parser,
+            without preceding dashes
+        """        
         Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
         from matplotlib.backend_bases import FigureCanvasBase as fcb
         if len(prefix) > 0:

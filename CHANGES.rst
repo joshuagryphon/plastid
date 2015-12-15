@@ -15,6 +15,11 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 
 
 
+Unreleased
+----------
+  - Revamped argparsers; now much easier to use and more concise
+
+
 plastid [0.4.4] = [2105-11-16]
 ------------------------------
 
