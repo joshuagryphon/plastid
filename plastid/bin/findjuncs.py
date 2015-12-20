@@ -91,33 +91,37 @@ def main(argv=sys.argv[1:]):
     
         printer.write("params: " +" ".join(argv))
         printer.write("Detecting & comparing junctions...")
-        ex_pairs = {}
+        ex_pairs = [] 
         
         c = 0
         u = 0
-        for ivc in transcripts:
-            if len(ivc) > 1: # if multi-exon
-                chrom = ivc.chrom
-                strand = ivc.strand
-                for i in range(0,len(ivc)-1):
-                    seg1 = ivc[i]
-                    seg2 = ivc[i+1]
+        for chain in transcripts:
+            if len(chain) > 1: # if multi-exon
+                chrom = chain.chrom
+                strand = chain.strand
+                for i in range(0,len(chain)-1):
+                    seg1 = chain[i]
+                    seg2 = chain[i+1]
                     if c % 1000 == 0 and c > 0:
                         printer.write("Processed %s junctions. Found %s unique..." % (c,u) )
                     c+=1
                     key = (chrom,seg1.end,seg2.start,strand)
-                    if key not in ex_pairs.keys():
+                    if key not in ex_pairs:
+                        ex_pairs.append(key)
                         u += 1
-                        new_ivc = SegmentChain(seg1,seg2)
-                        ex_pairs[key] = new_ivc
-                        bed_out.write(new_ivc.as_bed())
+                        new_chain = SegmentChain(seg1,seg2)
+                        bed_out.write(new_chain.as_bed())
                         if args.export_tophat == True:
                             my_junc = (chrom,seg1.end-1,seg2.start,strand)
                             tophat_out.write("%s\t%s\t%s\t%s\n" % my_junc)
-        del seg1
-        del seg2
-        del ivc
-    
+
+                        del new_chain
+
+                    del seg1
+                    del seg2
+
+                del chain
+
         printer.write("Processed %s total junctions. Found %s unique." % (c,u) )
     
         bed_out.close()
