@@ -233,7 +233,12 @@ class Parser(object):
 
 
 class AlignmentParser(Parser):
-    """Parser for files containing read alignments or quantitative data"""
+    """Parser for files containing read alignments or quantitative data.
+    
+    Checks for additional mapping rules and command-line arguments 
+    by checking the entrypoints ``plastid.mapping_rules`` and
+    ``plastid.mapping_options``
+    """
     
     def __init__(self,prefix="",disabled=None,
                  input_choices=("BAM","bowtie","wiggle"),
