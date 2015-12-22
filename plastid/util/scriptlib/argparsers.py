@@ -117,8 +117,7 @@ _DEFAULT_ANNOTATION_PARSER_TITLE = \
 "annotation file options (one or more annotation files required)"
 
 GFF_SORT_MESSAGE = \
-"""
-Sort and index your GTF2/GFF with Tabix as follows:
+"""Sort and index your GTF2/GFF with Tabix as follows:
 
     $ sort -k1,1 -k4,4n my_file.FORMAT | bgzip > my_file_sorted.FORMAT.gz
     $ tabix -p gff my_file_sorted.FORMAT.gz
@@ -372,8 +371,6 @@ class AlignmentParser(Parser):
             
             self.map_rules = map_rules
             self.map_ops = map_ops
-            
-            self.map_arguments = map_rules + map_ops
     
     def get_parser(self,
                    title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,

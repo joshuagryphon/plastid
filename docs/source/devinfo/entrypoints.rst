@@ -40,31 +40,33 @@ Setting up the folder
 ---------------------
 First, create a folder with structure similar to the following:
 
-    ```
+ .. code-block:: none
+
     my_project/
         setup.py
         my_project/
             __init__.py
             map_rules.py
-    ```
 
+
+Adjust the filenames to suit your project.
 
 
  .. _entrypoints-write-options:
 
 
 
-Writing command-line options
-----------------------------
+Writing command-line options for mapping rules
+----------------------------------------------
 
  .. _entrypoints-mapping-functions:
 
 
 
-Mapping functions
-.................
+Mapping rules
+.............
 
-We assume you have written mapping functions as described in 
+We assume you have written mapping rules as described in 
 :ref:`mapping-rules-roll-your-own`. :data:`plastid` needs some metadata
 to use them. This is specified in a dictionary that defines at least
 `bamfunc` or `bowtiefunc`. All of the remaining keys are optional:
@@ -73,7 +75,7 @@ to use them. This is specified in a dictionary that defines at least
      **Key**              **Value type**     **Value**
     --------------------  -----------------  ---------------------------------------------
 
-    `name`                str                If supplied over-rides the command-line name
+    `name`                str                Overrides the command-line name
                                              of mapping rule defined in ``setup.py``.
                                              I.e. - the flag ``--name`` will be the
                                              command-line argument that invokes the rule
@@ -94,7 +96,7 @@ to use them. This is specified in a dictionary that defines at least
                                              affect its behavior (e.g. 
                                              ``--offset``, ``--nibble`` or
                                              something added in 
-                                             :ref:`entrypoints-additional-parameters`)
+                                             :ref:`entrypoints-parameters`)
 
     ====================  =================  =============================================
 
@@ -113,15 +115,31 @@ might then look something like this:
 
     #!/usr/bin/env python
 
-    def rule1_for_bowtie_files():
-        return
+    def rule1_for_bowtie_files(alignment,args):
+        # calculate position(s) where a single aliignment maps
+        # and the value to place at each position
+        ...
 
-    def rule1_for_BAM_files():
-        # do some complicated calculations
-        return
+        return position_value_tuples
 
-    def rule2_for_BAM_files_only():
-        return
+    def rule1_for_BAM_files(alignments,segment,args):
+        # calculate positions where a list of alignments map,
+        # and a vector of values at each position
+        ...
+
+        return reads_out, count_array
+
+    def rule2_for_BAM_files_only(alignments,segment,args):
+        # calculate positions where a list of alignments map,
+        # and a vector of values at each position
+        ...
+
+        # do something with a command-line argument
+        my_option = args.new_option
+        if my_option == "":
+            pass
+
+        return reads_out, count_array
 
 
     rule1_info = {
@@ -146,8 +164,8 @@ which we define below in :ref:`entrypoints-parameters`.
 
  .. _entrypoints-parameters:
 
-Additional parameters for mapping functions
-...........................................
+Additional parameters for mapping rules
+.......................................
 
 Additional command-line parameters are also specified as dictionaries.
 In these, the keys and values can be any valid parameters for
@@ -171,7 +189,7 @@ That's it!
 
 
 
- .. _entrypoints-setup-py
+ .. _entrypoints-setup-py:
 
 Writing ``setup.py``
 --------------------
@@ -231,11 +249,13 @@ For more information see the documentation for :mod:`setuptools` and / or
 
     )
 
+That's the last piece.
+
  
   .. _entrypoints-install:
 
-Using the new mapping rule
---------------------------
+Installing the new mapping rules
+--------------------------------
 
 Installation is the final step. Enter the folder containing ``setup.py``. 
 Then, to install your new mapping rules, type:
@@ -244,11 +264,29 @@ Then, to install your new mapping rules, type:
 
     $ python setup.py install [--user]
 
- .. If the installation proceeded correctly you should see something like this:
+ .. 
+ 
+ 
+Or, if you plan to keep developing your :term:`mapping rules <mapping rule>`,
+and want :data:`plastid` to be aware of these changes instantly:
 
-    ```
+ .. code-block:: shell
 
-    ... rest of command line help above
+    $ python setup.py develop --user
+
+
+To test your installation, check command-line help from a script that uses
+mapping rules (e.g. ``make_wiggle``):
+
+ .. code-block:: shell
+
+    $ make-wiggle --help
+
+If the installation proceeded correctly you should see something like this:
+
+ .. code-block:: none
+
+    # rest of command line help above
 
 
     alignment mapping options (BAM & bowtie files only):
@@ -285,27 +323,10 @@ Then, to install your new mapping rules, type:
       --new_option N N      Some help text for --new_option
 
 
-    ... remaining command-line help below
-
-    ```
+    # remaining command-line help below
 
 
-Or, if you plan to keep developing your mapipng rules, and want :data:`plastid`
-to be aware of these changes instantly:
-
- .. code-block:: shell
-
-    $ python setup.py develop --user
-
-
-To test your installation, check command-line help from a script that uses
-mapping rules (e.g. ``make_wiggle``):
-
- .. code-block:: shell
-
-    $ make-wiggle --help
-
-If the new mapping rule and command-line arguments are listed, you are ready!
+If the new mapping rule and command-line arguments are listed, you are ready.
 
 
 
@@ -314,7 +335,7 @@ If the new mapping rule and command-line arguments are listed, you are ready!
 See also
 --------
 
-  - :ref:`/concepts/mapping_rules` for information on how to write
+  - :doc:`/concepts/mapping_rules` for information on how to write
     :term:`mapping rules <mapping rule>`
 
   - :mod:`argparse` documentation for information on command-line arguments
