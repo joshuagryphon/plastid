@@ -115,21 +115,27 @@ might then look something like this:
 
     #!/usr/bin/env python
 
-    def rule1_for_bowtie_files(alignment,args):
+    def rule1_for_bowtie_files(alignment,args=None):
         # calculate position(s) where a single aliignment maps
         # and the value to place at each position
+        #
+        # the parsed command-line arguments will be passed
+        # as an argparse.Namespace object
         ...
 
         return position_value_tuples
 
-    def rule1_for_BAM_files(alignments,segment,args):
+    def rule1_for_BAM_files(alignments,segment,args=args):
         # calculate positions where a list of alignments map,
         # and a vector of values at each position
+        #
+        # again, args is an argparse.Namespace object
+        # from the command-line args
         ...
 
         return reads_out, count_array
 
-    def rule2_for_BAM_files_only(alignments,segment,args):
+    def rule2_for_BAM_files_only(alignments,segment,args=args):
         # calculate positions where a list of alignments map,
         # and a vector of values at each position
         ...

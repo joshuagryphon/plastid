@@ -74,6 +74,7 @@ import warnings
 import sys
 import pkg_resources
 import pysam
+import functools
 
 from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
 from plastid.util.services.decorators import deprecated
@@ -492,7 +493,7 @@ class AlignmentParser(Parser):
                 offset_dict = _parse_variable_offset_file(CommentReader(open(args.offset)))
                 map_function = VariableFivePrimeMapFactory(offset_dict)
             elif map_rule in self.bamfuncs:
-                map_function = self.bamfuncs[map_rule](args)
+                map_function = functools.partial(self.bamfuncs[map_rule],args=args)
             else:
                 printer.write("Mapping rule '%s' not implemented for BAM/CRAM input. Exiting." % map_rule)
                 sys.exit(1)
@@ -532,7 +533,8 @@ class AlignmentParser(Parser):
                     elif map_rule == "center":
                         transformation = center_map
                     elif  map_rule in self.bowtiefuncs:
-                        transformation = self.bowtiefuncs[map_rule](args)
+                        transformation = self.bowtiefuncs[map_rule]
+                        trans_args["args"] = args
                     else:
                         printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
                         sys.exit(1)
