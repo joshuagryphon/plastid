@@ -90,32 +90,59 @@ from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
 #===============================================================================
 
 _MAPPING_RULE_TITLE = "alignment mapping options (BAM & bowtie files only)"
-_MAPPING_RULE_DESCRIPTION = """For BAM or bowtie files, one of the mutually exclusive read mapping choices
-(%s) is required.
-`--offset`, `--nibble`, `--min_length` and `--max_length` are optional."""
+_MAPPING_RULE_DESCRIPTION = \
+"""For BAM or bowtie files, one of the mutually exclusive read mapping choices
+is required:
+"""
 
-_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = "Open alignment or count files and optionally set mapping rules"
+
+_MAPPING_OPTION_DESCRIPTION = \
+"""
+The remaining arguments are optional and affect the behavior of specific
+mapping rules:
+"""
+
+
+_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION = \
+"Open alignment or count files and optionally set mapping rules"
+
 _DEFAULT_ALIGNMENT_FILE_PARSER_TITLE = "count & alignment file options"
 
-_DEFAULT_ANNOTATION_PARSER_DESCRIPTION = "Open one or more genome annotation files"
-_DEFAULT_ANNOTATION_PARSER_TITLE = "annotation file options (one or more annotation files required)"
-
-_MASK_PARSER_TITLE = "mask file options (optional)"
-_MASK_PARSER_DESCRIPTION = """Add mask file(s) that annotate regions that should be excluded from analyses
-(e.g. repetitive genomic regions)."""
-
-_DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
-_DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
-
-_DEFAULT_PLOTTING_TITLE = "Plotting options"
 
 
-GFF_SORT_MESSAGE = """Sort and index your GTF2/GFF with Tabix as follows:
+_DEFAULT_ANNOTATION_PARSER_DESCRIPTION = \
+"Open one or more genome annotation files"
+
+_DEFAULT_ANNOTATION_PARSER_TITLE = \
+"annotation file options (one or more annotation files required)"
+
+GFF_SORT_MESSAGE = \
+"""
+Sort and index your GTF2/GFF with Tabix as follows:
 
     $ sort -k1,1 -k4,4n my_file.FORMAT | bgzip > my_file_sorted.FORMAT.gz
     $ tabix -p gff my_file_sorted.FORMAT.gz
 
-See http://www.htslib.org/doc/tabix.html for download and documentation of tabix and bgzip."""
+See http://www.htslib.org/doc/tabix.html for download and documentation of
+tabix and bgzip."""
+
+
+
+_MASK_PARSER_TITLE = "mask file options (optional)"
+_MASK_PARSER_DESCRIPTION = \
+"""Add mask file(s) that annotate regions that should be excluded from analyses
+(e.g. repetitive genomic regions)."""
+
+
+
+_DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
+_DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
+
+
+
+_DEFAULT_PLOTTING_TITLE = "Plotting options"
+
+
 
 
 #===============================================================================
@@ -237,6 +264,7 @@ class AlignmentParser(Parser):
         Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
         self.input_choices = input_choices
         self.allow_mapping = allow_mapping
+        
         self.bamfuncs = {}
         self.bowtiefuncs = {}
         
@@ -272,7 +300,7 @@ class AlignmentParser(Parser):
         if self.allow_mapping == False:
             self.map_arguments = []
         else:
-            self.map_arguments = [
+            map_rules = [
                 ("fiveprime_variable" , dict(action="store_const",
                                              const="fiveprime_variable",
                                              dest="%smapping" % prefix,
@@ -292,6 +320,8 @@ class AlignmentParser(Parser):
                                             help="Subtract N positions from each end of read, "+
                                                  "and add 1/(length-N), to each remaining position, "+
                                                  "where N is specified by `--nibble`")),
+                ]
+            map_ops = [
                 ("offset"           , dict(default=0,
                                             metavar="OFFSET",
                                             help="For `--fiveprime` or `--threeprime`, provide an integer "+
@@ -309,23 +339,42 @@ class AlignmentParser(Parser):
                                                  "end of read before mapping (Default: %(default)s)")),
                 ]
             
-            # TODO: implement
-            for pdict in pkg_resources.iter_entry_points(group="plastid_mapping_rules"):
-                pdict["%smapping" % self.prefix] = pdict["mapping"]
-                pdict.pop("mapping")
-                
-                reg_name = pdict["const"]
+            for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_rules"):
+                reg_name = epoint.name
+                pdict = epoint.load()
+                if "name" in pdict:
+                    reg_name = pdict.pop("name")
                     
-                if "bamfunc" in pdict:
-                    self.bamfuncs[reg_name] = pdict["bamfunc"]
+                pdict["const"]  = reg_name
+                pdict["action"] = "store_const"
+                pdict["dest"]   = "%smapping" % self.prefix
+                
+                bamfunc = pdict.get("bamfunc",None)
+                bowtiefunc = pdict.get("bowtiefunc",None)
+                    
+                if bamfunc is not None:
+                    self.bamfuncs[reg_name] = bamfunc
                     pdict.pop("bamfunc")
                     
-                if "bowtiefunc" in pdict:
-                    self.bowtiefuncs[reg_name] = pdict["bowtiefunc"]
+                if bowtiefunc is not None:
+                    self.bowtiefuncs[reg_name] = bowtiefunc
                     pdict.pop("bowtiefunc")
                         
-                self.map_arguments.extend(pdict.items())
-        
+                map_rules.append((reg_name,pdict))
+            
+            for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_options"):
+                reg_name = epoint.name
+                pdict = epoint.load()
+                if "name" in pdict:
+                    reg_name = pdict.pop("name")
+                    
+                map_ops.append((reg_name,pdict))
+            
+            self.map_rules = map_rules
+            self.map_ops = map_ops
+            
+            self.map_arguments = map_rules + map_ops
+    
     def get_parser(self,
                    title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
                    description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
@@ -356,25 +405,20 @@ class AlignmentParser(Parser):
         :class:`argparse.ArgumentParser`
         """        
         parser = Parser.get_parser(self,title=title,description=description,**kwargs)
-        rules = ["fiveprime",
-                 "fiveprime_variable",
-                 "threeprime",
-                 "center",
-                 ]
-        
-        plugins = set(list(self.bamfuncs.keys() + list(self.bowtiefuncs.keys())))
-        rules.extend(sorted(plugins))
-        
-        rules = ["`--%s`" % X for X in rules]
-        rulestr = ", ".join(rules)
         
         if self.allow_mapping == True:
             Parser.get_parser(self,
                               parser=parser,
                               groupname="mapping_options",
-                              arglist=self.map_arguments,
+                              arglist=self.map_rules,
                               title=_MAPPING_RULE_TITLE,
-                              description=_MAPPING_RULE_DESCRIPTION % rulestr,
+                              description=_MAPPING_RULE_DESCRIPTION,
+                              )
+            Parser.get_parser(self,
+                              parser=parser,
+                              groupname="sub_options",
+                              description=_MAPPING_OPTION_DESCRIPTION,
+                              arglist=self.map_ops,
                               )
         
         return parser
@@ -453,7 +497,8 @@ class AlignmentParser(Parser):
             elif map_rule in self.bamfuncs:
                 map_function = self.bamfuncs[map_rule](args)
             else:
-                map_function = CenterMapFactory()
+                printer.write("Mapping rule '%s' not implemented for BAM/CRAM input. Exiting." % map_rule)
+                sys.exit(1)
             ga.set_mapping(map_function)
             
         else:
@@ -489,10 +534,11 @@ class AlignmentParser(Parser):
                         transformation = center_map
                     elif map_rule == "center":
                         transformation = center_map
-                    elif map_rule in self.bowtiefuncs:
+                    elif  map_rule in self.bowtiefuncs:
                         transformation = self.bowtiefuncs[map_rule](args)
                     else:
-                        transformation = center_map
+                        printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
+                        sys.exit(1)
             
                 for infile in args.count_files:
                     with opener(infile) as my_file:
