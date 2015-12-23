@@ -34,12 +34,7 @@ import pandas as pd
 import numpy
 import matplotlib
 matplotlib.use("Agg")
-from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                              get_transcripts_from_args,\
-                                              get_alignment_file_parser,\
-                                              get_annotation_file_parser,\
-                                              get_plotting_parser,\
-                                              get_colors_from_args
+from plastid.util.scriptlib.argparsers import AlignmentParser, AnnotationParser, PlottingParser
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -65,12 +60,14 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    alignment_file_parser = get_alignment_file_parser(disabled=["normalize",
-                                                                "big_genome",
-                                                                "spliced_bowtie_files"],
-                                                      input_choices=["BAM"])
-    annotation_file_parser = get_annotation_file_parser()
-    plotting_parser = get_plotting_parser()
+    al = AlignmentParser(disabled=["normalize","big_genome","spliced_bowtie_files"],
+                        input_choices=["BAM"])
+    an = AnnotationParser()
+    pp = PlottingParser()
+    
+    alignment_file_parser = al.get_parser()
+    annotation_file_parser = an.get_parser()
+    plotting_parser = pp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -83,10 +80,8 @@ def main(argv=sys.argv[1:]):
     
     parser.add_argument("outbase",type=str,help="Basename for output files")
     args = parser.parse_args(argv)
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=["normalize",
-                                                                    "big_genome",
-                                                                    "spliced_bowtie_files"])
-    transcripts = get_transcripts_from_args(args,printer=printer)
+    gnd = al.get_genome_array_from_args(args,printer=printer)
+    transcripts = an.get_transcripts_from_args(args,printer=printer)
     
     read_lengths = list(range(args.min_length,args.max_length+1))
     codon_buffer = args.codon_buffer
@@ -187,7 +182,7 @@ def main(argv=sys.argv[1:]):
     if args.figsize is not None:
         fig["figsize"] = tuple(args.figsize)
 
-    colors = get_colors_from_args(args,len(read_lengths))
+    colors = pp.get_colors_from_args(args,len(read_lengths))
 
     fn = "%s_phasing.%s" % (args.outbase,args.figformat)
     printer.write("Plotting to %s ..." % fn)

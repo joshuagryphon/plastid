@@ -28,7 +28,7 @@ These include, among others:
     to transform the alignments (e.g. for P-site assignment of 
     :term:`ribosome profiling` data) 
 
-For a complete list, see the :mod:`command-line script documentation <plastid.bin>`
+For a complete list, see :doc:`/scriptlist`.
 
 
 

@@ -50,7 +50,7 @@ import argparse
 import inspect
 import warnings
 from plastid.genomics.roitools import SegmentChain
-from plastid.util.scriptlib.argparsers import get_annotation_file_parser, get_segmentchains_from_args
+from plastid.util.scriptlib.argparsers import AnnotationParser
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -73,7 +73,8 @@ def main(argv=sys.argv[1:]):
 
         Default: sys.argv[1:] (actually command-line arguments)
     """
-    annotation_file_parser = get_annotation_file_parser(input_choices=_ANNOTATION_INPUT_CHOICES)
+    ap = AnnotationParser(input_choices=_ANNOTATION_INPUT_CHOICES)
+    annotation_file_parser = ap.get_parser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -83,7 +84,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("outbase",type=str,help="Basename for output files")
 
     args = parser.parse_args(argv)
-    transcripts = get_segmentchains_from_args(args,printer=printer)
+    transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
     
     with argsopener("%s.bed" % args.outbase,args,"w") as bed_out:
         if args.export_tophat == True:
@@ -99,29 +100,37 @@ def main(argv=sys.argv[1:]):
             if len(chain) > 1: # if multi-exon
                 chrom = chain.chrom
                 strand = chain.strand
+                try:
+                    ep = ex_pairs[(chrom,strand)]
+                except KeyError:
+                    ex_pairs[(chrom,strand)] = []
+                    ep = ex_pairs[(chrom,strand)]
+
                 for i in range(0,len(chain)-1):
+                    
                     seg1 = chain[i]
                     seg2 = chain[i+1]
                     if c % 1000 == 0 and c > 0:
                         printer.write("Processed %s junctions. Found %s unique..." % (c,u) )
                     c+=1
-                    key = (chrom,seg1.end,seg2.start,strand)
-                    if key not in ex_pairs:
-                        ex_pairs.append(key)
+                    key = (seg1.end,seg2.start)
+                        
+                    if key not in ep:
+                        ep.append(key)
                         u += 1
                         new_chain = SegmentChain(seg1,seg2)
                         bed_out.write(new_chain.as_bed())
                         if args.export_tophat == True:
                             my_junc = (chrom,seg1.end-1,seg2.start,strand)
                             tophat_out.write("%s\t%s\t%s\t%s\n" % my_junc)
-
+                        
                         del new_chain
-
+                    
                     del seg1
                     del seg2
-
-                del chain
-
+                    
+            del chain
+    
         printer.write("Processed %s total junctions. Found %s unique." % (c,u) )
     
         bed_out.close()
