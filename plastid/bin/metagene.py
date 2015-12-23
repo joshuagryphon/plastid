@@ -723,6 +723,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     outbase = args.outbase
     count_fn     = "%s_rawcounts.txt.gz" % outbase
     normcount_fn = "%s_normcounts.txt.gz" % outbase
+    mask_fn      = "%s_mask.txt.gz" % outbase
     profile_fn   = "%s_metagene_profile.txt" % outbase
     fig_fn       = "%s_metagene_overview.%s" % (outbase,args.figformat)
 
@@ -768,12 +769,27 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     row_select = denominator >= min_counts
 
     norm_counts = (counts.T.astype(float) / denominator).T
-    norm_counts = numpy.ma.masked_invalid(norm_counts)
+    norm_counts = numpy.ma.MaskedArray(norm_counts,mask=counts.mask)
+    norm_counts.mask[numpy.isnan(norm_counts)] = True
+    norm_counts.mask[numpy.isinf(norm_counts)] = True
 
     printer.write("Saving normalized counts to %s ..." % normcount_fn)
     numpy.savetxt(normcount_fn,norm_counts,delimiter="\t")
+
+    printer.write("Saving masks used in profile building to %s ..." % mask_fn)
+    numpy.savetxt(mask_fn,norm_counts.mask,delimiter="\t")
      
-    profile   = numpy.ma.median(norm_counts[row_select],axis=0)
+    try:
+        profile = numpy.ma.median(norm_counts[row_select],axis=0)
+    except IndexError:
+        profile = numpy.zeros(norm_counts.shape[0])
+    except ValueError:
+        profile = numpy.zeros(norm_counts.shape[0])
+
+    if profile.sum() == 0:
+        printer.write("Metagene profile is zero at all positions. %s ROIs made the minimum count cutoff." % row_select.sum())
+        printer.write("Consider lowering --min_counts (currently %s)." % min_counts)
+
     num_genes = ((~norm_counts.mask)[row_select]).sum(0) 
     profile_table = pd.DataFrame({ "metagene_average" : profile,
                                    "regions_counted"  : num_genes,
