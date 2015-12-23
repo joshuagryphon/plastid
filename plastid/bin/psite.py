@@ -54,11 +54,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
-from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                              get_alignment_file_parser,\
-                                              get_plotting_parser,\
-                                              get_colors_from_args,\
-                                              get_figure_from_args
+from plastid.util.scriptlib.argparsers import AlignmentParser, PlottingParser
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
@@ -67,14 +63,7 @@ from plastid.util.scriptlib.help_formatters import format_module_docstring
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-disabled_args = ["normalize",
-                 "big_genome",
-                 "nibble",
-                 "offset",
-                 "fiveprime_variable",
-                 "fiveprime",
-                 "threeprime",
-                 "center"]
+
 
 def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
     """Calculate a :term:`metagene profile` for each read length in the dataset
@@ -221,10 +210,12 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    alignment_file_parser = get_alignment_file_parser(disabled=disabled_args,
-                                                      input_choices=["BAM"],
-                                                      map_desc="")
-    plotting_parser = get_plotting_parser()
+    ap = AlignmentParser(allow_mapping=False,input_choices=["BAM"],
+                         disabled=["normalize","big_genome",])
+    alignment_file_parser = ap.get_parser()
+    
+    pp = PlottingParser()
+    plotting_parser = pp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -269,7 +260,7 @@ def main(argv=sys.argv[1:]):
     lengths = list(range(min_len,max_len+1))
     outbase = args.outbase
     title  = "Fiveprime read offsets by length" if args.title is None else args.title
-    colors = get_colors_from_args(args,profiles)
+    colors = pp.get_colors_from_args(args,profiles)
  
     printer.write("Opening ROI file %s..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
@@ -277,7 +268,7 @@ def main(argv=sys.argv[1:]):
         roi_fh.close()
         
     printer.write("Opening count files %s..." % ",".join(args.count_files))
-    ga = get_genome_array_from_args(args,printer=printer,disabled=disabled_args)
+    ga = ap.get_genome_array_from_args(args,printer=printer)
 
     
     # remove default size filters
@@ -347,7 +338,7 @@ def main(argv=sys.argv[1:]):
     figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
     default_figsize = (7.5,figheight)
 
-    fig = get_figure_from_args(args,figsize=default_figsize)
+    fig = pp.get_figure_from_args(args,figsize=default_figsize)
 
     ax = plt.gca()
     plt.title(title)
