@@ -128,9 +128,12 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     
     raw_count_dict  = OrderedDict()
     norm_count_dict = OrderedDict()
+    shape = (len(roi_table),window_size)
     for i in range(min_len,max_len+1):
-        raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,(len(roi_table),window_size)))
-        raw_count_dict[i].mask = numpy.tile(False,raw_count_dict[i].shape)
+        # mask all by default
+        raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,shape),
+                                                 mask=numpy.tile(True,shape),
+                                                 dtype=float)
     
     for i,row in roi_table.iterrows():
         if i % 1000 == 0:
@@ -148,8 +151,8 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
         for k in raw_count_dict:
             count_vectors[k] = []
 
-        for iv in roi:
-            reads = ga.get_reads(iv)
+        for seg in roi:
+            reads = ga.get_reads(seg)
             read_dict = {}
             for k in raw_count_dict:
                 read_dict[k] = []
@@ -157,40 +160,48 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
             for read in filter(lambda x: len(x.positions) in read_dict,reads):
                 read_dict[len(read.positions)].append(read)
             
-            for read_length in read_dict:
-                count_vector = list(ga.map_fn(read_dict[read_length],iv)[1])
-                count_vectors[read_length].extend(count_vector)
+            for k in read_dict:
+                count_vector = ga.map_fn(read_dict[k],seg)[1]
+                count_vectors[k].extend(count_vector)
                 
-        for read_length in raw_count_dict:
+        for k in raw_count_dict:
             if roi.strand == "-":
-                count_vectors[read_length] = count_vectors[read_length][::-1]
+                count_vectors[k] = count_vectors[k][::-1]
 
-            raw_count_dict[read_length][i,offset:offset+roi.length]      = numpy.array(count_vectors[read_length])
-            raw_count_dict[read_length].mask[i,offset:offset+roi.length] = valid_mask
+            raw_count_dict[k].data[i,offset:offset+roi.length] = numpy.array(count_vectors[k])
+            raw_count_dict[k].mask[i,offset:offset+roi.length] = valid_mask
     
     profile_table = { "x" : numpy.arange(-upstream_flank,window_size-upstream_flank) }
     
     printer.write("Counted %s ROIs total." % (i+1))
-    for read_length in raw_count_dict:
-        raw_count_dict[read_length] = numpy.ma.masked_invalid(raw_count_dict[read_length])
-        denominator = raw_count_dict[read_length][:,norm_start:norm_end].sum(1)
-        norm_count_dict[read_length] = (1.0*raw_count_dict[read_length].T / denominator).T
-    
-        norm_counts = numpy.ma.masked_invalid(norm_count_dict[read_length])
-    
+    for k in raw_count_dict:
+        k_raw = raw_count_dict[k]
+        
+        denominator = numpy.nansum(k_raw[:,norm_start:norm_end],axis=1)
+        norm_count_dict[k] = (k_raw.T.astype(float) / denominator).T
+        
+        # copy mask from raw counts, then add nans and infs
+        norm_counts = numpy.ma.MaskedArray(norm_count_dict[k],
+                                           mask=k_raw.mask)
+        norm_counts.mask[numpy.isnan(norm_counts)] = True
+        norm_counts.mask[numpy.isinf(norm_counts)] = True
+        
         with warnings.catch_warnings():
             # ignore numpy mean of empty slice warning, given by numpy in Python 2.7-3.4
             warnings.filterwarnings("ignore",".*mean of empty.*",RuntimeWarning)
             try:
-                profile   = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+                profile = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
             # in numpy under Python3.5, this is an IndexError instead of a warning
             except IndexError:
                 profile = numpy.zeros_like(profile_table["x"],dtype=float)
+            # in new versions of numpy, this is a ValueEror instead of an IndexError
+            except ValueError:
+                profile = numpy.zeros_like(profile_table["x"],dtype=float)
 
-        num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0) 
-        
-        profile_table["%s-mers" % read_length]         = profile
-        profile_table["%s_regions_counted" % read_length] = num_genes
+        num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0)
+
+        profile_table["%s-mers" % k]            = profile
+        profile_table["%s_regions_counted" % k] = num_genes
         
     profile_table = pd.DataFrame(profile_table)
     
@@ -299,9 +310,10 @@ def main(argv=sys.argv[1:]):
     for k in count_dict:
         count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
         normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
+        mask_fn      = "%s_%s_mask.txt.gz" % (outbase,k)
         numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
         numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
-        
+        numpy.savetxt(mask_fn,norm_count_dict[k].mask,delimiter="\t")
     
     # plotting & offsets
     printer.write("Plotting and determining offsets...")
