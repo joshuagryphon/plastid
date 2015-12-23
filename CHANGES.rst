@@ -22,12 +22,15 @@ Added
 .....
 
   - Created entrypoints for allowing users to use custom mapping rules
-    from the command line:
+    in the command line scripts:
 
       - ``plastid.mapping_rules`` for specifying new mapping functions
       - ``plastid.mapping_options`` for specifying any other command-line
         arguments they consume
-        
+  
+    Detailed instructions for use in the *developer info* section
+    of `plastid.readthedocs.org`_.
+
   - Argument parsing classes that replace methods deprecated below:
   
       - :class:`~plastid.util.scriptlib.argparsers.AlignmentParser`
@@ -44,6 +47,13 @@ Changed
     now optionally takes parameters indicating the future version of plastid
     in which deprecated features will be removed, and what replacement to use
     instead
+
+
+Fixed
+.....
+
+  - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
+    an ``IndexError`` in earlier versions of :mod:`numpy`.
 
 
 Deprecated
