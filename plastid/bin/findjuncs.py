@@ -92,7 +92,7 @@ def main(argv=sys.argv[1:]):
     
         printer.write("params: " +" ".join(argv))
         printer.write("Detecting & comparing junctions...")
-        ex_pairs = []
+        ex_pairs = {}
         
         c = 0
         u = 0
@@ -100,15 +100,23 @@ def main(argv=sys.argv[1:]):
             if len(chain) > 1: # if multi-exon
                 chrom = chain.chrom
                 strand = chain.strand
+                try:
+                    ep = ex_pairs[(chrom,strand)]
+                except KeyError:
+                    ex_pairs[(chrom,strand)] = []
+                    ep = ex_pairs[(chrom,strand)]
+
                 for i in range(0,len(chain)-1):
+                    
                     seg1 = chain[i]
                     seg2 = chain[i+1]
                     if c % 1000 == 0 and c > 0:
                         printer.write("Processed %s junctions. Found %s unique..." % (c,u) )
                     c+=1
-                    key = (chrom,seg1.end,seg2.start,strand)
-                    if key not in ex_pairs:
-                        ex_pairs.append(key)
+                    key = (seg1.end,seg2.start)
+                        
+                    if key not in ep:
+                        ep.append(key)
                         u += 1
                         new_chain = SegmentChain(seg1,seg2)
                         bed_out.write(new_chain.as_bed())
