@@ -303,7 +303,8 @@ class AlignmentParser(Parser):
             ]
 
         if self.allow_mapping == False:
-            self.map_arguments = []
+            self.map_rules = []
+            self.map_ops = []
         else:
             map_rules = [
                 ("fiveprime_variable" , dict(action="store_const",
@@ -420,8 +421,8 @@ class AlignmentParser(Parser):
             Parser.get_parser(self,
                               parser=parser,
                               groupname="sub_options",
-                              description=_MAPPING_OPTION_DESCRIPTION,
                               arglist=self.map_ops,
+                              description=_MAPPING_OPTION_DESCRIPTION,
                               )
         
         return parser
