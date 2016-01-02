@@ -2,7 +2,7 @@ from plastid.readers.bbifile cimport bbiFile, bbiChromInfo, \
                                  bbiChromList, bbiChromInfoFreeList, \
                                  bbiCachedChromLookup, bigWigValsOnChrom, \
                                  bigWigFileOpen, bigWigIntervalQuery, close_file,\
-                                 _BBI_File
+                                 lm
 
 
 cdef class _BBI_File:
@@ -19,7 +19,10 @@ cdef class _BBI_File:
 
 
 cdef class BigWigFile(_BBI_File):
-    pass
+    cdef:
+        lm* _lm
+        
+    cdef lm* _get_lm(self)
 #    cdef np.ndarray segment_counts(self,GenomicSegment)
 #    cdef np.ndarray chain_counts(self,SegmentChain)
     

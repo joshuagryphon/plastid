@@ -1,4 +1,6 @@
 from libc.stddef cimport size_t
+from mercurial.bdiff import blocks
+from _sha import blocksize
 
 #cimport numpy as np
 #from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
@@ -16,7 +18,24 @@ cdef extern from "<common.h>" nogil:
 
 cdef extern from "<localmem.h>":
     cdef struct lm:
-        pass
+        lmBlock *blocks
+        size_t blockSize
+        size_t allignMask
+        size_t allignAdd
+        
+    cdef struct lmBlock:
+        lmBlock *next
+        char *free
+        char *end
+        char *extra
+    
+    lm * lmInit(int blockSize)
+    size_t lmAvailable(lm *lm)
+    size_t lmSize(lm *lm)
+    void * lmAlloc(lm *lm, size_t size)
+    void * lmAllocMoreMem(lm *lm, void *pt, size_t oldSize, size_t newSize)
+    void lmCleanup(lm **pLm)
+    
 
 cdef extern from "<bbiFile.h>":
     cdef struct bbiZoomLevel:
@@ -71,7 +90,7 @@ cdef extern from "<bbiFile.h>":
 #        bits64 fileOffset
 #
     cdef struct bbiInterval:
-        bbiInterval * next_
+        bbiInterval * next
         bits32 start, end
         double val
 
