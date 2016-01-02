@@ -23,8 +23,6 @@ import glob
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-#from pkg_resources import resource_filename
-
 from Cython.Distutils import build_ext
 
 
@@ -177,16 +175,24 @@ C_PATHS = [X.replace(".pyx",".c") for X in PYX_PATHS] + glob.glob(os.path.join(b
 
 # other flags; fill in as needed
 LIBRARIES=[]
-LIBRARY_DIRS=[os.path.join("plastid","lib")]#[os.path.join(base_path,"plastid","lib")]
-RUNTIME_LIBRARY_DIRS=[] #[resource_filename("plastid","lib/")]
+
+# [os.path.join("plastid","lib")]#[os.path.join(base_path,"plastid","lib")]
+LIBRARY_DIRS=[]
+
+# if I could discover the install destination via a hack of distutils,
+# I could set this and have the Kent dependencies in their own library.
+RUNTIME_LIBRARY_DIRS=[]
+
 EXTRA_OBJECTS=[]
+
 
 #===============================================================================
 # Build an extension of portions of Jim Kent's utilities, which are needed by
 # BigWigReader. The Kent utilities come under a permissive license that
-# allows redistribution and modification for any use.
+# allows redistribution and modification for any use, including commercial,
+# with the exception of src/portimpl.h, which appears to have its own license.
 #
-# JK's utilities are put into plastid/lib/libkentutil.so
+# JK's utilities are compiled into plastid.readers.bigwig and plastid.readers.bbi_file
 #===============================================================================
 
 kent_samtabix = [
@@ -269,37 +275,37 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          extra_objects=EXTRA_OBJECTS,
                         ) for x in PYX_PATHS]
 
-# Jim Kent utils
-libjk = Extension(
-    "plastid.lib.libkentutil",
-    kent_deps,
-    language="c",
-    include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES,
-)
+# # Jim Kent utils - compile as plastid.lib.libkentutil
+# libjk = Extension(
+#     "plastid.lib.libkentutil",
+#     kent_deps,
+#     language="c",
+#     include_dirs=INCLUDE_PATH,
+#     libraries=LIBRARIES,
+# )
 
 # plastid extensions that require Jim Kent's utils
 bbifile = Extension(
     "plastid.readers.bbifile",
-    ["plastid/readers/bbifile.pyx"],
+    ["plastid/readers/bbifile.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES + ["kentutil"],
+    libraries=LIBRARIES,# + ["kentutil"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
 
 bigwig = Extension(
     "plastid.readers.bigwig",
-    ["plastid/readers/bigwig.pyx"],
+    ["plastid/readers/bigwig.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES + ["kentutil"],
+    libraries=LIBRARIES,# + ["kentutil"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
 
-ext_modules.append(libjk)
+#ext_modules.append(libjk)
 ext_modules.append(bbifile)
 ext_modules.append(bigwig)
 
@@ -376,6 +382,20 @@ class clean_c_files(Command):
                 os.remove(sofile)
 
 
+class hack_build_ext(build_ext):
+    """Hack build_ext so the linker can find libkentutil.so in the lib build dir"""
+    start_extensions = ext_modules
+    
+    def run(self):
+        libpath = os.path.join(self.build_lib,"plastid","lib")
+        for x in self.start_extensions:
+            if libpath not in x.library_dirs:
+                x.library_dirs.append(libpath)
+        
+        sys.stdin.readline()
+        build_ext.run(self)
+
+
 class build_c_from_pyx(build_ext):
     """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
     user_options = build_ext.user_options + CYTHON_OPTIONS
@@ -397,6 +417,9 @@ class build_c_from_pyx(build_ext):
             self.run_command('clean')
             #print("build_c_from_pyx: regenerating .c files from Cython")
             #from Cython.Build import cythonize
+            
+            
+            
             #extensions = cythonize(PYX_PATHS,
             #                       include_path=self.include_path,
             #                       compiler_directives=self.cython_args
@@ -420,10 +443,10 @@ class build_c_from_pyx(build_ext):
 # Program body 
 #===============================================================================
 
-FAIL_MSG = """Setup failed. If this is due to a compiler error,
-try rebuilding the Cython sources. If installing via pip, make
-sure all dependencies are already pre-installed, then separately
-run:
+FAIL_MSG = \
+"""Setup failed. If this is due to a compiler error, try rebuilding the Cython
+sources. If installing via pip, make sure all dependencies are already
+pre-installed, then separately run:
 
     $ pip install --upgrade --install-option="--recythonize" plastid
 
@@ -503,7 +526,7 @@ setup(
     
     cmdclass    = {
         CYTHONIZE_COMMAND : build_c_from_pyx,
-        'build_ext' : wrap_command_classes(build_ext),
+        #'build_ext' : hack_build_ext,#wrap_command_classes(build_ext),
         'install'   : wrap_command_classes(install),
         'develop'   : wrap_command_classes(develop),
         'clean'     : clean_c_files,
