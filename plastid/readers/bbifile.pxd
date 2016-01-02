@@ -134,7 +134,7 @@ cdef inline void close_file(bbiFile *myFile):
 #===============================================================================
 
 
-cdef class _BBI_File:
+cdef class _BBI_Reader:
 
     cdef:
         bbiFile * _bbifile

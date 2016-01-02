@@ -1,20 +1,18 @@
+"""Reader for `BigWig`_ files
+"""
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport reverse_strand
-
-from plastid.readers.bbifile cimport bbiFile, bbiInterval, bbiChromInfo,\
-                                 bbiChromList, bbiChromInfoFreeList, \
-                                 bbiCachedChromLookup, bigWigValsOnChrom, \
-                                 bigWigFileOpen, bigWigIntervalQuery, close_file,\
-                                 lmInit, lmCleanup, lmAlloc, lm,\
-                                 _BBI_File
+from plastid.readers.bbifile cimport _BBI_Reader, bbiInterval,\
+                                     bigWigFileOpen,\
+                                     close_file,\
+                                     bigWigValsOnChrom, bigWigIntervalQuery,\
+                                     lmInit, lmCleanup, lmAlloc, lm
 
 cimport numpy
 import numpy
 
 
-
-
-cdef class BigWigFile(_BBI_File):
+cdef class BigWigReader(_BBI_Reader):
 
     def __cinit__(self,str filename):
         """Open a `BigWig`_ file.
@@ -101,10 +99,26 @@ cdef class BigWigFile(_BBI_File):
         return counts
 
     def get_chromosome(self,str chrom):
+        """Retrieve values across an entire chromosome more efficiently than using `self[chromosome_segment]`
+        
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name
+            
+        Returns
+        -------
+        numpy.ndarray
+            Numpy array of floats
+        """
         pass
+    
         
     def __iter__(self):
-        """Iterate over values in the `BigWig`_ file, chromosome by chromosome.
+        return iter(self)
+    
+    def __next__(self):
+        """Iterate over values in the `BigWig`_ file, sorted lexically by position.
         
         Yields
         ------
@@ -112,7 +126,19 @@ cdef class BigWigFile(_BBI_File):
             `(chrom name, start, end, value)`, where start & end are 0-indexed
             and half-open
         """
-        pass  
+        cdef:
+            list chroms = sorted(self.c_chroms().keys())
+            str chrom
+            long start, end
+            double val
+            lm* buf = self._get_lm()
+        
+        for chrom in chroms:
+            #bigWigValsOnChrom
+            pass
 
+    def next(self):
+        return next(self)
+    
 #cdef class BigBedFile(BBI_File):
 #    pass

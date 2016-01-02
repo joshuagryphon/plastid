@@ -1,6 +1,9 @@
+"""Base class for reading BBI (BigWig & BigBeD) files. This is a Cython wrapper
+for Jim Kent's utilities.
+"""
 import os
 
-cdef class _BBI_File:
+cdef class _BBI_Reader:
     """Abstract base class for BigBed and BigWig file readers
 
     Reads basic file properties

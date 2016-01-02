@@ -1,9 +1,9 @@
-from plastid.readers.bbifile cimport lm, _BBI_File
+from plastid.readers.bbifile cimport lm, _BBI_Reader
 
 
 
 
-cdef class BigWigFile(_BBI_File):
+cdef class BigWigReader(_BBI_Reader):
     cdef:
         lm* _lm
         
