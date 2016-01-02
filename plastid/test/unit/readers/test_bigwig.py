@@ -1,6 +1,9 @@
 import os
 import numpy
-from nose.tools import assert_less_equal, assert_raises, assert_dict_equal
+
+from nose.tools import assert_less_equal, assert_raises, assert_dict_equal,\
+                       assert_true, assert_equal
+
 from pkg_resources import resource_filename
 from plastid.readers.bigwig import BigWigReader
 from plastid.genomics.roitools import GenomicSegment
@@ -123,8 +126,53 @@ class TestBigWigReader(AbstractTestBBIFile):
                 found = self.bw.get_chromosome(chrom)
                 yield self.check_vals_against_wig, expected, found
 
-    def test_fill_val(self):
-        assert False
+    def test_fill_val_absent_chrom(self):
+        filldef = BigWigReader(bigwigfile)
+        fillnan = BigWigReader(bigwigfile,fill=numpy.nan)
+        fill0   = BigWigReader(bigwigfile,fill=0)
+        fill10  = BigWigReader(bigwigfile,fill=10)
+        
+        # chrVI is not in dataset; this should be an empty array
+        seg = GenomicSegment("chrVI",5,1000,"+")
+        
+        assert_equal(len(filldef[seg]),len(seg),
+                     "fetched wrong size")
+        
+        assert_true(numpy.isnan(filldef[seg]).all(),
+                    "default not nan")
+        
+        assert_true(numpy.isnan(fillnan[seg]).all(),
+                    "nanfill didn't work")
+        
+        assert_true((fill0[seg] == 0).all(),
+                    "0-fill didn't work")
+        
+        assert_true((fill10[seg] == 10).all(),
+                    "10-fill didn't work")
+        
+    def test_fill_val_present_chrom(self):
+        filldef = BigWigReader(bigwigfile)
+        fillnan = BigWigReader(bigwigfile,fill=numpy.nan)
+        fill0   = BigWigReader(bigwigfile,fill=0)
+        fill10  = BigWigReader(bigwigfile,fill=10)
+        
+        # empty region
+        seg = GenomicSegment("chrIV",5,10,"+")
+        
+        assert_equal(len(filldef[seg]),len(seg),
+                     "fetched wrong size")
+        
+        assert_true(numpy.isnan(filldef[seg]).all(),
+                    "default not nan")
+        
+        assert_true(numpy.isnan(fillnan[seg]).all(),
+                    "nanfill didn't work")
+        
+        assert_true((fill0[seg] == 0).all(),
+                    "0-fill didn't work")
+        
+        assert_true((fill10[seg] == 10).all(),
+                    "10-fill didn't work")
         
     def test_iter(self):
         assert False

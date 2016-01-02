@@ -175,6 +175,10 @@ cdef class BigWigReader(_BBI_Reader):
             counts = numpy.full(length,self.fill)
         else:
             valview = <numpy.double_t[:length]> vals.valBuf
+            
+            # it would be nice not to copy; but if we borrow the memory
+            # allocated by the central stack in Jim Kent's source code,
+            # bad things might happen.
             counts = numpy.asarray(valview.copy())
             
             # if fill isn't 0, set no-data values in output to self.fill
