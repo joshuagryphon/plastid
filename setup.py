@@ -526,7 +526,7 @@ setup(
     
     cmdclass    = {
         CYTHONIZE_COMMAND : build_c_from_pyx,
-        #'build_ext' : hack_build_ext,#wrap_command_classes(build_ext),
+        'build_ext' : build_ext, #hack_build_ext,#wrap_command_classes(build_ext),
         'install'   : wrap_command_classes(install),
         'develop'   : wrap_command_classes(develop),
         'clean'     : clean_c_files,
