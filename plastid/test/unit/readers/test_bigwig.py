@@ -82,8 +82,10 @@ class TestBigWigReader(AbstractTestBBIFile):
                 expected = ga[seg]
                 found = self.bw[seg]
                 yield self.check_vals_against_wig, expected, found
-            
         
     def test_get_whole_chrom(self):
         assert False
         
+
+    def test_iter(self):
+        assert False
