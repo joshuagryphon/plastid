@@ -8,7 +8,7 @@ cdef class _BBI_Reader:
 
     Reads basic file properties
     """
-    def __cinit__(self, str filename):
+    def __cinit__(self, str filename, *args, **kwargs):
         if not os.path.exists(filename):
             raise IOError("File '%s' not found." % filename)
         

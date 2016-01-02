@@ -6,6 +6,8 @@ from plastid.readers.bbifile cimport _BBI_Reader, bbiInterval,\
                                      bigWigFileOpen,\
                                      close_file,\
                                      bigWigValsOnChrom, bigWigIntervalQuery,\
+                                     bigWigValsOnChromNew, bigWigValsOnChromFree,\
+                                     bigWigValsOnChromFetchData,\
                                      lmInit, lmCleanup, lmAlloc, lm
 
 cimport numpy
@@ -13,16 +15,27 @@ import numpy
 
 
 cdef class BigWigReader(_BBI_Reader):
+    """Reader providing random or sequential access to data stored in `BigWig`_ files.
+    """
 
-    def __cinit__(self,str filename):
+    def __cinit__(self,str filename, double fill = numpy.nan):
         """Open a `BigWig`_ file.
         
         Parameters
         ----------
         filename : str
-            Name of bigwig file
+            Name of `bigwig`_ file
+            
+        fill : float
+            Value to use when there is no data covering a base (e.g. zero, nan,
+            et c. Default: `numpy.nan`)
         """
+        # pointer to file; opened here but closed in __dealloc__ of _BBI_Reader
         self._bbifile = bigWigFileOpen(bytes(filename))
+        
+        # value for empty/missing data
+        self.fill = fill
+        
         # local memory buffer
         self._lm = NULL
         
@@ -38,9 +51,17 @@ cdef class BigWigReader(_BBI_Reader):
         -------
         lm
             local memory buffer
+            
+        Raises
+        ------
+        MemoryError
+            If memory cannot be allocated
         """
         if self._lm == NULL:
             self._lm = lmInit(0)
+
+        if not self._lm:
+            raise MemoryError("BigWig.__get__: Could not allocate memory.")
             
         return self._lm
          
@@ -75,19 +96,17 @@ cdef class BigWigReader(_BBI_Reader):
             long start    = roi.start
             long end      = roi.end
             size_t length = end - start
-            numpy.ndarray counts = numpy.zeros(length,dtype=numpy.float)
-            double [:] view = counts
+            
+            numpy.ndarray counts = numpy.full(length,self.fill,dtype=numpy.float)
+            double [:] view      = counts
+            
             lm* buf = self._get_lm()
             bbiInterval* iv
             long segstart, segend
-            
-        if not buf:
-            raise MemoryError("BigWig.__get__: Could not allocate memory.")
         
         # populate vector
         iv = bigWigIntervalQuery(self._bbifile,roi.chrom,start,end,buf)
         while iv is not NULL:
-            print("iv: %s\t%s\t%s" % (iv.start,iv.end,iv.val))
             segstart = iv.start - start
             segend = iv.end - start
             view[segstart:segend] = iv.val
@@ -111,8 +130,37 @@ cdef class BigWigReader(_BBI_Reader):
         numpy.ndarray
             Numpy array of floats
         """
-        pass
-    
+        cdef:
+            lm* buf = self._get_lm()
+            bigWigValsOnChrom* vals
+            long length
+            long i = 0
+            numpy.ndarray counts
+            bint retval
+        
+        length = self.c_chroms()[chrom]
+        counts = numpy.full(length,self.fill,dtype=numpy.float)
+        
+        vals   = bigWigValsOnChromNew()
+        retval = bigWigValsOnChromFetchData(vals,bytes(chrom),self._bbifile)
+
+        while vals != NULL:
+            i += 1
+            print("%s\t%s" % (vals.chrom,vals.chromSize,)#(float)*vals.bufSize,*vals.valBuf)
+                  
+                  )
+            vals = vals.next
+            
+        bigWigValsOnChromFree(&vals)
+        return counts
+            
+#     cdef struct bigWigValsOnChrom:
+#         bigWigValsOnChrom *next
+#         char   *chrom
+#         long   chromSize
+#         long   bufSize     # size of allocated buffer
+#         double *valBuf     # value for each base on chrom. Zero where no data
+#         Bits   *covBuf     # a bit for each base with data
         
     def __iter__(self):
         return iter(self)
@@ -137,8 +185,15 @@ cdef class BigWigReader(_BBI_Reader):
             #bigWigValsOnChrom
             pass
 
+    # python 2.x iteration support
     def next(self):
+        """Iterate over values in the `BigWig`_ file, sorted lexically by position.
+        
+        Yields
+        ------
+        tuple
+            `(chrom name, start, end, value)`, where start & end are 0-indexed
+            and half-open
+        """
         return next(self)
-    
-#cdef class BigBedFile(BBI_File):
-#    pass
+

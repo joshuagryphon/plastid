@@ -19,7 +19,7 @@ class AbstractTestBBIFile():
 
     @classmethod
     def setUpClass(cls):
-        cls.bw = BigWigReader(bigwigfile) 
+        cls.bw = BigWigReader(bigwigfile,fill=0) 
 
     @skip_if_abstract        
     def test_chrom_sizes(self):
@@ -45,7 +45,7 @@ class TestBigWigReader(AbstractTestBBIFile):
     
     @classmethod
     def setUpClass(cls):
-        cls.bw = BigWigReader(bigwigfile)
+        cls.bw = BigWigReader(bigwigfile,fill=0)
         cls.reader_class = BigWigReader 
         cls.chrdict = {
             'chrI': 230218,

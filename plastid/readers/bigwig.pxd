@@ -6,6 +6,7 @@ from plastid.readers.bbifile cimport lm, _BBI_Reader
 cdef class BigWigReader(_BBI_Reader):
     cdef:
         lm* _lm
+        double fill
         
     cdef lm* _get_lm(self)
 #    cdef np.ndarray segment_counts(self,GenomicSegment)

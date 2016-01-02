@@ -114,7 +114,6 @@ cdef extern from "<bigWig.h>":
                                       bits32 start,
                                       bits32 end,
                                       lm *lm)
-    #boolean isBigWig(char *fileName)
 
     cdef struct bigWigValsOnChrom:
         bigWigValsOnChrom *next
@@ -124,6 +123,14 @@ cdef extern from "<bigWig.h>":
         double *valBuf     # value for each base on chrom. Zero where no data
         Bits   *covBuf     # a bit for each base with data
 
+
+    bigWigValsOnChrom *bigWigValsOnChromNew()
+    
+    void bigWigValsOnChromFree(bigWigValsOnChrom **pChromVals)
+    
+    bint bigWigValsOnChromFetchData(bigWigValsOnChrom *chromVals,
+                                    char *chrom,
+                                    bbiFile *bigWig)
 
 cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)
