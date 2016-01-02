@@ -1,4 +1,5 @@
 import os
+import numpy
 from nose.tools import assert_less_equal, assert_raises, assert_dict_equal
 from pkg_resources import resource_filename
 from plastid.readers.bigwig import BigWigReader
@@ -46,19 +47,7 @@ class TestBigWigReader(AbstractTestBBIFile):
     def setUpClass(cls):
         cls.bw = BigWigReader(bigwigfile)
         cls.reader_class = BigWigReader 
-    
-    def check_vals_against_wig(self,expected,found):
-        diff = abs(expected-found)
-        maxdiff = diff.max()
-        maxloc = diff.argmax()
-        msg = "Maximum difference found between BigWig and Wiggle (%s) is at position %s and exceeded tolerance (%s).\n" % (maxdiff,maxloc,TOL)
-        msg += "At that position, expected %s, got %s." % (expected[maxloc],found[maxloc])
-        assert_less_equal(maxdiff,TOL,msg)
-        
-    # NOTE: this test relies on WiggleReader being correct
-    def test_vals_against_wig(self):
-        ga = GenomeArray()
-        chrdict = {
+        cls.chrdict = {
             'chrI': 230218,
             'chrII': 813184,
             'chrIII': 316620,
@@ -75,12 +64,47 @@ class TestBigWigReader(AbstractTestBBIFile):
             'chrXV': 1091291,
             'chrXVI': 948066
         }
+    
+    def check_vals_against_wig(self,expected,found):
+        diff = abs(expected-found)
+        maxdiff = diff.max()
+        maxloc = diff.argmax()
+        msg = "Maximum difference found between BigWig and Wiggle (%s) is at position %s and exceeded tolerance (%s).\n" % (maxdiff,maxloc,TOL)
+        msg += "At that position, expected %s, got %s." % (expected[maxloc],found[maxloc])
+        assert_less_equal(maxdiff,TOL,msg)
+        
+    # NOTE: this test relies on WiggleReader being correct
+    def test_vals_against_wig(self):
+        ga = GenomeArray()
         with open(wigfile) as fin:
             ga.add_from_wiggle(fin,"+")
-            for chrom, length in chrdict.items():
+            for chrom, length in self.chrdict.items():
                 seg = GenomicSegment(chrom,0,length,"+")
                 expected = ga[seg]
                 found = self.bw[seg]
+                yield self.check_vals_against_wig, expected, found
+    
+    # NOTE: this test relies on WiggleReader being correct
+    def test_random_windows_against_wig(self):
+        chrdict = self.chrdict
+        chroms = list(self.chrdict)
+        chridx = numpy.random.randint(0,high=len(chroms),size=50)
+        print chridx
+        ga = GenomeArray()
+        with open(wigfile) as fin:
+            ga.add_from_wiggle(fin,"+")
+            for i in chridx:
+                chrom = chroms[i]
+                maxlength = chrdict[chrom]
+                start = numpy.random.randint(0,high=maxlength-2000)
+                end = numpy.random.randint(start+100,high=start+10000)
+                while end > maxlength:
+                    end = numpy.random.randint(start+100,high=start+10000)
+                    
+                seg = GenomicSegment(chrom,start,end,"+")
+                expected = ga[seg]
+                found = self.bw[seg]
+            
                 yield self.check_vals_against_wig, expected, found
         
     def test_get_whole_chrom(self):
