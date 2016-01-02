@@ -103,10 +103,6 @@ cdef extern from "<bbiFile.h>":
 #        float sumSquares
 #        bits64 fileOffset
 #
-    cdef struct bbiInterval:
-        bbiInterval * next
-        bits32 start, end
-        double val
 
     # bbiFile *bbiFileOpen(char *fileName, bits32 sig, char *typeName)
 
@@ -121,30 +117,7 @@ cdef extern from "<bbiFile.h>":
                                char *chromBuf,
                                int chromBufSize)
 
-cdef extern from "<bigWig.h>":
-    bbiFile     * bigWigFileOpen(char *fileName)
-    bbiInterval * bigWigIntervalQuery(bbiFile *bwf,
-                                      char *chrom,
-                                      bits32 start,
-                                      bits32 end,
-                                      lm *lm)
 
-    cdef struct bigWigValsOnChrom:
-        bigWigValsOnChrom *next
-        char   *chrom
-        long   chromSize
-        long   bufSize     # size of allocated buffer
-        double *valBuf     # value for each base on chrom. Zero where no data
-        Bits   *covBuf     # a bit for each base with data
-
-
-    bigWigValsOnChrom *bigWigValsOnChromNew()
-    
-    void bigWigValsOnChromFree(bigWigValsOnChrom **pChromVals)
-    
-    bint bigWigValsOnChromFetchData(bigWigValsOnChrom *chromVals,
-                                    char *chrom,
-                                    bbiFile *bigWig)
 
 cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)

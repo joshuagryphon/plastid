@@ -48,21 +48,21 @@ class TestBigWigReader(AbstractTestBBIFile):
         cls.bw = BigWigReader(bigwigfile,fill=0)
         cls.reader_class = BigWigReader 
         cls.chrdict = {
-            'chrI': 230218,
-            'chrII': 813184,
-            'chrIII': 316620,
-            'chrIV': 1531933,
-            'chrIX': 439888,
-            'chrV': 576874,
-            'chrVII': 1090940,
-            'chrVIII': 562643,
-            'chrX': 745751,
-            'chrXI': 666816,
-            'chrXII': 1078177,
-            'chrXIII': 924431,
-            'chrXIV': 784333,
-            'chrXV': 1091291,
-            'chrXVI': 948066
+            'chrI'    : 230218,
+            'chrII'   : 813184,
+            'chrIII'  : 316620,
+            'chrIV'   : 1531933,
+            'chrV'    : 576874,
+            'chrVII'  : 1090940,
+            'chrVIII' : 562643,
+            'chrIX'   : 439888,
+            'chrX'    : 745751,
+            'chrXI'   : 666816,
+            'chrXII'  : 1078177,
+            'chrXIII' : 924431,
+            'chrXIV'  : 784333,
+            'chrXV'   : 1091291,
+            'chrXVI'  : 948066
         }
     
     def check_vals_against_wig(self,expected,found):
@@ -89,28 +89,41 @@ class TestBigWigReader(AbstractTestBBIFile):
         chrdict = self.chrdict
         chroms = list(self.chrdict)
         chridx = numpy.random.randint(0,high=len(chroms),size=50)
-        print chridx
         ga = GenomeArray()
+        
+        i = 0
+        
         with open(wigfile) as fin:
             ga.add_from_wiggle(fin,"+")
-            for i in chridx:
-                chrom = chroms[i]
+            while i < 50:
+                chrom = chroms[chridx[i]]
                 maxlength = chrdict[chrom]
                 start = numpy.random.randint(0,high=maxlength-2000)
-                end = numpy.random.randint(start+100,high=start+10000)
+                end = numpy.random.randint(start+10000,high=start+20000)
+                
+                # make sure we don't go off chrom
                 while end > maxlength:
                     end = numpy.random.randint(start+100,high=start+10000)
                     
                 seg = GenomicSegment(chrom,start,end,"+")
                 expected = ga[seg]
-                found = self.bw[seg]
-            
-                yield self.check_vals_against_wig, expected, found
+                # make sure segment has counts in it
+                if expected.sum() > 0:
+                    i += 1
+                    found = self.bw[seg]
+                    yield self.check_vals_against_wig, expected, found
     
+    def test_get_whole_chrom_against_wig(self):
+        ga = GenomeArray()
+        with open(wigfile) as fin:
+            ga.add_from_wiggle(fin,"+")
+            for chrom, length in self.chrdict.items():
+                seg = GenomicSegment(chrom,0,length,"+")
+                expected = ga[seg]
+                found = self.bw.get_chromosome(chrom)
+                yield self.check_vals_against_wig, expected, found
+
     def test_fill_val(self):
-        assert False
-           
-    def test_get_whole_chrom(self):
         assert False
         
     def test_iter(self):

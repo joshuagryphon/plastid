@@ -10,9 +10,46 @@ See also
 `Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
     The header files are particularly useful.
 """
-from plastid.readers.bbifile cimport lm, _BBI_Reader
+from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits
+
+#===============================================================================
+# Externs from Kent utilties
+#===============================================================================
+
+cdef extern from "<bigWig.h>":
+    cdef struct bigWigValsOnChrom:
+        bigWigValsOnChrom *next
+        char   *chrom
+        long   chromSize
+        long   bufSize     # size of allocated buffer
+        double *valBuf     # value for each base on chrom. Zero where no data
+        Bits   *covBuf     # a bit for each base with data
+
+    cdef struct bbiInterval:
+        bbiInterval * next
+        bits32 start, end
+        double val
+
+    bbiFile     * bigWigFileOpen(char *fileName)
+    
+    bbiInterval * bigWigIntervalQuery(bbiFile *bwf,
+                                      char *chrom,
+                                      bits32 start,
+                                      bits32 end,
+                                      lm *lm)
+    
+    bigWigValsOnChrom *bigWigValsOnChromNew()
+    
+    void bigWigValsOnChromFree(bigWigValsOnChrom **pChromVals)
+    
+    bint bigWigValsOnChromFetchData(bigWigValsOnChrom *chromVals,
+                                    char *chrom,
+                                    bbiFile *bigWig)
 
 
+#===============================================================================
+# Python class
+#===============================================================================
 
 
 cdef class BigWigReader(_BBI_Reader):
@@ -25,6 +62,3 @@ cdef class BigWigReader(_BBI_Reader):
 #    cdef np.ndarray chain_counts(self,SegmentChain)
     
 
-#cdef class BigBedFile(BBI_File)
-#    cdef list what_overlaps_segment(self,GenomicSegment)
-#    cdef list what_overlaps_chain(self,SegmentChain)

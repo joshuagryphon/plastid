@@ -13,9 +13,17 @@ See also
 import os
 
 
+#===============================================================================
+# Exported warnings
+#===============================================================================
+
 WARN_CHROM_NOT_FOUND = "No data for chromosome '%s' in file '%s'." 
+WARN_FILE_NOT_FOUND = "File '%s' not found."
 
 
+#===============================================================================
+# Classes
+#===============================================================================
 
 
 cdef class _BBI_Reader:
@@ -25,7 +33,7 @@ cdef class _BBI_Reader:
     """
     def __cinit__(self, str filename, *args, **kwargs):
         if not os.path.exists(filename):
-            raise IOError("File '%s' not found." % filename)
+            raise IOError(WARN_FILE_NOT_FOUND % filename)
         
         self.filename = filename
         self._chrominfo = None

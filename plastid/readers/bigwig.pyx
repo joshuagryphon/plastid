@@ -17,12 +17,7 @@ import numpy
 from plastid.util.services.exceptions import DataWarning
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport reverse_strand
-from plastid.readers.bbifile cimport _BBI_Reader, bbiInterval,\
-                                     bigWigFileOpen,\
-                                     close_file,\
-                                     bigWigValsOnChrom, bigWigIntervalQuery,\
-                                     bigWigValsOnChromNew, bigWigValsOnChromFree,\
-                                     bigWigValsOnChromFetchData,\
+from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
                                      lmInit, lmCleanup, lmAlloc, lm
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
@@ -158,6 +153,7 @@ cdef class BigWigReader(_BBI_Reader):
             long i = 0
             numpy.ndarray counts, mask
             bint success
+            numpy.double_t [:] valview
             
             
         #     cdef struct bigWigValsOnChrom:
@@ -178,7 +174,8 @@ cdef class BigWigReader(_BBI_Reader):
             warnings.warn("Could not retrieve data for chrom '%s' from file '%s'." % (chrom,self.filename),DataWarning)
             counts = numpy.full(length,self.fill)
         else:
-            counts = numpy.asarray(<numpy.double_t[:length]> vals.valBuf)
+            valview = <numpy.double_t[:length]> vals.valBuf
+            counts = numpy.asarray(valview.copy())
             
             # if fill isn't 0, set no-data values in output to self.fill
             # these are in vals.covBuf
