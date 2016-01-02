@@ -1,5 +1,20 @@
-"""Reader for `BigWig`_ files
+"""Fast reader for `BigWig`_ files, implemented as a Python binding for the C
+library of Jim Kent's utilties for the UCSC genome browser.
+
+
+See also
+--------
+`Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
+    Description of BigBed and BigWig formats. Especially see supplemental data.
+
+`Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
+    The header files are particularly useful.
 """
+import warnings
+cimport numpy
+import numpy
+
+from plastid.util.services.exceptions import DataWarning
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport reverse_strand
 from plastid.readers.bbifile cimport _BBI_Reader, bbiInterval,\
@@ -10,8 +25,8 @@ from plastid.readers.bbifile cimport _BBI_Reader, bbiInterval,\
                                      bigWigValsOnChromFetchData,\
                                      lmInit, lmCleanup, lmAlloc, lm
 
-cimport numpy
-import numpy
+from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
+
 
 
 cdef class BigWigReader(_BBI_Reader):
@@ -95,6 +110,7 @@ cdef class BigWigReader(_BBI_Reader):
         cdef:
             long start    = roi.start
             long end      = roi.end
+            str chrom     = roi.chrom
             size_t length = end - start
             
             numpy.ndarray counts = numpy.full(length,self.fill,dtype=numpy.float)
@@ -103,9 +119,14 @@ cdef class BigWigReader(_BBI_Reader):
             lm* buf = self._get_lm()
             bbiInterval* iv
             long segstart, segend
+                    
+        # return empty vector if chromosome is not in BigWig file
+        if chrom not in self.c_chroms():
+            warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
+            return counts
         
         # populate vector
-        iv = bigWigIntervalQuery(self._bbifile,roi.chrom,start,end,buf)
+        iv = bigWigIntervalQuery(self._bbifile,bytes(chrom),start,end,buf)
         while iv is not NULL:
             segstart = iv.start - start
             segend = iv.end - start
@@ -135,33 +156,42 @@ cdef class BigWigReader(_BBI_Reader):
             bigWigValsOnChrom* vals
             long length
             long i = 0
-            numpy.ndarray counts
-            bint retval
-        
-        length = self.c_chroms()[chrom]
-        counts = numpy.full(length,self.fill,dtype=numpy.float)
-        
-        vals   = bigWigValsOnChromNew()
-        retval = bigWigValsOnChromFetchData(vals,bytes(chrom),self._bbifile)
-
-        while vals != NULL:
-            i += 1
-            print("%s\t%s" % (vals.chrom,vals.chromSize,)#(float)*vals.bufSize,*vals.valBuf)
-                  
-                  )
-            vals = vals.next
+            numpy.ndarray counts, mask
+            bint success
             
+            
+        #     cdef struct bigWigValsOnChrom:
+        #         bigWigValsOnChrom *next
+        #         char   *chrom
+        #         long   chromSize
+        #         long   bufSize     # size of allocated buffer
+        #         double *valBuf     # value for each base on chrom. Zero where no data
+        #         Bits   *covBuf     # a bit for each base with data
+        vals    = bigWigValsOnChromNew()
+        success = bigWigValsOnChromFetchData(vals,bytes(chrom),self._bbifile)
+        length  = vals.chromSize
+
+        if chrom not in self.c_chroms():
+            warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
+            counts = numpy.full(length,self.fill)
+        elif success == False:
+            warnings.warn("Could not retrieve data for chrom '%s' from file '%s'." % (chrom,self.filename),DataWarning)
+            counts = numpy.full(length,self.fill)
+        else:
+            counts = numpy.asarray(<numpy.double_t[:length]> vals.valBuf)
+            
+            # if fill isn't 0, set no-data values in output to self.fill
+            # these are in vals.covBuf
+            #
+            # Bits is typedefed as unsigned char in kentUtils/inc/bits.h
+            # That corresponds to a 1 byte unsigned int in numpy
+            if self.fill != 0:
+                mask = numpy.asarray(<numpy.uint8_t[:length]> vals.covBuf)
+                counts[mask == 0] = self.fill
+
         bigWigValsOnChromFree(&vals)
         return counts
             
-#     cdef struct bigWigValsOnChrom:
-#         bigWigValsOnChrom *next
-#         char   *chrom
-#         long   chromSize
-#         long   bufSize     # size of allocated buffer
-#         double *valBuf     # value for each base on chrom. Zero where no data
-#         Bits   *covBuf     # a bit for each base with data
-        
     def __iter__(self):
         return iter(self)
     
@@ -185,7 +215,6 @@ cdef class BigWigReader(_BBI_Reader):
             #bigWigValsOnChrom
             pass
 
-    # python 2.x iteration support
     def next(self):
         """Iterate over values in the `BigWig`_ file, sorted lexically by position.
         

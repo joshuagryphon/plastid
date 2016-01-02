@@ -1,7 +1,22 @@
-"""Base class for reading BBI (BigWig & BigBeD) files. This is a Cython wrapper
-for Jim Kent's utilities.
+"""Base class for `BigWig`_ reader, implemented as a Python binding for the C
+library of Jim Kent's utilties for the UCSC genome browser.
+
+
+See also
+--------
+`Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
+    Description of BigBed and BigWig formats. Especially see supplemental data.
+
+`Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
+    The header files are particularly useful.
 """
 import os
+
+
+WARN_CHROM_NOT_FOUND = "No data for chromosome '%s' in file '%s'." 
+
+
+
 
 cdef class _BBI_Reader:
     """Abstract base class for BigBed and BigWig file readers
@@ -21,11 +36,11 @@ cdef class _BBI_Reader:
         """Close BBI file"""
         close_file(self._bbifile)
 
-    property kind:
+    property filename:
+        """Name of BigWig or BigBed file"""
         def __get__(self):
-            """Type signature for file"""
-            return self._bbifile.typeSig
-
+            return self.filename
+        
     property version:
         """Version of BigWig or BigBed file format"""
         def __get__(self):

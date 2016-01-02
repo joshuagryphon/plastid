@@ -8,7 +8,7 @@ from plastid.genomics.genome_array import GenomeArray
 from plastid.util.services.decorators import skip_if_abstract
 
 
-TOL=1e-5
+TOL=1e-5 #tolerance is high because bigwig files are approximate
 
 base_path = resource_filename("plastid","test/data")
 wigfile = os.path.join(base_path,"command_line","gen_reads_center_12_fw.wig")
@@ -106,10 +106,12 @@ class TestBigWigReader(AbstractTestBBIFile):
                 found = self.bw[seg]
             
                 yield self.check_vals_against_wig, expected, found
-        
+    
+    def test_fill_val(self):
+        assert False
+           
     def test_get_whole_chrom(self):
         assert False
         
-
     def test_iter(self):
         assert False

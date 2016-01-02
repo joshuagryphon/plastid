@@ -1,5 +1,21 @@
+"""Base class for `BigWig`_ reader, implemented as a Python binding for the C
+library of Jim Kent's utilties for the UCSC genome browser.
+
+
+See also
+--------
+`Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
+    Description of BigBed and BigWig formats. Especially see supplemental data.
+
+`Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
+    The header files are particularly useful.
+"""
+
 from libc.stddef cimport size_t
 
+
+cdef:
+    str WARN_CHROM_NOT_FOUND
 
 #===============================================================================
 # INDEX: Common info for all bigwig filefs 
@@ -14,7 +30,6 @@ cdef extern from "<common.h>" nogil:
     ctypedef unsigned short bits16
     ctypedef unsigned bits32
     ctypedef unsigned long long bits64
-
 
 cdef extern from "<localmem.h>":
     cdef struct lm:
@@ -35,7 +50,6 @@ cdef extern from "<localmem.h>":
     void * lmAlloc(lm *lm, size_t size)
     void * lmAllocMoreMem(lm *lm, void *pt, size_t oldSize, size_t newSize)
     void lmCleanup(lm **pLm)
-    
 
 cdef extern from "<bbiFile.h>":
     cdef struct bbiZoomLevel:
