@@ -1,9 +1,9 @@
 from libc.stddef cimport size_t
-from mercurial.bdiff import blocks
-from _sha import blocksize
 
-#cimport numpy as np
-#from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
+
+#===============================================================================
+# INDEX: Common info for all bigwig filefs 
+#===============================================================================
 
 DEF bigBedSig = 0x8789F2EB
 DEF bigWigSig = 0x888FFC26 
@@ -129,3 +129,19 @@ cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)
 
 
+#===============================================================================
+# INDEX: Python class
+#===============================================================================
+
+
+cdef class _BBI_File:
+
+    cdef:
+        bbiFile * _bbifile
+        str filename
+        dict _chrominfo
+        dict _zoomlevels
+        dict offsets
+
+    cdef dict _define_chroms(self)
+    cdef dict c_chroms(self)
