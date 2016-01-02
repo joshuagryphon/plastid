@@ -22,10 +22,12 @@ import sys
 import glob
 from collections import Iterable
 from setuptools import setup, find_packages, Extension, Command
-from setuptools.command.build_ext import build_ext
+#from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
+
+from Cython.Distutils import build_ext
 
 
 PYSAM_VER_NUM = (0,8,4)
@@ -156,7 +158,7 @@ CYTHON_DEFAULTS = [False]
 
 
 # add headers from numpy & pysam to include paths for pyx, c files
-INCLUDE_PATH = []
+INCLUDE_PATH = ["kentUtils/src/inc","kentUtils/samtabix"]
 for mod in (numpy,pysam):
     ipart = mod.get_include()
     if isinstance(ipart,str):
@@ -177,9 +179,102 @@ C_PATHS = [X.replace(".pyx",".c") for X in PYX_PATHS]
 """Potential path to cythonized .c files"""
 
 
-# default extension modules, C files
-ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".c","").replace(os.sep,"."),
-                    [x],include_dirs=INCLUDE_PATH) for x in C_PATHS]
+LIBRARIES=["png"]
+LIBRARY_DIRS=[]
+EXTRA_OBJECTS=[]
+
+# PYX files without external dependencies
+ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").replace(os.sep,"."),
+                         [x],
+                         include_dirs=INCLUDE_PATH,
+                         libraries=LIBRARIES,
+                         library_dirs=LIBRARY_DIRS,
+                         extra_objects=EXTRA_OBJECTS,
+                        ) for x in PYX_PATHS]
+
+
+kent_sources = [
+    "dopng.c",
+    ]
+
+kent_sources += [os.path.join("kentUtils","samtabix",X) for X in \
+    "kstring.c",
+    "bgzf.c",
+    "index.c",
+]
+
+kent_sources += [os.path.join("kentUtils","src","lib",X) for X in \
+    "asParse.c",
+    "aliType.c",
+    "base64.c",
+    "basicBed.c",
+    "bits.c",
+    "bbiRead.c",
+    "bbiWrite.c",
+    "binRange.c",
+    "bPlusTree.c",
+    "bwgQuery.c",
+    "bwgValsOnChrom.c",
+    "bigBed.c",
+    "cheapcgi.c",
+    "cirTree.c",
+    "dlist.c",
+    "dnautil.c",
+    "ffAli.c",
+    "hash.c",
+    "hmmstats.c",
+    "https.c",
+    "internet.c",
+    "intExp.c",
+    "kxTok.c",
+    "memalloc.c",
+    "mime.c",
+    "net.c",
+    "errAbort.c",
+    "verbose.c",
+    "common.c",
+    "dystring.c",
+    "linefile.c",
+    "localmem.c",
+    "obscure.c",
+    "osunix.c",
+    "pipeline.c",
+    "rangeTree.c",
+    "rbTree.c",
+    "portimpl.c",
+    "psl.c",
+    "servcl.c",
+    "servpws.c",
+    "servmsII.c",
+    "servcis.c",
+    "servCrunx.c",
+    "servBrcMcw.c",
+    "sqlNum.c",
+    "sqlList.c",
+    "tokenizer.c",
+    "udc.c",
+    "wildcmp.c",
+    "zlibFace.c",
+]
+
+
+# extensions for BigWig reader, which requires Jim Kent's utils
+bbifile = Extension(
+    "plastid.readers.bbifile",
+    ["plastid/readers/bbifile.pyx"]+kent_sources,
+    language="c",
+    include_dirs=INCLUDE_PATH,
+    libraries=LIBRARIES,
+)
+bigwig = Extension(
+    "plastid.readers.bigwig",
+    ["plastid/readers/bigwig.pyx"]+kent_sources,
+    language="c",
+    include_dirs=INCLUDE_PATH,
+    libraries=LIBRARIES,
+)
+ext_modules.append(bbifile)
+ext_modules.append(bigwig)
 
 
 # classes & functions for compilation -----------------------------------------
@@ -268,12 +363,19 @@ class build_c_from_pyx(build_ext):
     def finalize_options(self):
         if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
             self.run_command('clean')
-            print("build_c_from_pyx: regenerating .c files from Cython")
-            from Cython.Build import cythonize
-            extensions = cythonize(PYX_PATHS,
-                                   include_path=self.include_path,
-                                   compiler_directives=self.cython_args)
-            self.extensions = extensions
+            #print("build_c_from_pyx: regenerating .c files from Cython")
+            #from Cython.Build import cythonize
+            #extensions = cythonize(PYX_PATHS,
+            #                       include_path=self.include_path,
+            #                       compiler_directives=self.cython_args
+            #                     include_dirs=INCLUDE_PATH,
+            #                     libraries=LIBRARIES,
+            #                     library_dirs=LIBRARY_DIRS,
+            #                     extra_objects=EXTRA_OBJECTS,
+            #                      
+            #                       
+            #                       )
+            #self.extensions = extensions
 
         build_ext.finalize_options(self)
 
