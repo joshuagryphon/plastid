@@ -52,12 +52,12 @@ def version_tuple(inp):
 # because they are needed before them.
 try:
     import numpy
-    numpyver = version_tuple(numpyver)
+    numpyver = version_tuple(numpy.__version__)
     if numpyver < NUMPY_VER_NUM:
         raise ImportError()
 
     import pysam
-    pysamver = version_tuple(pysamver)
+    pysamver = version_tuple(pysam.__version__)
     if pysamver < PYSAM_VER_NUM:
         raise ImportError()
 
