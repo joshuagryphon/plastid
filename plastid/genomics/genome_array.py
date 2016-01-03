@@ -1071,8 +1071,9 @@ class BigWigGenomeArray(AbstractGenomeArray):
             return roi.get_counts(self)
         
         strand = roi.strand
-        sdict  = self.strands()
-        count_vec = numpy.zeros,len(roi)
+        sdict  = self._strand_dict
+        
+        count_vec = numpy.zeros(len(roi))
         if strand in sdict:
             for bw in sdict[strand]:
                 count_vec += bw[roi]
@@ -1088,7 +1089,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         # FIXME: reapply fill values. Need to get mask.
             
         return count_vec
-    
+        
     def strands(self):
         """Return a tuple of strands in the GenomeArray
         
@@ -1154,22 +1155,42 @@ class BigWigGenomeArray(AbstractGenomeArray):
         """
         self._chromset = None
         self._lengths = None
-        self._reset_sum()
+        bw = BigWigReader(filename,fill=self.fill)
+        
+        if self._sum is None:
+            self._sum = 0
+            
+        self._sum += bw.sum()
         try:
-            self._strand_dict[strand].append(BigWigReader(filename,fill=self.fill))
+            self._strand_dict[strand].append(bw)
         except KeyError:       
-            self._strand_dict[strand] = [BigWigReader(filename,fill=self.fill)]
+            self._strand_dict[strand] = [bw]
 
-    # FIXME
     def reset_sum(self):
         """Reset sum to total of data in the GenomeArray"""        
         my_sum = 0
-        for ltmp in self.strand_dict.values():
+        for ltmp in self._strand_dict.values():
             for bw in ltmp:
                 my_sum += bw.sum()
-        
+ 
+        self._sum = my_sum       
         return my_sum
+    
+    def to_genome_array(self):
+        """Converts |BigWigGenomeArrayGenomeArray| to a |GenomeArray|
 
+        Returns
+        -------
+        |GenomeArray|
+        """
+        ga = GenomeArray(chr_lengths=self.lengths(),strands=self.strands())
+        for chrom, length in self.lengths():
+            for strand in ("+","-","."):
+                region = GenomicSegment(chrom,0,length,strand)
+                for reader in self._strand_dict.get(strand,[]):
+                    ga[region] += reader.get_chromosome(chrom)
+
+        return ga
         
         
 class GenomeArray(MutableAbstractGenomeArray):

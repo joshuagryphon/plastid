@@ -25,7 +25,6 @@ WARN_FILE_NOT_FOUND = "File '%s' not found."
 # Classes
 #===============================================================================
 
-
 cdef class _BBI_Reader:
     """Abstract base class for BigBed and BigWig file readers
 
@@ -42,15 +41,6 @@ cdef class _BBI_Reader:
     def __dealloc__(self):
         """Close BBI file"""
         close_file(self._bbifile)
-    
-    def sum(self):
-        """Return sum of all data in BBI file"""
-        if self._summary is not None:
-            summary = self._summary
-        else:
-            summary = self.fetch_summary()
-             
-        return summary["sum"]
 
     property filename:
         """Name of BigWig or BigBed file"""
@@ -67,49 +57,51 @@ cdef class _BBI_Reader:
         def __get__(self):
             return self.c_chroms()
     
-    property summary_info:
-        """Summary information over total BBI file"""
-        def __get__(self):
-            if self._summary is not None:
-                return self._summary
-            else:
-                return self.fetch_summary()
+# see note below.
+#     property summary_info:
+#         """Summary information over total BBI file"""
+#         def __get__(self):
+#             if self._summary is not None:
+#                 return self._summary
+#             else:
+#                 return self.fetch_summary()
 
     property uncompress_buf_size:
         """Size of buffer needed to uncompress blocks. If 0, the data is uncompressed"""
         def __get__(self):
             return self._bbifile.uncompressBufSize
-    
-    cdef dict fetch_summary(self):
-        """Return summary info of BBI file, and set `self._summary`.
-        Summary info includes:
-        
-          - min value
-          - max value
-          - sum of values
-          - sum of squares of values
-          - covered bases
-          - mean value over covered bases
-          
-        Returns
-        -------
-        dict
-            dictionary described above
-        """
-        cdef:
-            bbiSummaryElement mydata = bbiTotalSummary(self._bbifile)
-            dict dtmp
-         
-        dtmp = {
-            "min" : mydata.minVal,
-            "max" : mydata.maxVal,
-            "mean" : mydata.sumData / mydata.validCount,
-            "sum"  : mydata.sumData,
-            "sum_squares" : mydata.sumSquares,
-            "valid_bases" : mydata.validCount,
-        }
-        self._summary = dtmp
-        return dtmp
+
+# data for mean as read from table is very inaccurate. Decide what to do later    
+#     cdef dict fetch_summary(self):
+#         """Return summary info of BBI file, and set `self._summary`.
+#         Summary info includes:
+#         
+#           - min value
+#           - max value
+#           - sum of values
+#           - sum of squares of values
+#           - covered bases
+#           - mean value over covered bases
+#           
+#         Returns
+#         -------
+#         dict
+#             dictionary described above
+#         """
+#         cdef:
+#             bbiSummaryElement mydata = bbiTotalSummary(self._bbifile)
+#             dict dtmp
+#          
+#         dtmp = {
+#             "min" : mydata.minVal,
+#             "max" : mydata.maxVal,
+#             "mean" : mydata.sumData / mydata.validCount,
+#             "sum"  : mydata.sumData,
+#             "sum_squares" : mydata.sumSquares,
+#             "valid_bases" : mydata.validCount,
+#         }
+#         self._summary = dtmp
+#         return dtmp
 
     cdef dict _define_chroms(self):
         """Return dictionary mapping chromosome names to their lengths

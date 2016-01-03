@@ -21,7 +21,8 @@ from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
                                      bbiSummary, bbiSummaryType,\
                                      bbiSumMax,bbiSumMin,bbiSumMean,\
                                      bbiSumCoverage, bbiSumStandardDeviation,\
-                                     lmInit, lmCleanup, lmAlloc, lm
+                                     lmInit, lmCleanup, lmAlloc, lm, \
+                                     bitFindClear
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
 
@@ -48,14 +49,10 @@ cdef class BigWigReader(_BBI_Reader):
             Value to use when there is no data covering a base (e.g. zero, nan,
             et c. Default: `numpy.nan`)
         """
-        # pointer to file; opened here but closed in __dealloc__ of _BBI_Reader
         self._bbifile = bigWigFileOpen(bytes(filename))
-        
-        # value for empty/missing data
         self.fill = fill
-        
-        # local memory buffer
         self._lm = NULL
+        self._sum = numpy.nan
         
     def __dealloc__(self):
         """Deallocate memory buffer ``self._lm``, if allocated"""
@@ -141,6 +138,19 @@ cdef class BigWigReader(_BBI_Reader):
 
         return counts
 
+    def sum(self):
+        """Calculate sum of data in `BigWig`_ file"""
+        cdef double mysum = 0.0
+        if not numpy.isnan(self._sum):
+            return self._sum
+        else:
+            for chrom in self.chroms:
+                mysum += numpy.nansum(self.get_chromosome(chrom))
+                
+            self._sum = mysum
+            
+        return mysum
+    
     def get_chromosome(self, str chrom):
         """Retrieve values across an entire chromosome more efficiently than using `self[chromosome_segment]`
         
@@ -157,11 +167,12 @@ cdef class BigWigReader(_BBI_Reader):
         cdef:
             lm* buf = self._get_lm()
             bigWigValsOnChrom* vals
-            long length
-            long i = 0
+            long length, bufsize
+            int i = 0
             numpy.ndarray counts, mask
             bint success
             numpy.double_t [:] valview
+            double fill = self.fill
             
         #     cdef struct bigWigValsOnChrom:
         #         bigWigValsOnChrom *next
@@ -176,10 +187,10 @@ cdef class BigWigReader(_BBI_Reader):
 
         if chrom not in self.c_chroms():
             warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
-            counts = numpy.full(length,self.fill)
+            counts = numpy.full(length,fill)
         elif success == False:
             warnings.warn("Could not retrieve data for chrom '%s' from file '%s'." % (chrom,self.filename),DataWarning)
-            counts = numpy.full(length,self.fill)
+            counts = numpy.full(length,fill)
         else:
             valview = <numpy.double_t[:length]> vals.valBuf
             
@@ -190,12 +201,13 @@ cdef class BigWigReader(_BBI_Reader):
             
             # if fill isn't 0, set no-data values in output to self.fill
             # these are in vals.covBuf
-            #
-            # Bits is typedefed as unsigned char in kentUtils/inc/bits.h
-            # That corresponds to a 1 byte unsigned int in numpy
             if self.fill != 0:
-                mask = numpy.asarray(<numpy.uint8_t[:length]> vals.covBuf)
-                counts[mask == 0] = self.fill
+                i=-1
+                while True:
+                    i = bitFindClear(vals.covBuf,i+1,length)
+                    if i >= length: # no clear bit left
+                        break
+                    counts[i] = fill
 
         bigWigValsOnChromFree(&vals)
         return counts

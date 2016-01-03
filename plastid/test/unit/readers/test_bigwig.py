@@ -2,7 +2,7 @@ import os
 import numpy
 
 from nose.tools import assert_less_equal, assert_raises, assert_dict_equal,\
-                       assert_true, assert_equal
+                       assert_true, assert_equal, assert_almost_equal
 
 from pkg_resources import resource_filename
 from plastid.readers.bigwig import BigWigReader
@@ -48,9 +48,9 @@ class AbstractTestBBIFile():
     def test_sum(self):
         assert False
 
-    @skip_if_abstract            
-    def test_summary_info(self):
-        assert False
+#     @skip_if_abstract            
+#     def test_summary_info(self):
+#         assert False
 
 class TestBigWigReader(AbstractTestBBIFile):
     
@@ -124,7 +124,7 @@ class TestBigWigReader(AbstractTestBBIFile):
                     found = self.bw[seg]
                     yield self.check_vals_against_wig, expected, found
     
-    def test_get_whole_chrom_against_wig(self):
+    def test_get_chromosome_zero_fill(self):
         ga = GenomeArray()
         with open(wigfile) as fin:
             ga.add_from_wiggle(fin,"+")
@@ -133,6 +133,26 @@ class TestBigWigReader(AbstractTestBBIFile):
                 expected = ga[seg]
                 found = self.bw.get_chromosome(chrom)
                 yield self.check_vals_against_wig, expected, found
+
+    def test_get_chromosome_nan_fill(self):
+        bw = BigWigReader(bigwigfile,fill=numpy.nan)
+        ga = GenomeArray()
+        with open(wigfile) as fin:
+            ga.add_from_wiggle(fin,"+")
+            for chrom, length in self.chrdict.items():
+                seg = GenomicSegment(chrom,0,length,"+")
+                expected = ga[seg]
+                found = bw.get_chromosome(chrom)
+                checkmask = ~numpy.isnan(found)
+                
+                # first to make sure no non-zero positions were masked
+                # this doesn't guarantee we're ok, but will tell us if a big
+                # problem is there
+                assert_almost_equal(expected[checkmask].sum(),expected.sum())
+                
+                # now check all non-nan positions
+                yield self.check_vals_against_wig, expected[checkmask], found[checkmask]
+
 
     def test_fill_val_absent_chrom(self):
         filldef = BigWigReader(bigwigfile)
@@ -182,9 +202,10 @@ class TestBigWigReader(AbstractTestBBIFile):
         assert_true((fill10[seg] == 10).all(),
                     "10-fill didn't work")
     
-    def test_summarize(self):
-        assert False
-                    
+    def test_sum(self):
+        bw = BigWigReader(os.path.join(base_path,"mini","wig","bw_fiveprime_15_fw.bw"))
+        assert_equal(bw.sum(),4000)
+    
     def test_iter(self):
         wig = WiggleReader(open(wigfile))
         bw  = BigWigReader(bigwigfile)
@@ -207,4 +228,8 @@ class TestBigWigReader(AbstractTestBBIFile):
             eval_ = expected[3]
             diff = abs(fval-eval_)
             assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
+            
+    def test_summarize(self):
+        assert False
+    
         

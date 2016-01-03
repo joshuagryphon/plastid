@@ -31,6 +31,17 @@ cdef extern from "<common.h>" nogil:
     ctypedef unsigned bits32
     ctypedef unsigned long long bits64
 
+cdef extern from "<bits.h>":
+    
+    # find index of next set bit
+    int bitFindSet(Bits *b, int startIx, int bitCount)
+    
+    # find index of next clear bit
+    int bitFindClear(Bits *b, int startIX, int bitCount)
+    
+    # read next bit
+    bint bitReadOne(Bits *b, int bitIx)
+
 cdef extern from "<localmem.h>":
     cdef struct lm:
         lmBlock *blocks
@@ -155,4 +166,4 @@ cdef class _BBI_Reader:
 
     cdef dict _define_chroms(self)
     cdef dict c_chroms(self)
-    cdef dict fetch_summary(self)
+#     cdef dict fetch_summary(self)

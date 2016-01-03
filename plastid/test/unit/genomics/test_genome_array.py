@@ -357,11 +357,14 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 gnd_counts   = numpy.array(region.get_counts(self.gnds[k]))
                 self.assertGreater(gnd_counts.sum(),0,"Region is empty in sample %s" % k)
                 known_counts = _get_ivc_numpy_counts(region,self.count_vecs["%s_%s" % (k,strand_key)])
+                
                 max_err = max(abs(gnd_counts - known_counts))
-                self.assertLessEqual(max_err,self.tol,
-                                "Positionwise count difference '%s' exceeded tolerance '%s' for %s import for sample test %s" % (self.tol,max_err,self.native_format,k))
-                self.assertLessEqual(abs(known_counts.sum() - gnd_counts.sum()),self.tol,
-                                     "Error in of total counts exceeded tolerance '%s' for '%s' import for sample test %s" % (self.tol,self.native_format,k))
+                msg1 = "Positionwise count difference (%s) exceeded tolerance (%s) for '%s' file import for sample test '%s'" % (self.tol,max_err,self.native_format,k)
+                self.assertLessEqual(max_err,self.tol,msg1)
+                
+                sum_diff = abs(known_counts.sum() - gnd_counts.sum())
+                msg2 = "Error in difference of total counts (%s) exceeded tolerance (%s) for '%s' import for sample test %s" % (sum_diff,self.tol,self.native_format,k)
+                self.assertLessEqual(sum_diff,self.tol,msg2)
         
     @skip_if_abstract
     def test_native_import_positionwise_equality_repeat_regions(self):
@@ -465,7 +468,7 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 known_counts = _get_ivc_numpy_counts(region,self.count_vecs["%s_%s" % (k,strand_key)])
                 max_err = max(abs(gnd_counts - known_counts))
                 self.assertLessEqual(max_err,self.tol,
-                                "Positionwise count difference '%s' exceeded tolerance '%s' for %s reimport after export from class %s for sample test %s" % (self.tol,max_err,self.native_format,self.test_class,k))
+                                "Positionwise count difference (%s) exceeded tolerance (%s) for %s reimport after export from class '%s' for sample '%s'" % (self.tol,max_err,self.native_format,self.test_class,k))
 
             os.remove(fw_out.name)
             os.remove(rc_out.name)
@@ -474,16 +477,19 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
     def test_unnormalized_sum(self):
         for k,v in self.gnds.items():
             v.set_normalize(False)
-            err = abs(v.sum() - self.expected_unnorm_sum)
-            err_msg = "Observed error %s in unnormalized sum %s greater than tolerance %s" % (k,err,self.tol)
+            found = v.sum()
+            expected = self.expected_unnorm_sum
+            err = abs(found - expected)
+            err_msg = "Observed error (%s) in unnormalized sum (observed %s; expected %s) greater than tolerance (%s) for sample '%s'" % (err,found,expected,self.tol,k)
             self.assertLessEqual(err,self.tol,err_msg)
     
     @skip_if_abstract
     def test_normalize_not_change_sum(self):
         for k,v in self.gnds.items():
             v.set_normalize(True)
-            err_msg = "%s normalize flag changed sum from %s " % (k,self.expected_unnorm_sum)
-            err = abs(v.sum() - self.expected_unnorm_sum)
+            found_sum = v.sum()
+            err_msg = "Normalize flag changed sum to %s from %s for sample '%s'" % (found_sum,self.expected_unnorm_sum,k)
+            err = abs(found_sum - self.expected_unnorm_sum)
             self.assertLessEqual(err,self.tol,err_msg)
             v.set_normalize(False)
 
@@ -493,19 +499,23 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
         for k,v in self.gnds.items():
             v.set_sum(expected_unnorm_sum2)
             v.set_normalize(False)
-            err = abs(v.sum() - expected_unnorm_sum2)
-            err_msg = "Observed error %s in %s set unnormalized sum greater than tolerance %s" % (k,err,self.tol)
+            
+            found = v.sum()
+            err = abs(found - expected_unnorm_sum2)
+            err_msg = "Observed error (%s) in sample '%s' set unnormalized sum (observed %s; expected %s) greater than tolerance %s" % (err,k,found,expected_unnorm_sum2,self.tol)
             self.assertLessEqual(err,self.tol,err_msg)
 
             v.set_normalize(True)
-            err = abs(v.sum() - expected_unnorm_sum2)
-            err_msg = "Observed error %s in %s set normalized sum greater than tolerance %s" % (k,err,self.tol)
+            found = v.sum()
+            err = abs(found - expected_unnorm_sum2)
+            err_msg = "Observed error (%s) in sample '%s' set normalized sum (observed %s; expected %s) greater than tolerance %s" % (err,k,found,expected_unnorm_sum2,self.tol)
             self.assertLessEqual(err,self.tol,err_msg)
 
             v.set_normalize(False)
             v.reset_sum()
-            err = abs(v.sum() - self.expected_unnorm_sum)
-            err_msg = "Observed error %s in %s reset sum greater than tolerance %s" % (k,err,self.tol)
+            found = v.sum()
+            err = abs(found - self.expected_unnorm_sum)
+            err_msg = "Observed error (%s) in sample '%s' reset sum (observed %s; expected %s) greater than tolerance %s" % (err,k,found,self.expected_unnorm_sum,self.tol)
             self.assertLessEqual(err,self.tol,err_msg)
 
     @skip_if_abstract
@@ -533,7 +543,7 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_norm)
                 self.assertLessEqual(err,self.tol,
-                                     "Found normalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_norm,self.tol))
+                                     "Found normalized region sum (%s) different from expected (%s) more than error (observed %s; tolerance %s) for sample '%s'" % (found_region_sum,expected_region_norm,err,self.tol,k))
 
                 # Test reversibility
                 v.set_normalize(False)
@@ -622,7 +632,6 @@ class AbstractExportableGenomeArrayHelper(AbstractGenomeArrayHelper):
     @skip_if_abstract
     def test_bedgraph_export(self):
         self.variablestep_and_bedgraph_export_helper("bedgraph",self.test_class.to_bedgraph)
-    
 
 
 @attr(test="unit")
@@ -719,8 +728,6 @@ class TestGenomeArray(AbstractExportableGenomeArrayHelper):
         minuschain = SegmentChain(GenomicSegment("chrA",50,100,"-"),
                                   GenomicSegment("chrA",150,732,"-"),
                                   GenomicSegment("chrA",1800,2500,"-"))
-
-        ga = GenomeArray({"chrA" : 2000})
 
         plusvec  = numpy.random.randint(0,high=250,size=pluschain.length)
         minusvec = numpy.random.randint(0,high=250,size=minuschain.length)
@@ -1093,7 +1100,6 @@ class TestSparseGenomeArray(TestGenomeArray):
 
 
 
-
 @attr(test="unit")
 @attr(speed="slow")
 class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
@@ -1106,7 +1112,7 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
                  methodName='runTest',
                  params=_BIGWIG_GENOME_ARRAY_PARAMS,
                  test_folder=resource_filename("plastid","test/data/mini"),
-                 tol=1e-6):
+                 tol=1e-4):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when
         the first instance is made, and then stored in class attributes
@@ -1150,10 +1156,10 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
             
     def test_fill_value(self):
         assert False
-        
+         
     def test_add_more(self):
         assert False
-    
+     
     def test_to_genome_array(self):
         assert False
         

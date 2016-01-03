@@ -60,6 +60,7 @@ cdef class BigWigReader(_BBI_Reader):
     cdef:
         lm*    _lm
         double fill
+        double _sum
         
     cdef lm* _get_lm(self)
     
