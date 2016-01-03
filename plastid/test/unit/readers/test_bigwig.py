@@ -43,7 +43,14 @@ class AbstractTestBBIFile():
     def test_no_crash_if_file_not_exist(self):
         with assert_raises(IOError) as _:
             _ = self.reader_class("non_existant_file")
+            
+    @skip_if_abstract            
+    def test_sum(self):
+        assert False
 
+    @skip_if_abstract            
+    def test_summary_info(self):
+        assert False
 
 class TestBigWigReader(AbstractTestBBIFile):
     
@@ -175,9 +182,9 @@ class TestBigWigReader(AbstractTestBBIFile):
         assert_true((fill10[seg] == 10).all(),
                     "10-fill didn't work")
     
-    def test_summary(self):
+    def test_summarize(self):
         assert False
-            
+                    
     def test_iter(self):
         wig = WiggleReader(open(wigfile))
         bw  = BigWigReader(bigwigfile)

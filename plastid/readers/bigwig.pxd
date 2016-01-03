@@ -62,5 +62,6 @@ cdef class BigWigReader(_BBI_Reader):
         double fill
         
     cdef lm* _get_lm(self)
-    cdef double _summary(self,GenomicSegment roi, bbiSummaryType type_)
+    
+    cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
 

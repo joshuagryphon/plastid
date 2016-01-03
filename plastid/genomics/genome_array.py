@@ -49,25 +49,6 @@ or quantitative data is stored. All GenomeArrays present the same interfaces for
 The following subclasses of GenomeArrays provide their own features in addition 
 to those above:
 
-    |GenomeArray|
-        The most basic GenomeArray. It allows:
-        
-            - setting values within the array
-    
-            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
-            
-            - import of :term:`read alignments` from native `bowtie`_ alignments,
-              and their convertion to :term:`counts` under configurable
-              :term:`mapping rules <mapping rule>`.
-    
-            - mathematical operations such as addition and subtraction of scalars,
-              or positionwise addition and subtraction of other |GenomeArray| s
-    
-    
-    |SparseGenomeArray|
-        A slower but more memory-efficient implementation of |GenomeArray|,
-        useful for large genomes or on computers with limited memory.
-
 
     |BAMGenomeArray|
         A GenomeArray for `BAM` files. Fetches alignments from one or more
@@ -92,7 +73,7 @@ to those above:
             - If necessary, a |BAMGenomeArray| can be converted to a |GenomeArray|
         
         
-        However, because a |BAMGenomeArray| is a view of the data in an
+        Because a |BAMGenomeArray| is a view of the data in an
         underlying `BAM`_ file, |BAMGenomeArrays| do not support
         *setter* operations. Instead, mathematical operations, if desired, may be:
         
@@ -100,6 +81,32 @@ to those above:
             
             - performed on a |GenomeArray| or |SparseGenomeArray| created from
               a |BAMGenomeArray| via :meth:`BAMGenomeArray.to_genome_array`
+
+    |BigWigGenomeArray|
+        A GenomeArray for `BigWig`_ files. Recommended for large quantitative
+        data sets. Like a |BAMGenomeArray|, |BigWigGenomeArrays| are immutable.
+        `BigWig`_ files can be made from `Wiggle`_ and `bedGraph`_ files using
+        `Jim Kent's utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
+              
+    |GenomeArray|
+        A mutable GenomeArray. It allows:
+        
+            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
+
+            - import of :term:`read alignments` from native `bowtie`_ alignments,
+              and their convertion to :term:`counts` under configurable
+              :term:`mapping rules <mapping rule>`.
+              
+            - setting values within the array
+    
+            - mathematical operations such as addition and subtraction of scalars,
+              or positionwise addition and subtraction of other |GenomeArrays|
+    
+    |SparseGenomeArray|
+        A slower but more memory-efficient implementation of |GenomeArray|,
+        useful for large genomes or on computers with limited memory.
+
+
 
 
 Mapping rules
@@ -167,6 +174,7 @@ from collections import OrderedDict
 
 from plastid.readers.wiggle import WiggleReader
 from plastid.readers.bowtie import BowtieReader
+from plastid.readers.bigwig import BigWigReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
 from plastid.util.services.exceptions import DataWarning
@@ -602,7 +610,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
         self.map_fn       = CenterMapFactory() if mapping is None else mapping
-        self._strands     = ("+","-")
+        self._strands     = ("+","-",".")
         self._normalize   = False
         
         self._chr_lengths = {}
@@ -1013,6 +1021,157 @@ class BAMGenomeArray(AbstractGenomeArray):
 
 
 
+class BigWigGenomeArray(AbstractGenomeArray):
+    """High-performance GenomeArray for `BigWig`_ files."""
+    
+    def __init__(self,fill=0.0):
+        """Create a |BigWigGenomeArray|.
+        
+        `BigWig`_ files may be added to the array via
+        :meth:`~BigWigGenomeArray.add_from_bigwig`.
+        
+        Parameters
+        ----------
+        fill : float, optional
+            Default fill value for data missing in the `BigWig`_ file.
+            Default value is 0, as `wiggle`_, `bedGraph`_ and `BigWig`_
+            files often don't explicitly list zero positions.
+        """
+        self._strand_dict = {}
+        self._normalize = False
+        self._chromset = None
+        self._sum = None
+        self._lengths = None
+        self.fill = fill
+    
+    def __getitem__(self,roi,roi_order=True):
+        """Retrieve array of counts from a region of interest.
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+        
+        roi_order : bool, optional
+            If `True` (default) return vector of values 5' to 3' 
+            relative to vector rather than genome.
+
+        Returns
+        -------
+        numpy.ndarray
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
+        
+        strand = roi.strand
+        sdict  = self.strands()
+        count_vec = numpy.zeros,len(roi)
+        if strand in sdict:
+            for bw in sdict[strand]:
+                count_vec += bw[roi]
+        else:
+            warnings.warn("Strand '%s' not in BigWigGenomeArray (has %s)." % (strand,", ".join(sdict.keys())),DataWarning)
+
+        if self._normalize is True:
+            count_vec = count_vec / float(self.sum()) * 1e6
+        
+        if roi_order == True and strand == "-":
+            count_vec = count_vec[::-1]
+            
+        # FIXME: reapply fill values. Need to get mask.
+            
+        return count_vec
+    
+    def strands(self):
+        """Return a tuple of strands in the GenomeArray
+        
+        Returns
+        -------
+        tuple
+            Chromosome strands as strings
+        """        
+        return sorted(tuple(self._strand_dict.keys()))
+    
+    def chroms(self):
+        """Return a list of chromosomes in the GenomeArray
+        
+        Returns
+        -------
+        list
+            Chromosome names as strings
+        """        
+        if self._chromset is not None:
+            return self._chromset
+        else:
+            chromset = []
+            for ltmp in self._strand_dict.values():
+                for bw in ltmp:
+                    chromset.extend(bw.chroms.keys())
+        
+            self._chromset = set(chromset)
+            return self._chromset
+    
+    def lengths(self):
+        """Return a dictionary mapping chromosome names to lengths.
+        When two strands report different lengths for a chromosome, the
+        max length is taken.
+        
+        Returns
+        -------
+        dict
+            Dictionary mapping chromosome names to chromosome lengths
+        """        
+        if self._lengths is not None:
+            return self._lengths
+        else:
+            lengths = {}
+            for ltmp in self._strand_dict.values():
+                for bw in ltmp:
+                    sizedict = bw.chroms
+                    for k,v in sizedict.items():
+                        lengths[k] = max(lengths.get(k,0),v)
+            
+            self._lengths = lengths
+            return lengths
+        
+    def add_from_bigwig(self,filename,strand):
+        """Import data from a `BigWig`_ file
+        
+        Parameters
+        ----------
+        filename : str
+            Path to `BigWig`_ file
+        
+        strand : str
+            Strand to which data should be added. `'+'`, `'-'`, or `'.'`
+        """
+        self._chromset = None
+        self._lengths = None
+        self._reset_sum()
+        try:
+            self._strand_dict[strand].append(BigWigReader(filename,fill=self.fill))
+        except KeyError:       
+            self._strand_dict[strand] = [BigWigReader(filename,fill=self.fill)]
+
+    # FIXME
+    def reset_sum(self):
+        """Reset sum to total of data in the GenomeArray"""        
+        my_sum = 0
+        for ltmp in self.strand_dict.values():
+            for bw in ltmp:
+                my_sum += bw.sum()
+        
+        return my_sum
+
+        
+        
 class GenomeArray(MutableAbstractGenomeArray):
     """Array-like data structure that maps numerical values (e.g. read :term:`counts`
     or conservation data, et c) to nucleotide positions in a genome.
@@ -1061,7 +1220,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                     self._chroms[chrom][strand] = numpy.zeros(l)
 
     def reset_sum(self):
-        """Reset the sum of the |GenomeArray| to the total number of mapped reads
+        """Reset the sum of the |GenomeArray| to the sum of all positions in the array
         """
         self._sum = sum([X.sum() for X in self.iterchroms()])
         

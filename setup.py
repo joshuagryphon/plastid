@@ -382,19 +382,6 @@ class clean_c_files(Command):
                 os.remove(sofile)
 
 
-class hack_build_ext(build_ext):
-    """Hack build_ext so the linker can find libkentutil.so in the lib build dir"""
-    start_extensions = ext_modules
-    
-    def run(self):
-        libpath = os.path.join(self.build_lib,"plastid","lib")
-        for x in self.start_extensions:
-            if libpath not in x.library_dirs:
-                x.library_dirs.append(libpath)
-        
-        sys.stdin.readline()
-        build_ext.run(self)
-
 
 class build_c_from_pyx(build_ext):
     """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
@@ -526,7 +513,7 @@ setup(
     
     cmdclass    = {
         CYTHONIZE_COMMAND : build_c_from_pyx,
-        'build_ext' : build_ext, #hack_build_ext,#wrap_command_classes(build_ext),
+        'build_ext' : build_ext, 
         'install'   : wrap_command_classes(install),
         'develop'   : wrap_command_classes(develop),
         'clean'     : clean_c_files,

@@ -21,11 +21,14 @@ from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
                                      bbiSummary, bbiSummaryType,\
                                      bbiSumMax,bbiSumMin,bbiSumMean,\
                                      bbiSumCoverage, bbiSumStandardDeviation,\
-                                     lmInit, lmCleanup, lmAlloc, lm\
+                                     lmInit, lmCleanup, lmAlloc, lm
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
 
 
+#===============================================================================
+# INDEX: BigWig reader
+#===============================================================================
 
 
 
@@ -80,11 +83,10 @@ cdef class BigWigReader(_BBI_Reader):
             
         return self._lm
 
-            
     def __iter__(self):
         return BigWigIterator(self)
          
-    def __getitem__(self,roi): #,roi_order=True): 
+    def __getitem__(self, roi): #,roi_order=True): 
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -137,12 +139,9 @@ cdef class BigWigReader(_BBI_Reader):
             view[segstart:segend] = iv.val
             iv = iv.next
 
-#         if roi_order == True and roi.c_strand == reverse_strand:
-#             counts = counts[::-1]
-
         return counts
 
-    def get_chromosome(self,str chrom):
+    def get_chromosome(self, str chrom):
         """Retrieve values across an entire chromosome more efficiently than using `self[chromosome_segment]`
         
         Parameters
@@ -201,45 +200,50 @@ cdef class BigWigReader(_BBI_Reader):
         bigWigValsOnChromFree(&vals)
         return counts
 
-    def summary(self,GenomicSegment roi):
+    def summarize(self, GenomicSegment roi):
         """Summarize `BigWig` data over the region of interest
-        
+         
         Returns
         -------
         tuple of floats
             `(mean,max,min,fractin of bases covered,stdev)` of data in `BigWig`_ 
             file over the region defined by `roi` 
         """
-        mean  = self._summary(roi,bbiSumMean)
-        max_  = self._summary(roi,bbiSumMax)
-        min_  = self._summary(roi,bbiSumMin)
-        cov   = self._summary(roi,bbiSumCoverage)
-        stdev = self._summary(roi,bbiSumStandardDeviation)
-        
+        mean  = self._summarize(roi,bbiSumMean)
+        max_  = self._summarize(roi,bbiSumMax)
+        min_  = self._summarize(roi,bbiSumMin)
+        cov   = self._summarize(roi,bbiSumCoverage)
+        stdev = self._summarize(roi,bbiSumStandardDeviation)
+         
         return (mean,max_,min_,cov,stdev)
         
-    cdef double _summary(self,GenomicSegment roi, bbiSummaryType type_):
+    cdef double _summarize(self, GenomicSegment roi, bbiSummaryType type_):
         """Summarize bigWig data over ROI for a single statistic
-        
+         
         Parameters
         ----------
         roi : |GenomicSegment|
-            
+             
         type: int in [0...4]
             Type of data to calculate: mean (type_ = 0), max (1), min (2),
             fraction of bases covered (3), stdev (4)
         """
         cdef double retval
-            
+             
         retval = bigWigSingleSummary(self._bbifile,
                                      bytes(roi.chrom),
                                      roi.start,
                                      roi.end,
                                      type_,
                                      self.fill)
-        
+         
         return retval
 
+
+
+#===============================================================================
+# INDEX: BigWig iterator
+#===============================================================================
 
 ####################################################################
 # for some reason, the return value for this gives no repr in python
@@ -260,6 +264,7 @@ cdef class BigWigReader(_BBI_Reader):
 #
 # '<generator object at 0x7f066e0f3d98>'
 #
+
 def BigWigIterator(_BBI_Reader reader):
     """Iterate over values in the `BigWig`_ file, sorted lexically by chromosome and position.
      

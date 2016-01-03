@@ -67,8 +67,8 @@ cdef extern from "<bbiFile.h>":
         bits16 version
         bits16 zoomLevels
         #bits64 chromTreeOffset
-        bits64 unzoomedDataOffset
-        bits64 unzoomedIndexOffset
+#         bits64 unzoomedDataOffset
+#         bits64 unzoomedIndexOffset
         bits16 fieldCount
         bits16 definedFieldCount
         bits64 asOffset
@@ -76,11 +76,10 @@ cdef extern from "<bbiFile.h>":
         bits32 uncompressBufSize
         #bits64 exgtensionOffset
         #struct cirTreeFile unzoomedCir
-        bbiZoomLevel *levelList
-
-        bits16 extensionSize
-        bits16 extraIndexCount
-        bits64 extraIndexListOffset
+        #bbiZoomLevel *levelList
+        #bits16 extensionSize
+        #bits16 extraIndexCount
+        #bits64 extraIndexListOffset
 
     cdef struct bbiChromIdSize:
         bits32 chromId
@@ -103,6 +102,13 @@ cdef extern from "<bbiFile.h>":
         float sumSquares
         bits64 fileOffset
 
+    cdef struct bbiSummaryElement:
+        bits64 validCount
+        double minVal
+        double maxVal
+        double sumData
+        double sumSquares
+
     cdef enum bbiSummaryType:
         bbiSumMean              = 0
         bbiSumMax               = 1
@@ -123,7 +129,7 @@ cdef extern from "<bbiFile.h>":
                                char *chromBuf,
                                int chromBufSize)
 
-    cdef bbiSummaryType bbiSummaryTypeFromString(char *string)
+    bbiSummaryElement bbiTotalSummary(bbiFile *bbi)
 
 
 
@@ -142,9 +148,11 @@ cdef class _BBI_Reader:
         bbiFile * _bbifile
         str filename
         dict _chrominfo
+        dict _summary
 #         dict _zoomlevels
 #         dict offsets
 #         bits64 _unzoomed_data_offset, _unzoomed_index_offset
 
     cdef dict _define_chroms(self)
     cdef dict c_chroms(self)
+    cdef dict fetch_summary(self)
