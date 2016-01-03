@@ -6,6 +6,7 @@ from nose.tools import assert_less_equal, assert_raises, assert_dict_equal,\
 
 from pkg_resources import resource_filename
 from plastid.readers.bigwig import BigWigReader
+from plastid.readers.wiggle import WiggleReader
 from plastid.genomics.roitools import GenomicSegment
 from plastid.genomics.genome_array import GenomeArray
 from plastid.util.services.decorators import skip_if_abstract
@@ -173,6 +174,30 @@ class TestBigWigReader(AbstractTestBBIFile):
         
         assert_true((fill10[seg] == 10).all(),
                     "10-fill didn't work")
-        
-    def test_iter(self):
+    
+    def test_summary(self):
         assert False
+            
+    def test_iter(self):
+        wig = WiggleReader(open(wigfile))
+        bw  = BigWigReader(bigwigfile)
+        
+        for found in bw:
+            expected = next(wig)
+            fchrom = found[0]
+            echrom = expected[0]
+            assert_equal(fchrom,echrom,"Chromosome mismatch. Expected '%s', found '%s'." % (fchrom,echrom))
+
+            fstart = found[1]
+            estart = expected[1]
+            assert_equal(fstart,estart,"Start mismatch. Expected '%s', found '%s'." % (fstart,estart))
+
+            fend = found[2]
+            eend = expected[2]
+            assert_equal(fend,eend,"End mismatch. Expected '%s', found '%s'." % (fend,eend))
+
+            fval = found[3]
+            eval_ = expected[3]
+            diff = abs(fval-eval_)
+            assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
+        

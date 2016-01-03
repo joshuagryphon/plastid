@@ -37,8 +37,6 @@ cdef class _BBI_Reader:
         
         self.filename = filename
         self._chrominfo = None
-        self._zoomlevels = None
-        self.offsets = None
 
     def __dealloc__(self):
         """Close BBI file"""

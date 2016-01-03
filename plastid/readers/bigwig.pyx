@@ -18,9 +18,14 @@ from plastid.util.services.exceptions import DataWarning
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport reverse_strand
 from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
-                                     lmInit, lmCleanup, lmAlloc, lm
+                                     bbiSummary, bbiSummaryType,\
+                                     bbiSumMax,bbiSumMin,bbiSumMean,\
+                                     bbiSumCoverage, bbiSumStandardDeviation,\
+                                     lmInit, lmCleanup, lmAlloc, lm\
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
+
+
 
 
 
@@ -74,6 +79,10 @@ cdef class BigWigReader(_BBI_Reader):
             raise MemoryError("BigWig.__get__: Could not allocate memory.")
             
         return self._lm
+
+            
+    def __iter__(self):
+        return BigWigIterator(self)
          
     def __getitem__(self,roi): #,roi_order=True): 
         """Retrieve array of counts from a region of interest, following
@@ -93,7 +102,7 @@ cdef class BigWigReader(_BBI_Reader):
 
         Returns
         -------
-        numpy.ndarray
+        :class:`numpy.ndarray`
             vector of numbers, each position corresponding to a position
             in `roi`, from 5' to 3' relative to `roi`
         
@@ -143,8 +152,8 @@ cdef class BigWigReader(_BBI_Reader):
             
         Returns
         -------
-        numpy.ndarray
-            Numpy array of floats
+        :class:`numpy.ndarray`
+            Numpy array of float values covering entire chromosome `chrom`
         """
         cdef:
             lm* buf = self._get_lm()
@@ -154,7 +163,6 @@ cdef class BigWigReader(_BBI_Reader):
             numpy.ndarray counts, mask
             bint success
             numpy.double_t [:] valview
-            
             
         #     cdef struct bigWigValsOnChrom:
         #         bigWigValsOnChrom *next
@@ -192,38 +200,100 @@ cdef class BigWigReader(_BBI_Reader):
 
         bigWigValsOnChromFree(&vals)
         return counts
+
+    def summary(self,GenomicSegment roi):
+        """Summarize `BigWig` data over the region of interest
+        
+        Returns
+        -------
+        tuple of floats
+            `(mean,max,min,fractin of bases covered,stdev)` of data in `BigWig`_ 
+            file over the region defined by `roi` 
+        """
+        mean  = self._summary(roi,bbiSumMean)
+        max_  = self._summary(roi,bbiSumMax)
+        min_  = self._summary(roi,bbiSumMin)
+        cov   = self._summary(roi,bbiSumCoverage)
+        stdev = self._summary(roi,bbiSumStandardDeviation)
+        
+        return (mean,max_,min_,cov,stdev)
+        
+    cdef double _summary(self,GenomicSegment roi, bbiSummaryType type_):
+        """Summarize bigWig data over ROI for a single statistic
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment|
             
-    def __iter__(self):
-        return iter(self)
-    
-    def __next__(self):
-        """Iterate over values in the `BigWig`_ file, sorted lexically by position.
-        
-        Yields
-        ------
-        tuple
-            `(chrom name, start, end, value)`, where start & end are 0-indexed
-            and half-open
+        type: int in [0...4]
+            Type of data to calculate: mean (type_ = 0), max (1), min (2),
+            fraction of bases covered (3), stdev (4)
         """
-        cdef:
-            list chroms = sorted(self.c_chroms().keys())
-            str chrom
-            long start, end
-            double val
-            lm* buf = self._get_lm()
+        cdef double retval
+            
+        retval = bigWigSingleSummary(self._bbifile,
+                                     bytes(roi.chrom),
+                                     roi.start,
+                                     roi.end,
+                                     type_,
+                                     self.fill)
         
-        for chrom in chroms:
-            #bigWigValsOnChrom
-            pass
+        return retval
 
-    def next(self):
-        """Iterate over values in the `BigWig`_ file, sorted lexically by position.
+
+####################################################################
+# for some reason, the return value for this gives no repr in python
+# so:
+#
+#     >>> z = iter(some_bigwig_file) gives
+#     >>> z
+#
+# gives:
+#
+# TypeError: object of type 'getset_descriptor' has no len()
+#
+# while:
+#
+#    >>>> repr(z)
+#
+# gives:
+#
+# '<generator object at 0x7f066e0f3d98>'
+#
+def BigWigIterator(_BBI_Reader reader):
+    """Iterate over values in the `BigWig`_ file, sorted lexically by chromosome and position.
+     
+    Yields
+    ------
+    tuple
+        `(chrom name, start, end, value)`, where start & end are zero-indexed
+        and half-open
         
-        Yields
-        ------
-        tuple
-            `(chrom name, start, end, value)`, where start & end are 0-indexed
-            and half-open
-        """
-        return next(self)
+    Raises
+    ------
+    MemoryError
+        If memory cannot be allocated
+    """
+    cdef:
+        dict chromsizes = reader.c_chroms()
+        list chroms = sorted(chromsizes.keys())
+        str chrom
+        long chromlength
+        double val
+        lm* buf
+        bbiInterval* iv
+     
+    buf = lmInit(0)
+    for chrom in chroms:
+        chromlength = chromsizes[chrom]
+        iv = bigWigIntervalQuery(reader._bbifile,
+                                 bytes(chrom),
+                                 0,
+                                 chromlength,
+                                 buf)
+        while iv is not NULL:
+            retval = (chrom,long(iv.start),long(iv.end),float(iv.val))
+            iv = iv.next
+            yield retval
 
+    lmCleanup(&buf)

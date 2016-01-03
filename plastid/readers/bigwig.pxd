@@ -10,7 +10,8 @@ See also
 `Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
     The header files are particularly useful.
 """
-from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits
+from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits, bbiSummaryType
+from plastid.genomics.roitools cimport GenomicSegment
 
 #===============================================================================
 # Externs from Kent utilties
@@ -46,6 +47,9 @@ cdef extern from "<bigWig.h>":
                                     char *chrom,
                                     bbiFile *bigWig)
 
+    double bigWigSingleSummary(bbiFile *bwf, char *chrom, int start, int end,
+                               bbiSummaryType summaryType, double defaultVal)
+
 
 #===============================================================================
 # Python class
@@ -54,11 +58,9 @@ cdef extern from "<bigWig.h>":
 
 cdef class BigWigReader(_BBI_Reader):
     cdef:
-        lm* _lm
+        lm*    _lm
         double fill
         
     cdef lm* _get_lm(self)
-#    cdef np.ndarray segment_counts(self,GenomicSegment)
-#    cdef np.ndarray chain_counts(self,SegmentChain)
-    
+    cdef double _summary(self,GenomicSegment roi, bbiSummaryType type_)
 
