@@ -16,7 +16,8 @@ This package contains parsers for the following file types:
     **Alignment & count files**     
     -----------------------------------------------------------------------------
     :py:mod:`plastid.readers.bowtie`          `bowtie`_ alignment            
-    :py:mod:`plastid.readers.wiggle`          `bedGraph`_ and `Wiggle`_      
+    :py:mod:`plastid.readers.wiggle`          `bedGraph`_ and `Wiggle`_
+    :py:mod:`plastid.readers.bigwig`          `BigWig`_
     --------------------------------------    -----------------------------------
     **Miscellaneous**
     -----------------------------------------------------------------------------
