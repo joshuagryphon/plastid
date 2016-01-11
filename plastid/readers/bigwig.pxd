@@ -58,11 +58,8 @@ cdef extern from "<bigWig.h>":
 
 cdef class BigWigReader(_BBI_Reader):
     cdef:
-        lm*    _lm
         double fill
         double _sum
-        
-    cdef lm* _get_lm(self)
     
     cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
 

@@ -11,8 +11,11 @@ See also
     The header files are particularly useful.
 """
 
-from libc.stddef cimport size_t
+from collections import OrderedDict # cimport?
 
+from libc.stddef cimport size_t
+from plastid.genomics.c_common cimport Strand, forward_strand, reverse_strand, unstranded
+from plastid.genomics.roitools cimport GenomicSegment
 
 cdef:
     str WARN_CHROM_NOT_FOUND
@@ -89,7 +92,7 @@ cdef extern from "<bbiFile.h>":
         #struct cirTreeFile unzoomedCir
         #bbiZoomLevel *levelList
         #bits16 extensionSize
-        #bits16 extraIndexCount
+        bits16 extraIndexCount
         #bits64 extraIndexListOffset
 
     cdef struct bbiChromIdSize:
@@ -148,6 +151,44 @@ cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)
 
 
+
+# cdef extern from "bigBed.h":
+# 
+#     cdef struct bigBedInterval:
+#         bigBedInterval *next
+#         bits32 start, end
+#         char *rest
+#         bits32 chromId
+# 
+#     bbiFile *bigBedFileOpen(char *fileName)
+#     bigBedInterval bigBedIntervalQuery(bbiFile *bbi, char *chrom, bits32 start, bits32 end,
+#                                        int maxItems, struct lm *lm)
+# 
+#     bint bigBedSummaryArray(bbiFile *bbi, char *chrom, bits32 start, bits32 end,
+#                             enum bbiSummaryType summaryType, int summarySize, double *summaryValues)
+# 
+# #    int bigBedIntervalToRow(bigBedInterval *interval, char *chrom, char *startBuf, char*endBuf,
+# #                            char **row, int rowSize)
+# #
+# #    int bigBedIntervalToRowLookupChrom(bigBedInterval *interval,
+# #                                       bigBedInterval *prevInterval,
+# #                                       bbiFile *bbi,
+# #                                       char *chromBuf,
+# #                                       int chromBufSize,
+# #                                       char *startBuf,
+# #                                       char *endBuf,
+# #                                       char **row,
+# #                                       int rowSize)
+# #
+# ##    struct bigBedInterval *bigBedNameQuery(bbiFile *bbi, bptFile *index, int fieldIx, char *name, lm *lm)
+# #
+# #    struct bigBedInterval *bigBedMultiNameQuery(bbiFile *bbi, bptFile *index, int fieldIx, char **names,
+# #                                                int nameCount, lm * lm)'
+# #
+#     bits64 bigBedItemCount(bbiFile *bbi)
+#     char * bigBedAutoSqlText(bbiFile *bbi)
+
+
 #===============================================================================
 # INDEX: Python class
 #===============================================================================
@@ -160,10 +201,27 @@ cdef class _BBI_Reader:
         str filename
         dict _chrominfo
         dict _summary
+        lm * _lm
+
 #         dict _zoomlevels
 #         dict offsets
 #         bits64 _unzoomed_data_offset, _unzoomed_index_offset
 
     cdef dict _define_chroms(self)
     cdef dict c_chroms(self)
+    cdef lm* _get_lm(self)
 #     cdef dict fetch_summary(self)
+
+
+# cdef class bb2(_BBI_Reader):
+#     cdef:
+#         _lm          * lm
+#         class          return_type
+#         OrderedDict    custom_fields
+#         bits64         num_records
+#         bint           add_three_for_stop
+# 
+#     cdef list c_getitem(self,GenomicSegment)
+#     cdef str c_get_autosql(self)
+#     cdef *lm _get_lm(self)
+

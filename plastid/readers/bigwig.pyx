@@ -51,39 +51,12 @@ cdef class BigWigReader(_BBI_Reader):
         """
         self._bbifile = bigWigFileOpen(bytes(filename))
         self.fill = fill
-        self._lm = NULL
         self._sum = numpy.nan
-        
-    def __dealloc__(self):
-        """Deallocate memory buffer ``self._lm``, if allocated"""
-        if self._lm != NULL:
-            lmCleanup(&self._lm)
-  
-    cdef lm * _get_lm(self):
-        """Return ``self._lm``, allocating it if necessary
-        
-        Returns
-        -------
-        lm
-            local memory buffer
-            
-        Raises
-        ------
-        MemoryError
-            If memory cannot be allocated
-        """
-        if self._lm == NULL:
-            self._lm = lmInit(0)
-
-        if not self._lm:
-            raise MemoryError("BigWig.__get__: Could not allocate memory.")
-            
-        return self._lm
 
     def __iter__(self):
         return BigWigIterator(self)
          
-    def __getitem__(self, roi): #,roi_order=True): 
+    def __getitem__(self, GenomicSegment roi): #,roi_order=True): 
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -218,7 +191,7 @@ cdef class BigWigReader(_BBI_Reader):
         Returns
         -------
         tuple of floats
-            `(mean,max,min,fractin of bases covered,stdev)` of data in `BigWig`_ 
+            `(mean,max,min,fraction of bases covered,stdev)` of data in `BigWig`_ 
             file over the region defined by `roi` 
         """
         mean  = self._summarize(roi,bbiSumMean)

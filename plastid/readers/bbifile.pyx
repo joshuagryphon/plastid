@@ -12,6 +12,8 @@ See also
 """
 import os
 
+from plastid.readers.autosql import AutoSqlDeclaration
+from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 
 #===============================================================================
 # Exported warnings
@@ -37,10 +39,44 @@ cdef class _BBI_Reader:
         self.filename = filename
         self._chrominfo = None
         self._summary = None
+        self._lm = NULL
 
     def __dealloc__(self):
         """Close BBI file"""
+
+        # deallocate memory, if allocated
+        if self._lm != NULL:
+            lmCleanup(&self._lm)
+
+        # close file
         close_file(self._bbifile)
+
+    def __repr__(self):
+        return "<%s file='%s'>" % (self.__class__.__name__,self.filename)
+
+    def __str__(self):
+        return repr(self)
+
+    cdef lm * _get_lm(self):
+        """Return ``self._lm``, allocating it if necessary
+        
+        Returns
+        -------
+        lm
+            local memory buffer
+            
+        Raises
+        ------
+        MemoryError
+            If memory cannot be allocated
+        """
+        if self._lm == NULL:
+            self._lm = lmInit(0)
+
+        if not self._lm:
+            raise MemoryError("BigWig.__get__: Could not allocate memory.")
+            
+        return self._lm
 
     property filename:
         """Name of BigWig or BigBed file"""
@@ -141,3 +177,108 @@ cdef class _BBI_Reader:
         else: 
             self._chrominfo = self._define_chroms()
             return self._chrominfo
+
+
+
+# from bigBed.h
+# To stream through whole file
+ #    struct bbiFile *bbi = bigBedFileOpen(fileName);
+ #    struct bbiChromInfo *chrom, *chromList = bbiChromList(bbi);
+ #    for (chrom = chromList; chrom != NULL; chrom = chrom->next)
+ #        {
+ #        struct lm *lm = lmInit(0);
+ #        struct bigBedInterval *list = bigBedIntervalQuery(bbi,chrom->name,0,chrom->size,0,lm);
+ #        struct bigBedInterval *el;
+ #        for (el = list; el != NULL; el = el->next)
+ #            // do something involving chrom, el->start, el->end
+ #        lmCleanup(&lm);
+ #        }
+ #    bigBedFileClose(&bbi);
+
+
+# def BigBedIterator(bb2 bigbed):
+#     """Iterate over `BigBed`_ files by chromosome in lexical order
+# 
+#     Parameters
+#     ----------
+#     bb2 : bb2
+#         `BigBed` reader
+# 
+#     Yields
+#     ------
+#     object
+#         object of type `bb2.return_type`
+#     """
+#     cdef:
+#         str    chrom
+#         bits32 length
+#         list   ltmp
+# 
+#     for chrom, length in sorted(self.c_chroms().items()):
+#         ltmp = bb2[GenomicSegment(chrom,length,0,".")]
+#         for item in ltmp:
+#             yield item
+# 
+# 
+# cdef class bb2(_BBI_Reader)
+# 
+#     # FIXME: should be object type?
+#     def __cinit__(self, str filename, class return_type = None, str add_three_for_stop = False):
+#         cdef str asql
+# 
+#         self._bbifile = bigBedFileOpen(bytes(filename))
+#         self.return_type = return_type
+#         self.custom_fields = OrderedDict()
+#         self.num_records = bigBedItemCount(self._bbifile)
+# 
+#         self.return_type = SegmentChain if return_type is None else return_type
+#         self.add_three_for_stop = add_three_for_stop
+# 
+#         # do something with custom fields here
+#         if self._bbifile.extraIndexCount > 0:
+#             asql = bigBedAutoSqlText(self._bbifile)
+#             try:
+#                 self.autosql_parser = AutoSqlDeclaration(asql)
+#                 self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self._num_custom_fields:])
+#             except AttributeError:
+#                 warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
+#                 self.custom_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self._num_custom_fields)])
+#                 self.autosql_parser = lambda x: OrderedDict(zip(self.custom_fields,x.split("\t")[-self._num_custom_fields:]))
+# 
+#     def __iter__(self):
+#         return BigBedIterator(self)
+# 
+#     def __getitem__(self,GenomicSegment roi):
+#         return self.c_getitem(roi)
+# 
+#     cdef list c_getitem(self, GenomicSegment roi, bint stranded = True):
+#         """Return a list of strings from BigBed file, covering `roi`
+#         """
+#         cdef:
+#             bigBedInterval iv
+#             Strand strand = iv.c_strand
+#             list ltmp
+#             string stmp
+#             list lout = []
+#             lm* = self._get_lm()
+#             str chrom, stmp, rest
+# 
+#         # FIXME: deal with strand info
+#         iv = bigBedIntervalQuery(self._bbifile,roi.start,roi.end,0,lm)
+#         while iv != NULL:
+# 
+#             # FIXME - get chrom name from ID
+#             chrom = "" # some_func(iv.chromId)
+# 
+#             stmp = "%s\t%s\t%s\t" % (chrom,str(iv.start),str(iv.end)) + iv.rest
+# 
+#             # TODO: process return type & extra attributes
+#             lout.append(stmp)
+#             iv = iv.next
+# 
+#         #FIXME : free iv?
+# 
+#         return lout
+# 
+#     cdef str c_get_autosql(self):
+#         return bigBedAutoSqlText(self._bbifile)
