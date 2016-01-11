@@ -1042,6 +1042,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         self._chromset = None
         self._sum = None
         self._lengths = None
+        self._strands = []
         self.fill = fill
     
     def __getitem__(self,roi,roi_order=True):
@@ -1098,7 +1099,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         tuple
             Chromosome strands as strings
         """        
-        return sorted(tuple(self._strand_dict.keys()))
+        return self._strands #sorted(tuple(self._strand_dict.keys()))
     
     def chroms(self):
         """Return a list of chromosomes in the GenomeArray
@@ -1165,6 +1166,8 @@ class BigWigGenomeArray(AbstractGenomeArray):
             self._strand_dict[strand].append(bw)
         except KeyError:       
             self._strand_dict[strand] = [bw]
+            
+        self._strands = sorted(self._strand_dict.keys())
 
     def reset_sum(self):
         """Reset sum to total of data in the GenomeArray"""        
@@ -1184,11 +1187,13 @@ class BigWigGenomeArray(AbstractGenomeArray):
         |GenomeArray|
         """
         ga = GenomeArray(chr_lengths=self.lengths(),strands=self.strands())
-        for chrom, length in self.lengths():
-            for strand in ("+","-","."):
+        for chrom, length in self.lengths().items():
+            for strand in self._strands:
                 region = GenomicSegment(chrom,0,length,strand)
                 for reader in self._strand_dict.get(strand,[]):
-                    ga[region] += reader.get_chromosome(chrom)
+                    old = ga.__getitem__(region,roi_order = False)
+                    new = old + reader.get_chromosome(chrom)
+                    ga.__setitem__(region,new,roi_order = False) 
 
         return ga
         

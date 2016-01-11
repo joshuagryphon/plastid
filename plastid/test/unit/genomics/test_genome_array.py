@@ -524,6 +524,9 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
         for k, v in self.gnds.items():
             v.set_normalize(False)
             v.reset_sum()
+            
+            # add an order of magnitude to account for summing
+            tol = self.tol*10
 
             # exclude repeat regions, because those will align differently than they were generated
             # remove "empty" also, because this will include spliced regions for some tests, 
@@ -534,52 +537,52 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                 found_region_sum = sum(region.get_counts(v))
                 expected_region_unnorm = _get_ivc_numpy_counts(region,self.count_vecs["%s_%s" % (k,STRAND_KEYS[region.strand])]).sum()
                 err = abs(found_region_sum-expected_region_unnorm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,tol))
 
                 # Test normalize
                 v.set_normalize(True)
                 expected_region_norm  = float(expected_region_unnorm) / v.sum() * 10**6
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_norm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found normalized region sum (%s) different from expected (%s) more than error (observed %s; tolerance %s) for sample '%s'" % (found_region_sum,expected_region_norm,err,self.tol,k))
+                self.assertLessEqual(err,tol,
+                                     "Found normalized region sum (%s) different from expected (%s) more than error (observed %s; tolerance %s) for sample '%s'" % (found_region_sum,expected_region_norm,err,tol,k))
 
                 # Test reversibility
                 v.set_normalize(False)
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_unnorm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found re-unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found re-unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,tol))
 
                 # Set sum, no normalization
                 v.set_sum(expected_unnorm_sum2)
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_unnorm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found post-global-sum-set unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found post-global-sum-set unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,tol))
 
                 # Add normalization on top of set sum
                 v.set_normalize(True)
                 expected_region_norm2 = float(expected_region_unnorm) / expected_unnorm_sum2 * 10**6
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_norm2)
-                self.assertLessEqual(err,self.tol,
-                                     "Found post-global-sum-set normalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_norm2,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found post-global-sum-set normalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_norm2,tol))
 
                 # Reset sum, keep normalization
                 v.reset_sum()
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_norm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found post-reset normalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_norm,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found post-reset normalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_norm,tol))
 
                 # Revert all
                 v.set_normalize(False)
                 found_region_sum = sum(region.get_counts(v))
                 err = abs(found_region_sum-expected_region_unnorm)
-                self.assertLessEqual(err,self.tol,
-                                     "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,self.tol))
+                self.assertLessEqual(err,tol,
+                                     "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,tol))
 
     @skip_if_abstract
     def test_getitem_genomicsegment_roi_order_false(self):
@@ -1112,7 +1115,7 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
                  methodName='runTest',
                  params=_BIGWIG_GENOME_ARRAY_PARAMS,
                  test_folder=resource_filename("plastid","test/data/mini"),
-                 tol=1e-4):
+                 tol=1e-3):
         """Initialize test case to run a single method. 
         We override this method to make sure expensive operations are only run when
         the first instance is made, and then stored in class attributes
@@ -1157,11 +1160,40 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
     def test_fill_value(self):
         assert False
          
-    def test_add_more(self):
+    def test_add_multiple(self):
         assert False
      
     def test_to_genome_array(self):
-        assert False
+        for test, orig in self.gnds.items():
+            fw = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_%s_fw.wig" % test)
+            rc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_%s_rc.wig" % test)            
+            
+            expected = GenomeArray()
+            expected.add_from_wiggle(open(fw), "+")
+            expected.add_from_wiggle(open(rc), "-")
+            
+            found = orig.to_genome_array()
+            
+            for chrom, length in expected.lengths().items():
+                for strand in ("+","-"):
+                    seg = GenomicSegment(chrom,0,length,strand)
+                    diffvec = abs(orig[seg] - found[seg])
+                    diffmax = diffvec.max() 
+                    msg1 = "Maximum difference between exported GenomeArray and BigWigGenomeArray (%s) exceeds tolerance (%s) for test '%s' strand '%s'" % (diffmax,self.tol,test,strand)
+                    self.assertLessEqual(diffmax,self.tol,msg1)
+                    
+                    
+            for chrom, length in expected.lengths().items():
+                for strand in ("+","-"):
+                    seg = GenomicSegment(chrom,0,length,strand)
+                    diffvec = abs(expected[seg] - found[seg])
+                    diffmax = diffvec.max() 
+                    msg1 = "Maximum difference between exported GenomeArray and wiggle-imported array (%s) exceeds tolerance (%s) for test '%s' strand '%s'" % (diffmax,self.tol,test,strand)
+                    
+                    self.assertLessEqual(diffmax,self.tol,msg1)
+            
+            
+        
         
  
 class FakeDict(object):
