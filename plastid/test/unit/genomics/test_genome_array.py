@@ -1157,11 +1157,45 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
         
         return dtmp
             
-    def test_fill_value(self):
-        assert False
+#     def test_fill_value(self):
+#         assert False
          
-    def test_add_multiple(self):
-        assert False
+    def test_multiple_same_strand_sum(self):
+        # should see sum double
+        bigwigfile = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_fw.bw")
+        bw = BigWigGenomeArray(fill=0)
+
+        bw.add_from_bigwig(bigwigfile, "+")
+        self.assertLessEqual(abs(bw.sum() - 4000),self.tol)
+
+        bw.add_from_bigwig(bigwigfile, "+")
+        self.assertLessEqual(abs(bw.sum() - 8000),self.tol)
+
+        bw.add_from_bigwig(bigwigfile, "+")
+        self.assertLessEqual(abs(bw.sum() - 12000),self.tol)
+
+    def test_multiple_same_strand_fetch(self):
+        bigwigfw = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_fw.bw")
+        bigwigrc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_rc.bw")
+        wigfw = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_fw.wig")
+        wigrc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_rc.wig")
+        
+        bw = BigWigGenomeArray(fill=0)
+        bw.add_from_bigwig(bigwigfw, "+")
+        bw.add_from_bigwig(bigwigfw, "+")
+        bw.add_from_bigwig(bigwigrc, "-")
+        bw.add_from_bigwig(bigwigrc, "-")
+        
+        ga = GenomeArray(bw.lengths())
+        ga.add_from_wiggle(open(wigfw),"+")
+        ga.add_from_wiggle(open(wigrc),"-")
+        
+        for chrom, length in bw.lengths().items():
+            for strand in bw.strands():
+                seg = GenomicSegment(chrom,0,length,strand)
+                maxdiff = abs(bw[seg] - 2*ga[seg]).max()
+                msg = "Maximum difference for multiple_strand_fetch (%s) exceeds tolerance (%s)"% (maxdiff,self.tol)
+                self.assertLessEqual(maxdiff, self.tol, msg)
      
     def test_to_genome_array(self):
         for test, orig in self.gnds.items():
@@ -1191,9 +1225,6 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
                     msg1 = "Maximum difference between exported GenomeArray and wiggle-imported array (%s) exceeds tolerance (%s) for test '%s' strand '%s'" % (diffmax,self.tol,test,strand)
                     
                     self.assertLessEqual(diffmax,self.tol,msg1)
-            
-            
-        
         
  
 class FakeDict(object):

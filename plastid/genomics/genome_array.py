@@ -1024,26 +1024,28 @@ class BAMGenomeArray(AbstractGenomeArray):
 class BigWigGenomeArray(AbstractGenomeArray):
     """High-performance GenomeArray for `BigWig`_ files."""
     
-    def __init__(self,fill=0.0):
+    def __init__(self,**kwargs): #,fill=0.0):
         """Create a |BigWigGenomeArray|.
         
         `BigWig`_ files may be added to the array via
         :meth:`~BigWigGenomeArray.add_from_bigwig`.
-        
-        Parameters
-        ----------
-        fill : float, optional
-            Default fill value for data missing in the `BigWig`_ file.
-            Default value is 0, as `wiggle`_, `bedGraph`_ and `BigWig`_
-            files often don't explicitly list zero positions.
         """
+#         """
+#         
+#         Parameters
+#         ----------
+#         fill : float, optional
+#             Default fill value for data missing in the `BigWig`_ file.
+#             Default value is 0, as `wiggle`_, `bedGraph`_ and `BigWig`_
+#             files often don't explicitly list zero positions.
+#         """
         self._strand_dict = {}
         self._normalize = False
         self._chromset = None
         self._sum = None
         self._lengths = None
         self._strands = []
-        self.fill = fill
+        self.fill = 0.0 # fill
     
     def __getitem__(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest.

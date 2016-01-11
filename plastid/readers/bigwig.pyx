@@ -37,20 +37,21 @@ cdef class BigWigReader(_BBI_Reader):
     """Reader providing random or sequential access to data stored in `BigWig`_ files.
     """
 
-    def __cinit__(self,str filename, double fill = numpy.nan):
+    def __cinit__(self,str filename, **kwargs): #, double fill = numpy.nan):
         """Open a `BigWig`_ file.
         
         Parameters
         ----------
         filename : str
             Name of `bigwig`_ file
-            
-        fill : float
-            Value to use when there is no data covering a base (e.g. zero, nan,
-            et c. Default: `numpy.nan`)
         """
+#         """
+#         fill : float
+#             Value to use when there is no data covering a base (e.g. zero, nan,
+#             et c. Default: `numpy.nan`)
+#         """
         self._bbifile = bigWigFileOpen(bytes(filename))
-        self.fill = fill
+        self.fill = 0.0 #fill
         self._sum = numpy.nan
 
     def __iter__(self):
