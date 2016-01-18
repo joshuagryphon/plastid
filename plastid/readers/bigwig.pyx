@@ -58,11 +58,12 @@ cdef class BigWigReader(_BBI_Reader):
         return BigWigIterator(self)
          
     def __getitem__(self, GenomicSegment roi): #,roi_order=True): 
-        """Retrieve array of counts from a region of interest, following
-        the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
-        Values in the vector are ordered 5' to 3' relative to `roi`
-        rather than the genome (i.e. are reversed for reverse-strand
-        features).
+        """Retrieve array of counts from a region of interest.
+        
+        Notes
+        -----
+        `roi.strand` is ignored; all coordinates are returned in left-to-right order
+        
         
         Parameters
         ----------
@@ -73,11 +74,13 @@ cdef class BigWigReader(_BBI_Reader):
             If `True` (default) return vector of values 5' to 3' 
             relative to vector rather than genome.
 
+
         Returns
         -------
         :class:`numpy.ndarray`
             vector of numbers, each position corresponding to a position
             in `roi`, from 5' to 3' relative to `roi`
+
         
         See also
         --------

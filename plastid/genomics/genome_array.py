@@ -1146,7 +1146,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
             return lengths
         
     def add_from_bigwig(self,filename,strand):
-        """Import data from a `BigWig`_ file
+        """Import additional data from a `BigWig`_ file
         
         Parameters
         ----------
@@ -1172,7 +1172,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         self._strands = sorted(self._strand_dict.keys())
 
     def reset_sum(self):
-        """Reset sum to total of data in the GenomeArray"""        
+        """Reset sum to total of data in the |BigWigGenomeArrayGenomeArray|"""        
         my_sum = 0
         for ltmp in self._strand_dict.values():
             for bw in ltmp:
