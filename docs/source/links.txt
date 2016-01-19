@@ -40,6 +40,9 @@
 .. _Metaseq: https://pythonhosted.org/metaseq/
 .. _pybedtools: https://pythonhosted.org/pybedtools
 .. _HTSeq: http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html 
+.. _conda: http://conda.pydata.org
+.. _Anaconda: http://docs.continuum.io/anaconda/index
+.. _Cython: http://cython.org
 
 .. Genome browsers & data sources
 

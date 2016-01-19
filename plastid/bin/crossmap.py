@@ -65,7 +65,7 @@ from plastid.genomics.roitools import SegmentChain, positionlist_to_segments, Ge
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.mini2to3 import xrange
 from plastid.util.services.exceptions import MalformedFileError
-from plastid.util.scriptlib.argparsers import get_sequence_file_parser, get_seqdict_from_args
+from plastid.util.scriptlib.argparsers import SequenceParser
 
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -304,9 +304,10 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
+    sp = SequenceParser()
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[get_sequence_file_parser()])
+                                     parents=[sp.get_parser()])
     parser.add_argument("-k",dest="read_length",metavar="READ_LENGTH",
                         type=int,default=29,
                         help="K-mer length to generate from input file. "+
@@ -350,7 +351,7 @@ def main(argv=sys.argv[1:]):
         seq_pat = re.compile(r".*_([^_]*)_kmers.fa")
         seqs = { seq_pat.search(X).groups()[0] : X for X in kmer_files }
     else:
-        seqs = get_seqdict_from_args(args,index=True) 
+        seqs = sp.get_seqdict_from_args(args,index=True) 
 
     worker = functools.partial(chrom_worker,args=args)
     chroms = seqs.items()

@@ -1,5 +1,7 @@
-#!/usr/bin/env python
-""":data:`plastid` includes the following command-line scripts. Click on a name below for more information:
+Command-line scripts
+====================
+
+:data:`plastid` includes the following command-line scripts. Click on a name below for more information:
 
     =========================   =============================================================================
     **Analysis of sequencing or quantitative data**                 
@@ -58,5 +60,3 @@
                                  if possible with equal sequence support, slide
                                  discovered junctions to compatible known junctions.
     =========================   =============================================================================
-    
-"""

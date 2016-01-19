@@ -43,14 +43,10 @@ import itertools
 import warnings
 import numpy
 
+from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
-from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                           get_segmentchains_from_args,\
-                                           get_genome_hash_from_mask_args,\
-                                           get_alignment_file_parser,\
-                                           get_segmentchain_file_parser,\
-                                           get_mask_file_parser
+from plastid.util.scriptlib.argparsers import AnnotationParser, AlignmentParser, MaskParser
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
@@ -71,9 +67,14 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    annotation_file_parser = get_segmentchain_file_parser()
-    alignment_file_parser  = get_alignment_file_parser(disabled=_DISABLED)
-    mask_file_parser       = get_mask_file_parser()
+    ap = AnnotationParser()
+    annotation_file_parser = ap.get_parser()
+    
+    al = AlignmentParser(disabled=_DISABLED)
+    alignment_file_parser  = al.get_parser()
+    
+    mp = MaskParser()
+    mask_file_parser = mp.get_parser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -83,10 +84,10 @@ def main(argv=sys.argv[1:]):
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
     args = parser.parse_args(argv)
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=_DISABLED)
     
-    transcripts = get_segmentchains_from_args(args,printer=printer)
-    crossmap = get_genome_hash_from_mask_args(args,printer=printer)
+    transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
+    gnd = al.get_genome_array_from_args(args,printer=printer)
+    crossmap = mp.get_genome_hash_from_args(args,printer=printer)
     
     gnd_sum = gnd.sum()
     with argsopener(args.outfile,args,"w") as fout:

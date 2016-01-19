@@ -105,16 +105,10 @@ import numpy
 import pandas as pd
 import scipy.stats
 
-from plastid.util.scriptlib.argparsers import get_genome_array_from_args,\
-                                           get_transcripts_from_args,\
-                                           get_alignment_file_parser,\
-                                           get_annotation_file_parser,\
-                                           get_mask_file_parser,\
-                                           get_genome_hash_from_mask_args,\
-                                           get_plotting_parser,\
-                                           get_figure_from_args,\
-                                           get_colors_from_args
-
+from plastid.util.scriptlib.argparsers import AnnotationParser,\
+                                              AlignmentParser,\
+                                              MaskParser,\
+                                              PlottingParser
 
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
@@ -484,7 +478,7 @@ def process_partial_group(transcripts,mask_hash,printer):
 
     return gene_df, transcript_df, merged_genes
 
-def do_generate(args):
+def do_generate(args,annotation_parser,mask_parser):
     """Generate gene position files from gene annotations.
     
     1.  Genes whose transcripts share exons are first merged into merged genes 
@@ -552,8 +546,8 @@ def do_generate(args):
     is_sorted = (args.sorted == True) or \
                 (args.tabix == True) or \
                 (args.annotation_format == "BigBed")
-    source = get_transcripts_from_args(args,printer=printer)
-    mask_hash = get_genome_hash_from_mask_args(args)
+    source = annotation_parser.get_transcripts_from_args(args,printer=printer)
+    mask_hash = mask_parser.get_genome_hash_from_args(args)
     
     # loop conditions
     last_chrom = None
@@ -614,7 +608,7 @@ def do_generate(args):
 # 'count' subprogram
 #===============================================================================
 
-def do_count(args):
+def do_count(args,alignment_parser):
     """Count the number of reads falling within a gene (as specified in a
 position file made using the `generate` subcommand). Reads are reported
 both in raw :term:`counts` and as :term:`RPKM`, and saved to a 
@@ -632,7 +626,7 @@ tab-delimited text file.
         pos_fh.close()
 
     # read count files
-    gnd = get_genome_array_from_args(args,printer=printer,disabled=["normalize"])
+    gnd = alignment_parser.get_genome_array_from_args(args,printer=printer)
     total_counts = gnd.sum()
 
     printer.write("Dataset has %s counts in it." % total_counts)
@@ -771,7 +765,7 @@ def get_short_samplename(inp):
     """
     return get_short_name(inp,separator=os.path.sep,terminator=".txt")
 
-def do_scatter(x,y,count_mask,args,pearsonr=None,xlabel=None,ylabel=None,title=None,min_x=10**-3,min_y=10**-3):
+def do_scatter(x,y,count_mask,plot_parser,args,pearsonr=None,xlabel=None,ylabel=None,title=None,min_x=10**-3,min_y=10**-3):
     """Scatter plot helper for cs `chart` subprogram
     
     Parameters
@@ -802,7 +796,7 @@ def do_scatter(x,y,count_mask,args,pearsonr=None,xlabel=None,ylabel=None,title=N
     :class:`matplotlib.figure.Figure`
         Formatted figure
     """
-    fig = get_figure_from_args(args)
+    fig = plot_parser.get_figure_from_args(args)
     xm = x[count_mask]
     ym = y[count_mask]
 
@@ -837,7 +831,7 @@ def do_scatter(x,y,count_mask,args,pearsonr=None,xlabel=None,ylabel=None,title=N
     return fig
 
 
-def do_chart(args):
+def do_chart(args,plot_parser):
     """Produce log-2 fold change histograms and scatter plots for :term:`count`
 and :term:`RPKM` values between two samples, as well as a chart plotting
 correlation coefficients as a function of summed read counts in both samples 
@@ -870,7 +864,7 @@ correlation coefficients as a function of summed read counts in both samples
     # Define some variables for later
     sample_names = sorted(samples.keys())    
     comparisons  = [X for X in itertools.combinations(sample_names,2) if X[0] != X[1]]
-    colors = get_colors_from_args(args,len(comparisons))
+    colors = plot_parser.get_colors_from_args(args,len(comparisons))
     binkeys      = tuple(["%s_reads" % k for k in args.regions])
    
     comparison_labels      = sorted(["%s_vs_%s" % (X,Y) for X,Y in comparisons]) 
@@ -928,7 +922,9 @@ correlation coefficients as a function of summed read counts in both samples
                 # ma plot
                 try:
                     ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                    fig, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
+                    fig = plot_parser.get_figure_from_args()
+                    _, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
+                                          axes=plt.gca(),
                                           kdalpha=0.2,title=ma_title)
                     _, _ = ma_plot(viover,vjover,axes=axdict,label=">= 128 counts",kdalpha=0.8)
 
@@ -962,7 +958,7 @@ correlation coefficients as a function of summed read counts in both samples
                 try:
                     scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
                     fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
-                                     count_mask,args,pearsonr=pearsonr,
+                                     count_mask,plot_parser,args,pearsonr=pearsonr,
                                      xlabel=ki,ylabel=kj,title=scatter_title)
 
                     plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
@@ -1064,7 +1060,7 @@ correlation coefficients as a function of summed read counts in both samples
              ""]                       # 7
     for region_metric in region_metrics:
         plt.close()
-        plt.figure()
+        fig = plot_parser.get_figure_from_args(args)
         plt.semilogx(basex=2)
         plt.title("Correlation coefficients by bin for %s" % region_metric)
         plt.xlabel("Bin")
@@ -1119,11 +1115,16 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
+    al = AlignmentParser(disabled=["normalize"])
+    an = AnnotationParser()
+    mp = MaskParser()
+    pl = PlottingParser()
 
-    alignment_file_parser  = get_alignment_file_parser(disabled=["normalize"])
-    annotation_file_parser = get_annotation_file_parser()
-    mask_file_parser = get_mask_file_parser()
-    plotting_parser = get_plotting_parser(disabled=["title"])
+
+    alignment_file_parser  = al.get_parser()
+    annotation_file_parser = an.get_parser()
+    mask_file_parser = mp.get_parser()
+    plotting_parser = pl.get_parser()
     
     generator_help = "Create unambiguous position file from GFF3 annotation"
     generator_desc = format_module_docstring(do_generate.__doc__)
@@ -1185,11 +1186,11 @@ def main(argv=sys.argv[1:]):
 
     if args.program == "generate":
         #generate position file
-        do_generate(args)
+        do_generate(args,an,mp)
     
     elif args.program == "count":
         #use position file to count gene expression in infiles
-        do_count(args)
+        do_count(args,al)
 
     elif args.program == "chart":
         #use count files to generate a family of charts and tables

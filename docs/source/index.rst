@@ -92,6 +92,7 @@ Site map
    quickstart
    tour
    installation
+   List of command-line scripts </scriptlist>
 
 
 .. _toc-user-manual:
@@ -102,21 +103,22 @@ Site map
    :caption: User manual
     
    examples
+   Module documentation <generated/plastid>
    FAQ
    glossary
    zreferences
 
 
-.. _toc-technical-documentation:
-   
+.. _toc-developer:
+
 .. toctree::
    :hidden:
    :includehidden:
    :maxdepth: 10
-   :caption: Technical documentation
-   
-   Module documentation <generated/plastid>
+   :caption: Developer info
 
+   Contributing </devinfo/contributing>
+   Entrypoints </devinfo/entrypoints>
 
 .. _toc-other-info:
      
@@ -127,7 +129,6 @@ Site map
     
    citing
    License <license>
-   contributing
    CHANGES
    related
    contact

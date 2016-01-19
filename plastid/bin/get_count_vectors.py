@@ -17,12 +17,7 @@ import warnings
 import sys
 import numpy
 
-from plastid.util.scriptlib.argparsers import get_alignment_file_parser,\
-                                                      get_genome_array_from_args,\
-                                                      get_segmentchains_from_args,\
-                                                      get_segmentchain_file_parser,\
-                                                      get_mask_file_parser,\
-                                                      get_genome_hash_from_mask_args
+from plastid.util.scriptlib.argparsers import AlignmentParser, AnnotationParser, MaskParser
 from plastid.util.io.openers import get_short_name
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -43,9 +38,13 @@ def main(args=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    alignment_file_parser  = get_alignment_file_parser()
-    annotation_file_parser = get_segmentchain_file_parser()
-    mask_file_parser = get_mask_file_parser()
+    al = AlignmentParser()
+    an = AnnotationParser()
+    mp = MaskParser()
+    
+    alignment_file_parser  = al.get_parser()
+    annotation_file_parser = an.get_parser()
+    mask_file_parser = mp.get_parser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -65,9 +64,9 @@ def main(args=sys.argv[1:]):
         os.mkdir(args.out_folder)
  
     # parse args
-    ga = get_genome_array_from_args(args,printer=printer)
-    transcripts = get_segmentchains_from_args(args,printer=printer)
-    mask_hash = get_genome_hash_from_mask_args(args,printer=printer)
+    ga = al.get_genome_array_from_args(args,printer=printer)
+    transcripts = an.get_segmentchains_from_args(args,printer=printer)
+    mask_hash = mp.get_genome_hash_from_args(args,printer=printer)
     
     # evaluate
     for n,tx in enumerate(transcripts):

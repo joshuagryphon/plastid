@@ -88,11 +88,7 @@ from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.genomics.genome_hash import GenomeHash
 from plastid.readers.bed import BED_Reader
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.scriptlib.argparsers import get_mask_file_parser,\
-                                           get_genome_hash_from_mask_args,\
-                                           get_sequence_file_parser,\
-                                           get_seqdict_from_args
-from Bio import SeqIO
+from plastid.util.scriptlib.argparsers import MaskParser, SequenceParser
 import inspect
 import warnings
 warnings.simplefilter("once")
@@ -379,9 +375,11 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
+    sp = SequenceParser()
+    mp = MaskParser()
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[get_sequence_file_parser(),get_mask_file_parser()],
+                                     parents=[sp.get_parser(),mp.get_parser()],
                                      )
     parser.add_argument("--maxslide",type=int,default=10,
                         help="Maximum number of nt to search 5\' and 3\' of intron"+
@@ -397,10 +395,10 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     
     printer.write("Opening genome from %s..." % args.sequence_file)
-    genome = get_seqdict_from_args(args)
+    genome = sp.get_seqdict_from_args(args)
     
     # load crossmap    
-    cross_hash = get_genome_hash_from_mask_args(args)
+    cross_hash = mp.get_genome_hash_from_args(args)
 
     # load ref junctions
     if args.ref is not None:
