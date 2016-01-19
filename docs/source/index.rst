@@ -117,8 +117,8 @@ Site map
    :maxdepth: 10
    :caption: Developer info
 
-   Entrypoints </devinfo/entrypoints>
    Contributing </devinfo/contributing>
+   Entrypoints </devinfo/entrypoints>
 
 .. _toc-other-info:
      

@@ -1,51 +1,104 @@
 Frequently-asked questions
 ==========================
 
+Questions are grouped into the following sections:
+
+  - :ref:`faq-run`
+  - :ref:`faq-analysis`
+  - :ref:`faq-tests`
+
 
 -------------------------------------------------------------------------------
 
-.. _faq-run:
+ .. _faq-run:
 
 Installation and runtime
 ------------------------
 
-.. _faq-install-numpy-first:
-
-
-The tests won't run
-...................
-In order to run the tests, you need to download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack it into ``plastid/test/``. We decided not to include the test data in the main package in order to keep the download small.
-
+ .. _faq-install-numpy-first:
 
 Install fails midway
 ....................
 
-This can be due to a `known quirk <https://github.com/numpy/numpy/issues/2434>`_ 
-with `NumPy`_ and `SciPy`_ installation in Python.
-As a workaround. Just install `NumPy`_ and `pysam`_ first.
-Starting in the folder where you cloned :data:`plastid`:
+The most common cause of installation failure is that the setup script for
+`plastid` requires `numpy`_, `pysam`_, and `Cython`_ to be installed before it
+can be run. You can verify this by passing the ``--verbose`` flag to `pip`:
 
-.. code-block:: shell
+ .. code-block:: shell
 
-    $ pip install numpy pysam # get these first
+    $ pip install --verbose plastid
 
-You can your installations by running unit tests:
 
-.. code-block:: shell
+You should see the following message:
 
-    $ python -c "import numpy; numpy.test()"
+ .. _faq-installation-message:
 
-Then repeat the installation:
+ .. code-block:: none
 
-.. code-block:: shell
+    *** IMPORTANT INSTALLATION INFORMATION ***
 
+    plastid setup requires numpy>=1.9.0, pysam>=0.8.4, and cython>=0.22 to be preinstalled. Please
+    install these via pip, and retry:
+
+        $ pip install --upgrade numpy pysam cython
+        $ pip install plastid
+
+If this is the problem, simply install `numpy`_, `pysam`_ and `Cython`_ first,
+then repeat the installation:
+
+ .. code-block:: shell
+
+    $ pip install numpy pysam cython # get these first
     $ pip install plastid
 
 
-If you have further problems, please file a `bug report <plastid_issues>`_.
+ .. _faq-install-versions:
+
+`numpy`_, `pysam`_ and `Cython`_ are up to date, but install still fails
+........................................................................
+
+If install fails, first try the workaround in :ref:`faq-install-numpy-first`. If install
+still fails with the message given in :ref:`faq-install-numpy-first`, then there may
+be multiple versions of these libraries installed on your system. Try installing inside
+a vanilla environment in a fresh `virtualenv`_ (note: *not* a `conda`_/`Anaconda`_ environment):
+
+ .. code-block:: shell
+
+    # install virtualenv if you don't have it
+    $ pip install virtualenv
+
+    # create & activate vanilla environment
+    # when prompted, do NOT give the virtualenv access to system packages
+    $ virtualenv /path/to/venv
+    $ source path/to/venv/bin/activate
+
+    # fresh install of plastid
+    (venv) $ pip install numpy pysam cython
+    (venv) $ pip install plastid
+
+    # test
+    (venv) $ python -c "from plastid import *"
 
 
-.. _distribution-error: 
+If install succeeds, this suggests that there are in fact multiple versions of 
+one or more of plastid's dependencies installed. In the mean time, ``plastid``
+can be used inside the `virtualenv`_.
+
+
+ .. _faq-install-conda:
+
+Install fails inside a `conda`_/`Anaconda`_ environment
+.......................................................
+
+One user has reported difficulties installing inside `conda`_/`Anaconda`_
+environments. Despite having up-to-date versions of `numpy`_, `pysam`_, and
+`Cython`_ installed in the `conda`_ environment, during the build process
+`pip` found an incompatible version of `Cython`_. In this case, we recommend
+installing in a fresh `virtualenv`_. See the workaround in
+:ref:`faq-install-versions` for instructions.
+
+
+ .. _faq-distribution-error: 
 
 I get an ``ImportError`` or ``DistributionError`` when using :data:`plastid`
 ............................................................................
@@ -66,19 +119,21 @@ If you get an error like the following::
      pkg_resources.DistributionNotFound: scipy>=0.12.0 
 
 
-One or more dependencies (in this example, `scipy`_ is not installed).
-Please see :ref:`this workaround <faq-install-numpy-first>`.
+One or more dependencies (in this example, `SciPy`_ is not installed).
+Please see :ref:`faq-install-numpy-first`, above.
+
+
 
 
 -------------------------------------------------------------------------------
 
-.. _faq-analysis:
+ .. _faq-analysis:
  
 Analysis
 --------
 
 
-.. _faq-analysis-fractional-counts:
+ .. _faq-analysis-fractional-counts:
 
 Why do some scripts report fractional count numbers?
 ....................................................
@@ -91,7 +146,8 @@ discussion of :doc:`concepts/mapping_rules`, where these are
 discussed in depth.
 
 
-.. _faq-igv-vs-mapped-wiggle:
+
+ .. _faq-igv-vs-mapped-wiggle:
 
 Why does `IGV`_ report way higher coverage at a given nucleotide than the file exported from |make_wiggle|?
 ...........................................................................................................
@@ -105,8 +161,7 @@ where :math:`\ell` is the length of the read. So, in this case, a 30-nucleotide 
 contribute 1 :term:`count <counts>` to a dataset. See :doc:`/concepts/mapping_rules/` for more information.
 
 
-
-.. _faq-cs-vs-counts-in-region:
+ .. _faq-cs-vs-counts-in-region:
 
 What are the differences between :mod:`~plastid.bin.counts_in_region` and :mod:`~plastid.bin.cs`?
 .................................................................................................
@@ -140,7 +195,8 @@ Either one can be an appropriate starting place for a pipeline, depending upon y
 See the documentation and/or source code for |cs| and |counts_in_region| for further
 discussion. 
 
-.. _faq-segmentchain-gff3:
+
+ .. _faq-segmentchain-gff3:
 
 Why does :meth:`plastid.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
 ..................................................................................................................
@@ -148,12 +204,29 @@ This is due to the incredible flexibility of the `GFF3`_ file format and ambigui
 necessarily induces. See :ref:`this advice <data-export-gff3>` on how to handle this.
 
 
-.. _faq-analysis-deseq:
+ .. _faq-analysis-deseq:
 
 How do I prepare data for differential gene expression analysis in `DESeq`_?
 ............................................................................
 
 See :doc:`examples/gene_expression` in the :doc:`examples` section.
+
+
+-------------------------------------------------------------------------------
+
+ .. _faq-tests:
+
+Tests
+-----
+
+The tests won't run
+...................
+In order to run the tests, you need to download the `test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_ and unpack it into ``plastid/test/``. We decided not to include the test data in the main package in order to keep the download small.
+
+
+
+
+-------------------------------------------------------------------------------
 
 
  .. toctree::
