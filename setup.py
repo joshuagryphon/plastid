@@ -21,8 +21,8 @@ import os
 import sys
 import glob
 from setuptools import setup, find_packages, Extension, Command
-from setuptools.command.install import install
-from setuptools.command.develop import develop
+#from setuptools.command.install import install
+#from setuptools.command.develop import develop
 from Cython.Distutils import build_ext
 
 
@@ -312,117 +312,117 @@ ext_modules.append(bigwig)
 
 # classes & functions for compilation -----------------------------------------
 
-def wrap_command_classes(baseclass):
-    """Add custom command-line `--recythonize` options to distutils/setuptools
-    command classes
-    
-    Parameters
-    ----------
-    baseclass : setuptools.Command or subclass (not instance!)
-        Command class to modify
-
-    Returns
-    -------
-    class
-        Modified class
-    """
-    class subclass(baseclass):
-        user_options = baseclass.user_options + CYTHON_OPTIONS
-        new_options = CYTHON_OPTIONS
-        new_defaults = CYTHON_DEFAULTS
-
-        def initialize_options(self):
-            baseclass.initialize_options(self)
-            for (op,_,_), default in zip(self.new_options,
-                    self.new_defaults):
-                setattr(self,op,default)
-        
-        def finalize_options(self):
-            baseclass.finalize_options(self)
-            if "--%s" % CYTHONIZE_ARG in self.distribution.script_args:
-                print("Cythonize on")
-                setattr(self,CYTHONIZE_ARG,True)
-
-        def run(self):
-            have_all = all([os.access(X,os.F_OK) for X in C_PATHS])
-            if have_all == False:
-                print("Could not find .c files. Regenerating via recythonize.")
-                setattr(self,CYTHONIZE_ARG,True)
-                self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
-            
-            if getattr(self,CYTHONIZE_ARG) == True:
-                print("Cythonizing")
-                self.run_command(CYTHONIZE_COMMAND)
-
-            return baseclass.run(self)
-
-    subclass.__name__ = "cython_%s" % baseclass.__name__
-    return subclass
-
-
+# def wrap_command_classes(baseclass):
+#     """Add custom command-line `--recythonize` options to distutils/setuptools
+#     command classes
+#     
+#     Parameters
+#     ----------
+#     baseclass : setuptools.Command or subclass (not instance!)
+#         Command class to modify
+# 
+#     Returns
+#     -------
+#     class
+#         Modified class
+#     """
+#     class subclass(baseclass):
+#         user_options = baseclass.user_options + CYTHON_OPTIONS
+#         new_options = CYTHON_OPTIONS
+#         new_defaults = CYTHON_DEFAULTS
+# 
+#         def initialize_options(self):
+#             baseclass.initialize_options(self)
+#             for (op,_,_), default in zip(self.new_options,
+#                     self.new_defaults):
+#                 setattr(self,op,default)
+#         
+#         def finalize_options(self):
+#             baseclass.finalize_options(self)
+#             if "--%s" % CYTHONIZE_ARG in self.distribution.script_args:
+#                 print("Cythonize on")
+#                 setattr(self,CYTHONIZE_ARG,True)
+# 
+#         def run(self):
+#             have_all = all([os.access(X,os.F_OK) for X in C_PATHS])
+#             if have_all == False:
+#                 print("Could not find .c files. Regenerating via recythonize.")
+#                 setattr(self,CYTHONIZE_ARG,True)
+#                 self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
+#             
+#             if getattr(self,CYTHONIZE_ARG) == True:
+#                 print("Cythonizing")
+#                 self.run_command(CYTHONIZE_COMMAND)
+# 
+#             return baseclass.run(self)
+# 
+#     subclass.__name__ = "cython_%s" % baseclass.__name__
+#     return subclass
+# 
+# 
 class clean_c_files(Command):
     """Remove previously generated .c and .so files"""
     user_options = []
-
+ 
     def initialize_options(self):
         pass
-
+ 
     def finalize_options(self):
         pass
-
+ 
     def run(self):
         for file_ in C_PATHS:
             if os.access(file_,os.F_OK):
                 print("clean_c_files: removing %s ..." % file_)
                 os.remove(file_)
-
+ 
             sofile = file_.replace(".c",".so")
             if os.access(sofile,os.F_OK):
                 print("clean_c_files: removing %s ..." % sofile)
                 os.remove(sofile)
-
-
-
-class build_c_from_pyx(build_ext):
-    """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
-    user_options = build_ext.user_options + CYTHON_OPTIONS
-    new_options  = CYTHON_OPTIONS
-    new_defaults = CYTHON_DEFAULTS
-
-    cython_args  = CYTHON_ARGS
-    include_path = INCLUDE_PATH
-    old_extensions = ext_modules
-
-    def initialize_options(self):
-        for (op,_,_), default in zip(self.new_options,
-                self.new_defaults):
-            setattr(self,op,default)
-        build_ext.initialize_options(self)
-
-    def finalize_options(self):
-        if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
-            self.run_command('clean')
-            #print("build_c_from_pyx: regenerating .c files from Cython")
-            #from Cython.Build import cythonize
-            
-            
-            
-            #extensions = cythonize(PYX_PATHS,
-            #                       include_path=self.include_path,
-            #                       compiler_directives=self.cython_args
-            #                     include_dirs=INCLUDE_PATH,
-            #                     libraries=LIBRARIES,
-            #                     library_dirs=LIBRARY_DIRS,
-            #                     extra_objects=EXTRA_OBJECTS,
-            #                      
-            #                       
-            #                       )
-            #self.extensions = extensions
-
-        build_ext.finalize_options(self)
-
-    def run(self): # override so that extensions are only build with build_ext, install, etc
-        pass
+ 
+# 
+# 
+# class build_c_from_pyx(build_ext):
+#     """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
+#     user_options = build_ext.user_options + CYTHON_OPTIONS
+#     new_options  = CYTHON_OPTIONS
+#     new_defaults = CYTHON_DEFAULTS
+# 
+#     cython_args  = CYTHON_ARGS
+#     include_path = INCLUDE_PATH
+#     old_extensions = ext_modules
+# 
+#     def initialize_options(self):
+#         for (op,_,_), default in zip(self.new_options,
+#                 self.new_defaults):
+#             setattr(self,op,default)
+#         build_ext.initialize_options(self)
+# 
+#     def finalize_options(self):
+#         if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
+#             self.run_command('clean')
+#             #print("build_c_from_pyx: regenerating .c files from Cython")
+#             #from Cython.Build import cythonize
+#             
+#             
+#             
+#             #extensions = cythonize(PYX_PATHS,
+#             #                       include_path=self.include_path,
+#             #                       compiler_directives=self.cython_args
+#             #                     include_dirs=INCLUDE_PATH,
+#             #                     libraries=LIBRARIES,
+#             #                     library_dirs=LIBRARY_DIRS,
+#             #                     extra_objects=EXTRA_OBJECTS,
+#             #                      
+#             #                       
+#             #                       )
+#             #self.extensions = extensions
+# 
+#         build_ext.finalize_options(self)
+# 
+#     def run(self): # override so that extensions are only build with build_ext, install, etc
+#         pass
 
 
 
@@ -512,10 +512,10 @@ setup(
     ext_modules = ext_modules,
     
     cmdclass    = {
-        CYTHONIZE_COMMAND : build_c_from_pyx,
+        #CYTHONIZE_COMMAND : build_c_from_pyx,
         'build_ext' : build_ext, 
-        'install'   : wrap_command_classes(install),
-        'develop'   : wrap_command_classes(develop),
+        #'install'   : wrap_command_classes(install),
+        #'develop'   : wrap_command_classes(develop),
         'clean'     : clean_c_files,
     },
 
