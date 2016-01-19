@@ -6,15 +6,14 @@ Introduction
 ------------
 
 :data:`plastid` is a `Python`_ library for genomics and sequencing that seeks to 
-flatten the learning curve for both bench and computational biologists.
-
-To do so, :data:`plastid` offers :ref:`intuitive tools for exploratory data analysis <tour-data-structures>` (EDA),
+flatten the learning curve for both bench and computational biologists. It
+:ref:`intuitive tools for exploratory data analysis <tour-data-structures>` (EDA),
 as well as :mod:`command-line scripts <plastid.bin>` that implement standard
 analyses.
 
 For EDA, plastid defines consistent interfaces for the many similar
 file types that exist in genomics, allowing users to focus on biology, without
-first having to understand the quirks of of file formats. The interfaces themselves
+first having to understand the quirks of file formats. The interfaces themselves
 use familiar biological idioms, such as :ref:`spliced transcripts <tour-segment-chain>`.
 
 In addition, plastid's data models interface directly with the rich computing environment
@@ -22,16 +21,14 @@ provided by the `SciPy`_ stack, enabling development of sophisticated analyses w
 substantially reduced effort.
 
 :data:`plastid` was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
-at `UCSF <http://ucsf.edu>`_,  initially for analysis of
-:term:`ribosome profiling` and :term:`RNA-seq` data. Versions of it have been used
-in several publications.
+at `UCSF <http://ucsf.edu>`_. Versions of it have been used in several publications.
 
 
 
-How it's different
-------------------
+How it's unique
+---------------
 
-:data:`plastid` differs from other packages by:
+:data:`plastid` offers a number of unique features, including:
 
   - handling discontinuous genomic features, such as transcripts or gapped alignments,
     in a single object, called a :ref:`SegmentChain <tour-segment-chain>`
@@ -51,6 +48,7 @@ How it's different
 
   - accepting simple plugin functions (like :term:`mapping rules <mapping rule>`) that
     globally modify its behavior
+
 
 
 

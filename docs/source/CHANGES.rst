@@ -29,7 +29,7 @@ Added
         arguments they consume
   
     Detailed instructions for use in the *developer info* section
-    of `plastid.readthedocs.org`_.
+    of `<plastid.readthedocs.org>`_.
 
   - Argument parsing classes that replace methods deprecated below:
   
@@ -43,7 +43,7 @@ Added
 Changed
 .......
 
-  - :func:`~plastid.util.services.decorators.deprecated`` function decorator
+  - :func:`~plastid.util.services.decorators.deprecated` function decorator
     now optionally takes parameters indicating the future version of plastid
     in which deprecated features will be removed, and what replacement to use
     instead
