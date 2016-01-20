@@ -54,7 +54,8 @@ Fixed
 
   - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
     an ``IndexError`` in earlier versions of :mod:`numpy`.
-
+  - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
+    as well as >= 1.3
 
 Deprecated
 ..........
