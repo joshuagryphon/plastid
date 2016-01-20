@@ -92,7 +92,7 @@ def main(argv=sys.argv[1:]):
     
         printer.write("params: " +" ".join(argv))
         printer.write("Detecting & comparing junctions...")
-        ex_pairs = [] 
+        ex_pairs = {}
         
         c = 0
         u = 0

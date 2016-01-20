@@ -9,7 +9,6 @@ from plastid.test.functional.base import execute_helper
 from plastid.test.ref_files import REF_FILES
 from plastid.bin.findjuncs import main
 from plastid.util.services.decorators import catch_stderr
-from plastid.util.services.mini2to3 import cStringIO
 
 
 #===============================================================================
