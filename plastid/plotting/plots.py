@@ -49,6 +49,7 @@ from plastid.plotting.plotutils import get_fig_axes, split_axes, clean_invalid, 
 
 #==============================================================================
 # Default keyword arguments for plots or subplots
+# and helper functions
 #==============================================================================
 
 plastid_default_scatter = {
@@ -59,6 +60,29 @@ plastid_default_scatter = {
     "rasterized" : True,
 }
 """Default parameters for scatter plots"""
+
+
+def get_color_cycle(ax):
+    """Get color cycle iterator from multiple versions of matplotlib axes
+
+    Parameters
+    ----------
+    ax : :class:`matplotlib.axes.Axes`
+
+
+    Returns
+    -------
+    iterator
+        Iterator over colors, passable to matplotlib `color` keyword
+    """
+    if hasattr(ax,"_get_lines"):
+        if hasattr(ax._get_lines,"color_cycle"):
+            return ax._get_lines.color_cycle
+        elif hasattr(ax._get_lines,"prop_cycler"):
+            return (X["color"] for X in ax._get_lines.prop_cycler)
+    else:
+        raise AssertionError("get_color_cycle: Could not find color cycle")
+
 
 
 
@@ -109,7 +133,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
     if cmap is not None:
         kwargs["color"] = cmap(numpy.linspace(0,1.0,num=10))
     elif kwargs.get("color",None) is None:
-        kwargs["color"] = [next(ax._get_lines.color_cycle) for _ in range(rows)]
+        kwargs["color"] = [next(get_color_cycle(ax)) for _ in range(rows)]
         
     x = numpy.arange(rows) + 0.5
     xaxis = ax.xaxis
@@ -134,6 +158,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
     ax.set_xlim(-0.5,rows+0.5)
 
     return fig, ax
+
 
 
 #==============================================================================
@@ -192,7 +217,7 @@ def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
     fig, axes = get_fig_axes(axes)
 
     if color is None:
-        color = next(axes._get_lines.color_cycle)
+        color = next(get_color_cycle(axes))
 
     a, b = get_kde(data,log=log,base=base,points=points,bw_method=bw_method)
 
@@ -631,7 +656,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
     xlog = False
 
     if color is None:
-        color = next(axes["main"]._get_lines.color_cycle)
+        color = next(get_color_cycle(axes["main"]))
     
     if mask_invalid == True:
         x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
@@ -733,7 +758,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
     ylog = False
 
     if color is None:
-        color = next(axes["main"]._get_lines.color_cycle)
+        color = next(get_color_cycle(axes["main"]))
 
     if label is not None:
         scargs = copy.deepcopy(scargs)
@@ -840,7 +865,7 @@ def scatterhist_xy(x,y,color=None,axes=None,label=None,
     xlog = ylog = False
 
     if color is None:
-        color = next(axes["main"]._get_lines.color_cycle)
+        color = next(get_color_cycle(axes["main"]))
     
     if mask_invalid == True:
         x, y = clean_invalid(x,y,min_x=min_x,max_x=max_x,min_y=min_y,max_y=max_y)
