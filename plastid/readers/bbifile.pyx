@@ -15,6 +15,8 @@ import os
 from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 
+from plastid.util.services.mini2to3 import safe_bytes, safe_str
+
 #===============================================================================
 # Exported warnings
 #===============================================================================
@@ -149,12 +151,12 @@ cdef class _BBI_Reader:
         """
         cdef:
             dict cdict = {}
-            bytes chr_name
+            str chr_name
             int chr_size
             bbiChromInfo *chrom_info = bbiChromList(self._bbifile)
 
         while chrom_info is not NULL:
-            chr_name = chrom_info.name
+            chr_name = safe_str(chrom_info.name)
             chr_size = chrom_info.size
             cdict[chr_name] = chr_size
             chrom_info = chrom_info.next

@@ -5,6 +5,8 @@ Various objects are aliased as follows:
     ===================    ===========================   =======================
     **Exported object**     **Points to in 2.x**         **Points to 3.x**
     -------------------    ---------------------------   -----------------------
+    ``safe_bytes``         :func:`bytes`                 ``lambda x: bytes(x,"utf-8")``
+    ``safe_str``           :func:`str`                   ``lambda x: x.decode("utf-8")``
     ``cStringIO``          :mod:`cStringIO`              :mod:`io`
     ``StringIO``           :mod:`StringIO`               :mod:`io`
     ``xrange``             :func:`xrange`                :func:`range`
@@ -38,6 +40,8 @@ if sys.version_info >= (3,):
     quote_plus   = urllib.parse.quote_plus
     unquote_plus = urllib.parse.unquote_plus
     ifilter = filter
+    safe_bytes = lambda x: bytes(x,"utf-8")
+    safe_str   = lambda x: x.decode("utf-8")
     
     # function code
     _func_code_attr = "__code__"
@@ -50,6 +54,8 @@ else:
     quote_plus   = urllib.quote_plus
     unquote_plus = urllib.unquote_plus
     ifilter = itertools.ifilter
+    safe_bytes = bytes
+    safe_str   = str
     
     # function code
     _func_code_attr = "func_code"

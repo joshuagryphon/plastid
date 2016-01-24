@@ -24,7 +24,7 @@ from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
                                      bitFindClear
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
-
+from plastid.util.services.mini2to3 import safe_bytes, safe_str
 
 #===============================================================================
 # INDEX: BigWig reader
@@ -36,7 +36,7 @@ cdef class BigWigReader(_BBI_Reader):
     """Reader providing random or sequential access to data stored in `BigWig`_ files.
     """
 
-    def __cinit__(self,str filename, **kwargs): #, double fill = numpy.nan):
+    def __cinit__(self, str filename, **kwargs): #, double fill = numpy.nan):
         """Open a `BigWig`_ file.
         
         Parameters
@@ -49,7 +49,7 @@ cdef class BigWigReader(_BBI_Reader):
 #             Value to use when there is no data covering a base (e.g. zero, nan,
 #             et c. Default: `numpy.nan`)
 #         """
-        self._bbifile = bigWigFileOpen(bytes(filename))
+        self._bbifile = bigWigFileOpen(safe_bytes(filename))
         self.fill = 0.0 #fill
         self._sum = numpy.nan
 
@@ -88,7 +88,7 @@ cdef class BigWigReader(_BBI_Reader):
         cdef:
             long start    = roi.start
             long end      = roi.end
-            str chrom     = roi.chrom
+            str  chrom    = roi.chrom
             size_t length = end - start
             double usefill = self.fill if numpy.isnan(fill) else fill
             
@@ -107,7 +107,7 @@ cdef class BigWigReader(_BBI_Reader):
             return counts
         
         # populate vector
-        iv = bigWigIntervalQuery(self._bbifile,bytes(chrom),start,end,buf)
+        iv = bigWigIntervalQuery(self._bbifile,safe_bytes(chrom),start,end,buf)
         while iv is not NULL:
             segstart = iv.start - start
             segend = iv.end - start
@@ -187,7 +187,7 @@ cdef class BigWigReader(_BBI_Reader):
         #         double *valBuf     # value for each base on chrom. Zero where no data
         #         Bits   *covBuf     # a bit for each base with data
         vals    = bigWigValsOnChromNew()
-        success = bigWigValsOnChromFetchData(vals,bytes(chrom),self._bbifile)
+        success = bigWigValsOnChromFetchData(vals,safe_bytes(chrom),self._bbifile)
         length  = vals.chromSize
 
         if chrom not in self.c_chroms():
@@ -255,10 +255,12 @@ cdef class BigWigReader(_BBI_Reader):
         float
             Summarized value
         """
-        cdef double retval
+        cdef:
+            double retval
+            str chrom = roi.chrom
              
         retval = bigWigSingleSummary(self._bbifile,
-                                     bytes(roi.chrom),
+                                     safe_bytes(chrom),
                                      roi.start,
                                      roi.end,
                                      type_,
@@ -325,7 +327,7 @@ def BigWigIterator(_BBI_Reader reader):
     for chrom in chroms:
         chromlength = chromsizes[chrom]
         iv = bigWigIntervalQuery(reader._bbifile,
-                                 bytes(chrom),
+                                 safe_bytes(chrom),
                                  0,
                                  chromlength,
                                  buf)

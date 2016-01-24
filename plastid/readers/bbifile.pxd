@@ -198,7 +198,7 @@ cdef class _BBI_Reader:
 
     cdef:
         bbiFile * _bbifile
-        str filename
+        str  filename
         dict _chrominfo
         dict _summary
         lm * _lm
