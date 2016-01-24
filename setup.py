@@ -214,7 +214,7 @@ kent_sources = [
     "bwgQuery.c",
     "bwgValsOnChrom.c",
     "bigBed.c",
-    "cheapcgi.c",
+#    "cheapcgi.c",
     "cirTree.c",
     "dlist.c",
     "dnautil.c",
@@ -226,8 +226,8 @@ kent_sources = [
     "intExp.c",
     "kxTok.c",
     "memalloc.c",
-    "mime.c",
-    "net.c",
+#    "mime.c",
+#    "net.c",
     "errAbort.c",
     "verbose.c",
     "common.c",
@@ -239,14 +239,14 @@ kent_sources = [
     "pipeline.c",
     "rangeTree.c",
     "rbTree.c",
-    "portimpl.c",
+#    "portimpl.c",
     "psl.c",
-    "servcl.c",
-    "servpws.c",
-    "servmsII.c",
-    "servcis.c",
-    "servCrunx.c",
-    "servBrcMcw.c",
+#     "servcl.c",
+#     "servpws.c",
+#     "servmsII.c",
+#     "servcis.c",
+#     "servCrunx.c",
+#     "servBrcMcw.c",
     "sqlNum.c",
     "sqlList.c",
     "tokenizer.c",
@@ -275,22 +275,12 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          extra_objects=EXTRA_OBJECTS,
                         ) for x in PYX_PATHS]
 
-# # Jim Kent utils - compile as plastid.lib.libkentutil
-# libjk = Extension(
-#     "plastid.lib.libkentutil",
-#     kent_deps,
-#     language="c",
-#     include_dirs=INCLUDE_PATH,
-#     libraries=LIBRARIES,
-# )
-
-# plastid extensions that require Jim Kent's utils
 bbifile = Extension(
     "plastid.readers.bbifile",
     ["plastid/readers/bbifile.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES,# + ["kentutil"],
+    libraries=LIBRARIES,
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
@@ -300,15 +290,14 @@ bigwig = Extension(
     ["plastid/readers/bigwig.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES,# + ["kentutil"],
+    libraries=LIBRARIES,
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
+    
 
-#ext_modules.append(libjk)
 ext_modules.append(bbifile)
 ext_modules.append(bigwig)
-
 
 # classes & functions for compilation -----------------------------------------
 
