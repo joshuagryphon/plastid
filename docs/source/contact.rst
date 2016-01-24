@@ -24,5 +24,5 @@ Then we can start a discussion on what to do.
 
 Contributing
 ------------
-See the instructions on :doc:`/contributing`
+See the instructions on :doc:`/devinfo/contributing`
 

@@ -922,7 +922,7 @@ correlation coefficients as a function of summed read counts in both samples
                 # ma plot
                 try:
                     ma_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                    fig = plot_parser.get_figure_from_args()
+                    fig = plot_parser.get_figure_from_args(args)
                     _, axdict = ma_plot(viunder,vjunder,color=process_black,label="< 128 counts",
                                           axes=plt.gca(),
                                           kdalpha=0.2,title=ma_title)
@@ -1194,7 +1194,7 @@ def main(argv=sys.argv[1:]):
 
     elif args.program == "chart":
         #use count files to generate a family of charts and tables
-        do_chart(args)
+        do_chart(args,pl)
         
 if __name__ == "__main__":
     main()

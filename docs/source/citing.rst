@@ -1,11 +1,10 @@
 Citing ``plastid``
 ==================
-We're in the process of writing a manuscript that can be cited in scientific literature. 
-Until then, please cite :data:`plastid` using both its name and version number, and
-the URL for our Github site::
 
-    https://github.com/joshuagryphon/plastid
+A manuscript for :data:`plastid` is in prep. Meanwhile, please cite :data:`plastid` as follows:
 
-If appropriate, include the author, Joshua G. Dunn. For other uses, please see the
-:doc:`license </license>` page.
+    Dunn, J.G. (2016). *plastid:* a positional library for sequencing analysis.
+    `<http://plastid.readthedocs.org>`_.
 
+
+For other uses, please see the :doc:`license </license>` page.

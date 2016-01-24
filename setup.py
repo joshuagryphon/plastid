@@ -40,15 +40,27 @@ ver = sys.version_info
 if ver < (2,7) or ver[0] == 3 and ver[1] < 3:
     raise RuntimeError(version_message)
 
+
+def version_tuple(inp):
+    return  tuple([int(X) for X in inp.split(".")])
+
+
 # at present, setup/build can't proceed without numpy & Pysam
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before them.
 try:
     import numpy
+    numpyver = version_tuple(numpy.__version__)
+    if numpyver < NUMPY_VER_NUM:
+        raise ImportError()
+
     import pysam
-    pysamver = tuple([int(X) for X in pysam.__version__.split(".")])
+    pysamver = version_tuple(pysam.__version__)
     if pysamver < PYSAM_VER_NUM:
         raise ImportError()
+
+    import Cython
+
 except ImportError:
     print("""
     
@@ -57,8 +69,12 @@ except ImportError:
 plastid setup requires %s, %s, and %s to be preinstalled. Please
 install these via pip, and retry:
 
-    $ pip install --upgrade numpy pysam
+    $ pip install --upgrade numpy pysam cython
     $ pip install plastid
+
+To see which versions you have installed:
+
+    $ pip list | grep -E "(Cython|pysam|numpy)+"
 
 
 

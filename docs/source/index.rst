@@ -5,65 +5,55 @@
 Introduction
 ------------
 
-:data:`plastid` is a `Python`_ library for genomic analysis -- in particular,
-:term:`high-throughput sequencing` data -- with an emphasis on simplicity for
-users. It was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
-at `UCSF <http://ucsf.edu>`_,  initially for analysis of
-:term:`ribosome profiling` and :term:`RNA-seq` data. Versions of it have been used
-in several publications.
+:data:`plastid` is a `Python`_ library for genomics and sequencing that seeks to 
+flatten the learning curve for both bench and computational biologists. It
+:ref:`intuitive tools for exploratory data analysis <tour-data-structures>` (EDA),
+as well as :mod:`command-line scripts <plastid.bin>` that implement standard
+analyses.
 
-:data:`plastid`'s intended audience includes computational and traditional biologists,
-software developers, and even those who are new to sequencing analysis. It is
-released under the :doc:`BSD 3-Clause license <license>`.
+For EDA, plastid defines consistent interfaces for the many similar
+file types that exist in genomics, allowing users to focus on biology, without
+first having to understand the quirks of file formats. The interfaces themselves
+use familiar biological idioms, such as :ref:`spliced transcripts <tour-segment-chain>`.
 
-This package provides:
+In addition, plastid's data models interface directly with the rich computing environment
+provided by the `SciPy`_ stack, enabling development of sophisticated analyses with
+substantially reduced effort.
 
-  #. A set of :mod:`scripts <plastid.bin>` that implement common sequencing
-     analyses
-
-  #. A :ref:`set of classes <tour-data-structures>` that create a simple,
-     intuitive interfaces to genomic :term:`features <feature>`,
-     :term:`read alignments`, and quantitative data. These objects readily
-     interace with existing scientific tools, like the `SciPy`_ stack.
-
-  #. :mod:`Script writing tools <plastid.util.scriptlib>` that make it easy to
-     use the :mod:`file parsers <plastid.readers>` and
-     :ref:`objects <tour-data-structures>` implemented in :data:`plastid`.
-
-  #. Extensive documentation, both in this web site and in source code
+:data:`plastid` was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
+at `UCSF <http://ucsf.edu>`_. Versions of it have been used in several publications.
 
 
-Motivation
-----------
-At the time of :data:`plastid`'s inception, few Python packages for genomic analysis
-existed. Now, there are quite a few useful, :doc:`similar projects </related>`
--- for example, `HTSeq`_ and `metaseq`_ -- whose design goals are
-similar to :data:`plastid`'s. Users are encouraged to look at those packages,
-and use the package that best suits their experimental needs.
 
-Among these, :data:`plastid` offers a number of unique features, including:
+How it's unique
+---------------
 
-  - Classes that can represent or operate on *discontinuous* genomic features,
-    like transcripts or gapped alignments, in addition to their continuous components
-    (e.g. exons). See :ref:`tour-segment-chain` for more info.
+:data:`plastid` offers a number of unique features, including:
 
-  - Tools for positional analysis of sequencing data, such as the use
-    of :term:`mapping rules <mapping rule>` to assign
-    :term:`read alignments` to genomic positions that are *functions*
-    of the alignments themselves 
-    (e.g. :term:`ribosome-protected footprints <footprint>` to their P-sites),
-    rather than just their 5' or 3' ends
+  - handling discontinuous genomic features, such as transcripts or gapped alignments,
+    in a single object, called a :ref:`SegmentChain <tour-segment-chain>`
 
-  - Tools for easily :doc:`masking genomic positions from analysis </examples/using_masks>`,
-    without needing to subtract positions from :term:`features <feature>` that
-    cover those positions. This enables feature annotations to stay intact
-    for analyses that don't require excluding such positions
+  - providing a suite of tools for positional analysis of sequencing data, such as
+
+      - :term:`mapping rules <mapping rule>` that can exploit arbitrary properties of a 
+        :term:`read alignment <read alignments>` to determine the genomic position(s)
+        to which it should map 
+        (e.g. map :term:`ribosome-protected footprints <footprint>` to their P-sites,
+        rather than just their 5' or 3' ends)
+
+      - tools for  :doc:`masking genomic positions from analysis </examples/using_masks>`,
+        without needing to subtract positions from :term:`features <feature>` that
+        cover those positions. This enables feature annotations to stay intact
+        for analyses that don't require excluding such positions
+
+  - accepting simple plugin functions (like :term:`mapping rules <mapping rule>`) that
+    globally modify its behavior
+
+
 
 
 Where to go next
 ----------------
-
-Documentation & help are written for users at multiple levels of experience:
 
   - **Those new to sequencing and/or bioinformatics**, and those who are
     :term:`ribosome profiling` should start with :doc:`quickstart`, and then
@@ -117,8 +107,8 @@ Site map
    :maxdepth: 10
    :caption: Developer info
 
-   Entrypoints </devinfo/entrypoints>
    Contributing </devinfo/contributing>
+   Entrypoints </devinfo/entrypoints>
 
 .. _toc-other-info:
      
