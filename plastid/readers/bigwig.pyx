@@ -56,14 +56,9 @@ cdef class BigWigReader(_BBI_Reader):
 
     def __iter__(self):
         return BigWigIterator(self)
-         
-    def __getitem__(self, GenomicSegment roi): #,roi_order=True): 
+
+    def _get(self, GenomicSegment roi, bint roi_order=True, double fill=numpy.nan): 
         """Retrieve array of counts from a region of interest.
-        
-        Notes
-        -----
-        `roi.strand` is ignored; all coordinates are returned in left-to-right order
-        
         
         Parameters
         ----------
@@ -73,6 +68,10 @@ cdef class BigWigReader(_BBI_Reader):
         roi_order : bool, optional
             If `True` (default) return vector of values 5' to 3' 
             relative to vector rather than genome.
+
+        fill : double, optional
+            Override fill value to put in positions with no data.
+            (Default: Use value of `self.fill`)
 
 
         Returns
@@ -92,8 +91,9 @@ cdef class BigWigReader(_BBI_Reader):
             long end      = roi.end
             str chrom     = roi.chrom
             size_t length = end - start
+            double usefill = self.fill if numpy.isnan(fill) else fill
             
-            numpy.ndarray counts = numpy.full(length,self.fill,dtype=numpy.float)
+            numpy.ndarray counts = numpy.full(length,usefill,dtype=numpy.float)
             double [:] view      = counts
             
             lm* buf = self._get_lm()
@@ -112,8 +112,33 @@ cdef class BigWigReader(_BBI_Reader):
             segend = iv.end - start
             view[segstart:segend] = iv.val
             iv = iv.next
+        
+        if roi.strand == "-" and roi_order == True:
+            counts = counts[::-1]
 
         return counts
+                     
+    def __getitem__(self, GenomicSegment roi):
+        """Retrieve array of counts at each position in `roi`, in `roi`'s 5' to 3' direction
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        return self._get(roi)
 
     def sum(self):
         """Calculate sum of data in `BigWig`_ file"""
@@ -122,6 +147,8 @@ cdef class BigWigReader(_BBI_Reader):
             return self._sum
         else:
             for chrom in self.chroms:
+                # n.b. - we calculate the sum from numpy arrays
+                # rather than using the stored sum, which is approximate
                 mysum += numpy.nansum(self.get_chromosome(chrom))
                 
             self._sum = mysum
@@ -216,6 +243,11 @@ cdef class BigWigReader(_BBI_Reader):
         type: int in [0...4]
             Type of data to calculate: mean (type_ = 0), max (1), min (2),
             fraction of bases covered (3), stdev (4)
+            
+        Returns
+        -------
+        float
+            Summarized value
         """
         cdef double retval
              
@@ -228,6 +260,12 @@ cdef class BigWigReader(_BBI_Reader):
          
         return retval
 
+    property fill:
+        def __set__(self,double val):
+            self.fill = val
+            
+        def __get__(self):
+            return self.fill
 
 
 #===============================================================================

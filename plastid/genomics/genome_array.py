@@ -1079,7 +1079,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         count_vec = numpy.zeros(len(roi))
         if strand in sdict:
             for bw in sdict[strand]:
-                count_vec += bw[roi]
+                count_vec += bw._get(roi,roi_order=False) # we flip later to save operations
         else:
             warnings.warn("Strand '%s' not in BigWigGenomeArray (has %s)." % (strand,", ".join(sdict.keys())),DataWarning)
 
@@ -1088,8 +1088,6 @@ class BigWigGenomeArray(AbstractGenomeArray):
         
         if roi_order == True and strand == "-":
             count_vec = count_vec[::-1]
-            
-        # FIXME: reapply fill values. Need to get mask.
             
         return count_vec
         

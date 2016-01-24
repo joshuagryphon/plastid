@@ -19,6 +19,21 @@ wigfile = os.path.join(base_path,"command_line","gen_reads_center_12_fw.wig")
 bigwigfile = os.path.join(base_path,"command_line","gen_reads_center_12_fw.bw")
 
 
+class WildCard(float):
+    def __eq__(self,other):
+        return True
+    
+    def __neq__(self,other):
+        return False
+    
+    def __repr__(self):
+        return 'any float'
+
+    def __str__(self):
+        return 'any float'
+
+wildcard = WildCard()
+
 class AbstractTestBBIFile():
 
     @classmethod
@@ -96,7 +111,7 @@ class TestBigWigReader(AbstractTestBBIFile):
                 yield self.check_vals_against_wig, expected, found
     
     # NOTE: this test relies on WiggleReader being correct
-    def test_random_windows_against_wig(self):
+    def test_random_windows_against_wig_fw(self):
         chrdict = self.chrdict
         chroms = list(self.chrdict)
         chridx = numpy.random.randint(0,high=len(chroms),size=50)
@@ -123,6 +138,35 @@ class TestBigWigReader(AbstractTestBBIFile):
                     i += 1
                     found = self.bw[seg]
                     yield self.check_vals_against_wig, expected, found
+
+    def test_random_windows_against_wig_rc(self):
+        chrdict = self.chrdict
+        chroms = list(self.chrdict)
+        chridx = numpy.random.randint(0,high=len(chroms),size=50)
+        ga = GenomeArray()
+        
+        i = 0
+        
+        with open(wigfile) as fin:
+            ga.add_from_wiggle(fin,"-")
+            while i < 50:
+                chrom = chroms[chridx[i]]
+                maxlength = chrdict[chrom]
+                start = numpy.random.randint(0,high=maxlength-2000)
+                end = numpy.random.randint(start+10000,high=start+20000)
+                
+                # make sure we don't go off chrom
+                while end > maxlength:
+                    end = numpy.random.randint(start+100,high=start+10000)
+                    
+                seg = GenomicSegment(chrom,start,end,"-")
+                expected = ga[seg]
+                # make sure segment has counts in it
+                if expected.sum() > 0:
+                    i += 1
+                    found = self.bw[seg]
+                    yield self.check_vals_against_wig, expected, found
+
     
     def test_get_chromosome_zero_fill(self):
         ga = GenomeArray()
@@ -234,6 +278,43 @@ class TestBigWigReader(AbstractTestBBIFile):
             assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
             
     def test_summarize(self):
+        bw  = BigWigReader(bigwigfile)
+        
+        #ga = GenomeArray(bw.chroms)
+        #ga.add_from_wiggle(open(wigfile),"+")
+        
+        chrom = "chrI"
+        maxlen = bw.chroms[chrom]
+        winstarts = numpy.random.randint(0,maxlen-20000,size=10)
+        winends   = winstarts + numpy.random.randint(500,40000,size=10)
+        winends[winends > maxlen] = maxlen
+        
+        numtests = 10
+        i = 0
+        while i < numtests:
+            s = numpy.random.randint(0,high=maxlen)
+            e = min(maxlen,numpy.random.randint(s+500,s+40000))
+            seg = GenomicSegment(chrom,s,e,"+")
+            #arr = ga[seg]
+            arr = bw[seg]
+
+            labels = ["mean","max","min","cov","stdev"]
+            expected = [arr.mean(),arr.max(),arr.min(),wildcard,arr.std()]
+            
+            # change nans to 0
+            expected = [0 if numpy.isnan(X) else X for X in expected]
+            
+            print expected
+            found = bw.summarize(seg)
+            print found
+            print("---------------")
+            for label, exval, fval in zip(labels,expected,found):
+                msg =  "test_summarize failed for stat '%s'. Expected %s, got %s (diff: %s)." % (label,exval,fval,abs(exval-fval))
+                assert_almost_equal(exval,fval,msg=msg,delta=5)
+                
+            i += 1
+        
+        # retval for summarize:  (mean,max_,min_,cov,stdev)
         assert False
     
         
