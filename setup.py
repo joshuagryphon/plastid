@@ -89,7 +89,7 @@ To see which versions you have installed:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = "0.4.4"  #plastid.__version__ 
+version = "0.4.4b"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
 packages = find_packages()
 
@@ -190,7 +190,7 @@ C_PATHS = [X.replace(".pyx",".c") for X in PYX_PATHS] + glob.glob(os.path.join(b
 """Potential path to cythonized .c files"""
 
 # other flags; fill in as needed
-LIBRARIES=[]
+LIBRARIES=["z"]
 
 # [os.path.join("plastid","lib")]#[os.path.join(base_path,"plastid","lib")]
 LIBRARY_DIRS=[]

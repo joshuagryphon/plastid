@@ -281,9 +281,9 @@ class TestBigWigReader(AbstractTestBBIFile):
             # change nans to 0
             expected = [0 if numpy.isnan(X) else X for X in expected]
             
-            print expected
+            print(expected)
             found = bw.summarize(seg)
-            print found
+            print =(found)
             print("---------------")
             for label, exval, fval in zip(labels,expected,found):
                 msg =  "test_summarize failed for stat '%s'. Expected %s, got %s (diff: %s)." % (label,exval,fval,abs(exval-fval))
