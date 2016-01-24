@@ -182,23 +182,16 @@ for mod in (numpy,pysam):
 
 
 # paths to C files and PYX files
-
 PYX_PATHS = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
-""".pyx files for extensions that don't depend on Jim Kent's utils"""
+""".pyx files for extensions"""
 
 C_PATHS = [X.replace(".pyx",".c") for X in PYX_PATHS] + glob.glob(os.path.join(base_path,"plastid","readers","*.c"))
 """Potential path to cythonized .c files"""
 
 # other flags; fill in as needed
-LIBRARIES=["z"]
-
-# [os.path.join("plastid","lib")]#[os.path.join(base_path,"plastid","lib")]
+LIBRARIES=[]
 LIBRARY_DIRS=[]
-
-# if I could discover the install destination via a hack of distutils,
-# I could set this and have the Kent dependencies in their own library.
 RUNTIME_LIBRARY_DIRS=[]
-
 EXTRA_OBJECTS=[]
 
 
@@ -230,7 +223,6 @@ kent_sources = [
     "bPlusTree.c",
     "bwgQuery.c",
     "bwgValsOnChrom.c",
-#    "cheapcgi.c",
     "cirTree.c",
     "common.c",
     "dlist.c",
@@ -244,8 +236,6 @@ kent_sources = [
     "internet.c",
     "intExp.c",
     "kxTok.c",
-#    "mime.c",
-#    "net.c",
     "linefile.c",
     "localmem.c",
     "memalloc.c",
@@ -255,13 +245,6 @@ kent_sources = [
     "psl.c",
     "rangeTree.c",
     "rbTree.c",
-#    "portimpl.c",
-#     "servcl.c",
-#     "servpws.c",
-#     "servmsII.c",
-#     "servcis.c",
-#     "servCrunx.c",
-#     "servBrcMcw.c",
     "sqlNum.c",
     "sqlList.c",
     "tokenizer.c",
@@ -296,7 +279,7 @@ bbifile = Extension(
     ["plastid/readers/bbifile.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES,
+    libraries=LIBRARIES + ["z"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
@@ -306,7 +289,7 @@ bigwig = Extension(
     ["plastid/readers/bigwig.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
-    libraries=LIBRARIES,
+    libraries=LIBRARIES + ["z"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )

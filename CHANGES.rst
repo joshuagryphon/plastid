@@ -18,8 +18,16 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 Unreleased
 ----------
 
+The next version contains a host of compatibility improvements under the hood,
+as well as support for ``BigWig``, a high-performance file format used
+to store quantitative data associated with genomic positions.
+
+
 Added
 .....
+
+  - ``BigWigReader``, a reader for BigWig files, and  ``BigWigGenomeArray``,
+    for handling those files more conveniently.
 
   - Created entrypoints for allowing users to use custom mapping rules
     in the command line scripts:
@@ -56,6 +64,7 @@ Fixed
     an ``IndexError`` in earlier versions of :mod:`numpy`.
   - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
     as well as >= 1.3
+
 
 Deprecated
 ..........
