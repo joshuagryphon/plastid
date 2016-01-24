@@ -465,7 +465,6 @@ setup(
          'Intended Audience :: Developers',
 
          'License :: OSI Approved :: BSD License',
-         #'Operating System :: OS Independent',
          'Operating System :: POSIX',
          'Natural Language :: English',
     ],
@@ -482,7 +481,7 @@ setup(
         "" : ["*.pyx","*.pxd"],
         "kentUtils"          : ["README*"],
         "kentUtils.src.inc"  : ["*.h"],
-        "kentUtils.src.lib"  : kent_sources + ["README","portimpl.h"],
+        "kentUtils.src.lib"  : kent_sources + ["README"],
         "kentUtils.samtabix" : kent_samtabix + ["*.h","COPYING","README*","AUTHORS"],
     },
 
