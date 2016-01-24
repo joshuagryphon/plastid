@@ -52,41 +52,14 @@ to those above:
 
     |BAMGenomeArray|
         A GenomeArray for `BAM` files. Fetches alignments from one or more
-        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` to
-        convert these alignments to to vectors of :term:`counts`.
+        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` and
+        filter functions to convert these alignments to vectors of :term:`counts`
+        at runtime. As a result :term:`mapping rules <mapping rule>` and filter
+        functions can be changed at will without re-loading data, allowing rapid
+        prototyping / EDA.
         
-        `BAM`_ files give |BAMGenomeArray| several advantages over |GenomeArray|:
-        
-            - |BAMGenomeArray| objects can be much faster to create and far more
-              memory-efficient than |GenomeArray| or |SparseGenomeArray|.
-            
-            - :term:`Mapping rules <mapping rule>` and filter functions may be
-              changed at runtime, with no speed cost, rather than having to be
-              set at import time (as is the case for import of `bowtie`_ files
-              into a |GenomeArray|). See :meth:`BAMGenomeArray.set_mapping` for details.
-                
-            - All of the rich properties of :term:`read alignments` that are
-              preserved in `BAM`_ files (e.g. alignment mismatches, read lengths,
-              et c) are accessible, and may be used by :term:`mapping rules <mapping rule>`
-              or filter functions. 
-              
-            - If necessary, a |BAMGenomeArray| can be converted to a |GenomeArray|
-        
-        
-        Because a |BAMGenomeArray| is a view of the data in an
-        underlying `BAM`_ file, |BAMGenomeArrays| do not support
-        *setter* operations. Instead, mathematical operations, if desired, may be:
-        
-            - applied to vectors of counts, once fetched from the |BAMGenomeArray|
-            
-            - performed on a |GenomeArray| or |SparseGenomeArray| created from
-              a |BAMGenomeArray| via :meth:`BAMGenomeArray.to_genome_array`
-
     |BigWigGenomeArray|
-        A GenomeArray for `BigWig`_ files. Recommended for large quantitative
-        data sets. Like a |BAMGenomeArray|, |BigWigGenomeArrays| are immutable.
-        `BigWig`_ files can be made from `Wiggle`_ and `bedGraph`_ files using
-        `Jim Kent's utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
+        A GenomeArray for data stored in one or more `BigWig`_ files.
               
     |GenomeArray|
         A mutable GenomeArray. It allows:
@@ -94,13 +67,15 @@ to those above:
             - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
 
             - import of :term:`read alignments` from native `bowtie`_ alignments,
-              and their convertion to :term:`counts` under configurable
-              :term:`mapping rules <mapping rule>`.
+              and their conversion to :term:`counts` under configurable
+              :term:`mapping rules <mapping rule>`. However,
+              because :term:`mapping rules <mapping rule>` are applied upon import,
+              they cannot be changed once the data has been loaded into the array
               
             - setting values within the array
     
-            - mathematical operations such as addition and subtraction of scalars,
-              or positionwise addition and subtraction of other |GenomeArrays|
+            - mathematical operations upon the array, such as addition and subtraction
+              of scalars, or positionwise addition and subtraction of other |GenomeArrays|
     
     |SparseGenomeArray|
         A slower but more memory-efficient implementation of |GenomeArray|,
@@ -1170,7 +1145,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         self._strands = sorted(self._strand_dict.keys())
 
     def reset_sum(self):
-        """Reset sum to total of data in the |BigWigGenomeArrayGenomeArray|"""        
+        """Reset sum to total of data in the |BigWigGenomeArray|"""
         my_sum = 0
         for ltmp in self._strand_dict.values():
             for bw in ltmp:
@@ -1180,7 +1155,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         return my_sum
     
     def to_genome_array(self):
-        """Converts |BigWigGenomeArrayGenomeArray| to a |GenomeArray|
+        """Converts |BigWigGenomeArray| to a |GenomeArray|
 
         Returns
         -------

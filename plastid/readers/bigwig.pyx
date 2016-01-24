@@ -1,5 +1,4 @@
-"""Fast reader for `BigWig`_ files, implemented as a Python binding for the C
-library of Jim Kent's utilties for the UCSC genome browser.
+"""Reader for `BigWig`_ files, built atop `Jim Kent's utilities`_.
 
 
 See also
@@ -99,7 +98,9 @@ cdef class BigWigReader(_BBI_Reader):
             lm* buf = self._get_lm()
             bbiInterval* iv
             long segstart, segend
-                    
+
+        # FIXME: add segmentchain here
+        
         # return empty vector if chromosome is not in BigWig file
         if chrom not in self.c_chroms():
             warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
@@ -156,7 +157,7 @@ cdef class BigWigReader(_BBI_Reader):
         return mysum
     
     def get_chromosome(self, str chrom):
-        """Retrieve values across an entire chromosome more efficiently than using `self[chromosome_segment]`
+        """Retrieve values across an entire chromosome more efficiently than using ``bigwig_reader[chromosome_roi]``
         
         Parameters
         ----------
@@ -217,7 +218,12 @@ cdef class BigWigReader(_BBI_Reader):
         return counts
 
     def summarize(self, GenomicSegment roi):
-        """Summarize `BigWig` data over the region of interest
+        """Summarize `BigWig`_ data over the region of interest.
+        
+        Note
+        ----
+        These are quickly calculated approximations. More accurate mean, stdev,
+        et c can be calculated using ``bigwig_reader[roi].mean()`` et c
          
         Returns
         -------
@@ -234,7 +240,7 @@ cdef class BigWigReader(_BBI_Reader):
         return (mean,max_,min_,cov,stdev)
         
     cdef double _summarize(self, GenomicSegment roi, bbiSummaryType type_):
-        """Summarize bigWig data over ROI for a single statistic
+        """Summarize `BigWig`_ data over ROI for a single statistic
          
         Parameters
         ----------

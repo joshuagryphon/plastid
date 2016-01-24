@@ -12,8 +12,10 @@ Submodules
 .. toctree::
 
    plastid.readers.autosql
+   plastid.readers.bbifile
    plastid.readers.bed
    plastid.readers.bigbed
+   plastid.readers.bigwig
    plastid.readers.bowtie
    plastid.readers.common
    plastid.readers.gff

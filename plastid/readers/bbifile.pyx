@@ -28,7 +28,7 @@ WARN_FILE_NOT_FOUND = "File '%s' not found."
 #===============================================================================
 
 cdef class _BBI_Reader:
-    """Abstract base class for BigBed and BigWig file readers
+    """Abstract base class for `BigWig`_ file readers
 
     Reads basic file properties
     """
