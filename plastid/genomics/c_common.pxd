@@ -9,3 +9,10 @@ cdef enum ExBool:
     false     = 0
     true      = 1
 
+cdef str strand_to_str(Strand)
+cdef Strand str_to_strand(str)
+
+cdef class _GeneratorWrapper(object):
+    cdef:
+        object generator
+        str    message

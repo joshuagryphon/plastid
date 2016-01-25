@@ -1,12 +1,8 @@
-from plastid.genomics.c_common cimport Strand, undef_strand, ExBool, bool_exception
+from plastid.genomics.c_common cimport Strand, undef_strand, ExBool, bool_exception, strand_to_str, str_to_strand
 from cpython cimport array
 import numpy
 import array
 cimport numpy
-
-
-cdef str strand_to_str(Strand)
-cdef Strand str_to_strand(str) #except undef_strand
 
 cpdef list positions_to_segments(str,str,object)
 cpdef list positionlist_to_segments(str,str,list)

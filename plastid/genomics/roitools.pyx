@@ -422,32 +422,6 @@ cdef void nonecheck(object obj,str place, str valname):
     if obj is None:
         raise ValueError("%s: value of %s cannot be None" % (place,valname))
 
-cdef str strand_to_str(Strand strand):
-    """Convert enum Strand to str representation"""
-    if strand == forward_strand:
-        return "+"
-    elif strand == reverse_strand:
-        return "-"
-    elif strand == unstranded:
-        return "."
-    elif strand == undef_strand:
-        return "strand undefined"
-    else:
-        raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'" % (forward_strand,
-            reverse_strand, unstranded, strand))
-
-cdef Strand str_to_strand(str val):
-    """Convert str representation of strand to enum"""
-    if val == "+":
-        return forward_strand
-    elif val == "-":
-        return reverse_strand
-    elif val == ".":
-        return unstranded
-    elif val == "\x00":
-        return undef_strand
-    else:
-        raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined)")
 
 cdef bint check_segments(SegmentChain chain, tuple segments) except False:
     cdef:

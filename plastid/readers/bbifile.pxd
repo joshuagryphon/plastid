@@ -88,9 +88,9 @@ cdef extern from "<bbiFile.h>":
         bits64 asOffset
         #bits64 totalSummaryOffset
         bits32 uncompressBufSize
-        #bits64 exgtensionOffset
+        #bits64 extensionOffset
         #struct cirTreeFile unzoomedCir
-        #bbiZoomLevel *levelList
+        bbiZoomLevel *levelList
         #bits16 extensionSize
         bits16 extraIndexCount
         #bits64 extraIndexListOffset
@@ -198,10 +198,11 @@ cdef class _BBI_Reader:
 
     cdef:
         bbiFile * _bbifile
-        str  filename
-        dict _chrominfo
-        dict _summary
-        lm * _lm
+        str       filename
+        dict      _chromids
+        dict      _chromlengths
+        dict      _summary
+        lm *      _lm
 
 #         dict _zoomlevels
 #         dict offsets

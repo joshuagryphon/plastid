@@ -293,10 +293,22 @@ bigwig = Extension(
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
-    
+
+bigbed = Extension(
+    "plastid.readers.z",
+    ["plastid/readers/z.pyx"] + kent_deps,
+    language="c",
+    include_dirs=INCLUDE_PATH,
+    libraries=LIBRARIES + ["z"],
+    library_dirs=LIBRARY_DIRS,
+    runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
+)
+
+
 
 ext_modules.append(bbifile)
 ext_modules.append(bigwig)
+ext_modules.append(bigbed)
 
 # classes & functions for compilation -----------------------------------------
 
