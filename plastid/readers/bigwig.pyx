@@ -301,8 +301,15 @@ cdef class BigWigReader(_BBI_Reader):
 # '<generator object at 0x7f066e0f3d98>'
 #
 
-def BigWigIterator(_BBI_Reader reader):
-    """Iterate over values in the `BigWig`_ file, sorted lexically by chromosome and position.
+# can't be cdef'ed or cpdef'ed due to yield
+def BigWigIterator(BigWigReader reader):
+    """Iterate over records in the `BigWig`_ file, sorted lexically by chromosome and position.
+
+    Parameters
+    ----------
+    reader : |BigWigReader|
+        Reader to iterate over
+        
      
     Yields
     ------
@@ -325,6 +332,9 @@ def BigWigIterator(_BBI_Reader reader):
         bbiInterval* iv
      
     buf = lmInit(0)
+    if buf == NULL:
+        raise MemoryError("BigWigIterator: could not allocate memory.")
+    
     for chrom in chroms:
         chromlength = chromsizes[chrom]
         iv = bigWigIntervalQuery(reader._bbifile,

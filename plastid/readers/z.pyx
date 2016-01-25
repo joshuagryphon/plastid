@@ -174,15 +174,15 @@ cdef class BigBedReader(_BBI_Reader):
         self.extension_fields     = {}
 
 
-        if self.num_extension_fields > 0:
-            autosql = self._get_autosql_str()
-            try:
-                self.autosql_parser = AutoSqlDeclaration(autosql)
-                self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self.num_extension_fields:])
-            except AttributeError:
-                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
-                self.extension_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self.num_extension_fields)])
-                self.autosql_parser = lambda x: OrderedDict(zip(self.extension_fields,x.split("\t")[-self.num_extension_fields:]))
+#         if self.num_extension_fields > 0:
+#             autosql = self._get_autosql_str()
+#             try:
+#                 self.autosql_parser = AutoSqlDeclaration(autosql)
+#                 self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self.num_extension_fields:])
+#             except AttributeError:
+#                 warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
+#                 self.extension_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self.num_extension_fields)])
+#                 self.autosql_parser = lambda x: OrderedDict(zip(self.extension_fields,x.split("\t")[-self.num_extension_fields:]))
         
         if return_type == None:
             self.return_type = SegmentChain
@@ -199,7 +199,12 @@ cdef class BigBedReader(_BBI_Reader):
         def __get__(self):
             warnings.warn("BigBedReader.custom_fields is deprecated and will be removed in plastid v0.6.0. Use BigBedReader.extension_fields in the future",UserWarning)
             return self.extension_fields
-            
+    
+    property num_chroms:
+        """Number of chromosomes in the `BigBed`_ file"""
+        def __get__(self):
+            return len(self.c_chroms())
+    
     property num_records:
         """Number of features in file"""
         def __get__(self):
@@ -237,10 +242,16 @@ cdef class BigBedReader(_BBI_Reader):
         str
             autoSql-formatted string
         """
-        return bigBedAutoSqlText(self._bbifile)
+        return ""#safe_str(bigBedAutoSqlText(self._bbifile))
 
-    def get(self, roi, bint stranded=True):
+    def get(self, roi, bint stranded=True, bint check_unique=True):
         """Iterate over features that share genomic positions with a region of interest
+        
+        Note
+        ----
+        ``reader.get(roi)`` is an alternative syntax to ``reader[roi]``. It's
+        only useful if setting `stranded` or `check_unique` to `False`.
+         
          
         Parameters
         ----------
@@ -248,14 +259,18 @@ cdef class BigBedReader(_BBI_Reader):
             Query feature representing region of interest
          
         stranded : bool, optional
-            if `True`, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands. (Default: `True`)
              
+        check_unique: bool, optional
+            if `True`, assure that all results in generator are unique.
+            (Default: `True`)
          
-        Returns
+         
+        Yields
         ------
-        list
-            Objects of `self.return_type`, |SegmentChain| or one of its subclasses
+        object
+            `self.return_type` of each record in the `BigBed`_ file
          
          
         Raises
@@ -273,13 +288,31 @@ cdef class BigBedReader(_BBI_Reader):
         else:
             raise TypeError("BigBedReader.get(): Query interval must be a GenomicSegment or SegmentChain")
             
-        return self._c_get(chain,stranded)
+        return self._c_get(chain,stranded,check_unique=check_unique)
     
     # NB- no cache layer, which we previously had
-    # will this be fast enough for repeated queries over the same region?
-    
-    cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True):
-        """c-layer implementation of :meth:`BigBedReader.get`"""
+    # will this be fast enough for repeated queries over the same region?    
+    cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True, bint check_unique=True):
+        """c-layer implementation of :meth:`BigBedReader.get`
+        
+        Parameters
+        ----------
+        roi : |SegmentChain| or |GenomicSegment|
+            Query feature representing region of interest
+         
+        stranded : bool, optional
+            If `True`, retrieve only features on same strand as query feature.
+            Otherwise, retrieve features on both strands. (Default: `True`)
+
+        check_unique: bool, optional
+            if `True`, assure that all results in generator are unique.
+            (Default: `True`)
+         
+        Yields
+        ------
+        object
+            `self.return_type` of each record in the `BigBed`_ file
+        """
         cdef:
             bigBedInterval * iv
             str              bed_row
@@ -301,25 +334,6 @@ cdef class BigBedReader(_BBI_Reader):
             self._define_chroms()
             chromids = self._chromids
 
-
-#                     chrom_name = self.bplus_tree.chrom_id_name[chrom_id]
-#                     items      = remaining_cols.split("\t")
-#                     bed_items  = items[:self.header["bed_field_count"] - 3]
-#                     bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)] + bed_items)
-#                     return_obj = self.return_type.from_bed(bed_line)
-#         
-#                     # if file contains custom fields, parse these and put them in attr dict
-#                     whole_bedplus_line = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])+"\t"+remaining_cols
-#                     if self._num_custom_fields > 0:
-#                         return_obj.attr.update(list(self.autosql_parser(whole_bedplus_line).items())[-self._num_custom_fields:])
-#                     
-#                     if self.add_three_for_stop == True:
-#                         return_obj = add_three_for_stop_codon(return_obj)
-#                     
-#                     self.fifo_dict[data_offset].append(return_obj)
-#                     yield return_obj
-
-        
         for roi in chain:
             iv = bigBedIntervalQuery(self._bbifile,
                                      safe_bytes(span.chrom),
@@ -337,7 +351,8 @@ cdef class BigBedReader(_BBI_Reader):
                     # if strand info is present and we care about it
                     if stranded == True and self.bed_fields >= 6:
                         items = rest.split("\t")
-                        ivstrand = str_to_strand(items[2])
+                        print(items)
+                        ivstrand = str_to_strand(items[3])
                         
                         # no overlap - restart loop at next iv
                         if ivstrand & strand == 0:
@@ -350,7 +365,8 @@ cdef class BigBedReader(_BBI_Reader):
                 iv = iv.next
         
         # filter for uniqueness
-        ltmp = sorted(set(ltmp))
+        if check_unique == True:
+            ltmp = sorted(set(ltmp))
         
         return _GeneratorWrapper((outfunc(X) for X in ltmp),"BigBed entries")
     
@@ -498,11 +514,10 @@ cdef class BigBedReader(_BBI_Reader):
         roi : |SegmentChain| or |GenomicSegment|
             Query feature representing region of interest
          
-         
-        Returns
+        Yields
         ------
-        list
-            Objects of `self.return_type`, |SegmentChain| or one of its subclasses
+        object
+            `self.return_type` of each record in the `BigBed`_ file
          
          
         Raises
@@ -512,17 +527,56 @@ cdef class BigBedReader(_BBI_Reader):
         """
         return self.get(roi,stranded=True)
 
+    def __iter__(self):
+        """Iterate over all features in `BigBed`_ file
+         
+        Yields
+        ------
+        object
+            Object of ``self.return_type``, |SegmentChain| or one of its subclasses
+        """
+        return _GeneratorWrapper(BigBedIterator(self),"BigBed records")
+
+
+# can't be cdef'ed or cpdef'ed due to yield
+def BigBedIterator(BigBedReader reader):
+    """Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
+     
+    Parameters
+    ----------
+    reader : |BigBedReader|
+        Reader to iterate over
+    
+    Yields
+    ------
+    object
+        reader.return_type of `BED`_ record
         
-#     
-#     def __iter__(self):
-#         """Generator that iterates over all features in `BigBed`_ file
-#         
-#         Yields
-#         ------
-#         object
-#             Object of ``self.return_type``, |SegmentChain| or one of its subclasses
-#         """
-#         return itertools.chain.from_iterable((self._iterate_over_chunk(*NODE) for NODE in self.r_tree))
+    Raises
+    ------
+    MemoryError
+        If memory cannot be allocated
+    """
+    cdef:
+        dict           chromsizes  = reader.c_chroms()
+        list           chroms      = sorted(chromsizes.keys())
+        str            chrom
+        long           chromlength
+        lm*            buf
+    
+    buf = lmInit(0)
+    if buf == NULL:
+        raise MemoryError("BigBedIterator: could not allocate memory.")
+    
+    for chrom in chroms:
+        chromlength = chromsizes[chrom]
+        query = GenomicSegment(chrom,0,chromlength,".")
+        for roi in reader.get(query,stranded=False,check_unique=False):
+            yield roi
+
+    lmCleanup(&buf)
+
+
 
 #===============================================================================
 # INDEX: BPlusTree parser

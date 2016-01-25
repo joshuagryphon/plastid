@@ -12,6 +12,7 @@ See also
 """
 from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits, bbiSummaryType
 from plastid.genomics.roitools cimport GenomicSegment
+from plastid.genomics.c_common cimport _GeneratorWrapper
 
 #===============================================================================
 # Externs from Kent utilties
@@ -62,4 +63,5 @@ cdef class BigWigReader(_BBI_Reader):
         double _sum
     
     cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
+
 

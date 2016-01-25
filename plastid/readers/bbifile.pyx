@@ -11,10 +11,10 @@ See also
     The header files are particularly useful.
 """
 import os
+import warnings
 
 from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
-
 from plastid.util.services.mini2to3 import safe_bytes, safe_str
 
 #===============================================================================
@@ -95,6 +95,12 @@ cdef class _BBI_Reader:
     property chroms:
         """Dictionary mapping chromosome names to lengths"""
         def __get__(self):
+            return self.c_chroms()
+
+    property chrom_sizes:
+        """DEPRECATED: Use `.chroms` instead of `.chrom_sizes`"""
+        def __get__(self):
+            warnings.warn("`chrom_sizes`` is deprecated and will be removed from plastid v0.6.0. Use `chroms` instead",UserWarning)
             return self.c_chroms()
 
     # FIXME: hide    

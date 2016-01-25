@@ -1,4 +1,4 @@
-from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm
+from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup
 from plastid.readers.bbifile cimport _BBI_Reader
 from plastid.util.services.mini2to3 import safe_bytes, safe_str
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
@@ -54,5 +54,5 @@ cdef class BigBedReader(_BBI_Reader):
         object    return_type
         #types.classTypes return_type
 
-    cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*)
+    cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*, bint check_unique=*)
 #    cpdef list _getiter(self,GenomicSegment,bint)    
