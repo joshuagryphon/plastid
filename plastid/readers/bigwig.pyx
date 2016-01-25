@@ -24,6 +24,7 @@ from plastid.readers.bbifile cimport _BBI_Reader, close_file,\
                                      bitFindClear
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
+from plastid.genomics.c_common import _GeneratorWrapper
 from plastid.util.services.mini2to3 import safe_bytes, safe_str
 
 #===============================================================================
@@ -54,7 +55,7 @@ cdef class BigWigReader(_BBI_Reader):
         self._sum = numpy.nan
 
     def __iter__(self):
-        return BigWigIterator(self)
+        return _GeneratorWrapper(BigWigIterator(self),"BigWig values")
 
     def _get(self, GenomicSegment roi, bint roi_order=True, double fill=numpy.nan): 
         """Retrieve array of counts from a region of interest.

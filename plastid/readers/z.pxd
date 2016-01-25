@@ -6,7 +6,6 @@ from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
                                        forward_strand, reverse_strand, unstranded,\
                                        _GeneratorWrapper
 
-
 cdef extern from "<bigBed.h>":
 
     cdef struct bigBedInterval:

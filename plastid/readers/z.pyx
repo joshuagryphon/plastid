@@ -353,7 +353,6 @@ cdef class BigBedReader(_BBI_Reader):
         ltmp = sorted(set(ltmp))
         
         return _GeneratorWrapper((outfunc(X) for X in ltmp),"BigBed entries")
-
     
 #     def _parse_header(self):
 #         """Parse first 64 bytes of `BigBed`_ file, and determine indices

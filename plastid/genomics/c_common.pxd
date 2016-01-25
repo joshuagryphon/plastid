@@ -15,4 +15,4 @@ cdef Strand str_to_strand(str)
 cdef class _GeneratorWrapper(object):
     cdef:
         object generator
-        str    message
+        str    desc

@@ -26,17 +26,39 @@ cdef Strand str_to_strand(str val):
         raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined). Got '%s'." % val)
 
 cdef class _GeneratorWrapper(object):
-    """Hack to allow generators created in Cython to have REPRs instead of erroring upon inspection"""
-
-    def __cinit__(self,generator,message):
+    """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions"""
+        
+    def __cinit__(self,generator,desc):
+        """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions
+        
+        Parameters
+        ----------
+        generator : Generator object to wrap
+        
+        desc :
+            Short description of generator contents, used in generating
+            the  `repr` text
+        """
         self.generator = generator
-        self.message = "<wrapped generator object '%s'>" % message
+        self.desc = "<wrapped generator object '%s'>" % desc
         
     def __str__(self):
-        return self.message
+        return self.desc
     
     def __repr__(self):
-        return self.message
+        return self.desc
     
     def __getattr__(self,attr):
-        return getattr(self.generator,attr)
+        if attr == "generator":
+            return self.generator
+        else:
+            return getattr(self.generator,attr)
+    
+    def __iter__(self):
+        return iter(self.generator)
+     
+    def __next__(self):
+        return next(self.generator)
+     
+    def next(self):
+        return next(self.generator)
