@@ -1,9 +1,12 @@
-from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup
+from collections import OrderedDict
+
+from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem
 from plastid.readers.bbifile cimport _BBI_Reader
 from plastid.util.services.mini2to3 import safe_bytes, safe_str
 from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
                                        forward_strand, reverse_strand, unstranded,\
+                                       error_strand,\
                                        _GeneratorWrapper
 
 cdef extern from "<bigBed.h>":
@@ -45,14 +48,16 @@ cdef extern from "<bigBed.h>":
  
 cdef class BigBedReader(_BBI_Reader):
     cdef:
-        bint      add_three_for_stop
-        int       total_fields
-        int       bed_fields
-        int       num_extension_fields
-        dict      extension_fields
+        bint               add_three_for_stop
+        int                total_fields
+        int                bed_fields
+        int                num_extension_fields
+        object             extension_fields  # maps name to description
+        object             extension_types   # map  name to formatting func
         
         object    return_type
         #types.classTypes return_type
 
     cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*, bint check_unique=*)
+    cdef str process_record(self,dict chromids,bigBedInterval *iv)
 #    cpdef list _getiter(self,GenomicSegment,bint)    

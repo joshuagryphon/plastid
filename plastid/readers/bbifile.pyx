@@ -100,7 +100,7 @@ cdef class _BBI_Reader:
     property chrom_sizes:
         """DEPRECATED: Use `.chroms` instead of `.chrom_sizes`"""
         def __get__(self):
-            warnings.warn("`chrom_sizes`` is deprecated and will be removed from plastid v0.6.0. Use `chroms` instead",UserWarning)
+            warnings.warn("`chrom_sizes` is deprecated and will be removed from plastid v0.6.0. Use `chroms` instead",UserWarning)
             return self.c_chroms()
 
     # FIXME: hide    

@@ -28,11 +28,20 @@ DEF bigBedSig = 0x8789F2EB
 DEF bigWigSig = 0x888FFC26 
 
 cdef extern from "<common.h>" nogil:
-    ctypedef unsigned char Bits
-    ctypedef unsigned char  bits8
-    ctypedef unsigned short bits16
+    ctypedef unsigned char   Bits
+    ctypedef unsigned char   bits8
+    ctypedef unsigned short  bits16
     ctypedef unsigned bits32
     ctypedef unsigned long long bits64
+
+    void freeMem(void *pt)
+#     
+#     cdef struct fileOffsetSize:
+#         fileOffsetSize * next
+#         bits64           offset
+#         bits64           size
+    
+
 
 cdef extern from "<bits.h>":
     
@@ -44,6 +53,7 @@ cdef extern from "<bits.h>":
     
     # read next bit
     bint bitReadOne(Bits *b, int bitIx)
+
 
 cdef extern from "<localmem.h>":
     cdef struct lm:
@@ -65,6 +75,7 @@ cdef extern from "<localmem.h>":
     void * lmAllocMoreMem(lm *lm, void *pt, size_t oldSize, size_t newSize)
     void lmCleanup(lm **pLm)
 
+
 cdef extern from "<bbiFile.h>":
     cdef struct bbiZoomLevel:
         bbiZoomLevel *next 
@@ -77,6 +88,7 @@ cdef extern from "<bbiFile.h>":
         char *fileName
         #struct udcFile *udc
         bits32 typeSig
+        bint   isSwapped
         #struct bptFile *chromBpt
         bits16 version
         bits16 zoomLevels
@@ -86,7 +98,7 @@ cdef extern from "<bbiFile.h>":
         bits16 fieldCount
         bits16 definedFieldCount
         bits64 asOffset
-        #bits64 totalSummaryOffset
+        bits64 totalSummaryOffset
         bits32 uncompressBufSize
         #bits64 extensionOffset
         #struct cirTreeFile unzoomedCir
@@ -146,47 +158,33 @@ cdef extern from "<bbiFile.h>":
     bbiSummaryElement bbiTotalSummary(bbiFile *bbi)
 
 
+# cdef extern from "<cirTree.h>":
+#     cdef struct cirTreeFile:
+#     # R tree index file handle. */
+#         struct cirTreeFile *next;    # Next in list of index files if any. */
+#         char *fileName;              # Name of file - for error reporting. */
+#         #struct udcFile *udc;         # Open file pointer. */
+#         boolean isSwapped;           # If TRUE need to byte swap everything. */
+#         bits64 rootOffset;           # Offset of root block. */
+#         bits32 blockSize;            # Size of block. */
+#         bits64 itemCount;            # Number of items indexed. */
+#         bits32 startChromIx;         # First chromosome in file. */
+#         bits32 startBase;            # Starting base position. */
+#         bits32 endChromIx;           # Ending chromosome in file. */
+#         bits32 endBase;              # Ending base position. */
+#         bits64 fileSize;             # Total size of index file. */
+#         bits32 itemsPerSlot;         # Max number of items to put in each index slot at lowest level. */
+#     
+#         struct fileOffsetSize *cirTreeEnumerateBlocks(struct cirTreeFile *crf)
+
+
+
+
 
 cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)
 
 
-
-# cdef extern from "bigBed.h":
-# 
-#     cdef struct bigBedInterval:
-#         bigBedInterval *next
-#         bits32 start, end
-#         char *rest
-#         bits32 chromId
-# 
-#     bbiFile *bigBedFileOpen(char *fileName)
-#     bigBedInterval bigBedIntervalQuery(bbiFile *bbi, char *chrom, bits32 start, bits32 end,
-#                                        int maxItems, struct lm *lm)
-# 
-#     bint bigBedSummaryArray(bbiFile *bbi, char *chrom, bits32 start, bits32 end,
-#                             enum bbiSummaryType summaryType, int summarySize, double *summaryValues)
-# 
-# #    int bigBedIntervalToRow(bigBedInterval *interval, char *chrom, char *startBuf, char*endBuf,
-# #                            char **row, int rowSize)
-# #
-# #    int bigBedIntervalToRowLookupChrom(bigBedInterval *interval,
-# #                                       bigBedInterval *prevInterval,
-# #                                       bbiFile *bbi,
-# #                                       char *chromBuf,
-# #                                       int chromBufSize,
-# #                                       char *startBuf,
-# #                                       char *endBuf,
-# #                                       char **row,
-# #                                       int rowSize)
-# #
-# ##    struct bigBedInterval *bigBedNameQuery(bbiFile *bbi, bptFile *index, int fieldIx, char *name, lm *lm)
-# #
-# #    struct bigBedInterval *bigBedMultiNameQuery(bbiFile *bbi, bptFile *index, int fieldIx, char **names,
-# #                                                int nameCount, lm * lm)'
-# #
-#     bits64 bigBedItemCount(bbiFile *bbi)
-#     char * bigBedAutoSqlText(bbiFile *bbi)
 
 
 #===============================================================================
@@ -212,17 +210,3 @@ cdef class _BBI_Reader:
     cdef dict c_chroms(self)
     cdef lm* _get_lm(self)
 #     cdef dict fetch_summary(self)
-
-
-# cdef class bb2(_BBI_Reader):
-#     cdef:
-#         _lm          * lm
-#         class          return_type
-#         OrderedDict    custom_fields
-#         bits64         num_records
-#         bint           add_three_for_stop
-# 
-#     cdef list c_getitem(self,GenomicSegment)
-#     cdef str c_get_autosql(self)
-#     cdef *lm _get_lm(self)
-
