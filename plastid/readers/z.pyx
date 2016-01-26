@@ -125,12 +125,13 @@ cdef class BigBedReader(_BBI_Reader):
     
     Attributes
     ----------
-    custom_fields : OrderedDict
+    extension_fields : OrderedDict
         Dictionary mapping custom field names to their descriptions,
         if any custom fields are present
 
-    header : dict
-        Dictionary containing header information
+    extension_types : OrderedDict
+        Dictionary mapping custom field names to objects that parse their
+        types from strings
 
     filename : str
         Path to open BigBed file
@@ -141,18 +142,11 @@ cdef class BigBedReader(_BBI_Reader):
     num_chroms : int
         Number of contigs or chromosomes in file
     
-    chrom_sizes : dict
+    chroms : dict
         Dictionary mapping chromosome names to sizes
     
     return_type : class implementing a :py:meth:`from_bed` method, or str
         Class of object to return (Default: |SegmentChain|)
-
-
-    Notes
-    -----
-    See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for 
-    detailed description of the structures of the BigBed format, B+ Tree,
-    and R trees. 
     """
     def __init__(self,
                  filename,
@@ -179,7 +173,6 @@ cdef class BigBedReader(_BBI_Reader):
                 
                 for fieldname in self.extension_fields:
                     self.extension_types[fieldname] = asql_parser.field_formatters[fieldname]
-                print("Assigned extension field types")
                      
             except AttributeError:
                 warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
@@ -269,15 +262,12 @@ cdef class BigBedReader(_BBI_Reader):
             str byte_order   = ">" if swapped else "<"
             str autosql_fmt
             
-        print("Here comes the str (asOfset %s; totalSummaryOffset %s):" % (as_offset,self._bbifile.totalSummaryOffset))
         if as_offset > 0 and length > 0:
             # temporarily open file, because using Kent's bigBedAutoSqlText() was segfaulting
             fh = open(self.filename,"rb")
             fh.seek(as_offset)
             autosql_fmt = "%s%ss" % (byte_order,length)            
             autosql_str, = struct.unpack(autosql_fmt,fh.read(length))
-            print("Here is the str (asOfset %s; totalSummaryOffset %s)" % (as_offset,self._bbifile.totalSummaryOffset))
-            print(autosql_str)
             return str(autosql_str.decode("ascii")).strip("\0")
         else:
             return ""
@@ -320,7 +310,6 @@ cdef class BigBedReader(_BBI_Reader):
         cdef:
             SegmentChain chain
 
-#         print("in get")
         if isinstance(roi,SegmentChain):
             chain = roi
         elif isinstance(roi,GenomicSegment):
@@ -369,18 +358,13 @@ cdef class BigBedReader(_BBI_Reader):
             Strand           ivstrand
             list             items
             object           outfunc   = self.return_type.from_bed
-            object           oldfunc
+            list             etypes    = list(self.extension_types.items())
         
-        
-#         print("in _c_get()")
         if chromids is None:
-#             print("defining chroms")
             self._define_chroms()
-#             print("Defined")
             chromids = self._chromids
 
         for roi in chain:
-#             print("getting first iv in loop")
             iv = bigBedIntervalQuery(self._bbifile,
                                      safe_bytes(span.chrom),
                                      roi.start,
@@ -389,13 +373,6 @@ cdef class BigBedReader(_BBI_Reader):
                                      buf)
             
             while iv != NULL:
-#                 print("in iv while l0op")
-
-                
-#                 if len(stmp) > 0:
-#                     ltmp.append(bed_row)
-#                 iv = iv.next
-
                 bed_row = "\t".join("%s" % X for X in [chromids[iv.chromId],iv.start,iv.end])
                  
                 if self.total_fields > 3: # if iv.rest is populated
@@ -412,20 +389,6 @@ cdef class BigBedReader(_BBI_Reader):
                         if ivstrand & strand == 0:
                             iv = iv.next
                             continue
-
-#                     bed_items  = items[:self.header["bed_field_count"] - 3]
-#                     bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)] + bed_items)
-#                     return_obj = self.return_type.from_bed(bed_line)
-#         
-#                     # if file contains custom fields, parse these and put them in attr dict
-#                     whole_bedplus_line = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])+"\t"+remaining_cols
-#                     if self._num_custom_fields > 0:
-#                         return_obj.attr.update(list(self.autosql_parser(whole_bedplus_line).items())[-self._num_custom_fields:])
-#                     
-#                     if self.add_three_for_stop == True:
-#                         return_obj = add_three_for_stop_codon(return_obj)
-
-
                  
                     bed_row = "%s\t%s" % (bed_row,rest)
                      
@@ -436,34 +399,12 @@ cdef class BigBedReader(_BBI_Reader):
         if check_unique == True:
             ltmp = sorted(set(ltmp))
         
-#         if self.add_three_for_stop == True:
-#             oldfunc = outfunc
-#             outfunc = lambda x,y: add_three_for_stop_codon(oldfunc(x,extra_columns=y)) 
         
-        return _GeneratorWrapper((outfunc(X,extra_columns=self.extension_types.items()) for X in ltmp),"BigBed entries")
+        if self.add_three_for_stop == True:
+            return _GeneratorWrapper((add_three_for_stop_codon(outfunc(X,extra_columns=etypes)) for X in ltmp),"BigBed entries")
+        else:    
+            return _GeneratorWrapper((outfunc(X,extra_columns=etypes) for X in ltmp),"BigBed entries")
     
-    cdef str process_record(self,dict chromids,bigBedInterval *iv):
-        return ""
-#         bed_row = "\t".join("%s" % X for X in [chromids[iv.chromId],iv.start,iv.end])
-#         
-#         if self.total_fields > 3: # if iv.rest is populated
-#             rest = safe_str(iv.rest)
-#             
-#             # if strand info is present and we care about it
-#             if stranded == True and self.bed_fields >= 6:
-#                 items = rest.split("\t")
-#                 print(items)
-#                 ivstrand = str_to_strand(items[3])
-#                 if ivstrand == error_strand:
-#                     raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined). Got '%s'." % ivstrand)
-#                 
-#                 # no overlap - restart loop at next iv
-#                 if ivstrand & strand == 0:
-#                     return ""
-#         
-#             bed_row = "%s\t%s" % (bed_row,rest)
-# 
-#         return bed_row
         
 #     def _parse_header(self):
 #         """Parse first 64 bytes of `BigBed`_ file, and determine indices
@@ -506,98 +447,7 @@ cdef class BigBedReader(_BBI_Reader):
 #         
 #         return items
 #     
-#     def _iterate_over_chunk(self,data_offset,data_size,null=b"\x00"):
-#         """Iterate over records in a portion of the `BigBed`_ file
-#         
-#         Parameters
-#         ----------
-#         data_offset : int
-#             Beginning of compressed record block in `BigBed`_ file
-#         
-#         data_size : int
-#             End of compressed record block in `BigBed`_ file
-#         
-#         null : str, optional
-#             Null character. Default: `'\\x00'`
-#         
-#         Yields
-#         ------
-#         object
-#             Object of `self.return_type`, usually |SegmentChain| or one of its subclasses
-#         """
-#         base_size = struct.calcsize(self._byte_order+self.base_record_format)
-#         
-#         if data_offset in self.fifo:
-#             self.fifo.append(data_offset) # this line looks funny here, but just moves data_offset to end of FIFO
-#             for my_obj in self.fifo_dict[data_offset]:
-#                 yield my_obj
-#         else:
-#             self.fifo.append(data_offset) # here, it actually adds data_offset to end of FIFO
-#             
-#             # remove any data that should be kicked out of FIFO
-#             # this would be in the keyset to self.fifo_dict ubt not in self.fifo
-#             for k in set(self.fifo_dict.keys()) - set(self.fifo._elements):
-#                 self.fifo_dict.pop(k)
-# 
-#             self.fifo_dict[data_offset] = []
-#         
-#             self.fh.seek(data_offset)
-#             raw_data = zlib.decompress(self.fh.read(data_size))
-#             if self.header["field_count"] > 3:
-#                 null_indices = find_null_bytes(raw_data,null=null)
-#                 last_index = 0
-#                 while (null_indices > last_index + base_size).sum() > 0:
-#                     # find first index that doesn't overlap numerical data
-#                     end_index = null_indices[(null_indices > last_index + base_size).argmax()]
-#                 
-#                     # get bytes covering next record
-#                     bytestr = raw_data[last_index:end_index]
-#                     str_bytes = end_index - last_index - base_size
-#                     new_format = "%s%s%ss" % (self._byte_order,self.base_record_format,str_bytes)
-#                     
-#                     # reset starting index
-#                     last_index = end_index + 1
-#                     
-#                     # parse record
-#                     chrom_id, chrom_start, chrom_end, remaining_cols = struct.unpack(new_format,bytestr)
-#                     
-#                     # 2.x returns str, 3.x returns bytes explicit cast here.
-#                     if isinstance(remaining_cols,bytes):
-#                         remaining_cols = remaining_cols.decode("ascii")
-#                     if sys.version_info < (3,) and isinstance(remaining_cols,unicode):
-#                         remaining_cols = str(remaining_cols.decode("ascii"))
-# 
-#                     chrom_name = self.bplus_tree.chrom_id_name[chrom_id]
-#                     items      = remaining_cols.split("\t")
-#                     bed_items  = items[:self.header["bed_field_count"] - 3]
-#                     bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)] + bed_items)
-#                     return_obj = self.return_type.from_bed(bed_line)
-#         
-#                     # if file contains custom fields, parse these and put them in attr dict
-#                     whole_bedplus_line = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])+"\t"+remaining_cols
-#                     if self._num_custom_fields > 0:
-#                         return_obj.attr.update(list(self.autosql_parser(whole_bedplus_line).items())[-self._num_custom_fields:])
-#                     
-#                     if self.add_three_for_stop == True:
-#                         return_obj = add_three_for_stop_codon(return_obj)
-#                     
-#                     self.fifo_dict[data_offset].append(return_obj)
-#                     yield return_obj
-#             else:
-#                 last_index = 0
-#                 fmt_str = "%s%ss" % (self._byte_order,self.base_record_format)
-#                 calcsize = struct.calcsize(fmt_str) 
-#                 while last_index < len(raw_data):
-#                     bytestr = raw_data[last_index:last_index+calcsize]
-#                     chrom_id, chrom_start, chrom_end, _ = struct.unpack(fmt_str,bytestr)
-#                     chrom_name = self.bplus_tree.chrom_id_name[chrom_id]
-#                     bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])
-#                     return_obj = self.return_type.from_bed(bed_line)
-#                     last_index = last_index+calcsize
-#                     
-#                     # don't need to add three for stop when field count < 3,
-#                     # because no stop codon
-#                     yield return_obj
+
             
     def __getitem__(self,roi):
         """Iterate over features that share genomic positions with a region of interest, on same strand.
@@ -665,9 +515,7 @@ def BigBedIterator(BigBedReader reader):
         long           chromlength
         str            chrom
     
-#     print("In iterator")
     for chrom,chromlength in chromsizes:
-        print("iterating over %s" % chrom)
         query = GenomicSegment(chrom,0,chromlength,".")
         for roi in reader.get(query,stranded=False,check_unique=False):
             yield roi

@@ -59,5 +59,3 @@ cdef class BigBedReader(_BBI_Reader):
         #types.classTypes return_type
 
     cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*, bint check_unique=*)
-    cdef str process_record(self,dict chromids,bigBedInterval *iv)
-#    cpdef list _getiter(self,GenomicSegment,bint)    
