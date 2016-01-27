@@ -78,7 +78,7 @@ cdef class _BBI_Reader:
             self._lm = lmInit(0)
 
         if not self._lm:
-            raise MemoryError("BigWig.__get__: Could not allocate memory.")
+            raise MemoryError("BigBed/BigWig reader: Could not allocate initial memory.")
             
         return self._lm
 
