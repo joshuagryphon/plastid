@@ -58,4 +58,4 @@ cdef class BigBedReader(_BBI_Reader):
         object    return_type
         #types.classTypes return_type
 
-    cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*, bint check_unique=*)
+    cdef _GeneratorWrapper _c_get(self, SegmentChain roi, bint stranded=*, bint check_unique=*, lm *my_lm=*)

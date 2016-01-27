@@ -64,6 +64,15 @@ from plastid.util.services.decorators import skipdoc
 from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
 from plastid.readers.autosql import AutoSqlDeclaration
 
+from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem, _BBI_Reader
+from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
+                                       forward_strand, reverse_strand, unstranded,\
+                                       error_strand,\
+                                       _GeneratorWrapper
+#
+#
+#from plastid.readers.bbifile cimport lmInit, lmCleanup
+
 
 #===============================================================================
 # INDEX: BigBedReader
@@ -321,7 +330,7 @@ cdef class BigBedReader(_BBI_Reader):
     
     # NB- no cache layer, which we previously had
     # will this be fast enough for repeated queries over the same region?    
-    cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True, bint check_unique=True):
+    cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True, bint check_unique=True, lm *my_lm = NULL):
         """c-layer implementation of :meth:`BigBedReader.get`
         
         Parameters
@@ -333,10 +342,15 @@ cdef class BigBedReader(_BBI_Reader):
             If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands. (Default: `True`)
 
-        check_unique: bool, optional
-            if `True`, assure that all results in generator are unique.
+        check_unique : bool, optional
+            If `True`, assure that all results in generator are unique.
             (Default: `True`)
-         
+        
+        my_lm : lm, optional
+            If not NULL, use this pool of local memory instead of the |BigBedReader|'s.
+            (Default: NULL)
+
+ 
         Yields
         ------
         object
@@ -353,13 +367,18 @@ cdef class BigBedReader(_BBI_Reader):
             Strand           strand    = span.c_strand
             long             start     = span.start
             long             end       = span.end
-            lm*              buf       = self._get_lm()
+            lm*              buf #       = self._get_lm()
             dict             chromids  = self._chromids
             Strand           ivstrand
             list             items
             object           outfunc   = self.return_type.from_bed
             list             etypes    = list(self.extension_types.items())
-        
+       
+        if my_lm != NULL:
+            buf = my_lm
+        else:
+            buf = self._get_lm()
+
         if chromids is None:
             self._define_chroms()
             chromids = self._chromids
@@ -381,8 +400,6 @@ cdef class BigBedReader(_BBI_Reader):
                     # if strand info is present and we care about it
                     if stranded == True and self.bed_fields >= 6:
                         items = rest.split("\t")
-                        print(items)
-                        
                         ivstrand = str_to_strand(items[2])
                          
                         # no overlap - restart loop at next iv
@@ -514,12 +531,17 @@ def BigBedIterator(BigBedReader reader):
         list           chromsizes  = sorted(reader.c_chroms().items(),key = lambda x: x[0].lower()) # sort using unix SORT conventions
         long           chromlength
         str            chrom
-    
+        lm             *buf = lmInit(0)
+   
+    if not buf:
+        raise MemoryError("BigBedIterator: could not allocate memory")
+
     for chrom,chromlength in chromsizes:
-        query = GenomicSegment(chrom,0,chromlength,".")
-        for roi in reader.get(query,stranded=False,check_unique=False):
+        query = SegmentChain(GenomicSegment(chrom,0,chromlength,"."))
+        for roi in reader._c_get(query,stranded=False,check_unique=False,my_lm=buf):
             yield roi
 
+    lmCleanup(&buf)
 
 
 #===============================================================================
