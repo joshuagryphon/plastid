@@ -57,7 +57,7 @@ cdef class BigWigReader(_BBI_Reader):
     def __iter__(self):
         return _GeneratorWrapper(BigWigIterator(self),"BigWig values")
 
-    def _get(self, GenomicSegment roi, bint roi_order=True, double fill=numpy.nan): 
+    def get(self, object roi, bint roi_order=True, double fill=numpy.nan): 
         """Retrieve array of counts from a region of interest.
         
         Parameters
@@ -100,7 +100,11 @@ cdef class BigWigReader(_BBI_Reader):
             bbiInterval* iv
             long segstart, segend
 
-        # FIXME: add segmentchain here
+        
+        # FIXME - compensatory changes to all GenomeArrays __getitem -> _get needed here
+        # ditto within SegmentChain
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
         
         # return empty vector if chromosome is not in BigWig file
         if chrom not in self.c_chroms():
@@ -140,7 +144,7 @@ cdef class BigWigReader(_BBI_Reader):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self._get(roi)
+        return self.get(roi)
 
     def sum(self):
         """Calculate sum of data in `BigWig`_ file"""
