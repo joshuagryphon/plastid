@@ -29,7 +29,7 @@ import inspect
 import sys
 import argparse
 
-from plastid.util.scriptlib.argparsers import AlignmentParser
+from plastid.util.scriptlib.argparsers import AlignmentParser, BaseParser
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.plotting.colors import get_rgb255
@@ -52,9 +52,10 @@ def main(argv=sys.argv[1:]):
         Default: sys.argv[1:] (actually command-line arguments)
     """
     ap = AlignmentParser()
+    bp = BaseParser
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[ap.get_parser()])
+                                     parents=[bp.get_parser(),ap.get_parser()])
     parser.add_argument("-o","--out",dest="outbase",type=str,required=True,
                         metavar="FILENAME",
                         help="Base name for output files")
@@ -76,6 +77,7 @@ def main(argv=sys.argv[1:]):
 
     args = parser.parse_args(argv)
     gnd  = ap.get_genome_array_from_args(args,printer=printer)
+    bp.get_base_ops_from_args(args)
     
     if args.track_name is None:
         name = args.outbase

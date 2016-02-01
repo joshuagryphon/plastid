@@ -18,16 +18,23 @@ To use this action, use the following two functions:
   - :func:`warn` or :func:`warn_explicit`. Again, these are drop-in replacements
     for Python's :func:`warnings.warn` and :func:`warnings.warn_explicit` that
     additionally check the `onceperfamily` filters.
+    
+For convenience, there are also functions that both issue a warning, and create
+a `onceperfamily` filter for it if one doesn't already exist:
+
+  - :func:`warn_onceperfamily`
+  - :func:`warn_explicit_onceperfamily`
 
 
-Exceptions
-----------
+Exception types
+---------------
 |MalformedFileError|
     Raised when a file cannot be parsed as expected, and
     execution must halt
 
-Warnings
---------
+
+Warning types
+-------------
 |ArgumentWarning|
     Warning for command-line arguments that:
     
@@ -166,7 +173,7 @@ def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=
         Python's warnings filter
     """
     tup = (action,re.compile(message,re.I),category,re.compile(module),lineno)
-    if action == "onceperfamily":
+    if action == "onceperfamily" and tup not in pl_filters:
         if append == 1:
             pl_filters.append(tup)
         else:
@@ -175,6 +182,84 @@ def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=
         warnings.filterwarnings(action,message=message,
                                 category=category,module=module,
                                 lineno=lineno,append=append)
+
+def warn_onceperfamily(message,pattern=None,category=None,stacklevel=1):
+    """Issue a warning and create a warning filter for that warning if it does not already exist
+    
+    Parameters
+    ----------
+    message : str
+        Message of warning. Can be a string that compiles to a regex.
+        Printed as warning text and used to create warning filter if `pattern`
+        is `None`. 
+    
+    pattern : str or None, optional
+        If not `None`, override message when generating warnings filter
+        
+    category: :class:`Warning`, or subclass, optional
+        Type of warning
+        
+    stacklevel : int
+        Ignored
+        
+    See also
+    --------
+    plastid.util.services.exceptions.filterwarnings
+        plastid-specific warnings filters
+    
+    warnings.warn
+        Python's warning system, which this wraps
+    """
+    if pattern is None:
+        pattern = message
+        filterwarnings("onceperfamily",message=pattern,category=category)
+        
+    warn(message,category=category,stacklevel=stacklevel)
+
+def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
+                                module=None,registry=None,module_globals=None):
+    """Low-level interface to issue warnings, allowing `plastid`-specific warnings filters
+
+    Parameters
+    ----------
+    message : str
+        Message
+    
+    pattern : str or None, optional
+        If not `None`, override message when generating warnings filter
+        
+    category: :class:`Warning`, or subclass, optional
+        Type of warning
+
+    filename : str
+        Name of module from which warning is issued
+    
+    lineno : int, optional
+        Line in module at which warning is called
+
+    module : str, optional
+        Module name
+    
+    registry : dict, optional
+        Registry of ignore filters (see source code for :func:`warnings.warn_explicit`
+    
+    module_globals : dict, optional
+        Dictionary of module-level variables
+        
+    
+    See also
+    --------
+    plastid.util.services.exceptions.filterwarnings
+        plastid-specific warnings filters
+
+    warnings.warn_explicit
+        Python's warning system, which this wraps
+    """
+    if pattern is None:
+        pattern = message
+        filterwarnings("onceperfamily",message=pattern,category=category)
+        
+    warn_explicit(pattern,category,filename,lineno,module=module,registry=registry,module_globals=module_globals)
 
 def warn(message,category=None,stacklevel=1):
     """Issue a non-essential warning to users, allowing `plastid`-specific warnings filters

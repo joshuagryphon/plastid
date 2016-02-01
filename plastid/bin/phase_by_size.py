@@ -34,7 +34,8 @@ import pandas as pd
 import numpy
 import matplotlib
 matplotlib.use("Agg")
-from plastid.util.scriptlib.argparsers import AlignmentParser, AnnotationParser, PlottingParser
+from plastid.util.scriptlib.argparsers import (AlignmentParser, AnnotationParser,
+                                               PlottingParser, BaseParser)
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -64,14 +65,17 @@ def main(argv=sys.argv[1:]):
                         input_choices=["BAM"])
     an = AnnotationParser()
     pp = PlottingParser()
+    bp = BaseParser()
     
     alignment_file_parser = al.get_parser()
     annotation_file_parser = an.get_parser()
     plotting_parser = pp.get_parser()
+    base_parser = bp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[annotation_file_parser,
+                                     parents=[base_parser,
+                                              annotation_file_parser,
                                               alignment_file_parser,
                                               plotting_parser])
     
@@ -80,6 +84,7 @@ def main(argv=sys.argv[1:]):
     
     parser.add_argument("outbase",type=str,help="Basename for output files")
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
     gnd = al.get_genome_array_from_args(args,printer=printer)
     transcripts = an.get_transcripts_from_args(args,printer=printer)
     

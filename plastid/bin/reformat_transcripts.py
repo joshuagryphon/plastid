@@ -22,7 +22,7 @@ import inspect
 import warnings
 import sys
 
-from plastid.util.scriptlib.argparsers import AnnotationParser
+from plastid.util.scriptlib.argparsers import (AnnotationParser,BaseParser)
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -43,10 +43,12 @@ def main(argv=sys.argv[1:]):
         Default: sys.argv[1:] (actually command-line arguments)
     """
     ap = AnnotationParser()
+    bp = BaseParser()
     annotation_parser = ap.get_parser()
+    base_parser = bp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     parents=[annotation_parser],
+                                     parents=[base_parser,annotation_parser],
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--no_escape",default=True,action="store_false",
                         help="If specified and output format is GTF2, special characters in column 9 will be escaped (default: True)")
@@ -55,6 +57,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("outfile",metavar="outfile.gtf",type=str,
                         help="Output file")
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
 
     with argsopener(args.outfile,args,"w") as fout:
         c = 0

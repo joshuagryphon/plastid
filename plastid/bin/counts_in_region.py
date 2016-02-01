@@ -46,7 +46,8 @@ import numpy
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
-from plastid.util.scriptlib.argparsers import AnnotationParser, AlignmentParser, MaskParser
+from plastid.util.scriptlib.argparsers import (AnnotationParser, AlignmentParser,
+                                               MaskParser, BaseParser)
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
@@ -76,15 +77,20 @@ def main(argv=sys.argv[1:]):
     mp = MaskParser()
     mask_file_parser = mp.get_parser()
     
+    bp = BaseParser()
+    base_parser = bp.get_parser()
+    
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[alignment_file_parser,
+                                     parents=[base_parser,
+                                              alignment_file_parser,
                                               annotation_file_parser,
                                               mask_file_parser],
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
     args = parser.parse_args(argv)
-    
+    bp.get_base_ops_from_args(args)
+
     transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
     gnd = al.get_genome_array_from_args(args,printer=printer)
     crossmap = mp.get_genome_hash_from_args(args,printer=printer)

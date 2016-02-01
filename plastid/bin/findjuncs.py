@@ -50,7 +50,7 @@ import argparse
 import inspect
 import warnings
 from plastid.genomics.roitools import SegmentChain
-from plastid.util.scriptlib.argparsers import AnnotationParser
+from plastid.util.scriptlib.argparsers import AnnotationParser, BaseParser
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -76,14 +76,19 @@ def main(argv=sys.argv[1:]):
     ap = AnnotationParser(input_choices=_ANNOTATION_INPUT_CHOICES)
     annotation_file_parser = ap.get_parser()
     
+    bp = BaseParser()
+    base_parser = bp.get_parser()
+    
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[annotation_file_parser])
+                                     parents=[base_parser,annotation_file_parser])
     parser.add_argument("--export_tophat",default=False,action="store_true",
                          help="Export tophat `.juncs` file in addition to BED output")
     parser.add_argument("outbase",type=str,help="Basename for output files")
 
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
+    
     transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
     
     with argsopener("%s.bed" % args.outbase,args,"w") as bed_out:

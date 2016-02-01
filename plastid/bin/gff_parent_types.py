@@ -7,6 +7,7 @@ from plastid.readers.gff import GFF3_Reader
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, opener, argsopener
 from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.scriptlib.argparsers import BaseParser
 from collections import Counter
 import argparse
 import sys
@@ -29,8 +30,10 @@ def main(argv=sys.argv[1:]):
 		Default: `sys.argv[1:]`. The command-line arguments, if the script is
 		invoked from the command line
 	"""
+	bp = BaseParser()
 	parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-									 formatter_class=argparse.RawDescriptionHelpFormatter)
+									 formatter_class=argparse.RawDescriptionHelpFormatter,
+									 parents=[bp.get_parser()])
 	parser.add_argument("--exclude",nargs="+",default=[],
 					    help="Feature types to exclude from consideration")
 	parser.add_argument("infile",metavar="infile.gff",type=str,
@@ -39,6 +42,7 @@ def main(argv=sys.argv[1:]):
 					   help="Name of output file")
 	
 	args = parser.parse_args(argv)
+	bp.get_base_ops_from_args(args)
 	excluded = set(args.exclude)
 
 	fin = sys.stdin if args.infile == "-" else opener(args.infile)

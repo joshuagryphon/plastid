@@ -13,7 +13,7 @@ cimport cython
 from pysam.calignmentfile cimport AlignedSegment
 from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
 from plastid.genomics.roitools cimport GenomicSegment
-from plastid.util.services.exceptions import DataWarning, warn
+from plastid.util.services.exceptions import DataWarning, warn, warn_onceperfamily
 from plastid.util.io.filters import CommentReader
 from plastid.util.scriptlib.argparsers import _parse_variable_offset_file
 
@@ -216,7 +216,7 @@ cdef class FivePrimeMapFactory:
                 count_view[p_site - seg_start] += 1
 
         if do_warn == 1:
-            warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+            warn_onceperfamily("Data contains read alignments shorter than offset (%s nt). Ignoring." % (self.offset),
                  DataWarning)
 
         return reads_out, count_array
@@ -307,7 +307,7 @@ cdef class ThreePrimeMapFactory:
                 count_view[p_site - seg_start] += 1
 
         if do_warn == 1:
-            warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+            warn_onceperfamily("Data contains read alignments shorter than offset (%s nt). Ignoring." % self.offset,
                  DataWarning)
 
         return reads_out, count_array
@@ -352,7 +352,7 @@ cdef class VariableFivePrimeMapFactory:
                 rc_view[0] = - offset - 1
             else:
                 if offset >= read_length:
-                    warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+                    warn_onceperfamily("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
                          DataWarning)
                     continue
                 fw_view[read_length] = offset
@@ -457,11 +457,11 @@ cdef class VariableFivePrimeMapFactory:
                 count_view[p_site - seg.start] += 1
 
         if do_no_offset_warning == 1:
-            warn("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
+            warn_onceperfamily("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
                  DataWarning)
 
         if do_bad_default_warning == 1:
-            warn("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
+            warn_onceperfamily("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
                  DataWarning)
 
         return reads_out, count_array

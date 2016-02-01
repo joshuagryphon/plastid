@@ -44,6 +44,7 @@ import sys
 import warnings
 import types
 from plastid.util.services.mini2to3 import get_func_code
+from plastid.util.services.exceptions import warn_explicit_onceperfamily
                        
 def notimplemented(func):
     """NotImplemented annotation decorator.
@@ -114,6 +115,8 @@ def catch_warnings(simple_filter="ignore"):
             ==============    ==================================================
 
         (source: :py:mod:`warnings`)
+        
+        This decorator does NOT support the `onceperfamily` custom warning action.
 
     
     Returns
@@ -192,10 +195,10 @@ def deprecated(func=None,version=None,instead=None):
             @functools.wraps(func_or_class)
             def new_func(*args,**kwargs):
                 func_code = get_func_code(func_or_class)
-                warnings.warn_explicit(message,
-                                       category = DeprecationWarning,
-                                       filename = func_code.co_filename,
-                                       lineno = func_code.co_firstlineno + 1)
+                warn_explicit_onceperfamily(message,
+                                            category = DeprecationWarning,
+                                            filename = func_code.co_filename,
+                                            lineno = func_code.co_firstlineno + 1)
                 return func_or_class(*args,**kwargs)
             
             return new_func
@@ -206,10 +209,10 @@ def deprecated(func=None,version=None,instead=None):
             message = message % ("Class", func_or_class.__name__)
             @functools.wraps(func_or_class.__init__)
             def new_func(self,*args,**kwargs):
-                warnings.warn_explicit(message,
-                                       category = DeprecationWarning,
-                                       filename = sys._getframe(1).f_globals["__name__"],
-                                       lineno = sys._getframe(1).f_lineno )
+                warn_explicit_onceperfamily(message,
+                                            category = DeprecationWarning,
+                                            filename = sys._getframe(1).f_globals["__name__"],
+                                            lineno = sys._getframe(1).f_lineno )
                 return old_init(self,*args,**kwargs)
             
             func_or_class.__init__ = new_func
