@@ -1263,6 +1263,7 @@ class BaseParser(Parser):
         """
         Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
         self.arguments = []
+        self.level_desc = ["--silent","--quiet","--verbose","--raise"]
         
     def get_parser(self,title=None,description=None):
         """Return an :py:class:`~argparse.ArgumentParser`     
@@ -1296,6 +1297,7 @@ class BaseParser(Parser):
         return p
 
     def get_base_ops_from_args(self,args):
+        
         global warnings
         
         args = PrefixNamespaceWrapper(args,self.prefix)
@@ -1304,6 +1306,13 @@ class BaseParser(Parser):
                    "onceperfamily",
                    "always",
                    "error"]
+        desc = self.level_desc
+        
+        print(warnlevel)
+        print(sys.argv[1:])
+        if len(set(desc) & set(sys.argv[1:])) > 1:
+            warnings.warn("Only one of [%s] is permitted. Using %s" % (", ".join(desc),desc[warnlevel]),
+                           ArgumentWarning)
         
         try:
             action = actions[warnlevel]
