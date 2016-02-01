@@ -249,7 +249,6 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
             if tup in pl_once_registry:
                 return
             else:
-                print "adding to registry"
                 pl_once_registry[tup] = 1
                 break
             

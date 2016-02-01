@@ -1277,8 +1277,8 @@ class BaseParser(Parser):
         -------
         :class:`argparse.ArgumentParser`
         """
-        p = Parser.get_parser(self,title="Error reporting options",description="Error reporting options")
-        g = p.add_mutually_exclusive_group()
+        p = Parser.get_parser(self)
+        g = p.add_argument_group(title="warning/error options")
         g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
                        help="Suppress all warning messages")
         g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
@@ -1287,38 +1287,30 @@ class BaseParser(Parser):
                        help="Show every warning instance")
         g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
                        help="Raise exceptions instead of warnings")
-#         g.add_argument("--mod",dest="warnlevel",action="store_const",const=4,
-#                        help="Raise exceptions instead of warnings")
+        p.set_defaults(warnlevel=1)
+
         return p
 
     def get_base_ops_from_args(self,args):
         global warnings
         
         args = PrefixNamespaceWrapper(args,self.prefix)
-        warnlevel = getattr(args,"warnlevel")
-        if warnlevel is None:
-            warnlevel = 1
+        warnlevel = args.warnlevel
+        actions = ["ignore",
+                   "onceperfamily",
+                   "always",
+                   "error"]
         
-        if warnlevel == 0: # show never
-            action = "ignore"
-        elif warnlevel == 1: # show once
-            action = "onceperfamily"
-        elif warnlevel == 2: # show all
-            action = "always"
-        elif warnlevel == 3: # show all
-            action = "error"
-#         elif warnlevel == 4: # show all
-#             action = "module"
-        else:
-            print warnlevel
+        try:
+            action = actions[warnlevel]
+        except IndexError:
+            warnings.warn("Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." % warnlevel,UserWarning)
+            action = actions[1]
         
         for type_, msg in PLASTID_WARNINGS:
             filterwarnings(action,message=msg,category=type_)
 
-# probs right now
-#   - each instance of each warning string is remembered, not the match string shown below,
-#     so each variant message appears to the system as if it is totally new
-#  - ditto for warnings with the same message in different modules
+
 PLASTID_WARNINGS = [
                     
     # mapping rules
