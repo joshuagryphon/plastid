@@ -8,8 +8,10 @@
   
 
 ===========================================================   ======================================
-**Data type**                                                 **Parser building class**            
+**Parameter/argument set**                                    **Parser building class**            
 -----------------------------------------------------------   --------------------------------------
+Generic parameters (e.g. for error reporting, logging)        :class:`BaseParser`
+
 :term:`Read alignments` or :term:`count files <count file>`   :class:`AlignmentParser`
 
 Genomic feature or mask annotations                           :class:`AnnotationParser`
@@ -1231,7 +1233,9 @@ class PlottingParser(Parser):
         return colors
 
 
-
+#===============================================================================
+# INDEX: Parser for generic command-line options (e.g. warning control)
+#===============================================================================
 
 class BaseParser(Parser):
     """Parser basic options"""

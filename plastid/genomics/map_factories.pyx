@@ -6,7 +6,6 @@ Module documentation for :mod:`~plastid.genomics.genome_array`
     For a detailed discussion of :term:`mapping rules <mapping rule>`.
 """
 
-import warnings
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -14,7 +13,7 @@ cimport cython
 from pysam.calignmentfile cimport AlignedSegment
 from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
 from plastid.genomics.roitools cimport GenomicSegment
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, warn
 from plastid.util.io.filters import CommentReader
 from plastid.util.scriptlib.argparsers import _parse_variable_offset_file
 
@@ -126,7 +125,7 @@ cdef class CenterMapFactory:
                 reads_out.append(read)
 
         if do_warn == 1:
-            warnings.warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*nibble,
+            warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*nibble,
                   DataWarning)
         
         return reads_out, count_array
@@ -217,8 +216,8 @@ cdef class FivePrimeMapFactory:
                 count_view[p_site - seg_start] += 1
 
         if do_warn == 1:
-            warnings.warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
-                          DataWarning)
+            warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+                 DataWarning)
 
         return reads_out, count_array
 
@@ -308,8 +307,8 @@ cdef class ThreePrimeMapFactory:
                 count_view[p_site - seg_start] += 1
 
         if do_warn == 1:
-            warnings.warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
-                          DataWarning)
+            warn("Data contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,self.offset),
+                 DataWarning)
 
         return reads_out, count_array
 
@@ -353,8 +352,8 @@ cdef class VariableFivePrimeMapFactory:
                 rc_view[0] = - offset - 1
             else:
                 if offset >= read_length:
-                    warnings.warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                    DataWarning)
+                    warn("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
+                         DataWarning)
                     continue
                 fw_view[read_length] = offset
                 rc_view[read_length] = - offset - 1
@@ -458,12 +457,12 @@ cdef class VariableFivePrimeMapFactory:
                 count_view[p_site - seg.start] += 1
 
         if do_no_offset_warning == 1:
-            warnings.warn("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
-                          DataWarning)
+            warn("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
+                 DataWarning)
 
         if do_bad_default_warning == 1:
-            warnings.warn("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
-                          DataWarning)
+            warn("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
+                 DataWarning)
 
         return reads_out, count_array
 

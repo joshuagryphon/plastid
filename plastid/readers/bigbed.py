@@ -53,7 +53,6 @@ import struct
 import zlib
 import itertools
 import sys
-import warnings
 from collections import OrderedDict
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, add_three_for_stop_codon
 from plastid.readers.autosql import AutoSqlDeclaration
@@ -61,7 +60,7 @@ from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 from plastid.util.unique_fifo import UniqueFIFO
 from plastid.util.services.mini2to3 import ifilter
 from plastid.util.services.decorators import skipdoc
-from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
+from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning, warn
 
 #===============================================================================
 # INDEX: BigBedReader
@@ -221,7 +220,7 @@ class BigBedReader(object):
                 self.autosql_parser = AutoSqlDeclaration(autosql)
                 self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self._num_custom_fields:])
             except AttributeError:
-                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
+                warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
                 self.custom_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self._num_custom_fields)])
                 self.autosql_parser = lambda x: OrderedDict(zip(self.custom_fields,x.split("\t")[-self._num_custom_fields:]))
         

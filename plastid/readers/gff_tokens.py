@@ -30,8 +30,7 @@ See also
 import re
 import shlex
 import copy
-import warnings
-from plastid.util.services.exceptions import FileFormatWarning
+from plastid.util.services.exceptions import FileFormatWarning, warn
 
 gtfpat = re.compile(r"^ *([^ ]*) +(.*) *$")
 
@@ -518,8 +517,8 @@ def parse_GFF3_tokens(inp,list_types=None):
                 val = unescape_GFF3(val.strip(" "))
                 
             if key in d:
-                warnings.warn("Found duplicate attribute key '%s' in GFF3 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
-                              FileFormatWarning)
+                warn("Found duplicate attribute key '%s' in GFF3 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
+                     FileFormatWarning)
                 val = "%s,%s" % (d[key],val)
             d[key] = val
     return d
@@ -579,8 +578,8 @@ def parse_GTF2_tokens(inp):
             val = val[:-1]
 
         if key in d:
-            warnings.warn("Found duplicate attribute key '%s' in GTF2 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
-                          FileFormatWarning)
+            warn("Found duplicate attribute key '%s' in GTF2 line. Catenating value with previous value for key in attr dict:\n    %s" % (key,inp),
+                 FileFormatWarning)
             d[key] = "%s,%s" % (d[key],unescape_GTF2(val))
 
         else:
