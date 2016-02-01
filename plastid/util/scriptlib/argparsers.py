@@ -76,7 +76,8 @@ import pkg_resources
 import pysam
 import functools
 
-from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
+from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning,\
+                                             DataWarning, FileFormatWarning, filterwarnings
 from plastid.util.services.decorators import deprecated
 #from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
@@ -1230,6 +1231,147 @@ class PlottingParser(Parser):
         return colors
 
 
+
+
+class BaseParser(Parser):
+    """Parser basic options"""
+    
+    def __init__(self,
+                 groupname="base_options",
+                 prefix="",
+                 disabled=None,
+                 ):
+        """Create a parser for basic options for command-line scripts, such as warnings and logging
+        
+    `   Parameters
+        ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
+        prefix : str, optional
+            string prefix to add to default argument options (Default: "")
+
+        disabled : list, optional
+            list of parameter names that should be disabled from parser,
+            without preceding dashes
+        """
+        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        self.arguments = []
+        
+    def get_parser(self,title=None,description=None):
+        """Return an :py:class:`~argparse.ArgumentParser`     
+    
+        Parameters
+        ----------
+            
+        title : str, optional
+            title for option group (used in command-line help screen)
+            
+        description : str, optional
+            description of parser (used in command-line help screen)
+        
+       
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
+        """
+        p = Parser.get_parser(self,title="Error reporting options",description="Error reporting options")
+        g = p.add_mutually_exclusive_group()
+        g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
+                       help="Suppress all warning messages")
+        g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
+                       help="Show each type of warning once (Default)")
+        g.add_argument("--verbose",dest="warnlevel",action="store_const",const=2,
+                       help="Show every warning instance")
+        g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
+                       help="Raise exceptions instead of warnings")
+#         g.add_argument("--mod",dest="warnlevel",action="store_const",const=4,
+#                        help="Raise exceptions instead of warnings")
+        return p
+
+    def get_base_ops_from_args(self,args):
+        global warnings
+        
+        args = PrefixNamespaceWrapper(args,self.prefix)
+        warnlevel = getattr(args,"warnlevel")
+        if warnlevel is None:
+            warnlevel = 1
+        
+        if warnlevel == 0: # show never
+            action = "ignore"
+        elif warnlevel == 1: # show once
+            action = "onceperfamily"
+        elif warnlevel == 2: # show all
+            action = "always"
+        elif warnlevel == 3: # show all
+            action = "error"
+#         elif warnlevel == 4: # show all
+#             action = "module"
+        else:
+            print warnlevel
+        
+        for type_, msg in PLASTID_WARNINGS:
+            filterwarnings(action,message=msg,category=type_)
+
+# probs right now
+#   - each instance of each warning string is remembered, not the match string shown below,
+#     so each variant message appears to the system as if it is totally new
+#  - ditto for warnings with the same message in different modules
+PLASTID_WARNINGS = [
+                    
+    # mapping rules
+    (DataWarning,"File contains read alignments shorter"),
+    (DataWarning,"No offset for reads of length"),
+    (DataWarning,"longer than read length"),
+    
+    # genome_array
+    (DataWarning,"Temporarily turning off normalization"),
+    
+    # metagene
+    (Warning,r"IndexError finding common positions at region.*"),
+    (DataWarning,"has no gene_id. Inferring gene_id"),
+    (DataWarning,"has no attribute"),
+    (DataWarning,"Ignoring labels"),
+    
+    # phase_by_size
+    (DataWarning,"is not divisible by 3. Ignoring last partial codon."),
+    
+    # util.io.filters
+    (Warning,"Could not alert listener"),
+
+
+    # util.services.decorators
+    (DeprecationWarning,"is deprecated and will be removed from module"),
+    
+    # gff
+    (DataWarning,"because it contains exons on multiple chromosomes or strands"),
+    (DataWarning,"because start or stop codons are outside exon boundaries"),
+    (DataWarning,"with no `Parent` or `ID`. Ignoring."),
+    (DataWarning,"because it contains exons on multiple strands"),
+    (DataWarning,"because start or stop codons are outside exon boundaries."),
+
+    # bed
+    (FileFormatWarning,"Extra columns specified by."),
+    (FileFormatWarning,"Are you sure this is a"),
+    (FileFormatWarning,"Are you sure this BED file has extra columns"),
+    (FileFormatWarning,"Maybe this BED has extra columns"),
+    
+    # gff_tokens
+    (FileFormatWarning,"Found duplicate attribute key"),
+
+
+    # BigBed
+    (FileFormatWarning,"Could not find or could not parse autoSql declaration in BigBedFile"),
+    
+    # autoSql
+    (DataWarning,"Could not convert autoSql value"),
+    
+    # psl
+    (FileFormatWarning,"Rejecting line")
+
+]
 
 
 #===============================================================================
