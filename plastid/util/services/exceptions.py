@@ -173,11 +173,14 @@ def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=
         Python's warnings filter
     """
     tup = (action,re.compile(message,re.I),category,re.compile(module),lineno)
-    if action == "onceperfamily" and tup not in pl_filters:
-        if append == 1:
-            pl_filters.append(tup)
+    if action == "onceperfamily":
+        if tup in pl_filters:
+            return
         else:
-            pl_filters.insert(0,tup)
+            if append == 1:
+                pl_filters.append(tup)
+            else:
+                pl_filters.insert(0,tup)
     else:
         warnings.filterwarnings(action,message=message,
                                 category=category,module=module,
