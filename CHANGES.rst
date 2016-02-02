@@ -21,6 +21,10 @@ Unreleased
 Added
 .....
 
+  - Users can now control verbosity/frequency of warnings via '-v' or '-q' 
+    options! By default there should no long screens of DataWarnings
+    when processing Ensembl (or other) GTFs.
+
   - Created entrypoints for allowing users to use custom mapping rules
     in the command line scripts:
 
@@ -55,7 +59,8 @@ Fixed
   - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
     an ``IndexError`` in earlier versions of :mod:`numpy`.
   - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
-    as well as >= 1.3
+    as well as >= 1.3. This corrected a plotting bug in `cs`.
+
 
 Deprecated
 ..........
