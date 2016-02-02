@@ -43,6 +43,9 @@ def util_func(x):
     """
     return x**2, os.getpid()
 
+def func_that_warns():
+    warnings.warn("Some warning",UserWarning)
+
 def get_pipes():
     readfd, writefd = os.pipe()
     fcntl.fcntl(readfd,fcntl.F_SETFL,os.O_NONBLOCK)
@@ -130,28 +133,25 @@ def test_catch_stderr_doesnt_print_with_buffer_but_catches_in_buffer():
 
 @attr(test="unit")
 def test_catch_warnings_catches_warnings():
-    dep_func = deprecated(util_func)
-    ign_func = catch_warnings("ignore")(dep_func)
+    ign_func = catch_warnings("ignore")(func_that_warns)
 
     num = 5
     with warnings.catch_warnings(record=True) as warns:
         warnings.simplefilter("always")
         for x in range(num):
-            assert_equal(dep_func(x),util_func(x))
-            dep_func(x)
+            func_that_warns()
     
-    # make sure warning is issued with deprecated
-    assert_greater_equal(len(warns),num)
+    # make sure warning is issued with vanilla function
+    assert_equal(len(warns),num)
 
     num = 5
     with warnings.catch_warnings(record=True) as warns:
         warnings.simplefilter("always")
         for x in range(num):
-            assert_equal(ign_func(x),util_func(x))
-            ign_func(x)
+            ign_func()
     
     # make sure warning is caught with wrapped function
-    assert_greater_equal(len(warns),0)
+    assert_equal(len(warns),0)
 
 
 # notimplemented    ------------------------------------------------------------
@@ -166,7 +166,7 @@ def test_notimplemented_raises_exception():
 # deprecated    ----------------------------------------------------------------
 
 @attr(test="unit")
-def test_deprecated_function_raises_warning():
+def test_deprecated_function_raises_warning_only_once():
     num = 5
     my_func = deprecated(util_func)
     assert_true(isinstance(my_func,types.FunctionType))
@@ -177,8 +177,8 @@ def test_deprecated_function_raises_warning():
             assert_equal(my_func(x),util_func(x))
             my_func(x)
     
-    # make sure warning is issued
-    assert_greater_equal(len(warns),num)
+    # make sure warning is issued only once
+    assert_equal(len(warns),1)
 
 @attr(test="unit")
 def test_deprecated_class_raises_warning():
