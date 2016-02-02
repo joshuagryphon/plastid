@@ -1122,9 +1122,9 @@ def main(argv=sys.argv[1:]):
 
     alignment_file_parser  = al.get_parser()
     annotation_file_parser = an.get_parser()
-    mask_file_parser = mp.get_parser()
-    plotting_parser = pl.get_parser()
-    bas_parser = bp.get_parser()
+    mask_file_parser       = mp.get_parser()
+    plotting_parser        = pl.get_parser()
+    base_parser            = bp.get_parser()
     
     generator_help = "Create unambiguous position file from GFF3 annotation"
     generator_desc = format_module_docstring(do_generate.__doc__)

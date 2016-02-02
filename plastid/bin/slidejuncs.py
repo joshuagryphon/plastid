@@ -88,7 +88,7 @@ from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.genomics.genome_hash import GenomeHash
 from plastid.readers.bed import BED_Reader
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.scriptlib.argparsers import (MaskParser, SequenceParser, baseParser)
+from plastid.util.scriptlib.argparsers import (MaskParser, SequenceParser, BaseParser)
 import inspect
 import warnings
 warnings.simplefilter("once")
@@ -377,7 +377,7 @@ def main(argv=sys.argv[1:]):
     """
     sp = SequenceParser()
     mp = MaskParser()
-    bp = baseParser
+    bp = BaseParser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,

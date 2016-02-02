@@ -52,7 +52,7 @@ def main(argv=sys.argv[1:]):
         Default: sys.argv[1:] (actually command-line arguments)
     """
     ap = AlignmentParser()
-    bp = BaseParser
+    bp = BaseParser()
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      parents=[bp.get_parser(),ap.get_parser()])
