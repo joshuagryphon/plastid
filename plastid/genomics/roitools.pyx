@@ -89,7 +89,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
-from plastid.util.services.exceptions import DataWarning, awrn
+from plastid.util.services.exceptions import DataWarning, warn
 from plastid.util.services.decorators import deprecated
 from plastid.plotting.colors import get_str_from_rgb255, get_str_from_rgb, get_rgb255
 from plastid.readers.gff_tokens import make_GFF3_tokens, \
