@@ -1263,7 +1263,7 @@ class BaseParser(Parser):
         """
         Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
         self.arguments = []
-        self.level_desc = ["--silent","--quiet","--verbose","--raise"]
+#         self.level_desc = ["--silent","--quiet","--verbose","--raise"]
         
     def get_parser(self,title=None,description=None):
         """Return an :py:class:`~argparse.ArgumentParser`     
@@ -1284,15 +1284,22 @@ class BaseParser(Parser):
         """
         p = Parser.get_parser(self)
         g = p.add_argument_group(title="warning/error options")
-        g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
-                       help="Suppress all warning messages")
-        g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
-                       help="Show each type of warning once (Default)")
-        g.add_argument("--verbose",dest="warnlevel",action="store_const",const=2,
-                       help="Show every warning instance")
-        g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
-                       help="Raise exceptions instead of warnings")
-        p.set_defaults(warnlevel=1)
+        
+        
+        g.add_argument("-q","--quiet",dest="warnlevel",action="store_const",const=-1,
+                       help="Suppress all warning messages. Cannot use with '-v'. (Default: show each type of warning once)")
+        g.add_argument("-v","--verbose",dest="warnlevel",action="count",
+                       help="Increase verbosity. With -v, show every warning. With -vv, turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)")
+        
+#         g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
+#                        help="Suppress all warning messages")
+#         g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
+#                        help="Show each type of warning once (Default)")
+#         g.add_argument("--verbose",dest="warnlevel",action="store_const",const=2,
+#                        help="Show every warning instance")
+#         g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
+#                        help="Raise exceptions instead of warnings")
+        p.set_defaults(warnlevel=0)
 
         return p
 
@@ -1306,16 +1313,16 @@ class BaseParser(Parser):
                    "onceperfamily",
                    "always",
                    "error"]
-        desc = self.level_desc
+#         desc = self.level_desc
         
-        print(warnlevel)
-        print(sys.argv[1:])
-        if len(set(desc) & set(sys.argv[1:])) > 1:
-            warnings.warn("Only one of [%s] is permitted. Using %s" % (", ".join(desc),desc[warnlevel]),
-                           ArgumentWarning)
-        
+#         if len(set(desc) & set(sys.argv[1:])) > 1:
+#             warnings.warn("Only one of [%s] is permitted. Using %s" % (", ".join(desc),desc[warnlevel]),
+#                            ArgumentWarning)
+            
+        if warnlevel >= len(actions) - 1:
+            warnlevel = len(actions) - 2
         try:
-            action = actions[warnlevel]
+            action = actions[warnlevel+1]
         except IndexError:
             warnings.warn("Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." % warnlevel,UserWarning)
             action = actions[1]
