@@ -18,6 +18,12 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 Unreleased
 ----------
 
+Changes here are mostly under the hood, involving improvements in speed,
+stability, compatibility, and error reporting. In addition, entrypoints
+were created to allow custom mapping rules to be used from command-line
+scripts.
+
+
 Added
 .....
 
