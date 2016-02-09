@@ -64,8 +64,13 @@ Fixed
 
   - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
     an ``IndexError`` in earlier versions of :mod:`numpy`.
+
   - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
     as well as >= 1.3. This corrected a plotting bug in `cs`.
+
+  - :meth:`AnnotationParser.get_genome_hash_from_args` now internally uses 
+    GFF3_Reader and GTF2_Reader instead of GFF3_TranscriptAssembler and 
+    GTF2_TranscriptAssembler, allowing GTF2/GFF3 masks to be type-agnostic
 
 
 Deprecated
