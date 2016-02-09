@@ -268,7 +268,7 @@ def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
             module = __name__
         else:
             try:
-                module = inspect.getmodule(frame.f_back.f_code)
+                module = inspect.getmodule(frame.f_back.f_code).__name__
             finally:
                 del frame
         
@@ -344,7 +344,7 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
             module = __name__
         else:
             try:
-                module = inspect.getmodule(frame.f_back.f_code)
+                module = inspect.getmodule(frame.f_back.f_code).__name__
             finally:
                 del frame
 
