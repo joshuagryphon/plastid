@@ -261,6 +261,16 @@ def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
     if pattern is None:
         pattern = message
         filterwarnings("onceperfamily",message=pattern,category=category)
+
+    if module is None:# or module_globals is None:
+        frame = inspect.currentframe()
+        if frame is None:
+            module = __name__
+        else:
+            try:
+                module = inspect.getmodule(frame.f_back.f_code)
+            finally:
+                del frame
         
     warn_explicit(pattern,category,filename,lineno,module=module,registry=registry,module_globals=module_globals)
 
@@ -328,6 +338,16 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
         Python's warning system, which this wraps
     """
     global pl_once_registry
+    if module is None: # or module_globals is None:
+        frame = inspect.currentframe()
+        if frame is None:
+            module = __name__
+        else:
+            try:
+                module = inspect.getmodule(frame.f_back.f_code)
+            finally:
+                del frame
+
     for _, pat, filter_category, mod, filter_line in pl_filters:
         if pat.match(message) and issubclass(category,filter_category) and\
            (module is None or mod.match(module)) and\
