@@ -830,7 +830,7 @@ class AnnotationParser(Parser):
                                      return_type=return_type,printer=printer)
             
         return transcripts
-
+        
     def get_genome_hash_from_args(self,args,printer=None):
         """Return a |GenomeHash| of regions from command-line arguments
     
@@ -856,29 +856,45 @@ class AnnotationParser(Parser):
             :py:class:`~argparse.Namespace` is processed by this function  
         """
         from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
+        from plastid.readers.bed import BED_Reader
+        from plastid.readers.gff import GTF2_Reader, GFF3_Reader
+        from plastid.readers.psl import PSL_Reader
         if printer is None:
             printer = NullWriter()
             
         prefix = self.prefix
-        tmp = PrefixNamespaceWrapper(args,prefix)
+        args = PrefixNamespaceWrapper(args,prefix)
         
-        if len(tmp.annotation_files) > 0:
-            printer.write("Opening mask annotation file(s) %s..." % ", ".join(tmp.annotation_files))
-            if tmp.annotation_format in ("BED","GTF2","GFF3") and tmp.tabix == False:
+        if len(args.annotation_files) > 0:
+            printer.write("Opening mask annotation file(s) %s..." % ", ".join(args.annotation_files))
+            if args.annotation_format in ("BED","GTF2","GFF3") and args.tabix == False:
                 msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
     Consider converting to BigBed or using tabix to index your mask file."""
                 warnings.warn(msg,ArgumentWarning)
     
-            if len(tmp.annotation_files) > 0:
-                if tmp.annotation_format.lower() == "bigbed":
-                    if len(tmp.annotation_files) > 1:
+            if len(args.annotation_files) > 0:
+                if args.annotation_format == "BigBed":
+                    if len(args.annotation_files) > 1:
                         printer.write("Bad arguments: we can only process one BigBed file.")
                         sys.exit(2)
-                    return BigBedGenomeHash(tmp.annotation_files[0])
-                elif tmp.tabix == True:
-                    return TabixGenomeHash(tmp.annotation_files,tmp.annotation_format,printer=printer)
+                    return BigBedGenomeHash(args.annotation_files[0])
+                elif "tabix" not in self.disabled and args.tabix == True:
+                    return TabixGenomeHash(args.annotation_files,args.annotation_format,printer=printer)
                 else:
-                    hash_ivcs = self.get_transcripts_from_args(args,printer=printer)
+                    streams = (opener(X) for X in args.annotation_files)
+                    if args.annotation_format == "BED":
+                        reader = BED_Reader
+                    elif args.annotation_format == "GTF2":
+                        reader = GTF2_Reader
+                    elif args.annotation_format == "GFF3":
+                        reader = GFF3_Reader
+                    elif args.annotation_format == "PSL":
+                        reader = PSL_Reader
+                    else:
+                        assert False
+                        
+                    hash_ivcs = list(reader(*streams))
+
                     return GenomeHash(hash_ivcs)
         else:
             return GenomeHash()
@@ -1287,9 +1303,9 @@ class BaseParser(Parser):
         
         
         g.add_argument("-q","--quiet",dest="warnlevel",action="store_const",const=-1,
-                       help="Suppress all warning messages. Cannot use with '-v'. (Default: show each type of warning once)")
+                       help="Suppress all warning messages. Cannot use with '-v'.")
         g.add_argument("-v","--verbose",dest="warnlevel",action="count",
-                       help="Increase verbosity. With -v, show every warning. With -vv, turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)")
+                       help="Increase verbosity. With '-v', show every warning. With '-vv', turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)")
         
 #         g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
 #                        help="Suppress all warning messages")
