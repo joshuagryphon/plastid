@@ -241,7 +241,7 @@ class AlignmentParser(Parser):
     """
     
     def __init__(self,prefix="",disabled=None,
-                 input_choices=("BAM","bowtie","wiggle"),
+                 input_choices=("BAM","bigwig","bowtie","wiggle"),
                  groupname="alignment_options",
                  allow_mapping=True):
         """Create a parser for read alignments and/or quantitative data
@@ -445,7 +445,7 @@ class AlignmentParser(Parser):
         |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|
         """
         from plastid.genomics.genome_array import GenomeArray, SparseGenomeArray,\
-                                                   BAMGenomeArray,\
+                                                   BAMGenomeArray, BigWigGenomeArray,\
                                                    SizeFilterFactory, CenterMapFactory,\
                                                    FivePrimeMapFactory, ThreePrimeMapFactory,\
                                                    VariableFivePrimeMapFactory,\
@@ -467,7 +467,7 @@ class AlignmentParser(Parser):
             sys.exit(1)
         
         # require mapping rules unless wiggle
-        if map_rule is None and args.countfile_format != "wiggle":
+        if map_rule is None and args.countfile_format in ("BAM","bowtie"):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
         
@@ -511,46 +511,52 @@ class AlignmentParser(Parser):
             else:
                 ga = GenomeArray()
                 
-            if "countfile_format" not in disabled and args.countfile_format == "wiggle":
-                for align_file in args.count_files:
-                    printer.write("Opening wiggle files %s..." % align_file)
-                    with open("%s_fw.wig" % align_file) as fh:
-                        ga.add_from_wiggle(fh,"+")
-                    with open("%s_rc.wig" % align_file) as fh:
-                        ga.add_from_wiggle(fh,"-")
-            else:
-                trans_args = { "nibble" : int(args.nibble) }
-                if map_rule == "fiveprime_variable":
-                    transformation = variable_five_prime_map
-                    if str(args.offset) == "0":
-                        printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
-                        sys.exit(1)
-                    else:
-                        with open(args.offset) as myfile:
-                            trans_args["offset"] = _parse_variable_offset_file(CommentReader(myfile))
+            if "countfile_format" not in disabled:
+                if args.countfile_format == "wiggle":
+                    for align_file in args.count_files:
+                        printer.write("Opening wiggle files %s..." % align_file)
+                        with open("%s_fw.wig" % align_file) as fh:
+                            ga.add_from_wiggle(fh,"+")
+                        with open("%s_rc.wig" % align_file) as fh:
+                            ga.add_from_wiggle(fh,"-")
+                elif args.countfile_format == "bigwig":
+                    ga = BigWigGenomeArray()
+                    for align_file in args.count_files:
+                        ga.add_from_bigwig("%s_fw.bw" % align_file,"+")
+                        ga.add_from_bigwig("%s_rc.bw" % align_file,"-")
                 else:
-                    trans_args["offset"] = int(args.offset)
-                    if map_rule == "fiveprime":
-                        transformation = five_prime_map
-                    elif map_rule == "threeprime":
-                        transformation = three_prime_map
-                    elif map_rule == "entire":
-                        transformation = center_map
-                    elif map_rule == "center":
-                        transformation = center_map
-                    elif  map_rule in self.bowtiefuncs:
-                        transformation = self.bowtiefuncs[map_rule]
-                        trans_args["args"] = args
+                    trans_args = { "nibble" : int(args.nibble) }
+                    if map_rule == "fiveprime_variable":
+                        transformation = variable_five_prime_map
+                        if str(args.offset) == "0":
+                            printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
+                            sys.exit(1)
+                        else:
+                            with open(args.offset) as myfile:
+                                trans_args["offset"] = _parse_variable_offset_file(CommentReader(myfile))
                     else:
-                        printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
-                        sys.exit(1)
-            
-                for infile in args.count_files:
-                    with opener(infile) as my_file:
-                        if args.countfile_format == "bowtie":
-                            ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
-            
-            printer.write("Counted %s total reads..." % ga.sum())
+                        trans_args["offset"] = int(args.offset)
+                        if map_rule == "fiveprime":
+                            transformation = five_prime_map
+                        elif map_rule == "threeprime":
+                            transformation = three_prime_map
+                        elif map_rule == "entire":
+                            transformation = center_map
+                        elif map_rule == "center":
+                            transformation = center_map
+                        elif  map_rule in self.bowtiefuncs:
+                            transformation = self.bowtiefuncs[map_rule]
+                            trans_args["args"] = args
+                        else:
+                            printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
+                            sys.exit(1)
+                
+                    for infile in args.count_files:
+                        with opener(infile) as my_file:
+                            if args.countfile_format == "bowtie":
+                                ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
+                
+        printer.write("Counted %s total reads..." % ga.sum())
             
         if "normalize" not in disabled and args.normalize == True:
             printer.write("Normalizing to reads per million...")
@@ -1238,7 +1244,7 @@ class PlottingParser(Parser):
 
 
 @deprecated(version="0.5.0",instead="AlignmentParser")
-def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
+def get_alignment_file_parser(input_choices=("BAM","bigwig","bowtie","wiggle"),
                               disabled=None,
                               prefix="",
                               title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,

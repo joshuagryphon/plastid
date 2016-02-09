@@ -21,7 +21,7 @@ from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.genomics.map_factories import FivePrimeMapFactory,\
     ThreePrimeMapFactory, CenterMapFactory, VariableFivePrimeMapFactory
 from plastid.genomics.genome_array import GenomeArray, BAMGenomeArray, \
-    SparseGenomeArray
+    SparseGenomeArray, BigWigGenomeArray
 from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash
 
 from plastid.util.scriptlib.argparsers import PrefixNamespaceWrapper,\
@@ -142,6 +142,7 @@ offset_file    = REF_FILES["yeast_psite"]
 bamfilename    = MINI["bamfile"]
 bowtiefilename = MINI["bowtie_file"]
 wigglefilename = MINI["wig_bedgraph"]
+bigwigfilename = MINI["bigwig"]
 regions = list(BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain))
 spliced_regions = [X for X in regions if len(X) > 1] # set(filter(lambda x: len(x) > 1, regions))
 unique_regions  = [X for X in regions if "repeat" not in X.get_name()] #set(filter(lambda x: "repeat" not in x.get_name(), regions))
@@ -280,6 +281,13 @@ def test_alignment_parser_open_bam_makes_bamgenomearray():
      
     ga = get_genome_array_from_args(args)
     assert_true(isinstance(ga,BAMGenomeArray))
+
+@attr(test="unit")
+def test_alignment_parser_open_bigwig_makes_bigwiggenomearray():
+    argstr = "--countfile_format bigwig --count_files %s" % bigwigfilename
+    args = alignment_file_parser.parse_args(shlex.split(argstr))
+    ga = get_genome_array_from_args(args)
+    assert_true(isinstance(ga,BigWigGenomeArray))
  
 @attr(test="unit")
 def test_alignment_parser_open_bowtie_makes_genomearray():
@@ -456,7 +464,9 @@ def alignment_parser_check_normalize(fmt,filename):
 def test_alignment_parser_normalize():
     tups = [("wiggle",wigglefilename),
             ("BAM"   ,bamfilename),
-            ("bowtie",bowtiefilename)]
+            ("bowtie",bowtiefilename),
+            ("bigwig",bigwigfilename)
+            ]
     for fmt, filename in tups:
         yield alignment_parser_check_normalize, fmt, filename
 
@@ -465,7 +475,7 @@ def test_alignment_parser_input_choices():
     # kind of a hack. make sure input choices
     # are correct based upon whether or not they
     # appear in --help
-    all_choices = ("bowtie","tagalign","wiggle","BAM")
+    all_choices = ("bowtie","tagalign","wiggle","BAM","bigwig")
     for chosen in itertools.chain.from_iterable(itertools.combinations(all_choices,K) for K in range(len(all_choices))):
         tmp_str = "  --countfile_format {%s}" % ",".join(list(chosen))
         parser = get_alignment_file_parser(input_choices=chosen)
