@@ -585,12 +585,13 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                                      "Found unnormalized region sum %s different from expected %s more than error %s" % (found_region_sum,expected_region_unnorm,tol))
 
     @skip_if_abstract
-    def test_getitem_genomicsegment_roi_order_false(self):
+    def test_get_genomicsegment_roi_order_false(self):
         k = _SAMPLE_BASES[0]
         for region in self.region_classes["unique"]:
             seg = region.spanning_segment
             strand_key = STRAND_KEYS[region.spanning_segment.strand]
-            gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=False)
+            #gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=False)
+            gnd_counts   = self.gnds[k].get(seg,roi_order=False)
             known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
 
             max_err = max(abs(gnd_counts - known_counts))
@@ -599,12 +600,26 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
 
 
     @skip_if_abstract
-    def test_getitem_genomicsegment_roi_order_true(self):
+    def test_get_genomicsegment_roi_order_true(self):
         k = _SAMPLE_BASES[0]
         for region in self.region_classes["unique"]:
             seg = region.spanning_segment
             strand_key = STRAND_KEYS[region.spanning_segment.strand]
-            gnd_counts   = self.gnds[k].__getitem__(seg,roi_order=True)
+            gnd_counts   = self.gnds[k].get(seg,roi_order=True)
+            known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
+            if seg.strand == "-":
+                known_counts = known_counts[::-1]
+
+            max_err = max(abs(gnd_counts - known_counts))
+            self.assertLessEqual(max_err,self.tol,
+                            "Positionwise count difference '%s' exceeded tolerance '%s' for %s __getitem__ with roi_order==True for sample test %s" % (self.tol,max_err,self.native_format,k))
+    @skip_if_abstract
+    def test_getitem_genomicsegment(self):
+        k = _SAMPLE_BASES[0]
+        for region in self.region_classes["unique"]:
+            seg = region.spanning_segment
+            strand_key = STRAND_KEYS[region.spanning_segment.strand]
+            gnd_counts   = self.gnds[k].__getitem__(seg)
             known_counts = self.count_vecs["%s_%s" % (k,strand_key)][seg.start:seg.end]
             if seg.strand == "-":
                 known_counts = known_counts[::-1]
@@ -774,7 +789,7 @@ class TestGenomeArray(AbstractExportableGenomeArrayHelper):
 
             empty_iv = GenomicSegment("chrA",vec_len,chrA_len,strand)
             nonempty_iv = GenomicSegment("chrA",0,vec_len,strand)
-            nonempty_vec = gnd.__getitem__(nonempty_iv,roi_order=False)
+            nonempty_vec = gnd.get(nonempty_iv,roi_order=False)
 
             # make sure count vector has requisite counts
             self.assertGreater(my_vec.sum(),0)

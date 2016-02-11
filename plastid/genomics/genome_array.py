@@ -802,9 +802,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self._get(roi,roi_order=True)
+        return self.get(roi,roi_order=True)
 
-    def _get(self,roi,roi_order=True): 
+    def get(self,roi,roi_order=True): 
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -945,11 +945,8 @@ class BAMGenomeArray(AbstractGenomeArray):
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
             for my_start in window_starts:
                 my_end = min(my_start + window_size,my_size)
-                my_counts = self.__getitem__(GenomicSegment(chrom,
-                                                            my_start,
-                                                            my_end,
-                                                            strand),
-                                             roi_order=False)
+                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),
+                                    roi_order=False)
                 if my_counts.sum() > 0:
                     for idx in my_counts.nonzero()[0]:
                         genomic_x = my_start + idx
@@ -1000,7 +997,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             my_size = self.lengths()[chrom]
             for my_start in window_starts:
                 my_end   = min(my_start + window_size,my_size) 
-                my_counts = self._get(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
+                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
                 
                 if my_counts.sum() > 0:
                     genomic_start_x = my_start
@@ -1071,9 +1068,9 @@ class BigWigGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self._get(roi,roi_order=True)
+        return self.get(roi,roi_order=True)
 
-    def _get(self,roi,roi_order=True):
+    def get(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest.
         
         Parameters
@@ -1105,7 +1102,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         count_vec = numpy.zeros(len(roi))
         if strand in sdict:
             for bw in sdict[strand]:
-                count_vec += bw._get(roi,roi_order=False) # we flip later to save operations
+                count_vec += bw.get(roi,roi_order=False) # we flip later to save operations
         else:
             warnings.warn("Strand '%s' not in BigWigGenomeArray (has %s)." % (strand,", ".join(sdict.keys())),DataWarning)
 
@@ -1217,7 +1214,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
             for strand in self._strands:
                 region = GenomicSegment(chrom,0,length,strand)
                 for reader in self._strand_dict.get(strand,[]):
-                    old = ga._get(region,roi_order = False)
+                    old = ga.get(region,roi_order = False)
                     new = old + reader.get_chromosome(chrom)
                     ga.__setitem__(region,new,roi_order = False) 
 
@@ -1351,9 +1348,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self._get(roi,roi_order=True)
+        return self.get(roi,roi_order=True)
     
-    def _get(self,roi,roi_order=True):
+    def get(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand
@@ -2027,7 +2024,7 @@ class SparseGenomeArray(GenomeArray):
         
         return d_out
 
-    def _get(self,roi,roi_order=True):
+    def get(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand

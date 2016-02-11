@@ -2822,7 +2822,7 @@ cdef class SegmentChain(object):
         c = 0
         for seg in self:
             cend = c + len(seg)
-            count_array[c:cend] = ga._get(seg,roi_order=False)
+            count_array[c:cend] = ga.get(seg,roi_order=False)
             c = cend
 
         if self.c_strand == reverse_strand and stranded is True:
