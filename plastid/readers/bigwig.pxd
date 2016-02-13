@@ -58,10 +58,10 @@ cdef extern from "<bigWig.h>":
 
 
 cdef class BigWigReader(_BBI_Reader):
-    cdef:
-        double fill
-        double _sum
+    cdef double fill
+    cdef double _sum
     
     cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
-
+    
+    cdef bigWigValsOnChrom * c_get_chromosome(self, str chrom)
 

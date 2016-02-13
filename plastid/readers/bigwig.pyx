@@ -99,10 +99,7 @@ cdef class BigWigReader(_BBI_Reader):
             lm* buf = self._get_lm()
             bbiInterval* iv
             long segstart, segend
-
         
-        # FIXME - compensatory changes to all GenomeArrays __getitem -> _get needed here
-        # ditto within SegmentChain
         if isinstance(roi,SegmentChain):
             return roi.get_counts(self)
         
@@ -147,22 +144,90 @@ cdef class BigWigReader(_BBI_Reader):
         return self.get(roi)
 
     def sum(self):
-        """Calculate sum of data in `BigWig`_ file"""
-        cdef double mysum = 0.0
+        """Calculate sum of data in `BigWig`_ file.
+        
+        Returns
+        -------
+        double
+            Sum of all values over all positions
+        """
+        # n.b. - we calculate the exact sum manually
+        # rather than using the stored sum,
+        # which is approximate        
+        cdef:
+            double mysum = 0.0
+            bigWigValsOnChrom* vals
+            double * vbuf
+            long length
+            long i = 0
+            
         if not numpy.isnan(self._sum):
             return self._sum
         else:
-            for chrom in self.chroms:
-                # n.b. - we calculate the sum from numpy arrays
-                # rather than using the stored sum, which is approximate
-                mysum += numpy.nansum(self.get_chromosome(chrom))
-                
-            self._sum = mysum
+            try:
+                for chrom in self.chroms:
+                    vals    = self.c_get_chromosome(chrom)
+                    length  = vals.chromSize
+                    vbuf = vals.valBuf
+                    while i < length:
+                        mysum += vbuf[i]
+                        i += 1
+
+                    bigWigValsOnChromFree(&vals)
+                    
+                self._sum = mysum
+            finally:
+                bigWigValsOnChromFree(&vals)
             
         return mysum
     
+    cdef bigWigValsOnChrom* c_get_chromosome(self, str chrom):
+        """Retrieve values across an entire chromosome.
+        
+         .. note::
+         
+            The bigWigValsOnChrom* returned by this function MUST be
+            freed by you, using bigWigValsOnChromFree() to avoid memoryleaks
+        
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name
+            
+        Returns
+        -------
+        *bigWigValsOnChrom
+            Chromosome data. chromSize and bufSize fields set to zero if
+            the `chrom` is not in the `BigWig`_ file.
+        """
+        cdef:
+            bigWigValsOnChrom* vals
+            int i = 0
+            bint success
+            
+        #     cdef struct bigWigValsOnChrom:
+        #         bigWigValsOnChrom *next
+        #         char   *chrom
+        #         long   chromSize
+        #         long   bufSize     # size of allocated buffer
+        #         double *valBuf     # value for each base on chrom. Zero where no data
+        #         Bits   *covBuf     # a bit for each base with data
+        if chrom not in self.c_chroms():
+            warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
+        
+        vals    = bigWigValsOnChromNew()
+        success = bigWigValsOnChromFetchData(vals,safe_bytes(chrom),self._bbifile)
+            
+        if success == False:
+            warnings.warn("Could not retrieve data for chrom '%s' from file '%s'." % (chrom,self.filename),DataWarning)
+            vals.chromSize = 0
+            vals.bufSize   = 0
+        
+        return vals
+    
     def get_chromosome(self, str chrom):
-        """Retrieve values across an entire chromosome more efficiently than using ``bigwig_reader[chromosome_roi]``
+        """Retrieve values across an entire chromosome more efficiently than
+        using ``bigwig_reader[chromosome_roi]``
         
         Parameters
         ----------
@@ -172,16 +237,15 @@ cdef class BigWigReader(_BBI_Reader):
         Returns
         -------
         :class:`numpy.ndarray`
-            Numpy array of float values covering entire chromosome `chrom`
+            Numpy array of float values covering entire chromosome `chrom`.
+            If `chom` is not in `BigWig`_ file, returns a numpy scalar of 0.
         """
         cdef:
-            lm* buf = self._get_lm()
             bigWigValsOnChrom* vals
-            long length, bufsize
+            long length
             int i = 0
-            numpy.ndarray counts, mask
-            bint success
-            numpy.double_t [:] valview
+            numpy.ndarray counts
+            numpy.double_t [:] valview 
             double fill = self.fill
             
         #     cdef struct bigWigValsOnChrom:
@@ -191,36 +255,28 @@ cdef class BigWigReader(_BBI_Reader):
         #         long   bufSize     # size of allocated buffer
         #         double *valBuf     # value for each base on chrom. Zero where no data
         #         Bits   *covBuf     # a bit for each base with data
-        vals    = bigWigValsOnChromNew()
-        success = bigWigValsOnChromFetchData(vals,safe_bytes(chrom),self._bbifile)
-        length  = vals.chromSize
-
-        if chrom not in self.c_chroms():
-            warnings.warn(WARN_CHROM_NOT_FOUND % (chrom,self.filename),DataWarning)
-            counts = numpy.full(length,fill)
-        elif success == False:
-            warnings.warn("Could not retrieve data for chrom '%s' from file '%s'." % (chrom,self.filename),DataWarning)
-            counts = numpy.full(length,fill)
-        else:
-            valview = <numpy.double_t[:length]> vals.valBuf
+        try:
+            vals    = self.c_get_chromosome(chrom)
+            length  = vals.chromSize
+            if length > 0:
+                valview = <numpy.double_t[:length]> vals.valBuf
+                counts  = numpy.asarray(valview.copy())
+                    
+                # if fill isn't 0, set no-data values in output to self.fill
+                # these are in vals.covBuf
+                if self.fill != 0:
+                    i=-1
+                    while True:
+                        i = bitFindClear(vals.covBuf,i+1,length)
+                        if i >= length: # no clear bit left
+                            break
+                        counts[i] = fill
+            else:
+                counts = numpy.array(0,dtype=float)
+        finally:
+            bigWigValsOnChromFree(&vals)
             
-            # it would be nice not to copy; but if we borrow the memory
-            # allocated by the central stack in Jim Kent's source code,
-            # bad things might happen.
-            counts = numpy.asarray(valview.copy())
-            
-            # if fill isn't 0, set no-data values in output to self.fill
-            # these are in vals.covBuf
-            if self.fill != 0:
-                i=-1
-                while True:
-                    i = bitFindClear(vals.covBuf,i+1,length)
-                    if i >= length: # no clear bit left
-                        break
-                    counts[i] = fill
-
-        bigWigValsOnChromFree(&vals)
-        return counts
+        return counts    
 
     def summarize(self, GenomicSegment roi):
         """Summarize `BigWig`_ data over the region of interest.
