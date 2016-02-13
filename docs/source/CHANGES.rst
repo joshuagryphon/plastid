@@ -72,6 +72,8 @@ Fixed
     GFF3_Reader and GTF2_Reader instead of GFF3_TranscriptAssembler and 
     GTF2_TranscriptAssembler, allowing GTF2/GFF3 masks to be type-agnostic
 
+  - bug lossing in result of contig names when using 2bit files in `crossmap`
+
 
 Deprecated
 ..........
