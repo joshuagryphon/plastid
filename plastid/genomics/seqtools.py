@@ -134,13 +134,13 @@ class _TwoBitSeqProxy(object):
         ----------
         twobitseq : :class:`twobitfile.TwoBitSequence`
         """
-        self._key = key
+        self.name        = key
         self._twobitfile = twobitfile
-        self.twobitseq = twobitfile[key]
-        self._seq = None
+        self.twobitseq   = twobitfile[key]
+        self._seq        = None
 
     def __reduce__(self):
-        return (_TwoBitSeqProxy,(self._twobitfile,self._key))
+        return (_TwoBitSeqProxy,(self._twobitfile,self.name))
 
     def __getitem__(self,slice_):
         return SeqRecord(Seq(self.twobitseq.get_slice(min_=slice_.start,max_=slice_.stop),generic_dna))
