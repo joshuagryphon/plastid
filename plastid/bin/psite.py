@@ -297,7 +297,7 @@ def main(argv=sys.argv[1:]):
     with argsopener(profile_fn,args,"w") as metagene_out:
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
-                                header=0,
+                                header=True,
                                 index=False,
                                 na_rep="nan",
                                 columns=["x"]+["%s-mers" % X for X in lengths])
@@ -325,7 +325,7 @@ def main(argv=sys.argv[1:]):
             max_y = numpy.nanmax([max_y,
                                   numpy.nanmax(metagene_profile["%s-mers"% k].values)])
 
-    if numpy.isnan(max_y):
+    if numpy.isnan(max_y) or max_y == 0:
         max_y = 1.0
 
 
@@ -377,9 +377,10 @@ def main(argv=sys.argv[1:]):
                 transform=matplotlib.transforms.offset_copy(ax.transData,fig,
                                                             x=6.0,y=3.0,units="points"))
 
-        ymax = baseline + plot_y.max()
+        ymax = baseline + numpy.nanmax(plot_y)
 
-        if mask.sum() == numpy.isnan(ymask).sum() or ymask.sum() == 0:
+        # if all valid positions are nan, or if all valid positions are <= 0
+        if mask.sum() == numpy.isnan(ymask).sum() or numpy.nanmax(ymask) == 0:
             offset = args.default
             usedefault = True
         else:

@@ -50,15 +50,6 @@ Added
       - :class:`~plastid.util.scriptlib.argparsers.PlottingParser`
 
 
-Changed
-.......
-
-  - :func:`~plastid.util.services.decorators.deprecated` function decorator
-    now optionally takes parameters indicating the future version of plastid
-    in which deprecated features will be removed, and what replacement to use
-    instead
-
-
 Fixed
 .....
 
@@ -73,6 +64,21 @@ Fixed
     GTF2_TranscriptAssembler, allowing GTF2/GFF3 masks to be type-agnostic
 
   - bug lossing in result of contig names when using 2bit files in `crossmap`
+
+  - updates to `psite`
+  
+      - output header in metagene_profiles. Sorry about that 
+
+      - fix compatibility problem with new versions of matplotlib
+
+
+Changed
+.......
+
+  - :func:`~plastid.util.services.decorators.deprecated` function decorator
+    now optionally takes parameters indicating the future version of plastid
+    in which deprecated features will be removed, and what replacement to use
+    instead
 
 
 Deprecated
