@@ -3615,8 +3615,8 @@ cdef class Transcript(SegmentChain):
         """
         cdef:
             SegmentChain chain
-            Transcript transcript = Transcript()
-            dict old_attr = {}
+            Transcript   transcript = Transcript()
+            dict         attr       = {}
 
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             chain = self.c_get_subchain(self.cds_start,
@@ -3624,7 +3624,11 @@ cdef class Transcript(SegmentChain):
                                         True)
 
             transcript._set_segments(chain._segments)
-            transcript.attr = chain.attr
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_name()
+            attr["ID"] = "%s_CDS" % self.get_name()
+
+            transcript.attr = attr
             transcript.attr.update(extra_attr)
             transcript.cds_genome_start = self.cds_genome_start
             transcript.cds_genome_end   = self.cds_genome_end
