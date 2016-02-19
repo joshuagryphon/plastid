@@ -11,6 +11,7 @@ from plastid.readers.gff_tokens import escape_GFF3, unescape_GFF3,\
                                                     parse_GFF3_tokens,\
                                                     parse_GTF2_tokens
 from plastid.util.services.decorators import catch_warnings
+import plastid.util.services.exceptions
 
 #===============================================================================
 # INDEX: test data
@@ -223,7 +224,9 @@ class TestGFF3_TokenParsing(unittest.TestCase):
 
     def test_repeated_token_raises_warning(self):
         with warnings.catch_warnings(record=True) as warns:
-             for c,(name, inp) in enumerate(self.repeated):
+            # manually reset warning registry before test
+            for c,(name, inp) in enumerate(self.repeated):
+                plastid.util.services.exceptions.pl_once_registry = {}
                 warnings.simplefilter("always")
                 msg = "%s parser failed to raise warning for %s" % (self.fmt, name)
                 self.parser(inp)
