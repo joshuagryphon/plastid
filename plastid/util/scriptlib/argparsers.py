@@ -93,17 +93,17 @@ from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
 # INDEX: String constants used in parsers below
 #===============================================================================
 
-_MAPPING_RULE_TITLE = "alignment mapping options (BAM & bowtie files only)"
+_MAPPING_RULE_TITLE = "alignment mapping functions (BAM & bowtie files only)"
 _MAPPING_RULE_DESCRIPTION = \
-"""For BAM or bowtie files, one of the mutually exclusive read mapping choices
+"""For BAM or bowtie files, one of the mutually exclusive read mapping functions
 is required:
 """
 
-
+_MAPPING_OPTION_TITLE = "further alignment mapping options"
 _MAPPING_OPTION_DESCRIPTION = \
 """
 The remaining arguments are optional and affect the behavior of specific
-mapping rules:
+mapping functions:
 """
 
 
@@ -284,16 +284,7 @@ class AlignmentParser(Parser):
             ("countfile_format", dict(choices=input_choices,
                                       default="BAM",
                                       help="Format of file containing alignments or counts (Default: %(default)s)")),
-            ("min_length"       , dict(type=int,
-                                       default=25,
-                                       metavar="N",
-                                       help="Minimum read length required to be included"+
-                                            " (Default: %(default)s)")),
-            ("max_length"       , dict(type=int,
-                                       default=100,
-                                       metavar="N",
-                                       help="Maximum read length permitted to be included"+
-                                            " (Default: %(default)s)")),
+
             ("big_genome"       , dict(action="store_true",
                                        default=False,
                                        help="Use slower but memory-efficient implementation "+
@@ -346,6 +337,16 @@ class AlignmentParser(Parser):
                                             metavar="N",
                                             help="For use with `--center` only. nt to remove from each "+
                                                  "end of read before mapping (Default: %(default)s)")),
+                ("min_length"       , dict(type=int,
+                                           default=25,
+                                           metavar="N",
+                                           help="Minimum read length required to be included"+
+                                                " (Default: %(default)s)")),
+                ("max_length"       , dict(type=int,
+                                           default=100,
+                                           metavar="N",
+                                           help="Maximum read length permitted to be included"+
+                                                " (Default: %(default)s)")),
                 ]
             
             for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_rules"):
@@ -425,6 +426,7 @@ class AlignmentParser(Parser):
                               parser=parser,
                               groupname="sub_options",
                               arglist=self.map_ops,
+                              title=_MAPPING_OPTION_TITLE,
                               description=_MAPPING_OPTION_DESCRIPTION,
                               )
         
@@ -470,7 +472,7 @@ class AlignmentParser(Parser):
             sys.exit(1)
         
         # require mapping rules unless wiggle
-        if map_rule is None and args.countfile_format != "wiggle":
+        if map_rule is None and args.countfile_format in ("BAM","bowtie"):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
         
@@ -1356,6 +1358,9 @@ PLASTID_WARNINGS = [
     
     # genome_array
     (DataWarning,"Temporarily turning off normalization"),
+    
+    # roi_tools
+    (DataWarning,"is a zero-length SegmentChain. Returning 0-length count vector"),
     
     # metagene
     (Warning,r"IndexError finding common positions at region.*"),
