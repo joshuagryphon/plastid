@@ -99,7 +99,7 @@ _MAPPING_RULE_DESCRIPTION = \
 is required:
 """
 
-_MAPPING_OPTION_TITLE = "further alignment mapping options"
+_MAPPING_OPTION_TITLE = "filtering and alignment mapping options"
 _MAPPING_OPTION_DESCRIPTION = \
 """
 The remaining arguments are optional and affect the behavior of specific
@@ -244,7 +244,7 @@ class AlignmentParser(Parser):
     """
     
     def __init__(self,prefix="",disabled=None,
-                 input_choices=("BAM","bowtie","wiggle"),
+                 input_choices=("BAM","CRAM","bowtie","wiggle"),
                  groupname="alignment_options",
                  allow_mapping=True):
         """Create a parser for read alignments and/or quantitative data
@@ -284,16 +284,24 @@ class AlignmentParser(Parser):
             ("countfile_format", dict(choices=input_choices,
                                       default="BAM",
                                       help="Format of file containing alignments or counts (Default: %(default)s)")),
-
             ("big_genome"       , dict(action="store_true",
                                        default=False,
                                        help="Use slower but memory-efficient implementation "+
-                                            "for big genomes (e.g. >20 megabases; irrelevant "+
-                                            "for BAM files), or for memory-limited computers")),
+                                            "for big genomes or for memory-limited computers. For wiggle & bowtie files only.")),
             ("normalize"        , dict(action="store_true",
                                        help="Whether counts should be normalized"+
                                             " to counts per million (usually not. default: %(default)s)",
                                        default=False)),
+            ("min_length"       , dict(type=int,
+                                       default=25,
+                                       metavar="N",
+                                       help="Minimum read length required to be included"+
+                                            " (BAM & bowtie files only. Default: %(default)s)")),
+            ("max_length"       , dict(type=int,
+                                       default=100,
+                                       metavar="N",
+                                       help="Maximum read length permitted to be included"+
+                                            " (BAM & bowtie files only. Default: %(default)s)")),
             ]
 
         if self.allow_mapping == False:
@@ -322,21 +330,6 @@ class AlignmentParser(Parser):
                                                  "where N is specified by `--nibble`")),
                 ]
             map_ops = [
-                ("offset"           , dict(default=0,
-                                            metavar="OFFSET",
-                                            help="For `--fiveprime` or `--threeprime`, provide an integer "+
-                                              "representing the offset into the read, "+
-                                              "starting from either the 5\' or 3\' end, at which data "+
-                                              "should be plotted. For `--fiveprime_variable`, "+
-                                              "provide the filename of a two-column tab-delimited text "+
-                                              "file, in which first column represents read length or the "+
-                                              "special keyword `'default'`, and the second column represents "+
-                                              "the offset from the five prime end of that read length at which the read should be mapped.")),
-                ("nibble"           , dict(type=int,
-                                            default=0,
-                                            metavar="N",
-                                            help="For use with `--center` only. nt to remove from each "+
-                                                 "end of read before mapping (Default: %(default)s)")),
                 ("min_length"       , dict(type=int,
                                            default=25,
                                            metavar="N",
@@ -347,6 +340,21 @@ class AlignmentParser(Parser):
                                            metavar="N",
                                            help="Maximum read length permitted to be included"+
                                                 " (Default: %(default)s)")),
+                ("offset"           , dict(default=0,
+                                            metavar="OFFSET",
+                                            help="For `--fiveprime` or `--threeprime`, provide an integer "+
+                                              "representing the offset into the read, "+
+                                              "starting from either the 5\' or 3\' end, at which data "+
+                                              "should be plotted. For `--fiveprime_variable`, "+
+                                              "provide the filename of a two-column tab-delimited text "+
+                                              "file, in which first column represents read length or the "+
+                                              "special keyword `'default'`, and the second column represents "+
+                                              "the offset from the five prime end of that read length at which the read should be mapped. (Default: %(default)s)")),
+                ("nibble"           , dict(type=int,
+                                            default=0,
+                                            metavar="N",
+                                            help="For use with `--center` only. nt to remove from each "+
+                                                 "end of read before mapping (Default: %(default)s)")),
                 ]
             
             for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_rules"):
@@ -388,7 +396,7 @@ class AlignmentParser(Parser):
                    description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
                    **kwargs):
         """Return an :py:class:`~argparse.ArgumentParser` that opens
-        alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+        alignment (`BAM`_, `CRAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
         In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
         rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
@@ -476,7 +484,7 @@ class AlignmentParser(Parser):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
         
-        if "countfile_format" not in disabled and args.countfile_format == "BAM":
+        if "countfile_format" not in disabled and args.countfile_format in ("BAM","CRAM"):
             count_files = [pysam.Samfile(X,"rb") for X in args.count_files]
             try:
                 ga = BAMGenomeArray(count_files)
@@ -484,7 +492,7 @@ class AlignmentParser(Parser):
                 printer.write("Input BAM/CRAM file(s) not indexed. Please index via:")
                 printer.write("")
                 for fn in args.count_files:
-                    printer.write("    samtools index %s" % fn)
+                    printer.write("    samtools index [-b|-c] %s" % fn)
                 printer.write("")
                 printer.write("Exiting.")
                 sys.exit(1)
