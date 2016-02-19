@@ -71,6 +71,8 @@ Fixed
 
       - fix compatibility problem with new versions of matplotlib
 
+  - Fixed loss-of-ID bug in :meth:`Transcript.get_cds`
+
 
 Changed
 .......
