@@ -330,16 +330,6 @@ class AlignmentParser(Parser):
                                                  "where N is specified by `--nibble`")),
                 ]
             map_ops = [
-                ("min_length"       , dict(type=int,
-                                           default=25,
-                                           metavar="N",
-                                           help="Minimum read length required to be included"+
-                                                " (Default: %(default)s)")),
-                ("max_length"       , dict(type=int,
-                                           default=100,
-                                           metavar="N",
-                                           help="Maximum read length permitted to be included"+
-                                                " (Default: %(default)s)")),
                 ("offset"           , dict(default=0,
                                             metavar="OFFSET",
                                             help="For `--fiveprime` or `--threeprime`, provide an integer "+
