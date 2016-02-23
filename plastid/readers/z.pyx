@@ -177,7 +177,7 @@ cdef class BigBedReader(_BBI_Reader):
         if self.num_extension_fields > 0:
             autosql = self._get_autosql_str()
             try:
-                asql_parser    = AutoSqlDeclaration(autosql)
+                asql_parser            = AutoSqlDeclaration(autosql)
                 self.extension_fields  = OrderedDict(list(asql_parser.field_comments.items())[-self.num_extension_fields:])             
                 
                 for fieldname in self.extension_fields:
@@ -290,7 +290,6 @@ cdef class BigBedReader(_BBI_Reader):
 #         else:
 #             return ""
 
-
     def get(self, roi, bint stranded=True, bint check_unique=True):
         """Iterate over features that share genomic positions with a region of interest
         
@@ -337,8 +336,9 @@ cdef class BigBedReader(_BBI_Reader):
             
         return self._c_get(chain,stranded,check_unique=check_unique)
     
-    # NB- no cache layer, which we previously had
-    # will this be fast enough for repeated queries over the same region?    
+    # NB- no cache layer, which we  had in pure Python implementation (below)
+    # will this be fast enough for repeated queries over the same region?
+    # need to test    
     cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True, bint check_unique=True, lm *my_lm = NULL):
         """c-layer implementation of :meth:`BigBedReader.get`
         
@@ -430,50 +430,6 @@ cdef class BigBedReader(_BBI_Reader):
             return _GeneratorWrapper((add_three_for_stop_codon(outfunc(X,extra_columns=etypes)) for X in ltmp),"BigBed entries")
         else:    
             return _GeneratorWrapper((outfunc(X,extra_columns=etypes) for X in ltmp),"BigBed entries")
-    
-        
-#     def _parse_header(self):
-#         """Parse first 64 bytes of `BigBed`_ file, and determine indices
-#         of file metadata. 
-#         
-#         Header table information from :cite:`Kent2010`, Supplemental table 5:
-#         
-#         =========================  ==== ====  =================================================
-#         Field                      Size Type   Summary
-#         =========================  ==== ====  =================================================
-#         magic                      4    uint   0x8789F2EB
-#         version                    2    uint   File version 3?
-#         zoom_levels                2    uint   Number of zoom summary resolutions
-#         bplus_tree_offset          8    uint   Offset to chr B+ tree index
-#         full_data_offset           8    uint   Offset to main data. dataCount
-#         r_tree_offset              8    uint   Offset to R tree index of items
-#         field_count                2    uint   Number of fields in BED file
-#         bed_field_count            2    uint   Number of fields that are pre-defined BED fields
-#         autosql_offset             8    uint   Offset to zero-terminated string with .as spec. 0 if no autoSql string present
-#         total_summary_offset       8    uint   Offset to overall file summary data block
-#         uncompressed_buffer_size   4    uint   Maximum size decompression buffer needed (files v3 and later)
-#         reserved                   8    uint   Reserved for future expansion
-#         =========================  ==== ====  =================================================
-#         
-#         Returns
-#         -------
-#         dict
-#             Dictionary mapping header field names to values 
-#         """
-#         self.fh.seek(0)
-#         items = HeaderFactory(self.fh,self._byte_order)
-# 
-#         if items["magic"] != 0x8789F2EB:
-#             self._byte_order = ">"
-#             self.fh.seek(0)
-#             items = HeaderFactory(self.fh,self._byte_order)
-#         
-#         if items["magic"] != 0x8789F2EB:
-#             raise MalformedFileError(self.filename,"Could not determine byte order of BigBed file. Expected magic number to be '%x', got '%x'." % (0x8789F2EB,self.header["magic"]))
-#         
-#         return items
-#     
-
             
     def __getitem__(self,roi):
         """Iterate over features that share genomic positions with a region of interest, on same strand.
