@@ -239,47 +239,56 @@ cdef class BigBedReader(_BBI_Reader):
     def __repr__(self):
         return str(self)
 
+    def _get_autosql_str(self):
+        """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
+         
+        Returns
+        -------
+        str
+            autoSql-formatted string, or "" if no autoSql definition present
+        """
+        cdef:
+            long as_offset  = self._bbifile.asOffset
+            int length      = self._bbifile.totalSummaryOffset - as_offset 
+            char *  c_asql = bigBedAutoSqlText(self._bbifile)
+            str     p_asql
+            
+        try:
+            if c_asql is NULL:
+                p_asql = ""
+            else:
+                p_asql = safe_str(c_asql)
+        finally:
+            freeMem(c_asql)
+        
+        return p_asql
+
 #     def _get_autosql_str(self):
 #         """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
 #         
 #         Returns
 #         -------
 #         str
-#             autoSql-formatted string
+#             autoSql-formatted string, or "" if no autoSql definition present
 #         """
 #         cdef:
-#             char *   c_asql = bigBedAutoSqlText(self._bbifile)
-#             str      p_asql = safe_str(c_asql)
-#         
-#         freeMem(c_asql)
-#         return p_asql
-
-    def _get_autosql_str(self):
-        """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
-        
-        Returns
-        -------
-        str
-            autoSql-formatted string
-        """
-        cdef:
-            long as_offset   = self._bbifile.asOffset
-            long length      = self._bbifile.totalSummaryOffset - as_offset 
-            bint swapped     = self._bbifile.isSwapped
-            
-            # prev note: whether or not file is byteswapped??
-            str byte_order   = ">" if swapped else "<"
-            str autosql_fmt
-            
-        if as_offset > 0 and length > 0:
-            # temporarily open file, because using Kent's bigBedAutoSqlText() was segfaulting
-            fh = open(self.filename,"rb")
-            fh.seek(as_offset)
-            autosql_fmt = "%s%ss" % (byte_order,length)            
-            autosql_str, = struct.unpack(autosql_fmt,fh.read(length))
-            return str(autosql_str.decode("ascii")).strip("\0")
-        else:
-            return ""
+#             long as_offset   = self._bbifile.asOffset
+#             long length      = self._bbifile.totalSummaryOffset - as_offset 
+#             bint swapped     = self._bbifile.isSwapped
+#             
+#             # prev note: whether or not file is byteswapped??
+#             str byte_order   = ">" if swapped else "<"
+#             str autosql_fmt
+#             
+#         if as_offset > 0 and length > 0:
+#             # temporarily open file, because using Kent's bigBedAutoSqlText() was segfaulting
+#             fh = open(self.filename,"rb")
+#             fh.seek(as_offset)
+#             autosql_fmt = "%s%ss" % (byte_order,length)            
+#             autosql_str, = struct.unpack(autosql_fmt,fh.read(length))
+#             return str(autosql_str.decode("ascii")).strip("\0")
+#         else:
+#             return ""
 
 
     def get(self, roi, bint stranded=True, bint check_unique=True):

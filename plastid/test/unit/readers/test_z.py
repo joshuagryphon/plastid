@@ -127,7 +127,7 @@ class test_BigBedReader(unittest.TestCase):
     def test_chrom_sizes(self):
         for _,my_reader in self.bbs.items():
             for k,v in self.chrom_sizes.items():
-                self.assertEqual(my_reader.chrom_sizes[k],v)   
+                self.assertEqual(my_reader.chroms[k],v)   
    
     def test_iter_same_as_bed_reader_various_columns(self):
         # implicitly tests iterate_over_chunk over all bed files, too
@@ -301,7 +301,7 @@ class test_BigBedReader(unittest.TestCase):
         for k in (4,12):
             bbplus_noas = BigBedReader(self.bb_bonuscols["bb%sno_as" % k])
             self.assertEqual(bbplus_noas._get_autosql_str(),"")
-    
+
     def test_custom_columns_names_with_autosql(self):
         expected = OrderedDict([("my_floats","some float values"),
                                 ("my_sets","some set options"),
