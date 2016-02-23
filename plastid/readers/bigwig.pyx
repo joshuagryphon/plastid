@@ -143,17 +143,14 @@ cdef class BigWigReader(_BBI_Reader):
         """
         return self.get(roi)
 
-    def sum(self):
-        """Calculate sum of data in `BigWig`_ file.
+    cdef double c_sum(self):
+        """Return sum of data in `BigWig`_ file, calculating if necessary
         
         Returns
         -------
         double
             Sum of all values over all positions
         """
-        # n.b. - we calculate the exact sum manually
-        # rather than using the stored sum,
-        # which is approximate        
         cdef:
             double mysum = 0.0
             bigWigValsOnChrom* vals
@@ -161,6 +158,9 @@ cdef class BigWigReader(_BBI_Reader):
             long length
             long i = 0
             
+        # n.b. - we calculate the exact sum manually
+        # rather than using the stored sum,
+        # which is approximate        
         if not numpy.isnan(self._sum):
             return self._sum
         else:
@@ -180,6 +180,16 @@ cdef class BigWigReader(_BBI_Reader):
                 bigWigValsOnChromFree(&vals)
             
         return mysum
+
+    def sum(self):
+        """Return sum of data in `BigWig`_ file, calculating if necessary
+        
+        Returns
+        -------
+        double
+            Sum of all values over all positions
+        """
+        return self.c_sum()
     
     cdef bigWigValsOnChrom* c_get_chromosome(self, str chrom):
         """Retrieve values across an entire chromosome.

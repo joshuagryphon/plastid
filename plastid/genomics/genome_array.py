@@ -1041,11 +1041,11 @@ class BigWigGenomeArray(AbstractGenomeArray):
 #         """
         self._strand_dict = {}
         self._normalize = False
-        self._chromset = None
-        self._sum = None
-        self._lengths = None
-        self._strands = []
-        self.fill = 0.0 # fill
+        self._chromset  = None
+        self._sum       = None
+        self._lengths   = None
+        self._strands   = []
+        self.fill       = 0.0 # fill
     
     def __getitem__(self,roi):
         """Retrieve array of counts from a region of interest.
@@ -1176,13 +1176,10 @@ class BigWigGenomeArray(AbstractGenomeArray):
             Strand to which data should be added. `'+'`, `'-'`, or `'.'`
         """
         self._chromset = None
-        self._lengths = None
+        self._lengths  = None
+        self._sum      = None
         bw = BigWigReader(filename,fill=self.fill)
         
-        if self._sum is None:
-            self._sum = 0
-            
-        self._sum += bw.sum()
         try:
             self._strand_dict[strand].append(bw)
         except KeyError:       
