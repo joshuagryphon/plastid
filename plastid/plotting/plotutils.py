@@ -26,7 +26,6 @@ import numpy
 import scipy.stats
 import matplotlib
 import matplotlib.pyplot as plt
-from plastid.plotting.colors import lighten, darken, process_black
 
 
 def get_fig_axes(axes):
