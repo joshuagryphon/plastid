@@ -28,10 +28,10 @@ are required for ``plastid``'s setup script to run.
 Compiling & installing
 ----------------------
 
- #. First, make sure you have GCC or clang, zlib, and its headers. On an Ubuntu
-    system, you could get these by typing::
+ #. First, make sure you have GCC or clang, zlib and its headers, and the 
+    Python headers. On an Ubuntu system, you could get these by typing::
     
-        $ sudo apt-get install build-essential zlib1g zlib1g-dev
+        $ sudo apt-get install build-essential zlib1g zlib1g-dev python-dev
         
  #. Install ``numpy``, ``pysam``, and ``Cython``::
  
