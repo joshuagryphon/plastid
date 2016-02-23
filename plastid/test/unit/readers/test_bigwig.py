@@ -253,45 +253,45 @@ class TestBigWigReader(AbstractTestBBIFile):
             eval_ = expected[3]
             diff = abs(fval-eval_)
             assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
-            
-    def test_summarize(self):
-        bw  = BigWigReader(bigwigfile)
-        
-        #ga = GenomeArray(bw.chroms)
-        #ga.add_from_wiggle(open(wigfile),"+")
-        
-        chrom = "chrI"
-        maxlen = bw.chroms[chrom]
-        winstarts = numpy.random.randint(0,maxlen-20000,size=10)
-        winends   = winstarts + numpy.random.randint(500,40000,size=10)
-        winends[winends > maxlen] = maxlen
-        
-        numtests = 10
-        i = 0
-        while i < numtests:
-            s = numpy.random.randint(0,high=maxlen)
-            e = min(maxlen,numpy.random.randint(s+500,s+40000))
-            seg = GenomicSegment(chrom,s,e,"+")
-            #arr = ga[seg]
-            arr = bw[seg]
 
-            labels = ["mean","max","min","cov","stdev"]
-            expected = [arr.mean(),arr.max(),arr.min(),wildcard,arr.std()]
-            
-            # change nans to 0
-            expected = [0 if numpy.isnan(X) else X for X in expected]
-            
-            print(expected)
-            found = bw.summarize(seg)
-            print(found)
-            print("---------------")
-            for label, exval, fval in zip(labels,expected,found):
-                msg =  "test_summarize failed for stat '%s'. Expected %s, got %s (diff: %s)." % (label,exval,fval,abs(exval-fval))
-                assert_almost_equal(exval,fval,msg=msg,delta=5)
-                
-            i += 1
-        
-        # retval for summarize:  (mean,max_,min_,cov,stdev)
-        assert False
+# Disabled until we decide what to do with summarize()            
+#     def test_summarize(self):
+#         bw  = BigWigReader(bigwigfile)
+#         
+#         #ga = GenomeArray(bw.chroms)
+#         #ga.add_from_wiggle(open(wigfile),"+")
+#         
+#         chrom = "chrI"
+#         maxlen = bw.chroms[chrom]
+#         winstarts = numpy.random.randint(0,maxlen-20000,size=10)
+#         winends   = winstarts + numpy.random.randint(500,40000,size=10)
+#         winends[winends > maxlen] = maxlen
+#         
+#         numtests = 10
+#         i = 0
+#         while i < numtests:
+#             s = numpy.random.randint(0,high=maxlen)
+#             e = min(maxlen,numpy.random.randint(s+500,s+40000))
+#             seg = GenomicSegment(chrom,s,e,"+")
+#             #arr = ga[seg]
+#             arr = bw[seg]
+# 
+#             labels = ["mean","max","min","cov","stdev"]
+#             expected = [arr.mean(),arr.max(),arr.min(),wildcard,arr.std()]
+#             
+#             # change nans to 0
+#             expected = [0 if numpy.isnan(X) else X for X in expected]
+#             
+#             print(expected)
+#             found = bw.summarize(seg)
+#             print(found)
+#             print("---------------")
+#             for label, exval, fval in zip(labels,expected,found):
+#                 msg =  "test_summarize failed for stat '%s'. Expected %s, got %s (diff: %s)." % (label,exval,fval,abs(exval-fval))
+#                 assert_almost_equal(exval,fval,msg=msg,delta=5)
+#                 
+#             i += 1
+#         
+#         # retval for summarize:  (mean,max_,min_,cov,stdev)
     
         

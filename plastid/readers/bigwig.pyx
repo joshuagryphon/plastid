@@ -164,6 +164,7 @@ cdef class BigWigReader(_BBI_Reader):
         if not numpy.isnan(self._sum):
             return self._sum
         else:
+            warnings.warn("Summing over a large BigWig file can take a while.",DataWarning)
             try:
                 for chrom in self.chroms:
                     vals    = self.c_get_chromosome(chrom)
@@ -274,13 +275,13 @@ cdef class BigWigReader(_BBI_Reader):
                     
                 # if fill isn't 0, set no-data values in output to self.fill
                 # these are in vals.covBuf
-                if self.fill != 0:
-                    i=-1
-                    while True:
-                        i = bitFindClear(vals.covBuf,i+1,length)
-                        if i >= length: # no clear bit left
-                            break
-                        counts[i] = fill
+#                 if self.fill != 0:
+#                     i=-1
+#                     while True:
+#                         i = bitFindClear(vals.covBuf,i+1,length)
+#                         if i >= length: # no clear bit left
+#                             break
+#                         counts[i] = fill
             else:
                 counts = numpy.array(0,dtype=float)
         finally:
@@ -288,27 +289,32 @@ cdef class BigWigReader(_BBI_Reader):
             
         return counts    
 
-    def summarize(self, GenomicSegment roi):
-        """Summarize `BigWig`_ data over the region of interest.
-        
-        Note
-        ----
-        These are quickly calculated approximations. More accurate mean, stdev,
-        et c can be calculated using ``bigwig_reader[roi].mean()`` et c
-         
-        Returns
-        -------
-        tuple of floats
-            `(mean,max,min,fraction of bases covered,stdev)` of data in `BigWig`_ 
-            file over the region defined by `roi` 
-        """
-        mean  = self._summarize(roi,bbiSumMean)
-        max_  = self._summarize(roi,bbiSumMax)
-        min_  = self._summarize(roi,bbiSumMin)
-        cov   = self._summarize(roi,bbiSumCoverage)
-        stdev = self._summarize(roi,bbiSumStandardDeviation)
-         
-        return (mean,max_,min_,cov,stdev)
+
+# DISABLED - values for mean & stdev aren't even close to those expected from
+# known test files. However, pulling a numpy array with get() or __getitem__
+# and manually calculating mean & stdev *is* accurate
+#
+#     def summarize(self, GenomicSegment roi):
+#         """Summarize `BigWig`_ data over the region of interest.
+#         
+#         Note
+#         ----
+#         These are quickly calculated approximations. More accurate mean, stdev,
+#         et c can be calculated using ``bigwig_reader[roi].mean()`` et c
+#          
+#         Returns
+#         -------
+#         tuple of floats
+#             `(mean,max,min,fraction of bases covered,stdev)` of data in `BigWig`_ 
+#             file over the region defined by `roi` 
+#         """
+#         mean  = self._summarize(roi,bbiSumMean)
+#         max_  = self._summarize(roi,bbiSumMax)
+#         min_  = self._summarize(roi,bbiSumMin)
+#         cov   = self._summarize(roi,bbiSumCoverage)
+#         stdev = self._summarize(roi,bbiSumStandardDeviation)
+#          
+#         return (mean,max_,min_,cov,stdev)
         
     cdef double _summarize(self, GenomicSegment roi, bbiSummaryType type_):
         """Summarize `BigWig`_ data over ROI for a single statistic
@@ -339,12 +345,12 @@ cdef class BigWigReader(_BBI_Reader):
          
         return retval
 
-    property fill:
-        def __set__(self,double val):
-            self.fill = val
-            
-        def __get__(self):
-            return self.fill
+#     property fill:
+#         def __set__(self,double val):
+#             self.fill = val
+#             
+#         def __get__(self):
+#             return self.fill
 
 
 #===============================================================================
