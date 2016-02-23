@@ -57,7 +57,7 @@
 .. _ENCODE: https://www.encodeproject.org/
 .. _GENCODE: www.gencodegenes.org 
 .. _galaxy: https://galaxyproject.org/
-
+.. _Sequence Ontology Project: http://www.sequenceontology.org/
 
 .. Non-Python software links
 
@@ -74,6 +74,7 @@
 .. _DESeq2: http://bioconductor.org/packages/release/bioc/html/DESeq2.html
 .. _kallisto: http://pachterlab.github.io/kallisto/
 .. _R: http://www.r-project.org
+.. _fastx toolkit: http://hannonlab.cshl.edu/fastx_toolkit/
 .. _riboseqr: http://bioconductor.org/packages/release/bioc/html/riboSeqR.html
 .. _ribogalaxy: http://ribogalaxy.ucc.ie
 

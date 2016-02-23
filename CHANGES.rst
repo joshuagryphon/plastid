@@ -14,9 +14,24 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
      name, ``plastid`` will not change.
 
 
-
 Unreleased
 ----------
+
+Added
+.....
+
+  - ``BigWigReader``, a reader for BigWig files, and  ``BigWigGenomeArray``,
+    for handling those files more conveniently.
+
+
+
+plastid [0.4.5] = [2016-02-22]
+------------------------------
+
+Changes here are mostly under the hood, involving improvements in usability,
+speed, stability, compatibility, and error reporting. We also fixed up tools
+for developers and added entrypoints for custom mapping rules.
+
 
 The next version contains a host of compatibility improvements under the hood,
 as well as support for ``BigWig``, a high-performance file format used
@@ -26,8 +41,9 @@ to store quantitative data associated with genomic positions.
 Added
 .....
 
-  - ``BigWigReader``, a reader for BigWig files, and  ``BigWigGenomeArray``,
-    for handling those files more conveniently.
+  - Users can now control verbosity/frequency of warnings via '-v' or '-q' 
+    options! By default there should no long screens of DataWarnings
+    when processing Ensembl (or other) GTFs.
 
   - Created entrypoints for allowing users to use custom mapping rules
     in the command line scripts:
@@ -46,6 +62,31 @@ Added
       - :class:`~plastid.util.scriptlib.argparsers.MaskParser`
       - :class:`~plastid.util.scriptlib.argparsers.SequenceParser`
       - :class:`~plastid.util.scriptlib.argparsers.PlottingParser`
+
+
+Fixed
+.....
+
+  - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
+    as well as >= 1.3. This corrected a plotting bug in `cs`.
+
+  - :meth:`AnnotationParser.get_genome_hash_from_args` now internally uses 
+    GFF3_Reader and GTF2_Reader instead of GFF3_TranscriptAssembler and 
+    GTF2_TranscriptAssembler, allowing mask files in GTF2/GFF3 foramts
+    to be type-agnostic in command-line scripts
+
+  - contig names no longer lost when using 2bit files in `crossmap`
+
+  - updates to :mod:`~plastid.bin.psite`
+  
+      - output header in metagene_profiles. Sorry about that 
+
+      - fix compatibility problem with new versions of matplotlib
+
+      - now catches a ``ValueError`` that used to be an ``IndexError``
+        in earlier versions of :mod:`numpy`.
+
+  - Fixed loss-of-ID bug in :meth:`Transcript.get_cds`
 
 
 Changed

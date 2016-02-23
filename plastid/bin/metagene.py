@@ -149,9 +149,9 @@ from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import ArgumentWarning, DataWarning
-from plastid.util.scriptlib.argparsers import AnnotationParser, AlignmentParser,\
-                                              MalformedFileError, PlottingParser,\
-                                              MaskParser
+from plastid.util.scriptlib.argparsers import (AnnotationParser, AlignmentParser,
+                                               MalformedFileError, PlottingParser,
+                                               MaskParser, BaseParser)
 
 
 warnings.simplefilter("once",DataWarning)
@@ -934,11 +934,13 @@ def main(argv=sys.argv[1:]):
     an = AnnotationParser()
     pp = PlottingParser()
     mp = MaskParser()
+    bp = BaseParser()
     
     alignment_file_parser  = al.get_parser()
     annotation_file_parser = an.get_parser()
     mask_file_parser = mp.get_parser()
     plotting_parser = pp.get_parser()
+    base_parser = bp.get_parser()
     
     generator_help = "Create ROI file from genome annotation"
     generator_desc = format_module_docstring(group_regions_make_windows.__doc__)
@@ -957,17 +959,17 @@ def main(argv=sys.argv[1:]):
     gparser    = subparsers.add_parser("generate",
                                        help=generator_help,
                                        description=generator_desc,
-                                       parents=[annotation_file_parser,mask_file_parser],
+                                       parents=[base_parser,annotation_file_parser,mask_file_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
     cparser    = subparsers.add_parser("count",
                                        help=count_help,
                                        description=count_desc,
-                                       parents=[alignment_file_parser,plotting_parser],
+                                       parents=[base_parser,alignment_file_parser,plotting_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
     pparser    = subparsers.add_parser("chart",
                                        help=chart_help,
                                        description=chart_desc,
-                                       parents=[plotting_parser],
+                                       parents=[base_parser,plotting_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
     
     # generate subprogram options
@@ -1016,6 +1018,7 @@ def main(argv=sys.argv[1:]):
 
     
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
     
     # 'generate' subprogram
     if args.program == "generate":

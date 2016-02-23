@@ -25,6 +25,9 @@ from nose.plugins.attrib import attr
 
 from Bio import SeqIO
 
+
+import plastid.util.services.exceptions
+
 from plastid.readers.bed import BED_Reader
 from plastid.genomics.genome_array import GenomeArray,\
                                        SparseGenomeArray,\
@@ -945,7 +948,9 @@ class TestGenomeArray(AbstractExportableGenomeArrayHelper):
         def my_func(ga):
             ga.set_normalize(True)
             ga[GenomicSegment("chrA",0,1000,"+")] += 5
-       
+      
+        # manually reset registry before test
+        plastid.util.services.exceptions.pl_once_registry = {}
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
             my_func(gnd)

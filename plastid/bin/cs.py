@@ -96,7 +96,6 @@ import itertools
 import copy
 import inspect
 import gc
-import warnings
 
 import matplotlib
 matplotlib.use("Agg")
@@ -108,7 +107,8 @@ import scipy.stats
 from plastid.util.scriptlib.argparsers import AnnotationParser,\
                                               AlignmentParser,\
                                               MaskParser,\
-                                              PlottingParser
+                                              PlottingParser, \
+                                              BaseParser
 
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
@@ -122,7 +122,6 @@ import numpy.ma as ma
 from plastid.plotting.plots import scatterhist_xy, ma_plot, clean_invalid
 from plastid.plotting.colors import process_black
 
-warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 
@@ -1119,12 +1118,13 @@ def main(argv=sys.argv[1:]):
     an = AnnotationParser()
     mp = MaskParser()
     pl = PlottingParser()
-
+    bp = BaseParser()
 
     alignment_file_parser  = al.get_parser()
     annotation_file_parser = an.get_parser()
-    mask_file_parser = mp.get_parser()
-    plotting_parser = pl.get_parser()
+    mask_file_parser       = mp.get_parser()
+    plotting_parser        = pl.get_parser()
+    base_parser            = bp.get_parser()
     
     generator_help = "Create unambiguous position file from GFF3 annotation"
     generator_desc = format_module_docstring(do_generate.__doc__)
@@ -1144,19 +1144,20 @@ def main(argv=sys.argv[1:]):
                                        help=generator_help,
                                        description=generator_desc,
                                        formatter_class=argparse.RawDescriptionHelpFormatter,
-                                       parents=[annotation_file_parser,
+                                       parents=[base_parser,
+                                                annotation_file_parser,
                                                 mask_file_parser],
                                        )
     cparser    = subparsers.add_parser("count",
                                        help=counter_help,
                                        description=counter_desc,
-                                       parents=[alignment_file_parser],
+                                       parents=[base_parser,alignment_file_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter,
                                        )
     pparser    = subparsers.add_parser("chart",
                                        help=chart_help,
                                        description=chart_desc,
-                                       parents=[plotting_parser],
+                                       parents=[base_parser,plotting_parser],
                                        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     gparser.add_argument("outbase",metavar="outbase",type=str,
@@ -1183,6 +1184,7 @@ def main(argv=sys.argv[1:]):
                          help="Basename for output files")
 
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
 
     if args.program == "generate":
         #generate position file

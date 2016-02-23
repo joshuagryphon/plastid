@@ -13,7 +13,7 @@ not found in matplotlib. For demos, see :doc:`/examples/z_plotting`.
                                               scatter plots with kernel density estimates of 
                                               marginal distributions, MA plots, et c
 
-    :mod:`plastid.plotting.plotutil`          Utility functions for preprocessing data or manipulating
+    :mod:`plastid.plotting.plotutils`         Utility functions for preprocessing data or manipulating
                                               axes
     ======================================    =========================================================
 """

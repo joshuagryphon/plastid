@@ -79,19 +79,17 @@ Find genomic coordinate of position 53 in a chain::
 
 import re
 import copy
-import warnings
 import array
 import numpy
 
 cimport numpy
-
 
 from numpy.ma import MaskedArray as MaskedArray
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, warn
 from plastid.util.services.decorators import deprecated
 from plastid.plotting.colors import get_str_from_rgb255, get_str_from_rgb, get_rgb255
 from plastid.readers.gff_tokens import make_GFF3_tokens, \
@@ -1772,8 +1770,8 @@ cdef class SegmentChain(object):
         int
         """
         cdef str name = self.__class__.__name__
-        warnings.warn("%s.get_length() is deprecated and will be removed in future versions. Use %s.length property instead" % (name,name),
-                DeprecationWarning)
+        warn("%s.get_length() is deprecated and will be removed in future versions. Use %s.length property instead" % (name,name),
+             DeprecationWarning)
         return self.length
 
     def get_masked_length(self):
@@ -1785,8 +1783,8 @@ cdef class SegmentChain(object):
         int
         """
         cdef str name = self.__class__.__name__
-        warnings.warn("%s.get_masked_length() is deprecated and will be removed in future versions. Use %s.masked_length property instead" % (name,name),
-                DeprecationWarning)
+        warn("%s.get_masked_length() is deprecated and will be removed in future versions. Use %s.masked_length property instead" % (name,name),
+             DeprecationWarning)
         return self.masked_length
 
     cdef bint c_add_segments(self, tuple segments) except False:
@@ -1823,7 +1821,7 @@ cdef class SegmentChain(object):
         """
         if len(segments) > 0:
             if self._mask_segments is not None and len(self._mask_segments) > 0:
-                warnings.warn("Segmentchain: adding segments to %s will reset its masks!" % (self),UserWarning)
+                warn("Segmentchain: adding segments to %s will reset its masks!" % (self),UserWarning)
 
             self.c_add_segments(segments)
         
@@ -1934,7 +1932,7 @@ cdef class SegmentChain(object):
         
         SegmentChain.reset_masks
         """
-        warnings.warn("SegmentChain.get_masks() is deprecated and will soon be removed from `plastid`. Use SegmentChain.mask_segments instead",UserWarning)
+        warn("SegmentChain.get_masks() is deprecated and will soon be removed from `plastid`. Use SegmentChain.mask_segments instead",UserWarning)
         if self._mask_segments is None:
             return []
         return self._mask_segments
@@ -2817,7 +2815,7 @@ cdef class SegmentChain(object):
             numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
 
         if len(self) == 0:
-            warnings.warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
+            warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
 
         c = 0
         for seg in self:
@@ -2894,7 +2892,7 @@ cdef class SegmentChain(object):
             str stmp
 
         if len(self._segments) == 0:
-            warnings.warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
+            warn("%s is a zero-length SegmentChain. Returning empty sequence." % self.get_name(),DataWarning)
             return ""
 
         else:
@@ -3596,8 +3594,8 @@ cdef class Transcript(SegmentChain):
         """
         cdef:
             SegmentChain chain
-            Transcript transcript = Transcript()
-            dict old_attr = {}
+            Transcript   transcript = Transcript()
+            dict         attr       = {}
 
         if self.cds_genome_start is not None and self.cds_genome_end is not None:
             chain = self.c_get_subchain(self.cds_start,
@@ -3605,7 +3603,11 @@ cdef class Transcript(SegmentChain):
                                         True)
 
             transcript._set_segments(chain._segments)
-            transcript.attr = chain.attr
+            attr["gene_id"] = self.get_gene()
+            attr["transcript_id"] = self.get_name()
+            attr["ID"] = "%s_CDS" % self.get_name()
+
+            transcript.attr = attr
             transcript.attr.update(extra_attr)
             transcript.cds_genome_start = self.cds_genome_start
             transcript.cds_genome_end   = self.cds_genome_end

@@ -4,7 +4,7 @@ mapping sequencing reads. These positions are then saved in a :term:`mask file`,
 so that they may be excluded as from further analyses.
 
 To identify such positions, a genome sequence is diced into :term:`k-mers <k-mer>`
-aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
+and the :term:`k-mers` aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
 one genomic location are then marked as deriving from repetitive regions of
 the genome. These regions are exported in a `BED`_ file.
 
@@ -30,7 +30,11 @@ where:
   - `MISMATCHES` is the number of mismatches permitted during alignment,
     also set by the user.
 
-
+ .. note::
+ 
+    This script internally uses `bowtie`_ and a bowtie index for alignments.
+    Make sure you have these installed.
+    
  .. note::
 
     For large genomes, it is highly recommended to convert the `BED`_-format output
@@ -65,7 +69,7 @@ from plastid.genomics.roitools import SegmentChain, positionlist_to_segments, Ge
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.mini2to3 import xrange
 from plastid.util.services.exceptions import MalformedFileError
-from plastid.util.scriptlib.argparsers import SequenceParser
+from plastid.util.scriptlib.argparsers import SequenceParser, BaseParser
 
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -305,9 +309,10 @@ def main(argv=sys.argv[1:]):
         invoked from the command line
     """
     sp = SequenceParser()
+    bp = BaseParser()
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[sp.get_parser()])
+                                     parents=[bp.get_parser(),sp.get_parser()])
     parser.add_argument("-k",dest="read_length",metavar="READ_LENGTH",
                         type=int,default=29,
                         help="K-mer length to generate from input file. "+
@@ -333,7 +338,9 @@ def main(argv=sys.argv[1:]):
                         help="Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `sequence_file`.")
     parser.add_argument("outbase",type=str,
                         help="Basename for output files")
+
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
 
 
     #filenames

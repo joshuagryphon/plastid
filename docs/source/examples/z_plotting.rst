@@ -16,7 +16,7 @@ of genomics. The following are included:
   - :ref:`profile-heatmap`
 
   - Homogeneous :ref:`triangle` plots (e.g. for :term:`sub-codon phasing`
-   in :term:`ribosome profiling` data)
+    in :term:`ribosome profiling` data)
 
 
 Here, as elsewhere, we use the :doc:`/test_dataset`. Before starting, we
@@ -117,7 +117,7 @@ This produces the following:
 
     Graphical output of plot above
 
-One subtlety of kernel density estimates occurs when plotting in long space.
+One subtlety of kernel density estimates occurs when plotting in log space.
 In this case, kernel widths need to be scaled accordingly. This may be
 controlled via the `log` and `base` arguments:
 
@@ -322,7 +322,7 @@ argments that are valid in :func:`~matplotlib.pyplot.scatter`:
     >>>                         edgecolor=colors,facecolor="none")
 
 But, we can use most any matplotlib plotting functions that ordinarily takes
-a series of `x` points and a series of `y` poitns to draw the data in triangular
+a series of `x` points and a series of `y` points to draw the data in triangular
 space. We do this by passing the name of the method to the `fn` argument.
 For example, to draw a line using :func:`~matplotlib.pyplot.plot`:
 

@@ -45,4 +45,4 @@ from plastid.readers.bed import BED_Reader
 from plastid.readers.bigbed import BigBedReader
 from plastid.readers.gff import GTF2_Reader, GFF3_Reader, GTF2_TranscriptAssembler, GFF3_TranscriptAssembler
 from plastid.readers.psl import PSL_Reader
-
+#from plastid.readers.bigwig import BigWigReader

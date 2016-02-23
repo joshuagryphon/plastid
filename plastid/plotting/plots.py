@@ -76,10 +76,10 @@ def get_color_cycle(ax):
         Iterator over colors, passable to matplotlib `color` keyword
     """
     if hasattr(ax,"_get_lines"):
-        if hasattr(ax._get_lines,"color_cycle"):
-            return ax._get_lines.color_cycle
-        elif hasattr(ax._get_lines,"prop_cycler"):
+        if hasattr(ax._get_lines,"prop_cycler"):
             return (X["color"] for X in ax._get_lines.prop_cycler)
+        elif hasattr(ax._get_lines,"color_cycle"):
+            return ax._get_lines.color_cycle
     else:
         raise AssertionError("get_color_cycle: Could not find color cycle")
 

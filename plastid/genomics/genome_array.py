@@ -140,7 +140,6 @@ from abc import abstractmethod
 import itertools
 import operator
 import copy
-import warnings
 import numpy
 import scipy.sparse
 import pysam
@@ -152,7 +151,7 @@ from plastid.readers.bowtie import BowtieReader
 from plastid.readers.bigwig import BigWigReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, warn
 from plastid.util.io.openers import NullWriter
 
 from plastid.genomics.map_factories import *
@@ -196,8 +195,8 @@ def center_map(feature,**kwargs):
     nibble = kwargs["nibble"]
     read_length = feature.length
     if read_length <= 2*nibble:
-        warnings.warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
-                      DataWarning)
+        warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
+             DataWarning)
         return []
 
     span = feature.spanning_segment
@@ -238,8 +237,8 @@ def five_prime_map(feature,**kwargs):
     offset  = kwargs.get("offset",0)
     read_length = feature.length
     if offset > read_length:
-        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-                     DataWarning)
+        warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+             DataWarning)
         return []
 
     value   = kwargs.get("value",1.0)
@@ -278,8 +277,8 @@ def three_prime_map(feature,**kwargs):
     offset  = kwargs.get("offset",0)
     read_length = feature.length
     if offset > read_length:
-        warnings.warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-                      DataWarning)
+        warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
+             DataWarning)
         return []
 
     value   = kwargs.get("value",1.0)
@@ -322,11 +321,10 @@ def variable_five_prime_map(feature,**kwargs):
     offset  = kwargs["offset"].get(len(span),kwargs["offset"].get("default",None))
     feature_length = feature.length
     if offset is None:
-        warnings.warn("No offset for reads of length %s. Ignoring." % feature_length,
-                      DataWarning)
+        warn("No offset for reads of length %s. Ignoring." % feature_length,DataWarning)
         return []
     if offset >= feature_length:
-        warnings.warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
+        warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
 
     if strand in ("+","."):
         start = span.start + offset
@@ -1452,7 +1450,7 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
 
         self.set_normalize(False)
 
@@ -1622,7 +1620,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         new_array = GenomeArray.like(self)
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
 
         if type(other) == self.__class__:
             if mode == "same":       
@@ -2119,7 +2117,7 @@ class SparseGenomeArray(GenomeArray):
             val = val[::-1]
 
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
         self.set_normalize(False)
 
         if seg.chrom not in self:
@@ -2235,7 +2233,7 @@ class SparseGenomeArray(GenomeArray):
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warnings.warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
         self.set_normalize(False)
 
         if isinstance(other,GenomeArray):

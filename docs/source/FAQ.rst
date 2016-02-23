@@ -1,4 +1,4 @@
-Frequently-asked questions
+Frequently asked questions
 ==========================
 
 Questions are grouped into the following sections:
@@ -10,28 +10,37 @@ Questions are grouped into the following sections:
 
 -------------------------------------------------------------------------------
 
+
  .. _faq-run:
 
 Installation and runtime
 ------------------------
 
- .. _faq-install-numpy-first:
 
-Install fails midway
-....................
+ .. _faq-install-fails:
 
-The most common cause of installation failure is that the setup script for
-`plastid` requires `numpy`_, `pysam`_, and `Cython`_ to be installed before it
-can be run. You can verify this by passing the ``--verbose`` flag to `pip`:
+Installation fails
+..................
+
+Installation can fail for multiple reasons. To figure out what is responsible,
+repeat installation passing the ``--verbose`` flag to ``pip``: 
 
  .. code-block:: shell
 
     $ pip install --verbose plastid
 
+Then find the corresponding error message below. If the error is not listed,
+let us know by filing a bug report at `our bug tracker <plastid_issues>`_. 
 
-You should see the following message:
 
- .. _faq-installation-message:
+ .. _faq-install-numpy-first:
+
+Installer requires `numpy`_, `pysam`_ and `Cython`_
+...................................................
+
+The most common cause of installation failure is that the setup script for
+`plastid` requires `numpy`_, `pysam`_, and `Cython`_ to be installed before it
+can be run. In this case, the following message should appear:
 
  .. code-block:: none
 
@@ -48,19 +57,30 @@ then repeat the installation:
 
  .. code-block:: shell
 
-    $ pip install numpy pysam cython # get these first
+    $ pip install numpy pysam cython
     $ pip install plastid
 
+Check if install worked:
 
- .. _faq-install-versions:
+ .. code-block:: shell
+ 
+    $ pip list
+    
+You should see `numpy`_, `pysam`_, and `Cython`_ in the list.
+
+
+ .. _faq-install-fails-with-prereqs:
 
 `numpy`_, `pysam`_ and `Cython`_ are up to date, but install still fails
 ........................................................................
 
-If install fails, first try the workaround in :ref:`faq-install-numpy-first`. If install
-still fails with the message given in :ref:`faq-install-numpy-first`, then there may
-be multiple versions of these libraries installed on your system. Try installing inside
-a vanilla environment in a fresh `virtualenv`_ (note: *not* a `conda`_/`Anaconda`_ environment):
+If  `numpy`_, `pysam`_ and `Cython`_ are already present and install still fails
+with the message given in :ref:`faq-install-numpy-first`, then there may
+be multiple versions of these libraries installed on your system, with
+:data:`plastid` seeing an earlier version.
+
+Try installing inside a vanilla environment in a fresh `virtualenv`_
+(note: *not* a `conda`_/`Anaconda`_ environment):
 
  .. code-block:: shell
 
@@ -81,8 +101,9 @@ a vanilla environment in a fresh `virtualenv`_ (note: *not* a `conda`_/`Anaconda
 
 
 If install succeeds, this suggests that there are in fact multiple versions of 
-one or more of plastid's dependencies installed. In the mean time, ``plastid``
-can be used inside the `virtualenv`_.
+one or more of plastid's dependencies installed on your system
+(as seen in :ref:`faq-install-conda`). In this case,
+``plastid`` can be used inside the `virtualenv`_.
 
 
  .. _faq-install-conda:
@@ -93,9 +114,58 @@ Install fails inside a `conda`_/`Anaconda`_ environment
 One user has reported difficulties installing inside `conda`_/`Anaconda`_
 environments. Despite having up-to-date versions of `numpy`_, `pysam`_, and
 `Cython`_ installed in the `conda`_ environment, during the build process
-`pip` found an incompatible version of `Cython`_. In this case, we recommend
-installing in a fresh `virtualenv`_. See the workaround in
+`pip` found an incompatible version of `Cython`_.  See the workaround in
 :ref:`faq-install-versions` for instructions.
+
+
+ .. _faq-locale-error-osx:
+ 
+I get a locale error when installing or running :data:`plastid`
+...............................................................
+
+This is known to occur on OSX. In this case, you should see a stack trace ending
+with something like:
+
+ .. code-block:: none
+ 
+    from docutils.utils.error_reporting import locale_encoding, ErrorString, ErrorOutput
+      File "/Applications/anaconda/lib/python2.7/site-packages/docutils/utils/error_reporting.py", line 47, in <module>
+        locale_encoding = locale.getlocale()[1] or locale.getdefaultlocale()[1]
+      File "/Applications/anaconda/lib/python2.7/locale.py", line 543, in getdefaultlocale
+        return _parse_localename(localename)
+      File "/Applications/anaconda/lib/python2.7/locale.py", line 475, in _parse_localename
+        raise ValueError, 'unknown locale: %s' % localename
+    ValueError: unknown locale: UTF-8
+
+Please see the workaround 
+`here <http://blog.remibergsma.com/2012/07/10/setting-locales-correctly-on-mac-osx-terminal-application/>`_.
+
+
+ .. _faq-macintosh-cflags:
+ 
+Install fails on OSX
+.................... 
+
+If installing on OSX and you find an error message that resembles the following:
+
+ .. code-block:: none
+ 
+    Command "/usr/local/opt/python/bin/python2.7 -c "import setuptools, tokenize;\
+    __file__='/private/var/folders/8y/xm0qbq655f1d4v20kq5vvfgm0000gq/T/pip-build-0bVdPy/pysam/setup.py';\
+    exec(compile(getattr(tokenize, 'open', open)(__file__).read().replace('\r\n', '\n'), __file__, 'exec'))"\
+   
+     install --record /var/folders/some-folder/install-record.txt --single-version-externally-managed \
+             --compile --user --prefix=" failed with error code 1 in /private/var/folders/some-folder/pysam
+
+Before installing, type:
+
+ .. code-block:: shell
+ 
+    export CFLAGS=-Qunused-arguments
+    export CPPFLAGS=-Qunused-arguments
+
+and then retry.
+
 
 
  .. _faq-distribution-error: 
@@ -132,6 +202,22 @@ Please see :ref:`faq-install-numpy-first`, above.
 Analysis
 --------
 
+ .. _faq-dutp-data
+ 
+Can I use :data:`plastid` with reverse-complemented sequencing data, like dUTP sequencing?
+..........................................................................................
+
+Yes. 
+If using a kit like Illumina's `Truseq Stranded mRNA Library Prep Kit <http://www.illumina.com/products/truseq_stranded_mrna_library_prep_kit.html>`_,
+the data coming off the sequencer will be reverse-complemented compared to the
+original strand that was cloned. To use it with :data:`plastid`, reverse-complement
+your FASTQ file using the
+`fastx_reverse_complement <http://hannonlab.cshl.edu/fastx_toolkit/commandline.html#fastx_revcomp_usage>`_
+tool from the Hanon lab's `fastx toolkit`_. Then align the
+reverse-complemented data using your favorite aligner (e.g. `tophat`_ with
+the argument ``--library-type=fr-second``).
+
+
 
  .. _faq-analysis-fractional-counts:
 
@@ -147,10 +233,40 @@ discussed in depth.
 
 
 
+ .. _faq-script-insufficient-arguments:
+ 
+A script won't run, reporting too few arguments
+...............................................
+
+If you see the following error:
+
+ .. code-block:: none
+ 
+    <script name>: error: too few arguments
+
+Try re-ordering the script arguments, so that all of the non-optional arguments
+(the ones that don't start with ``-``) come first. For example, change:
+
+ .. code-block:: none
+ 
+    $ cs count --fiveprime --offset 13 --min_length 23 --max_length 35 \
+               --count_files ../some_file.bam some_file.positions some_sample_name
+ 
+to
+
+ .. code-block:: none
+
+    $ cs count some_sample_name GL1 \
+               --fiveprime --offset 13 --min_length 23 --max_length 35 \
+               --count_files ../some_file.bam 
+
+Things should then run.
+
+
  .. _faq-igv-vs-mapped-wiggle:
 
-Why does `IGV`_ report way higher coverage at a given nucleotide than the file exported from |make_wiggle|?
-...........................................................................................................
+Why does `IGV`_ report higher coverage at a given nucleotide than the file exported from |make_wiggle|?
+.......................................................................................................
 When `IGV`_ calculates coverage of a nucleotide, it counts the number of alignments covering that nucleotide.
 So, a 30-nucleotide read would contribute 30 :term:`counts` to a dataset.
 
@@ -199,7 +315,7 @@ discussion.
  .. _faq-segmentchain-gff3:
 
 Why does :meth:`plastid.genomics.roitools.SegmentChain.as_gff3` throw errors when exporting multi-segment chains?
-..................................................................................................................
+.................................................................................................................
 This is due to the incredible flexibility of the `GFF3`_ file format and ambiguities that this flexibility
 necessarily induces. See :ref:`this advice <data-export-gff3>` on how to handle this.
 
@@ -210,6 +326,8 @@ How do I prepare data for differential gene expression analysis in `DESeq`_?
 ............................................................................
 
 See :doc:`examples/gene_expression` in the :doc:`examples` section.
+
+
 
 
 -------------------------------------------------------------------------------

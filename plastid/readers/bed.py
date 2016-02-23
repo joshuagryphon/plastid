@@ -37,10 +37,9 @@ __date__ =  "Aug 23, 2011"
 __author__ = "joshua"
 
 import shlex
-import warnings
 from plastid.readers.common import AssembledFeatureReader
 from plastid.genomics.roitools import SegmentChain, Transcript
-from plastid.util.services.exceptions import FileFormatWarning
+from plastid.util.services.exceptions import FileFormatWarning, warn
 
 
 bed_x_formats = {
@@ -165,8 +164,8 @@ class BED_Reader(AssembledFeatureReader):
                 elif self.extra_columns != bed_x_formats[track_type]:
                     my_columns = self._get_extra_column_names()
                     track_format_columns = ",".join([X[0] for X in bed_x_formats[track_type]])
-                    warnings.warn("Extra columns specified by %s track type declaration (%s) don't match those specified by user (%s). Using those specified by user." %\
-                                  (track_type,track_format_columns,my_columns),FileFormatWarning)
+                    warn("Extra columns specified by %s track type declaration (%s) don't match those specified by user (%s). Using those specified by user." %\
+                         (track_type,track_format_columns,my_columns),FileFormatWarning)
                     self.metadata["type"] = "custom"
             else:
                 self.printer.write("Found track type '%s' in track definition line." % track_type)
@@ -207,8 +206,8 @@ class BED_Reader(AssembledFeatureReader):
                 elif self.extra_columns != 0:
                     msg += ("Are you sure this BED file has extra columns (%s)?" % self._get_extra_column_names())
                 else:
-                    msg += "Maybe this BED has extra columns (i.e. is a BED X+Y file)?"
+                    msg += "Maybe this BED has extra columns (i.e. is an extended BED file)?"
 
                 msg += ("\n    %s" % line)
-                warnings.warn(msg,FileFormatWarning)
+                warn(msg,FileFormatWarning)
                 return self.__next__()

@@ -40,14 +40,23 @@ Examples
 --------
 Create a |GenomeHash|::
 
-    >>
-    >>
+    >> from plastid import *
+    >> my_hash = GenomeHash(list(GFF3_Reader(open("some_file.gff"))))
 
 
 Retrieve features overlapping a region of interest on chromosome II::
 
-    >>
-    >>
+    # can use dictionary-like syntax, supplying a GenomicSegment
+    >> overlapping = my_hash[GenomicSegment("chrII",50,10000,"+")]
+    >> overlapping
+    [ list of SegmentChains / Transcripts, et c ]
+    
+    # can also use SegmentChains & Transcripts. In this case, overlap
+    # is defined as sharing chromosomal positions on the same strand
+    >> tx = Transcript(GenomicSegment("chrII",50,300,"+"),GenomicSegment("chrII",9000,10000,"+"))
+    >> overlapping2 = my_hash[tx]
+    >> overlapping2
+    [ list of SegmentChains / Transcripts, et c ]
     
 """
 

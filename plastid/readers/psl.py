@@ -27,11 +27,10 @@ Group multiple entries from a `PSL`_ file by query sequence::
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"
-import warnings
 import itertools
 from plastid.readers.common import AssembledFeatureReader
 from plastid.genomics.roitools import SegmentChain
-from plastid.util.services.exceptions import FileFormatWarning
+from plastid.util.services.exceptions import FileFormatWarning, warn
 
 class PSL_Reader(AssembledFeatureReader): 
     """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
@@ -72,7 +71,7 @@ class PSL_Reader(AssembledFeatureReader):
                 return self.return_type.from_psl(line)
             except:
                 self.rejected.append(line)
-                warnings.warn("Rejecting line %s: %s" % (self.counter,line),FileFormatWarning)
+                warn("Rejecting line %s: %s" % (self.counter,line),FileFormatWarning)
                 return self.__next__()        
 
 

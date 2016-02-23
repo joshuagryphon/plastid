@@ -271,7 +271,7 @@ Glossary of terms
         For example, at a 5% :term:`false discovery rate`, a set of
         20 positive results would contain approximately 1 false positive.
 
-    BED extended format
+    Extended BED
     BED X+Y
         Extended `BED`_ files contain 3-12 columns of `BED`_-formatted data (x),
         plus additional (y) tab-delimited columns of arbitrary data.         

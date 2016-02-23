@@ -17,7 +17,8 @@ import warnings
 import sys
 import numpy
 
-from plastid.util.scriptlib.argparsers import AlignmentParser, AnnotationParser, MaskParser
+from plastid.util.scriptlib.argparsers import (AlignmentParser, AnnotationParser,
+                                               MaskParser, BaseParser)
 from plastid.util.io.openers import get_short_name
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
@@ -41,14 +42,17 @@ def main(args=sys.argv[1:]):
     al = AlignmentParser()
     an = AnnotationParser()
     mp = MaskParser()
+    bp = BaseParser()
     
     alignment_file_parser  = al.get_parser()
     annotation_file_parser = an.get_parser()
     mask_file_parser = mp.get_parser()
+    base_parser = bp.get_parser()
     
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[alignment_file_parser,
+                                     parents=[base_parser,
+                                              alignment_file_parser,
                                               annotation_file_parser,
                                               mask_file_parser])
     
@@ -58,6 +62,7 @@ def main(args=sys.argv[1:]):
     parser.add_argument("--format",default="%.8f",type=str,
                         help=r"printf-style format string for output (default: '%%.8f')")
     args = parser.parse_args(args)
+    bp.get_base_ops_from_args(args)
 
     # if output folder doesn't exist, create it
     if not os.path.isdir(args.out_folder):

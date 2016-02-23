@@ -196,7 +196,7 @@ genome sequence, using the following approach (introduced in :cite:`Ingolia2009`
 
  #. The number of times each pseudo-read aligns is counted. When a pseudo-read
     :term:`multimaps <multimapping>` equally well to multiple genomic coordinates,
-    the genomic position that gave rise to that pseud-read is annotated as
+    the genomic position that gave rise to that pseudo-read is annotated as
     repetitive under the given value for `k` and number of mismatches.
 
  #. Repetitive regions are saved in `BED`_ format.

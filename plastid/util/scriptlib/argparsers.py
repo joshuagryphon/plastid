@@ -8,8 +8,10 @@
   
 
 ===========================================================   ======================================
-**Data type**                                                 **Parser building class**            
+**Parameter/argument set**                                    **Parser building class**            
 -----------------------------------------------------------   --------------------------------------
+Generic parameters (e.g. for error reporting, logging)        :class:`BaseParser`
+
 :term:`Read alignments` or :term:`count files <count file>`   :class:`AlignmentParser`
 
 Genomic feature or mask annotations                           :class:`AnnotationParser`
@@ -76,7 +78,8 @@ import pkg_resources
 import pysam
 import functools
 
-from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning
+from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning,\
+                                             DataWarning, FileFormatWarning, filterwarnings
 from plastid.util.services.decorators import deprecated
 #from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
@@ -90,17 +93,17 @@ from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
 # INDEX: String constants used in parsers below
 #===============================================================================
 
-_MAPPING_RULE_TITLE = "alignment mapping options (BAM & bowtie files only)"
+_MAPPING_RULE_TITLE = "alignment mapping functions (BAM & bowtie files only)"
 _MAPPING_RULE_DESCRIPTION = \
-"""For BAM or bowtie files, one of the mutually exclusive read mapping choices
+"""For BAM or bowtie files, one of the mutually exclusive read mapping functions
 is required:
 """
 
-
+_MAPPING_OPTION_TITLE = "filtering and alignment mapping options"
 _MAPPING_OPTION_DESCRIPTION = \
 """
 The remaining arguments are optional and affect the behavior of specific
-mapping rules:
+mapping functions:
 """
 
 
@@ -281,25 +284,24 @@ class AlignmentParser(Parser):
             ("countfile_format", dict(choices=input_choices,
                                       default="BAM",
                                       help="Format of file containing alignments or counts (Default: %(default)s)")),
-            ("min_length"       , dict(type=int,
-                                       default=25,
-                                       metavar="N",
-                                       help="Minimum read length required to be included"+
-                                            " (Default: %(default)s)")),
-            ("max_length"       , dict(type=int,
-                                       default=100,
-                                       metavar="N",
-                                       help="Maximum read length permitted to be included"+
-                                            " (Default: %(default)s)")),
             ("big_genome"       , dict(action="store_true",
                                        default=False,
                                        help="Use slower but memory-efficient implementation "+
-                                            "for big genomes (e.g. >20 megabases; irrelevant "+
-                                            "for BAM files), or for memory-limited computers")),
+                                            "for big genomes or for memory-limited computers. For wiggle & bowtie files only.")),
             ("normalize"        , dict(action="store_true",
                                        help="Whether counts should be normalized"+
                                             " to counts per million (usually not. default: %(default)s)",
                                        default=False)),
+            ("min_length"       , dict(type=int,
+                                       default=25,
+                                       metavar="N",
+                                       help="Minimum read length required to be included"+
+                                            " (BAM & bowtie files only. Default: %(default)s)")),
+            ("max_length"       , dict(type=int,
+                                       default=100,
+                                       metavar="N",
+                                       help="Maximum read length permitted to be included"+
+                                            " (BAM & bowtie files only. Default: %(default)s)")),
             ]
 
         if self.allow_mapping == False:
@@ -337,7 +339,7 @@ class AlignmentParser(Parser):
                                               "provide the filename of a two-column tab-delimited text "+
                                               "file, in which first column represents read length or the "+
                                               "special keyword `'default'`, and the second column represents "+
-                                              "the offset from the five prime end of that read length at which the read should be mapped.")),
+                                              "the offset from the five prime end of that read length at which the read should be mapped. (Default: %(default)s)")),
                 ("nibble"           , dict(type=int,
                                             default=0,
                                             metavar="N",
@@ -384,7 +386,7 @@ class AlignmentParser(Parser):
                    description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
                    **kwargs):
         """Return an :py:class:`~argparse.ArgumentParser` that opens
-        alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+        alignment (`BAM`_, `CRAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
         In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
         rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
@@ -422,6 +424,7 @@ class AlignmentParser(Parser):
                               parser=parser,
                               groupname="sub_options",
                               arglist=self.map_ops,
+                              title=_MAPPING_OPTION_TITLE,
                               description=_MAPPING_OPTION_DESCRIPTION,
                               )
         
@@ -471,7 +474,7 @@ class AlignmentParser(Parser):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
         
-        if "countfile_format" not in disabled and args.countfile_format == "BAM":
+        if "countfile_format" not in disabled and args.countfile_format in ("BAM","CRAM"):
             count_files = [pysam.Samfile(X,"rb") for X in args.count_files]
             try:
                 ga = BAMGenomeArray(count_files)
@@ -479,7 +482,7 @@ class AlignmentParser(Parser):
                 printer.write("Input BAM/CRAM file(s) not indexed. Please index via:")
                 printer.write("")
                 for fn in args.count_files:
-                    printer.write("    samtools index %s" % fn)
+                    printer.write("    samtools index [-b|-c] %s" % fn)
                 printer.write("")
                 printer.write("Exiting.")
                 sys.exit(1)
@@ -833,7 +836,7 @@ class AnnotationParser(Parser):
                                      return_type=return_type,printer=printer)
             
         return transcripts
-
+        
     def get_genome_hash_from_args(self,args,printer=None):
         """Return a |GenomeHash| of regions from command-line arguments
     
@@ -859,29 +862,45 @@ class AnnotationParser(Parser):
             :py:class:`~argparse.Namespace` is processed by this function  
         """
         from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
+        from plastid.readers.bed import BED_Reader
+        from plastid.readers.gff import GTF2_Reader, GFF3_Reader
+        from plastid.readers.psl import PSL_Reader
         if printer is None:
             printer = NullWriter()
             
         prefix = self.prefix
-        tmp = PrefixNamespaceWrapper(args,prefix)
+        args = PrefixNamespaceWrapper(args,prefix)
         
-        if len(tmp.annotation_files) > 0:
-            printer.write("Opening mask annotation file(s) %s..." % ", ".join(tmp.annotation_files))
-            if tmp.annotation_format in ("BED","GTF2","GFF3") and tmp.tabix == False:
+        if len(args.annotation_files) > 0:
+            printer.write("Opening mask annotation file(s) %s..." % ", ".join(args.annotation_files))
+            if args.annotation_format in ("BED","GTF2","GFF3") and args.tabix == False:
                 msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
     Consider converting to BigBed or using tabix to index your mask file."""
                 warnings.warn(msg,ArgumentWarning)
     
-            if len(tmp.annotation_files) > 0:
-                if tmp.annotation_format.lower() == "bigbed":
-                    if len(tmp.annotation_files) > 1:
+            if len(args.annotation_files) > 0:
+                if args.annotation_format == "BigBed":
+                    if len(args.annotation_files) > 1:
                         printer.write("Bad arguments: we can only process one BigBed file.")
                         sys.exit(2)
-                    return BigBedGenomeHash(tmp.annotation_files[0])
-                elif tmp.tabix == True:
-                    return TabixGenomeHash(tmp.annotation_files,tmp.annotation_format,printer=printer)
+                    return BigBedGenomeHash(args.annotation_files[0])
+                elif "tabix" not in self.disabled and args.tabix == True:
+                    return TabixGenomeHash(args.annotation_files,args.annotation_format,printer=printer)
                 else:
-                    hash_ivcs = self.get_transcripts_from_args(args,printer=printer)
+                    streams = (opener(X) for X in args.annotation_files)
+                    if args.annotation_format == "BED":
+                        reader = BED_Reader
+                    elif args.annotation_format == "GTF2":
+                        reader = GTF2_Reader
+                    elif args.annotation_format == "GFF3":
+                        reader = GFF3_Reader
+                    elif args.annotation_format == "PSL":
+                        reader = PSL_Reader
+                    else:
+                        assert False
+                        
+                    hash_ivcs = list(reader(*streams))
+
                     return GenomeHash(hash_ivcs)
         else:
             return GenomeHash()
@@ -1236,6 +1255,160 @@ class PlottingParser(Parser):
         return colors
 
 
+#===============================================================================
+# INDEX: Parser for generic command-line options (e.g. warning control)
+#===============================================================================
+
+class BaseParser(Parser):
+    """Parser basic options"""
+    
+    def __init__(self,
+                 groupname="base_options",
+                 prefix="",
+                 disabled=None,
+                 ):
+        """Create a parser for basic options for command-line scripts, such as warnings and logging
+        
+    `   Parameters
+        ----------
+        groupname : str, optional
+            Name of argument group. If not `None`, an argument group with
+            the specified name will be created and added to the parser.
+            If not, arguments will be in the main group.         
+        
+        prefix : str, optional
+            string prefix to add to default argument options (Default: "")
+
+        disabled : list, optional
+            list of parameter names that should be disabled from parser,
+            without preceding dashes
+        """
+        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        self.arguments = []
+#         self.level_desc = ["--silent","--quiet","--verbose","--raise"]
+        
+    def get_parser(self,title=None,description=None):
+        """Return an :py:class:`~argparse.ArgumentParser`     
+    
+        Parameters
+        ----------
+            
+        title : str, optional
+            title for option group (used in command-line help screen)
+            
+        description : str, optional
+            description of parser (used in command-line help screen)
+        
+       
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
+        """
+        p = Parser.get_parser(self)
+        g = p.add_argument_group(title="warning/error options")
+        
+        
+        g.add_argument("-q","--quiet",dest="warnlevel",action="store_const",const=-1,
+                       help="Suppress all warning messages. Cannot use with '-v'.")
+        g.add_argument("-v","--verbose",dest="warnlevel",action="count",
+                       help="Increase verbosity. With '-v', show every warning. With '-vv', turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)")
+        
+#         g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
+#                        help="Suppress all warning messages")
+#         g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
+#                        help="Show each type of warning once (Default)")
+#         g.add_argument("--verbose",dest="warnlevel",action="store_const",const=2,
+#                        help="Show every warning instance")
+#         g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
+#                        help="Raise exceptions instead of warnings")
+        p.set_defaults(warnlevel=0)
+
+        return p
+
+    def get_base_ops_from_args(self,args):
+        
+        global warnings
+        
+        args = PrefixNamespaceWrapper(args,self.prefix)
+        warnlevel = args.warnlevel
+        actions = ["ignore",
+                   "onceperfamily",
+                   "always",
+                   "error"]
+#         desc = self.level_desc
+        
+#         if len(set(desc) & set(sys.argv[1:])) > 1:
+#             warnings.warn("Only one of [%s] is permitted. Using %s" % (", ".join(desc),desc[warnlevel]),
+#                            ArgumentWarning)
+            
+        if warnlevel >= len(actions) - 1:
+            warnlevel = len(actions) - 2
+        try:
+            action = actions[warnlevel+1]
+        except IndexError:
+            warnings.warn("Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." % warnlevel,UserWarning)
+            action = actions[1]
+        
+        for type_, msg in PLASTID_WARNINGS:
+            filterwarnings(action,message=msg,category=type_)
+
+
+PLASTID_WARNINGS = [
+                    
+    # mapping rules
+    (DataWarning,"File contains read alignments shorter"),
+    (DataWarning,"No offset for reads of length"),
+    (DataWarning,"longer than read length"),
+    
+    # genome_array
+    (DataWarning,"Temporarily turning off normalization"),
+    
+    # roi_tools
+    (DataWarning,"is a zero-length SegmentChain. Returning 0-length count vector"),
+    
+    # metagene
+    (Warning,r"IndexError finding common positions at region.*"),
+    (DataWarning,"has no gene_id. Inferring gene_id"),
+    (DataWarning,"has no attribute"),
+    (DataWarning,"Ignoring labels"),
+    
+    # phase_by_size
+    (DataWarning,"is not divisible by 3. Ignoring last partial codon."),
+    
+    # util.io.filters
+    (Warning,"Could not alert listener"),
+
+
+    # util.services.decorators
+    (DeprecationWarning,"is deprecated and will be removed from module"),
+    
+    # gff
+    (DataWarning,"because it contains exons on multiple chromosomes or strands"),
+    (DataWarning,"because start or stop codons are outside exon boundaries"),
+    (DataWarning,"with no `Parent` or `ID`. Ignoring."),
+    (DataWarning,"because it contains exons on multiple strands"),
+    (DataWarning,"because start or stop codons are outside exon boundaries."),
+
+    # bed
+    (FileFormatWarning,"Extra columns specified by."),
+    (FileFormatWarning,"Are you sure this is a"),
+    (FileFormatWarning,"Are you sure this BED file has extra columns"),
+    (FileFormatWarning,"Maybe this BED has extra columns"),
+    
+    # gff_tokens
+    (FileFormatWarning,"Found duplicate attribute key"),
+
+
+    # BigBed
+    (FileFormatWarning,"Could not find or could not parse autoSql declaration in BigBedFile"),
+    
+    # autoSql
+    (DataWarning,"Could not convert autoSql value"),
+    
+    # psl
+    (FileFormatWarning,"Rejecting line")
+
+]
 
 
 #===============================================================================

@@ -54,7 +54,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
-from plastid.util.scriptlib.argparsers import AlignmentParser, PlottingParser
+from plastid.util.scriptlib.argparsers import (AlignmentParser, PlottingParser,
+                                               BaseParser)
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
@@ -212,14 +213,17 @@ def main(argv=sys.argv[1:]):
     """
     ap = AlignmentParser(allow_mapping=False,input_choices=["BAM"],
                          disabled=["normalize","big_genome",])
+    bp = BaseParser()
     alignment_file_parser = ap.get_parser()
+    base_parser = bp.get_parser()
     
     pp = PlottingParser()
     plotting_parser = pp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[alignment_file_parser,
+                                     parents=[base_parser,
+                                              alignment_file_parser,
                                               plotting_parser])
     
     parser.add_argument("--min_counts",type=int,default=10,metavar="N",
@@ -248,6 +252,8 @@ def main(argv=sys.argv[1:]):
     
     # set manual options
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
+
     args.mapping = "fiveprime"
     args.offset  = 0
     args.nibble  = 0
@@ -291,7 +297,7 @@ def main(argv=sys.argv[1:]):
     with argsopener(profile_fn,args,"w") as metagene_out:
         metagene_profile.to_csv(metagene_out,
                                 sep="\t",
-                                header=0,
+                                header=True,
                                 index=False,
                                 na_rep="nan",
                                 columns=["x"]+["%s-mers" % X for X in lengths])
@@ -319,7 +325,7 @@ def main(argv=sys.argv[1:]):
             max_y = numpy.nanmax([max_y,
                                   numpy.nanmax(metagene_profile["%s-mers"% k].values)])
 
-    if numpy.isnan(max_y):
+    if numpy.isnan(max_y) or max_y == 0:
         max_y = 1.0
 
 
@@ -371,9 +377,10 @@ def main(argv=sys.argv[1:]):
                 transform=matplotlib.transforms.offset_copy(ax.transData,fig,
                                                             x=6.0,y=3.0,units="points"))
 
-        ymax = baseline + plot_y.max()
+        ymax = baseline + numpy.nanmax(plot_y)
 
-        if mask.sum() == numpy.isnan(ymask).sum() or ymask.sum() == 0:
+        # if all valid positions are nan, or if all valid positions are <= 0
+        if mask.sum() == numpy.isnan(ymask).sum() or numpy.nanmax(ymask) == 0:
             offset = args.default
             usedefault = True
         else:

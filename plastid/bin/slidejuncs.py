@@ -88,7 +88,7 @@ from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.genomics.genome_hash import GenomeHash
 from plastid.readers.bed import BED_Reader
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.scriptlib.argparsers import MaskParser, SequenceParser
+from plastid.util.scriptlib.argparsers import (MaskParser, SequenceParser, BaseParser)
 import inspect
 import warnings
 warnings.simplefilter("once")
@@ -377,9 +377,11 @@ def main(argv=sys.argv[1:]):
     """
     sp = SequenceParser()
     mp = MaskParser()
+    bp = BaseParser()
+    
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[sp.get_parser(),mp.get_parser()],
+                                     parents=[bp.get_parser(),sp.get_parser(),mp.get_parser()],
                                      )
     parser.add_argument("--maxslide",type=int,default=10,
                         help="Maximum number of nt to search 5\' and 3\' of intron"+
@@ -393,6 +395,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("outbase",type=str,
                         help="Basename for output files")
     args = parser.parse_args(argv)
+    bp.get_base_ops_from_args(args)
     
     printer.write("Opening genome from %s..." % args.sequence_file)
     genome = sp.get_seqdict_from_args(args)

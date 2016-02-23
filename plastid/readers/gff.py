@@ -54,7 +54,6 @@ See Also
 __author__="joshua"
 __date__ ="$Dec 1, 2010 11:00:55 AM$"
 import itertools
-import warnings
 import gc
 import copy
 import sys
@@ -66,7 +65,7 @@ from plastid.readers.common import get_identical_attributes, \
 from plastid.genomics.roitools import Transcript, SegmentChain, \
                                       GenomicSegment, add_three_for_stop_codon
 from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, warn
 
 #===============================================================================
 # INDEX: SO v2.5.3 feature types
@@ -958,14 +957,14 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                         
                 transcripts.append(my_tx)
             except ValueError:
-                warnings.warn("Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands." % tname,DataWarning)
+                warn("Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands." % tname,DataWarning)
                 # transcripts with exons on two strands
                 rejected_transcripts.append(tname)
             except KeyError:
                 # transcripts where CDS ends outside bounds of transcript
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
-                warnings.warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
+                warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
         transcripts.sort()
         sys.exc_traceback = None
 
@@ -1145,8 +1144,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             tnames = feature.attr.get("Parent",[feature.attr.get("ID",[])])
 
             if len(tnames) == 0:
-                warnings.warn("Found %s at %s with no `Parent` or `ID`. Ignoring." % (feature.attr["type"],str(feature.spanning_segment)),
-                              DataWarning)
+                warn("Found %s at %s with no `Parent` or `ID`. Ignoring." % (feature.attr["type"],str(feature.spanning_segment)),
+                     DataWarning)
             for tname in tnames:
                 try:
                     self._feature_cache[feature.attr["type"]][tname].append(feature)
@@ -1226,13 +1225,13 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     transcripts.append(my_tx)     
                                    
                 except ValueError:
-                    warnings.warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,DataWarning)
+                    warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,DataWarning)
                     # transcripts with exons on two strands
                     rejected.append(tname)
                 except KeyError:
                     # transcripts where CDS ends outside bounds of transcript
                     # there are 25 of these in flybase r5.43
-                    warnings.warn("Rejecting transcript '%s because start or stop codons are outside exon boundaries." % tname,DataWarning)
+                    warn("Rejecting transcript '%s because start or stop codons are outside exon boundaries." % tname,DataWarning)
                     rejected.append(tname)
             else:
                 # transcript that has multiple subfeatures with shared ID but no children
