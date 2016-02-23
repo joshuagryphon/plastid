@@ -244,7 +244,7 @@ class AlignmentParser(Parser):
     """
     
     def __init__(self,prefix="",disabled=None,
-                 input_choices=("BAM","CRAM","bowtie","wiggle"),
+                 input_choices=("BAM","bowtie","wiggle"),
                  groupname="alignment_options",
                  allow_mapping=True):
         """Create a parser for read alignments and/or quantitative data
@@ -386,7 +386,7 @@ class AlignmentParser(Parser):
                    description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
                    **kwargs):
         """Return an :py:class:`~argparse.ArgumentParser` that opens
-        alignment (`BAM`_, `CRAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+        alignment (`BAM`_,  or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
         In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
         rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
@@ -479,7 +479,7 @@ class AlignmentParser(Parser):
             try:
                 ga = BAMGenomeArray(count_files)
             except ValueError:
-                printer.write("Input BAM/CRAM file(s) not indexed. Please index via:")
+                printer.write("Input BAM file(s) not indexed. Please index via:")
                 printer.write("")
                 for fn in args.count_files:
                     printer.write("    samtools index [-b|-c] %s" % fn)
@@ -504,7 +504,7 @@ class AlignmentParser(Parser):
             elif map_rule in self.bamfuncs:
                 map_function = functools.partial(self.bamfuncs[map_rule],args=args)
             else:
-                printer.write("Mapping rule '%s' not implemented for BAM/CRAM input. Exiting." % map_rule)
+                printer.write("Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule)
                 sys.exit(1)
             ga.set_mapping(map_function)
             
