@@ -24,8 +24,6 @@
  .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
  .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
  .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
- .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
- .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
  .. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
  .. |_TwoBitSeqProxys| replace:: :py:class:`_TwoBitSeqProxys <plastid.genomics.seqtools._TwoBitSeqProxy>`
  .. |TwoBitSeqRecordAdaptor| replace:: :py:class:`~plastid.genomics.seqtools.TwoBitSeqRecordAdaptor`

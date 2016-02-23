@@ -107,10 +107,11 @@ and because `GFF3`_ is agnostic to the feature  :term:`ontology` used,
 correctly assembling complex features from a `GFF3`_ file is not trivial.
 
 For convenience, |GFF3_TranscriptAssembler| is provided.
-By assuming the `GFF3`_ uses th SO 2.5.3 ontology (used by many of the model
-organism databases,  including `SGD`_, `FlyBase`_, and `WormBase`_), it 
-assembles features into |Transcript| objects, first by `Parent` matching,
-and then by shared `ID`, if shared `ID` attributes are present.
+By assuming the `GFF3`_ uses the `Sequence Ontology Project`_ 
+(used by many of the model organism databases,  including `SGD`_, `FlyBase`_,
+and `WormBase`_) version 2.5.3, it  assembles features into |Transcript| objects,
+first by `Parent` matching, and then by shared `ID`, if shared `ID` attributes
+are present.
 
 The reader behaves as an iterator, which assembles groups of transcripts lazily::
 

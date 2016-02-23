@@ -18,7 +18,7 @@ or, for a single-user install:
 
  .. code-block:: shell
 
-    $ pip install --user numpy pysam
+    $ pip install --user numpy pysam cython
     $ pip install --user plastid
 
 Test your installation within Python:
@@ -36,8 +36,9 @@ Then type:
 
     $ pip install --user --install-option="--recythonize" plastid
 
-And then re-test the installation. If you continue to
-get errors, please report them on our `issue tracker <plastid_issues>`_.
+And then re-test the installation. If you continue to get errors,
+please see :ref:`faq-install-fails` for common errors or our
+`issue tracker <plastid_issues>`_ to report a new one.
 
 
 Command-line scripts will be installed wherever your system configuration dictates.

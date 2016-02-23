@@ -15,13 +15,12 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 
 
 
-Unreleased
-----------
+plastid [0.4.5] = [2016-02-22]
+------------------------------
 
-Changes here are mostly under the hood, involving improvements in speed,
-stability, compatibility, and error reporting. In addition, entrypoints
-were created to allow custom mapping rules to be used from command-line
-scripts.
+Changes here are mostly under the hood, involving improvements in usability,
+speed, stability, compatibility, and error reporting. We also fixed up tools
+for developers and added entrypoints for custom mapping rules.
 
 
 Added
@@ -53,23 +52,24 @@ Added
 Fixed
 .....
 
-  - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
-    an ``IndexError`` in earlier versions of :mod:`numpy`.
-
   - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
     as well as >= 1.3. This corrected a plotting bug in `cs`.
 
   - :meth:`AnnotationParser.get_genome_hash_from_args` now internally uses 
     GFF3_Reader and GTF2_Reader instead of GFF3_TranscriptAssembler and 
-    GTF2_TranscriptAssembler, allowing GTF2/GFF3 masks to be type-agnostic
+    GTF2_TranscriptAssembler, allowing mask files in GTF2/GFF3 foramts
+    to be type-agnostic in command-line scripts
 
-  - bug lossing in result of contig names when using 2bit files in `crossmap`
+  - contig names no longer lost when using 2bit files in `crossmap`
 
-  - updates to `psite`
+  - updates to :mod:`~plastid.bin.psite`
   
       - output header in metagene_profiles. Sorry about that 
 
       - fix compatibility problem with new versions of matplotlib
+
+      - now catches a ``ValueError`` that used to be an ``IndexError``
+        in earlier versions of :mod:`numpy`.
 
   - Fixed loss-of-ID bug in :meth:`Transcript.get_cds`
 

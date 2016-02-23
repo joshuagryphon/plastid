@@ -4,7 +4,7 @@ mapping sequencing reads. These positions are then saved in a :term:`mask file`,
 so that they may be excluded as from further analyses.
 
 To identify such positions, a genome sequence is diced into :term:`k-mers <k-mer>`
-aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
+and the :term:`k-mers` aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
 one genomic location are then marked as deriving from repetitive regions of
 the genome. These regions are exported in a `BED`_ file.
 
@@ -30,7 +30,11 @@ where:
   - `MISMATCHES` is the number of mismatches permitted during alignment,
     also set by the user.
 
-
+ .. note::
+ 
+    This script internally uses `bowtie`_ and a bowtie index for alignments.
+    Make sure you have these installed.
+    
  .. note::
 
     For large genomes, it is highly recommended to convert the `BED`_-format output
