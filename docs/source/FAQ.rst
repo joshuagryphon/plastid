@@ -256,7 +256,7 @@ to
 
  .. code-block:: none
 
-    $ cs count some_sample_name GL1 \
+    $ cs count some_file.positions some_sample_name \
                --fiveprime --offset 13 --min_length 23 --max_length 35 \
                --count_files ../some_file.bam 
 
