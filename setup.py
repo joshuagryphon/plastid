@@ -295,8 +295,8 @@ bigwig = Extension(
 )
 
 bigbed = Extension(
-    "plastid.readers.z",
-    ["plastid/readers/z.pyx"] + kent_deps,
+    "plastid.readers.bigbed",
+    ["plastid/readers/bigbed.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],

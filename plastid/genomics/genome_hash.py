@@ -482,9 +482,6 @@ class BigBedGenomeHash(AbstractGenomeHash):
                                          return_type=return_type,
                                          cache_depth=cache_depth)
     
-    def __del__(self):
-        self.bigbedreader.close()
-            
     def get_overlapping_features(self,roi,stranded=True):
         """Return list of features overlapping `roi`
         
@@ -508,7 +505,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return list(self.bigbedreader.__getitem__(roi,stranded=stranded))
+        return list(self.bigbedreader.get(roi,stranded=stranded))
 
     def __getitem__(self,roi,stranded=True):
         """Return list of features that overlap the region of interest (roi)
