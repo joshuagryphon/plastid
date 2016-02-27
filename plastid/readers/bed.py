@@ -13,7 +13,7 @@ with each transcript::
 
 Retrieve a list of |SegmentChains| from a `BED`_ file::
 
-    >>> my_chains = list(BED_Reader(open("some_file.bed"),return_type=SegmentChain))
+    >>> my_chains = list(BED_Reader(open("some_file.bed")))
     >>> my_chains[:5]
         [list of segment chains as output...]
 
@@ -24,7 +24,7 @@ they were one stream::
     >>> import pysam
     >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) for X in ["file1.bed","file2.bed","file3.bed"]]
     >>> bed_reader = BED_Reader(*bed_files,tabix=True)
-    >>> for segchain in bed_reader:
+    >>> for chain in bed_reader:
             pass # do something more interesting
                                 
 
@@ -38,7 +38,6 @@ __author__ = "joshua"
 
 import shlex
 from plastid.readers.common import AssembledFeatureReader
-from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.services.exceptions import FileFormatWarning, warn
 
 
@@ -69,7 +68,7 @@ bed_x_formats = {
 }
 
 class BED_Reader(AssembledFeatureReader):
-    """Reads `BED`_ and :term:`BED X+Y` files line-by-line into |SegmentChains|
+    """Reads `BED`_ and :term:`extended BED` files line-by-line into |SegmentChains|
     or |Transcripts|. Metadata, if present in a track declaration, is saved
     in `self.metadata`. Malformed lines are stored in `self.rejected`, while
     parsing continues.
@@ -94,7 +93,7 @@ class BED_Reader(AssembledFeatureReader):
         Attributes declared in track line, if any
     
     extra_columns : int or list, optional
-        Extra, non-BED columns in :term:`BED X+Y` format file corresponding to feature
+        Extra, non-BED columns in :term:`extended BED` format file corresponding to feature
         attributes. This is common in `ENCODE`_-specific `BED`_ variants.
         
         if `extra_columns` is:
@@ -119,7 +118,7 @@ class BED_Reader(AssembledFeatureReader):
 
           - if a known track type is specified by the `type` field, it attempts
             to format the extra columns as specified by that type. Known track
-            types prently include:
+            types presently include:
 
               - bedDetail
               - narrowPeak
@@ -137,12 +136,12 @@ class BED_Reader(AssembledFeatureReader):
         self.extra_columns = kwargs.get("extra_columns",0)
 
     def _parse_track_line(self,inp):
-        """Parse track line from `BED`_ file
+        """Parse track line from `BED`_ / extended BED file
         
         Parameters
         ----------
         inp : str
-            track definition line from `BED`_ file
+            track definition line from `BED`_  / extended BED file
 
         Returns
         -------
@@ -171,7 +170,7 @@ class BED_Reader(AssembledFeatureReader):
                 self.printer.write("Found track type '%s' in track definition line." % track_type)
         
     def _get_extra_column_names(self):
-        """Return names of extra columns in BED X+Y file)"""
+        """Return names of extra columns in extended BED file)"""
         if isinstance(self.extra_columns,int):
             my_columns = "%s unnamed columns" % self.extra_columns
         elif isinstance(self.extra_columns,list):
