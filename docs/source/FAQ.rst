@@ -218,6 +218,16 @@ reverse-complemented data using your favorite aligner (e.g. `tophat`_ with
 the argument ``--library-type=fr-second``).
 
 
+ .. _faq-psite-use-aggregate:
+
+The P-site script shows zero reads in output, but I have lots of reads in my genes
+..................................................................................
+This occurs in datasets with few counts of any given length, because |psite| 
+plots the median density at each position. In this case, do the P-site estimation
+from aggregate counts at each position instead of median normalized density. To
+do so, re-run |psite| with the ``--aggregate`` argument, as shown
+:ref:`here <psite-use-aggregate>`.
+
 
  .. _faq-analysis-fractional-counts:
 

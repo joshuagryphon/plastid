@@ -7,6 +7,7 @@ as the largest peak upstream of the start codon. The distance between that
 peak and the start codon itself is taken to be the :term:`P-site offset` for that
 read length.
 
+
 Notes
 ------
 Users should carefully examine output files to make sure these estimates are
@@ -14,6 +15,7 @@ reasonable, because if clear start codon peaks are not present in the data,
 the algorithm described above will fail.  For this reason, in addition to the
 :term:`P-site offsets <P-site offset>`, full metagene profiles are
 exported as both tables and graphics.
+
 
 Output files
 ------------
@@ -24,7 +26,7 @@ Output files
         for ``--offset`` when using ``--fiveprime_variable`` mapping in any
         of the other scripts in :obj:`plastid.bin`
 
-    OUTBASE_p_offsets.svg
+    OUTBASE_p_offsets.[svg | png | pdf | et c]
         Plot of metagene profiles for each read length, when reads are mapped
         to their 5' ends, :term:`P-site offsets <P-site offset>` are applied.
 
@@ -66,7 +68,7 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 
 
-def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer=NullWriter()):
+def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,aggregate=False,printer=NullWriter()):
     """Calculate a :term:`metagene profile` for each read length in the dataset
     
     Parameters
@@ -94,8 +96,14 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
     max_len : int
         Maximum read length to include
 
+    aggregate : bool, optional
+        Estimate P-site from aggregate reads at each position, instead of median
+        normalized read density. Potentially noisier, but helpful for lower-count
+        data or read lengths with few counts. (Default: False)
+                             
     printer : file-like, optional
         filehandle to write logging info to (Default: :func:`~plastid.util.io.openers.NullWriter`)
+        
                
     Returns
     -------
@@ -180,7 +188,11 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,printer
             # ignore numpy mean of empty slice warning, given by numpy in Python 2.7-3.4
             warnings.filterwarnings("ignore",".*mean of empty.*",RuntimeWarning)
             try:
-                profile = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+                if aggregate == False:
+                    profile = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+                else:
+                    profile = numpy.nansum(k_raw[denominator >= min_counts],axis=0)
+                    
             # in numpy under Python3.5, this is an IndexError instead of a warning
             except IndexError:
                 profile = numpy.zeros_like(profile_table["x"],dtype=float)
@@ -241,6 +253,11 @@ def main(argv=sys.argv[1:]):
                              "to be the distance between the largest peak in the entire ROI "+
                              "and the start codon."
                         )
+    parser.add_argument("--aggregate",default=False,action="store_true",
+                        help="Estimate P-site from aggregate reads at each position, instead "+
+                             "of median normalized read density. Noisier, but helpful for "+
+                             "lower-count data or read lengths with few counts. (Default: False)"
+                        ),
 
     parser.add_argument("--default",type=int,default=13,
                         help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset (Default: 13)")
@@ -290,6 +307,7 @@ def main(argv=sys.argv[1:]):
                                                              args.min_counts,
                                                              min_len,
                                                              max_len,
+                                                             aggregate=args.aggregate,
                                                              printer=printer)
     
     # save counts
@@ -349,7 +367,11 @@ def main(argv=sys.argv[1:]):
     ax = plt.gca()
     plt.title(title)
     plt.xlabel("Distance from CDS start, (nt; 5' end mapping)")
-    plt.ylabel("Median normalized read density (au)")
+    if args.aggregate == True:
+        plt.ylabel("Aggregate read counts (au)")
+    else:
+        plt.ylabel("Median normalized read density (au)")
+        
     plt.axvline(0.0,color=mplrc["axes.edgecolor"],dashes=[3,2])
 
     x = metagene_profile["x"].values
@@ -366,7 +388,10 @@ def main(argv=sys.argv[1:]):
         if numpy.isnan(y).all():
             plot_y = numpy.zeros_like(x)
         else:
-            plot_y = y / max_y
+            if args.aggregate == False:
+                plot_y = y / max_y
+            else:
+                plot_y = y.astype(float) / numpy.nanmax(y) * 0.9
  
         # plot metagene profiles on common scale, offset by baseline from bottom to top
         ax.plot(x,baseline + plot_y,color=color)

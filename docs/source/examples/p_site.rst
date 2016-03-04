@@ -75,12 +75,12 @@ This yields the following strategy:
 
 Determining :term:`P-site offsets <P-site offset>` using the |psite| script
 ---------------------------------------------------------------------------
-The strategy above is implemented by |psite|, which can be
-executed from the terminal.
+The strategy above is implemented by |psite|, which can be executed from
+the terminal.
 
 Because |psite| internally performs :term:`metagene analysis <metagene>`, we need
-to use a file produced by the |metagene| script. The command call to 
-|metagene| is included below, and explained in detal in :doc:`/examples/metagene`.
+to use a file produced by the |metagene| script. The command call to  |metagene|
+is included below, and explained in detal in :doc:`/examples/metagene`.
 From the terminal:
 
  .. code-block:: shell
@@ -102,7 +102,7 @@ From the terminal:
 
 For most users, two of the output files are of interest:
 
-  #. An SVG graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
+  #. A graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
      showing the metagene profile for each read length:
 
       .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
@@ -132,7 +132,57 @@ For most users, two of the output files are of interest:
      As in the graphical output, the values for 29 and 35 appear to be off. We will
      edit this file in a text editor, and set the offset to 12 for 29-mers, and 14
      for 35-mers. We'll also set the default to 14, the most common value.
+     
+     
+ .. _psite-use-aggregate:
+ 
+If the output looks blank for one or more read lengths
+......................................................
+    
+This occurs in datasets in which there are few reads of any given length.
+In this case, it is possible to estimate the P-site offset from aggregate
+read counts at each position, instead of median normalized read density.
 
+The aggregate measurement is potentially noisier, but more sensitive to low read
+counts. To so, run the script with the ``--aggregate`` flag:
+
+ .. code-block:: shell
+
+    # re-run the psite script using --aggregate
+    $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
+                                 --min_length 29 \
+                                 --max_length 35 \
+                                 --require_upstream \
+                                 --count_files SRR609197_riboprofile.bam \
+                                 --aggregate
+
+
+Or, manually load the appropriate data matrix from the previous run (named
+``SAMPLE_LENGTH_rawcounts.txt.gz``), and make the profile manually:
+
+ .. code-block:: python
+ 
+    >>> import numpy
+    >>> import matplotlib.pyplot as plt
+    
+    >>> counts26  = numpy.loadtxt("merlin_orfs_26_rawcounts.txt.gz")
+    >>> profile26 = numpy.nansum(counts26,axis=0)
+    
+    # assuming we used `--upstream 50 --downstream 50` in call to `metagene generate`
+    # change ranges below to match what you used
+    >>> x = numpy.arange(-50,50)
+    
+    # estimate offset as highest peak upstream of start codon
+    >>> offset = 0 - x[profile26[x <= 0].argmax()]
+    
+    # plot
+    >>> plt.plot(x,profile26,label="26 mers")
+    >>> plt.axvline(offset,dashes=[2,2],label="%s nt offset" % offset)
+    
+    # check estimate to see if it is reasonable
+    >>> plt.show()
+    
+Then, manually edit the text output accordingly.
 
 
 Using the P-site offset in analyses
