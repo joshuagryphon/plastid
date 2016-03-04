@@ -19,7 +19,7 @@ from collections import OrderedDict
 from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from plastid.genomics.genome_hash import GenomeHash
 from plastid.readers.bed import BED_Reader
-from plastid.readers.z import BigBedReader
+from plastid.readers.bigbed import BigBedReader
 
 warnings.simplefilter("ignore",DeprecationWarning)
 
