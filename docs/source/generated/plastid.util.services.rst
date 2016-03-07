@@ -11,7 +11,6 @@ Submodules
 
 .. toctree::
 
-   plastid.util.services.colors
    plastid.util.services.decorators
    plastid.util.services.exceptions
    plastid.util.services.lists
