@@ -64,14 +64,11 @@ from plastid.util.services.decorators import skipdoc
 from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
 from plastid.readers.autosql import AutoSqlDeclaration
 
-from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem, _BBI_Reader
+from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem, _BBI_Reader, get_lm
 from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
                                        forward_strand, reverse_strand, unstranded,\
                                        error_strand,\
                                        _GeneratorWrapper
-#
-#
-#from plastid.readers.bbifile cimport lmInit, lmCleanup
 
 
 #===============================================================================
@@ -163,6 +160,28 @@ cdef class BigBedReader(_BBI_Reader):
                  add_three_for_stop=False,
                  **kwargs
                  ):
+        """
+        Parameters
+        ----------
+        filename : str
+            Path to `BigBed`_ file
+            
+        return_type : |SegmentChain| or subclass, optional
+            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+        add_three_for_stop : bool, optional
+            Some annotation files exclude the stop codon from CDS annotations. If set to
+            `True`, three nucleotides will be added to the threeprime end of each
+            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+            feature. (Default: `False`)
+            
+        maxmem : float
+            Maximum desired memory footprint for C objects, in megabytes.
+            May be temporarily exceeded if large queries are requested.
+            Does not include memory footprint of Python objects.
+            (Default: 0, no limit)
+            
+        """
         cdef:
             str autosql
             
@@ -248,8 +267,6 @@ cdef class BigBedReader(_BBI_Reader):
             autoSql-formatted string, or "" if no autoSql definition present
         """
         cdef:
-            long as_offset  = self._bbifile.asOffset
-            int length      = self._bbifile.totalSummaryOffset - as_offset 
             char *  c_asql = bigBedAutoSqlText(self._bbifile)
             str     p_asql
             
@@ -262,33 +279,6 @@ cdef class BigBedReader(_BBI_Reader):
             freeMem(c_asql)
         
         return p_asql
-
-#     def _get_autosql_str(self):
-#         """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
-#         
-#         Returns
-#         -------
-#         str
-#             autoSql-formatted string, or "" if no autoSql definition present
-#         """
-#         cdef:
-#             long as_offset   = self._bbifile.asOffset
-#             long length      = self._bbifile.totalSummaryOffset - as_offset 
-#             bint swapped     = self._bbifile.isSwapped
-#             
-#             # prev note: whether or not file is byteswapped??
-#             str byte_order   = ">" if swapped else "<"
-#             str autosql_fmt
-#             
-#         if as_offset > 0 and length > 0:
-#             # temporarily open file, because using Kent's bigBedAutoSqlText() was segfaulting
-#             fh = open(self.filename,"rb")
-#             fh.seek(as_offset)
-#             autosql_fmt = "%s%ss" % (byte_order,length)            
-#             autosql_str, = struct.unpack(autosql_fmt,fh.read(length))
-#             return str(autosql_str.decode("ascii")).strip("\0")
-#         else:
-#             return ""
 
     def get(self, roi, bint stranded=True, bint check_unique=True):
         """Iterate over features that share genomic positions with a region of interest
@@ -418,13 +408,19 @@ cdef class BigBedReader(_BBI_Reader):
                  
                     bed_row = "%s\t%s" % (bed_row,rest)
                      
+                # TO CONSIDER: could change this to a def insetad of a cdef,
+                # and then yield after each row. This would save memory compared
+                # to building up a big list of strings
+                #
+                # but then we wouldn't be able to check_unique
+                #
+                # not even sure a list of strings takes up that much space
                 ltmp.append(bed_row)
                 iv = iv.next
         
         # filter for uniqueness
         if check_unique == True:
             ltmp = sorted(set(ltmp))
-        
         
         if self.add_three_for_stop == True:
             return _GeneratorWrapper((add_three_for_stop_codon(outfunc(X,extra_columns=etypes)) for X in ltmp),"BigBed entries")
@@ -462,7 +458,7 @@ cdef class BigBedReader(_BBI_Reader):
         object
             Object of ``self.return_type``, |SegmentChain| or one of its subclasses
         """
-        return _GeneratorWrapper(BigBedIterator(self),"BigBed records")
+        return _GeneratorWrapper(BigBedIterator(self,maxmem=self._maxmem),"BigBed records")
 
 
 # can't be cdef'ed or cpdef'ed due to yield
@@ -474,13 +470,19 @@ cdef class BigBedReader(_BBI_Reader):
 # 
 # But, cirTree.h, crTree.h, and BigBed.h don't give a convenient way to get
 # all the data from a node, so doing so would result in lots of reimplementation.
-def BigBedIterator(BigBedReader reader):
+def BigBedIterator(BigBedReader reader,maxmem=0):
     """Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
      
     Parameters
     ----------
     reader : |BigBedReader|
         Reader to iterate over
+
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        Does not include memory footprint of Python objects.
+        (Default: 0, no limit)
     
     Yields
     ------
@@ -499,11 +501,15 @@ def BigBedIterator(BigBedReader reader):
         lm             *buf = lmInit(0)
    
     if not buf:
-        raise MemoryError("BigBedIterator: could not allocate memory")
+        raise MemoryError("BigBedIterator: could not allocate local memory")
 
     for chrom,chromlength in chromsizes:
         query = SegmentChain(GenomicSegment(chrom,0,chromlength,"."))
-        for roi in reader._c_get(query,stranded=False,check_unique=False,my_lm=buf):
+        buf = get_lm(my_lm=buf,maxmem=maxmem)
+        if not buf:
+            raise MemoryError("BigBedIterator: could not allocate local memory")
+
+        for n,roi in enumerate(reader._c_get(query,stranded=False,check_unique=False,my_lm=buf)):
             yield roi
 
     lmCleanup(&buf)

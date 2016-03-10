@@ -44,6 +44,12 @@ cdef class BigWigReader(_BBI_Reader):
         ----------
         filename : str
             Name of `bigwig`_ file
+
+        maxmem : float
+            Maximum desired memory footprint for C objects, in megabytes.
+            May be temporarily exceeded if large queries are requested.
+            Does not include memory footprint of Python objects.
+            (Default: 0, no limit)
         """
 #         """
 #         fill : float
@@ -55,7 +61,7 @@ cdef class BigWigReader(_BBI_Reader):
         self._sum = numpy.nan
 
     def __iter__(self):
-        return _GeneratorWrapper(BigWigIterator(self),"BigWig values")
+        return _GeneratorWrapper(BigWigIterator(self,maxmem=self._maxmem),"BigWig values")
 
     def get(self, object roi, bint roi_order=True, double fill=numpy.nan): 
         """Retrieve array of counts from a region of interest.
@@ -289,7 +295,6 @@ cdef class BigWigReader(_BBI_Reader):
             
         return counts    
 
-
 # DISABLED - values for mean & stdev aren't even close to those expected from
 # known test files. However, pulling a numpy array with get() or __getitem__
 # and manually calculating mean & stdev *is* accurate
@@ -378,13 +383,19 @@ cdef class BigWigReader(_BBI_Reader):
 #
 
 # can't be cdef'ed or cpdef'ed due to yield
-def BigWigIterator(BigWigReader reader):
+def BigWigIterator(BigWigReader reader, maxmem=0):
     """Iterate over records in the `BigWig`_ file, sorted lexically by chromosome and position.
 
     Parameters
     ----------
     reader : |BigWigReader|
         Reader to iterate over
+        
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        Does not include memory footprint of Python objects.
+        (Default: 0, no limit)
         
      
     Yields
@@ -399,19 +410,19 @@ def BigWigIterator(BigWigReader reader):
         If memory cannot be allocated
     """
     cdef:
-        dict chromsizes = reader.c_chroms()
-        list chroms = sorted(chromsizes.keys())
-        str chrom
-        long chromlength
-        double val
-        lm* buf
-        bbiInterval* iv
-     
-    buf = lmInit(0)
-    if buf == NULL:
-        raise MemoryError("BigWigIterator: could not allocate memory.")
-    
+        dict          chromsizes = reader.c_chroms()
+        list          chroms     = sorted(chromsizes.keys())
+        str           chrom
+        long          chromlength
+        double        val
+        lm          * buf = NULL
+        bbiInterval * iv
+         
     for chrom in chroms:
+        buf = get_lm(my_lm=buf, maxmem=maxmem)
+        if not buf:
+            raise MemoryError("BigWigIterator: could not allocate memory.")
+
         chromlength = chromsizes[chrom]
         iv = bigWigIntervalQuery(reader._bbifile,
                                  safe_bytes(chrom),

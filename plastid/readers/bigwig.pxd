@@ -10,7 +10,7 @@ See also
 `Source repository for Kent utilities <https://github.com/ENCODE-DCC/kentUtils.git>`_
     The header files are particularly useful.
 """
-from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits, bbiSummaryType
+from plastid.readers.bbifile cimport lm, bbiFile, _BBI_Reader, bits32, Bits, bbiSummaryType, get_lm
 from plastid.genomics.roitools cimport GenomicSegment
 from plastid.genomics.c_common cimport _GeneratorWrapper
 

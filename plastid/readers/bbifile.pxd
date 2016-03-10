@@ -21,7 +21,7 @@ cdef:
     str WARN_CHROM_NOT_FOUND
 
 #===============================================================================
-# INDEX: Common info for all bigwig filefs 
+# INDEX: Common info for all bigwig files 
 #===============================================================================
 
 DEF bigBedSig = 0x8789F2EB
@@ -180,11 +180,12 @@ cdef extern from "<bbiFile.h>":
 
 
 
-
+# Close a BigBed/BigWig file
 cdef inline void close_file(bbiFile *myFile):
     bbiFileClose(&myFile)
 
-
+# Allocate or destroy and reallocate a local memory block of size <= maxmem
+cdef lm * get_lm(lm * my_lm=*, int maxmem=*) except NULL
 
 
 #===============================================================================
@@ -201,6 +202,7 @@ cdef class _BBI_Reader:
         dict      _chromlengths
         dict      _summary
         lm *      _lm
+        long      _maxmem
 
 #         dict _zoomlevels
 #         dict offsets

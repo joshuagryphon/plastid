@@ -26,15 +26,81 @@ WARN_FILE_NOT_FOUND = "File '%s' not found."
 
 
 #===============================================================================
+# Functions
+#===============================================================================
+
+
+cdef lm * get_lm(lm * my_lm=NULL, int maxmem=0) except NULL:
+    """Allocate or destroy and reallocate a local memory pool, aiming to keep it under `maxmem`
+    
+    Parameters
+    ----------
+    my_lm : *lm, optional
+        Local memory pool. If NULL, a new pool is allocated. (Default: NULL)
+    
+    maxmem : int, optional
+        Maximum desired size in bytes for memory pool. If the size of `my_lm`
+        exceeds `maxmem`, `my_lm` will be freed and a new pool created.
+    
+    
+    Returns
+    -------
+    lm
+        local memory buffer, or NULL if memory cannot be allocated
+        
+    Raises
+    ------
+    MemoryError
+        If memory cannot be allocated
+    """
+    cdef:
+        int realmaxmem = maxmem >> 10
+        
+    # TODO: remove print statements
+    if my_lm == NULL:
+        print("Initializing LM in get_lm()")
+        my_lm = lmInit(0)
+
+    elif maxmem > 0 and lmSize(my_lm) >= maxmem:
+        print("LM Size (%s kb allocated. %s available) exceeded maxmem (%s kb). Cleaning up ..." % (lmSize(my_lm) >> 10,
+                                                                                                    lmAvailable(my_lm) >> 10,
+                                                                                                    realmaxmem))
+        
+        lmCleanup(&my_lm)
+        my_lm = NULL
+        my_lm = lmInit(0)
+        print("    New size: %s kb (%s kb available). Max: %s" % (lmSize(my_lm) >> 10,
+                                                                  lmAvailable(my_lm) >> 10,
+                                                                  realmaxmem>>10))
+
+    if not my_lm:
+        raise MemoryError("BigBed/BigWig reader: Could not allocate local memory block.")
+        return NULL
+
+    print("LM Size (%s kb allocated. %s available. %s max)." % (lmSize(my_lm) >> 10,lmAvailable(my_lm) >> 10,maxmem>>10))
+    return my_lm
+
+
+#===============================================================================
 # Classes
 #===============================================================================
+
 
 cdef class _BBI_Reader:
     """Abstract base class for `BigWig`_ file readers
 
-    Reads basic file properties
+    Reads basic file properties.
+
+    Parameters
+    ----------
+    filename : str
+        Name of file to open
+
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
     """
-    def __cinit__(self, str filename, *args, **kwargs):
+    def __cinit__(self, str filename, maxmem=0,*args, **kwargs):
         if not os.path.exists(filename):
             raise IOError(WARN_FILE_NOT_FOUND % filename)
         
@@ -43,10 +109,10 @@ cdef class _BBI_Reader:
         self._chromids     = None
         self._summary      = None
         self._lm           = NULL
-
+        self._maxmem       = int(round(maxmem * 1024 * 1024))
 
     def __dealloc__(self):
-        """Close BBI file"""
+        """Close `BigBed`_/`BigWig`_ file"""
 
         # deallocate memory, if allocated
         if self._lm != NULL:
@@ -74,12 +140,7 @@ cdef class _BBI_Reader:
         MemoryError
             If memory cannot be allocated
         """
-        if self._lm == NULL:
-            self._lm = lmInit(0)
-
-        if not self._lm:
-            raise MemoryError("BigBed/BigWig reader: Could not allocate initial memory.")
-            
+        self._lm = get_lm(my_lm=self._lm,maxmem=self._maxmem)
         return self._lm
 
     property filename:
