@@ -103,10 +103,11 @@ class AssembledFeatureReader(AbstractReader):
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
         add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations.
-            If set to `True`, three nucleotides will be added to the threeprime
-            end of each CDS annotation. (Default: `False`)
-        
+            Some annotation files exclude the stop codon from CDS annotations. If set to
+            `True`, three nucleotides will be added to the threeprime end of each
+            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+            feature. (Default: `False`)
+                        
         printer : file-like, optional
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
@@ -114,12 +115,6 @@ class AssembledFeatureReader(AbstractReader):
             `streams` are `tabix`_-compressed, and using the parser
             :py:class:`pysam.asTuple` (Default: `False`)
 
-        add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations. If set to
-            `True`, three nucleotides will be added to the threeprime end of each
-            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
-            feature. (Default: `False`)
-                        
         **kwargs
             Other keyword arguments used by specific parsers
         """

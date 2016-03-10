@@ -132,6 +132,51 @@ class BED_Reader(AssembledFeatureReader):
             are `BED`_ formatted.
     """
     def __init__(self,*args,**kwargs):
+        """
+        Parameters
+        ----------
+        streams : file-like
+            One or more open filehandles of input data.
+        
+        return_type : |SegmentChain| or subclass, optional
+            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+        add_three_for_stop : bool, optional
+            Some annotation files exclude the stop codon from CDS annotations. If set to
+            `True`, three nucleotides will be added to the threeprime end of each
+            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+            feature. (Default: `False`)
+
+        extra_columns: int or list optional
+            Extra, non-BED columns in :term:`Extended BED`_ format file corresponding
+            to feature attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+            
+            if `extra-columns` is:
+            
+              - an :class:`int`: it is taken to be the
+                number of attribute columns. Attributes will be stored in
+                the `attr` dictionary of the |SegmentChain|, under names like
+                `custom0`, `custom1`, ... , `customN`.
+
+              - a :class:`list` of :class:`str`, it is taken to be the names
+                of the attribute columns, in order, from left to right in the file.
+                In this case, attributes in extra columns will be stored under
+                their respective names in the `attr` dict.
+
+              - a :class:`list` of :class:`tuple`, each tuple is taken
+                to be a pair of `(attribute_name, formatter_func)`. In this case,
+                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+                will be set to `formatter_func(column_value)`.
+            
+            (Default: 0)
+                        
+        printer : file-like, optional
+            Logger implementing a ``write()`` method. Default: |NullWriter|
+        
+        tabix : boolean, optional
+            `streams` are `tabix`_-compressed, and using the parser
+            :py:class:`pysam.asTuple` (Default: `False`)
+        """
         AssembledFeatureReader.__init__(self,*args,**kwargs)
         self.extra_columns = kwargs.get("extra_columns",0)
 

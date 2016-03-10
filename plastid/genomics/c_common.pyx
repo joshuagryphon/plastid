@@ -28,7 +28,15 @@ cdef Strand str_to_strand(str val) except error_strand:
         return error_strand
 
 cdef class _GeneratorWrapper(object):
-    """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions"""
+    """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions.
+    All attributes and behaviors are delegated to the wrapped generator, except the attribute
+    `generator`.
+    
+    Attributes
+    ----------
+    generator : generator
+        Wrapped generator object
+    """
         
     def __cinit__(self,generator,desc):
         """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions
@@ -37,7 +45,7 @@ cdef class _GeneratorWrapper(object):
         ----------
         generator : Generator object to wrap
         
-        desc :
+        desc : str
             Short description of generator contents, used in generating
             the  `repr` text
         """

@@ -2980,8 +2980,8 @@ cdef class SegmentChain(object):
             Line from a `BED`_ file, containing 4 or more columns
 
         extra_columns: int or list optional
-            Extra, non-BED columns in :term:`BED X+Y`_ format file corresponding to feature
-            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+            Extra, non-BED columns in :term:`Extended BED`_ format file corresponding
+            to feature attributes. This is common in `ENCODE`_-specific `BED`_ variants.
             
             if `extra-columns` is:
             
