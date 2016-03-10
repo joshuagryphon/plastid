@@ -45,6 +45,9 @@ Added
     options! By default there should no long screens of DataWarnings
     when processing Ensembl (or other) GTFs.
 
+  - ``--aggregate`` option added to ``psite`` script to improve sensitivity
+    for low-count data.
+
   - Created entrypoints for allowing users to use custom mapping rules
     in the command line scripts:
 

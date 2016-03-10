@@ -89,7 +89,7 @@ To see which versions you have installed:
 with open("README.rst") as f:
     long_description = f.read()
 
-version = "0.4.4b"  #plastid.__version__ 
+plastid_version = "0.4.5"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
 packages = find_packages()
 
@@ -447,7 +447,7 @@ setup(
 
     # package metadata
     name             = "plastid",
-    version          = version,
+    version          = plastid_version,
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
