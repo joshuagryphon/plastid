@@ -25,7 +25,7 @@ Added
 
 
 
-plastid [0.4.5] = [2016-02-22]
+plastid [0.4.5] = [2016-03-09]
 ------------------------------
 
 Changes here are mostly under the hood, involving improvements in usability,
