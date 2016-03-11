@@ -99,6 +99,7 @@ cdef class _BBI_Reader:
     maxmem : float
         Maximum desired memory footprint for C objects, in megabytes.
         May be temporarily exceeded if large queries are requested.
+        (Default: 0, No maximum)
     """
     def __cinit__(self, str filename, maxmem=0,*args, **kwargs):
         if not os.path.exists(filename):
