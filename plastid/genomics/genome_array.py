@@ -1024,11 +1024,18 @@ class BAMGenomeArray(AbstractGenomeArray):
 class BigWigGenomeArray(AbstractGenomeArray):
     """High-performance GenomeArray for `BigWig`_ files."""
     
-    def __init__(self,**kwargs): #,fill=0.0):
+    def __init__(self,maxmem=0,**kwargs): #,fill=0.0):
         """Create a |BigWigGenomeArray|.
         
         `BigWig`_ files may be added to the array via
         :meth:`~BigWigGenomeArray.add_from_bigwig`.
+        
+        Parameters
+        ----------
+        maxmem : float
+            Maximum desired memory footprint for C objects, in megabytes.
+            May be temporarily exceeded if large queries are requested.
+            (Default: 0, No maximum)        
         """
 #         """
 #         
@@ -1045,6 +1052,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         self._sum       = None
         self._lengths   = None
         self._strands   = []
+        self._maxmem    = maxmem
         self.fill       = 0.0 # fill
     
     def __getitem__(self,roi):
@@ -1178,7 +1186,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         self._chromset = None
         self._lengths  = None
         self._sum      = None
-        bw = BigWigReader(filename,fill=self.fill)
+        bw = BigWigReader(filename,fill=self.fill,maxmem=self._maxmem)
         
         try:
             self._strand_dict[strand].append(bw)

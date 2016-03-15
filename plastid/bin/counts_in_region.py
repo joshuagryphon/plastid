@@ -69,10 +69,10 @@ def main(argv=sys.argv[1:]):
         invoked from the command line
     """
     ap = AnnotationParser()
-    annotation_file_parser = ap.get_parser()
+    annotation_file_parser = ap.get_parser(conflict_handler="resolve")
     
     al = AlignmentParser(disabled=_DISABLED)
-    alignment_file_parser  = al.get_parser()
+    alignment_file_parser  = al.get_parser(conflict_handler="resolve")
     
     mp = MaskParser()
     mask_file_parser = mp.get_parser()
