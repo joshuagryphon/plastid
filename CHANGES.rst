@@ -16,12 +16,26 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
 
 Unreleased
 ----------
+The next version contains a host of compatibility improvements under the hood,
+as well as support for ``BigWig``, a high-performance file format used
+to store quantitative data associated with genomic positions.
+
+
 
 Added
 .....
 
-  - ``BigWigReader``, a reader for BigWig files, and  ``BigWigGenomeArray``,
-    for handling those files more conveniently.
+  - Support for `BigWig`_ files, a high-performance file format used to store
+    quantitative data associated with genomic positions. ``BigWigReader`` reads
+    `BigWig`_ files, and  ``BigWigGenomeArray``, for handles them files conveniently.
+
+
+Changed
+.......
+
+  - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
+    making it far faster.
+
 
 
 
@@ -31,11 +45,6 @@ plastid [0.4.5] = [2016-03-09]
 Changes here are mostly under the hood, involving improvements in usability,
 speed, stability, compatibility, and error reporting. We also fixed up tools
 for developers and added entrypoints for custom mapping rules.
-
-
-The next version contains a host of compatibility improvements under the hood,
-as well as support for ``BigWig``, a high-performance file format used
-to store quantitative data associated with genomic positions.
 
 
 Added
