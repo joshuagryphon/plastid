@@ -62,7 +62,11 @@ cdef class SegmentChain(object):                       # >= 836 bytes
     cdef long c_get_genomic_coordinate(self, long, bint) except -1
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
     cdef SegmentChain c_get_subchain(self,long, long, bint)
-    cpdef SegmentChain get_antisense(self)
+    
+    # 
+    cdef SegmentChain _restrand(self,Strand strand)#,extra_attr=*)
+    cpdef SegmentChain get_unstranded(self)#,extra_attr=*)
+    cpdef SegmentChain get_antisense(self)#,extra_attr=*)
 
  
 cdef class Transcript(SegmentChain):

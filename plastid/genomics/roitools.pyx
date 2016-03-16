@@ -1640,24 +1640,57 @@ cdef class SegmentChain(object):
             return true
 
         return false
-    
-    cpdef SegmentChain get_antisense(self):
-        """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
         
+#         extra_attr : keyword arguments
+#             Values that will be included in the new chain's `attr` dict.
+#             These can be used to overwrite values already present.    
+    cdef SegmentChain _restrand(self,Strand strand):#,**extra_attr):
+        """Create a |SegmentChain| on strand `strand` using coordinates from `self`.
+        
+        Parameters
+        ----------
+        strand : Strand
+            New strand
+
+                        
+        Returns
+        -------
+        SegmentChain
+            |SegmentChain| with new strand
+        """
+        cdef: 
+            str            s_strand     = strand_to_str(strand)
+            str            chrom        = self.spanning_segment.chrom
+            SegmentChain   new_chain    = SegmentChain()#**extra_attr)
+            list           new_segments = []
+            GenomicSegment seg
+    
+        for seg in self._segments:
+            new_segments.append(GenomicSegment(chrom,seg.start,seg.end,s_strand))
+
+        new_chain._set_segments(new_segments)
+        return new_chain
+    
+    cpdef SegmentChain get_unstranded(self):#,**extra_attr):
+        """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
+
+        Returns
+        -------
+        SegmentChain
+            |SegmentChain| antisense to `self`
+        """
+        return self._restrand(unstranded)#,**extra_attr)
+    
+    cpdef SegmentChain get_antisense(self):#,**extra_attr):
+        """Returns an |SegmentChain| antisense to `self`, with empty `attr` dict.
+
         Returns
         -------
         SegmentChain
             |SegmentChain| antisense to `self`
         """
         cdef:
-            SegmentChain new_chain = SegmentChain()
-            GenomicSegment span = self.spanning_segment
-            Strand strand = span.c_strand
-            str chrom = span.chrom
-            GenomicSegment seg 
-            Strand new_strand
-            list new_segments = []
-            str s_strand
+            Strand strand = self.spanning_segment.c_strand
 
         if strand == forward_strand:
             new_strand = reverse_strand
@@ -1667,15 +1700,8 @@ cdef class SegmentChain(object):
             new_strand = unstranded
         else:
             raise ValueError("Strand for SegmentChain '%s' is undefined and has no anti-sense." % self)
-
-        s_strand = strand_to_str(new_strand)
-
-        for seg in self._segments:
-            new_segments.append(GenomicSegment(chrom,seg.start,seg.end,s_strand))
-
-        new_chain._set_segments(new_segments)
-
-        return new_chain
+        
+        return self._restrand(new_strand)#,**extra_attr)
 
     cdef list c_get_position_list(self):
         """Retrieve a sorted **end-inclusive** numpy array of genomic coordinates in this |SegmentChain|

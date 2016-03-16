@@ -780,14 +780,31 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self._eq_check("equals",self.test_class.__eq__)
         
     @skip_if_abstract    
+    def test_get_unstranded(self):
+        for ivc in self.bed_list:
+            unstranded = ivc.get_unstranded()
+            for iv, univ in zip(ivc,unstranded):
+                self.assertEquals(iv.chrom,univ.chrom)
+                self.assertEquals(iv.start,univ.start)
+                self.assertEquals(iv.end,univ.end)
+                self.assertEquals(univ.strand,".")
+
+    @skip_if_abstract    
     def test_get_antisense(self):
         for ivc in self.bed_list:
+            strand = ivc.strand
+            if strand == "+":
+                newstrand = "-"
+            elif strand == "-":
+                newstrand = "+"
+            elif strand == ".":
+                newstrand = "."
             antisense = ivc.get_antisense()
             for iv, asiv in zip(ivc,antisense):
                 self.assertEquals(iv.chrom,asiv.chrom)
                 self.assertEquals(iv.start,asiv.start)
                 self.assertEquals(iv.end,asiv.end)
-                self.assertNotEquals(iv.strand,asiv.strand)
+                self.assertEquals(asiv.strand,newstrand)
     
     @skip_if_abstract    
     def test_get_length(self):
