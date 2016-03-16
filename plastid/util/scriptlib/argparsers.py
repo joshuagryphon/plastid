@@ -244,7 +244,7 @@ class AlignmentParser(Parser):
     """
     
     def __init__(self,prefix="",disabled=None,
-                 input_choices=("BAM","bowtie","wiggle"),
+                 input_choices=("BAM","bigwig","bowtie","wiggle"),
                  groupname="alignment_options",
                  allow_mapping=True):
         """Create a parser for read alignments and/or quantitative data
@@ -284,14 +284,13 @@ class AlignmentParser(Parser):
             ("countfile_format", dict(choices=input_choices,
                                       default="BAM",
                                       help="Format of file containing alignments or counts (Default: %(default)s)")),
-            ("big_genome"       , dict(action="store_true",
-                                       default=False,
-                                       help="Use slower but memory-efficient implementation "+
-                                            "for big genomes or for memory-limited computers. For wiggle & bowtie files only.")),
             ("normalize"        , dict(action="store_true",
                                        help="Whether counts should be normalized"+
                                             " to counts per million (usually not. default: %(default)s)",
                                        default=False)),
+            ]
+        
+        length_ops = [
             ("min_length"       , dict(type=int,
                                        default=25,
                                        metavar="N",
@@ -303,6 +302,27 @@ class AlignmentParser(Parser):
                                        help="Maximum read length permitted to be included"+
                                             " (BAM & bowtie files only. Default: %(default)s)")),
             ]
+
+        big_genome = [
+            ("big_genome"       , dict(action="store_true",
+                                       default=False,
+                                       help="Use slower but memory-efficient implementation "+
+                                            "for big genomes or for memory-limited computers. For wiggle & bowtie files only.")),
+            ]
+
+        maxmem = [
+            ("maxmem"           , dict(type=float,default=0,
+                                       help="Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)")), 
+            ]
+        
+        # filetype-specific options
+        self.filetype_options = {
+             "BAM"    : length_ops,
+             "bowtie" : length_ops + big_genome,
+             "wiggle" : big_genome,
+             "bigwig" : maxmem,
+                                 
+             }
 
         if self.allow_mapping == False:
             self.map_rules = []
@@ -411,6 +431,18 @@ class AlignmentParser(Parser):
         :class:`argparse.ArgumentParser`
         """        
         parser = Parser.get_parser(self,title=title,description=description,**kwargs)
+        extra_args = []
+        for k in self.input_choices:
+            arglist = self.filetype_options.get(k,[])
+            for arg in arglist:
+                if arg not in extra_args:
+                    extra_args.append(arg)
+                
+        if len(extra_args) > 0:
+            # use mutator function- add new parser to `parser`
+            Parser.get_parser(self,
+                              parser=parser,
+                              arglist=extra_args,title=title,description=description)
         
         if self.allow_mapping == True:
             Parser.get_parser(self,
@@ -448,7 +480,7 @@ class AlignmentParser(Parser):
         |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|
         """
         from plastid.genomics.genome_array import GenomeArray, SparseGenomeArray,\
-                                                   BAMGenomeArray,\
+                                                   BAMGenomeArray, BigWigGenomeArray,\
                                                    SizeFilterFactory, CenterMapFactory,\
                                                    FivePrimeMapFactory, ThreePrimeMapFactory,\
                                                    VariableFivePrimeMapFactory,\
@@ -474,86 +506,97 @@ class AlignmentParser(Parser):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
         
-        if "countfile_format" not in disabled and args.countfile_format in ("BAM","CRAM"):
-            count_files = [pysam.Samfile(X,"rb") for X in args.count_files]
-            try:
-                ga = BAMGenomeArray(count_files)
-            except ValueError:
-                printer.write("Input BAM file(s) not indexed. Please index via:")
-                printer.write("")
-                for fn in args.count_files:
-                    printer.write("    samtools index [-b|-c] %s" % fn)
-                printer.write("")
-                printer.write("Exiting.")
-                sys.exit(1)
-                
-            size_filter = SizeFilterFactory(min=args.min_length,max=args.max_length)
-            ga.add_filter("size:%s-%s" % (args.min_length,args.max_length) ,size_filter)
-            if map_rule == "fiveprime":
-                map_function = FivePrimeMapFactory(int(args.offset))
-            elif map_rule == "threeprime":
-                map_function = ThreePrimeMapFactory(int(args.offset))
-            elif map_rule == "center":
-                map_function = CenterMapFactory(args.nibble)
-            elif map_rule == "fiveprime_variable":
-                if str(args.offset) == "0":
-                    printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
-                    sys.exit(1)
-                offset_dict = _parse_variable_offset_file(CommentReader(open(args.offset)))
-                map_function = VariableFivePrimeMapFactory(offset_dict)
-            elif map_rule in self.bamfuncs:
-                map_function = functools.partial(self.bamfuncs[map_rule],args=args)
-            else:
-                printer.write("Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule)
-                sys.exit(1)
-            ga.set_mapping(map_function)
+        if "countfile_format" not in disabled:
             
-        else:
-            if "big_genome" not in disabled and args.big_genome == True:
-                ga = SparseGenomeArray()
-            else:
-                ga = GenomeArray()
-                
-            if "countfile_format" not in disabled and args.countfile_format == "wiggle":
-                for align_file in args.count_files:
-                    printer.write("Opening wiggle files %s..." % align_file)
-                    with open("%s_fw.wig" % align_file) as fh:
-                        ga.add_from_wiggle(fh,"+")
-                    with open("%s_rc.wig" % align_file) as fh:
-                        ga.add_from_wiggle(fh,"-")
-            else:
-                trans_args = { "nibble" : int(args.nibble) }
-                if map_rule == "fiveprime_variable":
-                    transformation = variable_five_prime_map
+            if args.countfile_format in ("BAM","CRAM"):
+                count_files = [pysam.Samfile(X,"rb") for X in args.count_files]
+                try:
+                    ga = BAMGenomeArray(count_files)
+                except ValueError:
+                    printer.write("Input BAM file(s) not indexed. Please index via:")
+                    printer.write("")
+                    for fn in args.count_files:
+                        printer.write("    samtools index [-b|-c] %s" % fn)
+                    printer.write("")
+                    printer.write("Exiting.")
+                    sys.exit(1)
+                    
+                size_filter = SizeFilterFactory(min=args.min_length,max=args.max_length)
+                ga.add_filter("size:%s-%s" % (args.min_length,args.max_length) ,size_filter)
+                if map_rule == "fiveprime":
+                    map_function = FivePrimeMapFactory(int(args.offset))
+                elif map_rule == "threeprime":
+                    map_function = ThreePrimeMapFactory(int(args.offset))
+                elif map_rule == "center":
+                    map_function = CenterMapFactory(args.nibble)
+                elif map_rule == "fiveprime_variable":
                     if str(args.offset) == "0":
                         printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
                         sys.exit(1)
-                    else:
-                        with open(args.offset) as myfile:
-                            trans_args["offset"] = _parse_variable_offset_file(CommentReader(myfile))
+                    offset_dict = _parse_variable_offset_file(CommentReader(open(args.offset)))
+                    map_function = VariableFivePrimeMapFactory(offset_dict)
+                elif map_rule in self.bamfuncs:
+                    map_function = functools.partial(self.bamfuncs[map_rule],args=args)
                 else:
-                    trans_args["offset"] = int(args.offset)
-                    if map_rule == "fiveprime":
-                        transformation = five_prime_map
-                    elif map_rule == "threeprime":
-                        transformation = three_prime_map
-                    elif map_rule == "entire":
-                        transformation = center_map
-                    elif map_rule == "center":
-                        transformation = center_map
-                    elif  map_rule in self.bowtiefuncs:
-                        transformation = self.bowtiefuncs[map_rule]
-                        trans_args["args"] = args
+                    printer.write("Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule)
+                    sys.exit(1)
+                ga.set_mapping(map_function)
+                
+            elif args.countfile_format == "bigwig":
+                ga = BigWigGenomeArray(maxmem=args.maxmem)
+                for align_file in args.count_files:
+                    ga.add_from_bigwig("%s_fw.bw" % align_file,"+")
+                    ga.add_from_bigwig("%s_rc.bw" % align_file,"-")
+            
+            # wiggle/bedGraph and bowtie
+            else:
+                if "big_genome" not in disabled and args.big_genome == True:
+                    ga = SparseGenomeArray()
+                else:
+                    ga = GenomeArray()
+
+                # wiggle/bedGraph
+                if args.countfile_format == "wiggle":
+                    for align_file in args.count_files:
+                        printer.write("Opening wiggle files %s..." % align_file)
+                        with open("%s_fw.wig" % align_file) as fh:
+                            ga.add_from_wiggle(fh,"+")
+                        with open("%s_rc.wig" % align_file) as fh:
+                            ga.add_from_wiggle(fh,"-")
+
+                # bowtie
+                elif args.countfile_format == "bowtie":
+                    trans_args = { "nibble" : int(args.nibble) }
+                    if map_rule == "fiveprime_variable":
+                        transformation = variable_five_prime_map
+                        if str(args.offset) == "0":
+                            printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
+                            sys.exit(1)
+                        else:
+                            with open(args.offset) as myfile:
+                                trans_args["offset"] = _parse_variable_offset_file(CommentReader(myfile))
                     else:
-                        printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
-                        sys.exit(1)
-            
-                for infile in args.count_files:
-                    with opener(infile) as my_file:
-                        if args.countfile_format == "bowtie":
+                        trans_args["offset"] = int(args.offset)
+                        if map_rule == "fiveprime":
+                            transformation = five_prime_map
+                        elif map_rule == "threeprime":
+                            transformation = three_prime_map
+                        elif map_rule == "entire":
+                            transformation = center_map
+                        elif map_rule == "center":
+                            transformation = center_map
+                        elif  map_rule in self.bowtiefuncs:
+                            transformation = self.bowtiefuncs[map_rule]
+                            trans_args["args"] = args
+                        else:
+                            printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
+                            sys.exit(1)
+                
+                    for infile in args.count_files:
+                        with opener(infile) as my_file:
                             ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
-            
-            printer.write("Counted %s total reads..." % ga.sum())
+                
+        printer.write("Counted %s total reads..." % ga.sum())
             
         if "normalize" not in disabled and args.normalize == True:
             printer.write("Normalizing to reads per million...")
@@ -614,15 +657,21 @@ class AnnotationParser(Parser):
                                               help="%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files." % prefix)),
                 ("sorted"              , dict(default=False,
                                               action="store_true",
-                                              help="%sannotation_files are sorted by chromosomal position (Default: False)" % prefix))
+                                              help="%sannotation_files are sorted by chromosomal position (Default: False)" % prefix)),
             ]
- 
+        
+        # options for specific filetypes
         self.filetype_options = {
             "BED" : [("bed_extra_columns", dict(default=0,
                                                 nargs="+",
                                                 help="Number of extra columns in BED file (e.g. in custom ENCODE formats) "+
                                                      "or list of names for those columns. (Default: %(default)s)."))
                     ],
+            "BigBed" : [
+                ("maxmem"           , dict(type=float,default=0,
+                                           help="Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)")), 
+                        
+                        ],
             "GFF3" : [("gff_transcript_types", dict(type=str,
                                                     default=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
                                                     nargs="+",
@@ -637,8 +686,6 @@ class AnnotationParser(Parser):
                                              nargs="+",
                                              help="GFF3 feature types to include as CDS (for GFF3 only; default: use SO v2.5.3 specification)")),
                      ]
-                                 
-                                 
              }
 
     def get_parser(self,
@@ -669,12 +716,12 @@ class AnnotationParser(Parser):
         
         for k in self.input_choices:
             arglist = self.filetype_options.get(k)
-            if arglist is not None:            
+            if arglist is not None:
+                # use mutator function- add new parser to `parser`
                 Parser.get_parser(self,
                                   parser=parser,
                                   groupname="%s_%s_options" % (self.groupname,k),
-                                  title="%s-specific options" % k,
-                                  arglist=arglist)
+                                  title="%s-specific options" % k,arglist=arglist)
         
         return parser           
 
@@ -772,11 +819,12 @@ class AnnotationParser(Parser):
                 warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",ArgumentWarning)
     
             from plastid.readers.bigbed import BigBedReader
-            transcripts = BigBedReader(args.annotation_files[0],
+            transcripts = iter(BigBedReader(args.annotation_files[0],
                                        return_type=return_type,
                                        cache_depth=1,
                                        add_three_for_stop=add_three,
-                                       printer=printer)
+                                       printer=printer,
+                                       maxmem=args.maxmem))
             
         elif tabix == True:
             #streams = [pysam.tabix_iterator(opener(X), lambda x,y: x) for X in args.annotation_files] # used to work in earlier pysam
@@ -1411,7 +1459,7 @@ PLASTID_WARNINGS = [
 
 
 @deprecated(version="0.5.0",instead="AlignmentParser")
-def get_alignment_file_parser(input_choices=("BAM","bowtie","wiggle"),
+def get_alignment_file_parser(input_choices=("BAM","bigwig","bowtie","wiggle"),
                               disabled=None,
                               prefix="",
                               title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,

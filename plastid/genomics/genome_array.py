@@ -49,57 +49,39 @@ or quantitative data is stored. All GenomeArrays present the same interfaces for
 The following subclasses of GenomeArrays provide their own features in addition 
 to those above:
 
-    |GenomeArray|
-        The most basic GenomeArray. It allows:
+
+    |BAMGenomeArray|
+        A GenomeArray for `BAM` files. Fetches alignments from one or more
+        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` and
+        filter functions to convert these alignments to vectors of :term:`counts`
+        at runtime. As a result :term:`mapping rules <mapping rule>` and filter
+        functions can be changed at will without re-loading data, allowing rapid
+        prototyping / EDA.
         
+    |BigWigGenomeArray|
+        A GenomeArray for data stored in one or more `BigWig`_ files.
+              
+    |GenomeArray|
+        A mutable GenomeArray. It allows:
+        
+            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
+
+            - import of :term:`read alignments` from native `bowtie`_ alignments,
+              and their conversion to :term:`counts` under configurable
+              :term:`mapping rules <mapping rule>`. However,
+              because :term:`mapping rules <mapping rule>` are applied upon import,
+              they cannot be changed once the data has been loaded into the array
+              
             - setting values within the array
     
-            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
-            
-            - import of :term:`read alignments` from native `bowtie`_ alignments,
-              and their convertion to :term:`counts` under configurable
-              :term:`mapping rules <mapping rule>`.
-    
-            - mathematical operations such as addition and subtraction of scalars,
-              or positionwise addition and subtraction of other |GenomeArray| s
-    
+            - mathematical operations upon the array, such as addition and subtraction
+              of scalars, or positionwise addition and subtraction of other |GenomeArrays|
     
     |SparseGenomeArray|
         A slower but more memory-efficient implementation of |GenomeArray|,
         useful for large genomes or on computers with limited memory.
 
 
-    |BAMGenomeArray|
-        A GenomeArray for `BAM` files. Fetches alignments from one or more
-        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` to
-        convert these alignments to to vectors of :term:`counts`.
-        
-        `BAM`_ files give |BAMGenomeArray| several advantages over |GenomeArray|:
-        
-            - |BAMGenomeArray| objects can be much faster to create and far more
-              memory-efficient than |GenomeArray| or |SparseGenomeArray|.
-            
-            - :term:`Mapping rules <mapping rule>` and filter functions may be
-              changed at runtime, with no speed cost, rather than having to be
-              set at import time (as is the case for import of `bowtie`_ files
-              into a |GenomeArray|). See :meth:`BAMGenomeArray.set_mapping` for details.
-                
-            - All of the rich properties of :term:`read alignments` that are
-              preserved in `BAM`_ files (e.g. alignment mismatches, read lengths,
-              et c) are accessible, and may be used by :term:`mapping rules <mapping rule>`
-              or filter functions. 
-              
-            - If necessary, a |BAMGenomeArray| can be converted to a |GenomeArray|
-        
-        
-        However, because a |BAMGenomeArray| is a view of the data in an
-        underlying `BAM`_ file, |BAMGenomeArrays| do not support
-        *setter* operations. Instead, mathematical operations, if desired, may be:
-        
-            - applied to vectors of counts, once fetched from the |BAMGenomeArray|
-            
-            - performed on a |GenomeArray| or |SparseGenomeArray| created from
-              a |BAMGenomeArray| via :meth:`BAMGenomeArray.to_genome_array`
 
 
 Mapping rules
@@ -166,6 +148,7 @@ from collections import OrderedDict
 
 from plastid.readers.wiggle import WiggleReader
 from plastid.readers.bowtie import BowtieReader
+from plastid.readers.bigwig import BigWigReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
 from plastid.util.services.exceptions import DataWarning, warn
@@ -413,14 +396,14 @@ class AbstractGenomeArray(object):
         return len(self._strands)*sum(self.lengths().values())
     
     @abstractmethod
-    def __getitem__(self,seg):
+    def __getitem__(self,roi):
         """Retrieve array of counts from a region of interest. The values in
         the returned array are in 5' to 3' with respect to `seg` rather than
         the genome (i.e. are reversed for reverse-strand features).
         
         Parameters
         ----------
-        seg : |GenomicSegment| or |SegmentChain|
+        roi : |GenomicSegment| or |SegmentChain|
             Region of interest in genome
         
         Returns
@@ -600,7 +583,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
         self.map_fn       = CenterMapFactory() if mapping is None else mapping
-        self._strands     = ("+","-")
+        self._strands     = ("+","-",".")
         self._normalize   = False
         
         self._chr_lengths = {}
@@ -789,7 +772,37 @@ class BAMGenomeArray(AbstractGenomeArray):
         reads, _ = self.get_reads_and_counts(roi)
         return reads
 
-    def __getitem__(self,roi,roi_order=True): 
+    def __getitem__(self,roi): 
+        """Retrieve array of counts from a region of interest, following
+        the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
+        Values in the vector are ordered 5' to 3' relative to `roi`
+        rather than the genome (i.e. are reversed for reverse-strand
+        features).
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+
+        Raises
+        ------
+        ValueError
+            if bamfiles not sorted or not indexed
+
+        Returns
+        -------
+        numpy.ndarray
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        return self.get(roi,roi_order=True)
+
+    def get(self,roi,roi_order=True): 
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -930,11 +943,8 @@ class BAMGenomeArray(AbstractGenomeArray):
             window_starts = xrange(0,self._chr_lengths[chrom],window_size)
             for my_start in window_starts:
                 my_end = min(my_start + window_size,my_size)
-                my_counts = self.__getitem__(GenomicSegment(chrom,
-                                                            my_start,
-                                                            my_end,
-                                                            strand),
-                                             roi_order=False)
+                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),
+                                    roi_order=False)
                 if my_counts.sum() > 0:
                     for idx in my_counts.nonzero()[0]:
                         genomic_x = my_start + idx
@@ -985,7 +995,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             my_size = self.lengths()[chrom]
             for my_start in window_starts:
                 my_end   = min(my_start + window_size,my_size) 
-                my_counts = self.__getitem__(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
+                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
                 
                 if my_counts.sum() > 0:
                     genomic_start_x = my_start
@@ -1011,6 +1021,209 @@ class BAMGenomeArray(AbstractGenomeArray):
 
 
 
+class BigWigGenomeArray(AbstractGenomeArray):
+    """High-performance GenomeArray for `BigWig`_ files."""
+    
+    def __init__(self,maxmem=0,**kwargs): #,fill=0.0):
+        """Create a |BigWigGenomeArray|.
+        
+        `BigWig`_ files may be added to the array via
+        :meth:`~BigWigGenomeArray.add_from_bigwig`.
+        
+        Parameters
+        ----------
+        maxmem : float
+            Maximum desired memory footprint for C objects, in megabytes.
+            May be temporarily exceeded if large queries are requested.
+            (Default: 0, No maximum)        
+        """
+#         """
+#         
+#         Parameters
+#         ----------
+#         fill : float, optional
+#             Default fill value for data missing in the `BigWig`_ file.
+#             Default value is 0, as `wiggle`_, `bedGraph`_ and `BigWig`_
+#             files often don't explicitly list zero positions.
+#         """
+        self._strand_dict = {}
+        self._normalize = False
+        self._chromset  = None
+        self._sum       = None
+        self._lengths   = None
+        self._strands   = []
+        self._maxmem    = maxmem
+        self.fill       = 0.0 # fill
+    
+    def __getitem__(self,roi):
+        """Retrieve array of counts from a region of interest.
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+
+        Returns
+        -------
+        numpy.ndarray
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        return self.get(roi,roi_order=True)
+
+    def get(self,roi,roi_order=True):
+        """Retrieve array of counts from a region of interest.
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+        
+        roi_order : bool, optional
+            If `True` (default) return vector of values 5' to 3' 
+            relative to vector rather than genome.
+
+        Returns
+        -------
+        numpy.ndarray
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        if isinstance(roi,SegmentChain):
+            return roi.get_counts(self)
+        
+        strand = roi.strand
+        sdict  = self._strand_dict
+        
+        count_vec = numpy.zeros(len(roi))
+        if strand in sdict:
+            for bw in sdict[strand]:
+                count_vec += bw.get(roi,roi_order=False) # we flip later to save operations
+        else:
+            warnings.warn("Strand '%s' not in BigWigGenomeArray (has %s)." % (strand,", ".join(sdict.keys())),DataWarning)
+
+        if self._normalize is True:
+            count_vec = count_vec / float(self.sum()) * 1e6
+        
+        if roi_order == True and strand == "-":
+            count_vec = count_vec[::-1]
+            
+        return count_vec
+        
+    def strands(self):
+        """Return a tuple of strands in the GenomeArray
+        
+        Returns
+        -------
+        tuple
+            Chromosome strands as strings
+        """        
+        return self._strands #sorted(tuple(self._strand_dict.keys()))
+    
+    def chroms(self):
+        """Return a list of chromosomes in the GenomeArray
+        
+        Returns
+        -------
+        list
+            Chromosome names as strings
+        """        
+        if self._chromset is not None:
+            return self._chromset
+        else:
+            chromset = []
+            for ltmp in self._strand_dict.values():
+                for bw in ltmp:
+                    chromset.extend(bw.chroms.keys())
+        
+            self._chromset = set(chromset)
+            return self._chromset
+    
+    def lengths(self):
+        """Return a dictionary mapping chromosome names to lengths.
+        When two strands report different lengths for a chromosome, the
+        max length is taken.
+        
+        Returns
+        -------
+        dict
+            Dictionary mapping chromosome names to chromosome lengths
+        """        
+        if self._lengths is not None:
+            return self._lengths
+        else:
+            lengths = {}
+            for ltmp in self._strand_dict.values():
+                for bw in ltmp:
+                    sizedict = bw.chroms
+                    for k,v in sizedict.items():
+                        lengths[k] = max(lengths.get(k,0),v)
+            
+            self._lengths = lengths
+            return lengths
+        
+    def add_from_bigwig(self,filename,strand):
+        """Import additional data from a `BigWig`_ file
+        
+        Parameters
+        ----------
+        filename : str
+            Path to `BigWig`_ file
+        
+        strand : str
+            Strand to which data should be added. `'+'`, `'-'`, or `'.'`
+        """
+        self._chromset = None
+        self._lengths  = None
+        self._sum      = None
+        bw = BigWigReader(filename,fill=self.fill,maxmem=self._maxmem)
+        
+        try:
+            self._strand_dict[strand].append(bw)
+        except KeyError:       
+            self._strand_dict[strand] = [bw]
+            
+        self._strands = sorted(self._strand_dict.keys())
+
+    def reset_sum(self):
+        """Reset sum to total of data in the |BigWigGenomeArray|"""
+        my_sum = 0
+        for ltmp in self._strand_dict.values():
+            for bw in ltmp:
+                my_sum += bw.sum()
+ 
+        self._sum = my_sum       
+        return my_sum
+    
+    def to_genome_array(self):
+        """Converts |BigWigGenomeArray| to a |GenomeArray|
+
+        Returns
+        -------
+        |GenomeArray|
+        """
+        ga = GenomeArray(chr_lengths=self.lengths(),strands=self.strands())
+        for chrom, length in self.lengths().items():
+            for strand in self._strands:
+                region = GenomicSegment(chrom,0,length,strand)
+                for reader in self._strand_dict.get(strand,[]):
+                    old = ga.get(region,roi_order = False)
+                    new = old + reader.get_chromosome(chrom)
+                    ga.__setitem__(region,new,roi_order = False) 
+
+        return ga
+        
+        
 class GenomeArray(MutableAbstractGenomeArray):
     """Array-like data structure that maps numerical values (e.g. read :term:`counts`
     or conservation data, et c) to nucleotide positions in a genome.
@@ -1059,7 +1272,7 @@ class GenomeArray(MutableAbstractGenomeArray):
                     self._chroms[chrom][strand] = numpy.zeros(l)
 
     def reset_sum(self):
-        """Reset the sum of the |GenomeArray| to the total number of mapped reads
+        """Reset the sum of the |GenomeArray| to the sum of all positions in the array
         """
         self._sum = sum([X.sum() for X in self.iterchroms()])
         
@@ -1116,7 +1329,31 @@ class GenomeArray(MutableAbstractGenomeArray):
 
         return True
         
-    def __getitem__(self,roi,roi_order=True):
+    def __getitem__(self,roi):
+        """Retrieve array of counts from a region of interest (`roi`)
+        with values in vector ordered 5' to 3' relative to `roi`
+        rather than genome (i.e. are reversed for reverse-strand
+        features).
+        
+        Parameters
+        ----------
+        roi : |GenomicSegment| or |SegmentChain|
+            Region of interest in genome
+        
+        Returns
+        -------
+        :class:`numpy.ndarray`
+            vector of numbers, each position corresponding to a position
+            in `roi`, from 5' to 3' relative to `roi`
+        
+        See also
+        --------
+        plastid.genomics.roitools.SegmentChain.get_counts
+            Fetch a spliced vector of data covering a |SegmentChain|
+        """
+        return self.get(roi,roi_order=True)
+    
+    def get(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand
@@ -1790,7 +2027,7 @@ class SparseGenomeArray(GenomeArray):
         
         return d_out
 
-    def __getitem__(self,roi,roi_order=True):
+    def get(self,roi,roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand

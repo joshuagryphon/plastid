@@ -4,6 +4,8 @@
  .. |AbstractGenomeArrays| replace:: :py:class:`AbstractGenomeArrays <plastid.genomics.genome_array.AbstractGenomeArray>`
  .. |BAMGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BAMGenomeArray`
  .. |BAMGenomeArrays| replace:: :py:class:`BAMGenomeArrays <plastid.genomics.genome_array.BAMGenomeArray>`
+ .. |BigWigGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BigWigGenomeArray`
+ .. |BigWigGenomeArrays| replace:: :py:class:`BigWigGenomeArrays <plastid.genomics.genome_array.BigWigGenomeArray>`
  .. |GenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.GenomeArray`
  .. |GenomeArrays| replace:: :py:class:`GenomeArrays <plastid.genomics.genome_array.GenomeArray>`
  .. |MutableAbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.MutableAbstractGenomeArray`
@@ -19,9 +21,7 @@
  .. |TabixGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.TabixGenomeHash`
  .. |TabixGenomeHashs| replace:: :py:class:`TabixGenomeHashs <plastid.genomics.genome_hash.TabixGenomeHash>`
  .. |GenomicSegment| replace:: :py:class:`~plastid.genomics.roitools.GenomicSegment`
- .. |GenomicSegments| replace:: :py:class:`GenomicSegment <plastid.genomics.roitools.GenomicSegment>`
- .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
- .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
+ .. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.roitools.GenomicSegment>`
  .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
  .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
  .. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
@@ -48,6 +48,8 @@
  .. |_FromBED_StrAdaptors| replace:: :py:class:`_FromBED_StrAdaptors <plastid.readers.bigbed._FromBED_StrAdaptor>`
  .. |RTree| replace:: :py:class:`~plastid.readers.bigbed.RTree`
  .. |RTrees| replace:: :py:class:`RTrees <plastid.readers.bigbed.RTree>`
+ .. |BigWigReader| replace:: :py:class:`~plastid.readers.bigwig.BigWigReader`
+ .. |BigWigReaders| replace:: :py:class:`BigWigReaders <plastid.readers.bigwig.BigWigReader>`
  .. |BowtieReader| replace:: :py:class:`~plastid.readers.bowtie.BowtieReader`
  .. |BowtieReaders| replace:: :py:class:`BowtieReaders <plastid.readers.bowtie.BowtieReader>`
  .. |AssembledFeatureReader| replace:: :py:class:`~plastid.readers.common.AssembledFeatureReader`
@@ -70,108 +72,6 @@
  .. |PSL_Readers| replace:: :py:class:`PSL_Readers <plastid.readers.psl.PSL_Reader>`
  .. |WiggleReader| replace:: :py:class:`~plastid.readers.wiggle.WiggleReader`
  .. |WiggleReaders| replace:: :py:class:`WiggleReaders <plastid.readers.wiggle.WiggleReader>`
- .. |TestCrossmap| replace:: :py:class:`~plastid.test.unit.bin.test_crossmap.TestCrossmap`
- .. |TestCrossmaps| replace:: :py:class:`TestCrossmaps <plastid.test.unit.bin.test_crossmap.TestCrossmap>`
- .. |TestTestDataframeEquality| replace:: :py:class:`~plastid.test.unit.bin.test_test_table_equality.TestTestDataframeEquality`
- .. |TestTestDataframeEqualitys| replace:: :py:class:`TestTestDataframeEqualitys <plastid.test.unit.bin.test_test_table_equality.TestTestDataframeEquality>`
- .. |AbstractGenomeArrayHelper| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_array.AbstractGenomeArrayHelper`
- .. |AbstractGenomeArrayHelpers| replace:: :py:class:`AbstractGenomeArrayHelpers <plastid.test.unit.genomics.test_genome_array.AbstractGenomeArrayHelper>`
- .. |FakeDict| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_array.FakeDict`
- .. |FakeDicts| replace:: :py:class:`FakeDicts <plastid.test.unit.genomics.test_genome_array.FakeDict>`
- .. |TestBAMGenomeArray| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_array.TestBAMGenomeArray`
- .. |TestBAMGenomeArrays| replace:: :py:class:`TestBAMGenomeArrays <plastid.test.unit.genomics.test_genome_array.TestBAMGenomeArray>`
- .. |TestGenomeArray| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_array.TestGenomeArray`
- .. |TestGenomeArrays| replace:: :py:class:`TestGenomeArrays <plastid.test.unit.genomics.test_genome_array.TestGenomeArray>`
- .. |TestSparseGenomeArray| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_array.TestSparseGenomeArray`
- .. |TestSparseGenomeArrays| replace:: :py:class:`TestSparseGenomeArrays <plastid.test.unit.genomics.test_genome_array.TestSparseGenomeArray>`
- .. |AbstractGenomeHashHelper| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper`
- .. |AbstractGenomeHashHelpers| replace:: :py:class:`AbstractGenomeHashHelpers <plastid.test.unit.genomics.test_genome_hash.AbstractGenomeHashHelper>`
- .. |TestBigBedGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash`
- .. |TestBigBedGenomeHashs| replace:: :py:class:`TestBigBedGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestBigBedGenomeHash>`
- .. |TestGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestGenomeHash`
- .. |TestGenomeHashs| replace:: :py:class:`TestGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestGenomeHash>`
- .. |TestTabixGenomeHash| replace:: :py:class:`~plastid.test.unit.genomics.test_genome_hash.TestTabixGenomeHash`
- .. |TestTabixGenomeHashs| replace:: :py:class:`TestTabixGenomeHashs <plastid.test.unit.genomics.test_genome_hash.TestTabixGenomeHash>`
- .. |TestBAM_MappingRules| replace:: :py:class:`~plastid.test.unit.genomics.test_mapping_rules.TestBAM_MappingRules`
- .. |TestBAM_MappingRuless| replace:: :py:class:`TestBAM_MappingRuless <plastid.test.unit.genomics.test_mapping_rules.TestBAM_MappingRules>`
- .. |AbstractSegmentChainHelper| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.AbstractSegmentChainHelper`
- .. |AbstractSegmentChainHelpers| replace:: :py:class:`AbstractSegmentChainHelpers <plastid.test.unit.genomics.test_roitools.AbstractSegmentChainHelper>`
- .. |TestAddThreeForStopCodon| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestAddThreeForStopCodon`
- .. |TestAddThreeForStopCodons| replace:: :py:class:`TestAddThreeForStopCodons <plastid.test.unit.genomics.test_roitools.TestAddThreeForStopCodon>`
- .. |TestGenomicSegment| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestGenomicSegment`
- .. |TestGenomicSegments| replace:: :py:class:`TestGenomicSegments <plastid.test.unit.genomics.test_roitools.TestGenomicSegment>`
- .. |TestMiscellaneous| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestMiscellaneous`
- .. |TestMiscellaneouss| replace:: :py:class:`TestMiscellaneouss <plastid.test.unit.genomics.test_roitools.TestMiscellaneous>`
- .. |TestSegmentChain| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestSegmentChain`
- .. |TestSegmentChains| replace:: :py:class:`TestSegmentChains <plastid.test.unit.genomics.test_roitools.TestSegmentChain>`
- .. |TestTranscript| replace:: :py:class:`~plastid.test.unit.genomics.test_roitools.TestTranscript`
- .. |TestTranscripts| replace:: :py:class:`TestTranscripts <plastid.test.unit.genomics.test_roitools.TestTranscript>`
- .. |TestAbstractAutoSqlElement| replace:: :py:class:`~plastid.test.unit.readers.test_autosql.TestAbstractAutoSqlElement`
- .. |TestAbstractAutoSqlElements| replace:: :py:class:`TestAbstractAutoSqlElements <plastid.test.unit.readers.test_autosql.TestAbstractAutoSqlElement>`
- .. |TestAutoSqlDeclaration| replace:: :py:class:`~plastid.test.unit.readers.test_autosql.TestAutoSqlDeclaration`
- .. |TestAutoSqlDeclarations| replace:: :py:class:`TestAutoSqlDeclarations <plastid.test.unit.readers.test_autosql.TestAutoSqlDeclaration>`
- .. |TestAutoSqlField| replace:: :py:class:`~plastid.test.unit.readers.test_autosql.TestAutoSqlField`
- .. |TestAutoSqlFields| replace:: :py:class:`TestAutoSqlFields <plastid.test.unit.readers.test_autosql.TestAutoSqlField>`
- .. |TestSizedAutoSqlField| replace:: :py:class:`~plastid.test.unit.readers.test_autosql.TestSizedAutoSqlField`
- .. |TestSizedAutoSqlFields| replace:: :py:class:`TestSizedAutoSqlFields <plastid.test.unit.readers.test_autosql.TestSizedAutoSqlField>`
- .. |TestValuesAutoSqlField| replace:: :py:class:`~plastid.test.unit.readers.test_autosql.TestValuesAutoSqlField`
- .. |TestValuesAutoSqlFields| replace:: :py:class:`TestValuesAutoSqlFields <plastid.test.unit.readers.test_autosql.TestValuesAutoSqlField>`
- .. |TestBED| replace:: :py:class:`~plastid.test.unit.readers.test_bed.TestBED`
- .. |TestBEDs| replace:: :py:class:`TestBEDs <plastid.test.unit.readers.test_bed.TestBED>`
- .. |test_BigBedReader| replace:: :py:class:`~plastid.test.unit.readers.test_bigbed.test_BigBedReader`
- .. |test_BigBedReaders| replace:: :py:class:`test_BigBedReaders <plastid.test.unit.readers.test_bigbed.test_BigBedReader>`
- .. |test_BPlusTree| replace:: :py:class:`~plastid.test.unit.readers.test_bigbed.test_BPlusTree`
- .. |test_BPlusTrees| replace:: :py:class:`test_BPlusTrees <plastid.test.unit.readers.test_bigbed.test_BPlusTree>`
- .. |test_RTree| replace:: :py:class:`~plastid.test.unit.readers.test_bigbed.test_RTree`
- .. |test_RTrees| replace:: :py:class:`test_RTrees <plastid.test.unit.readers.test_bigbed.test_RTree>`
- .. |TestGetIdenticalAttributes| replace:: :py:class:`~plastid.test.unit.readers.test_common.TestGetIdenticalAttributes`
- .. |TestGetIdenticalAttributess| replace:: :py:class:`TestGetIdenticalAttributess <plastid.test.unit.readers.test_common.TestGetIdenticalAttributes>`
- .. |AbstractTestAssembler| replace:: :py:class:`~plastid.test.unit.readers.test_gff.AbstractTestAssembler`
- .. |AbstractTestAssemblers| replace:: :py:class:`AbstractTestAssemblers <plastid.test.unit.readers.test_gff.AbstractTestAssembler>`
- .. |AbstractTest_to_Transcripts| replace:: :py:class:`~plastid.test.unit.readers.test_gff.AbstractTest_to_Transcripts`
- .. |AbstractTest_to_Transcriptss| replace:: :py:class:`AbstractTest_to_Transcriptss <plastid.test.unit.readers.test_gff.AbstractTest_to_Transcripts>`
- .. |TestGFF3| replace:: :py:class:`~plastid.test.unit.readers.test_gff.TestGFF3`
- .. |TestGFF3s| replace:: :py:class:`TestGFF3s <plastid.test.unit.readers.test_gff.TestGFF3>`
- .. |TestGFF3_Assembler| replace:: :py:class:`~plastid.test.unit.readers.test_gff.TestGFF3_Assembler`
- .. |TestGFF3_Assemblers| replace:: :py:class:`TestGFF3_Assemblers <plastid.test.unit.readers.test_gff.TestGFF3_Assembler>`
- .. |TestGTF2| replace:: :py:class:`~plastid.test.unit.readers.test_gff.TestGTF2`
- .. |TestGTF2s| replace:: :py:class:`TestGTF2s <plastid.test.unit.readers.test_gff.TestGTF2>`
- .. |TestGTF2_Assembler| replace:: :py:class:`~plastid.test.unit.readers.test_gff.TestGTF2_Assembler`
- .. |TestGTF2_Assemblers| replace:: :py:class:`TestGTF2_Assemblers <plastid.test.unit.readers.test_gff.TestGTF2_Assembler>`
- .. |TestGFF3_TokenParsing| replace:: :py:class:`~plastid.test.unit.readers.test_gff_tokens.TestGFF3_TokenParsing`
- .. |TestGFF3_TokenParsings| replace:: :py:class:`TestGFF3_TokenParsings <plastid.test.unit.readers.test_gff_tokens.TestGFF3_TokenParsing>`
- .. |TestGTF2_TokenParsing| replace:: :py:class:`~plastid.test.unit.readers.test_gff_tokens.TestGTF2_TokenParsing`
- .. |TestGTF2_TokenParsings| replace:: :py:class:`TestGTF2_TokenParsings <plastid.test.unit.readers.test_gff_tokens.TestGTF2_TokenParsing>`
- .. |TestBundledPSL_Reader| replace:: :py:class:`~plastid.test.unit.readers.test_psl.TestBundledPSL_Reader`
- .. |TestBundledPSL_Readers| replace:: :py:class:`TestBundledPSL_Readers <plastid.test.unit.readers.test_psl.TestBundledPSL_Reader>`
- .. |TestPSL_Reader| replace:: :py:class:`~plastid.test.unit.readers.test_psl.TestPSL_Reader`
- .. |TestPSL_Readers| replace:: :py:class:`TestPSL_Readers <plastid.test.unit.readers.test_psl.TestPSL_Reader>`
- .. |TestWiggleReader| replace:: :py:class:`~plastid.test.unit.readers.test_wiggle.TestWiggleReader`
- .. |TestWiggleReaders| replace:: :py:class:`TestWiggleReaders <plastid.test.unit.readers.test_wiggle.TestWiggleReader>`
- .. |TestBinaryParserFactory| replace:: :py:class:`~plastid.test.unit.util.io.test_binary.TestBinaryParserFactory`
- .. |TestBinaryParserFactorys| replace:: :py:class:`TestBinaryParserFactorys <plastid.test.unit.util.io.test_binary.TestBinaryParserFactory>`
- .. |TestCommentReader| replace:: :py:class:`~plastid.test.unit.util.io.test_filters.TestCommentReader`
- .. |TestCommentReaders| replace:: :py:class:`TestCommentReaders <plastid.test.unit.util.io.test_filters.TestCommentReader>`
- .. |TestFunctionReader| replace:: :py:class:`~plastid.test.unit.util.io.test_filters.TestFunctionReader`
- .. |TestFunctionReaders| replace:: :py:class:`TestFunctionReaders <plastid.test.unit.util.io.test_filters.TestFunctionReader>`
- .. |TestSkipBlankReader| replace:: :py:class:`~plastid.test.unit.util.io.test_filters.TestSkipBlankReader`
- .. |TestSkipBlankReaders| replace:: :py:class:`TestSkipBlankReaders <plastid.test.unit.util.io.test_filters.TestSkipBlankReader>`
- .. |TestParseVariableOffsetFile| replace:: :py:class:`~plastid.test.unit.util.scriptlib.test_argparsers.TestParseVariableOffsetFile`
- .. |TestParseVariableOffsetFiles| replace:: :py:class:`TestParseVariableOffsetFiles <plastid.test.unit.util.scriptlib.test_argparsers.TestParseVariableOffsetFile>`
- .. |TestPrefixNamespaceWrapper| replace:: :py:class:`~plastid.test.unit.util.scriptlib.test_argparsers.TestPrefixNamespaceWrapper`
- .. |TestPrefixNamespaceWrappers| replace:: :py:class:`TestPrefixNamespaceWrappers <plastid.test.unit.util.scriptlib.test_argparsers.TestPrefixNamespaceWrapper>`
- .. |TestHelpFormatters| replace:: :py:class:`~plastid.test.unit.util.scriptlib.test_help_formatters.TestHelpFormatters`
- .. |TestHelpFormatterss| replace:: :py:class:`TestHelpFormatterss <plastid.test.unit.util.scriptlib.test_help_formatters.TestHelpFormatters>`
- .. |TestColors| replace:: :py:class:`~plastid.test.unit.util.services.test_colors.TestColors`
- .. |TestColorss| replace:: :py:class:`TestColorss <plastid.test.unit.util.services.test_colors.TestColors>`
- .. |UtilClass| replace:: :py:class:`~plastid.test.unit.util.services.test_decorators.UtilClass`
- .. |UtilClasss| replace:: :py:class:`UtilClasss <plastid.test.unit.util.services.test_decorators.UtilClass>`
- .. |TestLists| replace:: :py:class:`~plastid.test.unit.util.services.test_lists.TestLists`
- .. |TestListss| replace:: :py:class:`TestListss <plastid.test.unit.util.services.test_lists.TestLists>`
- .. |TestMisc| replace:: :py:class:`~plastid.test.unit.util.services.test_misc.TestMisc`
- .. |TestMiscs| replace:: :py:class:`TestMiscs <plastid.test.unit.util.services.test_misc.TestMisc>`
- .. |TestUniqueFIFO| replace:: :py:class:`~plastid.test.unit.util.test_uniquefifo.TestUniqueFIFO`
- .. |TestUniqueFIFOs| replace:: :py:class:`TestUniqueFIFOs <plastid.test.unit.util.test_uniquefifo.TestUniqueFIFO>`
  .. |BinaryParserFactory| replace:: :py:class:`~plastid.util.io.binary.BinaryParserFactory`
  .. |BinaryParserFactorys| replace:: :py:class:`BinaryParserFactorys <plastid.util.io.binary.BinaryParserFactory>`
  .. |AbstractReader| replace:: :py:class:`~plastid.util.io.filters.AbstractReader`
@@ -198,8 +98,20 @@
  .. |TestTeeListeners| replace:: :py:class:`TestTeeListeners <plastid.util.io.filters.TestTeeListener>`
  .. |NullWriter| replace:: :py:class:`~plastid.util.io.openers.NullWriter`
  .. |NullWriters| replace:: :py:class:`NullWriters <plastid.util.io.openers.NullWriter>`
+ .. |AlignmentParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AlignmentParser`
+ .. |AlignmentParsers| replace:: :py:class:`AlignmentParsers <plastid.util.scriptlib.argparsers.AlignmentParser>`
+ .. |AnnotationParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AnnotationParser`
+ .. |AnnotationParsers| replace:: :py:class:`AnnotationParsers <plastid.util.scriptlib.argparsers.AnnotationParser>`
+ .. |MaskParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.MaskParser`
+ .. |MaskParsers| replace:: :py:class:`MaskParsers <plastid.util.scriptlib.argparsers.MaskParser>`
+ .. |Parser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.Parser`
+ .. |Parsers| replace:: :py:class:`Parsers <plastid.util.scriptlib.argparsers.Parser>`
+ .. |PlottingParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PlottingParser`
+ .. |PlottingParsers| replace:: :py:class:`PlottingParsers <plastid.util.scriptlib.argparsers.PlottingParser>`
  .. |PrefixNamespaceWrapper| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper`
  .. |PrefixNamespaceWrappers| replace:: :py:class:`PrefixNamespaceWrappers <plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper>`
+ .. |SequenceParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.SequenceParser`
+ .. |SequenceParsers| replace:: :py:class:`SequenceParsers <plastid.util.scriptlib.argparsers.SequenceParser>`
  .. |ArgumentWarning| replace:: :py:class:`~plastid.util.services.exceptions.ArgumentWarning`
  .. |ArgumentWarnings| replace:: :py:class:`ArgumentWarnings <plastid.util.services.exceptions.ArgumentWarning>`
  .. |DataWarning| replace:: :py:class:`~plastid.util.services.exceptions.DataWarning`

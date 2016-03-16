@@ -37,6 +37,12 @@ MINI = {
     'wig_bedgraph'         : 'wig/bedgraph',
     'wig_bedgraph_fw'      : 'wig/bedgraph_fw.wig',
     'wig_bedgraph_rc'      : 'wig/bedgraph_rc.wig',
+
+    'bigwig'               : 'wig/bedgraph',
+    'bigwig_fw'            : 'wig/bigwig_fw.bw',
+    'bigwig_rc'            : 'wig/bigwig_rc.bw',
+
+    
     'wig_variable_step'    : 'wig/variable_step',
     'wig_variable_step_fw' : 'wig/variable_step_fw.wig',
     'wig_variable_step_rc' : 'wig/variable_step_rc.wig',

@@ -420,32 +420,6 @@ cdef void nonecheck(object obj,str place, str valname):
     if obj is None:
         raise ValueError("%s: value of %s cannot be None" % (place,valname))
 
-cdef str strand_to_str(Strand strand):
-    """Convert enum Strand to str representation"""
-    if strand == forward_strand:
-        return "+"
-    elif strand == reverse_strand:
-        return "-"
-    elif strand == unstranded:
-        return "."
-    elif strand == undef_strand:
-        return "strand undefined"
-    else:
-        raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'" % (forward_strand,
-            reverse_strand, unstranded, strand))
-
-cdef Strand str_to_strand(str val):
-    """Convert str representation of strand to enum"""
-    if val == "+":
-        return forward_strand
-    elif val == "-":
-        return reverse_strand
-    elif val == ".":
-        return unstranded
-    elif val == "\x00":
-        return undef_strand
-    else:
-        raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined)")
 
 cdef bint check_segments(SegmentChain chain, tuple segments) except False:
     cdef:
@@ -2872,7 +2846,7 @@ cdef class SegmentChain(object):
         c = 0
         for seg in self:
             cend = c + len(seg)
-            count_array[c:cend] = ga.__getitem__(seg,roi_order=False)
+            count_array[c:cend] = ga.get(seg,roi_order=False)
             c = cend
 
         if self.c_strand == reverse_strand and stranded is True:
@@ -3032,8 +3006,8 @@ cdef class SegmentChain(object):
             Line from a `BED`_ file, containing 4 or more columns
 
         extra_columns: int or list optional
-            Extra, non-BED columns in :term:`BED X+Y`_ format file corresponding to feature
-            attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+            Extra, non-BED columns in :term:`Extended BED`_ format file corresponding
+            to feature attributes. This is common in `ENCODE`_-specific `BED`_ variants.
             
             if `extra-columns` is:
             
@@ -3045,7 +3019,7 @@ cdef class SegmentChain(object):
               - a :class:`list` of :class:`str`, it is taken to be the names
                 of the attribute columns, in order, from left to right in the file.
                 In this case, attributes in extra columns will be stored under
-                there respective names in the `attr` dict.
+                their respective names in the `attr` dict.
 
               - a :class:`list` of :class:`tuple`, each tuple is taken
                 to be a pair of `(attribute_name, formatter_func)`. In this case,
@@ -3074,22 +3048,27 @@ cdef class SegmentChain(object):
         
         if isinstance(extra_columns,int):
             if extra_columns < 0:
-                raise ValueError("Cannot make SegmentChain from BED input: if an integer, extra_columns must be non-negative.")
+                raise ValueError("SegmentChain.from_bed(): Cannot make SegmentChain from BED input: if an integer, extra_columns must be non-negative.")
             num_extra_columns = extra_columns
             column_formatters = [("custom%s" % X,str) for X in range(extra_columns)]
         elif isinstance(extra_columns,(list,tuple)):
             num_extra_columns = len(extra_columns)
-            types = set([type(X) for X in extra_columns])
-            if len(types) > 1:
-                raise ValueError("List of `extra_columns` contains mixed types. Cannot parse.")
-            elif str in types:
-                column_formatters = [(X,str) for X in extra_columns]
-            elif tuple in types:
-                if all([len(X) == 2 for X in extra_columns]) == False:
-                    raise ValueError("Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
-                column_formatters = extra_columns
+            if num_extra_columns == 0:
+                column_formatters = []
+            else:                
+                types = set([type(X) for X in extra_columns])
+                if len(types) > 1:
+                    raise ValueError("SegmentChain.from_bed(): List of `extra_columns` contains mixed types. All items need to be the same type, either str or tuple.")
+                elif types == { str }:
+                    column_formatters = [(X,str) for X in extra_columns]
+                elif types == { tuple }:
+                    if all([len(X) == 2 for X in extra_columns]) == False:
+                        raise ValueError("SegmentChain.from_bed(): Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
+                    column_formatters = extra_columns
+                else:
+                    raise TypeError("SegmentChain.from_bed(): Couldn't figure out types from input '%s' of types '%s'" % (extra_columns,types))
         else:
-            raise TypeError("Cannot make SegmentChain from BED input: extra_columns must be an int or list. Got a %s" % type(extra_columns))
+            raise TypeError("SegmentChain.from_bed(): Cannot make SegmentChain from BED input: extra_columns must be an int or list. Got a %s" % type(extra_columns))
             
         num_bed_columns = len(items) - num_extra_columns
         if num_bed_columns < 3:

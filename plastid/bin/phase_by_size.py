@@ -67,13 +67,14 @@ def main(argv=sys.argv[1:]):
     pp = PlottingParser()
     bp = BaseParser()
     
-    alignment_file_parser = al.get_parser()
-    annotation_file_parser = an.get_parser()
+    alignment_file_parser = al.get_parser(conflict_handler="resolve")
+    annotation_file_parser = an.get_parser(conflict_handler="resolve")
     plotting_parser = pp.get_parser()
     base_parser = bp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     conflict_handler="resolve",
                                      parents=[base_parser,
                                               annotation_file_parser,
                                               alignment_file_parser,

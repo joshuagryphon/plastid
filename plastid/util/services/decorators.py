@@ -39,7 +39,6 @@ Decorators
 """
 import functools
 import os
-import fcntl
 import sys
 import warnings
 import types

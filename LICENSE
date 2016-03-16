@@ -1,5 +1,18 @@
-The BSD 3-Clause License
+Overview
+========
 
+Plastid (the contents of this folder and all subfolders EXCEPT the `kentUtils`
+folder and  its subfolders) is licensed via the BSD 3-Clause license (below).
+
+Plastid's ``BigWigReader`` depends on Jim Kent's utilities (`kentUtils` folder
+and its subfolders), which have their own licenses. These may be found in
+files named 'README' and/or 'COPYING' in each of their respective subfolders.
+
+
+
+The BSD 3-Clause License
+------------------------
+ 
 Copyright (c) 2013, Joshua Griffin Dunn
 All rights reserved.
 

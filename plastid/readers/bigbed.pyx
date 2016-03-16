@@ -53,14 +53,23 @@ import struct
 import zlib
 import itertools
 import sys
+import warnings
 from collections import OrderedDict
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, add_three_for_stop_codon
 from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 from plastid.util.unique_fifo import UniqueFIFO
-from plastid.util.services.mini2to3 import ifilter
+from plastid.util.services.mini2to3 import ifilter, safe_bytes, safe_str
 from plastid.util.services.decorators import skipdoc
-from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning, warn
+from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
+from plastid.readers.autosql import AutoSqlDeclaration
+
+from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem, _BBI_Reader, get_lm
+from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
+                                       forward_strand, reverse_strand, unstranded,\
+                                       error_strand,\
+                                       _GeneratorWrapper
+
 
 #===============================================================================
 # INDEX: BigBedReader
@@ -90,8 +99,7 @@ class _FromBED_StrAdaptor(object):
         """
         return inp
 
-
-class BigBedReader(object):
+cdef class BigBedReader(_BBI_Reader):
     """Reader for `BigBed`_ files. This class is useful for both iteration
     over genomic features one-by-one (like a reader), as well as random access to
     genomic features that overlap a region of interest (like a |GenomeHash|).  
@@ -123,12 +131,13 @@ class BigBedReader(object):
     
     Attributes
     ----------
-    custom_fields : OrderedDict
+    extension_fields : OrderedDict
         Dictionary mapping custom field names to their descriptions,
         if any custom fields are present
 
-    header : dict
-        Dictionary containing header information
+    extension_types : OrderedDict
+        Dictionary mapping custom field names to objects that parse their
+        types from strings
 
     filename : str
         Path to open BigBed file
@@ -139,113 +148,109 @@ class BigBedReader(object):
     num_chroms : int
         Number of contigs or chromosomes in file
     
-    chrom_sizes : dict
+    chroms : dict
         Dictionary mapping chromosome names to sizes
     
     return_type : class implementing a :py:meth:`from_bed` method, or str
         Class of object to return (Default: |SegmentChain|)
-
-
-    Notes
-    -----
-    See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for 
-    detailed description of the structures of the BigBed format, B+ Tree,
-    and R trees. 
     """
     def __init__(self,
                  filename,
-                 base_record_format="III",
                  return_type=None,
-                 memorize_r_tree=False,
                  add_three_for_stop=False,
-                 cache_depth=5,
                  **kwargs
                  ):
-        """Create a BigBedReader
-        
+        """
         Parameters
         ----------
         filename : str
-            String indicating path to `BigBed`_ file (*not* open filehandle)
-        
-        base_record_format : str, optional
-            Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
-            and any notion of a null-terminated string (Default: "III")
-        
-        return_type : str or class implementing a :py:meth:`from_bed` method, optional
-            Class of object to return (Default: |SegmentChain|)
-        
+            Path to `BigBed`_ file
+            
+        return_type : |SegmentChain| or subclass, optional
+            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
         add_three_for_stop : bool, optional
             Some annotation files exclude the stop codon from CDS annotations. If set to
-            `True`, and the `BigBed`_ file annotates transcripts, three nucleotides
-            will be added to the threeprime end of each CDS annotation.
-            (Default: `False`)
-                        
-        cache_depth : int, optional
-            Number of previously-fetched data blocks to keep in memory.
-            Decrease this number to reduce memory usage. Increase it to speed up
-            repeated fetches to nearby genomic regions. (Default: `5`)
-
-        memorize_r_tree : bool, optional
-            If *True*, cache entire |RTree| index into memory for faster lookup
-            (faster for small files, use big memory for large files. Default: `False`)
+            `True`, three nucleotides will be added to the threeprime end of each
+            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+            feature. (Default: `False`)
             
-        printer : file-like, optional
-            Filehandle or sys.stderr-like for logging (Default: |NullWriter|)            
+        maxmem : float
+            Maximum desired memory footprint for C objects, in megabytes.
+            May be temporarily exceeded if large queries are requested.
+            Does not include memory footprint of Python objects.
+            (Default: 0, no limit)
+            
         """
-        self.filename = filename
-        self.fh = open(filename,"rb")
-        if return_type == str:
-            self.return_type = _FromBED_StrAdaptor 
-        else:
-            self.return_type = SegmentChain if return_type is None else return_type
+        cdef:
+            str autosql
+            
+        self._bbifile = bigBedFileOpen(safe_bytes(filename))
 
-        self.base_record_format = base_record_format
-        self.add_three_for_stop = add_three_for_stop
+        self.total_fields         = self._bbifile.fieldCount
+        self.bed_fields           = self._bbifile.definedFieldCount
+        self.num_extension_fields = self.total_fields - self.bed_fields
+        self.extension_fields     = OrderedDict()
+        self.extension_types      = OrderedDict()
 
-        # whether or not file is byteswapped
-        # this is re-detected below when the file in _parse_header
-        # default: little-endian
-        self._byte_order = "<"
-        
-        self.header      = self._parse_header()
-        self.num_records = self._count_records()
-        
-        self._num_custom_fields  = self.header["field_count"] - self.header["bed_field_count"]
-        self.custom_fields = {}
-        
-        if self._num_custom_fields > 0:
+        if self.num_extension_fields > 0:
             autosql = self._get_autosql_str()
             try:
-                self.autosql_parser = AutoSqlDeclaration(autosql)
-                self.custom_fields  = OrderedDict(list(self.autosql_parser.field_comments.items())[-self._num_custom_fields:])
+                asql_parser            = AutoSqlDeclaration(autosql)
+                self.extension_fields  = OrderedDict(list(asql_parser.field_comments.items())[-self.num_extension_fields:])             
+                
+                for fieldname in self.extension_fields:
+                    self.extension_types[fieldname] = asql_parser.field_formatters[fieldname]
+                     
             except AttributeError:
-                warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
-                self.custom_fields  = OrderedDict([("custom_%s" % X,"no description") for X in range(self._num_custom_fields)])
-                self.autosql_parser = lambda x: OrderedDict(zip(self.custom_fields,x.split("\t")[-self._num_custom_fields:]))
+                warnings.warn("Could not find or could not parse autoSql declaration in BigBed file '%s': %s" % (self.filename,autosql),FileFormatWarning)
+                for x in range(self.num_extension_fields):
+                    fieldname = "custom_%s" % x
+                    self.extension_fields[fieldname] = "no description"
+                    self.extension_types[ fieldname] = str
         
-        self.bplus_tree = BPlusTree(self.filename,self.header["bplus_tree_offset"],self._byte_order)
-        self.bplus_tree_header  = self.bplus_tree.header
-        self.num_chroms  = self.bplus_tree.num_chroms
-        self.chrom_sizes = self.bplus_tree.chrom_sizes
+        if return_type == None:
+            self.return_type = SegmentChain
+        elif return_type == str:
+            self.return_type = _FromBED_StrAdaptor 
+        else:
+            self.return_type = return_type
 
-        self.r_tree = RTree(self.filename,
-                            self.bplus_tree,
-                            self.header["r_tree_offset"],
-                            self._byte_order,
-                            memorize=memorize_r_tree)
-        
-        self.fifo = UniqueFIFO(cache_depth)
-        self.fifo_dict = {}
+        self.add_three_for_stop = add_three_for_stop
 
-    def close(self):
-        """Close all open pointers to `BigBed`_ file"""
-        self.fh.close()
-        self.r_tree.fh.close()
-        self.bplus_tree.fh.close()
+    property custom_fields:
+        """DEPRECATED: Use extension_fields in future"""
+        def __get__(self):
+            warnings.warn("BigBedReader.custom_fields is deprecated and will be removed in plastid v0.6.0. Use BigBedReader.extension_fields in the future",UserWarning)
+            return self.extension_fields
+    
+    property num_chroms:
+        """Number of chromosomes in the `BigBed`_ file"""
+        def __get__(self):
+            return len(self.c_chroms())
+    
+    property num_records:
+        """Number of features in file"""
+        def __get__(self):
+            return bigBedItemCount(self._bbifile)
+
+    property bed_fields:
+        """Number of standard `BED`_ format columns included in file"""
+        def __get__(self):
+            return self._bbifile.definedFieldCount
         
-    def __del__(self):
-        self.close()
+    property extension_fields:
+        """Dictionary of names and types extra fields included in `BigWig`_/`BigBed`_ file"""
+        def __get__(self):
+            return self.extension_fields
+
+    property return_type:
+        """Return type of reader"""
+        def __get__(self):
+            if self.return_type == _FromBED_StrAdaptor:
+                return str
+            else:
+                return self.return_type
 
     def __str__(self):
         return "<%s records=%s chroms=%s>" % (self.__class__.__name__,self.num_records,self.num_chroms)
@@ -255,216 +260,260 @@ class BigBedReader(object):
 
     def _get_autosql_str(self):
         """Fetch `autoSql`_ field definition string from `BigBed`_ file, if present
-        
+         
         Returns
         -------
         str
-            autoSql-formatted string
+            autoSql-formatted string, or "" if no autoSql definition present
         """
-        if self.header["autosql_offset"] > 0:
-            self.fh.seek(self.header["autosql_offset"])
-            autosql_len = self.header["total_summary_offset"] - self.header["autosql_offset"]
-            autosql_fmt = "%s%ss" % (self._byte_order,autosql_len)
-            autosql_str, = struct.unpack(autosql_fmt,self.fh.read(autosql_len))
-            return str(autosql_str.decode("ascii")).strip("\0")
-        else:
-            return ""
+        cdef:
+            char *  c_asql = bigBedAutoSqlText(self._bbifile)
+            str     p_asql
             
-    def _count_records(self):
-        """Counts number of features in `BigBed`_ file
-        
-        Returns
-        -------
-        int
-            Number of features in `BigBed`_ file
-        """
-        self.fh.seek(self.header["full_data_offset"])
-        return struct.unpack(self._byte_order+"Q",self.fh.read(8))[0]
-
-    def _parse_header(self):
-        """Parse first 64 bytes of `BigBed`_ file, and determine indices
-        of file metadata. 
-        
-        Header table information from :cite:`Kent2010`, Supplemental table 5:
-        
-        =========================  ==== ====  =================================================
-        Field                      Size Type   Summary
-        =========================  ==== ====  =================================================
-        magic                      4    uint   0x8789F2EB
-        version                    2    uint   File version 3?
-        zoom_levels                2    uint   Number of zoom summary resolutions
-        bplus_tree_offset          8    uint   Offset to chr B+ tree index
-        full_data_offset           8    uint   Offset to main data. dataCount
-        r_tree_offset              8    uint   Offset to R tree index of items
-        field_count                2    uint   Number of fields in BED file
-        bed_field_count            2    uint   Number of fields that are pre-defined BED fields
-        autosql_offset             8    uint   Offset to zero-terminated string with .as spec. 0 if no autoSql string present
-        total_summary_offset       8    uint   Offset to overall file summary data block
-        uncompressed_buffer_size   4    uint   Maximum size decompression buffer needed (files v3 and later)
-        reserved                   8    uint   Reserved for future expansion
-        =========================  ==== ====  =================================================
-        
-        Returns
-        -------
-        dict
-            Dictionary mapping header field names to values 
-        """
-        self.fh.seek(0)
-        items = HeaderFactory(self.fh,self._byte_order)
-
-        if items["magic"] != 0x8789F2EB:
-            self._byte_order = ">"
-            self.fh.seek(0)
-            items = HeaderFactory(self.fh,self._byte_order)
-        
-        if items["magic"] != 0x8789F2EB:
-            raise MalformedFileError(self.filename,"Could not determine byte order of BigBed file. Expected magic number to be '%x', got '%x'." % (0x8789F2EB,self.header["magic"]))
-        
-        return items
-    
-    def _iterate_over_chunk(self,data_offset,data_size,null=b"\x00"):
-        """Iterate over records in a portion of the `BigBed`_ file
-        
-        Parameters
-        ----------
-        data_offset : int
-            Beginning of compressed record block in `BigBed`_ file
-        
-        data_size : int
-            End of compressed record block in `BigBed`_ file
-        
-        null : str, optional
-            Null character. Default: `'\\x00'`
-        
-        Yields
-        ------
-        object
-            Object of `self.return_type`, usually |SegmentChain| or one of its subclasses
-        """
-        base_size = struct.calcsize(self._byte_order+self.base_record_format)
-        
-        if data_offset in self.fifo:
-            self.fifo.append(data_offset) # this line looks funny here, but just moves data_offset to end of FIFO
-            for my_obj in self.fifo_dict[data_offset]:
-                yield my_obj
-        else:
-            self.fifo.append(data_offset) # here, it actually adds data_offset to end of FIFO
-            
-            # remove any data that should be kicked out of FIFO
-            # this would be in the keyset to self.fifo_dict ubt not in self.fifo
-            for k in set(self.fifo_dict.keys()) - set(self.fifo._elements):
-                self.fifo_dict.pop(k)
-
-            self.fifo_dict[data_offset] = []
-        
-            self.fh.seek(data_offset)
-            raw_data = zlib.decompress(self.fh.read(data_size))
-            if self.header["field_count"] > 3:
-                null_indices = find_null_bytes(raw_data,null=null)
-                last_index = 0
-                while (null_indices > last_index + base_size).sum() > 0:
-                    # find first index that doesn't overlap numerical data
-                    end_index = null_indices[(null_indices > last_index + base_size).argmax()]
-                
-                    # get bytes covering next record
-                    bytestr = raw_data[last_index:end_index]
-                    str_bytes = end_index - last_index - base_size
-                    new_format = "%s%s%ss" % (self._byte_order,self.base_record_format,str_bytes)
-                    
-                    # reset starting index
-                    last_index = end_index + 1
-                    
-                    # parse record
-                    chrom_id, chrom_start, chrom_end, remaining_cols = struct.unpack(new_format,bytestr)
-                    
-                    # 2.x returns str, 3.x returns bytes explicit cast here.
-                    if isinstance(remaining_cols,bytes):
-                        remaining_cols = remaining_cols.decode("ascii")
-                    if sys.version_info < (3,) and isinstance(remaining_cols,unicode):
-                        remaining_cols = str(remaining_cols.decode("ascii"))
-
-                    chrom_name = self.bplus_tree.chrom_id_name[chrom_id]
-                    items      = remaining_cols.split("\t")
-                    bed_items  = items[:self.header["bed_field_count"] - 3]
-                    bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)] + bed_items)
-                    return_obj = self.return_type.from_bed(bed_line)
-        
-                    # if file contains custom fields, parse these and put them in attr dict
-                    whole_bedplus_line = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])+"\t"+remaining_cols
-                    if self._num_custom_fields > 0:
-                        return_obj.attr.update(list(self.autosql_parser(whole_bedplus_line).items())[-self._num_custom_fields:])
-                    
-                    if self.add_three_for_stop == True:
-                        return_obj = add_three_for_stop_codon(return_obj)
-                    
-                    self.fifo_dict[data_offset].append(return_obj)
-                    yield return_obj
+        try:
+            if c_asql is NULL:
+                p_asql = ""
             else:
-                last_index = 0
-                fmt_str = "%s%ss" % (self._byte_order,self.base_record_format)
-                calcsize = struct.calcsize(fmt_str) 
-                while last_index < len(raw_data):
-                    bytestr = raw_data[last_index:last_index+calcsize]
-                    chrom_id, chrom_start, chrom_end, _ = struct.unpack(fmt_str,bytestr)
-                    chrom_name = self.bplus_tree.chrom_id_name[chrom_id]
-                    bed_line   = "\t".join([chrom_name,str(chrom_start),str(chrom_end)])
-                    return_obj = self.return_type.from_bed(bed_line)
-                    last_index = last_index+calcsize
-                    
-                    # don't need to add three for stop when field count < 3,
-                    # because no stop codon
-                    yield return_obj
-            
-    def __getitem__(self,roi,stranded=True):
-        """Iterate over features that overlap a region of interest
+                p_asql = safe_str(c_asql)
+        finally:
+            freeMem(c_asql)
         
+        return p_asql
+
+    def get(self, roi, bint stranded=True, bint check_unique=True):
+        """Iterate over features that share genomic positions with a region of interest
+        
+        Note
+        ----
+        ``reader.get(roi)`` is an alternative syntax to ``reader[roi]``. It's
+        only useful if setting `stranded` or `check_unique` to `False`.
+         
+         
         Parameters
         ----------
         roi : |SegmentChain| or |GenomicSegment|
             Query feature representing region of interest
-        
+         
         stranded : bool, optional
-            if `True`, retrieve only features on same strand as query feature.
+            If `True`, retrieve only features on same strand as query feature.
             Otherwise, retrieve features on both strands. (Default: `True`)
-            
-        
+             
+        check_unique: bool, optional
+            if `True`, assure that all results in generator are unique.
+            (Default: `True`)
+         
+         
         Yields
         ------
         object
-            Object of `self.return_type`, |SegmentChain| or one of its subclasses
-        
-        
+            `self.return_type` of each record in the `BigBed`_ file
+         
+         
         Raises
         ------
         TypeError
             if `other` is not a |GenomicSegment| or |SegmentChain|
         """
+        cdef:
+            SegmentChain chain
+
         if isinstance(roi,SegmentChain):
-            segchain = roi
+            chain = roi
         elif isinstance(roi,GenomicSegment):
-            segchain = SegmentChain(roi)
+            chain = SegmentChain(roi)
         else:
-            raise TypeError("Query interval must be a GenomicSegment or SegmentChain")
-        
-        if stranded:
-            overlap_fn = SegmentChain.overlaps
-        else:
-            overlap_fn = SegmentChain.unstranded_overlaps
+            raise TypeError("BigBedReader.get(): Query interval must be a GenomicSegment or SegmentChain")
             
-        return ifilter(lambda x: overlap_fn(segchain,x),
-                                 itertools.chain.from_iterable((self._iterate_over_chunk(file_offset,byte_length) \
-                                                                for (file_offset,byte_length) \
-                                                                in self.r_tree[segchain.spanning_segment])))
+        return self._c_get(chain,stranded,check_unique=check_unique)
     
-    def __iter__(self):
-        """Generator that iterates over all features in `BigBed`_ file
+    # NB- no cache layer, which we  had in pure Python implementation (below)
+    # will this be fast enough for repeated queries over the same region?
+    # need to test    
+    cdef _GeneratorWrapper _c_get(self, SegmentChain chain, bint stranded=True, bint check_unique=True, lm *my_lm = NULL):
+        """c-layer implementation of :meth:`BigBedReader.get`
         
+        Parameters
+        ----------
+        roi : |SegmentChain| or |GenomicSegment|
+            Query feature representing region of interest
+         
+        stranded : bool, optional
+            If `True`, retrieve only features on same strand as query feature.
+            Otherwise, retrieve features on both strands. (Default: `True`)
+
+        check_unique : bool, optional
+            If `True`, assure that all results in generator are unique.
+            (Default: `True`)
+        
+        my_lm : lm, optional
+            If not NULL, use this pool of local memory instead of the |BigBedReader|'s.
+            (Default: NULL)
+
+ 
+        Yields
+        ------
+        object
+            `self.return_type` of each record in the `BigBed`_ file
+        """
+        cdef:
+            bigBedInterval * iv
+            str              bed_row
+            str              rest
+            list             ltmp      = []
+            GenomicSegment   span      = chain.spanning_segment
+            GenomicSegment   roi
+            str              chrom     = span.chrom
+            Strand           strand    = span.c_strand
+            long             start     = span.start
+            long             end       = span.end
+            lm*              buf #       = self._get_lm()
+            dict             chromids  = self._chromids
+            Strand           ivstrand
+            list             items
+            object           outfunc   = self.return_type.from_bed
+            list             etypes    = list(self.extension_types.items())
+       
+        if my_lm != NULL:
+            buf = my_lm
+        else:
+            buf = self._get_lm()
+
+        if chromids is None:
+            self._define_chroms()
+            chromids = self._chromids
+
+        for roi in chain:
+            iv = bigBedIntervalQuery(self._bbifile,
+                                     safe_bytes(span.chrom),
+                                     roi.start,
+                                     roi.end,
+                                     0,
+                                     buf)
+            
+            while iv != NULL:
+                bed_row = "\t".join("%s" % X for X in [chromids[iv.chromId],iv.start,iv.end])
+                 
+                if self.total_fields > 3: # if iv.rest is populated
+                    rest = safe_str(iv.rest)
+                     
+                    # if strand info is present and we care about it
+                    if stranded == True and self.bed_fields >= 6:
+                        items = rest.split("\t")
+                        ivstrand = str_to_strand(items[2])
+                         
+                        # no overlap - restart loop at next iv
+                        if ivstrand & strand == 0:
+                            iv = iv.next
+                            continue
+                 
+                    bed_row = "%s\t%s" % (bed_row,rest)
+                     
+                # TO CONSIDER: could change this to a def insetad of a cdef,
+                # and then yield after each row. This would save memory compared
+                # to building up a big list of strings
+                #
+                # but then we wouldn't be able to check_unique
+                #
+                # not even sure a list of strings takes up that much space
+                ltmp.append(bed_row)
+                iv = iv.next
+        
+        # filter for uniqueness
+        if check_unique == True:
+            ltmp = sorted(set(ltmp))
+        
+        if self.add_three_for_stop == True:
+            return _GeneratorWrapper((add_three_for_stop_codon(outfunc(X,extra_columns=etypes)) for X in ltmp),"BigBed entries")
+        else:    
+            return _GeneratorWrapper((outfunc(X,extra_columns=etypes) for X in ltmp),"BigBed entries")
+            
+    def __getitem__(self,roi):
+        """Iterate over features that share genomic positions with a region of interest, on same strand.
+        Unstranded features, if present, are considered to overlap both `rois` on any strand.
+         
+         
+        Parameters
+        ----------
+        roi : |SegmentChain| or |GenomicSegment|
+            Query feature representing region of interest
+         
+        Yields
+        ------
+        object
+            `self.return_type` of each record in the `BigBed`_ file
+         
+         
+        Raises
+        ------
+        TypeError
+            if `other` is not a |GenomicSegment| or |SegmentChain|
+        """
+        return self.get(roi,stranded=True)
+
+    def __iter__(self):
+        """Iterate over all features in `BigBed`_ file
+         
         Yields
         ------
         object
             Object of ``self.return_type``, |SegmentChain| or one of its subclasses
         """
-        return itertools.chain.from_iterable((self._iterate_over_chunk(*NODE) for NODE in self.r_tree))
+        return _GeneratorWrapper(BigBedIterator(self,maxmem=self._maxmem),"BigBed records")
+
+
+# can't be cdef'ed or cpdef'ed due to yield
+#
+# This would probably be faster if we iterated through the cirTree leaf nodes
+# directly, since they overlap chromosome boundaries. But, as long as the
+# number of chromosomes/contigs in the file is low, this shouldn't be too big
+# a deal.
+# 
+# But, cirTree.h, crTree.h, and BigBed.h don't give a convenient way to get
+# all the data from a node, so doing so would result in lots of reimplementation.
+def BigBedIterator(BigBedReader reader,maxmem=0):
+    """Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
+     
+    Parameters
+    ----------
+    reader : |BigBedReader|
+        Reader to iterate over
+
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        Does not include memory footprint of Python objects.
+        (Default: 0, no limit)
+    
+    Yields
+    ------
+    object
+        reader.return_type of `BED`_ record
+        
+    Raises
+    ------
+    MemoryError
+        If memory cannot be allocated
+    """
+    cdef:
+        list           chromsizes  = sorted(reader.c_chroms().items(),key = lambda x: x[0].lower()) # sort using unix SORT conventions
+        long           chromlength
+        str            chrom
+        lm             *buf = lmInit(0)
+   
+    if not buf:
+        raise MemoryError("BigBedIterator: could not allocate local memory")
+
+    for chrom,chromlength in chromsizes:
+        query = SegmentChain(GenomicSegment(chrom,0,chromlength,"."))
+        buf = get_lm(my_lm=buf,maxmem=maxmem)
+        if not buf:
+            raise MemoryError("BigBedIterator: could not allocate local memory")
+
+        for n,roi in enumerate(reader._c_get(query,stranded=False,check_unique=False,my_lm=buf)):
+            yield roi
+
+    lmCleanup(&buf)
+
 
 #===============================================================================
 # INDEX: BPlusTree parser

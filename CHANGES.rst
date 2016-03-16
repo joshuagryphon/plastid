@@ -14,8 +14,32 @@ roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
      name, ``plastid`` will not change.
 
 
+Unreleased
+----------
+The next version contains a host of compatibility improvements under the hood,
+as well as support for ``BigWig``, a high-performance file format used
+to store quantitative data associated with genomic positions.
 
-plastid [0.4.5] = [2016-02-22]
+
+
+Added
+.....
+
+  - Support for `BigWig`_ files, a high-performance file format used to store
+    quantitative data associated with genomic positions. ``BigWigReader`` reads
+    `BigWig`_ files, and  ``BigWigGenomeArray``, for handles them files conveniently.
+
+
+Changed
+.......
+
+  - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
+    making it far faster.
+
+
+
+
+plastid [0.4.5] = [2016-03-09]
 ------------------------------
 
 Changes here are mostly under the hood, involving improvements in usability,
@@ -84,6 +108,15 @@ Changed
     now optionally takes parameters indicating the future version of plastid
     in which deprecated features will be removed, and what replacement to use
     instead
+
+
+Fixed
+.....
+
+  - :mod:`~plastid.bin.psite` now catches a ``ValueError`` that used to be
+    an ``IndexError`` in earlier versions of :mod:`numpy`.
+  - updated plotting tools to fetch color cycles from matplotlib versions >= 1.5
+    as well as >= 1.3
 
 
 Deprecated

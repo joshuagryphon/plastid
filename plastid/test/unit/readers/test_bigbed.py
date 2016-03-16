@@ -13,11 +13,13 @@ import warnings
 from random import shuffle
 from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
+from nose.tools import assert_almost_equal
+
 from collections import OrderedDict
 from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from plastid.genomics.genome_hash import GenomeHash
 from plastid.readers.bed import BED_Reader
-from plastid.readers.bigbed import BigBedReader, RTree, RTreeLeafFactory
+from plastid.readers.bigbed import BigBedReader
 
 warnings.simplefilter("ignore",DeprecationWarning)
 
@@ -46,230 +48,6 @@ def transcript_identical(ivc1,ivc2):
 #===============================================================================
 # INDEX: test suites
 #===============================================================================
-
-@attr(test="unit")
-@attr(speed="slow")
-class test_BPlusTree(unittest.TestCase):
- 
-    @classmethod
-    def setUpClass(cls):
-        cls.cols = [3,4,5,6,8,9,12]
-        cls.bedfiles = {}
-        cls.bbfiles  = {}
-        for col in cls.cols:
-            cls.bedfiles[col] = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bed" % col) 
-            cls.bbfiles[col]  = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bb" % col)
-        
-        cls.chrom_sizes = { }
-        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
-            chrom,size = line.strip().split("\t")
-            cls.chrom_sizes[chrom] = int(size)
-        
-        cls.chrom_id_name = { N : K for N,K in enumerate(sorted(cls.chrom_sizes.keys(),
-                                                                key = lambda x: x.lower())) }
-        cls.bbs = { K : BigBedReader(cls.bbfiles[K]) for K in cls.cols }
-            
-    def test_magic_number(self):
-        for num_cols in self.bbs:
-            my_reader = self.bbs[num_cols]
-            my_btree  = my_reader.bplus_tree
-            my_headers = my_btree.header
-            
-            # test magic number parsing
-            self.assertEqual(my_headers["magic"],0x78CA8C91)
-            
-    def test_key_size(self):
-        for num_cols in self.bbs:
-            my_headers = self.bbs[num_cols].bplus_tree.header
-            max_len = max((len(K) for K in self.chrom_sizes))
-            self.assertEqual(my_headers["key_size"],max_len)
-            
-    def test_num_chroms(self):
-        for num_cols in self.bbs:
-            my_reader = self.bbs[num_cols]
-            my_btree  = my_reader.bplus_tree
-            my_headers = my_btree.header
-            
-            # assert number of columns is correct
-            self.assertEqual(my_headers["num_chroms"],len(self.chrom_sizes))
-    
-    def test_chrom_sizes(self):
-        for num_cols in self.bbs:
-            my_btree = self.bbs[num_cols].bplus_tree
-            for k,v in self.chrom_sizes.items():
-                self.assertEqual(v,my_btree.chrom_sizes[k])
-    
-    def test_chrom_id_name(self):
-        for num_cols in self.bbs:
-            my_btree = self.bbs[num_cols].bplus_tree
-            for my_id, my_name in self.chrom_id_name.items():
-                self.assertEqual(my_name,my_btree.chrom_id_name[my_id])
-    
-    def test_chrom_name_id(self):
-        for num_cols in self.bbs:
-            my_btree = self.bbs[num_cols].bplus_tree
-            for my_id, my_name in self.chrom_id_name.items():
-                self.assertEqual(my_id,my_btree.chrom_name_id[my_name])
-
-@attr(test="unit")
-class test_RTree(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.bbfile = resource_filename("plastid","test/data/annotations/100transcripts_bed12.bb")
-        
-        cls.chrom_sizes = { }
-        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
-            chrom,size = line.strip().split("\t")
-            cls.chrom_sizes[chrom] = int(size)
-        
-        cls.chrom_id_name = { N : K for N,K in enumerate(sorted(cls.chrom_sizes.keys(),
-                                                                key = lambda x: x.lower())) }
-        
-        cls.bb = BigBedReader(cls.bbfile)
-        
-        cls.flybbfile = resource_filename("plastid","test/data/annotations/dmel-all-no-analysis-r5.54.bb")
-        
-    def test_magic_number(self):
-        self.assertEqual(self.bb.r_tree.header["magic"],0x2468ACE0)
-    
-    def test_node_overlaps_roi(self):
-        # overlap tests. Nodes represented as tuples of 
-        #     (start_chrom,end_chrom,start_base,end_bse)
-        #
-        # Intervals represented as tuples of (start_chrom,start_base,end_base)
-        
-        # dict of node -> regions node should overlap
-        overlap_tests = { 
-                          (0,5,500,10000) : [(0,1,1000), # on first chromosome
-                                             (0,0,1000),
-                                             (0,100,505),
-                                             (0,100,20000),
-                                             (3,20000,20000),
-                                             (1,1,1000), # in middle chromosomes
-                                             (3,1,1000),
-                                             (3,1,20000),
-                                             (3,20000,20000), # in middle chromosome, but bounds outside last chrom bounds
-                                             (5,1,5000), # on last chromosome, inside bounds
-                                             (5,9500,10000), # on last chromosome, at edge of bounds
-                                             (5,9500,10500), # on last chromosome, crossing bounds
-                                          ],
-                           (0,0,5000,10000) : [(0,5000,5001),
-                                               (0,9999,10000),
-                                               (0,6000,7000),
-                                               (0,2000,6000),
-                                               (0,9000,11000),
-                                               (0,1000,11000),
-                                               (0,5000,10000)
-                                              ]
-                         }
-        non_overlap_tests = {
-                          (0,0,5000,10000) : [(0,10000,20000),
-                                              (0,10001,20000),
-                                              (0,2000, 2500),
-                                              (5,6000,8000),
-                                              (5,6000,80000),
-                                              (5,2000,6000),
-                                              (5,2000,12000),
-                                              ],
-                         }
-        
-        for node_tup, node_tests in overlap_tests.items():
-            node = dict(zip(["start_chrom_id","end_chrom_id","start_base","end_base"],
-                            node_tup))
-            for test in node_tests:
-                self.assertTrue(RTree.node_overlaps_roi(node,*test),
-                                "Failed positive overlap test: %s,%s" % (str(node_tup),str(test)))
-
-        for node_tup, node_tests in non_overlap_tests.items():
-            node = dict(zip(["start_chrom_id","end_chrom_id","start_base","end_base"],
-                            node_tup))
-            for test in node_tests:
-                self.assertFalse(RTree.node_overlaps_roi(node,*test),
-                                "Failed negative overlap test: %s,%s" % (str(node_tup),str(test)))
-    
-    def test_find_leaves_no_memorize(self):
-        
-        flybb = BigBedReader(self.flybbfile)
-        self.assertEqual(flybb.r_tree.header["num_nodes"],73)
-        self.assertEqual(len(flybb.r_tree.leaf_data),0)
-        flybb.r_tree._find_leaves()
-        self.assertEqual(flybb.r_tree.header["num_nodes"],len(flybb.r_tree.leaf_data))
-        
-        bb = BigBedReader(self.bbfile,memorize_r_tree=False)
-        num_leaves = bb.r_tree.header["num_nodes"]
-        self.assertEqual(num_leaves,17)
-        
-        # No leaves before we look
-        self.assertEqual(len(bb.r_tree.leaf_data),0)
-        
-        bb.r_tree._find_leaves()
-        
-        # Make sure we find all
-        self.assertEqual(len(bb.r_tree.leaf_data),num_leaves)
-        
-        # Make sure we didn't populate other data
-        self.assertEqual(len(bb.r_tree.node_parent_offsets),0)
-        self.assertEqual(len(bb.r_tree.node_child_offsets),0)
-        self.assertEqual(len(bb.r_tree.node_genome_boundaries),0)
-    
-    def test_find_leaves_memorize(self):
-
-        bb = BigBedReader(self.bbfile,memorize_r_tree=True)
-        num_leaves = bb.r_tree.header["num_nodes"]
-        
-        # No leaves before we look
-        self.assertEqual(len(bb.r_tree.leaf_data),0)
-        bb.r_tree._find_leaves()
-        
-        # Make sure we find all
-        self.assertEqual(len(bb.r_tree.leaf_data),num_leaves)
-        
-        # Make sure we populated other data
-        self.assertEqual(len(bb.r_tree.node_parent_offsets),num_leaves)
-        self.assertEqual(len(bb.r_tree.node_genome_boundaries),num_leaves)
-        
-        #self.assertEqual(len(bb.r_tree.node_child_offsets),num_nodes - num_leaves)
-    
-    def test_getitem(self):
-        flybb = BigBedReader(self.flybbfile)
-        # give an ROI and return  List of tuples of *(file_offset, bytes_to_read)*
-        # hard answers obtained by manual checking in expt 258
-        big_roi = GenomicSegment("2L",0,23011547,"+")
-        expected = [(850, 14694),
-                    (15544, 14890),
-                    (30434, 15558),
-                    (45992, 14665),
-                    (60657, 15445),
-                    (76102, 14645),
-                    (90747, 15934),
-                    (106681, 14673),
-                    (121354, 15031),
-                    (136385, 14654),
-                    (151039, 14742),
-                    (165781, 13265),
-                    (179046, 4028)]
-        self.assertListEqual(flybb.r_tree[big_roi],expected)
-        
-        small_roi = GenomicSegment("2L",0,10000,"+")
-        expected = [(850, 14694)]
-        self.assertListEqual(flybb.r_tree[small_roi],expected)
-    
-    def test_iter(self):
-        # should fetch a list of data pointers of leaves
-        # we should have 17 of them
-        # and they should be sorted by order
-        leaves = list(self.bb.r_tree)
-        self.assertEqual(len(leaves),self.bb.r_tree.header["num_nodes"])
-        for items in leaves:
-            self.assertEqual(len(items),2)
-
-        #for the fly, we should have 73
-        flybb = BigBedReader(self.flybbfile)
-        leaves = list(flybb.r_tree)
-        self.assertEqual(len(leaves),flybb.r_tree.header["num_nodes"])
-        for items in leaves:
-            self.assertEqual(len(items),2)
 
     
 @attr(test="unit")
@@ -326,17 +104,17 @@ class test_BigBedReader(unittest.TestCase):
                            }
         cls.bonus_col_file = resource_filename("plastid","test/data/annotations/bonus_bed_columns.txt")
         
-    def test_parse_header(self):
-        for col,my_reader in self.bbs.items():
-            my_headers = my_reader.header
-            
-            # test magic number parsing
-            self.assertEqual(my_headers["magic"],0x8789F2EB)
-            
-            # assert number of columns is correct
-            self.assertEqual(my_headers["field_count"],col)
-            self.assertEqual(my_headers["bed_field_count"],col)
-
+#    def test_parse_header(self):
+#        for col,my_reader in self.bbs.items():
+#            my_headers = my_reader.header
+#            
+#            # test magic number parsing
+#            self.assertEqual(my_headers["magic"],0x8789F2EB)
+#            
+#            # assert number of columns is correct
+#            self.assertEqual(my_headers["field_count"],col)
+#            self.assertEqual(my_headers["bed_field_count"],col)
+#
     def test_count_records(self):
         for _,my_reader in self.bbs.items():
             # make sure we have all records
@@ -349,50 +127,45 @@ class test_BigBedReader(unittest.TestCase):
     def test_chrom_sizes(self):
         for _,my_reader in self.bbs.items():
             for k,v in self.chrom_sizes.items():
-                self.assertEqual(my_reader.chrom_sizes[k],v)   
-                
-    def test_parse_bplus_tree_header(self):
-        for _,my_reader in self.bbs.items():
-            my_headers = my_reader.bplus_tree_header
-            
-            # test magic number parsing
-            self.assertEqual(my_headers["magic"],0x78CA8C91)
-            
-            # make sure we have all 17 contigs
-            self.assertEqual(my_headers["num_chroms"],17)
-            
-            # test chrom sizes
-            for k,v in self.chrom_sizes.items():
-                self.assertEqual(my_reader.bplus_tree.chrom_sizes[k],v)
-    
-    def test_iter_same_as_bed_reader(self):
+                self.assertEqual(my_reader.chroms[k],v)   
+   
+    def test_iter_same_as_bed_reader_various_columns(self):
         # implicitly tests iterate_over_chunk over all bed files, too
+        # this tests BigBed equality with various ranges of columns
+        # and various custom columns
         for col in self.cols:
             bigbed = self.bbs[col]
             bed    = BED_Reader(open(self.bedfiles[col]),return_type=Transcript)
                
             for n, (tx1, tx2) in enumerate(zip(bed,bigbed)):
-                self.assertTrue(transcript_identical(tx1,tx2))
+                msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
+                self.assertTrue(transcript_identical(tx1,tx2),msg)
                
             self.assertEqual(n,100-1)
-         
+        
+    def test_iter_same_as_bed_reader_flydata(self):
+        # test more complex transcript models
+        # we cast them to lists, sadly, because Python's lexical chromosome sorting
+        # differs from unix command-line sort; so even though the records are
+        # in the same order in both files, they are returned with different sorts
         flybb  = BigBedReader(self.flybbfile,return_type=Transcript)
         flybed = BED_Reader(open(self.flybedfile),return_type=Transcript)
-        for n, (tx1,tx2) in enumerate(zip(flybb,flybed)):
-            self.assertTrue(transcript_identical(tx1,tx2))
+        for n, (tx1,tx2) in enumerate(zip(flybed,flybb)):
+            msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
+            self.assertTrue(transcript_identical(tx1,tx2),msg)
          
         self.assertEqual(n,32682-1)
   
-    def test_iterate_over_chunk(self):
-        # we will have to hard-code the answers to this
-        flybb = BigBedReader(self.flybbfile)
-        fetched = list(flybb._iterate_over_chunk(850,14694))
-        self.assertEqual(len(fetched),512)
-        for ivc in fetched:
-            self.assertEqual(ivc.spanning_segment.chrom,"2L")
-            self.assertGreaterEqual(ivc.spanning_segment.start,7528)
-            self.assertLessEqual(ivc.spanning_segment.end,1858550)
-        
+#    def test_iterate_over_chunk(self):
+#        # we will have to hard-code the answers to this
+#        flybb = BigBedReader(self.flybbfile)
+#        fetched = list(flybb._iterate_over_chunk(850,14694))
+#        self.assertEqual(len(fetched),512)
+#        for ivc in fetched:
+#            self.assertEqual(ivc.spanning_segment.chrom,"2L")
+#            self.assertGreaterEqual(ivc.spanning_segment.start,7528)
+#            self.assertLessEqual(ivc.spanning_segment.end,1858550)
+#        
     def test_getitem_stranded(self):
         """Test fetching of overlapping features, minding strand
         
@@ -408,6 +181,8 @@ class test_BigBedReader(unittest.TestCase):
         for txid,cds in list(self.cds_dict.items())[:100]:
             gh_ol_features = self.tx_hash.get_overlapping_features(cds,stranded=True)
             bb_ol_features = bb[cds]
+            
+            
             self.assertIn(txid,(X.get_name() for X in gh_ol_features),
                           msg="%s failed to fetch its own CDS on correct strand" % txid)
             
@@ -429,7 +204,45 @@ class test_BigBedReader(unittest.TestCase):
             self.assertSetEqual(set([str(X) for X in gh_ol_features]),
                                 set([str(X) for X in bb_ol_features]))
 
-    def test_getitem_unstranded(self):
+    def test_get_stranded(self):
+        """Test fetching of overlapping features, minding strand
+        
+        1.  Make sure each feature can fetch its own subregion from its own neighborhood
+        
+        2.  Make sure each feature cannot fetch its own antisense subregion
+        
+        3.  Make sure each features fetches exactly the same features as a GenomeHash
+        """             
+        # make sure we can fetch each transcript's own CDS
+        bb = self.bbs[12]
+        u = 0
+        for txid,cds in list(self.cds_dict.items())[:100]:
+            gh_ol_features = self.tx_hash.get_overlapping_features(cds,stranded=True)
+            bb_ol_features = bb.get(cds,stranded=True)
+            
+            
+            self.assertIn(txid,(X.get_name() for X in gh_ol_features),
+                          msg="%s failed to fetch its own CDS on correct strand" % txid)
+            
+            # make sure bb fetch matches GenomeHash fetch
+            self.assertSetEqual(set([str(X) for X in gh_ol_features]),
+                                set([str(X) for X in bb_ol_features]))
+        
+            u += 1
+            
+        self.assertGreater(u,0)
+
+        # make sure we don't fetch each transcript's own antisense CDS
+        # on opposite strand
+        for txid,cds in list(self.as_cds_dict.items())[:100]:
+            gh_ol_features = self.tx_hash.get_overlapping_features(cds,stranded=True)
+            bb_ol_features = bb[cds]
+            self.assertNotIn(txid,(X.get_name() for X in gh_ol_features),
+                             msg="%s fetched its own name on wrong strand!" % txid)       
+            self.assertSetEqual(set([str(X) for X in gh_ol_features]),
+                                set([str(X) for X in bb_ol_features]))
+
+    def test_get_unstranded(self):
         """Test fetching of overlapping features, disregarding strand
         
         1.  Make sure each feature can fetch its own subregion from its own neighborhood
@@ -443,7 +256,7 @@ class test_BigBedReader(unittest.TestCase):
         u = 0
         for txid,cds in list(self.cds_dict.items())[:100]:
             gh_ol_features = self.tx_hash.get_overlapping_features(cds,stranded=False)
-            bb_ol_features = bb.__getitem__(cds,stranded=False)
+            bb_ol_features = bb.get(cds,stranded=False)
             self.assertIn(txid,(X.get_name() for X in gh_ol_features),
                           msg="%s failed to fetch its own CDS on same strand" % txid)
             
@@ -459,7 +272,7 @@ class test_BigBedReader(unittest.TestCase):
         # on opposite strand
         for txid,cds in list(self.as_cds_dict.items())[:100]:
             gh_ol_features = self.tx_hash.get_overlapping_features(cds,stranded=False)
-            bb_ol_features = bb.__getitem__(cds,stranded=False)
+            bb_ol_features = bb.get(cds,stranded=False)
             self.assertIn(txid,(X.get_name() for X in gh_ol_features),
                           msg="%s failed to fetched its own name on opposite strand!" % txid)   
             s1 = set([str(X)+X.get_name() for X in gh_ol_features])
@@ -488,7 +301,7 @@ class test_BigBedReader(unittest.TestCase):
         for k in (4,12):
             bbplus_noas = BigBedReader(self.bb_bonuscols["bb%sno_as" % k])
             self.assertEqual(bbplus_noas._get_autosql_str(),"")
-    
+
     def test_custom_columns_names_with_autosql(self):
         expected = OrderedDict([("my_floats","some float values"),
                                 ("my_sets","some set options"),
@@ -499,7 +312,7 @@ class test_BigBedReader(unittest.TestCase):
         for k in (4,12): 
             fn = "bb%sas" % k
             bb = BigBedReader(self.bb_bonuscols[fn])
-            self.assertEqual(bb.custom_fields,expected)
+            self.assertEqual(bb.extension_fields,expected)
      
     def test_custom_columns_names_without_autosql(self):
         expected = OrderedDict([("custom_0","no description"),
@@ -511,7 +324,7 @@ class test_BigBedReader(unittest.TestCase):
         for k in (4,12): 
             fn = "bb%sno_as" % k
             bb = BigBedReader(self.bb_bonuscols[fn])
-            self.assertEqual(bb.custom_fields,expected)
+            self.assertEqual(bb.extension_fields,expected)
     
     def test_custom_columns_retval_type_with_autosql(self):
         values = { "my_floats" : [],
@@ -540,12 +353,18 @@ class test_BigBedReader(unittest.TestCase):
             # field 9 (itemRgb, typically uint[3]) to be `reserved uint;` in 
             # autoSql declarations
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+                #warnings.simplefilter("ignore")
                 bb = BigBedReader(self.bb_bonuscols[fn])
                 for n, item in enumerate(bb):
                     for key in values:
-                        self.assertEqual(values[key][n],item.attr[key])
-    
+                        expected = values[key][n]
+                        found    = item.attr[key]
+                        msg = "failed test_custom_columns_retval_type_with_autosql at record %s, key %s. Expected '%s'. Got '%s' " % (n,key,expected,found)
+                        if isinstance(expected,float):
+                            assert_almost_equal(expected, found, msg)
+                        else:
+                            self.assertEqual(expected, found, msg)
+                        
     def test_custom_columns_retval_type_without_autosql(self):
         values = { "custom_%s" % X : copy.deepcopy([])for X in range(5) }
         bfile = open(self.bonus_col_file)
