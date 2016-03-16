@@ -360,14 +360,17 @@ between samples.
  .. _examples-deseq-count-table
 
 The first table may be constructed by running |cs| or |counts_in_region|
-on each biological sample to obtain counts:
+on each biological sample to obtain counts. Here, we'll use RNA-seq data:
 
  .. code-block:: shell
 
-    $ counts_in_region ribo_rep1 --count_files SRR609197_riboprofile.bam  --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
-    $ counts_in_region inf_rnaseq_rep1 --count_files SRR592963_rnaseq.bam  --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
-    $ counts_in_region ribo_rep2 --count_files [SOME_OTHER_FILE].bam       --fiveprime --offset 14 --annotation_files merlin_orfs.bed --annotation_format BED 
-    $ counts_in_region inf_rnaseq_rep2 --count_files [SOME_OTHER_FILE].bam --fiveprime             --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_5hr_rep1 --count_files SRR592963_rnaseq_5hr_rep1.bam        --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_5hr_rep2 --count_files _rnaseq_5hr_rep2.bam                 --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+
+
+    $ counts_in_region rnaseq_24hr_rep1 --count_files SRR592964_rnaseq_24hr_rep1.bam      --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_24hr_rep2 --count_files SRR592967_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+
 
 
  .. TODO: include output
@@ -377,13 +380,13 @@ a single table:
  .. code-block:: python
 
     >>> import pandas as pd
-    >>> sample_names = ["inf_rnaseq_rep1","inf_rnaseq_rep2","uninf_rnaseq_rep1","uninf_rnaseq"rep2"]
+    >>> sample_names = ["rnaseq_5hr_rep1","rnaseq_5hr_rep2","rnaseq_24hr_rep1","rnaseq_24hr_rep2"]
 
     >>> # load samples as DataFrames
     >>> samples = { K : pd.read_table("%s.txt" % K,sep="\t",header=0,comment="#",index_col=None) for K in sample_names }
 
     >>> # combine count columns to single DataFrame
-    >>> combined_df = samples["ribo_rep1"]["region_name","region"]
+    >>> combined_df = samples["rnaseq_5hr_rep1"]["region_name","region"]
     >>> for k,v in samples.items():
     >>>     combined_df["%s_counts" % k] = v["counts"]
 
@@ -406,11 +409,14 @@ of each condition:
 
  .. code-block :: shell
 
-    sample_name        condition
-    inf_rnaseq_1       infected
-    inf_rnaseq_2       infected
-    uninf_rnaseq_1     uninfected
-    uninf_rnaseq_2     uninfected
+    sample_name          condition
+    rnaseq_5hr_rep1      5_hours
+    rnaseq_5hr_rep2      5_hours
+    rnaseq_24hr_rep1     24_hours
+    rnaseq_24hr_rep2     24_hours
+
+
+
 
 
  .. _examples-deseq-equation:
@@ -471,15 +477,14 @@ Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_).
 We use an sample table similar to that above, but include a `sample_type`
 column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries::
 
-    sample_name        condition      sample_type
-    inf_rnaseq_1       infected       rnaseq
-    inf_rnaseq_2       infected       rnaseq
-    uninf_rnaseq_1     uninfected     rnaseq
-    uninf_rnaseq_2     uninfected     rnaseq
-    inf_riboprof_1     infected       riboprof
-    inf_riboprof_2     infected       riboprof
-    uninf_riboprof_1   uninfected     riboprof
-    uninf_riboprof_2   uninfected     riboprof
+    sample_name          condition    sample_type
+    rnaseq_5hr_rep1      5_hours      rnaseq
+    rnaseq_5hr_rep2      5_hours      rnaseq
+    rnaseq_24hr_rep1     24_hours     rnaseq
+    rnaseq_24hr_rep2     24_hours     rnaseq
+    ribo_5hr_rep1        5_hours      riboprof
+    ribo_24hr_rep1       24_hours     riboprof
+
 
 To the design equation, we need to add  an *interaction term* to alert
 `DESeq`_/`DESeq2`_ that we expect the relationship between the sample
