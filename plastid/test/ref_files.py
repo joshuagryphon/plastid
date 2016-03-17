@@ -93,10 +93,12 @@ REF_FILES = {
               "yeast_crossmap_o0_26_0"    : os.path.join(RPATH,"command_line","2013-01-23.sc_o0_26_0_crossmap.bed"),
               "yeast_crossmap_o12_26_2"   : os.path.join(RPATH,"command_line","2013-01-23.sc_o12_26_2_crossmap.bed"),
               
-              "yeast_rp_bam"        : os.path.join(RPATH,"command_line","gen_reads.bam"),
-              "yeast_psite"         : os.path.join(RPATH,"command_line","gen_p_offsets.txt"),
-              "yeast_mini_bed"      : os.path.join(RPATH,"command_line","transcripts_chosen.bed"),
-              "yeast_phasing"       : os.path.join(RPATH,"command_line","gen_phasing.txt"),
+              "yeast_rp_bam"          : os.path.join(RPATH,"command_line","gen_reads.bam"),
+              "yeast_psite"           : os.path.join(RPATH,"command_line","gen_p_offsets.txt"),
+              "yeast_psite_constrain" : os.path.join(RPATH,"command_line","gen_p_offsets_constrain.txt"),
+              
+              "yeast_mini_bed"        : os.path.join(RPATH,"command_line","transcripts_chosen.bed"),
+              "yeast_phasing"         : os.path.join(RPATH,"command_line","gen_phasing.txt"),
               
               "yeast_metagene_cds_start" : os.path.join(RPATH,"command_line","gen_cds_start_rois.txt"),
               "yeast_metagene_cds_stop"  : os.path.join(RPATH,"command_line","gen_cds_stop_rois.txt"),              

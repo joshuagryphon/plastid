@@ -253,8 +253,13 @@ def main(argv=sys.argv[1:]):
                              "between the largest peak upstream of the start codon and "+
                              "the start codon itself. Otherwise, the P-site offset is taken "+
                              "to be the distance between the largest peak in the entire ROI "+
-                             "and the start codon."
+                             "and the start codon. Ignored if ``--constrain`` is used."
                         )
+    parser.add_argument("--constrain",type=int,nargs=3,default=None,metavar="X",
+                        help="Constrain P-site offset to be between specified distance from "+
+                             "start codon. Left-to-right, parameters are minimum distance, "+
+                             "maximum distance, position of start codon. Useful for noisy data. "+
+                             "(Reasonable set: 10 15 50; default: not constrained)")
     parser.add_argument("--aggregate",default=False,action="store_true",
                         help="Estimate P-site from aggregate reads at each position, instead "+
                              "of median normalized read density. Noisier, but helpful for "+
@@ -263,7 +268,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("--keep",default=False,action="store_true",
                         help="Save intermediate count files. Useful for additional computations (Default: False)")
     parser.add_argument("--default",type=int,default=13,
-                        help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset (Default: 13)")
+                        help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset. Unaffected by ``--constrain`` (Default: 13)")
 
     parser.add_argument("roi_file",type=str,
                         help="ROI file surrounding start codons, from ``metagene generate`` subprogram")
@@ -274,6 +279,7 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
+    # set defaults
     args.mapping = "fiveprime"
     args.offset  = 0
     args.nibble  = 0
@@ -381,13 +387,22 @@ def main(argv=sys.argv[1:]):
     x = metagene_profile["x"].values
     xmin = x.min()
     xmax = x.max()
-    mask = numpy.tile(True,len(x)) if args.require_upstream == False else (x <= 0)
+    
+    if args.constrain is not None:
+        mask = numpy.tile(True,len(x))
+        mindist,maxdist,zp = args.constrain
+        mask[zp-maxdist:zp-mindist+1] = False
+    elif args.require_upstream == True:
+        mask = x >= 0
+    else:
+        mask = numpy.tile(False,len(x))
 
     for n,k in enumerate(lengths):
         color = colors[n]
         baseline = plt_incr*n
         y = metagene_profile["%s-mers" % k].values
-        ymask = y[mask]
+        #ymask = y[mask]
+        ymask = numpy.ma.MaskedArray(y,mask=mask)
 
         if numpy.isnan(y).all():
             plot_y = numpy.zeros_like(x)
@@ -409,11 +424,11 @@ def main(argv=sys.argv[1:]):
         ymax = baseline + numpy.nanmax(plot_y)
 
         # if all valid positions are nan, or if all valid positions are <= 0
-        if mask.sum() == numpy.isnan(ymask).sum() or numpy.nanmax(ymask) == 0:
+        if (~mask).sum() == numpy.isnan(ymask).sum() or numpy.nanmax(ymask) == 0:
             offset = args.default
             usedefault = True
         else:
-            offset = -x[ymask.argmax()]
+            offset = -x[numpy.ma.argmax(ymask)]
             usedefault = False
 
         offset_dict[k] = offset

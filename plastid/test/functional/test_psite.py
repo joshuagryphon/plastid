@@ -38,7 +38,18 @@ psite_tests = [
      [_outbase+"_p_offsets.txt"],
      [""]
     ),
+    ("%s %s --count_files %s --norm_region 70 150 --require_upstream --min_length 26 --max_length 31 --constrain 0 11 50"  % (REF_FILES["yeast_metagene_cds_start"],
+                                                                                                          _outbase,
+                                                                                                          REF_FILES["yeast_rp_bam"],)  ,
+     [REF_FILES["yeast_psite_constrain"]],
+     [_outbase+"_p_offsets.txt"],
+     [""]
+    ),
 ]
+
+
+# /home/joshua/projects/plastid/plastid/test/data/command_line/gen_cds_start_rois.txt /tmp/psite5SY5Wc/test_psite --count_files /home/joshua/projects/plastid/plastid/test/data/command_line/gen_reads.bam --norm_region 70 150 --require_upstream --min_length 26 --max_length 31
+
 """Functional tests of :py:mod:`plastid.bin.psite`.
 
 Tests are specified as tuples of:

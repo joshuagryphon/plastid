@@ -18,20 +18,24 @@ Unreleased
 ----------
 
 
-Added
-.....
+Added/Changed
+.............
 
   - Support for `BigWig`_ files, a high-performance file format used to store
     quantitative data associated with genomic positions. ``BigWigReader`` reads
     `BigWig`_ files, and  ``BigWigGenomeArray``  handles them conveniently.
 
-
-Changed
-.......
-
   - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
     making it far faster.
 
+  - By default, ``psite`` and ``metagene`` scripts no longer save intermediate
+    count files. ``--keep`` option added to both scripts to save these.
+
+  - ``--constrain`` option added to ``psite`` to improve performance on noisy
+    or low count data.
+
+  - All script output metadata now includes command as executed, for easier
+    re-running and record keeping
 
 
 
