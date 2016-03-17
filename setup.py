@@ -1,15 +1,21 @@
 #!/usr/bin/env python
-"""Setup script for plastid. This is *fairly* boilerplate EXCEPT:
+"""Setup script for plastid. This is boilerplate except:
 
-    1. `sdist`, `build_ext`, `install`, and `develop` commands are wrapped
-       to add a "--recythonize" flag, which causes Cython to regenerate
-       ".c" files from ".pyx" files before the commands are run.
+    1. Setup will error if numpy, Pysam, and Cython are not pre-installed.
+       This is because this script needs those to run. This situation is
+       is unavoidable at present given how package specification works.
 
-    2.  These commands *also* invoke Cython if the ".c" files cannot be found.
+    2. `build_ext`, `install`, and `develop` commands are wrapped to add
+       a ``--recythonize`` flag, which causes Cython to regenerate ".c" files
+       from ".pyx" files before the commands are run. This is merely a 
+       convenience for developers to force rebuild even if ".c" files
+       appear up to date (but are not e.g. due to a switch in git repo)
 
-    3. a `recythonize` command class was also created to do this, and only this
+    3. a `clean` command class was added to wipe old ".c" and ".so" files,
+       e.g. optionally before meaking an sdist
 
-    4. a `clean` command class was added to wipe old ".c" files
+    4. Kent utilities and dependencies are compiled and included for
+       ``BigBedReader`` and ``BigWigReader``.
 
     5. Separately, if the package is being installed on readthedocs.org,
        it only installs absolutely necessary build dependencies, which are
@@ -21,10 +27,10 @@ import os
 import sys
 import glob
 from setuptools import setup, find_packages, Extension, Command
-#from setuptools.command.install import install
-#from setuptools.command.develop import develop
+from setuptools.command.install import install
+from setuptools.command.develop import develop
 from Cython.Distutils import build_ext
-
+from Cython.Build import cythonize
 
 PYSAM_VER_NUM = (0,8,4)
 NUMPY_VER_NUM = (1,9,0)
@@ -156,7 +162,7 @@ CYTHON_OPTIONS = [
         (CYTHONIZE_ARG,
          None,
          "If supplied, use Cython to regenerate .c sources from pyx files " +\
-         "(requires Cython; default False)"
+         "(default False)"
         ),
 ]
 
@@ -180,13 +186,6 @@ for mod in (numpy,pysam):
     else:
         raise ValueError("Could not parse include path: %s" % ipart)
 
-
-# paths to C files and PYX files
-PYX_PATHS = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
-""".pyx files for extensions"""
-
-C_PATHS = [X.replace(".pyx",".c") for X in PYX_PATHS] + glob.glob(os.path.join(base_path,"plastid","readers","*.c"))
-"""Potential path to cythonized .c files"""
 
 # other flags; fill in as needed
 LIBRARIES=[]
@@ -265,6 +264,7 @@ kent_deps += [os.path.join(base_path,"kentUtils","src","lib",X) for X in kent_so
 
 
 # Cython extensions without external dependencies
+noinclude_pyx = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
 ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").replace(os.sep,"."),
                          [x],
                          include_dirs=INCLUDE_PATH,
@@ -272,7 +272,7 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          library_dirs=LIBRARY_DIRS,
                          runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
                          extra_objects=EXTRA_OBJECTS,
-                        ) for x in PYX_PATHS]
+                        ) for x in noinclude_pyx]
 
 bbifile = Extension(
     "plastid.readers.bbifile",
@@ -304,65 +304,73 @@ bigbed = Extension(
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
 )
 
-
-
 ext_modules.append(bbifile)
 ext_modules.append(bigwig)
 ext_modules.append(bigbed)
 
+
+# paths to sources
+PYX_PATHS = []
+for ex in ext_modules:
+    PYX_PATHS.extend([X for X in ex.sources if X.endswith("pyx")])
+
+C_PATHS   = [X.replace(".pyx",".c") for X in PYX_PATHS]
+
+
 # classes & functions for compilation -----------------------------------------
 
-# def wrap_command_classes(baseclass):
-#     """Add custom command-line `--recythonize` options to distutils/setuptools
-#     command classes
-#     
-#     Parameters
-#     ----------
-#     baseclass : setuptools.Command or subclass (not instance!)
-#         Command class to modify
-# 
-#     Returns
-#     -------
-#     class
-#         Modified class
-#     """
-#     class subclass(baseclass):
-#         user_options = baseclass.user_options + CYTHON_OPTIONS
-#         new_options = CYTHON_OPTIONS
-#         new_defaults = CYTHON_DEFAULTS
-# 
-#         def initialize_options(self):
-#             baseclass.initialize_options(self)
-#             for (op,_,_), default in zip(self.new_options,
-#                     self.new_defaults):
-#                 setattr(self,op,default)
-#         
-#         def finalize_options(self):
-#             baseclass.finalize_options(self)
-#             if "--%s" % CYTHONIZE_ARG in self.distribution.script_args:
-#                 print("Cythonize on")
-#                 setattr(self,CYTHONIZE_ARG,True)
-# 
-#         def run(self):
-#             have_all = all([os.access(X,os.F_OK) for X in C_PATHS])
-#             if have_all == False:
-#                 print("Could not find .c files. Regenerating via recythonize.")
-#                 setattr(self,CYTHONIZE_ARG,True)
-#                 self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
-#             
-#             if getattr(self,CYTHONIZE_ARG) == True:
-#                 print("Cythonizing")
-#                 self.run_command(CYTHONIZE_COMMAND)
-# 
-#             return baseclass.run(self)
-# 
-#     subclass.__name__ = "cython_%s" % baseclass.__name__
-#     return subclass
-# 
-# 
+def wrap_command_classes(baseclass):
+    """Add custom command-line `--recythonize` options to distutils/setuptools
+    command classes
+    
+    Parameters
+    ----------
+    baseclass : setuptools.Command or subclass (not instance!)
+        Command class to modify
+
+    Returns
+    -------
+    class
+        Modified class
+    """
+    class subclass(baseclass):
+        user_options = baseclass.user_options + CYTHON_OPTIONS
+        new_options = CYTHON_OPTIONS
+        new_defaults = CYTHON_DEFAULTS
+
+        def initialize_options(self):
+            baseclass.initialize_options(self)
+            for (op,_,_), default in zip(self.new_options,
+                    self.new_defaults):
+                setattr(self,op,default)
+        
+        def finalize_options(self):
+            baseclass.finalize_options(self)
+            if "--%s" % CYTHONIZE_ARG in self.distribution.script_args:
+                print("Cythonize on")
+                setattr(self,CYTHONIZE_ARG,True)
+
+        def run(self):
+            have_all = all([os.access(X,os.F_OK) for X in C_PATHS])
+            if have_all == False:
+                print("Could not find .c files. Regenerating via recythonize.")
+                setattr(self,CYTHONIZE_ARG,True)
+                self.distribution.script_args.append("--%s" % CYTHONIZE_ARG)
+            
+            if getattr(self,CYTHONIZE_ARG) == True:
+                print("Cythonizing")
+                self.run_command(CYTHONIZE_COMMAND)
+
+            return baseclass.run(self)
+
+    subclass.__name__ = "cython_%s" % baseclass.__name__
+    return subclass
+
+
 class clean_c_files(Command):
     """Remove previously generated .c and .so files"""
     user_options = []
+    description = "Remove previously generated .c and .so files"
  
     def initialize_options(self):
         pass
@@ -380,49 +388,37 @@ class clean_c_files(Command):
             if os.access(sofile,os.F_OK):
                 print("clean_c_files: removing %s ..." % sofile)
                 os.remove(sofile)
+
  
-# 
-# 
-# class build_c_from_pyx(build_ext):
-#     """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
-#     user_options = build_ext.user_options + CYTHON_OPTIONS
-#     new_options  = CYTHON_OPTIONS
-#     new_defaults = CYTHON_DEFAULTS
-# 
-#     cython_args  = CYTHON_ARGS
-#     include_path = INCLUDE_PATH
-#     old_extensions = ext_modules
-# 
-#     def initialize_options(self):
-#         for (op,_,_), default in zip(self.new_options,
-#                 self.new_defaults):
-#             setattr(self,op,default)
-#         build_ext.initialize_options(self)
-# 
-#     def finalize_options(self):
-#         if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
-#             self.run_command('clean')
-#             #print("build_c_from_pyx: regenerating .c files from Cython")
-#             #from Cython.Build import cythonize
-#             
-#             
-#             
-#             #extensions = cythonize(PYX_PATHS,
-#             #                       include_path=self.include_path,
-#             #                       compiler_directives=self.cython_args
-#             #                     include_dirs=INCLUDE_PATH,
-#             #                     libraries=LIBRARIES,
-#             #                     library_dirs=LIBRARY_DIRS,
-#             #                     extra_objects=EXTRA_OBJECTS,
-#             #                      
-#             #                       
-#             #                       )
-#             #self.extensions = extensions
-# 
-#         build_ext.finalize_options(self)
-# 
-#     def run(self): # override so that extensions are only build with build_ext, install, etc
-#         pass
+class build_c_from_pyx(build_ext):
+    """Regenerate .c files from pyx files if --CYTHONIZE_ARG or CYTHONIZE_COMMAND is added to command line"""
+    user_options = build_ext.user_options + CYTHON_OPTIONS
+    new_options  = CYTHON_OPTIONS
+    new_defaults = CYTHON_DEFAULTS
+
+    cython_args  = CYTHON_ARGS
+    include_path = INCLUDE_PATH
+    old_extensions = ext_modules
+
+    description = "Regenerate .c files from .pyx source"
+
+    def initialize_options(self):
+        for (op,_,_), default in zip(self.new_options,
+                self.new_defaults):
+            setattr(self,op,default)
+        build_ext.initialize_options(self)
+
+    def finalize_options(self):
+        if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
+            self.run_command('clean')
+            print("build_c_from_pyx: regenerating .c files from Cython")
+            extensions = cythonize(ext_modules)
+            self.extensions = extensions
+
+        build_ext.finalize_options(self)
+
+    def run(self): # override so that extensions are only built with build_ext, install, etc
+        pass
 
 
 
@@ -511,10 +507,10 @@ setup(
     ext_modules = ext_modules,
     
     cmdclass    = {
-        #CYTHONIZE_COMMAND : build_c_from_pyx,
-        'build_ext' : build_ext, 
-        #'install'   : wrap_command_classes(install),
-        #'develop'   : wrap_command_classes(develop),
+        CYTHONIZE_COMMAND : build_c_from_pyx,
+        'build_ext' : wrap_command_classes(build_ext), 
+        'install'   : wrap_command_classes(install),
+        'develop'   : wrap_command_classes(develop),
         'clean'     : clean_c_files,
     },
 
