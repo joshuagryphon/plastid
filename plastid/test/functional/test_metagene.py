@@ -58,7 +58,7 @@ tests = [
     ),
     # test count cds start
     (
-        "count %s %s_cds_start --norm_region 70 150 %s" % (REF_FILES["yeast_metagene_cds_start"],
+        "count %s %s_cds_start --keep --norm_region 70 150 %s" % (REF_FILES["yeast_metagene_cds_start"],
                                                     _basename,
                                                     COUNT_OPTIONS),
     [
@@ -75,7 +75,7 @@ tests = [
     ),
     # test count cds stop
     (
-        "count %s %s_cds_stop --norm_region 0 80 %s" % (REF_FILES["yeast_metagene_cds_stop"],
+        "count %s %s_cds_stop --keep --norm_region 0 80 %s" % (REF_FILES["yeast_metagene_cds_stop"],
                                                      _basename,
                                                      COUNT_OPTIONS),
     [

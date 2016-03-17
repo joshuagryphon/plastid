@@ -35,12 +35,14 @@ Output files
         are applied.
 
     OUTBASE_K_rawcounts.txt
-        Raw count vectors for each :term:`metagene` window specified in input ROI file,
-        without P-site mapping rules applied, for reads of length `K`
+        Saved if ``--keep`` is given on command line. Raw count vectors for each
+        :term:`metagene` window specified in input ROI file, without P-site
+        mapping rules applied, for reads of length `K`
 
     OUTBASE_K_normcounts.txt
-        Normalized count vectors for each metagene window specified in input ROI file,
-        without P-site mapping rules applied, for reads of length `K`
+        Saved if ``--keep`` is given on command line. Normalized count vectors
+        for each metagene window specified in input ROI file, without P-site
+        mapping rules applied, for reads of length `K`
 
 where `OUTBASE` is supplied by the user.
 """
@@ -258,7 +260,8 @@ def main(argv=sys.argv[1:]):
                              "of median normalized read density. Noisier, but helpful for "+
                              "lower-count data or read lengths with few counts. (Default: False)"
                         ),
-
+    parser.add_argument("--keep",default=False,action="store_true",
+                        help="Save intermediate count files. Useful for additional computations (Default: False)")
     parser.add_argument("--default",type=int,default=13,
                         help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset (Default: 13)")
 
@@ -321,14 +324,15 @@ def main(argv=sys.argv[1:]):
                                 columns=["x"]+["%s-mers" % X for X in lengths])
         metagene_out.close()
 
-    printer.write("Saving raw and normalized counts...")
-    for k in count_dict:
-        count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
-        normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
-        mask_fn      = "%s_%s_mask.txt.gz" % (outbase,k)
-        numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
-        numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
-        numpy.savetxt(mask_fn,norm_count_dict[k].mask,delimiter="\t")
+    if args.keep == True:
+        printer.write("Saving raw and normalized counts...")
+        for k in count_dict:
+            count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
+            normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
+            mask_fn      = "%s_%s_mask.txt.gz" % (outbase,k)
+            numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
+            numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
+            numpy.savetxt(mask_fn,norm_count_dict[k].mask,delimiter="\t")
     
     # plotting & offsets
     printer.write("Plotting and determining offsets...")

@@ -112,16 +112,20 @@ Count
         ================   ==================================================        
         
     OUTBASE_rawcounts.txt
-        Table of raw counts. Each row is a maximal spanning window for a gene,
-        and each column a nucleotide position in that window. All windows
-        are aligned at the landmark.
+        Saved if ``--keep`` is specified. Table of raw counts. Each row is a
+        maximal spanning window for a gene, and each column a nucleotide position
+        in that window. All windows are aligned at the landmark.
     
     OUTBASE_normcounts.txt
-        Table of normalized counts, produced by dividing each row in the
-        raw count table by the of counts in that row within the columns
-        specified by ``--norm_region``.
+        Saved if ``--keep`` is specified. Table of normalized counts, produced
+        by dividing each row in the raw count table by the of counts in that
+        row within the columns specified by ``--norm_region``.
 
-    OUTBASE_metagene_overview.svg
+    OUTBASE_mask.txt
+        Saved if ``--keep`` is specified. Matrix of masks indicating which
+        cells in ``normcounts`` were excluded from computations.
+
+    OUTBASE_metagene_overview.[png | svg | pdf | et c...]
         Metagene average plotted above a heatmap of normalized counts,
         in which each row of pixels is a maximal spanning window for a gene,
         and rows are sorted by the column in which they reach their
@@ -762,9 +766,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         #counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
     
     printer.write("Counted %s ROIs total." % (i+1))
-    printer.write("Saving counts to %s ..." % count_fn)
-    numpy.savetxt(count_fn,counts,delimiter="\t",fmt='%.8f')
-         
+             
     denominator = numpy.nansum(counts[:,norm_start:norm_end],axis=1)
     row_select = denominator >= min_counts
 
@@ -773,11 +775,13 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     norm_counts.mask[numpy.isnan(norm_counts)] = True
     norm_counts.mask[numpy.isinf(norm_counts)] = True
 
-    printer.write("Saving normalized counts to %s ..." % normcount_fn)
-    numpy.savetxt(normcount_fn,norm_counts,delimiter="\t")
-
-    printer.write("Saving masks used in profile building to %s ..." % mask_fn)
-    numpy.savetxt(mask_fn,norm_counts.mask,delimiter="\t")
+    if args.keep == True:
+        printer.write("Saving counts to %s ..." % count_fn)
+        numpy.savetxt(count_fn,counts,delimiter="\t",fmt='%.8f')
+        printer.write("Saving normalized counts to %s ..." % normcount_fn)
+        numpy.savetxt(normcount_fn,norm_counts,delimiter="\t")
+        printer.write("Saving masks used in profile building to %s ..." % mask_fn)
+        numpy.savetxt(mask_fn,norm_counts.mask,delimiter="\t")
      
     try:
         profile = numpy.ma.median(norm_counts[row_select],axis=0)
@@ -1001,6 +1005,8 @@ def main(argv=sys.argv[1:]):
                               " distance, from 5\' end of window. (Default: 70 100)")
     cparser.add_argument("--landmark",type=str,default=None,
                          help="Name of landmark at zero point, optional.")
+    cparser.add_argument("--keep",default=False,action="store_true",
+                        help="Save intermediate count files. Useful for additional computations (Default: False)")
     cparser.add_argument("outbase",type=str,
                          help="Basename for output files")
 
