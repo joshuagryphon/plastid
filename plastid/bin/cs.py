@@ -212,7 +212,7 @@ def merge_genes(tx_ivcs):
     }
 
     # backmap exons to genes as tuples
-    printer.write("Mapping exons to genes...")
+    printer.write("Mapping exons to genes ...")
     for txid in tx_ivcs.keys():
         my_segmentchain  = tx_ivcs[txid]
         my_gene = my_segmentchain.get_gene()
@@ -233,7 +233,7 @@ def merge_genes(tx_ivcs):
     for strand in exondicts:
         for chrom in exondicts[strand]:
             exondicts[strand][chrom] = { K : set(V) for K,V in exondicts[strand][chrom].items() }
-            printer.write("Flattening genes on %s(%s)..." % (chrom,strand))
+            printer.write("Flattening genes on %s(%s) ..." % (chrom,strand))
             gene_groups = merge_sets(exondicts[strand][chrom].values(),
                                      printer=printer)
  
@@ -305,7 +305,7 @@ def process_partial_group(transcripts,mask_hash,printer):
     keycombos = list(itertools.permutations(("utr5","cds","utr3"),2))
 
     # merge genes that share exons & write output
-    printer.write("Collapsing genes that share exons...")
+    printer.write("Collapsing genes that share exons ...")
     merged_genes = merge_genes(transcripts)
 
     # remap transcripts to merged genes
@@ -324,10 +324,10 @@ def process_partial_group(transcripts,mask_hash,printer):
             merged_gene_tx[my_merged] = [txid]
 
     # flatten merged genes
-    printer.write("Flattening merged genes, masking positions, and labelling subfeatures...")
+    printer.write("Flattening merged genes, masking positions, and labeling subfeatures ...")
     for n, (gene_id, my_txids) in enumerate(merged_gene_tx.items()):
         if n % 1000 == 0 and n > 0:
-            printer.write("    %s genes..." % n)
+            printer.write("    %s genes ..." % n)
 
         my_gene_positions = []
         chroms  = []
@@ -357,12 +357,12 @@ def process_partial_group(transcripts,mask_hash,printer):
     printer.write("    %s genes total." % (n+1))
 
     # mask genes
-    printer.write("Masking positions and labeling subfeature positions...")
+    printer.write("Masking positions and labeling subfeature positions ...")
     gene_hash = GenomeHash(gene_table["exon_unmasked"],do_copy=False)
 
     for n,(gene_id,gene_ivc_raw) in enumerate(zip(gene_table["region"],gene_table["exon_unmasked"])):
         if n % 2000 == 0:
-            printer.write("    %s genes..." % n)
+            printer.write("    %s genes ..." % n)
 
         my_chrom  = gene_ivc_raw.spanning_segment.chrom
         my_strand = gene_ivc_raw.spanning_segment.strand
@@ -585,7 +585,7 @@ def do_generate(args,annotation_parser,mask_parser):
             transcripts[tx.get_name()] = tx
    
     # write output
-    printer.write("Writing output...")
+    printer.write("Writing output ...")
     
     merged_fn = "%s_merged.txt" % args.outbase
     number_merged = len(set(merged_genes.values()))
@@ -596,9 +596,9 @@ def do_generate(args,annotation_parser,mask_parser):
         
     fout.close()
     
-    printer.write("Writing gene table and BED files...")
+    printer.write("Writing gene table and BED files ...")
     write_output_files(gene_table,"gene",args)
-    printer.write("Writing transcript summary table and BED files...")
+    printer.write("Writing transcript summary table and BED files ...")
     write_output_files(transcript_table,"transcript",args)
     printer.write("Done!")
 
@@ -629,7 +629,7 @@ tab-delimited text file.
     total_counts = gnd.sum()
 
     printer.write("Dataset has %s counts in it." % total_counts)
-    printer.write("Tallying genes...")
+    printer.write("Tallying genes ...")
 
     dtmp = { "region" : [] }
     for x in keys:
@@ -641,7 +641,7 @@ tab-delimited text file.
     for i,name in enumerate(gene_positions["region"]):
         dtmp["region"].append(name)
         if i % 500 == 0:
-            printer.write("Processed %s genes..." % i)
+            printer.write("Processed %s genes ..." % i)
         
         for k in keys:
             ivc = SegmentChain.from_str(gene_positions[k][i])
@@ -854,7 +854,7 @@ correlation coefficients as a function of summed read counts in both samples
     figformat = args.figformat
     
     # read input files
-    printer.write("Reading input files: %s..." % ", ".join(args.infiles))
+    printer.write("Reading input files: %s ..." % ", ".join(args.infiles))
     list_of_genes = set([X.strip() for X in opener(args.list_of_regions)])
     samples = { get_short_samplename(X) : read_count_file(opener(X),list_of_genes)\
                                           for X in args.infiles }
@@ -898,7 +898,7 @@ correlation coefficients as a function of summed read counts in both samples
             
             for metric in args.metrics:                                        
                 region_metric = "%s_%s" % (region,metric)
-                printer.write("    -%s across %s for all >=128..." % (metric,region))
+                printer.write("    -%s across %s for all >=128 ..." % (metric,region))
                 
                 # divide into regions >=128 and <128 and plot
                 viover = vi[region_metric][count_mask].values
@@ -979,7 +979,7 @@ correlation coefficients as a function of summed read counts in both samples
                 bigtable[label][region_counts][metric]["num_genes_log2"]    = num_genes_log2
                 
                 # do bin-by-bin counting
-                printer.write("    -%s across %s by bin..." % (metric,region))                    
+                printer.write("    -%s across %s by bin ..." % (metric,region))                    
                 bin_masks = get_bin_mask_by_summed_key(vi,vj,bins=args.bins,key=region_counts)
                 for my_bin,bin_mask in sorted(bin_masks.items()):
                     
@@ -1017,7 +1017,7 @@ correlation coefficients as a function of summed read counts in both samples
                     corrcoef_by_bin_table[label][region_counts][metric][my_bin]["log2_std"]     = my_logstd
 
     # export big (non-binned) table
-    printer.write("Writing tables...")
+    printer.write("Writing tables ...")
     
     bigtable_out = argsopener("%s_bigtable.txt" % args.outbase,args,"w")
     stats = ("num_genes_128plus",  # 0

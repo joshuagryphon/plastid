@@ -640,7 +640,7 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
             for region_id, tx_list in group_transcript.items():
                 c += 1
                 if c % 1000 == 1:
-                    printer.write("Processed %s genes, included %s..." % (c,len(list(dtmp.values())[0])))
+                    printer.write("Processed %s genes, included %s ..." % (c,len(list(dtmp.values())[0])))
 
                 name = region_id # name regions after gene id
                 max_spanning_window, offset =  maximal_spanning_window(tx_list,
@@ -734,7 +734,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     norm_start, norm_end = args.norm_region
     min_counts = args.min_counts
 
-    printer.write("Opening ROI file %s..." % args.roi_file)
+    printer.write("Opening ROI file %s ..." % args.roi_file)
     with open(args.roi_file) as fh:
         roi_table = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
         fh.close()
@@ -751,7 +751,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     
     for i,row in roi_table.iterrows():
         if i % 1000 == 1:
-            printer.write("Counted %s ROIs..." % (i))
+            printer.write("Counted %s ROIs ..." % (i))
             
         roi    = SegmentChain.from_str(row["region"])
         mask   = SegmentChain.from_str(row["masked"])
@@ -847,7 +847,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     if args.landmark is not None:
         ax["main"].set_xlabel("Distance (nt) from %s" % landmark)
 
-    printer.write("Saving image to %s..." % fig_fn)
+    printer.write("Saving image to %s ..." % fig_fn)
     fig.savefig(fig_fn,dpi=args.dpi,bbox_inches="tight")
 
     return counts, norm_counts, profile_table
@@ -1028,7 +1028,7 @@ def main(argv=sys.argv[1:]):
     
     # 'generate' subprogram
     if args.program == "generate":
-        printer.write("Generating ROI file...")
+        printer.write("Generating ROI file ...")
         if args.landmark == "cds_start":
             map_function = window_cds_start
         elif args.landmark == "cds_stop":
@@ -1040,12 +1040,12 @@ def main(argv=sys.argv[1:]):
                     (args.annotation_format == "BigBed")
             
         # open annotations
-        printer.write("Opening annotation files: %s..." % ", ".join(args.annotation_files))
+        printer.write("Opening annotation files: %s ..." % ", ".join(args.annotation_files))
         transcripts = an.get_transcripts_from_args(args,printer=printer)
         mask_hash = mp.get_genome_hash_from_args(args)
         
         # get ROIs
-        printer.write("Generating regions of interest...")   
+        printer.write("Generating regions of interest ...")   
         roi_table = group_regions_make_windows(transcripts,
                                                mask_hash,
                                                args.upstream,
@@ -1056,7 +1056,7 @@ def main(argv=sys.argv[1:]):
                                                group_by=args.group_by)
         roi_file = "%s_rois.txt" % args.outbase
         bed_file = "%s_rois.bed" % args.outbase
-        printer.write("Saving to ROIs %s..." % roi_file)
+        printer.write("Saving to ROIs %s ..." % roi_file)
         with argsopener(roi_file,args,"w") as roi_fh:
             roi_table.to_csv(roi_fh,
                              sep="\t",
@@ -1067,7 +1067,7 @@ def main(argv=sys.argv[1:]):
                              )
             roi_fh.close()
             
-        printer.write("Saving BED output as %s..." % bed_file)
+        printer.write("Saving BED output as %s ..." % bed_file)
         with argsopener(bed_file,args,"w") as bed_fh:
             for roi in roi_table["region_bed"]:
                 bed_fh.write(roi)

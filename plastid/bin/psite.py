@@ -137,7 +137,7 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,aggrega
     
     for i,row in roi_table.iterrows():
         if i % 1000 == 0:
-            printer.write("Counted %s ROIs..." % (i+1))
+            printer.write("Counted %s ROIs ..." % (i+1))
             
         roi    = SegmentChain.from_str(row["region"])
         mask   = SegmentChain.from_str(row["masked"])
@@ -294,12 +294,12 @@ def main(argv=sys.argv[1:]):
     title  = "Fiveprime read offsets by length" if args.title is None else args.title
     colors = pp.get_colors_from_args(args,profiles)
  
-    printer.write("Opening ROI file %s..." % args.roi_file)
+    printer.write("Opening ROI file %s ..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
         roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
         roi_fh.close()
         
-    printer.write("Opening count files %s..." % ",".join(args.count_files))
+    printer.write("Opening count files %s ..." % ",".join(args.count_files))
     ga = ap.get_genome_array_from_args(args,printer=printer)
 
     
@@ -331,7 +331,7 @@ def main(argv=sys.argv[1:]):
         metagene_out.close()
 
     if args.keep == True:
-        printer.write("Saving raw and normalized counts...")
+        printer.write("Saving raw and normalized counts ...")
         for k in count_dict:
             count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
             normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
@@ -341,7 +341,7 @@ def main(argv=sys.argv[1:]):
             numpy.savetxt(mask_fn,norm_count_dict[k].mask,delimiter="\t")
     
     # plotting & offsets
-    printer.write("Plotting and determining offsets...")
+    printer.write("Plotting and determining offsets ...")
     offset_dict = OrderedDict() 
 
     # Determine scaling factor for plotting metagene profiles
