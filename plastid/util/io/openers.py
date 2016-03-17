@@ -16,6 +16,7 @@ Important methods
 :py:func:`NullWriter`
     Returns an open filehandle to the system's null location.
 """
+import sys
 import os
 from plastid.util.io.filters import AbstractWriter
 
@@ -181,7 +182,9 @@ def args_to_comment(namespace):
     """
     import datetime
     dtmp = namespace.__dict__
-    ltmp = ["## date = '%s'" % datetime.datetime.today()]
+    ltmp = ["## date = '%s'" % datetime.datetime.today(),
+            "## execstr = '%s'" % " ".join(sys.argv)
+            ]
     ltmp.append("## args = {  ")
     ltmp2 = pretty_print_dict(dtmp).split("\n")[1:-2]
     for i in range(len(ltmp2)):
