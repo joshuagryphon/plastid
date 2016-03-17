@@ -38,7 +38,7 @@ psite_tests = [
      [_outbase+"_p_offsets.txt"],
      [""]
     ),
-    ("%s %s --count_files %s --norm_region 70 150 --require_upstream --min_length 26 --max_length 31 --constrain 0 11 50"  % (REF_FILES["yeast_metagene_cds_start"],
+    ("%s %s --count_files %s --norm_region 70 150 --require_upstream --min_length 26 --max_length 31 --constrain 0 11"  % (REF_FILES["yeast_metagene_cds_start"],
                                                                                                           _outbase,
                                                                                                           REF_FILES["yeast_rp_bam"],)  ,
      [REF_FILES["yeast_psite_constrain"]],

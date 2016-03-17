@@ -256,11 +256,10 @@ def main(argv=sys.argv[1:]):
                              "to be the distance between the largest peak in the entire ROI "+
                              "and the start codon. Ignored if ``--constrain`` is used."
                         )
-    parser.add_argument("--constrain",type=int,nargs=3,default=None,metavar="X",
+    parser.add_argument("--constrain",type=int,nargs=2,default=None,metavar="X",
                         help="Constrain P-site offset to be between specified distance from "+
-                             "start codon. Left-to-right, parameters are minimum distance, "+
-                             "maximum distance, position of start codon. Useful for noisy data. "+
-                             "(Reasonable set: 10 15 50; default: not constrained)")
+                             "start codon. Useful for noisy data. "+
+                             "(Reasonable set: 10 15; default: not constrained)")
     parser.add_argument("--aggregate",default=False,action="store_true",
                         help="Estimate P-site from aggregate reads at each position, instead "+
                              "of median normalized read density. Noisier, but helpful for "+
@@ -392,7 +391,8 @@ def main(argv=sys.argv[1:]):
     if args.constrain is not None:
         mask = numpy.tile(True,len(x))
         
-        l,r,zp = args.constrain
+        zp = (x==0).argmax()
+        l,r = args.constrain
         if l == r:
             warnings.warn("Minimum and maximum distance constraints are equal (both '%s'). This is silly." % l,ArgumentWarning)
             
