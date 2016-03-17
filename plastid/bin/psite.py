@@ -64,6 +64,7 @@ from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
+from plastid.util.services.exceptions import ArgumentWarning
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
@@ -390,7 +391,14 @@ def main(argv=sys.argv[1:]):
     
     if args.constrain is not None:
         mask = numpy.tile(True,len(x))
-        mindist,maxdist,zp = args.constrain
+        
+        l,r,zp = args.constrain
+        if l == r:
+            warnings.warn("Minimum and maximum distance constraints are equal (both '%s'). This is silly." % l,ArgumentWarning)
+            
+        mindist = min(l,r)
+        maxdist = max(l,r)
+        
         mask[zp-maxdist:zp-mindist+1] = False
     elif args.require_upstream == True:
         mask = x >= 0
