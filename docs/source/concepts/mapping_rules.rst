@@ -154,7 +154,7 @@ Mapping rules are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.s
 
    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
+   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=5))
@@ -269,7 +269,7 @@ to mapping functions. To specify an offset, use a wrapper function::
     >>>
     >>>    return new_func
 
-    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
     >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 

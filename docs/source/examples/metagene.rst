@@ -184,7 +184,7 @@ of each :term:`read alignment`.
  .. code-block:: shell
 
     $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile \
-                     --count_files SRR609197_riboprofile.bam \
+                     --count_files SRR609197_riboprofile_5hr_rep1.bam \
                      --fiveprime --offset 14
 
 
@@ -304,7 +304,7 @@ Window functions must return the following values, in order:
 
 
 Window function examples
-.........................
+........................
 
 Here is a window function that produces windows surrounding transcription
 start sites:
@@ -451,7 +451,7 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
 
     >>> # window_biggest_spike() needs read alignments stored in a variable
     >>> # called ALIGNMENTS. so let's load some
-    >>> ALIGNMENTS = BAMGenomeArray(["SRR609197_riboprofile.bam")])
+    >>> ALIGNMENTS = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam")])
     >>> ALIGNMENTS.set_mapping(FivePrimeMapFactory(offset=14))
 
     >>> # skip masking out any repetitive regions for purpose of demo
@@ -496,7 +496,7 @@ The `roi file` can be used as if it were made by the command-line
 
      $ metagene count SRR609197_riboprofile_big_spike_roi_file.txt \
                       SRR609197_riboprofile_big_spike \
-                      --count_files SRR609197_riboprofile.bam \
+                      --count_files SRR609197_riboprofile_5hr_rep1.bam \
                       --fiveprime --offset 14
      
      $ metagene chart SRR609197_metagene_big_spike_demo.png \

@@ -49,7 +49,7 @@ and |Transcripts| can be masked using their
                             BAMGenomeArray, FivePrimeMapFactory
 
     >>> # load transcripts and count data
-    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"],FivePrimeMapFactory(offset=14))
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"],FivePrimeMapFactory(offset=14))
     >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
     >>> #this is ribosome profiling data, so we'll look at a coding region

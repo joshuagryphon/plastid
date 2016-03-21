@@ -41,7 +41,7 @@ which we'll load into a :class:`~plastid.genomics.genome_array.BAMGenomeArray`.
 We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
 estimating the P-site to be 14 nucleotides from the 5' end::
 
-    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 Now, we're ready to count. The method
@@ -143,7 +143,7 @@ The script may then be executed from the terminal:
 
     $ get_count_vectors --annotation_files merlin_orfs.bed \
                         --annotation_format BED \
-                        --count_files SRR609197_riboprofile.bam \
+                        --count_files SRR609197_riboprofile_5hr_rep1.bam \
                         --fiveprime \
                         --offset 14 \
                         folder_of_vectors

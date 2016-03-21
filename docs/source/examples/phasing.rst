@@ -64,7 +64,7 @@ First, we need to open the read alignments and transcript annotation:
     >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
 
     >>> # open read alignments and map to P-sites
-    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
     >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 :term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit variable
@@ -138,7 +138,7 @@ The |phase_by_size| script automates the calculations described in
 :term:`read alignments` of each length.
 
 The command line below examines phasing in 
-the :term:`ribosome profiling` dataset ``SRR609197_riboprofile.bam``,
+the :term:`ribosome profiling` dataset ``SRR609197_riboprofile_5hr_rep1.bam``,
 estimating the P-site as 14 nucleotides from the 5' end of each read.
 In addition, we exclude 5 codons near the start and stop codons (
 via the ``--codon_buffer`` argument), because these are often hyper-phased
@@ -147,7 +147,7 @@ compared to coding regions:
   .. code-block:: shell
 
      $ phase_by_size SRR609197 \
-                     --count_files SRR609197_riboprofile.bam \
+                     --count_files SRR609197_riboprofile_5hr_rep1.bam \
                      --annotation_files merlin_orfs.bed \
                      --annotation_format BED \
                      --fiveprime --offset 14 \

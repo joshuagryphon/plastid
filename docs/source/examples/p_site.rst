@@ -98,7 +98,7 @@ From the terminal:
                                  --min_length 29 \
                                  --max_length 35 \
                                  --require_upstream \
-                                 --count_files SRR609197_riboprofile.bam
+                                 --count_files SRR609197_riboprofile_5hr_rep1.bam
 
 For most users, two of the output files are of interest:
 
@@ -153,7 +153,7 @@ counts. To so, run the script with the ``--aggregate`` flag:
                                  --min_length 29 \
                                  --max_length 35 \
                                  --require_upstream \
-                                 --count_files SRR609197_riboprofile.bam \
+                                 --count_files SRR609197_riboprofile_5hr_rep1.bam \
                                  --aggregate
 
 
@@ -213,7 +213,7 @@ method of |VariableFivePrimeMapFactory|::
 
     >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
     
-    >>> alignments = BAMGenomeArray(["SRR1562907.bam"])
+    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
     >>> alignments.set_mapping(maprule)
 
 
