@@ -57,7 +57,7 @@ Our first dataset is :term:`ribosome profiling`, and we will map the ribosomal
 P-site at 14 nucleotides from the 5' end of each read (approximating :cite:`Stern-Ginossar2012`).
 To specify this, we use the arguments ``--fiveprime --offset 14``.
 
-The data we want to count is in the file ``SRR609197_riboprofile.bam``, which we pass
+The data we want to count is in the file ``SRR609197_riboprofile_rep1.bam``, which we pass
 via ``--count_files``. The genes we are interested in counting in this example
 are on chromosome I, in the annotation file ``merlin_orfs.gtf``. Finally,
 we will tell the script to save the output in ``riboprofile.txt``.
@@ -66,7 +66,7 @@ Putting this together, the script is run from the terminal as:
 
  .. code-block:: shell
 
-    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile.bam \
+    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile_rep1.bam \
                                        --annotation_files merlin_orfs.gtf \
                                        --fiveprime --offset 14
 
@@ -119,8 +119,8 @@ First, we need to import a few things::
 
 First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArray|::
 
-    >>> my_datasets = { "ribosome_profiling" : "SRR609197_riboprofile.bam",
-    >>>                 "RNA-seq"            : "SRR592963_rnaseq.bam",
+    >>> my_datasets = { "ribosome_profiling" : "SRR609197_riboprofile_5hr_rep1.bam",
+    >>>                 "RNA-seq"            : "SRR592963_rnaseq_5hr_rep1.bam",
     >>>               }
 
     >>> my_datasets = { K : BAMGenomeArray([V]) for K,V in my_datasets.items() }
@@ -281,8 +281,6 @@ control:
 
 
 
-
-
  .. figure:: /_static/images/demo_gene_expr_teff_vs_tx.png
 
     :class: captionfigure
@@ -294,11 +292,6 @@ control:
 Testing for differential expression
 -----------------------------------
 
- .. note::
-
-    We need to add some more samples to the test dataset for this section.
-    In the mean time, just read along
-
 
 RNA-seq, specifically
 .....................
@@ -308,16 +301,18 @@ make statistical corrections that assume -- :term:`RNA-seq` data.
 
 For :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_ in particular are popular,
 and operate directly on alignments in `BAM`_ format. These packages don't require
-:data:`plastid` at all. For further information on them packages, see their documentation.
+:data:`plastid` at all. For further information on them packages, see their
+documentation.
 
 
 Any :term:`high-throughput sequencing` experiment, including RNA-seq
 ....................................................................
 For other experimental data types -- e.g. :term:`ribosome profiling`, :term:`DMS-seq`,
 :term:`ChIP-Seq`, :term:`ClIP-Seq`, et c -- the assumptions made by many packages
-specifically developed for :term:`RNA-seq` analysis do not hold. 
+specifically developed for :term:`RNA-seq` analysis (e.g. even coverage across
+transcripts) do not hold. 
 
-In contrast, the `R`_ packages `DESeq`_ and `DESeq2`_ (:cite:`Anders2010,Anders2013,Love2014`)
+In contrast, the `R`_ package `DESeq2`_ (:cite:`Anders2010,Anders2013,Love2014`)
 offer a generally applicable statistical approach that is appropriate to virtually
 any count-based sequencing data.
 
@@ -327,10 +322,10 @@ any count-based sequencing data.
     `Analysing RNA-Seq data with the "DESeq2" package <http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf>`_,
     hosted on the `DESeq2`_ website.
     
-    Users are encouraged to read the `DESeq`_/`DESeq2`_ documentation for a fuller
-    discussion with additional examples.
+    Users are strongly encouraged to read the `DESeq`_/`DESeq2`_ documentation 
+    for a fuller discussion of DESeq's statistical models with additional examples.
 
-As input, `DESeq`_ and `DESeq2`_ take two tables and an equation:
+As input, `DESeq2`_ takes two tables and an equation:
 
  #. A :ref:`table <examples-deseq-count-table>` of *uncorrected, unnormalized*
     :term:`counts`, in which:
@@ -341,18 +336,18 @@ As input, `DESeq`_ and `DESeq2`_ take two tables and an equation:
         in the corresponding genomic region and sample
 
  #. A :ref:`sample design table <examples-deseq-design-table>`
-    describing the properties of each sample
-    (e.g. if any are technical or biological replicates, or any treatments
-    or conditions that differ between samples)
+    describing the properties of each sample (e.g. if any are technical or
+    biological replicates, or any treatments or conditions that differ between
+    samples)
 
  #. A :ref:`design equation <examples-deseq-equation>`, describing how
     the samples or treatments relate to one another
 
     
-From these, `DESeq`_ and `DESeq2`_ separately model intrinsic counting
+From these, `DESeq2`_ separately model intrinsic counting
 error (Poisson noise) as well as additional inter-replicate error
 resulting biological or experimental variability. From these error models,
-`DESeq`_ and `DESeq2`_ can detect significant differences in count numbers
+and `DESeq2`_ can detect significant differences in count numbers
 between non-replicate samples, accounting for different sequencing depth
 between samples.
 
@@ -364,18 +359,11 @@ on each biological sample to obtain counts. Here, we'll use RNA-seq data:
 
  .. code-block:: shell
 
-    $ counts_in_region rnaseq_5hr_rep1 --count_files SRR592963_rnaseq_5hr_rep1.bam        --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
-    $ counts_in_region rnaseq_5hr_rep2 --count_files _rnaseq_5hr_rep2.bam                 --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_5hr_rep1.txt --count_files  SRR592963_rnaseq_5hr_rep1.bam   --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_5hr_rep3.txt --count_files  SRR2064027_rnaseq_5hr_rep2.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_24hr_rep1.txt --count_files SRR592964_rnaseq_24hr_rep1.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region rnaseq_24hr_rep3.txt --count_files SRR2064029_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
 
-
-    $ counts_in_region rnaseq_24hr_rep1 --count_files SRR592964_rnaseq_24hr_rep1.bam      --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
-    $ counts_in_region rnaseq_24hr_rep2 --count_files SRR592967_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
-
-
-
- .. TODO: include output
-From the output, the relevant columns can be extracted and moved to
-a single table:
 
  .. code-block:: python
 
@@ -386,26 +374,24 @@ a single table:
     >>> samples = { K : pd.read_table("%s.txt" % K,sep="\t",header=0,comment="#",index_col=None) for K in sample_names }
 
     >>> # combine count columns to single DataFrame
-    >>> combined_df = samples["rnaseq_5hr_rep1"]["region_name","region"]
+    >>> combined_df = samples["rnaseq_5hr_rep1"][["region_name"]]
     >>> for k,v in samples.items():
-    >>>     combined_df["%s_counts" % k] = v["counts"]
+    >>>     combined_df[k] = v["counts"]
 
     >>> combined_df.head()
 
     >>> # save
-    >>> combined_df.savecsv("combined_counts.txt",sep="\t",header=True,index=False)
-
-
-
-
+    >>> combined_df.to_csv("combined_counts.txt",sep="\t",header=True,index=False,
+                           columns=["region_name","rnaseq_5hr_rep1","rnaseq_5hr_rep2",
+                                    "rnaseq_24hr_rep1","rnaseq_24hr_rep2"])
 
 
  .. _examples-deseq-design-table:
 
-The second table contains the *experimental design*. This can be created
-in any text editor and saved as a tab-delimited text file. In this example,
-the we have two conditions, "infected" and "uninfected", and two replicates
-of each condition:
+The second table (in this example, ``rnaseq_sample_table.txt``) is a description
+of the experimental design. This can be created in any text editor and saved as a
+tab-delimited text file. In this example, the we have two conditions, "infected"
+and "uninfected", and two replicates of each condition:
 
  .. code-block :: shell
 
@@ -416,9 +402,6 @@ of each condition:
     rnaseq_24hr_rep2     24_hours
 
 
-
-
-
  .. _examples-deseq-equation:
 
 Because the only difference between samples is the `condition` column,
@@ -426,28 +409,31 @@ the design equation is this case is very simple::
 
     design = ~ condition
 
-
 With the count table, design table, and equation ready, everything can
 be loaded into `R`_:
 
  .. TODO: put output below
  .. code-block:: r
 
+    > # workflow from DESeq2 vignette at
+    > # https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf
+
+    > # import DESeq2 & run with default settings
+    > library("DESeq2")
+
     > # load RNA seq data into a data.frame
     > # first line of file are colum headers
     > # "region" column specifies a list of row names
     > count_table <- read.delim("combined_counts.txt",
     >                           sep="\t",
-    >                           header=True,
-    >                           row.names="region")
+    >                           header=TRUE,
+    >                           row.names="region_name")
 
+    > # load sample table
     > sample_table <- read.delim("rnaseq_sample_table.txt",
     >                            sep="\t",
-    >                            header=True,
+    >                            header=TRUE,
     >                            row.names="sample_name")
-
-    > # import DESeq2 & run with default settings
-    > library("DESeq2")
 
     > # note, design string below tells DESeq2 that the 'condition' column
     > # distinguishes replicates from non-replicates 
@@ -455,35 +441,94 @@ be loaded into `R`_:
     >                               colData = sample_table,
     >                               design = ~ condition) # <--- design equation
 
-    > results <- results(dds)
-    > summary(res)
+    > # filter out rows with zero counts
+    > dds <- dds[rowSums(counts(dds)) > 1,]
 
-    > # sort results by adjusted p-value
+    > # set baseline for comparison to 5 hours
+    > dds$condition <- relevel(dds$condition,ref="5_hours")
+
+    > # run analysis
+    > dds <- DESeq(dds)
+    > res <- results(dds)
+
+    > # sort results ascending by adjusted p-value, column `padj`
     > resOrdered <- res[order(res$padj),]
 
-    > # export sorted data to text file
-    > write.delim(as.data.frame(resOrdered),
-    >             sep="\t",
-    >             file="infected_uninfected_rnaseq_p_values.txt")
+    > # export sorted data to text file for further analysis
+    > write.table(as.data.frame(resOrdered),sep="\t",quote=FALSE,
+    >             file="5_vs_24hr_rnaseq_p_values.txt")
+
+    > # or, just select genes whose adjusted P-values meet significance level
+    > res[res$padj < 0.05]
+
+    > # look at MA plot
+    > plotMA(res,main="DESeq2")
+
+    > # see DESeq2 vignette for further information
 
 
 Differential translation efficiency
 ...................................
 
 Tests for differential translation efficiency can also be implemented within
-`DESeq`_/`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
-Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_).
+`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
+Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_). We'll
+use the RNA-seq samples from above, plus some matched :term:`ribosome profiling`.
+First, collect the count data for the ribosome profiling:
+
+ .. code-block::shell
+
+    $ counts_in_region riboprofile_5hr_rep1.txt  --count_files SRR609197_riboprofile_5hr_rep1.bam   --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region riboprofile_5hr_rep2.txt  --count_files SRR2064020_riboprofile_5hr_rep2.bam  --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region riboprofile_24hr_rep1.txt --count_files SRR592954_riboprofile_24hr_rep1.bam  --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
+    $ counts_in_region riboprofile_24hr_rep2.txt --count_files SRR2064022_riboprofile_24hr_rep2.bam --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
+
+
+Combine the data into a new table, as before:
+
+ .. code-block::python
+ 
+    >>> import pandas as pd
+    >>> sample_names = ["rnaseq_5hr_rep1",
+    >>>                 "rnaseq_5hr_rep2",
+    >>>                 "rnaseq_24hr_rep1",
+    >>>                 "rnaseq_24hr_rep2",
+    >>>                 "riboprofile_5hr_rep1",
+    >>>                 "riboprofile_5hr_rep2",
+    >>>                 "riboprofile_24hr_rep1",
+    >>>                 "riboprofile_24hr_rep2" 
+    >>>                ]
+
+    >>> # load samples as DataFrames
+    >>> samples = { K : pd.read_table("%s.txt" % K,sep="\t",header=0,comment="#",index_col=None) for K in sample_names }
+
+    >>> # combine count columns to single DataFrame
+    >>> combined_df = samples["rnaseq_5hr_rep1"][["region_name"]]
+    >>> for k,v in samples.items():
+    >>>     combined_df[k] = v["counts"]
+
+    >>> # save
+    >>> combined_df.to_csv("te_combined_counts.txt",sep="\t",header=True,index=False,
+    >>>                            columns=["region_name","rnaseq_5hr_rep1","rnaseq_5hr_rep2",
+    >>>                                    "rnaseq_24hr_rep1","rnaseq_24hr_rep2",
+    >>>                                    "riboprofile_5hr_rep1","riboprofile_5hr_rep2",
+    >>>                                    "riboprofile_24hr_rep1","riboprofile_24hr_rep2" 
+    >>>                                    ])
+
+
 
 We use an sample table similar to that above, but include a `sample_type`
 column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries::
 
-    sample_name          condition    sample_type
-    rnaseq_5hr_rep1      5_hours      rnaseq
-    rnaseq_5hr_rep2      5_hours      rnaseq
-    rnaseq_24hr_rep1     24_hours     rnaseq
-    rnaseq_24hr_rep2     24_hours     rnaseq
-    ribo_5hr_rep1        5_hours      riboprof
-    ribo_24hr_rep1       24_hours     riboprof
+    sample_name                 time         assay
+    rnaseq_5hr_rep1             5_hours      rnaseq
+    rnaseq_5hr_rep2             5_hours      rnaseq
+    rnaseq_24hr_rep1            24_hours     rnaseq
+    rnaseq_24hr_rep2            24_hours     rnaseq
+    riboprofile_5hr_rep1        5_hours      riboprof
+    riboprofile_5hr_rep2        5_hours      riboprof
+    riboprofile_24hr_rep1       24_hours     riboprof
+    riboprofile_24hr_rep2       24_hours     riboprof
 
 
 To the design equation, we need to add  an *interaction term* to alert
@@ -492,46 +537,63 @@ types (i.e. translation efficiency, the ratio of
 :term:`ribosome-protected footprints <footprint>` to RNA-seq fragments)
 to differ between conditions::
 
-    design = ~ sample_type + condition + sample_type:condition
+    design = ~  assay + time + assay:time
 
 In `R`_:
 
- .. TODO: put output below
  .. code-block:: r
+
+    > # load DESeq2
+    > library("DESeq2")
 
     > # load RNA seq data into a data.frame
     > # first line of file are colum headers
     > # "region" column specifies a list of row names
-    > combined_data <- read.delim("combined_counts.txt",
+    > te_combined_data <- read.delim("te_combined_counts.txt",
+    >                          sep="\t",
+    >                          header=TRUE,
+    >                          row.names="region_name")
+    > 
+    > te_sample_table <- read.delim("te_sample_table.txt",
     >                             sep="\t",
-    >                             header=True,
-    >                            row.names="region")
+    >                             header=TRUE,
+    >                             row.names="sample_name")
+    > 
 
-    > teff_sample_table <- read.delim("teff_sample_table.txt",
-    >                                sep="\t",
-    >                                header=True,
-    >                                row.names="sample_name")
-
-    > library("DESeq2")
-
+    > # set up the experiment
     > # note the interaction term in the design below:
-    > dds <- DESeqDataSetFromMatrix(countData = combined_data,
-    >                               colData = teff_sample_table,
-    >                               design = ~ sample_type + condition + sample_type:condition)
-
-    > results <- results(dds)
+    > dds <- DESeqDataSetFromMatrix(countData = te_combined_data,
+    >                               colData = te_sample_table,
+    >                               design = ~ assay + time + assay:time)
+    > 
+    > dds <- estimateSizeFactors(dds)
+    > dds <- estimateDispersions(dds)
+    > 
+    > # likelihood ratio test on samples
+    > dds <- nbinomLRT(dds,
+    >                  full= ~ assay + time + assay:time,
+    >                  reduced= ~ assay + time )
+    > 
+    > res <- DESeq(dds)
+    > res <- results(dds)
     > summary(res)
-
-    > # now, do wald test on interaction term
-    TODO: complete this line
-
-    > # sort by adjusted p-value
+    
+    > # Order results by P-value.
+    > # Column `padj` contains adjusted P-values for changes
+    > # in translation efficiency over time.
     > resOrdered <- res[order(res$padj),]
-
+    > 
     > # export
-    > write.delim(as.data.frame(resOrdered),
-    >             sep="\t",
-    >             file="infected_uninfected_rnaseq_p_values.txt")
+    > write.table(as.data.frame(resOrdered),
+    >             sep="\t",quote=FALSE,
+    >             file="te_change_over_time.txt")
+
+    > # sneak a peak
+    > head(resOrdered)
+
+
+The table `te_change_over_time.txt` can then be manipulated/visualized in your
+environment of choice.
 
 
  .. old discussion- the empirical test used by Nick Ingolia 
@@ -591,10 +653,10 @@ See also
   - Documentation for |cs| and |counts_in_region| for further discussion 
     of their algorithms
 
-  - Websites for `DESeq` and `DESeq2`_, as well as :cite:`Anders2010`,
-    :cite:`Anders2013` and :cite:`Love2014` for discussions of statistical models
-    for differential gene expression, an examples
-    on how to use `DESeq`_/`DESeq2`_ for various experimental setups
+  - Website for `DESeq2`_, as well as :cite:`Anders2010`, :cite:`Anders2013` and
+    :cite:`Love2014` for discussions of statistical models for differential gene
+    expression, and examples on how to use `DESeq`_/`DESeq2`_ for various
+    experimental designs
 
   - :doc:`/examples/using_masks` for instructions on how to exclude parts of
     the genome or transcriptome from analysis.
