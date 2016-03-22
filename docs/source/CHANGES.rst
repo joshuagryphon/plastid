@@ -37,6 +37,13 @@ Added/Changed
   - All script output metadata now includes command as executed, for easier
     re-running and record keeping
 
+  - ``read_pl_table()`` convenience function for reading tables written
+    by command-line scripts into DataFrames, preserving headers, formatting,
+    et c
+
+  - scripts using count files get ``--sum`` flag, enabling users to 
+    set effective sum of counts/reads used in normalization and RPKM
+    calculations
 
 
 plastid [0.4.5] = [2016-03-09]
