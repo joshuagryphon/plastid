@@ -288,6 +288,10 @@ class AlignmentParser(Parser):
                                        help="Whether counts should be normalized"+
                                             " to counts per million (usually not. default: %(default)s)",
                                        default=False)),
+            ("sum"              , dict(type=float,default=None,
+                                       help="Sum used in normalization of counts and or RPKM/RPNT calculations "+\
+                                            "(Default: total mapped reads/counts in dataset)")),
+                          
             ]
         
         length_ops = [
@@ -597,6 +601,9 @@ class AlignmentParser(Parser):
                             ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
                 
         printer.write("Counted %s total reads..." % ga.sum())
+        
+        if "sum" not in disabled and args.sum is not None:
+            ga.set_sum(args.sum)
             
         if "normalize" not in disabled and args.normalize == True:
             printer.write("Normalizing to reads per million...")

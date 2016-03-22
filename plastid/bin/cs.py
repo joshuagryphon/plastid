@@ -626,10 +626,7 @@ tab-delimited text file.
 
     # read count files
     ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
-    if args.sum is None:
-        total_counts = ga.sum()
-    else:
-        total_counts = args.sum
+    total_counts = ga.sum()
 
     normconst = 1000.0*1e6/total_counts
 
@@ -1171,9 +1168,6 @@ def main(argv=sys.argv[1:]):
     cparser.add_argument("position_file",type=str,metavar="file.positions",
                          help="File assigning positions to genes or transcripts (made using 'generate' subcommand)")
     cparser.add_argument("outbase",type=str,help="Basename for output files")
-    cparser.add_argument("--sum",type=float,default=None,
-                         help="Sum used in normalization of counts "+\
-                              "(Default: total mapped reads/counts in dataset)")
     
     pparser.add_argument("-i","--in",nargs="+",type=str,dest="infiles",
                          help="input files, made by 'count' subprogram")

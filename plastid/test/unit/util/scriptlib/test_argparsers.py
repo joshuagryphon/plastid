@@ -481,6 +481,22 @@ def test_alignment_parser_input_choices():
         parser = get_alignment_file_parser(input_choices=chosen)
         assert_in(tmp_str,parser.format_help())
 
+@attr(test="unit")
+def test_alignment_parser_set_sum():
+    tups = [("wiggle",wigglefilename),
+            ("BAM"   ,bamfilename),
+            ("bowtie",bowtiefilename),
+            ("bigwig",bigwigfilename)
+            ]
+    for fmt, filename in tups:
+        yield alignment_parser_check_set_sum, fmt, filename
+
+def alignment_parser_check_set_sum(fmt,filename):
+    my_sum = 5
+    argstr = "--countfile_format %s --count_files %s --fiveprime --sum %s" % (fmt,filename,my_sum)
+    args = alignment_file_parser.parse_args(shlex.split(argstr))
+    ga = get_genome_array_from_args(args)
+    assert_equal(my_sum,ga.sum())
 
 #=============================================================================
 # INDEX: tests for annotation file parsing

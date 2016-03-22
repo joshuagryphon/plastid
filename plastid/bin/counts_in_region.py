@@ -88,10 +88,6 @@ def main(argv=sys.argv[1:]):
                                               mask_file_parser],
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
-    parser.add_argument("--sum",type=float,default=None,
-                        help="Sum used in normalization of counts "+\
-                            "(Default: total mapped reads/counts in dataset)")
-
     
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
@@ -100,11 +96,7 @@ def main(argv=sys.argv[1:]):
     ga = al.get_genome_array_from_args(args,printer=printer)
     crossmap = mp.get_genome_hash_from_args(args,printer=printer)
     
-    if args.sum is None:
-        ga_sum = ga.sum()
-    else:
-        ga_sum = args.sum
-    
+    ga_sum = ga.sum()
     normconst = 1000.0*1e6 / ga_sum
     
     with argsopener(args.outfile,args,"w") as fout:
