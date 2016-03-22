@@ -210,6 +210,15 @@ class Parser(object):
             
         description : str, optional
             Optional description for parser
+
+
+        kwargs : keyword arguments
+            Additional arguments passed during creation of :class:`argparse.ArgumentParser`
+        
+        
+        Returns
+        -------
+        :class:`argparse.ArgumentParser`
         """
         if groupname is None:
             groupname = self.groupname
@@ -429,6 +438,10 @@ class AlignmentParser(Parser):
                 
         description : str, optional
             description of parser (used in command-line help screen)
+
+        kwargs : keyword arguments
+            Additional arguments to pass to :meth:`Parser.get_parser`
+
             
         Returns
         -------
@@ -714,6 +727,9 @@ class AnnotationParser(Parser):
                 
         description : str, optional
             description of parser (used in command-line help screen)
+
+        kwargs : keyword arguments
+            Additional arguments to pass to :meth:`Parser.get_parser`
             
         Returns
         -------
@@ -1011,6 +1027,14 @@ class MaskParser(AnnotationParser):
                 
         description : str, optional
             description of parser (used in command-line help screen)
+
+        arglist : list, optional
+            If not `None`, arguments in this list will be added to `parser`.
+            Otherwise, arguments will be taken from `self.arguments`.
+            
+            The list should be a list of tuples of ('argument_name',dict_of_options),
+            where `argument_name` is a string, and `dict_of_options` a dictionary
+            of keyword arguments to pass to :meth:`argparse.ArgumentParser.add_argument`.
             
         Returns
         -------
@@ -1063,7 +1087,8 @@ class SequenceParser(AnnotationParser):
         
     def get_parser(self,
                    title=_DEFAULT_SEQUENCE_PARSER_TITLE,
-                   description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
+                   description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION,
+                   **kwargs):
         """Return an :py:class:`~argparse.ArgumentParser` that opens sequence files
          
         Parameters
@@ -1074,8 +1099,11 @@ class SequenceParser(AnnotationParser):
             
         description : str, optional
             description of parser (used in command-line help screen)
-        
-       
+
+        kwargs : keyword arguments
+            Additional arguments to pass to :meth:`Parser.get_parser`
+
+            
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -1088,7 +1116,7 @@ class SequenceParser(AnnotationParser):
             by this :py:class:`~argparse.ArgumentParser`
         """        
         
-        return Parser.get_parser(self,title=title,description=description)
+        return Parser.get_parser(self,title=title,description=description,**kwargs)
 
     def get_seqdict_from_args(self,args,index=True,printer=None):
         """Retrieve a dictionary-like object of sequences
