@@ -18,6 +18,7 @@ Important methods
 """
 import sys
 import os
+import pandas as pd
 from plastid.util.io.filters import AbstractWriter
 
 class NullWriter(AbstractWriter):
@@ -86,7 +87,39 @@ def opener(filename,mode="r",**kwargs):
         call_func = open
     
     return call_func(filename,mode,**kwargs)
+
+# needs unittest
+def read_pl_table(filename,**kwargs):
+    """Open a table saved by one of :data:`plastid`'s command-line scripts.
     
+    Parameters
+    ----------
+    filename : str
+        Name of file. Can be gzipped, bzipped, or zipped.
+        
+    kwargs : keyword arguments
+        Other keyword arguments to pass to :func:`pandas.read_table`.
+        Will override defaults.
+        
+    Returns
+    -------
+    :class:`pandas.DataFrame`
+        Table of results
+    """
+    args = { "sep"      : "\t",
+             "comment"  : "#",
+             "index_col"  : None,
+             "header"     : 0,
+        }
+    args.update(kwargs)
+    with opener(filename) as fh:
+        try:
+            table = pd.read_table(fh,**args)
+        finally:
+            fh.close()
+            
+    return table
+
 def get_short_name(inpt,separator=os.path.sep,terminator=""):
     """Gives the basename of a filename or module name passed as a string.
     If the string doesn't match the pattern specified by the separator
