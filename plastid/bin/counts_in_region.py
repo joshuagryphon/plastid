@@ -88,16 +88,27 @@ def main(argv=sys.argv[1:]):
                                               mask_file_parser],
                                      )
     parser.add_argument("outfile",type=str,help="Output filename")
+    parser.add_argument("--sum",type=float,default=None,
+                        help="Sum used in normalization of counts "+\
+                            "(Default: total mapped reads/counts in dataset)")
+
+    
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
     transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
-    gnd = al.get_genome_array_from_args(args,printer=printer)
+    ga = al.get_genome_array_from_args(args,printer=printer)
     crossmap = mp.get_genome_hash_from_args(args,printer=printer)
     
-    gnd_sum = gnd.sum()
+    if args.sum is None:
+        ga_sum = ga.sum()
+    else:
+        ga_sum = args.sum
+    
+    normconst = 1000.0*1e6 / ga_sum
+    
     with argsopener(args.outfile,args,"w") as fout:
-        fout.write("## total_dataset_counts: %s\n" % gnd_sum)
+        fout.write("## total_dataset_counts: %s\n" % ga_sum)
         fout.write("region_name\tregion\tcounts\tcounts_per_nucleotide\trpkm\tlength\n")
         for n,ivc in enumerate(transcripts):
             name = ivc.get_name()
@@ -106,10 +117,10 @@ def main(argv=sys.argv[1:]):
             if n % 1000 == 0:
                 printer.write("Processed %s regions..." % n)
                 
-            counts = numpy.nansum(ivc.get_masked_counts(gnd))
+            counts = numpy.nansum(ivc.get_masked_counts(ga))
             length = ivc.masked_length
             rpnt = numpy.nan if length == 0 else float(counts)/length
-            rpkm = numpy.nan if length == 0 else float(counts)/length/gnd_sum * 1000 * 10**6 
+            rpkm = numpy.nan if length == 0 else rpnt * normconst 
             ltmp = [name,
                     str(ivc),
                     "%.8e" % counts,

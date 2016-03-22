@@ -625,8 +625,13 @@ tab-delimited text file.
         pos_fh.close()
 
     # read count files
-    gnd = alignment_parser.get_genome_array_from_args(args,printer=printer)
-    total_counts = gnd.sum()
+    ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
+    if args.sum is None:
+        total_counts = ga.sum()
+    else:
+        total_counts = args.sum
+
+    normconst = 1000.0*1e6/total_counts
 
     printer.write("Dataset has %s counts in it." % total_counts)
     printer.write("Tallying genes ...")
@@ -645,9 +650,9 @@ tab-delimited text file.
         
         for k in keys:
             ivc = SegmentChain.from_str(gene_positions[k][i])
-            total  = sum(ivc.get_counts(gnd))
+            total  = sum(ivc.get_counts(ga))
             length = ivc.length
-            rpkm =( 1000 * 1e6 * total / length / total_counts ) if length > 0 else numpy.nan
+            rpkm =( normconst * total / length ) if length > 0 else numpy.nan
             dtmp["%s_reads"  % k].append(total)
             dtmp["%s_length" % k].append(length)
             dtmp["%s_rpkm"   % k].append(rpkm)
@@ -1166,6 +1171,9 @@ def main(argv=sys.argv[1:]):
     cparser.add_argument("position_file",type=str,metavar="file.positions",
                          help="File assigning positions to genes or transcripts (made using 'generate' subcommand)")
     cparser.add_argument("outbase",type=str,help="Basename for output files")
+    cparser.add_argument("--sum",type=float,default=None,
+                         help="Sum used in normalization of counts "+\
+                              "(Default: total mapped reads/counts in dataset)")
     
     pparser.add_argument("-i","--in",nargs="+",type=str,dest="infiles",
                          help="input files, made by 'count' subprogram")

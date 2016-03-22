@@ -60,6 +60,11 @@ cs_tests = [
      [os.path.join(test_info["temp_file_path"],"test_cs_count.txt")],
      ["--sort_keys region"]
     ),
+    ("count %s_gene.positions %s_count %s --sum 1e9" % (_outbase,_outbase,COUNT_OPTIONS),
+     [os.path.join(test_info["ref_file_path"],'gen_cs_count_gene_sum_1.txt')],
+     [os.path.join(test_info["temp_file_path"],"test_cs_count.txt")],
+     ["--sort_keys region"]
+    ),
     #("",[],[],[]),
 ]
 """Functional tests of :py:mod:`plastid.bin.cs`.

@@ -45,7 +45,18 @@ counts_in_region_tests = [
      ),
      [REF_FILES["yeast_counts_in_region_no_mask"]],
      [_no_mask_outfile],
-     ["--sort_keys region_name"]),]
+     ["--sort_keys region_name"]),
+    # test setting sum
+    ("%s %s %s --sum 1e9" % (_no_mask_outfile,
+                             COUNT_OPTIONS,
+                             _annotation_options
+     ),
+     [REF_FILES["yeast_counts_in_region_sum_1"]],
+     [_no_mask_outfile],
+     ["--sort_keys region_name"]),
+    
+                          
+    ]
 """Functional tests of :py:mod:`plastid.bin.counts_in_region`.
 
 Tests are specified as tuples of:

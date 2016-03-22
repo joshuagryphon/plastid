@@ -119,8 +119,10 @@ REF_FILES = {
               "yeast_findjuncs_top"   :  os.path.join(RPATH,"annotations","sgd_plus_utrs_findjuncs_top250.bed"),
               "yeast_findjuncs_bot" :  os.path.join(RPATH,"annotations","sgd_plus_utrs_findjuncs_bot230.bed"),
 
-              "yeast_counts_in_region_mask" : os.path.join(RPATH,"command_line","gen_counts_in_region_mask.txt"),
+              "yeast_counts_in_region_mask"    : os.path.join(RPATH,"command_line","gen_counts_in_region_mask.txt"),
               "yeast_counts_in_region_no_mask" : os.path.join(RPATH,"command_line","gen_counts_in_region_no_mask.txt"),
+              "yeast_counts_in_region_sum_1" : os.path.join(RPATH,"command_line","gen_counts_in_region_sum_1.txt"),
+
 
               'slidejuncs_seqs'                        : os.path.join(RPATH,'annotations','juncs','junction_seqs.fa'),
               'slidejuncs_input'                       : os.path.join(RPATH,'annotations','juncs','input.bed'),
