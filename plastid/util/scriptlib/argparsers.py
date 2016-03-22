@@ -289,7 +289,7 @@ class AlignmentParser(Parser):
                                             " to counts per million (usually not. default: %(default)s)",
                                        default=False)),
             ("sum"              , dict(type=float,default=None,
-                                       help="Sum used in normalization of counts and or RPKM/RPNT calculations "+\
+                                       help="Sum used in normalization of counts and RPKM/RPNT calculations "+\
                                             "(Default: total mapped reads/counts in dataset)")),
                           
             ]
