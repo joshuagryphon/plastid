@@ -250,7 +250,7 @@ made from a single mRNA. :term:`Translation efficiency` thus reports
 specifically on the *translational* control of gene expression.
 
 :term:`Translation efficiency` can be estimated
-by normalizing an mRNA 's translating ribosome density (in :term:`RPKM`,
+by normalizing an mRNA's translating ribosome density (in :term:`RPKM`,
 as measured by :term:`ribosome profiling`) by the mRNA's abundance (in
 :term:`RPKM`, measured by :term:`RNA-Seq`) (:cite:`Ingolia2009`).
 
@@ -299,11 +299,8 @@ Download it and place it in the same folder as part 1 of the dataset.
 RNA-seq, specifically
 .....................
 There are many strategies for significance testing of differential gene expression
-between multiple datasets, many of which are specifically developed for -- and
-make statistical corrections that assume -- :term:`RNA-seq` data.
-
-For :term:`RNA-seq` data, `cufflinks`_ and `kallisto`_ in particular are popular,
-and operate directly on alignments in `BAM`_ format. These packages don't require
+between multiple datasets, many of which (e.g. `cufflinks`_ and `kallisto`_)
+are specifically developed for :term:`RNA-seq` These packages don't require
 :data:`plastid` at all. For further information on them packages, see their
 documentation.
 
@@ -325,7 +322,7 @@ any count-based sequencing data.
     `Analysing RNA-Seq data with the "DESeq2" package <http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf>`_,
     hosted on the `DESeq2`_ website.
     
-    Users are strongly encouraged to read the `DESeq`_/`DESeq2`_ documentation 
+    Users are strongly encouraged to read the `DESeq2`_ documentation 
     for a fuller discussion of DESeq's statistical models with additional examples.
 
 As input, `DESeq2`_ takes two tables and an equation:
@@ -347,15 +344,19 @@ As input, `DESeq2`_ takes two tables and an equation:
     the samples or treatments relate to one another
 
     
-From these, `DESeq2`_ separately model intrinsic counting
-error (Poisson noise) as well as additional inter-replicate error
-resulting biological or experimental variability. From these error models,
-and `DESeq2`_ can detect significant differences in count numbers
-between non-replicate samples, accounting for different sequencing depth
+From these, `DESeq2`_ separately model intrinsic counting error (Poisson noise)
+as well as additional inter-replicate error from biological or experimental
+variability.
+
+From these error models `DESeq2`_ can detect significant differences in count
+numbers between non-replicate samples, accounting for different sequencing depth
 between samples.
 
 
  .. _examples-deseq-count-table
+
+The count table
+"""""""""""""""
 
 The first table may be constructed by running |cs| or |counts_in_region|
 on each biological sample to obtain counts. Here, we'll use RNA-seq data:
@@ -367,6 +368,7 @@ on each biological sample to obtain counts. Here, we'll use RNA-seq data:
     $ counts_in_region rnaseq_24hr_rep1.txt --count_files SRR592964_rnaseq_24hr_rep1.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
     $ counts_in_region rnaseq_24hr_rep3.txt --count_files SRR2064029_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
 
+We combine the data into a single table in Python:
 
  .. code-block:: python
 
@@ -388,13 +390,15 @@ on each biological sample to obtain counts. Here, we'll use RNA-seq data:
                            columns=["region_name","rnaseq_5hr_rep1","rnaseq_5hr_rep2",
                                     "rnaseq_24hr_rep1","rnaseq_24hr_rep2"])
 
+The design table
+""""""""""""""""
 
  .. _examples-deseq-design-table:
 
 The second table (in this example, ``rnaseq_sample_table.txt``) is a description
 of the experimental design. This can be created in any text editor and saved as a
-tab-delimited text file. In this example, the we have two conditions, "infected"
-and "uninfected", and two replicates of each condition:
+tab-delimited text file. In this example, the we have two conditions, representing
+timepoints at 5 and 24 hours post-infection:
 
  .. code-block :: shell
 
@@ -407,21 +411,23 @@ and "uninfected", and two replicates of each condition:
 
  .. _examples-deseq-equation:
 
-Because the only difference between samples is the `condition` column,
-the design equation is this case is very simple::
+The design equation is this case is very simple::
 
     design = ~ condition
+
+
+Putting it together
+"""""""""""""""""""
 
 With the count table, design table, and equation ready, everything can
 be loaded into `R`_:
 
- .. TODO: put output below
  .. code-block:: r
 
-    > # workflow from DESeq2 vignette at
+    > # workflow modified from DESeq2 vignette at
     > # https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf
 
-    > # import DESeq2 & run with default settings
+    > # import DESeq2
     > library("DESeq2")
 
     > # load RNA seq data into a data.frame
@@ -432,22 +438,22 @@ be loaded into `R`_:
     >                           header=TRUE,
     >                           row.names="region_name")
 
-    > # load sample table
+    > # load experiment design table
     > sample_table <- read.delim("rnaseq_sample_table.txt",
     >                            sep="\t",
     >                            header=TRUE,
     >                            row.names="sample_name")
 
-    > # note, design string below tells DESeq2 that the 'condition' column
+    > # note, design parameter below tells DESeq2 that the 'condition' column
     > # distinguishes replicates from non-replicates 
     > dds <- DESeqDataSetFromMatrix(countData = count_table,
     >                               colData = sample_table,
-    >                               design = ~ condition) # <--- design equation
+    >                               design = ~ condition)
 
     > # filter out rows with zero counts
     > dds <- dds[rowSums(counts(dds)) > 1,]
 
-    > # set baseline for comparison to 5 hours
+    > # set baseline for comparison to 5 hour timepoint
     > dds$condition <- relevel(dds$condition,ref="5_hours")
 
     > # run analysis
@@ -473,13 +479,17 @@ be loaded into `R`_:
 Differential translation efficiency
 ...................................
 
-Tests for differential translation efficiency can also be implemented within
-`DESeq2`_. The discussion below follows a reply from `DESeq2`_ author
-Mike Love (source `here <https://support.bioconductor.org/p/56736/>`_). We'll
+Tests for differential translation efficiency can also be implemented in `DESeq2`_.
+The discussion below follows a reply from `DESeq2`_ author Mike Love
+(source `here <https://support.bioconductor.org/p/56736/>`_). We'll
 use the RNA-seq samples from above, plus some matched :term:`ribosome profiling`.
+
+Sample table
+""""""""""""
+
 First, collect the count data for the ribosome profiling:
 
- .. code-block::shell
+ .. code-block:: shell
 
     $ counts_in_region riboprofile_5hr_rep1.txt  --count_files SRR609197_riboprofile_5hr_rep1.bam   --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
     $ counts_in_region riboprofile_5hr_rep2.txt  --count_files SRR2064020_riboprofile_5hr_rep2.bam  --fiveprime_variable --offset demo_p_offset.txt --annotation_files merlin_orfs.bed --annotation_format BED
@@ -489,7 +499,7 @@ First, collect the count data for the ribosome profiling:
 
 Combine the data into a new table, as before:
 
- .. code-block::python
+ .. code-block:: python
  
     >>> import pandas as pd
     >>> sample_names = ["rnaseq_5hr_rep1",
@@ -520,8 +530,11 @@ Combine the data into a new table, as before:
 
 
 
-We use an sample table similar to that above, but include a `sample_type`
-column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries::
+Design table
+""""""""""""
+
+The design table now includes an additional column to indicate which assay was
+used for each sample::
 
     sample_name                 time         assay
     rnaseq_5hr_rep1             5_hours      rnaseq
@@ -534,18 +547,18 @@ column to distinguish :term:`ribosome profiling` from :term:`RNA-seq` libraries:
     riboprofile_24hr_rep2       24_hours     riboprof
 
 
-To the design equation, we need to add  an *interaction term* to alert
-`DESeq`_/`DESeq2`_ that we expect the relationship between the sample
-types (i.e. translation efficiency, the ratio of
-:term:`ribosome-protected footprints <footprint>` to RNA-seq fragments)
-to differ between conditions::
+Similarly, the design equation now needs an *interaction term* to alert
+`DESeq2`_ that we want to test whether the relationship between the two assays
+to differ as a function of timepoint::
 
-    design = ~  assay + time + assay:time
+    design = ~ assay + time + assay:time
 
-In `R`_:
+The analysis
+""""""""""""
+This is similar to what we did above. In `R`_:
 
  .. code-block:: r
-
+ 
     > # load DESeq2
     > library("DESeq2")
 
@@ -553,14 +566,14 @@ In `R`_:
     > # first line of file are colum headers
     > # "region" column specifies a list of row names
     > te_combined_data <- read.delim("te_combined_counts.txt",
-    >                          sep="\t",
-    >                          header=TRUE,
-    >                          row.names="region_name")
+    >                                sep="\t",
+    >                                header=TRUE,
+    >                                row.names="region_name")
     > 
     > te_sample_table <- read.delim("te_sample_table.txt",
-    >                             sep="\t",
-    >                             header=TRUE,
-    >                             row.names="sample_name")
+    >                               sep="\t",
+    >                               header=TRUE,
+    >                               row.names="sample_name")
     > 
 
     > # set up the experiment
@@ -568,11 +581,13 @@ In `R`_:
     > dds <- DESeqDataSetFromMatrix(countData = te_combined_data,
     >                               colData = te_sample_table,
     >                               design = ~ assay + time + assay:time)
-    > 
+    
+    > # run the experiment
     > dds <- estimateSizeFactors(dds)
     > dds <- estimateDispersions(dds)
     > 
     > # likelihood ratio test on samples
+    > # compare model with and without interaction term
     > dds <- nbinomLRT(dds,
     >                  full= ~ assay + time + assay:time,
     >                  reduced= ~ assay + time )
