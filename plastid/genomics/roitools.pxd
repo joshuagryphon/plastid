@@ -9,6 +9,17 @@ cpdef list positionlist_to_segments(str,str,list)
 cpdef Transcript add_three_for_stop_codon(Transcript)
 cpdef list merge_segments(list)
 
+
+
+# import/export
+cdef SegmentChain chain_from_bed_column_tuples(   list items, int num_bed_columns, int total_columns, list column_tuples)
+cdef SegmentChain chain_from_bed_column_names(    list items, int num_bed_columns, list column_names)
+cdef SegmentChain chain_from_bed_column_number(   list items, int num_bed_columns, int num_extra_columns)
+cdef SegmentChain chain_from_bed_no_extra_columns(list items, int num_bed_columns)
+
+
+
+
 cdef class GenomicSegment(object):                      # 20 bytes + str
     cdef str chrom
     cdef long start                                     # 8 bytes
@@ -59,7 +70,7 @@ cdef class SegmentChain(object):                       # >= 836 bytes
     cdef long c_get_segmentchain_coordinate(self, long, bint) except -1
     cdef SegmentChain c_get_subchain(self,long, long, bint)
     
-    # 
+    # strand changes
     cdef SegmentChain _restrand(self,Strand strand)#,extra_attr=*)
     cpdef SegmentChain get_unstranded(self)#,extra_attr=*)
     cpdef SegmentChain get_antisense(self)#,extra_attr=*)

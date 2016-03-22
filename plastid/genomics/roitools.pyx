@@ -108,6 +108,7 @@ from plastid.genomics.c_common cimport ExBool, true, false, bool_exception, \
 cdef hash_template = array.array('l',[]) # c signed long / python int
 cdef mask_template = array.array('i',[]) # TODO: change to c unsigned char / python int
 
+
 # to/from str
 igvpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)")
 segpat = re.compile(r"([^:]*):([0-9]+)-([0-9]+)\(([+-.])\)")
@@ -410,6 +411,160 @@ cpdef Transcript add_three_for_stop_codon(Transcript tx):
     else:
         return tx
 
+
+#==============================================================================
+# Import/export from BED (used by readers)
+#==============================================================================
+    
+cdef SegmentChain chain_from_bed_column_tuples(list items, int num_bed_columns, int total_columns, list column_tuples):
+    """Create a SegmentChain from a `BED`_ line with extra columns specified as a list of (column_name,formatter_func)"""
+    cdef:
+        SegmentChain chain
+        dict         attr
+        int          i
+        list         xorder = []
+    
+    chain  = chain_from_bed_no_extra_columns(items,num_bed_columns)
+    attr   = chain.attr
+    for i in range(num_bed_columns,total_columns):
+        name, formatter = column_tuples[i-num_bed_columns]
+        xorder.append(name)
+        try: 
+            attr[name] = formatter(items[i])
+        except:
+            warn("SegmentChain.from_bed(): Could not format '%s' as '%s'. Defaulting to type 'str'." % (items[i],str(formatter.__name__)),DataWarning)
+            attr[name] = items[i]
+
+    chain.attr["_bedx_column_order"] = xorder
+    return chain
+
+cdef SegmentChain chain_from_bed_column_names(list items, int num_bed_columns, list column_names): 
+    """Create a SegmentChain from a `BED`_ line with extra column names given by a list of column names"""
+    cdef:
+        SegmentChain chain
+        int          n
+        dict         attr
+        str          name
+        
+    chain = chain_from_bed_no_extra_columns(items,num_bed_columns)
+    attr  = chain.attr
+    for n, name in enumerate(column_names):
+        attr[name] = items[n+num_bed_columns]
+
+    chain.attr["_bedx_column_order"] = column_names
+    return chain
+
+cdef SegmentChain chain_from_bed_column_number(list items, int num_bed_columns, int num_extra_columns): 
+    """Create a SegmentChain from a `BED`_ line, given a number of extra columns"""
+    cdef:
+        SegmentChain chain
+        int          i
+        dict         attr
+        str          name
+        list         xorder = []
+    
+    chain = chain_from_bed_no_extra_columns(items,num_bed_columns)
+    attr  = chain.attr
+    for i in range(num_extra_columns):
+        name = "custom%s" % i
+        attr[name] = items[i+num_bed_columns]
+        xorder.append(name)
+
+    attr["_bedx_column_order"] = xorder
+    return chain
+
+cdef SegmentChain chain_from_bed_no_extra_columns(list items, int num_bed_columns):
+    """Create a SegmentChain from a `BED`_ line with no extra columns"""
+    cdef:
+        str     chrom, strand, default_id
+        long    chrom_start, chrom_end, frag_start, frag_end, thickstart, thickend
+        str     KEY
+        object  DEFAULT, _
+        tuple   tup
+        int     i
+        dict    attr, _default_bed_columns
+        list    frags = []
+        list    frag_sizes, frag_offsets
+        
+        SegmentChain chain
+
+    if num_bed_columns < 3:
+        raise ValueError("BED format requires at least 3 columns. Found only %s." % num_bed_columns)
+    
+    chrom         = items[0]
+    chrom_start   = long(items[1])
+    chrom_end     = long(items[2])
+    strand        = "." if num_bed_columns < 6 else items[5]
+
+    default_id  = "%s:%s-%s(%s)" % (chrom,chrom_start,chrom_end,strand)
+
+    _default_bed_columns = {
+        3 :  ("ID",         default_id,                  str),
+        4 :  ("score",      numpy.nan,                   float),
+        #5 :  ("strand",    ".", strand),
+        6 :  ("thickstart", -1,                          long),
+        7 :  ("thickend",   -1,                          long),
+        8 :  ("color",      "0,0,0",                     str),
+        9 :  ("blocks",     "1",                         int),
+        10 : ("blocksizes", str(chrom_end - chrom_start),str),
+        11 : ("blockstarts","0",                         str),
+    }
+
+    # dict mapping optional bed column to tuple of (Name,default value)
+    # these values are used if any optional columns 4-12 are ommited
+    # set attr defaults in case we're dealing with BED4-BED9 format
+    attr = { KEY : DEFAULT for KEY,DEFAULT,_ in _default_bed_columns.values() }
+
+    for i in (3,4,6,7,8,9,10,11):
+        # populate attr with real values from BED columns that are present
+        if i >= num_bed_columns:
+            break
+        
+        tup = _default_bed_columns[i]
+        key     = tup[0]
+        default = tup[1]
+        func    = tup[2]
+        try:
+            attr[key] = func(items[i])
+        except IndexError:
+            # fall back to default value if real value isn't present
+            attr[key] = default
+        except ValueError:
+            # fall back to default value if real value cannot be parsed
+            warn("SegmentChain.from_bed(): Could not format column %s with '%s'. Falling back to default value '%s'." % (items[i],str(func.__name__),default),DataWarning)
+            attr[key] = default
+
+    # convert color to hex string
+    try:
+        attr["color"] = get_str_from_rgb255(tuple([int(X) for X in attr["color"].split(",")]))
+    except ValueError:
+        attr["color"] = "#000000"
+
+    # sanity check on thickstart and thickend
+    thickstart = attr["thickstart"]
+    thickend   = attr["thickend"]
+
+    if thickstart == thickend or None in (thickstart, thickend) \
+    or thickstart < 0 or thickend < 0:
+        attr["thickstart"] = attr["thickend"] = chrom_start
+    
+    # convert blocks to GenomicSegments
+    num_frags    = int(attr["blocks"])
+    frag_sizes   = attr["blocksizes"].strip(",").split(",")
+    frag_offsets = attr["blockstarts"].strip(",").split(",")
+    for i in range(0,num_frags):
+        frag_start = chrom_start + int(frag_offsets[i])
+        frag_end   = frag_start  + int(frag_sizes[i])
+        frags.append(GenomicSegment(chrom,frag_start,frag_end,strand))
+
+    # clean up attr
+    for key in ("blocks","blocksizes","blockstarts"):
+        attr.pop(key)
+
+    chain = SegmentChain()
+    chain.attr.update(attr)
+    chain._set_segments(frags)
+    return chain
 
 #==============================================================================
 # Helpers
@@ -2990,9 +3145,91 @@ cdef class SegmentChain(object):
                 segs.append(GenomicSegment(chrom,start,end,strand))
             return SegmentChain(*segs)
         
-    # TODO: optimize
+    # at each call to from_bed (e.g. from a BigBedReader)
     @staticmethod
     def from_bed(str line, object extra_columns=0):
+        """Create a |SegmentChain| from a line from a `BED`_ file.
+        The `BED`_ line may contain 4 to 12 columns, per the specification.
+        These will be auto-detected and parsed appropriately.
+        
+        See the `UCSC file format faq <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
+        for more details.
+
+        Parameters
+        ----------
+        line
+            Line from a `BED`_ file, containing 4 or more columns
+
+        extra_columns: int or list optional
+            Extra, non-BED columns in :term:`Extended BED`_ format file corresponding
+            to feature attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+            
+            if `extra-columns` is:
+            
+              - an :class:`int`: it is taken to be the
+                number of attribute columns. Attributes will be stored in
+                the `attr` dictionary of the |SegmentChain|, under names like
+                `custom0`, `custom1`, ... , `customN`.
+
+              - a :class:`list` of :class:`str`, it is taken to be the names
+                of the attribute columns, in order, from left to right in the file.
+                In this case, attributes in extra columns will be stored under
+                their respective names in the `attr` dict.
+
+              - a :class:`list` of :class:`tuple`, each tuple is taken
+                to be a pair of `(attribute_name, formatter_func)`. In this case,
+                the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+                will be set to `formatter_func(column_value)`.
+            
+            (Default: 0)
+
+        Returns
+        -------
+        |SegmentChain|
+        """
+        cdef:
+            list items        = line.strip("\n").split("\t")
+            int total_columns = len(items)
+            
+            int num_bed_columns, num_extra_columns
+            set types
+            SegmentChain chain
+        
+        
+        if extra_columns == 0:
+            chain = chain_from_bed_no_extra_columns(items, len(items))
+            
+        elif isinstance(extra_columns,int):
+            chain = chain_from_bed_column_number(items, total_columns - extra_columns, extra_columns)
+            
+        elif isinstance(extra_columns,(list,tuple)):
+            if len(extra_columns) == 0:
+                chain = chain_from_bed_no_extra_columns(items, len(items))
+            else:
+                types = set([type(X) for X in extra_columns])
+                num_extra_columns = len(extra_columns)
+                num_bed_columns   = total_columns - num_extra_columns
+                
+                if len(types) > 1:
+                    raise ValueError("SegmentChain.from_bed(): List of `extra_columns` contains mixed types. All items need to be the same type, either str or tuple.")
+                elif types == { str }:
+                    chain = chain_from_bed_column_names(items, num_bed_columns, extra_columns)
+                elif types == { tuple }:
+                    if all([len(X) == 2 for X in extra_columns]) == False:
+                        raise ValueError("SegmentChain.from_bed(): Cannot make SegmentChain from BED input: if a list, extra_columns must be a list of tuples of (column_name,formatter_func)")
+                    chain = chain_from_bed_column_tuples(items, num_bed_columns, total_columns, extra_columns)
+                else:
+                    raise TypeError("SegmentChain.from_bed(): Couldn't figure out types from input '%s' of types '%s'" % (extra_columns,types))
+        else:
+            raise TypeError("SegmentChain.from_bed(): Cannot make SegmentChain from BED input: extra_columns must be an int or list. Got a %s" % type(extra_columns))
+
+        if chain is None:
+            raise ValueError("Could not parse BED line:\n\t    '%s'" % line)
+        
+        return chain
+
+    @staticmethod
+    def from_bed_old(str line, object extra_columns=0):
         """Create a |SegmentChain| from a line from a `BED`_ file.
         The `BED`_ line may contain 4 to 12 columns, per the specification.
         These will be auto-detected and parsed appropriately.
@@ -3147,6 +3384,7 @@ cdef class SegmentChain(object):
             attr.pop(key)
     
         return SegmentChain(*frags,**attr)
+
     
     @staticmethod
     def from_psl(psl_line):
