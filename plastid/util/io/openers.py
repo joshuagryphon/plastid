@@ -90,7 +90,17 @@ def opener(filename,mode="r",**kwargs):
 
 # needs unittest
 def read_pl_table(filename,**kwargs):
-    """Open a table saved by one of :data:`plastid`'s command-line scripts.
+    """Open a table saved by one of :data:`plastid`'s command-line scripts,
+    passing default arguments to :func:`pandas.read_table`:
+    
+        ==========   =======
+        Key          Value
+        ----------   -------
+        sep          `"\t"`
+        comment      `"#"`
+        index_col    `None`
+        header       `0`
+        ==========   =======
     
     Parameters
     ----------
