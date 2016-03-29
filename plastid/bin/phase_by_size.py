@@ -102,17 +102,16 @@ def main(argv=sys.argv[1:]):
     
     for n, roi in enumerate(transcripts):
         if n % 1000 == 1:
-            printer.write("Counted %s ROIs..." % n)
-            
-        read_dict     = {}
-        count_vectors = {}
-        for k in read_lengths:
-            read_dict[k]     = []
-            count_vectors[k] = []
+            printer.write("Counted %s ROIs ..." % n)
         cds_chain = roi.get_cds()
-        
         # only calculate for coding genes
         if len(cds_chain) > 0:
+
+            read_dict     = {}
+            count_vectors = {}
+            for k in read_lengths:
+                read_dict[k]     = []
+                count_vectors[k] = []
             
             # for each seg, fetch reads, sort them, and create individual count vectors
             for seg in cds_chain:
@@ -132,11 +131,13 @@ def main(argv=sys.argv[1:]):
                     counts = counts[::-1]
                
                 if len(counts) % 3 == 0:
-                    counts = counts.reshape((len(vec)/3,3))
+                    counts = counts.reshape((len(counts)/3,3))
                 else:
                     message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (len(counts),roi.get_name())
                     warnings.warn(message,DataWarning)
-                    counts = counts.reshape(len(vec)//3,3)
+                    newlen = len(counts)//3
+                    counts = counts[:3*newlen]
+                    counts = counts.reshape(newlen,3)
     
                 phase_sums[k] += counts[codon_buffer:-codon_buffer,:].sum(0)
 
