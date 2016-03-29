@@ -129,7 +129,10 @@ Count
         Metagene average plotted above a heatmap of normalized counts,
         in which each row of pixels is a maximal spanning window for a gene,
         and rows are sorted by the column in which they reach their
-        max value `OUTBASE` is supplied by the user.
+        max value. To faciliate visualization, colors in the heatmap are scaled
+        from 0 to the 95th percentile of non-zero numbers in the normalized counts
+        
+    `OUTBASE` is supplied by the user.
 
     
 Chart
@@ -822,15 +825,18 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         pass
 
 
+    p95 = numpy.nanpercentile(norm_counts[norm_counts > 0],95)
     im_args = {
         "interpolation" : "none",
+        "vmin"          : 0,
+        "vmax"          : p95, # limit color space for better plotting
     }
     if args.cmap is not None:
         im_args["cmap"] = args.cmap
 
     plot_args = {}
     plot_args["color"] = plot_parser.get_colors_from_args(args,1)[0]
-
+    
     fig = plot_parser.get_figure_from_args(args)
     ax = plt.gca()
     fig, ax = profile_heatmap(norm_counts[row_select],

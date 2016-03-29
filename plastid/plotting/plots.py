@@ -435,8 +435,14 @@ def sort_max_position(data):
 
     return numpy.argsort(maxidx)
 
+_heatmap_defaults = {
+    "aspect"        :  "auto",
+    "origin"        : "upper",
+    "interpolation" : "none",
+}
+
 def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position,
-                    cmap=None,im_args={},plot_args={}):
+                    cmap=None,nancolor="#666666",im_args={},plot_args={}):
     """Create a dual-paned plot in which `profile` is displayed in a top
     panel, above a heatmap showing the intensities of each row of `data`,
     optionally sorted top-to-bottom by `sort_fn`.
@@ -467,6 +473,9 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
         Colormap to use in heatmap. It not `None`, overrides any value
         in `im_args`. (Default: None) 
 
+    nancolor : str or matplotlib colorspec
+        Color used for plotting `nan`s and other illegal or masked values
+        
     im_args : dict
         Keyword arguments to pass to :func:`matplotlib.pyplot.imshow`
 
@@ -499,12 +508,15 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
     if profile is None:
         profile = numpy.nanmedian(data,axis=0)
     
-    plot_kwargs = copy.deepcopy(plot_args)
     im_args     = copy.deepcopy(im_args)
-    im_args["aspect"] = "auto"
-    im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
-    im_args["origin"] = "upper"
+    
+    # populate with defaults
+    for k,v in _heatmap_defaults.items():
+        if k not in im_args:
+            im_args[k] = v
 
+    if "extent" not in im_args:            
+        im_args["extent"] = [x.min(),x.max(),0,data.shape[0]]#,0]
     if "vmin" not in im_args:
         im_args["vmin"] = numpy.nanmin(data)
     if "vmax" not in im_args:
@@ -512,17 +524,23 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
 
     if cmap is not None:
         im_args["cmap"] = cmap
-
+    elif "cmap" in im_args:
+        cmap = matplotlib.cm.get_cmap(im_args["cmap"])
+    else:
+        cmap = matplotlib.cm.get_cmap()
+    
+    cmap.set_bad(nancolor,1.0)
+    
     axes["top"].plot(x,profile,**plot_args)
     axes["top"].set_ylim(0,profile.max())
     axes["top"].set_xlim(x.min(),x.max())
-    axes["top"].set_yticks([])
+    #axes["top"].set_yticks([])
+    axes["top"].set_yticks([0,profile.max()])
     axes["top"].xaxis.tick_bottom()
-    axes["top"].set_frame_on(False)
+    axes["top"].grid(True,which="both")
 
     axes["main"].xaxis.tick_bottom()
-    axes["main"].imshow(data[sort_indices,:],
-                        **im_args)
+    axes["main"].imshow(data[sort_indices,:],**im_args)
 
     return fig, axes
 
