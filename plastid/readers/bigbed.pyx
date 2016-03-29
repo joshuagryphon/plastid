@@ -60,11 +60,13 @@ from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
 from plastid.util.unique_fifo import UniqueFIFO
 from plastid.util.services.mini2to3 import ifilter, safe_bytes, safe_str
-from plastid.util.services.decorators import skipdoc
+from plastid.util.services.decorators import skipdoc, deprecated
 from plastid.util.services.exceptions import MalformedFileError, FileFormatWarning
 from plastid.readers.autosql import AutoSqlDeclaration
 
 from plastid.readers.bbifile cimport bbiFile, bits32, bits64, lm, lmInit, lmCleanup, freeMem, _BBI_Reader, get_lm
+
+from plastid.genomics.roitools cimport GenomicSegment, SegmentChain
 from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
                                        forward_strand, reverse_strand, unstranded,\
                                        error_strand,\
@@ -219,9 +221,9 @@ cdef class BigBedReader(_BBI_Reader):
         self.add_three_for_stop = add_three_for_stop
 
     property custom_fields:
-        """DEPRECATED: Use extension_fields in future"""
+        """BigBedReader.custom_fields is DEPRECATED. Will be removed in plastid v0.5.0. Use BigBedReader.extension_fields in future"""
         def __get__(self):
-            warnings.warn("BigBedReader.custom_fields is deprecated and will be removed in plastid v0.6.0. Use BigBedReader.extension_fields in the future",UserWarning)
+            warnings.warn("BigBedReader.custom_fields is deprecated and will be removed in plastid v0.5.0. Use BigBedReader.extension_fields in the future",UserWarning)
             return self.extension_fields
     
     property num_chroms:
@@ -326,6 +328,7 @@ cdef class BigBedReader(_BBI_Reader):
             
         return self._c_get(chain,stranded,check_unique=check_unique)
     
+    # TODO: direct C/Cython route to SegmentChain.from_bed
     # NB- no cache layer, which we  had in pure Python implementation (below)
     # will this be fast enough for repeated queries over the same region?
     # need to test    
@@ -519,6 +522,7 @@ def BigBedIterator(BigBedReader reader,maxmem=0):
 # INDEX: BPlusTree parser
 #===============================================================================
 
+@deprecated(version="0.5")
 class BPlusTree(object):
     """Decode B+ Trees, which are used to describe chromosomes and contigs
     in `BigBed`_ and BigWig files.
@@ -690,7 +694,7 @@ class BPlusTree(object):
 #===============================================================================
 # INDEX: R tree parser
 #===============================================================================
-
+@deprecated(version="0.5")
 class RTree(object):
     """Decode R Trees, which index genomic coordinates to file positions in `BigBed`_
     and BigWig files
