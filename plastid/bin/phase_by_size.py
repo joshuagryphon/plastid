@@ -111,31 +111,34 @@ def main(argv=sys.argv[1:]):
             count_vectors[k] = []
         cds_chain = roi.get_cds()
         
-        # for each seg, fetch reads, sort them, and create individual count vectors
-        for seg in cds_chain:
-            reads = gnd.get_reads(seg)
-            for read in filter(lambda x: len(x.positions) in read_dict,reads):
-                read_dict[len(read.positions)].append(read)
-
-            # map and sort by length
-            for read_length in read_dict:
-                count_vector = list(gnd.map_fn(read_dict[read_length],seg)[1])
-                count_vectors[read_length].extend(count_vector)
-        
-        # add each count vector for each length to total
-        for k, vec in count_vectors.items():
-            counts = numpy.array(vec)
-            if roi.strand == "-":
-                counts = counts[::-1]
-           
-            if len(counts) % 3 == 0:
-                counts = counts.reshape((len(vec)/3,3))
-            else:
-                message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (len(counts),roi.get_name())
-                warnings.warn(message,DataWarning)
-                counts = counts.reshape(len(vec)//3,3)
-
-            phase_sums[k] += counts[codon_buffer:-codon_buffer,:].sum(0)
+        # only calculate for coding genes
+        if len(cds_chain) > 0:
+            
+            # for each seg, fetch reads, sort them, and create individual count vectors
+            for seg in cds_chain:
+                reads = gnd.get_reads(seg)
+                for read in filter(lambda x: len(x.positions) in read_dict,reads):
+                    read_dict[len(read.positions)].append(read)
+    
+                # map and sort by length
+                for read_length in read_dict:
+                    count_vector = list(gnd.map_fn(read_dict[read_length],seg)[1])
+                    count_vectors[read_length].extend(count_vector)
+            
+            # add each count vector for each length to total
+            for k, vec in count_vectors.items():
+                counts = numpy.array(vec)
+                if roi.strand == "-":
+                    counts = counts[::-1]
+               
+                if len(counts) % 3 == 0:
+                    counts = counts.reshape((len(vec)/3,3))
+                else:
+                    message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (len(counts),roi.get_name())
+                    warnings.warn(message,DataWarning)
+                    counts = counts.reshape(len(vec)//3,3)
+    
+                phase_sums[k] += counts[codon_buffer:-codon_buffer,:].sum(0)
 
     printer.write("Counted %s ROIs total." % (n+1))
     for k in dtmp:
