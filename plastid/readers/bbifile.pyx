@@ -75,7 +75,6 @@ cdef lm * get_lm(lm * my_lm=NULL, int maxmem=0) except NULL:
 
     if not my_lm:
         raise MemoryError("BigBed/BigWig reader: Could not allocate local memory block.")
-        return NULL
 
     print("LM Size (%s kb allocated. %s available. %s max)." % (lmSize(my_lm) >> 10,lmAvailable(my_lm) >> 10,maxmem>>10))
     return my_lm
