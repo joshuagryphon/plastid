@@ -119,19 +119,31 @@ For most users, two of the output files are of interest:
      in which the first column is a read length and the second, the corresponding
      :term:`P-site offset` from the 5' end of the read::
 
-        #length	p_offset
-        29	0
-        30	12
-        31	13
-        32	14
-        33	14
-        34	14
-        35	0
-        default	13
+         #length	p_offset
+         29        0
+         30        12
+         31        13
+         32        14
+         33        14
+         34        14
+         35        0
+         default   13
 
      As in the graphical output, the values for 29 and 35 appear to be off. We will
      edit this file in a text editor, and set the offset to 12 for 29-mers, and 14
-     for 35-mers. We'll also set the default to 14, the most common value.
+     for 35-mers. We'll also set the default to 14, the most common value. This
+     gives the following table::
+
+         #length   p_offset
+         29        12
+         30        12
+         31        13
+         32        14
+         33        14
+         34        14
+         35        14
+         default   14
+
      
      
  .. _psite-use-aggregate:
@@ -144,7 +156,7 @@ In this case, it is possible to estimate the P-site offset from aggregate
 read counts at each position, instead of median normalized read density.
 
 The aggregate measurement is potentially noisier, but more sensitive to low read
-counts. To so, run the script with the ``--aggregate`` flag:
+counts. To do so, run the script with the ``--aggregate`` flag:
 
  .. code-block:: shell
 
