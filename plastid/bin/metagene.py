@@ -825,7 +825,8 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         pass
 
 
-    p95 = numpy.nanpercentile(norm_counts[norm_counts > 0],95)
+    rs = norm_counts[row_select,:]
+    p95 = numpy.nanpercentile(rs[rs > 0],95)
     im_args = {
         "interpolation" : "none",
         "vmin"          : 0,
