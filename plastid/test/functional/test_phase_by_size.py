@@ -7,12 +7,8 @@ from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
 from plastid.util.services.decorators import catch_stderr
 from plastid.test.functional.base import execute_helper
-from plastid.test.ref_files import RPATH, REF_FILES, \
-                                             COUNT_OPTIONS, \
-                                             ANNOTATION_OPTIONS, \
-                                             MASK_OPTIONS  
+from plastid.test.ref_files import REF_FILES, COUNT_OPTIONS
 from plastid.bin.phase_by_size import main
-from plastid.util.services.mini2to3 import cStringIO
 
 #===============================================================================
 # INDEX: global constants
