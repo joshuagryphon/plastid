@@ -79,7 +79,7 @@ Count
 
     2.  A **normalized count vector** is created for each window by dividing
         its raw count vector by the total number of counts occurring within a
-        user-defined normalization window within the window.
+        user-defined normalization region within the window.
     
     3.  A **metagene average** is created by taking aligning all of the
         normalized count vectors, and taking the median normalized counts
@@ -119,7 +119,7 @@ Count
     OUTBASE_normcounts.txt
         Saved if ``--keep`` is specified. Table of normalized counts, produced
         by dividing each row in the raw count table by the of counts in that
-        row within the columns specified by ``--norm_region``.
+        row within the columns specified by ``--normalize_over``.
 
     OUTBASE_mask.txt
         Saved if ``--keep`` is specified. Matrix of masks indicating which
@@ -129,7 +129,7 @@ Count
         Metagene average plotted above a heatmap of normalized counts,
         in which each row of pixels is a maximal spanning window for a gene,
         and rows are sorted by the column in which they reach their
-        max value. To faciliate visualization, colors in the heatmap are scaled
+        max value. To facilitate visualization, colors in the heatmap are scaled
         from 0 to the 95th percentile of non-zero numbers in the normalized counts
         
     `OUTBASE` is supplied by the user.

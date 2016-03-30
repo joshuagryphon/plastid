@@ -2,24 +2,24 @@ Change log
 ==========
 
 All major changes to ``plastid`` are documented here. Version numbers for the
-project follow the conventions described in :pep:`440`. After release 1.0, they
-will also follow `Semantic versioning <http://semver.org/>`_. Until then, they
-roughly follow `Semantic versioning <http://semver.org/>`_, with a prepended
-'0.'
-
-  .. note::
-  
-     This project was initially developed internally under the provisional name
-     ``genometools``, and then later under the codename ``yeti``. The current
-     name, ``plastid`` will not change.
+project follow the conventions described in :pep:`440`, along with the 
+guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
+that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
 Unreleased
 ----------
 
+This release adds support for `BigWig`_ files, and includes major usability
+improvements in command-line scripts, especially on low-count data. Note:
+a number of script behaviors have been deprecated (see below), and will be
+removed in future versions of ``plastid``.
+
 
 Added/Changed
 .............
+
+File formats
 
   - Support for `BigWig`_ files, a high-performance file format used to store
     quantitative data associated with genomic positions. ``BigWigReader`` reads
@@ -28,22 +28,57 @@ Added/Changed
   - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
     making it far faster.
 
-  - By default, ``psite`` and ``metagene`` scripts no longer save intermediate
-    count files. ``--keep`` option added to both scripts to save these.
 
-  - ``--constrain`` option added to ``psite`` to improve performance on noisy
-    or low count data.
+Command-line scripts
 
   - All script output metadata now includes command as executed, for easier
     re-running and record keeping
+
+  - Scripts using count files get ``--sum`` flag, enabling users to 
+    set effective sum of counts/reads used in normalization and RPKM
+    calculations
+
+  - ``psite``
+
+      - ``--constrain`` option added to ``psite`` to improve performance on
+        noisy or low count data.
+
+      - No longer saves intermediate count files. ``--keep`` option added
+        to take care of this.
+
+  - ``metagene``
+   
+      - Fixed/improved color scaling in heatmap output. Color values are now
+        capped at the 95th percentile of nonzero values, improving contrast
+
+      - Added warnings for files that appear not to contain UTRs
+
+      - Like ``psite``, no longer saves intermediate count files. ``--keep``
+        option added to take care of this.
+
+  - ``phase_by_size`` can now optionally use an ROI file from the 
+    ``metagene generate`` subprogram. This improves accuracy in higher
+    eukaryotes by preventing double-counting of codons when more than
+    one transcript is annotated per gene.
+
+
+Interactive/developer
 
   - ``read_pl_table()`` convenience function for reading tables written
     by command-line scripts into DataFrames, preserving headers, formatting,
     et c
 
-  - scripts using count files get ``--sum`` flag, enabling users to 
-    set effective sum of counts/reads used in normalization and RPKM
-    calculations
+
+Deprecated
+..........
+
+  - ``--norm_region`` option of ``psite`` and ``metagene`` has been deprecated
+    and will be removed in ``plastid`` v0.5. Instead, use ``--normalize_over``,
+    which performs the same role, except coordinates are specified relative to the
+    landmark of interest, rather than entire window. This change is more
+    intuitive to many users, and saves them mental math. If both ``--norm_region``
+    and ``--normalize_over`` are specified, ``--normalize_over`` will be used.
+
 
 
 plastid [0.4.5] = [2016-03-09]
@@ -98,7 +133,7 @@ Fixed
 
   - updates to :mod:`~plastid.bin.psite`
   
-      - output header in metagene_profiles. Sorry about that 
+      - output header in metagene profiles. Sorry about that 
 
       - fix compatibility problem with new versions of matplotlib
 
@@ -146,11 +181,13 @@ everybody upgrade
 
 Added
 .....
-  - Fast ``merge_segments()`` function in ``roitools`` module.
+
+- Fast ``merge_segments()`` function in ``roitools`` module.
 
 
 Changed
 .......
+
   - 10-100 fold reduction in memory consumed by ``SegmentChain`` objects,
     ``GTF2_TranscriptAssembler`` and ``GFF3_TranscriptAssembler``.  All
     position & mask hashes now lazily evaluated
@@ -161,6 +198,7 @@ Changed
 
 Fixed
 .....
+
   - Track naming bug in ``make_wiggle``
   - init bug in ``GenomeHash``
 
@@ -225,7 +263,7 @@ Changed
 .......
    - ``add_three_for_stop_codon()`` reimplemented in Cython, resulting in 2-fold
      speedup.  Moved from ``plastid.readers.common`` to
-     ``plastid.genomics.roitools`` (though previosu import path still works)
+     ``plastid.genomics.roitools`` (though previous import path still works)
 
 Fixed
 .....
@@ -298,6 +336,15 @@ Changed
    - Reimplemented mapping rules and some internals in Cython, giving 2-10x
      speedup for some operations
    - ``GenomicSegment`` now sorts lexically. Properties are read-only
+
+
+
+  .. note::
+  
+     This project was initially developed internally under the provisional name
+     ``genometools``, and then later under the codename ``yeti``. The current
+     name, ``plastid`` will not change. Changelogs from earlier versions 
+     appear below.
 
 
 yeti [0.2.1] = [2015-09-06]
