@@ -134,11 +134,15 @@ def main(argv=sys.argv[1:]):
                           ArgumentWarning)
     else:
         using_roi = False
-        warnings.warn("Using a transcript annotation file instead of an ROI file can lead to double-counting of codons if the annotation contains multiple transcripts per gene.",
-                      ArgumentWarning)        
-        regions = an.get_transcripts_from_args(args,printer=printer)
-        back_buffer  = -codon_buffer
-        transform_fn = lambda x: x.get_cds()
+        if len(args.annotation_files) == 0:
+            printer.write("Either an ROI file or at least annotation file must be given.")
+            sys.exit(1)
+        else:
+            warnings.warn("Using a transcript annotation file instead of an ROI file can lead to double-counting of codons if the annotation contains multiple transcripts per gene.",
+                          ArgumentWarning)        
+            regions = an.get_transcripts_from_args(args,printer=printer)
+            back_buffer  = -codon_buffer
+            transform_fn = lambda x: x.get_cds()
     
     phase_sums = {}
     for k in read_lengths:
