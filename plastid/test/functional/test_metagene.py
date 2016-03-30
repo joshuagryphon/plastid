@@ -17,7 +17,7 @@ from plastid.util.services.decorators import catch_stderr
 # INDEX: global constants used by tests
 #===============================================================================
 
-TEST_INFO = { "test_method"   : catch_stderr()(main),
+TEST_INFO = { "test_method"   : main,# catch_stderr()(main),
               "module_name"   : "plastid.bin.metagene",
               "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
               "temp_file_path" : tempfile.mkdtemp(prefix="metagene"),
@@ -30,7 +30,7 @@ _basename = os.path.join(TEST_INFO["temp_file_path"],"test_metagene")
 #===============================================================================
 
 tests = [
-    # test cds start
+    # test generate cds start
     (
         "generate %s_cds_start --downstream 100 %s %s" % (_basename, ANNOTATION_OPTIONS, MASK_OPTIONS),
         [
@@ -43,7 +43,7 @@ tests = [
         ],
         ["","--no_header"]
     ),
-    # test cds stop
+    # test generate cds stop
     (
         "generate %s_cds_stop --upstream 100 --landmark cds_stop %s %s" % (_basename, ANNOTATION_OPTIONS, MASK_OPTIONS),
         [
@@ -56,7 +56,7 @@ tests = [
         ],
         ["","--no_header"]
     ),
-    # test count cds start
+    # test count cds start with --norm_region
     (
         "count %s %s_cds_start --keep --norm_region 70 150 %s" % (REF_FILES["yeast_metagene_cds_start"],
                                                     _basename,
@@ -73,7 +73,7 @@ tests = [
     ],
     ["","--no_header","--no_header"]
     ),
-    # test count cds stop
+    # test count cds stop with --norm_region
     (
         "count %s %s_cds_stop --keep --norm_region 0 80 %s" % (REF_FILES["yeast_metagene_cds_stop"],
                                                      _basename,
@@ -90,6 +90,40 @@ tests = [
     ],
     ["","--no_header","--no_header"]
     ),
+    # test count cds start, using --norm_over
+    (
+        "count %s %s_cds_start --keep --norm_over 20 100 %s" % (REF_FILES["yeast_metagene_cds_start"],
+                                                    _basename,
+                                                    COUNT_OPTIONS),
+    [
+        REF_FILES["yeast_metagene_cds_start_profile"],
+        REF_FILES["yeast_metagene_cds_start_normcounts"],
+        REF_FILES["yeast_metagene_cds_start_rawcounts"],
+    ],
+    [
+        _basename+"_cds_start_metagene_profile.txt",
+        _basename+"_cds_start_normcounts.txt.gz",
+        _basename+"_cds_start_rawcounts.txt.gz"
+    ],
+    ["","--no_header","--no_header"]
+    ),
+    # test count cds stop, using --norm_over
+    (
+        "count %s %s_cds_stop --keep --norm_over '-100' '-20' %s" % (REF_FILES["yeast_metagene_cds_stop"],
+                                                     _basename,
+                                                     COUNT_OPTIONS),
+    [
+        REF_FILES["yeast_metagene_cds_stop_profile"],
+        REF_FILES["yeast_metagene_cds_stop_normcounts"],
+        REF_FILES["yeast_metagene_cds_stop_rawcounts"],
+    ],
+    [
+        _basename+"_cds_stop_metagene_profile.txt",
+        _basename+"_cds_stop_normcounts.txt.gz",
+        _basename+"_cds_stop_rawcounts.txt.gz"
+    ],
+    ["","--no_header","--no_header"]
+    ),         
 ]
 """Functional tests of :py:mod:`plastid.bin.metagene`.
 

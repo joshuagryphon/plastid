@@ -157,7 +157,7 @@ from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import ArgumentWarning, DataWarning
 from plastid.util.scriptlib.argparsers import (AnnotationParser, AlignmentParser,
-                                               MalformedFileError, PlottingParser,
+                                               PlottingParser,
                                                MaskParser, BaseParser)
 
 
@@ -552,26 +552,38 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
         A :class:`pandas.DataFrame` containing the following columns describing the
         maximal spanning windows:
 
-            ================   ==================================================
-            *Column*           *Contains*
-            ----------------   --------------------------------------------------
+            ====================   ==================================================
+            *Column*               *Contains*
+            --------------------   --------------------------------------------------
     
-            alignment_offset   Offset to align window to all other windows in the
-                               file, if the window happens to be shorter on the 5\'
-                               end than specified in ``--flank_upstream``
+            alignment_offset       Offset to align window to all other windows in the
+                                   file from the 5' end, if the window happens to be
+                                   shorter on the 5' end than specified in
+                                   `flank_upstream`
     
-            region_id          ID of region, given by shared value of `group_by`
-                               parameter (i.e. by default is 'gene_id')
+            region_id              ID of region, given by shared value of `group_by`
+                                   parameter (i.e. by default is 'gene_id')
             
-            region             maximal spanning window, formatted as
-                               `chromosome:start-end:(strand)`
+            region                 Maximal spanning window, formatted as
+                                   `chromosome:start-end:(strand)`
 
-            region_bed         maximal spanning window, formatted as a `BED`_ line
+            region_length          Length of maximal spanning window
             
-            window_size        width of window
+            region_bed             Maximal spanning window, formatted as a `BED`_ line
             
-            zero_point         distance from 5' end of window to landmark
-            ================   ==================================================        
+            window_size            Requested length of maximal spanning window.
+                                   May be larger than actual window if
+                                   `alignment_offset` or `threeprime_offset` is 
+                                   nonzero
+            
+            zero_point             Distance from 5' end of window to landmark,
+                                   including `alignment_offset`
+            
+            threeprime_offset      Offset to align window to all other windows
+                                   the file from the 3' end, if the window happens
+                                   to be shorter on the 3' end than specified in
+                                   `flank_downstream`
+            ====================   ==================================================        
     
     list
         List of |SegmentChain| representing each window. These data are also
@@ -585,13 +597,15 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
     import itertools
     window_size = flank_upstream + flank_downstream
         
-    dtmp = { "region_id"         : [],
-             "region"            : [],
-             "masked"            : [],
-             "alignment_offset"  : [],
-             "window_size"       : [],
-             "zero_point"        : [],
-             "region_bed"        : [],
+    dtmp = { "region_id"          : [],
+             "region"             : [],
+             "region_length"      : [],
+             "masked"             : [],
+             "alignment_offset"   : [],
+             "window_size"        : [],
+             "zero_point"         : [],
+             "region_bed"         : [],
+             "threeprime_offset"  : [],
              }
     
     transcripts = []
@@ -629,7 +643,7 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
                     if group_by in attr:
                         group_attr = attr[group_by]
                     else:
-                        warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Defaulting to region name." % (tx_chain.get_name(),group_by),
+                        warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Using region name as default group." % (tx_chain.get_name(),group_by),
                                       DataWarning)
                         group_attr = tx_chain.get_name()
 
@@ -663,6 +677,8 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
                     dtmp["alignment_offset"].append(offset)
                     dtmp["zero_point"].append(flank_upstream)
                     dtmp["region_bed"].append(max_spanning_window.as_bed())
+                    dtmp["region_length"].append(max_spanning_window.length)
+                    dtmp["threeprime_offset"].append(window_size - offset - max_spanning_window.length)
 
             # clean up
             del transcripts
@@ -679,7 +695,21 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
     df.sort_values(["region_id"],inplace=True)
     printer.write("Processed %s genes total. Included %s." % (c+1,len(df)))
 
+    # Warn in case of annotation problems
+    if (df["alignment_offset"] == flank_upstream).all():
+        warnings.warn("All maximal spanning windows lack flanks upstream of reference landmark. This occurs e.g. for start codons when annotation files don't contain UTR data. Please check your annotation file.",
+                      DataWarning)
+        
+    # N.b. This warning will only be invoked for zero-length landmarks
+    # e.g. won't work for stop codons, which are 3nt wide
+    if (df["threeprime_offset"] == flank_downstream).all():
+        warnings.warn("All maximal spanning windows lack flanks downstream of reference landmark. This occurs e.g. for stop codons when annotation files don't contain UTR data. Please check your annotation file.",
+                      DataWarning)
+
     return df
+
+_NORM_START_DEFAULT = 20
+_NORM_END_DEFAULT   = 50
 
 def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
@@ -734,16 +764,33 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     profile_fn   = "%s_metagene_profile.txt" % outbase
     fig_fn       = "%s_metagene_overview.%s" % (outbase,args.figformat)
 
-    norm_start, norm_end = args.norm_region
-    min_counts = args.min_counts
-
     printer.write("Opening ROI file %s ..." % args.roi_file)
     with open(args.roi_file) as fh:
         roi_table = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
         fh.close()
     
+    # TODO: remove --norm_region in Plastid v0.5
+    flank_upstream = roi_table["zero_point"][0]
+    if args.normalize_over is not None:
+        norm_start, norm_end = args.normalize_over
+        norm_start += flank_upstream
+        norm_end   += flank_upstream
+        if args.norm_region is not None:
+            warnings.warn("`--normalize_over` replaces `--norm_region`, which is deprecated. Ignoring `--norm_region` and using `--normalize_over`. See `metagene count --help` for differences.",ArgumentWarning)
+    elif args.norm_region is not None:
+        warnings.warn("`--norm_region` is deprecated and will be removed in plastid v0.5. Use `--normalize_over` instead. See `metagene count --help` for differences.",ArgumentWarning)
+        norm_start, norm_end = args.norm_region
+    else:
+        norm_start = _NORM_START_DEFAULT
+        norm_end   = _NORM_END_DEFAULT
+        
+    #norm_start, norm_end = args.norm_region
+    min_counts = args.min_counts
+
     # open count files
     ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
+    
+    # following value are identical for all genes, so 0th val is fine
     window_size    = roi_table["window_size"][0]
     upstream_flank = roi_table["zero_point"][0]
     cshape = (len(roi_table),window_size)
@@ -1005,11 +1052,23 @@ def main(argv=sys.argv[1:]):
     cparser.add_argument("--min_counts",type=int,default=10,metavar="N",
                          help="Minimum counts required in normalization region "+
                               "to be included in metagene average (Default: 10)")
+#     cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
+#                          default=(70,100),
+#                          help="Portion of each window against which its individual raw count profile"+
+#                               " will be normalized. Specify two integers, in nucleotide"+
+#                               " distance, from 5\' end of window. (Default: 70 100)")
     cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
-                         default=(70,100),
-                         help="Portion of each window against which its individual raw count profile"+
+                         default=None,
+                         help="Deprecated. Use ``--normalize_over`` instead. "+
+                              "Formerly, Portion of each window against which its individual raw count profile"+
                               " will be normalized. Specify two integers, in nucleotide"+
                               " distance, from 5\' end of window. (Default: 70 100)")
+    cparser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
+                         default=None,
+                         #default=(20,50),
+                         help="Portion of each window against which its individual raw count profile"+
+                              " will be normalized. Specify two integers, in nucleotide"+
+                              " distance from landmark (negatative for upstream, positive for downstream). (Default: 20 50)")
     cparser.add_argument("--landmark",type=str,default=None,
                          help="Name of landmark at zero point, optional.")
     cparser.add_argument("--keep",default=False,action="store_true",
@@ -1061,6 +1120,7 @@ def main(argv=sys.argv[1:]):
                                                printer=printer,
                                                is_sorted=is_sorted,
                                                group_by=args.group_by)
+        
         roi_file = "%s_rois.txt" % args.outbase
         bed_file = "%s_rois.bed" % args.outbase
         printer.write("Saving to ROIs %s ..." % roi_file)
