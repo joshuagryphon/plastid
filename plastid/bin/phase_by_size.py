@@ -101,8 +101,12 @@ def main(argv=sys.argv[1:]):
                                               plotting_parser])
     
     parser.add_argument("roi_file",type=str,nargs="?",default=None,
-                        help="ROI file surrounding start codons, from ``metagene generate`` subprogram")
-    parser.add_argument("outbase",type=str,help="Basename for output files")
+                        help="Optional. ROI file of maximal spanning windows surrounding start codons, "+\
+                             "from ``metagene generate`` subprogram. Using this instead of `--annotation_files` "+\
+                             "prevents double-counting of codons when multiple transcript isoforms exist "+\
+                             "for a gene. See the documentation for `metagene` for more info about ROI files."+\
+                             "If an ROI file is not given, supply an annotation with ``--annotation_files``")
+    parser.add_argument("outbase",type=str,help="Required. Basename for output files")
     parser.add_argument("--codon_buffer",type=int,default=5,
                         help="Codons before and after start codon to ignore (Default: 5)")
 
