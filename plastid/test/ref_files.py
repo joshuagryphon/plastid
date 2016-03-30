@@ -99,6 +99,7 @@ REF_FILES = {
               
               "yeast_mini_bed"        : os.path.join(RPATH,"command_line","transcripts_chosen.bed"),
               "yeast_phasing"         : os.path.join(RPATH,"command_line","gen_phasing.txt"),
+              "yeast_phasing_roifile" : os.path.join(RPATH,"command_line","gen_phasing_roifile.txt"),
               
               "yeast_metagene_cds_start" : os.path.join(RPATH,"command_line","gen_cds_start_rois.txt"),
               "yeast_metagene_cds_stop"  : os.path.join(RPATH,"command_line","gen_cds_stop_rois.txt"),              

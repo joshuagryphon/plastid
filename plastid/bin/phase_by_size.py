@@ -36,17 +36,37 @@ import matplotlib
 matplotlib.use("Agg")
 from plastid.util.scriptlib.argparsers import (AlignmentParser, AnnotationParser,
                                                PlottingParser, BaseParser)
-from plastid.util.io.openers import get_short_name, argsopener
+from plastid.util.io.openers import get_short_name, argsopener, read_pl_table
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, ArgumentWarning
 from plastid.plotting.plots import phase_plot
-
+from plastid.genomics.roitools import SegmentChain
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-# TODO: support bowtie or wiggle files
+
+def roi_row_to_cds(row):
+    """Helper function to extract coding portions from maximal spanning windows
+    flanking CDS starts that are created by |metagene| ``generate`` subprogram.
+    
+    Parameters
+    ----------
+    row : (int, Series)
+        Row from a :class:`pandas.DataFrame` of an ROI file made by the |metagene|
+        ``generate`` subprogram
+        
+    Returns
+    -------
+    |SegmentChain|
+        Coding portion of maximal spanning window
+    """
+    chainstr, alignment_offset, zero_point = row[1][["region","alignment_offset","zero_point"]]
+    chain = SegmentChain.from_str(chainstr)
+    cds_start = zero_point - alignment_offset
+    subchain = chain.get_subchain(cds_start,chain.length)
+    return subchain
 
 def main(argv=sys.argv[1:]):
     """Command-line program
@@ -80,32 +100,55 @@ def main(argv=sys.argv[1:]):
                                               alignment_file_parser,
                                               plotting_parser])
     
+    parser.add_argument("roi_file",type=str,nargs="?",default=None,
+                        help="ROI file surrounding start codons, from ``metagene generate`` subprogram")
+    parser.add_argument("outbase",type=str,help="Basename for output files")
     parser.add_argument("--codon_buffer",type=int,default=5,
                         help="Codons before and after start codon to ignore (Default: 5)")
-    
-    parser.add_argument("outbase",type=str,help="Basename for output files")
+
+
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
     gnd = al.get_genome_array_from_args(args,printer=printer)
-    transcripts = an.get_transcripts_from_args(args,printer=printer)
-    
+
     read_lengths = list(range(args.min_length,args.max_length+1))
     codon_buffer = args.codon_buffer
     
     dtmp = { "read_length"   : numpy.array(read_lengths),
              "reads_counted" : numpy.zeros_like(read_lengths,dtype=int),
             }
+
+    if args.roi_file is not None:
+        using_roi = True
+        roi_table = read_pl_table(args.roi_file)
+        regions = roi_table.iterrows()
+        transform_fn = roi_row_to_cds
+        back_buffer = -1
+        if len(args.annotation_files) > 0:
+            warnings.warn("If an ROI file is given, annotation files are ignored. Pulling regions from '%s'. Ignoring '%s'" % (args.roi_file,
+                                                                                                                               ", ".join(args.annotation_files)),
+                          ArgumentWarning)
+    else:
+        using_roi = False
+        warnings.warn("Using a transcript annotation file instead of an ROI file can lead to double-counting of codons if the annotation contains multiple transcripts per gene.",
+                      ArgumentWarning)        
+        regions = an.get_transcripts_from_args(args,printer=printer)
+        back_buffer  = -codon_buffer
+        transform_fn = lambda x: x.get_cds()
     
     phase_sums = {}
     for k in read_lengths:
         phase_sums[k] = numpy.zeros(3)
     
-    for n, roi in enumerate(transcripts):
+    for n, roi in enumerate(regions):
         if n % 1000 == 1:
             printer.write("Counted %s ROIs ..." % n)
-        cds_chain = roi.get_cds()
+        
+        # transformation needed to extract CDS from transcript or from ROI file window
+        cds_part = transform_fn(roi)
+        
         # only calculate for coding genes
-        if len(cds_chain) > 0:
+        if len(cds_part) > 0:
 
             read_dict     = {}
             count_vectors = {}
@@ -114,7 +157,7 @@ def main(argv=sys.argv[1:]):
                 count_vectors[k] = []
             
             # for each seg, fetch reads, sort them, and create individual count vectors
-            for seg in cds_chain:
+            for seg in cds_part:
                 reads = gnd.get_reads(seg)
                 for read in filter(lambda x: len(x.positions) in read_dict,reads):
                     read_dict[len(read.positions)].append(read)
@@ -127,19 +170,20 @@ def main(argv=sys.argv[1:]):
             # add each count vector for each length to total
             for k, vec in count_vectors.items():
                 counts = numpy.array(vec)
-                if roi.strand == "-":
+                if cds_part.strand == "-":
                     counts = counts[::-1]
                
                 if len(counts) % 3 == 0:
                     counts = counts.reshape((len(counts)/3,3))
                 else:
-                    message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (roi.get_name(),len(counts))
-                    warnings.warn(message,DataWarning)
+                    if using_roi == False:
+                        message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (roi.get_name(),len(counts))
+                        warnings.warn(message,DataWarning)
                     newlen = len(counts)//3
                     counts = counts[:3*newlen]
                     counts = counts.reshape(newlen,3)
     
-                phase_sums[k] += counts[codon_buffer:-codon_buffer,:].sum(0)
+                phase_sums[k] += counts[codon_buffer:back_buffer,:].sum(0)
 
     printer.write("Counted %s ROIs total." % (n+1))
     for k in dtmp:
@@ -197,7 +241,7 @@ def main(argv=sys.argv[1:]):
     fn = "%s_phasing.%s" % (args.outbase,args.figformat)
     printer.write("Plotting to %s ..." % fn)
     plot_counts = numpy.vstack([V for (_,V) in sorted(phase_sums.items())])
-    fig, (ax1,ax2) = phase_plot(plot_counts,labels=read_lengths,lighten_by=0.3,
+    fig, (ax1,_) = phase_plot(plot_counts,labels=read_lengths,lighten_by=0.3,
                                 cmap=None,color=colors,fig=fig)
 
     if args.title is not None:

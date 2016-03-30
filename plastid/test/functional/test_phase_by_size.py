@@ -36,11 +36,19 @@ _basename = os.path.join(test_info["temp_file_path"],"test_phase")
 # INDEX: tests
 #===============================================================================
 
+# old test, on annotation file
 phase_by_size_tests = [
+    # without ROI file
     ("%s --min_length 26 --max_length 31 --annotation_files %s --annotation_format BED %s" % (_basename,
                                                                                              REF_FILES["yeast_mini_bed"],
                                                                                              COUNT_OPTIONS),
      [REF_FILES["yeast_phasing"]],
+     [_basename+"_phasing.txt"],
+     [""]
+    ),
+    # with ROI file
+    ("%s %s --min_length 26 --max_length 31 %s" % (REF_FILES["yeast_metagene_cds_start"],_basename,COUNT_OPTIONS),
+     [REF_FILES["yeast_phasing_roifile"]],
      [_basename+"_phasing.txt"],
      [""]
     ),
