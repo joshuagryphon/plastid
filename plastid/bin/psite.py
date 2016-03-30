@@ -66,6 +66,9 @@ from plastid.util.io.filters import NameDateWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 from plastid.util.services.exceptions import ArgumentWarning
 
+# to handle deprecated command-line arguments
+from plastid.bin.metagene import _get_norm_region
+
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -244,11 +247,18 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("--min_counts",type=int,default=10,metavar="N",
                          help="Minimum counts required in normalization region "+
                               "to be included in metagene average (Default: 10)")
-    parser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
-                         default=(70,100),
-                         help="Portion of ROI against which each individual profile"+
+    parser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
+                         default=None,
+                         #default=(20,50),
+                         help="Portion of each window against which its individual raw count profile"+
                               " will be normalized. Specify two integers, in nucleotide"+
-                              " distance, from 5\' end of ROI. (Default: 70 100)")
+                              " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)")
+    parser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
+                         default=None,
+                         help="Deprecated. Use ``--normalize_over`` instead. "+
+                              "Formerly, Portion of each window against which its individual raw count profile"+
+                              " will be normalized. Specify two integers, in nucleotide"+
+                              " distance, from 5\' end of window. (Default: 70 100)")
     parser.add_argument("--require_upstream",default=False,action="store_true",
                         help="If supplied, the P-site offset is taken to be the distance "+
                              "between the largest peak upstream of the start codon and "+
@@ -308,11 +318,13 @@ def main(argv=sys.argv[1:]):
     for f in my_filters:
         ga.remove_filter(f)
 
+    norm_start, norm_end = _get_norm_region(roi_table,args)
+    
     # count
     count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
                                                              ga,
-                                                             args.norm_region[0],
-                                                             args.norm_region[1],
+                                                             norm_start,
+                                                             norm_end,
                                                              args.min_counts,
                                                              min_len,
                                                              max_len,

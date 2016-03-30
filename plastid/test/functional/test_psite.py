@@ -7,10 +7,7 @@ from nose.plugins.attrib import attr
 from pkg_resources import resource_filename, cleanup_resources
 from plastid.util.services.decorators import catch_stderr
 from plastid.test.functional.base import execute_helper
-from plastid.test.ref_files import RPATH, REF_FILES, \
-                                             COUNT_OPTIONS, \
-                                             ANNOTATION_OPTIONS, \
-                                             MASK_OPTIONS  
+from plastid.test.ref_files import REF_FILES
 from plastid.bin.psite import main
 
 #===============================================================================
@@ -45,6 +42,22 @@ psite_tests = [
      [_outbase+"_p_offsets.txt"],
      [""]
     ),
+    # test using --normalize_over instead of --norm_region
+    ("%s %s --count_files %s --normalize_over 20 100 --require_upstream --min_length 26 --max_length 31"  % (REF_FILES["yeast_metagene_cds_start"],
+                                                                                                          _outbase,
+                                                                                                          REF_FILES["yeast_rp_bam"],)  ,
+     [REF_FILES["yeast_psite"]],
+     [_outbase+"_p_offsets.txt"],
+     [""]
+    ),
+    # test using --normalize_over instead of --norm_region
+    ("%s %s --count_files %s --normalize_over 20 100 --require_upstream --min_length 26 --max_length 31 --constrain 0 11"  % (REF_FILES["yeast_metagene_cds_start"],
+                                                                                                          _outbase,
+                                                                                                          REF_FILES["yeast_rp_bam"],)  ,
+     [REF_FILES["yeast_psite_constrain"]],
+     [_outbase+"_p_offsets.txt"],
+     [""]
+    ),               
 ]
 
 

@@ -17,8 +17,8 @@ from plastid.util.services.decorators import catch_stderr
 # INDEX: global constants used by tests
 #===============================================================================
 
-TEST_INFO = { "test_method"   : main,# catch_stderr()(main),
-              "module_name"   : "plastid.bin.metagene",
+TEST_INFO = { "test_method"    : catch_stderr()(main),
+              "module_name"    : "plastid.bin.metagene",
               "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
               "temp_file_path" : tempfile.mkdtemp(prefix="metagene"),
              }
@@ -90,9 +90,9 @@ tests = [
     ],
     ["","--no_header","--no_header"]
     ),
-    # test count cds start, using --norm_over
+    # test count cds start, using --normalize_over
     (
-        "count %s %s_cds_start --keep --norm_over 20 100 %s" % (REF_FILES["yeast_metagene_cds_start"],
+        "count %s %s_cds_start --keep --normalize_over 20 100 %s" % (REF_FILES["yeast_metagene_cds_start"],
                                                     _basename,
                                                     COUNT_OPTIONS),
     [
@@ -107,9 +107,9 @@ tests = [
     ],
     ["","--no_header","--no_header"]
     ),
-    # test count cds stop, using --norm_over
+    # test count cds stop, using --normalize_over
     (
-        "count %s %s_cds_stop --keep --norm_over '-100' '-20' %s" % (REF_FILES["yeast_metagene_cds_stop"],
+        "count %s %s_cds_stop --keep --normalize_over '-100' '-20' %s" % (REF_FILES["yeast_metagene_cds_stop"],
                                                      _basename,
                                                      COUNT_OPTIONS),
     [

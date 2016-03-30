@@ -711,6 +711,44 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
 _NORM_START_DEFAULT = 20
 _NORM_END_DEFAULT   = 50
 
+
+def _get_norm_region(roi_table,args):
+    """Helper function to get normalization region from current and deprecated command-line arguments.
+    This function will be removed in plastid v0.5, when the deprecated
+    command-line arguments will also be removed.
+    
+    Parameters
+    ----------
+    
+    roi_table : :class:`pandas.DataFrame`
+        DataFrame of output from |metagene| generate subprogram
+        
+    args : :class:`argparse.NameSpace`
+        Command-line arguments to |metagene| or |psite| count subprograms
+        
+    Returns
+    -------
+    (int, int)
+        Start and end of normalization region, with respect to start of window,
+        including `alignment_offset`.
+    """
+    # TODO: remove --norm_region in Plastid v0.5
+    flank_upstream = roi_table["zero_point"][0]
+    if args.normalize_over is not None:
+        norm_start, norm_end = args.normalize_over
+        norm_start += flank_upstream
+        norm_end   += flank_upstream
+        if args.norm_region is not None:
+            warnings.warn("`--normalize_over` replaces `--norm_region`, which is deprecated. Ignoring `--norm_region` and using `--normalize_over`. See `metagene count --help` for differences.",ArgumentWarning)
+    elif args.norm_region is not None:
+        warnings.warn("`--norm_region` is deprecated and will be removed in plastid v0.5. Use `--normalize_over` instead. See `metagene count --help` for differences.",ArgumentWarning)
+        norm_start, norm_end = args.norm_region
+    else:
+        norm_start = _NORM_START_DEFAULT
+        norm_end   = _NORM_END_DEFAULT
+    
+    return norm_start, norm_end
+
 def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in 
     `roi_table`, taking the following steps:
@@ -769,20 +807,8 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         roi_table = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
         fh.close()
     
-    # TODO: remove --norm_region in Plastid v0.5
-    flank_upstream = roi_table["zero_point"][0]
-    if args.normalize_over is not None:
-        norm_start, norm_end = args.normalize_over
-        norm_start += flank_upstream
-        norm_end   += flank_upstream
-        if args.norm_region is not None:
-            warnings.warn("`--normalize_over` replaces `--norm_region`, which is deprecated. Ignoring `--norm_region` and using `--normalize_over`. See `metagene count --help` for differences.",ArgumentWarning)
-    elif args.norm_region is not None:
-        warnings.warn("`--norm_region` is deprecated and will be removed in plastid v0.5. Use `--normalize_over` instead. See `metagene count --help` for differences.",ArgumentWarning)
-        norm_start, norm_end = args.norm_region
-    else:
-        norm_start = _NORM_START_DEFAULT
-        norm_end   = _NORM_END_DEFAULT
+    # wrapper to deal with multiple command-line arguments
+    norm_start, norm_end = _get_norm_region(roi_table, args)
         
     #norm_start, norm_end = args.norm_region
     min_counts = args.min_counts
@@ -1052,23 +1078,18 @@ def main(argv=sys.argv[1:]):
     cparser.add_argument("--min_counts",type=int,default=10,metavar="N",
                          help="Minimum counts required in normalization region "+
                               "to be included in metagene average (Default: 10)")
-#     cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
-#                          default=(70,100),
-#                          help="Portion of each window against which its individual raw count profile"+
-#                               " will be normalized. Specify two integers, in nucleotide"+
-#                               " distance, from 5\' end of window. (Default: 70 100)")
+    cparser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
+                         default=None,
+                         #default=(20,50),
+                         help="Portion of each window against which its individual raw count profile"+
+                              " will be normalized. Specify two integers, in nucleotide"+
+                              " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)")
     cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
                          default=None,
                          help="Deprecated. Use ``--normalize_over`` instead. "+
                               "Formerly, Portion of each window against which its individual raw count profile"+
                               " will be normalized. Specify two integers, in nucleotide"+
                               " distance, from 5\' end of window. (Default: 70 100)")
-    cparser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
-                         default=None,
-                         #default=(20,50),
-                         help="Portion of each window against which its individual raw count profile"+
-                              " will be normalized. Specify two integers, in nucleotide"+
-                              " distance from landmark (negatative for upstream, positive for downstream). (Default: 20 50)")
     cparser.add_argument("--landmark",type=str,default=None,
                          help="Name of landmark at zero point, optional.")
     cparser.add_argument("--keep",default=False,action="store_true",
