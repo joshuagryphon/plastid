@@ -171,7 +171,11 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     str
     """
     import re
-    pat = r"([^%s]+)%s$" % (separator,terminator)
+    tlen = len(terminator)
+    if inpt[-tlen:] == terminator:
+        inpt = inpt[:-tlen]
+        
+    pat = r"([^%s]+)+$" % separator
     try:
         stmp = re.search(pat,inpt).group(1)
     except AttributeError:
@@ -179,7 +183,7 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     #if terminator[0] == ".":
     #    terminator = "\"" + terminator
         
-    return re.sub("%s$" % terminator,"",stmp)
+    return stmp
 
 def argsopener(filename,namespace,mode="w",**kwargs):
     """Open a file for writing, and write to it command-line arguments
