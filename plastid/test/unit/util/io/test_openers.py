@@ -38,12 +38,12 @@ def test_pretty_print_dict():
              "somereallyreallylongname" : "short val",
             }
     expected = """{
-          'a'                        : 1
-          'b'                        : 2.3
-          'c'                        : 'some string'
-          'd'                        : 'some string with 'subquotes' inside'
-          'e'                        : (3, 4, 5)
-          'somereallyreallylongname' : 'short val'
+          'a'                        : 1,
+          'b'                        : 2.3,
+          'c'                        : 'some string',
+          'd'                        : 'some string with 'subquotes' inside',
+          'e'                        : (3, 4, 5),
+          'somereallyreallylongname' : 'short val',
 }
 """
     found = pretty_print_dict(dtmp)

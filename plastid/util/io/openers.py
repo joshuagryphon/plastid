@@ -258,7 +258,7 @@ def pretty_print_dict(dtmp):
         if type(v) == type(""):
             v = "'%s'" % v
         new_k = "'%s'" % k
-        stmp = ("          {0:<%s} : {1}" % maxlen).format(new_k,v)
+        stmp = ("          {0:<%s} : {1}," % maxlen).format(new_k,v)
         ltmp.append(stmp)
     sout = "\n".join(ltmp)
     return "{\n%s\n}\n" % sout
