@@ -32,6 +32,8 @@ from setuptools.command.develop import develop
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
+plastid_version = "0.4.6dev" #plastid.__version__ 
+
 PYSAM_VER_NUM = (0,8,4)
 NUMPY_VER_NUM = (1,9,0)
 
@@ -95,7 +97,6 @@ To see which versions you have installed:
 with open("README.rst") as f:
     long_description = f.read()
 
-plastid_version = "0.4.5"  #plastid.__version__ 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
 packages = find_packages()
 
@@ -133,6 +134,7 @@ if not on_rtd:
                         "matplotlib>=1.4.0",
                         "biopython>=1.64",
                         "twobitreader>=3.0.0",
+                        "termcolor",
                         ] + setup_requires
 else:
     install_requires = ["cython","numpy","pysam","biopython"]
