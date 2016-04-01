@@ -620,6 +620,8 @@ tab-delimited text file.
     args : :py:class:`argparse.Namespace`
         command-line arguments for ``count`` subprogram    
     """
+    warnings.simplefilter("ignore","is a zero-length SegmentChain. Returning 0-length")
+
     keys=("exon","utr5","cds","utr3")
     column_order = ["region"]
     gene_positions = read_pl_table(args.position_file)
