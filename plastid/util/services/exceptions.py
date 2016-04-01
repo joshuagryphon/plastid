@@ -4,10 +4,10 @@ an implementation of a custom warning filter action, called `"onceperfamily"`.
 
 The `onceperfamily` action
 --------------------------
-This filter action groups warning messages by families specified regular expressions,
+`onceperfamily` groups warning messages by families regular expressions,
 and only prints the first instance of a warning for each family. In contrast,
-Python's `"once"` action prints any warning string once, even if the strings
-match the same regex in the same warnings filter.
+Python's native `once` action prints any string literal once, even if it
+matches the same regex as another warning already given.
 
 To use this action, use the following two functions:
 
@@ -62,6 +62,11 @@ warnings
 import re
 import warnings
 import inspect
+import linecache
+import textwrap
+import termcolor
+
+_wrapper = textwrap.TextWrapper(break_long_words=False,width=77) 
 
 #===============================================================================
 # INDEX: Warning and exception classes
@@ -363,3 +368,56 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
     warnings.warn_explicit(message,category,filename,lineno,
                            module=module,registry=registry,
                            module_globals=module_globals)
+
+
+def formatwarning(message,category,filename,lineno,file=None,line=None):
+    """Wrapper to colorize warnings for readability. Overrides :func:`warnings.formatwarning`
+    
+    Parameters
+    ----------
+    message : str
+        Warning message
+        
+    category : Warning
+        Class (not instance) of warning
+    
+    filename : str
+        Name of file calling warning
+    
+    lineno : int
+        Line in file calling warning
+        
+    line : str
+        Text of line in file calling warning. If `None`, `line` is taken
+        to be line number `lineno` of `filename` 
+    
+    Returns
+    -------
+    str
+        Pretty-printed warning message
+    """
+    sep     = termcolor.colored("-"*75,color="cyan")
+    message = _wrapper.fill(termcolor.colored(message,color="white",attrs=["bold"]))
+    name    = termcolor.colored(category.__name__,color="cyan",attrs=["bold"])
+
+    if line is None:
+        numwidth = len(str(lineno+3))
+        fmtstr   = "{0: >%ss} {1}" % (numwidth)
+        lines    = []
+        for x in range(max(0,lineno-2),lineno+3):
+            tmpline = linecache.getline(filename,x).strip("\n")
+            if tmpline:
+                attrs = ["bold"] if x == lineno else []
+                lines.append(fmtstr.format(termcolor.colored(x,color="green",attrs=attrs),
+                                           termcolor.colored(tmpline,attrs=attrs)
+                                           ))
+        line = "\n".join(lines)
+
+    filename = "in %s, line %s:" % (termcolor.colored(filename,color="cyan"),lineno)
+
+    ltmp = [sep,name,message,filename,"",line,"",sep,""]
+
+    return "\n".join(ltmp)
+
+warnings.formatwarning = formatwarning
+
