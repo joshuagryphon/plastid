@@ -1,7 +1,7 @@
 Change log
 ==========
 
-All major changes to ``plastid`` are documented here. Version numbers for the
+Major changes to ``plastid`` are documented here. Version numbers for the
 project follow the conventions described in :pep:`440`, along with the 
 guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
@@ -11,9 +11,12 @@ Unreleased
 ----------
 
 This release adds support for `BigWig`_ files, and includes major usability
-improvements in command-line scripts, especially on low-count data. Note:
-a number of script behaviors have been deprecated (see below), and will be
-removed in future versions of ``plastid``.
+improvements in command-line scripts. Note: a number of script behaviors have
+been replaced with more sensible/robust/intuitive alternatives. To minimize
+disruption of any research in progress, the old behaviors still function and can
+still be used (see below), but users will be warned when using them that they
+will be removed in future versions of ``plastid``.
+
 
 
 Added/Changed
@@ -61,6 +64,8 @@ Command-line scripts
     eukaryotes by preventing double-counting of codons when more than
     one transcript is annotated per gene.
 
+  - ``cs chart`` file containing list of genes is now optional. If not given,
+    all genes are included in comparisons
 
 Interactive/developer
 
