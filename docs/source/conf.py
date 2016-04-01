@@ -18,9 +18,11 @@ import unittest
 import datetime
 import mock
 import plastid
-
+import warnings
+warnings.filterwarnings("ignore",message="toctree contains reference to nonexisting document")
 
 # -- General configuration ------------------------------------------------
+
 
 
 project = u'plastid'
@@ -164,6 +166,9 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
                     except AttributeError:
                         base_doc = ""
                     skip |= obj.__doc__ == base_doc
+        elif name.startswith("_"):
+            skip = True
+            
     return skip
 
 # intersphinx config ------------------------------------------------------------
