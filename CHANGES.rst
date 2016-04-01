@@ -23,6 +23,7 @@ Added/Changed
 .............
 
 File formats
+""""""""""""
 
   - Support for `BigWig`_ files, a high-performance file format used to store
     quantitative data associated with genomic positions. ``BigWigReader`` reads
@@ -33,6 +34,7 @@ File formats
 
 
 Command-line scripts
+""""""""""""""""""""
 
   - All script output metadata now includes command as executed, for easier
     re-running and record keeping
@@ -67,7 +69,14 @@ Command-line scripts
   - ``cs chart`` file containing list of genes is now optional. If not given,
     all genes are included in comparisons
 
+
 Interactive/developer
+"""""""""""""""""""""
+
+  - Reformatted warning output to improve legibility
+
+  - ``colored()`` function to colorize text only when a terminal or stream
+    supports it
 
   - ``read_pl_table()`` convenience function for reading tables written
     by command-line scripts into DataFrames, preserving headers, formatting,
@@ -84,6 +93,14 @@ Deprecated
     intuitive to many users, and saves them mental math. If both ``--norm_region``
     and ``--normalize_over`` are specified, ``--normalize_over`` will be used.
 
+  - ``BigBedReader.custom_fields`` has been replaced with ``BigBedReader.extension_fields``
+
+  - ``BigBedReader.chrom_sizes`` has been replaced with ``BigBedReader.chroms``
+    for consistency with other data structures
+
+  - ``BPlusTree`` and ``RTree`` classes, which will be removed in ``plastid`` v0.5
+
+  
 
 
 plastid [0.4.5] = [2016-03-09]
