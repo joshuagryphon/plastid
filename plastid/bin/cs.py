@@ -96,6 +96,7 @@ import itertools
 import copy
 import inspect
 import gc
+import warnings
 
 import matplotlib
 matplotlib.use("Agg")
@@ -114,10 +115,11 @@ from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 from plastid.genomics.roitools import positions_to_segments, SegmentChain
 from plastid.genomics.genome_hash import GenomeHash
-from plastid.util.io.openers import opener, get_short_name, argsopener
+from plastid.util.io.openers import opener, get_short_name, argsopener, read_pl_table
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.services.sets import merge_sets
 from plastid.util.services.decorators import skipdoc
+from plastid.util.services.exceptions import DataWarning
 import numpy.ma as ma
 from plastid.plotting.plots import scatterhist_xy, ma_plot, clean_invalid
 from plastid.plotting.colors import process_black
@@ -620,9 +622,7 @@ tab-delimited text file.
     """
     keys=("exon","utr5","cds","utr3")
     column_order = ["region"]
-    with opener(args.position_file) as pos_fh:
-        gene_positions = pd.read_table(pos_fh,sep="\t",comment="#",index_col=None,header=0)
-        pos_fh.close()
+    gene_positions = read_pl_table(args.position_file)
 
     # read count files
     ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
@@ -685,10 +685,12 @@ def read_count_file(fh,genes_to_include=None):
 
         Count data
     """
-    df = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
-    import_mask = numpy.array([True if X in genes_to_include else False for X in df["region"]])
-
-    return df[import_mask]
+    df = read_pl_table(fh)
+    if genes_to_include is not None:
+        import_mask = numpy.array([True if X in genes_to_include else False for X in df["region"]])
+        return df[import_mask]
+    else:
+        return df
 
 @skipdoc
 def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
@@ -857,15 +859,14 @@ correlation coefficients as a function of summed read counts in both samples
     
     # read input files
     printer.write("Reading input files: %s ..." % ", ".join(args.infiles))
-    list_of_genes = set([X.strip() for X in opener(args.list_of_regions)])
-    samples = { get_short_samplename(X) : read_count_file(opener(X),list_of_genes)\
-                                          for X in args.infiles }
     
+    samples = { get_short_samplename(X) : read_count_file(opener(X),args.list_of_regions)\
+                                          for X in args.infiles }
 
     # Define some variables for later
     sample_names = sorted(samples.keys())    
     comparisons  = [X for X in itertools.combinations(sample_names,2) if X[0] != X[1]]
-    colors = plot_parser.get_colors_from_args(args,len(comparisons))
+    colors       = plot_parser.get_colors_from_args(args,len(comparisons))
     binkeys      = tuple(["%s_reads" % k for k in args.regions])
    
     comparison_labels      = sorted(["%s_vs_%s" % (X,Y) for X,Y in comparisons]) 
@@ -951,22 +952,22 @@ correlation coefficients as a function of summed read counts in both samples
                                 bbox_inches="tight"
                                )
                     plt.close()
-                except ValueError as e:
-                    printer.write("Could not make MA plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message))
+                except Exception as e:
+                    warnings.warn("Could not make MA plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message),DataWarning)
                 
                 
                 # scatter plot
                 try:
                     scatter_title = "%s vs %s (%s %s)" % (ki,kj,region,metric)
-                    fig = do_scatter(vi[region_metric].values,vj[region_metric].values,
-                                     count_mask,plot_parser,args,pearsonr=pearsonr,
-                                     xlabel=ki,ylabel=kj,title=scatter_title)
+                    do_scatter(vi[region_metric].values,vj[region_metric].values,
+                               count_mask,plot_parser,args,pearsonr=pearsonr,
+                               xlabel=ki,ylabel=kj,title=scatter_title)
 
                     plt.savefig("%s_scatter_%s_%s_%s.%s" % (outbase, label, region, metric, figformat),
                                 bbox_inches="tight")
                     plt.close()
                 except ValueError as e:
-                    printer.write("Could not make scatter plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message))
+                    warnings.warn("Could not make scatter plot for samples %s and %s. Error message:\n    %s" % (ki,kj,e.message),DataWarning)
  
                 
                 # TODO: make these tables into dataframes. this scheme is insane
@@ -1070,27 +1071,30 @@ correlation coefficients as a function of summed read counts in both samples
         region,metric = region_metric.split("_")
         region_counts = "%s_reads" % region
         bintable_out.write("%s\n\n" % region_metric)
-        
-        for n,label in enumerate(comparison_labels):
-            corrcoefs = []
-            bintable_out.write("%s\t\t\t\t\t\t\t\t" % label)
-            bintable_out.write("\n")
-            bintable_out.write("bin\t" + "\t".join(stats)+"\n")
-            for my_bin in bins:
-                ltmp = [my_bin]
-                for stat in stats:
-                    ltmp.append(corrcoef_by_bin_table[label][region_counts][metric][my_bin].get(stat,""))
-                ltmp = [str(X) for X in ltmp]
-                bintable_out.write("\t".join(ltmp)+"\n\n")
-                corrcoefs.append(corrcoef_by_bin_table[label][region_counts][metric][my_bin]["spearmanr"])
-            corrcoefs = ma.masked_invalid(corrcoefs)
-            plt.plot(bins[~corrcoefs.mask],
-                     corrcoefs[~corrcoefs.mask],
-                     label=label,
-                     color=colors[n])
-        plt.legend(loc="lower right")
-        plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (outbase,region_metric,label,figformat),
-                    bbox_inches="tight")
+
+        try:       
+            for n,label in enumerate(comparison_labels):
+                corrcoefs = []
+                bintable_out.write("%s\t\t\t\t\t\t\t\t" % label)
+                bintable_out.write("\n")
+                bintable_out.write("bin\t" + "\t".join(stats)+"\n")
+                for my_bin in bins:
+                    ltmp = [my_bin]
+                    for stat in stats:
+                        ltmp.append(corrcoef_by_bin_table[label][region_counts][metric][my_bin].get(stat,""))
+                    ltmp = [str(X) for X in ltmp]
+                    bintable_out.write("\t".join(ltmp)+"\n\n")
+                    corrcoefs.append(corrcoef_by_bin_table[label][region_counts][metric][my_bin]["spearmanr"])
+                corrcoefs = ma.masked_invalid(corrcoefs)
+                plt.plot(bins[~corrcoefs.mask],
+                         corrcoefs[~corrcoefs.mask],
+                         label=label,
+                         color=colors[n])
+            plt.legend(loc="lower right")
+            plt.savefig("%s_corrcoef_by_bin_%s_%s.%s" % (outbase,region_metric,label,figformat),
+                        bbox_inches="tight")
+        except Exception as e:
+            warnings.warn("Could not plot correlation-by-bin plot for '%s', '%s'" % (outbase,region_metric),DataWarning)
 
         bintable_out.write("\n\n")
     bintable_out.close()
@@ -1180,8 +1184,8 @@ def main(argv=sys.argv[1:]):
     pparser.add_argument("--metrics",nargs="+",type=str,
                          default=("rpkm","reads"),
                          help="Metrics to compare (default: rpkm, reads)")
-    pparser.add_argument("list_of_regions",type=str,metavar='gene_list.txt',
-                         help="File listing regions (genes or transcripts), one per line, to include in count")
+    pparser.add_argument("list_of_regions",type=str,metavar='gene_list.txt',nargs="?",default=None,
+                         help="Optional. File listing regions (genes or transcripts), one per line, to include in comparisons. If not given, all genes are included.")
     pparser.add_argument("outbase",type=str,
                          help="Basename for output files")
 
