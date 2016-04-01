@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-"""This module contains custom exception and warning classes, as well as 
-an implementation of a custom warning filter action, called `"onceperfamily"`.
+"""This module contains custom exception and warning classes, implements 
+a custom warning filter action, called `"onceperfamily"`, and monkey-patches
+warning output to improve legibility.
+
 
 The `onceperfamily` action
 --------------------------
@@ -60,13 +62,16 @@ warnings
     Warnings module
 """
 import re
+import sys
 import warnings
 import inspect
 import linecache
 import textwrap
-import termcolor
+from plastid.util.io.filters import colored
 
 _wrapper = textwrap.TextWrapper(break_long_words=False,width=77) 
+
+
 
 #===============================================================================
 # INDEX: Warning and exception classes
@@ -386,6 +391,9 @@ def formatwarning(message,category,filename,lineno,file=None,line=None):
     
     lineno : int
         Line in file calling warning
+    
+    file : something implementing a `write` method 
+        File to which output is written. Default: :obj:`sys.stderr`
         
     line : str
         Text of line in file calling warning. If `None`, `line` is taken
@@ -396,9 +404,9 @@ def formatwarning(message,category,filename,lineno,file=None,line=None):
     str
         Pretty-printed warning message
     """
-    sep     = termcolor.colored("-"*75,color="cyan")
-    message = _wrapper.fill(termcolor.colored(message,color="white",attrs=["bold"]))
-    name    = termcolor.colored(category.__name__,color="cyan",attrs=["bold"])
+    sep     = colored("-"*75,color="cyan")
+    message = _wrapper.fill(colored(message,color="white",attrs=["bold"]))
+    name    = colored(category.__name__,color="cyan",attrs=["bold"])
 
     if line is None:
         numwidth = len(str(lineno+3))
@@ -408,16 +416,17 @@ def formatwarning(message,category,filename,lineno,file=None,line=None):
             tmpline = linecache.getline(filename,x).strip("\n")
             if tmpline:
                 attrs = ["bold"] if x == lineno else []
-                lines.append(fmtstr.format(termcolor.colored(x,color="green",attrs=attrs),
-                                           termcolor.colored(tmpline,attrs=attrs)
+                lines.append(fmtstr.format(colored(x,color="green",attrs=attrs),
+                                           colored(tmpline,attrs=attrs)
                                            ))
         line = "\n".join(lines)
 
-    filename = "in %s, line %s:" % (termcolor.colored(filename,color="cyan"),lineno)
+    filename = "in %s, line %s:" % (colored(filename,color="cyan"),lineno)
 
     ltmp = [sep,name,message,filename,"",line,"",sep,""]
 
     return "\n".join(ltmp)
 
+    
 warnings.formatwarning = formatwarning
 

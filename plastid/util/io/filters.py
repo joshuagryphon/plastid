@@ -4,41 +4,50 @@ input or output streams, such as file objects.
 
 These filters may be composed by wrapping one around another, to perform
 multiple operations in line on, for example, a text stream, before finally
-coverting it to another type of data.
+converting it to another type of data.
 
 Various readers are included:
 
-    - :py:class:`AbstractReader`
-        the base class for all reader functions. To create a functional subclass,
-        you should only need to override the :py:meth:`~AbstractReader.filter` method,
-        which is called on each unit of data (usually a line of an input file).
+    :class:`AbstractReader`
+        Base class for all Readers. To create a Reader, subclass this and
+        override the :py:meth:`~AbstractReader.filter` method.
     
-    - :py:class:`CommentReader`
-        read through text documents, skipping over commented lines transparently
+    :class:`CommentReader`
+        read through text documents, skipping over commented lines
     
-    - :py:class:`SkipBlankReader`
-        read through text documents, skipping over blank lines transparently
+    :class:`SkipBlankReader`
+        read through text documents, skipping over blank lines
     
-    - :py:class:`FunctionReader`
+    :class:`FunctionReader`
         apply an arbitrary function to each unit of input data
     
-    - :py:class:`TeeReader`
+    :class:`TeeReader`
         similar to Unix/Linux shell command ``tee``. Allows input streams to be
         sent to an arbitrary number of listeners
 
 And various writers:
 
-    - :py:class:`AbstractWriter`
-        the base class for all reader functions. To create a functional subclass,
-        you should only need to override the :py:meth:`~AbstractWriter.filter` method,
-        which is called on each unit (usually a line or block of text)
+    :class:`AbstractWriter`
+        Base class for all writers. To create a Writer, subclass this and
+        override the :py:meth:`~AbstractReader.filter` method.
+
+    :class:`ColorWriter`
+        Enable ANSI coloring of text to output streams that support color.
+        For streams that do not support color, text is not colored.
     
-    - :py:class:`NameDateWriter`
+    :class:`NameDateWriter`
         Prepend timestamps to each line of string input before writing
 
-    - :py:class:`CommentWriter`
+    :class:`CommentWriter`
         Filter out commented lines from text stream before writing
 
+
+And one convenience function:
+
+    :func:`colored`
+        Colorize text (via :func:`termcolor.colored`) if and only
+        if color is supported by :obj:`sys.stderr` 
+        
 
 Examples
 --------
@@ -66,6 +75,15 @@ from __future__ import print_function
 import sys
 import datetime
 from abc import abstractmethod
+import termcolor
+
+# color detection hint from http://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
+if hasattr(sys.stderr,"isatty") and sys.stderr.isatty():
+    colored = termcolor.colored
+else:
+    colored = lambda x, **kwargs: str(x)
+
+
 
 #===============================================================================
 # INDEX: readers
@@ -422,8 +440,43 @@ class AbstractWriter(object):
         pass
 
 
-class NameDateWriter(AbstractWriter):
-    """Prepend date and program name to each line of output"""
+class ColorWriter(AbstractWriter):
+    """Detect whether output stream supports color, and enable/disable colored output
+    
+    Methods
+    -------
+    :meth:`color`
+        Color text. Delegates to :func:`termcolor.colored` if color is supported.
+        Otherwise, returns uncolored text.
+    """
+    def __init__(self,stream=None):
+        """Create a ColorWriter
+        
+        Parameters
+        ----------
+        stream : file-like
+            Stream to write to (Default: :obj:`sys.stderr`)
+        """
+        AbstractWriter.__init__(self,stream=stream)
+        if hasattr(self.stream,"isatty") and self.stream.isatty():
+            self.color = termcolor.colored
+    
+    def color(self,text,**kwargs):
+        """Color `text` with attributes specified in `kwargs` if `stream` supports ANSI color.
+        
+        See :func:`termcolor.colored` for usage
+        
+        Returns
+        -------
+        str
+            `text`, colored as indicated, if color is supported
+        """
+        return text
+
+
+class NameDateWriter(ColorWriter):
+    """Prepend program name, date, and time to each line of output"""
+    
     def __init__(self,name,line_delimiter="\n",stream=None):
         """Create a NameDateWriter
         
@@ -438,10 +491,17 @@ class NameDateWriter(AbstractWriter):
         line_delimiter : str, optional
             Delimiter, postpended to lines. (Default `'\n'`)
         """
+        stream = sys.stderr if stream is None else stream
+        ColorWriter.__init__(self,stream=stream)
         self.name = name
         self.delimiter = line_delimiter
-        stream = sys.stderr if stream is None else stream
-        AbstractWriter.__init__(self,stream)
+        self.fmtstr = "%s %s%s %s%s: {2}%s" % (self.color(name,color="blue",attrs=["bold"]),
+                                               self.color("[",color="blue",attrs=["bold"]),
+                                               self.color("{0}",color="green"),
+                                               self.color("{1}",color="green",attrs=["bold"]),
+                                               self.color("]",color="blue",attrs=["bold"]),
+                                               self.delimiter
+                                              )
     
     def filter(self,line):
         """Prepend date and time to each line of input
@@ -456,8 +516,10 @@ class NameDateWriter(AbstractWriter):
         str : Input with date and time prepended
         """
         now = datetime.datetime.now()
-        return "%s [%s]: %s%s" % (self.name, now, line.strip(self.delimiter), self.delimiter)
-    
+        d   = datetime.datetime.strftime(now,"%Y-%m-%d")
+        t   = datetime.datetime.strftime(now,"%T")
+        return self.fmtstr.format(d,t,line.strip(self.delimiter))
+        
     # included for backward compatibility
     def __call__(self,line):
         self.write(line)

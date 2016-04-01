@@ -48,3 +48,6 @@ from plastid.readers.psl import PSL_Reader
 from plastid.readers.bigwig import BigWigReader
 
 from plastid.util.io.openers import read_pl_table
+
+from plastid.util.services.exceptions import formatwarning
+
