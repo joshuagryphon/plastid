@@ -126,12 +126,7 @@ def read_pl_table(filename,**kwargs):
              "header"     : 0,
         }
     args.update(kwargs)
-    with opener(filename) as fh:
-        try:
-            table = pd.read_table(fh,**args)
-        finally:
-            fh.close()
-            
+    table = pd.read_table(filename,**args)
     return table
 
 def get_short_name(inpt,separator=os.path.sep,terminator=""):
