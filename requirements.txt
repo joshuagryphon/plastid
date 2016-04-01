@@ -1,4 +1,4 @@
-numpy>=1.9
+numpy>=1.9.4
 scipy>=0.15.1
 cython>=0.22
 pysam>=0.8.4
@@ -6,3 +6,4 @@ pandas>=0.17.0
 matplotlib>=1.4.0
 biopython>=1.64
 twobitreader>=3.0.0
+termcolor
