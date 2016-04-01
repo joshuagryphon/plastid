@@ -59,7 +59,7 @@ def merge_sets(list_of_sets,printer=None):
     # ignore singletons in merge process
     multis = [X for X in list_of_sets if len(X) > 1]
     if  printer is not None:
-        stmp = "Starting with %s sets, %s distinct members, and %s groups with multiple items..." % (len(list_of_sets), len(all_members),len(multis))
+        stmp = "Starting with %s sets, %s distinct members, and %s groups with multiple items ..." % (len(list_of_sets), len(all_members),len(multis))
         printer.write(stmp)
         
     # find remaining singletons post-merge
@@ -106,7 +106,7 @@ def _merge_sets(list_of_sets,printer=None):
 
     ltmp = list(set(new_sets))
     if printer is not None:
-        stmp = "Merged %s starting sets to %s final sets..." % (len(list_of_sets), len(ltmp))
+        stmp = "Merged %s starting sets to %s final sets ..." % (len(list_of_sets), len(ltmp))
         printer.write(stmp)
 
     # terminate if no new mergers
