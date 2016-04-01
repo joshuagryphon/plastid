@@ -9,6 +9,10 @@ Important methods
     commented out. The open file handle is then returned for subsequent
     writing
 
+:py:func:`read_pl_table'
+    Wrapper function to open a table saved by one of :data:`plastid`'s
+    command-line scripts into a :class:`pandas.DataFrame`.
+
 :py:func:`opener`
     Guesses whether a file is bzipped, gzipped, zipped, or uncompressed based upon 
     file extension, opens it appropriately, and returns a file-like object.

@@ -1,14 +1,7 @@
 #!/usr/bin/env python
-import argparse
 from plastid.util.io.openers import (get_short_name, pretty_print_dict)
 from nose.tools import assert_equal
 
-# def test_read_pl_table():
-#     assert False
-# 
-# def test_opener():
-#     assert False
-    
 def test_get_short_name():
     tests = [("test","test",{}),
              ("test.py","test",dict(terminator=".py")),
@@ -22,12 +15,7 @@ def test_get_short_name():
         found = get_short_name(inp,**kwargs)
         msg = "test_get_short_name(): failed on input '%s'. Expected '%s'. Got '%s'" % (inp,expected,found)
         yield assert_equal, expected, found, msg
-# 
-# def test_argsopener():
-#     assert False
-# 
-# def test_args_to_comment():
-#     assert False
+
     
 def test_pretty_print_dict():
     dtmp = { "a" : 1,
