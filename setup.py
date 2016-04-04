@@ -90,9 +90,9 @@ except ImportError:
 
 plastid setup requires the following to be preinstalled:
 
-    numpy %s.%s.%s or greater  %s
-    Pysam %s.%s.%s or greater  %s 
-    Cython %s.%s.%s or greater %s
+    numpy  %s.%s.%s or greater  %s
+    Pysam  %s.%s.%s or greater  %s 
+    Cython %s.%s.%s or greater  %s
 
 
 Please install or upgrade these via pip, and retry:
@@ -109,7 +109,7 @@ check the most up-to-date versions by typing:
 If version numbers reported by `pip list` differ from those reported above,
 please check your system to make sure there are not multiple versions 
 of each package installed. This can be a problem e.g. if using anaconda.
-Or, alternatively, install and run Plastid within a virtual environment
+In this case, Plastid can be installed and run within a virtual environment
 (not a conda environment):
 
     # install virtualenv if you don't have it
