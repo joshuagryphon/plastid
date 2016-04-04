@@ -620,8 +620,8 @@ tab-delimited text file.
     args : :py:class:`argparse.Namespace`
         command-line arguments for ``count`` subprogram    
     """
-    warnings.simplefilter("ignore")
-#    warnings.filterwarnings("ignore","is a zero-length SegmentChain. Returning 0-length")
+    # we expect many zero-lenght segmentchains, so turn these off for now
+    warnings.filterwarnings("ignore",".*zero-length SegmentChain.*",)
 
     keys=("exon","utr5","cds","utr3")
     column_order = ["region"]
@@ -815,8 +815,8 @@ def do_scatter(x,y,count_mask,plot_parser,args,pearsonr=None,xlabel=None,ylabel=
                     "verticalalignment" : "baseline",
                     "transform" : axdict["main"].transAxes }
     
-    plt.legend(loc="lower right",frameon=False)
     mainax = axdict["main"]
+    mainax.legend(loc="lower right",frameon=False)
 
     if pearsonr is not None:
         mainax.text(0.02,0.9,"Pearson r**2 >= 128: %0.4e" % pearsonr**2,
@@ -847,14 +847,7 @@ correlation coefficients as a function of summed read counts in both samples
     args : :py:class:`argparse.Namespace`
         command-line arguments for ``chart`` subprogram       
     """
-
-        
-    try:
-        import matplotlib.style
-        if getattr(args,"stylesheet",None) is not None:
-            matplotlib.style.use(args.stylesheet)
-    except ImportError:
-        pass
+    plot_parser.set_style_from_args(args)
 
     outbase = args.outbase
     bins = numpy.array(args.bins)
@@ -883,7 +876,7 @@ correlation coefficients as a function of summed read counts in both samples
         try:
             assert (samples[ki]["region"] == samples[kj]["region"]).all()
         except AssertionError:
-            printer.write("Mismatched line entries for samples %s and %s." % (ki,kj))
+            printer.write("Mismatched line entries for samples %s and %s. Were different gene lists used for counting?" % (ki,kj))
 
         vi = samples[ki]
         vj = samples[kj]
