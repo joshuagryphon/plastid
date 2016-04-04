@@ -29,18 +29,16 @@ import glob
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-from Cython.Distutils import build_ext
-from Cython.Build import cythonize
-
 plastid_version = "0.4.6dev" #plastid.__version__ 
 
 PYSAM_VER_NUM = (0,8,4)
 NUMPY_VER_NUM = (1,9,0)
+CYTHON_VER_NUM = (0,22,0)
 
-NUMPY_VERSION  = "numpy>=%s.%s.%s" % NUMPY_VER_NUM
+NUMPY_VERSION  = "numpy>=%s.%s.%s"  % NUMPY_VER_NUM
 SCIPY_VERSION  = "scipy>=0.15.1"
-CYTHON_VERSION = "cython>=0.22"
-PYSAM_VERSION  = "pysam>=%s.%s.%s" % PYSAM_VER_NUM
+CYTHON_VERSION = "cython>=%s.%s.%s" % CYTHON_VER_NUM
+PYSAM_VERSION  = "pysam>=%s.%s.%s"  % PYSAM_VER_NUM
 
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
@@ -53,40 +51,80 @@ def version_tuple(inp):
     return  tuple([int(X) for X in inp.split(".")])
 
 
-# at present, setup/build can't proceed without numpy & Pysam
+# at present, setup/build can't proceed without numpy, Pysam, Cython
 # adding these to setup_requires and/or install_requires doesn't work,
-# because they are needed before them.
+# because they are needed before then.
+foundstr = "(found %s.%s.%s)"
+nstr = pstr = cstr = "(no version found)"
 try:
+    rai
     import numpy
     numpyver = version_tuple(numpy.__version__)
-    if numpyver < NUMPY_VER_NUM:
-        raise ImportError()
+    nstr = foundstr % numpyver
 
     import pysam
     pysamver = version_tuple(pysam.__version__)
-    if pysamver < PYSAM_VER_NUM:
-        raise ImportError()
+    pstr = foundstr % pysamver
 
     import Cython
+    from Cython.Distutils import build_ext
+    from Cython.Build import cythonize
+    cythonver = version_tuple(Cython.__version__)
+    cstr = foundstr % cythonver
+
+    if numpyver < NUMPY_VER_NUM or pysamver < PYSAM_VER_NUM or cythonver < CYTHON_VER_NUM:
+        raise ImportError()
 
 except ImportError:
+    ltmp = []
+    ltmp.extend(NUMPY_VER_NUM)
+    ltmp.append(nstr)
+    ltmp.extend(PYSAM_VER_NUM)
+    ltmp.append(pstr)
+    ltmp.extend(CYTHON_VER_NUM)
+    ltmp.append(cstr)
+
     print("""
     
 *** IMPORTANT INSTALLATION INFORMATION ***
 
-plastid setup requires %s, %s, and %s to be preinstalled. Please
-install these via pip, and retry:
+plastid setup requires the following to be preinstalled:
+
+    numpy %s.%s.%s or greater  %s
+    Pysam %s.%s.%s or greater  %s 
+    Cython %s.%s.%s or greater %s
+
+
+Please install or upgrade these via pip, and retry:
 
     $ pip install --upgrade numpy pysam cython
     $ pip install plastid
 
-To see which versions you have installed:
+
+If you believe you have more up-to-date versions than those detected above,
+check the most up-to-date versions by typing:
 
     $ pip list | grep -E "(Cython|pysam|numpy)+"
 
+If version numbers reported by `pip list` differ from those reported above,
+please check your system to make sure there are not multiple versions 
+of each package installed. This can be a problem e.g. if using anaconda.
+Or, alternatively, install and run Plastid within a virtual environment
+(not a conda environment):
+
+    # install virtualenv if you don't have it
+    $ pip install virtualenv
+
+    # make & activate virtualenv
+    $ virtualenv /path/to/new/venv
+    $ source /path/to/new/venv/bin/activate
+
+    # install plastid in virtualenv
+    $ pip install numpy pysam cython
+    $ pip install --verbose plastid | tee install_log.txt
 
 
-""" % (NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION))
+""" % tuple(ltmp))
     sys.exit(1)
 
 
@@ -433,12 +471,12 @@ FAIL_MSG = \
 sources. If installing via pip, make sure all dependencies are already
 pre-installed, then separately run:
 
-    $ pip install --upgrade --install-option="--recythonize" plastid
+    $ pip install --verbose --upgrade --install-option="--recythonize" plastid | tee install_log.txt
 
 
 Or, if installing manually via setup.py:
 
-    $ python setup.py install --recythonize
+    $ python setup.py install --recythonize | tee install_log.txt
 """
 
 setup(
