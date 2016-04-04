@@ -1202,7 +1202,7 @@ class PlottingParser(Parser):
                                   )),
                 ("title",    dict(type=str,default=None,help="Base title for plot(s).")),
                 ("cmap",     dict(type=str,default=None,
-                                  help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use color cycle in matplotlibrc)"
+                                  help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use colors from ``--stylesheet`` if given, or color cycle in matplotlibrc)"
                                   )),
                 ("dpi",      dict(type=int,default=150,
                                   help="Figure resolution (Default: %(default)s)")),
@@ -1282,16 +1282,17 @@ class PlottingParser(Parser):
         fargs = {}
         # keep this loop in place in case we add additional command line attributes as fig properties later
         for attr in ("figsize",): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
-            v = getattr(args,attr,None)
-            if v is None:
-                v = getattr(kwargs,attr,None)
+            if attr in kwargs:
+                v = kwargs[attr]
+            else:
+                v = getattr(args,attr,None)
+
             if v is not None:
                 fargs[attr] = v
     
         # copy values from fargs
         kwargs.update(fargs)
-        return plt.figure()
-        #return plt.figure(**kwargs)
+        return plt.figure(**kwargs)
 
     def get_colors_from_args(self,args,num_colors):
         """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
@@ -1321,10 +1322,8 @@ class PlottingParser(Parser):
             List of matplotlib colors
         """
         import matplotlib.cm
-        args = PrefixNamespaceWrapper(args,self.prefix)
-    
+        args       = PrefixNamespaceWrapper(args,self.prefix)
         figcolors  = getattr(args,"cmap",None)
-        stylesheet = getattr(args,"stylesheet",None)
     
         if figcolors is not None:
             import numpy
@@ -1333,16 +1332,10 @@ class PlottingParser(Parser):
                 colors = cmap(numpy.linspace(0,1.0,num_colors))
             else:
                 colors = [cmap(0.5)]
-        else:
+        else:   
             from itertools import cycle
             try:
-                import matplotlib.style
-                if stylesheet is not None:
-                    matplotlib.style.use(stylesheet)
-            except ImportError:
-                pass
-   
-            try:
+                
                 color_cycle = cycle(matplotlib.rcParams["axes.prop_cycle"].by_key()["color"])
             except KeyError:
                 color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
@@ -1475,7 +1468,6 @@ PLASTID_WARNINGS = [
     # util.io.filters
     (Warning,"Could not alert listener"),
 
-
     # util.services.decorators
     (DeprecationWarning,"is deprecated and will be removed from module"),
     
@@ -1494,7 +1486,6 @@ PLASTID_WARNINGS = [
     
     # gff_tokens
     (FileFormatWarning,"Found duplicate attribute key"),
-
 
     # BigBed
     (FileFormatWarning,"Could not find or could not parse autoSql declaration in BigBedFile"),
