@@ -1239,6 +1239,22 @@ class PlottingParser(Parser):
         """
         return Parser.get_parser(self,title=title,description=description)
 
+
+    def set_style_from_args(self,args):
+        """Parse style information, if present on system and defined in `args`
+
+        Parameters
+        ----------
+        args : :class:`argparse.Namespace`
+            Namespace object from :func:`get_plotting_parser`
+        """
+        try:
+            import matplotlib.style
+            if getattr(args,"stylesheet",None) is not None:
+                matplotlib.style.use(args.stylesheet)
+        except ImportError:
+            pass
+
     def get_figure_from_args(self,args,**kwargs):
         """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
     
@@ -1325,8 +1341,12 @@ class PlottingParser(Parser):
                     matplotlib.style.use(stylesheet)
             except ImportError:
                 pass
-    
-            color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
+   
+            try:
+                color_cycle = cycle(matplotlib.rcParams["axes.prop_cycle"].by_key()["color"])
+            except KeyError:
+                color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
+
             colors = [next(color_cycle) for _ in range(num_colors)]
     
         return colors
