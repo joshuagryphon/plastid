@@ -86,10 +86,10 @@ def main(argv=sys.argv[1:]):
     an = AnnotationParser()
     pp = PlottingParser()
     bp = BaseParser()
+    plotting_parser = pp.get_parser()
     
     alignment_file_parser = al.get_parser(conflict_handler="resolve")
     annotation_file_parser = an.get_parser(conflict_handler="resolve")
-    plotting_parser = pp.get_parser()
     base_parser = bp.get_parser()
 
     parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
@@ -113,6 +113,7 @@ def main(argv=sys.argv[1:]):
 
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
+    pp.set_style_from_args(args)
     gnd = al.get_genome_array_from_args(args,printer=printer)
 
     read_lengths = list(range(args.min_length,args.max_length+1))
@@ -233,13 +234,6 @@ def main(argv=sys.argv[1:]):
                       )
         fh.close()
     
-    try:
-        import matplotlib.style
-        if getattr(args,"stylesheet",None) is not None:
-            matplotlib.style.use(args.stylesheet)
-    except ImportError:
-        pass
-
     fig = {}
     if args.figsize is not None:
         fig["figsize"] = tuple(args.figsize)

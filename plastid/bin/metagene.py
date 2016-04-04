@@ -795,6 +795,8 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     import matplotlib.pyplot as plt
     from plastid.plotting.plots import profile_heatmap
 
+    plot_parser.set_style_from_args(args)
+
     outbase = args.outbase
     count_fn     = "%s_rawcounts.txt.gz" % outbase
     normcount_fn = "%s_normcounts.txt.gz" % outbase
@@ -890,14 +892,6 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
 
     # plot
     printer.write("Plotting to %s ..." % fig_fn)
-    try:
-        import matplotlib.style
-        if getattr(args,"stylesheet",None) is not None:
-            matplotlib.style.use(args.stylesheet)
-    except ImportError:
-        pass
-
-
     rs = norm_counts[row_select,:]
     p95 = numpy.nanpercentile(rs[rs > 0],95)
     im_args = {
@@ -957,14 +951,8 @@ def do_chart(args,plot_parser,printer=NullWriter()): #sample_dict,landmark="land
         if len(args.labels) > 0:
             warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
         samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
-     
-    try:
-        import matplotlib.style
-        if getattr(args,"stylesheet",None) is not None:
-            matplotlib.style.use(args.stylesheet)
-    except ImportError:
-        printer.write("Could not import matplotlib.style. Consider upgrading to matplotlib >=1.4.0")
-
+    
+    plot_parser.set_style_from_args(args)
     title = args.title
     colors = plot_parser.get_colors_from_args(args,len(args.infiles))
 

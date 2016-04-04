@@ -302,6 +302,7 @@ def main(argv=sys.argv[1:]):
     lengths = list(range(min_len,max_len+1))
     outbase = args.outbase
     title  = "Fiveprime read offsets by length" if args.title is None else args.title
+    pp.set_style_from_args(args)
     colors = pp.get_colors_from_args(args,profiles)
  
     printer.write("Opening ROI file %s ..." % args.roi_file)
@@ -370,13 +371,6 @@ def main(argv=sys.argv[1:]):
 
 
     # parse arguments & set styles
-    try:
-        import matplotlib.style
-        if getattr(args,"stylesheet",None) is not None:
-            matplotlib.style.use(args.stylesheet)
-    except ImportError:
-        pass
-
     mplrc = matplotlib.rcParams
     plt_incr  = 1.2
 
