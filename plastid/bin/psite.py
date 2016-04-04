@@ -302,6 +302,7 @@ def main(argv=sys.argv[1:]):
     lengths = list(range(min_len,max_len+1))
     outbase = args.outbase
     title  = "Fiveprime read offsets by length" if args.title is None else args.title
+    
     pp.set_style_from_args(args)
     colors = pp.get_colors_from_args(args,profiles)
  
