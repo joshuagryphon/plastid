@@ -1,6 +1,10 @@
 Installation
 ============
 
+.. contents::
+   :local:
+ 
+
 From PyPi
 ---------
 Stable versions of :py:data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
@@ -9,21 +13,23 @@ first:
 
 Simply type from the terminal:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    $ sudo pip install numpy pysam cython
-    $ sudo pip install plastid
+   $ sudo pip install numpy pysam cython
+   $ sudo pip install plastid
 
 or, for a single-user install:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    $ pip install --user numpy pysam cython
-    $ pip install --user plastid
+   $ pip install --user numpy pysam cython
+   $ pip install --user plastid
 
 Test your installation within Python:
 
-    >>> import plastid
+.. code-block:: python
+
+   >>> import plastid
 
 If you get an error saying an object in `numpy`_ or `pysam`_
 is the wrong size, you need to regenerate the included C
@@ -32,9 +38,9 @@ linked against your version of `numpy`_ or `pysam`_. To
 do so, first make sure all the dependencies are installed.
 Then type:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    $ pip install --user --install-option="--recythonize" plastid
+   $ pip install --verbose --user --install-option="--recythonize" plastid
 
 And then re-test the installation. If you continue to get errors,
 please see :ref:`faq-install-fails` for common errors or our
@@ -42,14 +48,14 @@ please see :ref:`faq-install-fails` for common errors or our
 
 
 Command-line scripts will be installed wherever your system configuration dictates.
-Typically the install path for command line scripts for users appears in
-``~/bin`` or ``~/.local/bin``. For system-wide installs, they would be
-in ``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
-adding to your ``.bashrc``, or ``.profile``:
+On OSX and many varities of linux, the install path for a single-user install is
+``~/bin`` or ``~/.local/bin``. For system-wide installs, the path is typically
+``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
+adding to your ``.bashrc``, ``.bash_profile``, or ``.profile``:
 
- .. code-block:: shell
+.. code-block:: shell
 
-   export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
+    export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
 
 
 Development versions
@@ -57,31 +63,50 @@ Development versions
 To fetch the latest development versions, clone it from
 `our github repository <plastid_repo>`_. From the terminal:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    # get the source
-    $ git clone git://github.com/joshuagryphon/plastid.git
+   # get the source
+   $ git clone git://github.com/joshuagryphon/plastid.git
 
-    # Do to a quirk in Python setup scripts, numpy,
-    # and pysam must must be installed first:
-    $ pip install --user --upgrade numpy pysam
+   # Do to a quirk in Python setup scripts, numpy,
+   # and pysam must must be installed first:
+   $ pip install --user --upgrade numpy pysam
 
-    # Install in develop mode
-    # Use `--recythonize` flag to link code against your
-    # versions of numpy and pysam, if they are different
-    # from ours
+   # Install in develop mode
+   # Use `--recythonize` flag to link code against your
+   # versions of numpy and pysam, if they are different
+   # from ours
 
-    $ cd plastid
-    $ python setup.py develop --user --recythonize
+   $ cd plastid
+   $ python setup.py develop --user --recythonize
 
 
 Non-Python Dependencies
 -----------------------
 
-The following are required or recommended for specific functions:
+Plastid has a number of non-Python dependencies:
 
-   - `bowtie`_ (not Bowtie 2), for :py:mod:`~plastid.bin.crossmap`
+ - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_,
+  `clang <clang.llvm.org>`_) 
+ - `zlib <www.zlib.net>`_, including its headers
 
-   - `Jim Kent's utilities`_ for converting BED to BigBed files
+
+The following are not required for full functionality, but are recommended
+for specific functions:
+
+ - `bowtie`_ (not Bowtie 2), for :py:mod:`~plastid.bin.crossmap`
+ - `Jim Kent's utilities`_ for converting BED to BigBed files
+ - `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_   
 
 
+
+Considerations for OSX
+----------------------
+
+On many computers, :data:`plastid` installs without any problems on OSX.
+However, some users needed to enable special compiler flags, or other 
+environment variables. If you are having problems, see:
+
+  - :ref:`faq-locale-error-osx`
+  - :ref:`faq-macintosh-cflags`
+ 
