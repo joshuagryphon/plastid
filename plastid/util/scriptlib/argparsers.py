@@ -71,12 +71,13 @@ See Also
 :py:obj:`plastid.bin`
     Source code of command-line scripts, for further examples
 """
+import sys
+import os
+import functools
 import argparse
 import warnings
-import sys
 import pkg_resources
 import pysam
-import functools
 
 from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning,\
                                              DataWarning, FileFormatWarning, filterwarnings
@@ -90,8 +91,11 @@ from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
                                 _DEFAULT_GFF3_CDS_TYPES
                                 
 #===============================================================================
-# INDEX: String constants used in parsers below
+# INDEX: Constants used in parsers below
 #===============================================================================
+
+# Size above which we recommend sorting a GFF/GTF2 file
+_GFF_SORT_SIZE = 100 * 1024 * 1024
 
 _MAPPING_RULE_TITLE = "alignment mapping functions (BAM & bowtie files only)"
 _MAPPING_RULE_DESCRIPTION = \
@@ -860,8 +864,9 @@ class AnnotationParser(Parser):
         if args.annotation_format in ("GFF3","GTF2"):
             from plastid.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
             if 'sorted' not in disabled and args.sorted == False and \
-               'tabix' not in disabled and args.tabix == False:
-                msg = """Transcript assembly on FORMAT files can require a lot of memory.
+               'tabix' not in disabled and args.tabix == False and \
+               any((os.stat(X).st_size >= _GFF_SORT_SIZE for X in args.annotation_files)):
+                msg = """Transcript assembly on large FORMAT files can require a lot of memory.
     Consider using a sorted file with the '--sorted' flag and/or tabix-compression.
     """
                 msg += GFF_SORT_MESSAGE

@@ -13,7 +13,7 @@ from nose.plugins.attrib import attr
 from nose.tools import assert_equal, assert_greater, assert_raises,  \
     assert_in, assert_not_in, assert_true, assert_list_equal
 
-from plastid.test.ref_files import MINI, REF_FILES
+from plastid.test.ref_files import MINI, REF_FILES, EXTENSIONS
 from plastid.util.io.filters import CommentReader
 from plastid.readers.bed import BED_Reader
 from plastid.util.services.exceptions import MalformedFileError
@@ -721,15 +721,11 @@ def test_get_transcript_from_args_add_three_tabix():
         yield check_get_transcript_from_args_add_three_tabix, fmt
 
 def check_arg_not_raises_error(name,func,args,params,kwargs):
-    try:
-        params = [args] + params
-        func(*params,**kwargs)
-        assert True
-    except IOError: # because we're using dummy files
-        pass
+    params = [args] + params
+    func(*params,**kwargs)
 
 def check_arg_raises_error(name,func,args,params,kwargs):
-    msg = "%s did not raise error with args '%s', params '%s' and kwargs '%s'" % (name,args,params,kwargs)
+#    msg = "%s did not raise error with args '%s', params '%s' and kwargs '%s'" % (name,args,params,kwargs)
     params = [args] + params
     assert_raises(SystemExit,func,*params,**kwargs)
 
@@ -737,7 +733,7 @@ def check_arg_raises_error(name,func,args,params,kwargs):
 def test_annotation_not_sorted_raises_error_if_required():
     for func in get_transcripts_from_args, get_segmentchains_from_args:
         for fmt in ("BED","GTF2","GFF3"):
-            argstr = "--annotation_format %s --annotation_files some_file" % fmt
+            argstr = "--annotation_format %s --annotation_files %s" % (fmt,REF_FILES["100transcripts_%s" % EXTENSIONS[fmt]])
             args = annotation_file_parser.parse_args(shlex.split(argstr))
             name = "require_sort_but_not_sorted_%s" % fmt
             yield check_arg_raises_error, name, func, args, [], {"require_sort" : True}
@@ -745,13 +741,15 @@ def test_annotation_not_sorted_raises_error_if_required():
 @attr(test="unit")
 def test_annotation_sorted_raises_error_if_required():
     for func in get_transcripts_from_args, get_segmentchains_from_args:
+        # no warning if sorted
         for fmt in ("BED","GTF2","GFF3"):
-            argstr = "--sorted --annotation_format %s --annotation_files some_file" % fmt
+            argstr = "--sorted --annotation_format %s --annotation_files %s" % (fmt,REF_FILES["100transcripts_%s" % EXTENSIONS[fmt]])
             args = annotation_file_parser.parse_args(shlex.split(argstr))
             name = "require_sort_and_sorted_%s" % fmt
             yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : True}
+        # no warning if sorted
         for fmt in ("BED","GTF2","GFF3"):
-            argstr = "--tabix --annotation_format %s --annotation_files some_file" % fmt
+            argstr = "--tabix --annotation_format %s --annotation_files %s" % (fmt,REF_FILES["100transcripts_%s" % EXTENSIONS[fmt]])
             args = annotation_file_parser.parse_args(shlex.split(argstr))
             name = "require_sort_and_tabix_%s" % fmt
             yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : True}
@@ -760,7 +758,7 @@ def test_annotation_sorted_raises_error_if_required():
 def test_annotation_not_sorted_not_raises_error_if_not_required():
     for func in get_transcripts_from_args, get_segmentchains_from_args:
         for fmt in ("BED","GTF2","GFF3"):
-            argstr = "--annotation_format %s --annotation_files some_file" % fmt
+            argstr = "--annotation_format %s --annotation_files %s" % (fmt,REF_FILES["100transcripts_%s" % EXTENSIONS[fmt]])
             args = annotation_file_parser.parse_args(shlex.split(argstr))
             name = "not_require_sort_and_not_sorted_%s" % fmt
             yield check_arg_not_raises_error, name, func, args, [], {"require_sort" : False}

@@ -8,6 +8,11 @@ from pkg_resources import resource_filename
 # INDEX: small data set for faster/unit tests
 #===============================================================================
 
+EXTENSIONS = { "BED" : "bed",
+              "GTF2" : "gtf",
+              "GFF3" : "gff"
+                }
+
 MINI_PATH = resource_filename("plastid","test/data/mini")
 MINI = {
     'vec_center_0_rc.txt'  : 'count_vectors/center_0_rc.txt',
