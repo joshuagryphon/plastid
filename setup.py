@@ -57,7 +57,6 @@ def version_tuple(inp):
 foundstr = "(found %s.%s.%s)"
 nstr = pstr = cstr = "(no version found)"
 try:
-    rai
     import numpy
     numpyver = version_tuple(numpy.__version__)
     nstr = foundstr % numpyver
@@ -175,7 +174,7 @@ if not on_rtd:
                         "termcolor",
                         ] + setup_requires
 else:
-    install_requires = ["cython","numpy","pysam","biopython"]
+    install_requires = ["cython","numpy","pysam","biopython","termcolor"]
 
 
 
@@ -239,8 +238,10 @@ EXTRA_OBJECTS=[]
 # BigWigReader. The Kent utilities come under a permissive license that
 # allows redistribution and modification for any use, including commercial,
 # with the exception of src/portimpl.h, which appears to have its own license.
+# Sources included here have therefore been modified not to depend on portimpl.h.
 #
-# JK's utilities are compiled into plastid.readers.bigwig and plastid.readers.bbi_file
+# JK's utilities are compiled into plastid.readers.bigwig, plastid.readers.bigbed,
+# and plastid.readers.bbi_file
 #===============================================================================
 
 kent_samtabix = [
