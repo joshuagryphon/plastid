@@ -7,15 +7,15 @@ warning output to improve legibility.
 The `onceperfamily` action
 --------------------------
 `onceperfamily` groups warning messages by families regular expressions,
-and only prints the first instance of a warning for each family. In contrast,
-Python's native `once` action prints any string literal once, even if it
-matches the same regex as another warning already given.
+and only prints the first warning instance that matches a given family's 
+regular expression. In contrast, Python's native `once` action prints any string
+literal once, even if it matches the same regex as another warning already given.
 
 To use this action, use the following two functions:
 
   - :func:`filterwarnings` to create the warnings filter. Because :func:`filterwarnings`
     wraps Python's :func:`warnings.filterwarnings`, it may be used as a drop-in
-    replacement. for creation of any warnings filter.
+    replacement for creation of any warnings filter.
     
   - :func:`warn` or :func:`warn_explicit`. Again, these are drop-in replacements
     for Python's :func:`warnings.warn` and :func:`warnings.warn_explicit` that
@@ -62,7 +62,6 @@ warnings
     Warnings module
 """
 import re
-import sys
 import warnings
 import inspect
 import linecache
@@ -405,7 +404,11 @@ def formatwarning(message,category,filename,lineno,file=None,line=None):
         Pretty-printed warning message
     """
     sep     = colored("-"*75,color="cyan")
-    message = _wrapper.fill(colored(message,color="white",attrs=["bold"]))
+    message = str(message)
+    if not "\n" in message:
+        message = _wrapper.fill(str(message))
+        
+    message = colored(message,color="white",attrs=["bold"])
     name    = colored(category.__name__,color="cyan",attrs=["bold"])
 
     if line is None:
