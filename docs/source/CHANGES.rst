@@ -69,18 +69,26 @@ Command-line scripts
   - ``cs chart`` file containing list of genes is now optional. If not given,
     all genes are included in comparisons
 
+  - ``reformat_transcripts`` is now able to export extended BED columns 
+    (e.g. `gene_id`) if the input data has useful attributes. This particularly
+    useful when working with large transcript annotations in GTF2/GFF3 format-
+    they can now be exported to BED format, and converted to BigBed foramt,
+    allowing random access and low memory usage, while preserving gene-transcript
+    relationships.
+
+
 
 Interactive/developer
 """""""""""""""""""""
 
   - Reformatted warning output to improve legibility
 
-  - ``colored()`` function to colorize text only when a terminal or stream
-    supports it
-
   - ``read_pl_table()`` convenience function for reading tables written
     by command-line scripts into DataFrames, preserving headers, formatting,
     et c
+
+  - ``colored()`` function to colorize text only when a terminal or stream
+    supports it
 
 
 Deprecated
