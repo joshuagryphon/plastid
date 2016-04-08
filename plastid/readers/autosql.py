@@ -77,7 +77,13 @@ See Also
 import re
 from collections import OrderedDict
 from abc import abstractmethod
-from plastid.util.services.exceptions import DataWarning, warn
+from plastid.util.services.exceptions import DataWarning, warn, filterwarnings
+
+# use "once" because we want each literal to be shown once
+filterwarnings("once","Could not find formatter for field.*")
+filterwarnings("once","Could not find formatter for field.*")
+filterwarnings("once","Could not convert autoSql value.*")
+filterwarnings("once",".*already found in autoSql declaration.*")
 
 # regular expressions that recognize various autoSql elements
 _pattern_bits = { "start"   : r"^\s*",
@@ -318,8 +324,26 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
             for field_class in match_order:
                 if field_class.matches(field_str):
                     my_parser = field_class(field_str)
-                    self.field_formatters[my_parser.attr["name"]]  = my_parser
-                    self.field_comments[my_parser.attr["name"]]    = my_parser.attr["comment"]
+                    name      = my_parser.attr["name"]
+                    if name in self.field_formatters:
+                        oldname = name
+                        i = 1
+                        current_formatter = self.field_formatters[name]
+                        current_type = current_formatter.attr.get("type",current_formatter.__class__.__name__) 
+                        new_type = my_parser.attr.get("type",my_parser.__class__.__name__) 
+                        while name in self.field_formatters:
+                            i += 1
+                            name = "%s%s" % (oldname,i)
+                            warn("Element named '%s' of type '%s' already found in autoSql declaration '%s.' Renaming current element of type '%s' to '%s'" % (oldname,
+                                                                                                                                                               current_type,
+                                                                                                                                                               self.attr.get("name","unnamed declaration"),
+                                                                                                                                                               new_type,
+                                                                                                                                                               name),
+                                      DataWarning)
+                        my_parser.attr["name"] = name
+                        
+                    self.field_formatters[name]  = my_parser
+                    self.field_comments[  name]  = my_parser.attr["comment"]
             
             last_index = next_index+1
 
@@ -355,7 +379,6 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
             obj[field_name] = formatter(item,rec=obj)
         
         return obj
-
 
 class AutoSqlField(AbstractAutoSqlElement):
     """Parser factory for autoSql fields of type ``fieldType fieldName ';' comment``
@@ -405,10 +428,15 @@ class AutoSqlField(AbstractAutoSqlElement):
             Field delimiter (default: tab)
         """        
         AbstractAutoSqlElement.__init__(self,autosql,parent=parent,delim=delim)
+        type_ = self.attr["type"]
         try:
-            self.formatter = self.field_types[self.attr["type"]][0]
+            self.formatter = self.field_types[type_][0]
         except KeyError:
-            self.formatter = self.parent.field_types[self.attr["type"]][0]
+            try:
+                self.formatter = self.parent.field_types[type_][0]
+            except:
+                self.formatter = str
+                warn("Could not find formatter for field '%s' of type '%s'. Casting to 'string' instead." % (self.attr["name"],type_),DataWarning)
     
     def __call__(self,text,rec=None):
         """Parse an value matching the field described by ``self.autosql``
@@ -426,9 +454,9 @@ class AutoSqlField(AbstractAutoSqlElement):
         try:
             return self.formatter(text)
         except ValueError:
-            message = "Could not convert autoSql value '%s' for field '%s' to type '%s'. Leaving as str " % (text,
-                                                                                                             self.attr["name"],
-                                                                                                             self.formatter.__name__)
+            message = "Could not convert autoSql value '%s' for field '%s' to type '%s'. Casting to 'string' instead. " % (text,
+                                                                                                                           self.attr["name"],
+                                                                                                                           self.formatter.__name__)
             warn(message,DataWarning) 
             return text
 

@@ -2,6 +2,7 @@
 """Test suites for :py:mod:`plastid.readers.autosql`"""
 import unittest
 import itertools
+import warnings
 import nose.tools
 from nose.plugins.attrib import attr
 from collections import OrderedDict
@@ -391,3 +392,36 @@ class TestAutoSqlDeclaration(TestAbstractAutoSqlElement):
                                               ("float_array",(3.0,-4586.2)),
                                               ("alpha",set())])),
                                 ]]*3
+
+    def test_warning_on_bad_type(self):
+        bad_table = \
+"""table easy_table "A table with a comment on the next line" ( 
+uint number auto; "a number with a token"
+uint [3] points ; "r,g,b values"
+lstring  my_string ; "a long string"
+uint a_field_size ; "the size for the next field"
+float [a_field_size] float_array ; "an array of floats"
+set(a,b,c) alpha ; "the first three letters of the alphabet"
+stringz  badtype ; "non-existent type!")
+"""
+        with warnings.catch_warnings(record=True) as warns:
+            AutoSqlDeclaration(bad_table)
+            
+        self.assertEquals(1,len(warns),"AutoSqlDeclaration() failed to warn on bad type name (warned %s times)." % len(warns))
+
+    def test_warning_on_double_declaration(self):
+        bad_table = \
+"""table easy_table "A table with a comment on the next line" ( 
+uint number auto; "a number with a token"
+uint [3] points ; "r,g,b values"
+lstring  my_string ; "a long string"
+uint a_field_size ; "the size for the next field"
+float [a_field_size] float_array ; "an array of floats"
+set(a,b,c) alpha ; "the first three letters of the alphabet"
+string  number ; "a duplicated field!")
+"""
+        with warnings.catch_warnings(record=True) as warns:
+            AutoSqlDeclaration(bad_table)
+            
+        self.assertEquals(1,len(warns),"AutoSqlDeclaration() failed to warn on duplicated field name (warned %s times)." % len(warns))
+        
