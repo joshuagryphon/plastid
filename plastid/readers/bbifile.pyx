@@ -56,27 +56,26 @@ cdef lm * get_lm(lm * my_lm=NULL, int maxmem=0) except NULL:
     cdef:
         int realmaxmem = maxmem >> 10
         
-    # TODO: remove print statements
     if my_lm == NULL:
-        print("Initializing LM in get_lm()")
+#         print("Initializing LM in get_lm()")
         my_lm = lmInit(0)
 
     elif maxmem > 0 and lmSize(my_lm) >= maxmem:
-        print("LM Size (%s kb allocated. %s available) exceeded maxmem (%s kb). Cleaning up ..." % (lmSize(my_lm) >> 10,
-                                                                                                    lmAvailable(my_lm) >> 10,
-                                                                                                    realmaxmem))
+#         print("LM Size (%s kb allocated. %s available) exceeded maxmem (%s kb). Cleaning up ..." % (lmSize(my_lm) >> 10,
+#                                                                                                     lmAvailable(my_lm) >> 10,
+#                                                                                                     realmaxmem))
         
         lmCleanup(&my_lm)
         my_lm = NULL
         my_lm = lmInit(0)
-        print("    New size: %s kb (%s kb available). Max: %s" % (lmSize(my_lm) >> 10,
-                                                                  lmAvailable(my_lm) >> 10,
-                                                                  realmaxmem>>10))
+#         print("    New size: %s kb (%s kb available). Max: %s" % (lmSize(my_lm) >> 10,
+#                                                                   lmAvailable(my_lm) >> 10,
+#                                                                   realmaxmem>>10))
 
     if not my_lm:
         raise MemoryError("BigBed/BigWig reader: Could not allocate local memory block.")
 
-    print("LM Size (%s kb allocated. %s available. %s max)." % (lmSize(my_lm) >> 10,lmAvailable(my_lm) >> 10,maxmem>>10))
+#     print("LM Size (%s kb allocated. %s available. %s max)." % (lmSize(my_lm) >> 10,lmAvailable(my_lm) >> 10,maxmem>>10))
     return my_lm
 
 
