@@ -2559,7 +2559,7 @@ cdef class SegmentChain(object):
             keyword of :meth:`~plastid.genomics.roitools.SegmentChain.from_bed`,
             the |SegmentChain| will be exported in BED 12+X format, in which
             extra columns are in the same order as they were upon import. If no extra columns
-            were present, the |SegmentChain| will be exported a aa BED12 line.
+            were present, the |SegmentChain| will be exported as a BED12 line.
 
             If a list of attribute names, these attributes will be exported as
             extra columns in order, overriding whatever happened upon import. 
@@ -3951,7 +3951,8 @@ cdef class Transcript(SegmentChain):
             start_codon_chain.attr.update(child_chain_attr)
             stmp += start_codon_chain.as_gtf(feature_type="start_codon",escape=escape,excludes=excludes)
     
-            stop_codon_chain = cds_chain_temp.get_subchain(cds_chain_temp.get_length()-3, cds_chain_temp.get_length())
+            tmplen = cds_chain_temp.length
+            stop_codon_chain = cds_chain_temp.get_subchain(tmplen-3, tmplen)
             stop_codon_chain.attr.update(child_chain_attr)
             stmp += stop_codon_chain.as_gtf(feature_type="stop_codon",escape=escape,excludes=excludes)
 
