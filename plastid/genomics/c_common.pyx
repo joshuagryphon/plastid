@@ -11,7 +11,6 @@ cdef str strand_to_str(Strand strand):
     else:
         raise ValueError("strand_to_str: Strand must be forward (%s), reverse (%s), or unstranded(%s). Got '%s'." % (forward_strand,
             reverse_strand, unstranded, strand))
-    return ""
 
 cdef Strand str_to_strand(str val) except error_strand:
     """Convert str representation of strand to enum"""
@@ -25,7 +24,6 @@ cdef Strand str_to_strand(str val) except error_strand:
         return undef_strand
     else:
         raise ValueError("Strand must be '+', '-', '.', or '\\x00' (undefined). Got '%s'." % val)
-        return error_strand
 
 cdef class _GeneratorWrapper(object):
     """Wrapper class to prevent `repr()` of Cython generators from erroring in interactive sessions.
