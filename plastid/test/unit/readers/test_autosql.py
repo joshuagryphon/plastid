@@ -404,6 +404,7 @@ float [a_field_size] float_array ; "an array of floats"
 set(a,b,c) alpha ; "the first three letters of the alphabet"
 stringz  badtype ; "non-existent type!")
 """
+        warnings.resetwarnings()
         with warnings.catch_warnings(record=True) as warns:
             AutoSqlDeclaration(bad_table)
             
@@ -420,6 +421,7 @@ float [a_field_size] float_array ; "an array of floats"
 set(a,b,c) alpha ; "the first three letters of the alphabet"
 string  number ; "a duplicated field!")
 """
+        warnings.resetwarnings()
         with warnings.catch_warnings(record=True) as warns:
             AutoSqlDeclaration(bad_table)
             
