@@ -409,9 +409,9 @@ def wrap_command_classes(baseclass):
 
 
 class clean_c_files(Command):
-    """Remove previously generated .c and .so files"""
+    """Remove previously generated .c files"""
     user_options = []
-    description = "Remove previously generated .c and .so files"
+    description = "Remove previously generated .c files"
  
     def initialize_options(self):
         pass
@@ -424,11 +424,6 @@ class clean_c_files(Command):
             if os.access(file_,os.F_OK):
                 print("clean_c_files: removing %s ..." % file_)
                 os.remove(file_)
- 
-            sofile = file_.replace(".c",".so")
-            if os.access(sofile,os.F_OK):
-                print("clean_c_files: removing %s ..." % sofile)
-                os.remove(sofile)
 
  
 class build_c_from_pyx(build_ext):
