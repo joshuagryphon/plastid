@@ -79,6 +79,7 @@ def test_catch_stderr_doesnt_print_without_buffer():
     # spy on `inner` by making sure there is nothing written to stderr
     outer_reader, outer_writer = get_pipes()
     message = "this is a test"
+    sys.stderr = sys.__stderr__
     
     @catch_stderr(outer_writer)
     def inner():
@@ -102,7 +103,8 @@ def test_catch_stderr_doesnt_print_with_buffer_but_catches_in_buffer():
     # but make sure message is found in inner readre
     outer_reader, outer_writer = get_pipes()
     message = "this is a test"
-    
+    sys.stderr = sys.__stderr__
+
     @catch_stderr(outer_writer)
     def inner():
         inner_reader, inner_writer = get_pipes()

@@ -8,7 +8,7 @@ from nose.plugins.attrib import attr
 from collections import OrderedDict
 from plastid.util.services.decorators import skip_if_abstract
 from plastid.readers.autosql import AutoSqlField, SizedAutoSqlField, ValuesAutoSqlField, AutoSqlDeclaration, AbstractAutoSqlElement
-
+from plastid.util.services.exceptions import pl_once_registry
 
 _autosql_declarations = [
 """table easy_table
@@ -404,11 +404,18 @@ float [a_field_size] float_array ; "an array of floats"
 set(a,b,c) alpha ; "the first three letters of the alphabet"
 stringz  badtype ; "non-existent type!")
 """
-        warnings.resetwarnings()
+        # reset warning registry temporarily to prevent weird interactions with nose
+        global pl_once_registry
+        tmp = pl_once_registry
+        tmp2 = warnings.filters
+        warnings.filters = []
+        pl_once_registry = {}
         with warnings.catch_warnings(record=True) as warns:
             AutoSqlDeclaration(bad_table)
-            
-        self.assertEquals(1,len(warns),"AutoSqlDeclaration() failed to warn on bad type name (warned %s times)." % len(warns))
+        
+        pl_once_registry = tmp
+        warnings.filters = tmp2
+        self.assertEqual(1,len(warns),"AutoSqlDeclaration() failed to warn on bad type name (warned %s times)." % len(warns))
 
     def test_warning_on_double_declaration(self):
         bad_table = \
@@ -421,9 +428,16 @@ float [a_field_size] float_array ; "an array of floats"
 set(a,b,c) alpha ; "the first three letters of the alphabet"
 string  number ; "a duplicated field!")
 """
-        warnings.resetwarnings()
+        # reset warning registry temporarily to prevent weird interactions with nose
+        global pl_once_registry
+        tmp = pl_once_registry
+        tmp2 = warnings.filters
+        warnings.filters = []
+        pl_once_registry = {}
         with warnings.catch_warnings(record=True) as warns:
             AutoSqlDeclaration(bad_table)
             
-        self.assertEquals(1,len(warns),"AutoSqlDeclaration() failed to warn on duplicated field name (warned %s times)." % len(warns))
+        pl_once_registry = tmp
+        warnings.filters = tmp2
+        self.assertEqual(1,len(warns),"AutoSqlDeclaration() failed to warn on duplicated field name (warned %s times)." % len(warns))
         
