@@ -11,7 +11,7 @@
        convenience for developers to force rebuild even if ".c" files
        appear up to date (but are not e.g. due to a switch in git repo)
 
-    3. a `clean` command class was added to wipe old ".c" and ".so" files,
+    3. a `clean` command class was added to wipe old ".c" files,
        e.g. optionally before meaking an sdist
 
     4. Kent utilities and dependencies are compiled and included for
@@ -29,7 +29,7 @@ import glob
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-plastid_version = "0.4.6dev" #plastid.__version__ 
+plastid_version = "0.4.6"
 
 PYSAM_VER_NUM = (0,8,4)
 NUMPY_VER_NUM = (1,9,0)
