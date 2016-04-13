@@ -1,130 +1,130 @@
- .. |FastaNameReader| replace:: :py:class:`~plastid.bin.crossmap.FastaNameReader`
- .. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <plastid.bin.crossmap.FastaNameReader>`
- .. |AbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.AbstractGenomeArray`
- .. |AbstractGenomeArrays| replace:: :py:class:`AbstractGenomeArrays <plastid.genomics.genome_array.AbstractGenomeArray>`
- .. |BAMGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BAMGenomeArray`
- .. |BAMGenomeArrays| replace:: :py:class:`BAMGenomeArrays <plastid.genomics.genome_array.BAMGenomeArray>`
- .. |BigWigGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BigWigGenomeArray`
- .. |BigWigGenomeArrays| replace:: :py:class:`BigWigGenomeArrays <plastid.genomics.genome_array.BigWigGenomeArray>`
- .. |GenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.GenomeArray`
- .. |GenomeArrays| replace:: :py:class:`GenomeArrays <plastid.genomics.genome_array.GenomeArray>`
- .. |MutableAbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.MutableAbstractGenomeArray`
- .. |MutableAbstractGenomeArrays| replace:: :py:class:`MutableAbstractGenomeArrays <plastid.genomics.genome_array.MutableAbstractGenomeArray>`
- .. |SparseGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.SparseGenomeArray`
- .. |SparseGenomeArrays| replace:: :py:class:`SparseGenomeArrays <plastid.genomics.genome_array.SparseGenomeArray>`
- .. |AbstractGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.AbstractGenomeHash`
- .. |AbstractGenomeHashs| replace:: :py:class:`AbstractGenomeHashs <plastid.genomics.genome_hash.AbstractGenomeHash>`
- .. |BigBedGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.BigBedGenomeHash`
- .. |BigBedGenomeHashs| replace:: :py:class:`BigBedGenomeHashs <plastid.genomics.genome_hash.BigBedGenomeHash>`
- .. |GenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.GenomeHash`
- .. |GenomeHashs| replace:: :py:class:`GenomeHashs <plastid.genomics.genome_hash.GenomeHash>`
- .. |TabixGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.TabixGenomeHash`
- .. |TabixGenomeHashs| replace:: :py:class:`TabixGenomeHashs <plastid.genomics.genome_hash.TabixGenomeHash>`
- .. |GenomicSegment| replace:: :py:class:`~plastid.genomics.roitools.GenomicSegment`
- .. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.roitools.GenomicSegment>`
- .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
- .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
- .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
- .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
- .. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
- .. |_TwoBitSeqProxys| replace:: :py:class:`_TwoBitSeqProxys <plastid.genomics.seqtools._TwoBitSeqProxy>`
- .. |TwoBitSeqRecordAdaptor| replace:: :py:class:`~plastid.genomics.seqtools.TwoBitSeqRecordAdaptor`
- .. |TwoBitSeqRecordAdaptors| replace:: :py:class:`TwoBitSeqRecordAdaptors <plastid.genomics.seqtools.TwoBitSeqRecordAdaptor>`
- .. |AbstractAutoSqlElement| replace:: :py:class:`~plastid.readers.autosql.AbstractAutoSqlElement`
- .. |AbstractAutoSqlElements| replace:: :py:class:`AbstractAutoSqlElements <plastid.readers.autosql.AbstractAutoSqlElement>`
- .. |AutoSqlDeclaration| replace:: :py:class:`~plastid.readers.autosql.AutoSqlDeclaration`
- .. |AutoSqlDeclarations| replace:: :py:class:`AutoSqlDeclarations <plastid.readers.autosql.AutoSqlDeclaration>`
- .. |AutoSqlField| replace:: :py:class:`~plastid.readers.autosql.AutoSqlField`
- .. |AutoSqlFields| replace:: :py:class:`AutoSqlFields <plastid.readers.autosql.AutoSqlField>`
- .. |SizedAutoSqlField| replace:: :py:class:`~plastid.readers.autosql.SizedAutoSqlField`
- .. |SizedAutoSqlFields| replace:: :py:class:`SizedAutoSqlFields <plastid.readers.autosql.SizedAutoSqlField>`
- .. |ValuesAutoSqlField| replace:: :py:class:`~plastid.readers.autosql.ValuesAutoSqlField`
- .. |ValuesAutoSqlFields| replace:: :py:class:`ValuesAutoSqlFields <plastid.readers.autosql.ValuesAutoSqlField>`
- .. |BED_Reader| replace:: :py:class:`~plastid.readers.bed.BED_Reader`
- .. |BED_Readers| replace:: :py:class:`BED_Readers <plastid.readers.bed.BED_Reader>`
- .. |BigBedReader| replace:: :py:class:`~plastid.readers.bigbed.BigBedReader`
- .. |BigBedReaders| replace:: :py:class:`BigBedReaders <plastid.readers.bigbed.BigBedReader>`
- .. |BPlusTree| replace:: :py:class:`~plastid.readers.bigbed.BPlusTree`
- .. |BPlusTrees| replace:: :py:class:`BPlusTrees <plastid.readers.bigbed.BPlusTree>`
- .. |_FromBED_StrAdaptor| replace:: :py:class:`~plastid.readers.bigbed._FromBED_StrAdaptor`
- .. |_FromBED_StrAdaptors| replace:: :py:class:`_FromBED_StrAdaptors <plastid.readers.bigbed._FromBED_StrAdaptor>`
- .. |RTree| replace:: :py:class:`~plastid.readers.bigbed.RTree`
- .. |RTrees| replace:: :py:class:`RTrees <plastid.readers.bigbed.RTree>`
- .. |BigWigReader| replace:: :py:class:`~plastid.readers.bigwig.BigWigReader`
- .. |BigWigReaders| replace:: :py:class:`BigWigReaders <plastid.readers.bigwig.BigWigReader>`
- .. |BowtieReader| replace:: :py:class:`~plastid.readers.bowtie.BowtieReader`
- .. |BowtieReaders| replace:: :py:class:`BowtieReaders <plastid.readers.bowtie.BowtieReader>`
- .. |AssembledFeatureReader| replace:: :py:class:`~plastid.readers.common.AssembledFeatureReader`
- .. |AssembledFeatureReaders| replace:: :py:class:`AssembledFeatureReaders <plastid.readers.common.AssembledFeatureReader>`
- .. |AbstractGFF_Assembler| replace:: :py:class:`~plastid.readers.gff.AbstractGFF_Assembler`
- .. |AbstractGFF_Assemblers| replace:: :py:class:`AbstractGFF_Assemblers <plastid.readers.gff.AbstractGFF_Assembler>`
- .. |AbstractGFF_Reader| replace:: :py:class:`~plastid.readers.gff.AbstractGFF_Reader`
- .. |AbstractGFF_Readers| replace:: :py:class:`AbstractGFF_Readers <plastid.readers.gff.AbstractGFF_Reader>`
- .. |GFF3_Reader| replace:: :py:class:`~plastid.readers.gff.GFF3_Reader`
- .. |GFF3_Readers| replace:: :py:class:`GFF3_Readers <plastid.readers.gff.GFF3_Reader>`
- .. |GFF3_TranscriptAssembler| replace:: :py:class:`~plastid.readers.gff.GFF3_TranscriptAssembler`
- .. |GFF3_TranscriptAssemblers| replace:: :py:class:`GFF3_TranscriptAssemblers <plastid.readers.gff.GFF3_TranscriptAssembler>`
- .. |GTF2_Reader| replace:: :py:class:`~plastid.readers.gff.GTF2_Reader`
- .. |GTF2_Readers| replace:: :py:class:`GTF2_Readers <plastid.readers.gff.GTF2_Reader>`
- .. |GTF2_TranscriptAssembler| replace:: :py:class:`~plastid.readers.gff.GTF2_TranscriptAssembler`
- .. |GTF2_TranscriptAssemblers| replace:: :py:class:`GTF2_TranscriptAssemblers <plastid.readers.gff.GTF2_TranscriptAssembler>`
- .. |BundledPSL_Reader| replace:: :py:class:`~plastid.readers.psl.BundledPSL_Reader`
- .. |BundledPSL_Readers| replace:: :py:class:`BundledPSL_Readers <plastid.readers.psl.BundledPSL_Reader>`
- .. |PSL_Reader| replace:: :py:class:`~plastid.readers.psl.PSL_Reader`
- .. |PSL_Readers| replace:: :py:class:`PSL_Readers <plastid.readers.psl.PSL_Reader>`
- .. |WiggleReader| replace:: :py:class:`~plastid.readers.wiggle.WiggleReader`
- .. |WiggleReaders| replace:: :py:class:`WiggleReaders <plastid.readers.wiggle.WiggleReader>`
- .. |BinaryParserFactory| replace:: :py:class:`~plastid.util.io.binary.BinaryParserFactory`
- .. |BinaryParserFactorys| replace:: :py:class:`BinaryParserFactorys <plastid.util.io.binary.BinaryParserFactory>`
- .. |AbstractReader| replace:: :py:class:`~plastid.util.io.filters.AbstractReader`
- .. |AbstractReaders| replace:: :py:class:`AbstractReaders <plastid.util.io.filters.AbstractReader>`
- .. |AbstractWriter| replace:: :py:class:`~plastid.util.io.filters.AbstractWriter`
- .. |AbstractWriters| replace:: :py:class:`AbstractWriters <plastid.util.io.filters.AbstractWriter>`
- .. |BackwardReader| replace:: :py:class:`~plastid.util.io.filters.BackwardReader`
- .. |BackwardReaders| replace:: :py:class:`BackwardReaders <plastid.util.io.filters.BackwardReader>`
- .. |ColorWriter| replace:: :py:class:`~plastid.util.io.filters.ColorWriter`
- .. |ColorWriters| replace:: :py:class:`ColorWriters <plastid.util.io.filters.ColorWriter>`
- .. |CommentReader| replace:: :py:class:`~plastid.util.io.filters.CommentReader`
- .. |CommentReaders| replace:: :py:class:`CommentReaders <plastid.util.io.filters.CommentReader>`
- .. |CommentWriter| replace:: :py:class:`~plastid.util.io.filters.CommentWriter`
- .. |CommentWriters| replace:: :py:class:`CommentWriters <plastid.util.io.filters.CommentWriter>`
- .. |FunctionReader| replace:: :py:class:`~plastid.util.io.filters.FunctionReader`
- .. |FunctionReaders| replace:: :py:class:`FunctionReaders <plastid.util.io.filters.FunctionReader>`
- .. |NameDateWriter| replace:: :py:class:`~plastid.util.io.filters.NameDateWriter`
- .. |NameDateWriters| replace:: :py:class:`NameDateWriters <plastid.util.io.filters.NameDateWriter>`
- .. |SkipBlankReader| replace:: :py:class:`~plastid.util.io.filters.SkipBlankReader`
- .. |SkipBlankReaders| replace:: :py:class:`SkipBlankReaders <plastid.util.io.filters.SkipBlankReader>`
- .. |TeeListener| replace:: :py:class:`~plastid.util.io.filters.TeeListener`
- .. |TeeListeners| replace:: :py:class:`TeeListeners <plastid.util.io.filters.TeeListener>`
- .. |TeeReader| replace:: :py:class:`~plastid.util.io.filters.TeeReader`
- .. |TeeReaders| replace:: :py:class:`TeeReaders <plastid.util.io.filters.TeeReader>`
- .. |TestTeeListener| replace:: :py:class:`~plastid.util.io.filters.TestTeeListener`
- .. |TestTeeListeners| replace:: :py:class:`TestTeeListeners <plastid.util.io.filters.TestTeeListener>`
- .. |NullWriter| replace:: :py:class:`~plastid.util.io.openers.NullWriter`
- .. |NullWriters| replace:: :py:class:`NullWriters <plastid.util.io.openers.NullWriter>`
- .. |AlignmentParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AlignmentParser`
- .. |AlignmentParsers| replace:: :py:class:`AlignmentParsers <plastid.util.scriptlib.argparsers.AlignmentParser>`
- .. |AnnotationParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AnnotationParser`
- .. |AnnotationParsers| replace:: :py:class:`AnnotationParsers <plastid.util.scriptlib.argparsers.AnnotationParser>`
- .. |BaseParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.BaseParser`
- .. |BaseParsers| replace:: :py:class:`BaseParsers <plastid.util.scriptlib.argparsers.BaseParser>`
- .. |MaskParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.MaskParser`
- .. |MaskParsers| replace:: :py:class:`MaskParsers <plastid.util.scriptlib.argparsers.MaskParser>`
- .. |Parser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.Parser`
- .. |Parsers| replace:: :py:class:`Parsers <plastid.util.scriptlib.argparsers.Parser>`
- .. |PlottingParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PlottingParser`
- .. |PlottingParsers| replace:: :py:class:`PlottingParsers <plastid.util.scriptlib.argparsers.PlottingParser>`
- .. |PrefixNamespaceWrapper| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper`
- .. |PrefixNamespaceWrappers| replace:: :py:class:`PrefixNamespaceWrappers <plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper>`
- .. |SequenceParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.SequenceParser`
- .. |SequenceParsers| replace:: :py:class:`SequenceParsers <plastid.util.scriptlib.argparsers.SequenceParser>`
- .. |ArgumentWarning| replace:: :py:class:`~plastid.util.services.exceptions.ArgumentWarning`
- .. |ArgumentWarnings| replace:: :py:class:`ArgumentWarnings <plastid.util.services.exceptions.ArgumentWarning>`
- .. |DataWarning| replace:: :py:class:`~plastid.util.services.exceptions.DataWarning`
- .. |DataWarnings| replace:: :py:class:`DataWarnings <plastid.util.services.exceptions.DataWarning>`
- .. |FileFormatWarning| replace:: :py:class:`~plastid.util.services.exceptions.FileFormatWarning`
- .. |FileFormatWarnings| replace:: :py:class:`FileFormatWarnings <plastid.util.services.exceptions.FileFormatWarning>`
- .. |MalformedFileError| replace:: :py:class:`~plastid.util.services.exceptions.MalformedFileError`
- .. |MalformedFileErrors| replace:: :py:class:`MalformedFileErrors <plastid.util.services.exceptions.MalformedFileError>`
- .. |UniqueFIFO| replace:: :py:class:`~plastid.util.unique_fifo.UniqueFIFO`
- .. |UniqueFIFOs| replace:: :py:class:`UniqueFIFOs <plastid.util.unique_fifo.UniqueFIFO>`
+.. |FastaNameReader| replace:: :py:class:`~plastid.bin.crossmap.FastaNameReader`
+.. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <plastid.bin.crossmap.FastaNameReader>`
+.. |AbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.AbstractGenomeArray`
+.. |AbstractGenomeArrays| replace:: :py:class:`AbstractGenomeArrays <plastid.genomics.genome_array.AbstractGenomeArray>`
+.. |BAMGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BAMGenomeArray`
+.. |BAMGenomeArrays| replace:: :py:class:`BAMGenomeArrays <plastid.genomics.genome_array.BAMGenomeArray>`
+.. |BigWigGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.BigWigGenomeArray`
+.. |BigWigGenomeArrays| replace:: :py:class:`BigWigGenomeArrays <plastid.genomics.genome_array.BigWigGenomeArray>`
+.. |GenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.GenomeArray`
+.. |GenomeArrays| replace:: :py:class:`GenomeArrays <plastid.genomics.genome_array.GenomeArray>`
+.. |MutableAbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.MutableAbstractGenomeArray`
+.. |MutableAbstractGenomeArrays| replace:: :py:class:`MutableAbstractGenomeArrays <plastid.genomics.genome_array.MutableAbstractGenomeArray>`
+.. |SparseGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.SparseGenomeArray`
+.. |SparseGenomeArrays| replace:: :py:class:`SparseGenomeArrays <plastid.genomics.genome_array.SparseGenomeArray>`
+.. |AbstractGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.AbstractGenomeHash`
+.. |AbstractGenomeHashs| replace:: :py:class:`AbstractGenomeHashs <plastid.genomics.genome_hash.AbstractGenomeHash>`
+.. |BigBedGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.BigBedGenomeHash`
+.. |BigBedGenomeHashs| replace:: :py:class:`BigBedGenomeHashs <plastid.genomics.genome_hash.BigBedGenomeHash>`
+.. |GenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.GenomeHash`
+.. |GenomeHashs| replace:: :py:class:`GenomeHashs <plastid.genomics.genome_hash.GenomeHash>`
+.. |TabixGenomeHash| replace:: :py:class:`~plastid.genomics.genome_hash.TabixGenomeHash`
+.. |TabixGenomeHashs| replace:: :py:class:`TabixGenomeHashs <plastid.genomics.genome_hash.TabixGenomeHash>`
+.. |GenomicSegment| replace:: :py:class:`~plastid.genomics.roitools.GenomicSegment`
+.. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.roitools.GenomicSegment>`
+.. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
+.. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
+.. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
+.. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
+.. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
+.. |_TwoBitSeqProxys| replace:: :py:class:`_TwoBitSeqProxys <plastid.genomics.seqtools._TwoBitSeqProxy>`
+.. |TwoBitSeqRecordAdaptor| replace:: :py:class:`~plastid.genomics.seqtools.TwoBitSeqRecordAdaptor`
+.. |TwoBitSeqRecordAdaptors| replace:: :py:class:`TwoBitSeqRecordAdaptors <plastid.genomics.seqtools.TwoBitSeqRecordAdaptor>`
+.. |AbstractAutoSqlElement| replace:: :py:class:`~plastid.readers.autosql.AbstractAutoSqlElement`
+.. |AbstractAutoSqlElements| replace:: :py:class:`AbstractAutoSqlElements <plastid.readers.autosql.AbstractAutoSqlElement>`
+.. |AutoSqlDeclaration| replace:: :py:class:`~plastid.readers.autosql.AutoSqlDeclaration`
+.. |AutoSqlDeclarations| replace:: :py:class:`AutoSqlDeclarations <plastid.readers.autosql.AutoSqlDeclaration>`
+.. |AutoSqlField| replace:: :py:class:`~plastid.readers.autosql.AutoSqlField`
+.. |AutoSqlFields| replace:: :py:class:`AutoSqlFields <plastid.readers.autosql.AutoSqlField>`
+.. |SizedAutoSqlField| replace:: :py:class:`~plastid.readers.autosql.SizedAutoSqlField`
+.. |SizedAutoSqlFields| replace:: :py:class:`SizedAutoSqlFields <plastid.readers.autosql.SizedAutoSqlField>`
+.. |ValuesAutoSqlField| replace:: :py:class:`~plastid.readers.autosql.ValuesAutoSqlField`
+.. |ValuesAutoSqlFields| replace:: :py:class:`ValuesAutoSqlFields <plastid.readers.autosql.ValuesAutoSqlField>`
+.. |BED_Reader| replace:: :py:class:`~plastid.readers.bed.BED_Reader`
+.. |BED_Readers| replace:: :py:class:`BED_Readers <plastid.readers.bed.BED_Reader>`
+.. |BigBedReader| replace:: :py:class:`~plastid.readers.bigbed.BigBedReader`
+.. |BigBedReaders| replace:: :py:class:`BigBedReaders <plastid.readers.bigbed.BigBedReader>`
+.. |BPlusTree| replace:: :py:class:`~plastid.readers.bigbed.BPlusTree`
+.. |BPlusTrees| replace:: :py:class:`BPlusTrees <plastid.readers.bigbed.BPlusTree>`
+.. |_FromBED_StrAdaptor| replace:: :py:class:`~plastid.readers.bigbed._FromBED_StrAdaptor`
+.. |_FromBED_StrAdaptors| replace:: :py:class:`_FromBED_StrAdaptors <plastid.readers.bigbed._FromBED_StrAdaptor>`
+.. |RTree| replace:: :py:class:`~plastid.readers.bigbed.RTree`
+.. |RTrees| replace:: :py:class:`RTrees <plastid.readers.bigbed.RTree>`
+.. |BigWigReader| replace:: :py:class:`~plastid.readers.bigwig.BigWigReader`
+.. |BigWigReaders| replace:: :py:class:`BigWigReaders <plastid.readers.bigwig.BigWigReader>`
+.. |BowtieReader| replace:: :py:class:`~plastid.readers.bowtie.BowtieReader`
+.. |BowtieReaders| replace:: :py:class:`BowtieReaders <plastid.readers.bowtie.BowtieReader>`
+.. |AssembledFeatureReader| replace:: :py:class:`~plastid.readers.common.AssembledFeatureReader`
+.. |AssembledFeatureReaders| replace:: :py:class:`AssembledFeatureReaders <plastid.readers.common.AssembledFeatureReader>`
+.. |AbstractGFF_Assembler| replace:: :py:class:`~plastid.readers.gff.AbstractGFF_Assembler`
+.. |AbstractGFF_Assemblers| replace:: :py:class:`AbstractGFF_Assemblers <plastid.readers.gff.AbstractGFF_Assembler>`
+.. |AbstractGFF_Reader| replace:: :py:class:`~plastid.readers.gff.AbstractGFF_Reader`
+.. |AbstractGFF_Readers| replace:: :py:class:`AbstractGFF_Readers <plastid.readers.gff.AbstractGFF_Reader>`
+.. |GFF3_Reader| replace:: :py:class:`~plastid.readers.gff.GFF3_Reader`
+.. |GFF3_Readers| replace:: :py:class:`GFF3_Readers <plastid.readers.gff.GFF3_Reader>`
+.. |GFF3_TranscriptAssembler| replace:: :py:class:`~plastid.readers.gff.GFF3_TranscriptAssembler`
+.. |GFF3_TranscriptAssemblers| replace:: :py:class:`GFF3_TranscriptAssemblers <plastid.readers.gff.GFF3_TranscriptAssembler>`
+.. |GTF2_Reader| replace:: :py:class:`~plastid.readers.gff.GTF2_Reader`
+.. |GTF2_Readers| replace:: :py:class:`GTF2_Readers <plastid.readers.gff.GTF2_Reader>`
+.. |GTF2_TranscriptAssembler| replace:: :py:class:`~plastid.readers.gff.GTF2_TranscriptAssembler`
+.. |GTF2_TranscriptAssemblers| replace:: :py:class:`GTF2_TranscriptAssemblers <plastid.readers.gff.GTF2_TranscriptAssembler>`
+.. |BundledPSL_Reader| replace:: :py:class:`~plastid.readers.psl.BundledPSL_Reader`
+.. |BundledPSL_Readers| replace:: :py:class:`BundledPSL_Readers <plastid.readers.psl.BundledPSL_Reader>`
+.. |PSL_Reader| replace:: :py:class:`~plastid.readers.psl.PSL_Reader`
+.. |PSL_Readers| replace:: :py:class:`PSL_Readers <plastid.readers.psl.PSL_Reader>`
+.. |WiggleReader| replace:: :py:class:`~plastid.readers.wiggle.WiggleReader`
+.. |WiggleReaders| replace:: :py:class:`WiggleReaders <plastid.readers.wiggle.WiggleReader>`
+.. |BinaryParserFactory| replace:: :py:class:`~plastid.util.io.binary.BinaryParserFactory`
+.. |BinaryParserFactorys| replace:: :py:class:`BinaryParserFactorys <plastid.util.io.binary.BinaryParserFactory>`
+.. |AbstractReader| replace:: :py:class:`~plastid.util.io.filters.AbstractReader`
+.. |AbstractReaders| replace:: :py:class:`AbstractReaders <plastid.util.io.filters.AbstractReader>`
+.. |AbstractWriter| replace:: :py:class:`~plastid.util.io.filters.AbstractWriter`
+.. |AbstractWriters| replace:: :py:class:`AbstractWriters <plastid.util.io.filters.AbstractWriter>`
+.. |BackwardReader| replace:: :py:class:`~plastid.util.io.filters.BackwardReader`
+.. |BackwardReaders| replace:: :py:class:`BackwardReaders <plastid.util.io.filters.BackwardReader>`
+.. |ColorWriter| replace:: :py:class:`~plastid.util.io.filters.ColorWriter`
+.. |ColorWriters| replace:: :py:class:`ColorWriters <plastid.util.io.filters.ColorWriter>`
+.. |CommentReader| replace:: :py:class:`~plastid.util.io.filters.CommentReader`
+.. |CommentReaders| replace:: :py:class:`CommentReaders <plastid.util.io.filters.CommentReader>`
+.. |CommentWriter| replace:: :py:class:`~plastid.util.io.filters.CommentWriter`
+.. |CommentWriters| replace:: :py:class:`CommentWriters <plastid.util.io.filters.CommentWriter>`
+.. |FunctionReader| replace:: :py:class:`~plastid.util.io.filters.FunctionReader`
+.. |FunctionReaders| replace:: :py:class:`FunctionReaders <plastid.util.io.filters.FunctionReader>`
+.. |NameDateWriter| replace:: :py:class:`~plastid.util.io.filters.NameDateWriter`
+.. |NameDateWriters| replace:: :py:class:`NameDateWriters <plastid.util.io.filters.NameDateWriter>`
+.. |SkipBlankReader| replace:: :py:class:`~plastid.util.io.filters.SkipBlankReader`
+.. |SkipBlankReaders| replace:: :py:class:`SkipBlankReaders <plastid.util.io.filters.SkipBlankReader>`
+.. |TeeListener| replace:: :py:class:`~plastid.util.io.filters.TeeListener`
+.. |TeeListeners| replace:: :py:class:`TeeListeners <plastid.util.io.filters.TeeListener>`
+.. |TeeReader| replace:: :py:class:`~plastid.util.io.filters.TeeReader`
+.. |TeeReaders| replace:: :py:class:`TeeReaders <plastid.util.io.filters.TeeReader>`
+.. |TestTeeListener| replace:: :py:class:`~plastid.util.io.filters.TestTeeListener`
+.. |TestTeeListeners| replace:: :py:class:`TestTeeListeners <plastid.util.io.filters.TestTeeListener>`
+.. |NullWriter| replace:: :py:class:`~plastid.util.io.openers.NullWriter`
+.. |NullWriters| replace:: :py:class:`NullWriters <plastid.util.io.openers.NullWriter>`
+.. |AlignmentParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AlignmentParser`
+.. |AlignmentParsers| replace:: :py:class:`AlignmentParsers <plastid.util.scriptlib.argparsers.AlignmentParser>`
+.. |AnnotationParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AnnotationParser`
+.. |AnnotationParsers| replace:: :py:class:`AnnotationParsers <plastid.util.scriptlib.argparsers.AnnotationParser>`
+.. |BaseParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.BaseParser`
+.. |BaseParsers| replace:: :py:class:`BaseParsers <plastid.util.scriptlib.argparsers.BaseParser>`
+.. |MaskParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.MaskParser`
+.. |MaskParsers| replace:: :py:class:`MaskParsers <plastid.util.scriptlib.argparsers.MaskParser>`
+.. |Parser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.Parser`
+.. |Parsers| replace:: :py:class:`Parsers <plastid.util.scriptlib.argparsers.Parser>`
+.. |PlottingParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PlottingParser`
+.. |PlottingParsers| replace:: :py:class:`PlottingParsers <plastid.util.scriptlib.argparsers.PlottingParser>`
+.. |PrefixNamespaceWrapper| replace:: :py:class:`~plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper`
+.. |PrefixNamespaceWrappers| replace:: :py:class:`PrefixNamespaceWrappers <plastid.util.scriptlib.argparsers.PrefixNamespaceWrapper>`
+.. |SequenceParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.SequenceParser`
+.. |SequenceParsers| replace:: :py:class:`SequenceParsers <plastid.util.scriptlib.argparsers.SequenceParser>`
+.. |ArgumentWarning| replace:: :py:class:`~plastid.util.services.exceptions.ArgumentWarning`
+.. |ArgumentWarnings| replace:: :py:class:`ArgumentWarnings <plastid.util.services.exceptions.ArgumentWarning>`
+.. |DataWarning| replace:: :py:class:`~plastid.util.services.exceptions.DataWarning`
+.. |DataWarnings| replace:: :py:class:`DataWarnings <plastid.util.services.exceptions.DataWarning>`
+.. |FileFormatWarning| replace:: :py:class:`~plastid.util.services.exceptions.FileFormatWarning`
+.. |FileFormatWarnings| replace:: :py:class:`FileFormatWarnings <plastid.util.services.exceptions.FileFormatWarning>`
+.. |MalformedFileError| replace:: :py:class:`~plastid.util.services.exceptions.MalformedFileError`
+.. |MalformedFileErrors| replace:: :py:class:`MalformedFileErrors <plastid.util.services.exceptions.MalformedFileError>`
+.. |UniqueFIFO| replace:: :py:class:`~plastid.util.unique_fifo.UniqueFIFO`
+.. |UniqueFIFOs| replace:: :py:class:`UniqueFIFOs <plastid.util.unique_fifo.UniqueFIFO>`
