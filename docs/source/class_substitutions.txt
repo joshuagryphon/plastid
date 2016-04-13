@@ -24,6 +24,8 @@
  .. |GenomicSegments| replace:: :py:class:`GenomicSegments <plastid.genomics.roitools.GenomicSegment>`
  .. |SegmentChain| replace:: :py:class:`~plastid.genomics.roitools.SegmentChain`
  .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
+ .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
+ .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
  .. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
  .. |_TwoBitSeqProxys| replace:: :py:class:`_TwoBitSeqProxys <plastid.genomics.seqtools._TwoBitSeqProxy>`
  .. |TwoBitSeqRecordAdaptor| replace:: :py:class:`~plastid.genomics.seqtools.TwoBitSeqRecordAdaptor`
@@ -80,6 +82,8 @@
  .. |AbstractWriters| replace:: :py:class:`AbstractWriters <plastid.util.io.filters.AbstractWriter>`
  .. |BackwardReader| replace:: :py:class:`~plastid.util.io.filters.BackwardReader`
  .. |BackwardReaders| replace:: :py:class:`BackwardReaders <plastid.util.io.filters.BackwardReader>`
+ .. |ColorWriter| replace:: :py:class:`~plastid.util.io.filters.ColorWriter`
+ .. |ColorWriters| replace:: :py:class:`ColorWriters <plastid.util.io.filters.ColorWriter>`
  .. |CommentReader| replace:: :py:class:`~plastid.util.io.filters.CommentReader`
  .. |CommentReaders| replace:: :py:class:`CommentReaders <plastid.util.io.filters.CommentReader>`
  .. |CommentWriter| replace:: :py:class:`~plastid.util.io.filters.CommentWriter`
@@ -102,6 +106,8 @@
  .. |AlignmentParsers| replace:: :py:class:`AlignmentParsers <plastid.util.scriptlib.argparsers.AlignmentParser>`
  .. |AnnotationParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.AnnotationParser`
  .. |AnnotationParsers| replace:: :py:class:`AnnotationParsers <plastid.util.scriptlib.argparsers.AnnotationParser>`
+ .. |BaseParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.BaseParser`
+ .. |BaseParsers| replace:: :py:class:`BaseParsers <plastid.util.scriptlib.argparsers.BaseParser>`
  .. |MaskParser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.MaskParser`
  .. |MaskParsers| replace:: :py:class:`MaskParsers <plastid.util.scriptlib.argparsers.MaskParser>`
  .. |Parser| replace:: :py:class:`~plastid.util.scriptlib.argparsers.Parser`
