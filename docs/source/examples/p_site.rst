@@ -3,11 +3,11 @@ Determine P-site offsets for :term:`ribosome profiling` data
 
 In this tutorial we:
 
-  - determine the :term:`P-site offset` to use with a
-    :term:`ribosome profiling` dataset.
-     
-  - use these offsets as a :term:`mapping rule` to map :term:`read alignments`
-    from that dataset to their P-sites, enabling visualization of translation
+ - determine the :term:`P-site offset` to use with a
+   :term:`ribosome profiling` dataset.
+    
+ - use these offsets as a :term:`mapping rule` to map :term:`read alignments`
+   from that dataset to their P-sites, enabling visualization of translation
 
 Here, we presume that ribosome-protected fragments were produced using
 an unbiased nuclease (e.g. RNase I, NOT microccal nuclease). that
@@ -29,48 +29,48 @@ the :term:`start codon peak` at some fixed distance *upstream* of the start codo
 in a :term:`metagene analysis` of the data. The distance between the observed
 :term:`start codon peak` and the annotated start codon corresponds to the offset:
 
- .. figure:: /_static/images/p_site_map_cartoon.png
-    :alt: Cartoon of ribosomal P-site
-    :width: 30ex
-    :align: center
-    :figclass: captionfigure
-    
-    A ribosome containing a :term:`footprint` after digestion. The P-site offset
-    is the distance from the 5' end of the read to the ribosomal P-site
-    (in this case, 12 nt). After :cite:`Ingolia2009`.
+.. figure:: /_static/images/p_site_map_cartoon.png
+   :alt: Cartoon of ribosomal P-site
+   :width: 30ex
+   :align: center
+   :figclass: captionfigure
+   
+   A ribosome containing a :term:`footprint` after digestion. The P-site offset
+   is the distance from the 5' end of the read to the ribosomal P-site
+   (in this case, 12 nt). After :cite:`Ingolia2009`.
 
 This yields the following strategy:
 
- #. Separate :term:`footprints <footprint>` into classes based upon their lengths
+#. Separate :term:`footprints <footprint>` into classes based upon their lengths
 
- #. For each length:
+#. For each length:
 
-      #. Perform a :term:`metagene analysis <metagene>` at the start codon,
-         in which the :term:`footprints <footprint>` are mapped to their 5' ends.
+   #. Perform a :term:`metagene analysis <metagene>` at the start codon,
+      in which the :term:`footprints <footprint>` are mapped to their 5' ends.
 
-      #. Measure the distance between the highest peak 5' of the start codon
-         and the start codon. Assuming this peak is the initiation peak, this
-         distance is the offset to use for reads of this length:
-         
-         .. figure:: /_static/images/p_site_offset_by_length.png
-            :alt: P-site offsets, by read length
-            :figclass: captionfigure
-            
-            :term:`Metagene` analysis of individual read lengths mapped to their
-            5' ends to discover :term:`P-site offsets <P-site offset>`
+   #. Measure the distance between the highest peak 5' of the start codon
+      and the start codon. Assuming this peak is the initiation peak, this
+      distance is the offset to use for reads of this length:
+        
+      .. figure:: /_static/images/p_site_offset_by_length.png
+         :alt: P-site offsets, by read length
+         :figclass: captionfigure
+           
+         :term:`Metagene` analysis of individual read lengths mapped to their
+         5' ends to discover :term:`P-site offsets <P-site offset>`
 
- #. Manually inspect offsets to make sure they seem reasonable
+#. Manually inspect offsets to make sure they seem reasonable
 
- #. Check results by perform a :term:`metagene analysis` around the start codon, 
-    this time using the :term:`P-site offsets <P-site offset>` we determined.
-    Results should resemble the image below:
+#. Check results by perform a :term:`metagene analysis` around the start codon, 
+   this time using the :term:`P-site offsets <P-site offset>` we determined.
+   Results should resemble the image below:
 
-         .. figure:: /_static/images/p_site_applied.png
-            :alt: Metagene around start codin with P-site offsets applied
-            :figclass: captionfigure
-            
-            :term:`Metagene` analysis surrounding start codon, with
-            :term:`P-site offsets <P-site offset>` applied to read alignments
+      .. figure:: /_static/images/p_site_applied.png
+         :alt: Metagene around start codin with P-site offsets applied
+         :figclass: captionfigure
+           
+         :term:`Metagene` analysis surrounding start codon, with
+         :term:`P-site offsets <P-site offset>` applied to read alignments
 
 
 Determining :term:`P-site offsets <P-site offset>` using the |psite| script
@@ -83,74 +83,74 @@ to use a file produced by the |metagene| script. The command call to  |metagene|
 is included below, and explained in detal in :doc:`/examples/metagene`.
 From the terminal:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    # generate metagene `roi` file. See `metagene` documentation for details
-    $ metagene generate merlin_orfs \
-                        --landmark cds_start \
-                        --annotation_files merlin_orfs.gtf
+   # generate metagene `roi` file. See `metagene` documentation for details
+   $ metagene generate merlin_orfs \
+                       --landmark cds_start \
+                       --annotation_files merlin_orfs.gtf
 
-    # run the psite script
-    # We ignore reads shorter than 29 nucleotides or longer than 35-
-    # there should be few of these, and it saves psite from doing 
-    # unnecessary analyses
-    $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
-                                 --min_length 29 \
-                                 --max_length 35 \
-                                 --require_upstream \
-                                 --count_files SRR609197_riboprofile_5hr_rep1.bam
+   # run the psite script
+   # We ignore reads shorter than 29 nucleotides or longer than 35-
+   # there should be few of these, and it saves psite from doing 
+   # unnecessary analyses
+   $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
+                                --min_length 29 \
+                                --max_length 35 \
+                                --require_upstream \
+                                --count_files SRR609197_riboprofile_5hr_rep1.bam
 
 For most users, two of the output files are of interest:
 
-  #. A graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
-     showing the metagene profile for each read length:
+#. A graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
+   showing the metagene profile for each read length:
 
-      .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
-         :figclass: captionfigure
-         :alt: Output of P-site script
+    .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
+       :figclass: captionfigure
+       :alt: Output of P-site script
 
-         Graphical output of |psite| script.
+       Graphical output of |psite| script.
 
-     From this image we can see that there are few 29- and 35-mers, so
-     their P-site mapping is likely to be off. We'll adjust these
-     manually below.
+   From this image we can see that there are few 29- and 35-mers, so
+   their P-site mapping is likely to be off. We'll adjust these
+   manually below.
 
-  #. A two-column text file (in this example, ``SRR609197_riboprofile_p_offsets.txt``),
-     in which the first column is a read length and the second, the corresponding
-     :term:`P-site offset` from the 5' end of the read::
+#. A two-column text file (in this example, ``SRR609197_riboprofile_p_offsets.txt``),
+   in which the first column is a read length and the second, the corresponding
+   :term:`P-site offset` from the 5' end of the read::
 
-         #length	p_offset
-         29        0
-         30        12
-         31        13
-         32        14
-         33        14
-         34        14
-         35        0
-         default   13
+      #length	p_offset
+      29        0
+      30        12
+      31        13
+      32        14
+      33        14
+      34        14
+      35        0
+      default   13
 
-     As in the graphical output, the values for 29 and 35 appear to be off. We will
-     edit this file in a text editor, and set the offset to 12 for 29-mers, and 14
-     for 35-mers. We'll also set the default to 14, the most common value. This
-     gives the following table::
+   As in the graphical output, the values for 29 and 35 appear to be off. We will
+   edit this file in a text editor, and set the offset to 12 for 29-mers, and 14
+   for 35-mers. We'll also set the default to 14, the most common value. This
+   gives the following table::
 
-         #length   p_offset
-         29        12
-         30        12
-         31        13
-         32        14
-         33        14
-         34        14
-         35        14
-         default   14
+      #length   p_offset
+      29        12
+      30        12
+      31        13
+      32        14
+      33        14
+      34        14
+      35        14
+      default   14
 
-     
-     
- .. _psite-use-aggregate:
- 
+    
+    
+.. _psite-use-aggregate:
+
 If the output looks blank for one or more read lengths
 ......................................................
-    
+   
 This occurs in datasets in which there are few reads of any given length.
 In this case, it is possible to estimate the P-site offset from aggregate
 read counts at each position, instead of median normalized read density.
@@ -158,42 +158,42 @@ read counts at each position, instead of median normalized read density.
 The aggregate measurement is potentially noisier, but more sensitive to low read
 counts. To do so, run the script with the ``--aggregate`` flag:
 
- .. code-block:: shell
+.. code-block:: shell
 
-    # re-run the psite script using --aggregate
-    $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
-                                 --min_length 29 \
-                                 --max_length 35 \
-                                 --require_upstream \
-                                 --count_files SRR609197_riboprofile_5hr_rep1.bam \
-                                 --aggregate
+   # re-run the psite script using --aggregate
+   $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
+                                --min_length 29 \
+                                --max_length 35 \
+                                --require_upstream \
+                                --count_files SRR609197_riboprofile_5hr_rep1.bam \
+                                --aggregate
 
 
 Or, manually load the appropriate data matrix from the previous run (named
 ``SAMPLE_LENGTH_rawcounts.txt.gz``), and make the profile manually:
 
- .. code-block:: python
- 
-    >>> import numpy
-    >>> import matplotlib.pyplot as plt
-    
-    >>> counts26  = numpy.loadtxt("merlin_orfs_26_rawcounts.txt.gz")
-    >>> profile26 = numpy.nansum(counts26,axis=0)
-    
-    # assuming we used `--upstream 50 --downstream 50` in call to `metagene generate`
-    # change ranges below to match what you used
-    >>> x = numpy.arange(-50,50)
-    
-    # estimate offset as highest peak upstream of start codon
-    >>> offset = 0 - x[profile26[x <= 0].argmax()]
-    
-    # plot
-    >>> plt.plot(x,profile26,label="26 mers")
-    >>> plt.axvline(offset,dashes=[2,2],label="%s nt offset" % offset)
-    
-    # check estimate to see if it is reasonable
-    >>> plt.show()
-    
+.. code-block:: python
+
+   >>> import numpy
+   >>> import matplotlib.pyplot as plt
+   
+   >>> counts26  = numpy.loadtxt("merlin_orfs_26_rawcounts.txt.gz")
+   >>> profile26 = numpy.nansum(counts26,axis=0)
+   
+   # assuming we used `--upstream 50 --downstream 50` in call to `metagene generate`
+   # change ranges below to match what you used
+   >>> x = numpy.arange(-50,50)
+   
+   # estimate offset as highest peak upstream of start codon
+   >>> offset = 0 - x[profile26[x <= 0].argmax()]
+   
+   # plot
+   >>> plt.plot(x,profile26,label="26 mers")
+   >>> plt.axvline(offset,dashes=[2,2],label="%s nt offset" % offset)
+   
+   # check estimate to see if it is reasonable
+   >>> plt.show()
+   
 Then, manually edit the text output accordingly.
 
 
@@ -208,10 +208,10 @@ read :term:`mapping rules <mapping rule>`. To use the offsets generated by |psit
 the ``--fiveprime_variable`` mapping rule, and pass the text file made
 by |psite| to the ``--offset`` parameter. For example, from the terminal:
 
- .. code-block :: shell
+.. code-block :: shell
 
-    $ some_script --fiveprime_variable \
-                  --offset SRR609197_riboprofile_p_offsets_adjusted.txt [other arguments]
+   $ some_script --fiveprime_variable \
+                 --offset SRR609197_riboprofile_p_offsets_adjusted.txt [other arguments]
 
 
 In interactive sessions
@@ -221,23 +221,23 @@ The mapping rule can be constructed by passing the offset file from |psite| to t
 :meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
 method of |VariableFivePrimeMapFactory|::
 
-    >>> from plastid import BAMGenomeArray, VariableFivePrimeMapFactory
+   >>> from plastid import BAMGenomeArray, VariableFivePrimeMapFactory
 
-    >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
-    
-    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
-    >>> alignments.set_mapping(maprule)
+   >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
+   
+   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments.set_mapping(maprule)
 
 
 For alignments in `bowtie`_-format use |GenomeArray| and
 :func:`~plastid.genomics.genome_array.variable_five_prime_map`::
 
-    >>> from plastid import GenomeArray, variable_five_prime_map
-    >>> from plastid.genomics.util.scriptlib import _parse_variable_offset_file as pvof
-    >>> offset_dict = pvof(open("SRR609197_riboprofile_p_offsets_adjusted.txt"))
+   >>> from plastid import GenomeArray, variable_five_prime_map
+   >>> from plastid.genomics.util.scriptlib import _parse_variable_offset_file as pvof
+   >>> offset_dict = pvof(open("SRR609197_riboprofile_p_offsets_adjusted.txt"))
 
-    >>> alignments = GenomeArray()
-    >>> alignments.add_from_bowtie("some_file.bowtie",variable_five_prime_map,offset=offset_dict)
+   >>> alignments = GenomeArray()
+   >>> alignments.add_from_bowtie("some_file.bowtie",variable_five_prime_map,offset=offset_dict)
 
 
 Pitfalls
@@ -266,22 +266,22 @@ content to use offsets published in literature by other groups. Others
 more conservatively perform this analysis for every dataset. We strongly
 suggest performing this analysis at the very least:
 
-  - when changing nuclease, buffer, or cloning conditions
+ - when changing nuclease, buffer, or cloning conditions
 
-  - when changing culture conditions (e.g. profiling under starvation,
-    heat shock, viral infection, et c)
+ - when changing culture conditions (e.g. profiling under starvation,
+   heat shock, viral infection, et c)
 
-  - when ribosome profiling a new organism
+ - when ribosome profiling a new organism
 
 -------------------------------------------------------------------------------
 
 See also
 --------
 
-  - |psite| script, for full documentation
+ - |psite| script, for full documentation
 
-  - |metagene| script, for information on generating the ROI file used
-    by |psite|
+ - |metagene| script, for information on generating the ROI file used
+   by |psite|
 
-  - :doc:`/examples/metagene` for an in-depth discussion
-    of :term:`metagene analysis`
+ - :doc:`/examples/metagene` for an in-depth discussion
+   of :term:`metagene analysis`

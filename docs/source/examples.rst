@@ -2,27 +2,27 @@ Tutorials
 =========
 Tutorials are divided into two sections:
 
-  - The :ref:`examples-cookbook` contains step-by-step instructions for
-    performing common tasks, with detailed explanations of each step
+ - The :ref:`examples-cookbook` contains step-by-step instructions for
+   performing common tasks, with detailed explanations of each step
   
-  - :ref:`examples-concepts` includes longer discussions of issues that arise
-    in :term:`high-throughput sequencing` and genomics, and includes code
-    examples when appropriate. 
+ - :ref:`examples-concepts` includes longer discussions of issues that arise
+   in :term:`high-throughput sequencing` and genomics, and includes code
+   examples when appropriate. 
   
 We suggest downloading the :doc:`test_dataset` and following along.
 
  
- .. _examples-cookbook:
+.. _examples-cookbook:
 
 Cookbook
 --------
 
- .. toctree::
-    :hidden:
-    :maxdepth: 4
-    :glob:
+.. toctree::
+   :hidden:
+   :maxdepth: 4
+   :glob:
     
-    /examples/*
+   /examples/*
     
     
     
@@ -58,7 +58,7 @@ Cookbook
 ============================================================================    ===========================================================================================
 
 
- .. _examples-concepts:
+.. _examples-concepts:
  
 In-depth
 --------
@@ -78,10 +78,10 @@ In-depth
 ===============================================================    ===========================================================================================
 
 
- .. toctree::
-    :hidden:
-    :maxdepth: 4
-    :glob:
+.. toctree::
+   :hidden:
+   :maxdepth: 4
+   :glob:
     
-    /concepts/*
+   /concepts/*
         

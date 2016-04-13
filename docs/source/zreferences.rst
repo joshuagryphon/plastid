@@ -1,5 +1,5 @@
 References
 ==========
 
- .. bibliography:: zreferences.bib
-    :cited:
+.. bibliography:: zreferences.bib
+   :cited:
