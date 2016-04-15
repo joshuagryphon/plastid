@@ -80,11 +80,12 @@ of the various file formats used in genomics. But, two points are relevant:
      speed cost. The exception is for short :term:`read alignments`, where indexed
      `BAM`_ files are universally recommended. 
 
-.. TODO later: update when format support changes
 
 Below is a table of commonly used file formats. At present, :data:`plastid` handles
-all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
-`Biopython`_ (`FASTA`_), or `twobitreader`_ (`2bit <twobit>`_).
+all of these either natively or via `Pysam`_ (`BAM`_ files), `Biopython`_ (`FASTA`_),
+or `twobitreader`_ (`2bit <twobit>`_).
+
+.. _file-format-table:
 
     =====================   ===================================   ===================
     **Data type**           **Unindexed formats**                 **Indexed formats**
@@ -99,7 +100,7 @@ all of these except `BigWig`_, either natively or via `Pysam`_ (`BAM`_ files),
     =====================   ===================================   ===================
  
  
-`BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be indexed via `tabix`_.
+In addition, `BED`_, `GTF2`_, `GFF3`_, and `PSL`_ files can be indexed via `tabix`_.
 :data:`plastid` supports (via `pysam`_) reading of `tabix`_-compressed files too.
 
 

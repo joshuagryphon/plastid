@@ -7,9 +7,12 @@ Installation
 
 From PyPi
 ---------
+
+Install package
+...............
 Stable versions of :py:data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
-Due to some quirks in Python packaging `numpy`_ and `pysam`_ must be installed
-first:
+Due to some quirks in Python packaging `Cython`_, `numpy`_ , `pysam`_ must be
+installed first:
 
 Simply type from the terminal:
 
@@ -47,6 +50,8 @@ please see :ref:`faq-install-fails` for common errors or our
 `issue tracker <plastid_issues>`_ to report a new one.
 
 
+Set ``PATH`` variable
+.....................
 Command-line scripts will be installed wherever your system configuration dictates.
 On OSX and many varities of linux, the install path for a single-user install is
 ``~/bin`` or ``~/.local/bin``. For system-wide installs, the path is typically
@@ -76,7 +81,6 @@ To fetch the latest development versions, clone it from
    # Use `--recythonize` flag to link code against your
    # versions of numpy and pysam, if they are different
    # from ours
-
    $ cd plastid
    $ python setup.py develop --user --recythonize
 
@@ -86,7 +90,7 @@ Non-Python Dependencies
 
 Plastid has a number of non-Python dependencies:
 
- - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_,
+ - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_ or
   `clang <clang.llvm.org>`_) 
  - `zlib <www.zlib.net>`_, including its headers
 
@@ -94,18 +98,19 @@ Plastid has a number of non-Python dependencies:
 The following are not required for full functionality, but are recommended
 for specific functions:
 
- - `bowtie`_ (not Bowtie 2), for :py:mod:`~plastid.bin.crossmap`
+ - `bowtie`_ (not `bowtie 2`_) for use in  :py:mod:`~plastid.bin.crossmap`
  - `Jim Kent's utilities`_ for converting BED to BigBed files
  - `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_   
 
 
 
-Considerations for OSX
+Troubleshooting on OSX
 ----------------------
 
-On many computers, :data:`plastid` installs without any problems on OSX.
-However, some users needed to enable special compiler flags, or other 
-environment variables. If you are having problems, see:
+On many Macintosh computers, :data:`plastid` installs without any problems.
+
+To install :data:`plastid`, Some OSX users have needed to enable special
+compiler flags or set environment variables. If you are having problems, see:
 
   - :ref:`faq-locale-error-osx`
   - :ref:`faq-macintosh-cflags`

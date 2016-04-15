@@ -1,37 +1,47 @@
-Before starting
+Getting started
 ===============
-To get started with genomic analysis, one needs:
 
-  - Some :doc:`data </concepts/data>` to analyze, usually including:
-  
-      - A :term:`genome annotation <annotation>`, typically downloaded
-        from a consortium like `UCSC`_, `Ensembl`_, `ENCODE`_, `SGD`_,
-        or `FlyBase`_.
-      
-      - A genome sequence that matches the annotation
-      
-      - Some :term:`high-throughput sequencing` data, in the form of
-        :term:`read alignments`, preferably in `BAM`_ format. 
-      
-         .. note::
+Genomic analysis requires some setup. This page describes the pieces that
+suffice in many cases.
 
-            Because excellent alignment tools -- `bowtie`_, `Tophat`_, and others --
-            already exist, and because choosing alignment parameters involves
-            careful consideration, :data:`plastid` does not perform this step.
-            
-            For help on performing alignments, and a discussion of the subtleties
-            involved, see the documentation for the read alignment program you use. 
+For those looking to try :data:`plastid` out, or to explore sequencing concepts,
+we have included a :doc:`/test_dataset`, which includes sequence and annotation
+for the hCMV genome, and :term:`ribosome profiling` and RNA-seq datasets. 
 
-             .. TODO:: add reference for help on alignments
-      
-    For the curious, we have created a small :doc:`demo dataset </test_dataset>`,
-    used throughout the examples in this documentation. 
+
+A genome sequence & annotation
+------------------------------
+
+The starting point for most genomics research is to obtain a genome sequence
+and matching :term:`genome annotation <annotation>`. Good sources for these
+include:
+
+  - Mammal genomes: `UCSC`_, `Ensembl`_, `ENCODE`_, and `GENCODE`_
+  - Fly genomes: `FlyBase`_, `modENCODE`_
+  - *S. cerevisiae*: `SGD`_
+
+It is critical that the genome sequence and feature annotations use the same
+coordinates, so be sure to download corresponding versions from a single build
+(i.e. it is unhelpful to mix mouse the *mm9* genome sequence with the *mm10*
+annotation).
+
+
+Aligned sequence data
+---------------------
+
+The starting point for analysis with :data:`Plastid` is aligned sequence data,
+preferably in `BAM`_ format.
+ 
+For help on performing alignments, and a discussion of the subtleties of
+choosing alignment parameters, see the documentation for the read alignment
+program you use (e.g. `Bowtie`_, `Bowtie 2`_, `Tophat`_, `bwa`_). 
+
+ 
+Other
+-----
+Most of the :data:`plastid` documentation assumes familiarty with a handful 
+of concepts and conventions. We encourage those new to sequencing analysis
+to check :ref:`tutorials <examples-concepts>` and browse as needed.
   
-  - Familiarity with a handful of concepts and conventions. We encourage those
-    new to sequencing analysis to check :ref:`examples-concepts` and browse as
-    needed.
-  
-  - Some scientific software for data analysis. See :doc:`/installation`
-    for instructions on how to get :data:`plastid` and its dependencies, and
-    :doc:`/related` for resources that might be useful.
+
   

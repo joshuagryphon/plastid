@@ -58,6 +58,7 @@
 .. _GENCODE: www.gencodegenes.org 
 .. _galaxy: https://galaxyproject.org/
 .. _Sequence Ontology Project: http://www.sequenceontology.org/
+.. _modENCODE: http://www.modencode.org
 
 .. Non-Python software links
 
@@ -65,7 +66,8 @@
 .. _bedtools: http://bedtools.readthedocs.org/
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
-.. _bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
+.. _Bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
+.. _Bowtie 2: http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
 .. _cufflinks: http://cole-trapnell-lab.github.io/cufflinks/
 .. _BWA: http://bio-bwa.sourceforge.net
 .. _blat: http://genome.cshlp.org/content/12/4/656.full

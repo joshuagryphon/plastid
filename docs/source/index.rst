@@ -1,54 +1,54 @@
-:data:`plastid` |version| welcome!
-==================================
+:data:`plastid` |version|
+=========================
 
 
-Introduction
-------------
+Welcome!
+--------
 
-:data:`plastid` is a `Python`_ library for genomics and sequencing that seeks to 
-flatten the learning curve for both bench and computational biologists. It
-:ref:`intuitive tools for exploratory data analysis <tour-data-structures>` (EDA),
-as well as :mod:`command-line scripts <plastid.bin>` that implement standard
-analyses.
+:data:`plastid` is a `Python`_ library for genomics and sequencing. It includes
+:ref:`tools for exploratory data analysis <tour-data-structures>` (EDA) 
+as well as a handful of :doc:`scripts </scriptlist>` that implement common tasks.
 
-For EDA, plastid defines consistent interfaces for the many similar
-file types that exist in genomics, allowing users to focus on biology, without
-first having to understand the quirks of file formats. The interfaces themselves
-use familiar biological idioms, such as :ref:`spliced transcripts <tour-segment-chain>`.
+:data:`plastid` differs from other packages in its design goals. Namely:
 
-In addition, plastid's data models interface directly with the rich computing environment
-provided by the `SciPy`_ stack, enabling development of sophisticated analyses with
-substantially reduced effort.
+ - its intended audience includes both **bench and computational biologists**.
+   We tried to make it easy to use, and wrote lots of :doc:`/examples`
+ 
+ 
+ - It is designed for analyses in which data at each position
+   **within a gene or transcript** are of interest, such as analysis of
+   :term:`ribosome profiling` data. To this end, :data:`plastid`
 
-:data:`plastid` was written by Joshua Dunn in `Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_
-at `UCSF <http://ucsf.edu>`_. Versions of it have been used in several publications.
+    - uses :doc:`/concepts/mapping_rules` to **extract the biology of interest**
+      from :term:`read alignments` -- e.g. in the case of 
+      :term:`ribosome profiling`, a ribosomal :term:`P-site`, in :term:`DMS-seq`,
+      sites of nucleotide modification, et c. --
+      and turn these into quantitative data, usually
+      :class:`numpy arrays <numpy.ndarray>` of counts at each nucleotide
+      position in a transcript.
+  
+    - **encapsulates multi-segment features**, such as spliced transcripts,
+      as :ref:`single objects <tour-segment-chain>`. This facilitates many common
+      tasks, such as converting coordinates between genome and feature-centric
+      spaces.
+   
+ 
+ - It **separates data from its representation** on disk by providing consistent
+   interfaces to many of the various :ref:`file formats <file-format-table>`, 
+   found in the wild.
+   
+   
+ - It is **designed for expansion** to new or unknown assays. Frequently,
+   :ref:`writing a new mapping rule <mapping-rules-roll-your-own>` is sufficient
+   to enable all of :data:`plastid`'s tools to interpret data coming from a new
+   assay.
 
 
 
-How it's unique
----------------
-
-:data:`plastid` offers a number of unique features, including:
-
- - handling discontinuous genomic features, such as transcripts or gapped alignments,
-   in a single object, called a :ref:`SegmentChain <tour-segment-chain>`
-
- - providing a suite of tools for positional analysis of sequencing data, such as
-
-    - :term:`mapping rules <mapping rule>` that can exploit arbitrary properties of a 
-      :term:`read alignment <read alignments>` to determine the genomic position(s)
-      to which it should map 
-      (e.g. map :term:`ribosome-protected footprints <footprint>` to their P-sites,
-      rather than just their 5' or 3' ends)
-
-    - tools for  :doc:`masking genomic positions from analysis </examples/using_masks>`,
-      without needing to subtract positions from :term:`features <feature>` that
-      cover those positions. This enables feature annotations to stay intact
-      for analyses that don't require excluding such positions
-
- - accepting simple plugin functions (like :term:`mapping rules <mapping rule>`) that
-   globally modify its behavior
-
+:data:`plastid` was written by Joshua Dunn in
+`Jonathan Weissman's lab <http://weissmanlab.ucsf.edu>`_ at
+`UCSF <http://ucsf.edu>`_. Versions of it have been used in several publications
+(:cite:`Dunn2013,FieldsRodriguez2015`).
 
 
 
@@ -67,7 +67,7 @@ Where to go next
 --------------------------------------------------------------------------------
 
 Site map
-========
+--------
  - :ref:`genindex`
  - :ref:`modindex`
 
@@ -82,6 +82,7 @@ Site map
    quickstart
    tour
    installation
+   Demo dataset </test_dataset>
    List of command-line scripts </scriptlist>
 
 
