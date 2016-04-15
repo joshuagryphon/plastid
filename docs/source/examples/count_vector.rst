@@ -1,16 +1,17 @@
-Vectors of counts along transcripts
-===================================
-In this tutorial, we show:
+Arrays of counts at each transcript position
+============================================
 
- - :ref:`how to retrieve a vector <examples-count-vector-interactive>`
-   of the number of 5' ends of :term:`read alignments` that align to each
-   position in a transcript
-
- - :ref:`how to automate this process <examples-count-vector-script>`
-   using the :mod:`~plastid.bin.get_count_vectors` script
- 
+This tutorial shows how to obtain :class:`numpy array <numpy.ndarray>` of
+:term:`ribosome protected footprints <footprint>` at each position in a transcript
+in  :term:`ribosome profiling` data. With a few changes, the code below could be
+used to retrive arrays of virtually any type of data at each position in any type
+of feature. 
 
 In the examples below, we use the :doc:`/test_dataset`.
+
+
+.. contents::
+   :local:
 
 
 .. _examples-count-vector-interactive:
@@ -18,56 +19,90 @@ In the examples below, we use the :doc:`/test_dataset`.
 Working with vectors of counts interactively
 --------------------------------------------
 
-To count :term:`read alignments` along a transcript, we need two types of data:
 
- #. An :term:`annotation` of transcript models
+Retrieving the arrays
+.....................
 
- #. A :term:`high-throughput sequencing` dataset
+To count :term:`read alignments` along a transcript, we need:
 
-First, we import everything we need::
+ #. An :term:`annotation` of transcript models. In this case, a `BED`_ file,
+    which we'll read using a |BED_Reader|.
+    
+    Just as easily, we could have
+    read files from a `BigBed`_ file (using |BigBedReader|), a `GTF2`_ file (using
+    |GTF2_TranscriptAssembler|), a `GFF3`_ file (using |GFF3_TranscriptAssembler|),
+    et c. 
 
-   >>> # data structure for mapping read alignments to genomic positions
+ #. A :term:`high-throughput sequencing` dataset. In this case, read alignments
+    in a `BAM`_ file, imported into a |BAMGenomeArray|.
+
+
+First read the transcripts:
+
+.. code-block:: python
+
+   # import plastid
+   # data structure for mapping read alignments to genomic positions
    >>> from plastid import BAMGenomeArray, FivePrimeMapFactory, \
                            BED_Reader, Transcript
 
-Next, load the transcripts. By default, |BED_Reader| and the other readers
-in :data:`plastid` behave as iterators. Here, we'll retrieve the transcripts
-as a :class:`list`::
 
+   # load the transcript annotations from the BED file. 
+   # BED_Reader returns an iterator, so here we convert it to a list.
    >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
-Then, load the :term:`ribosome profiling` data. The data are in a `BAM`_ file,
-which we'll load into a :class:`~plastid.genomics.genome_array.BAMGenomeArray`.
-We'll map :term:`read alignments` to the corresponding :term:`P-sites <P-site offset>`,
-estimating the P-site to be 14 nucleotides from the 5' end::
+Then, load the :term:`ribosome profiling` data. We'll map :term:`read alignments`
+to their corresponding :term:`P-sites <P-site offset>`, estimating the P-site to
+be 14 nucleotides from the 5' end:
 
+.. code-block:: python
+
+   # load ribosome profiling data
    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   
+   # set P-site mapping as 14 nucleotides from 5' end
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 Now, we're ready to count. The method
-:meth:`Transcript.get_counts <plastid.genomics.roitools.Transcript.get_counts>`, returns
-a vector (:class:`numpy.ndarray`) of counts corresponding to
-each position in the transcript, from the 5' end of the transcript to the 3'
-end (i.e. for reverse-strand features, counts are reversed relative to
-genomic coordinates), accounting for splicing of exons::
+:meth:`get_counts() <plastid.genomics.roitools.Transcript.get_counts>`, returns
+a :class:`numpy array <numpy.ndarray>` of counts at each position in the
+transcript, from the transcript's 5' end to its 3' end (for reverse-strand
+features, counts are reversed relative to genomic coordinates), accounting for
+splicing of exons:
 
+.. code-block:: python
+
+   # create a list to hold the vectors
    >>> count_vectors = []
+   
+   # get counts for each transcript
    >>> for transcript in transcripts:
    >>>     count_vectors.append(transcript.get_counts(alignments))
+
+
+Manipulating arrays
+...................
+
+Now that we have the :class:`numpy arrays <numpy.ndarray>`, we can manipulate
+them like any other :class:`numpy arrays <numpy.ndarray>`: 
+
+.. code-block:: python
 
    # we'll take transcript 53 as an example- it has lots of reads
    # check the lengths of the first transcript and its vector.
    # they should be identical
    >>> my_transcript = transcripts[53]
    >>> my_vector = count_vectors[53]
+   
+   # lengths should match
    >>> my_transcript.length, len(my_vector)
    (1571, 1571)
 
-   # get total counts over entire vector
+   # get total counts over entire array
    >>> my_vector.sum()
    7444.0
 
-   >>> # slicing 
+   # look at counts at positions 200-250 of the array
    >>> my_vector[200:250]
    array([   7.,   25.,   18.,   13.,    5.,    1.,   11.,    3.,    0.,
              1.,   25.,   11.,   29.,   27.,   18.,    3.,   16.,   20.,
@@ -76,8 +111,10 @@ genomic coordinates), accounting for splicing of exons::
              4.,  121.,    3.,    6.,   45.,    3.,    4.,   39.,   14.,
              3.,    9.,    7.,    8.,   24.])
 
-Because the vector is a :class:`numpy.ndarray`, it can be manipulated using
-any of the tools in `numpy`_, `SciPy`_, or `matplotlib`_::
+Because the vector is a :class:`numpy array <numpy.ndarray>`, it can be
+manipulated using the tools in `numpy`_, `SciPy`_, or `matplotlib`_:
+
+.. code-block:: python
 
    >>> import numpy
    
@@ -128,16 +165,9 @@ This makes the following figure:
 Using the |get_count_vectors| script
 ------------------------------------
 The analysis above is implemented by the command-line script |get_count_vectors|.
-|get_count_vectors| requires the same data types as above:
-
-#. An :term:`annotation` of genomic :term:`features <feature>`
-   (e.g. transcripts for :term:`ribosome profiling`,
-   promoters & enhancers for ChIP-seq, et c)
-
-#. Some :term:`high-throughput` sequencing data
-
-
-The script may then be executed from the terminal:
+Again, we'll map at their estimated P-sites, 14 nucleotides from 
+their 5' ends using the arguments ``--fiveprime --offset 14``. The script may
+then be executed from the terminal:
 
 .. code-block:: shell
 
@@ -148,8 +178,8 @@ The script may then be executed from the terminal:
                        --offset 14 \
                        folder_of_vectors
 
-Each output file will be saved in `folder_of_vectors` and named for the `ID`
-attribute of the corresponding genomic :term:`feature`:
+Each output file will be saved in `folder_of_vectors` and named for the
+`transcript_ID` or  `ID` attribute of the corresponding genomic :term:`feature`:
 
 .. code-block:: shell                        
 
@@ -165,7 +195,8 @@ attribute of the corresponding genomic :term:`feature`:
    (rest of output omitted)
 
 
-The output can be loaded into numpy vectors using :func:`numpy.loadtxt`::
+The output can be loaded into :class:`numpy vectors <numpy.ndarray>` using
+:func:`numpy.loadtxt`::
 
    >>> import numpy
    
@@ -179,28 +210,36 @@ The output can be loaded into numpy vectors using :func:`numpy.loadtxt`::
              3.,    9.,    7.,    8.,   24.])
 
 
+Masking out unwanted regions
+----------------------------
+
 |get_count_vectors| can optionally take a :term:`mask file` to exclude
-problematic regions from analysis. In this case, vectors are returned
-as :class:`numpy.ma.MaskedArray` objects, and positions annotated
-in the :term:`mask file` are given the value :obj:`numpy.NaN` instead
-of their numerical values. See :doc:`/examples/using_masks` for a 
-discussion of :term:`mask files <mask file>` and how to make them
-using |crossmap|.
+problematic regions from analysis. Interactively, regions can be masked using
+:meth:`~plastid.genomics.roitools.Transcript.add_masks` and masked arrays
+obtained using :meth:`~plastid.genomics.roitools.Transcript.get_masked_counts`.
+
+In these cases, vectors are returned as :class:`numpy.ma.MaskedArray` objects,
+and positions annotated in the :term:`mask file` are given the value
+:obj:`numpy.NaN` instead of their numerical values.
+
+See :doc:`/examples/using_masks` for a  discussion of
+:term:`mask files <mask file>` and how to make mask files annotating 
+multimapping regions of the genome them using the |crossmap| script.
+
 
 -------------------------------------------------------------------------------
 
 See also
 --------
- - :doc:`/concepts/mapping_rules` for further discussion of
-   :term:`mapping rules <mapping rule>`
+ - :doc:`/concepts/mapping_rules`
 
- - :class:`~plastid.genomics.genome_array.GenomeArray` and
-   :class:`~plastid.genomics.genome_array.BAMGenomeArray` for
-   descriptions of Genome Arrays
+ - :mod:`plastid.readers`, which contains readers for various
+   :ref:`file formats <file-format-table>` used in genomics
+
+ - :mod:`plastid.genomics.genome_array`, which contains genome array
+   classes for `BigWig`_, `wiggle`_, `bedGraph`_ and `bowtie`_ files
 
  - :class:`~plastid.genomics.roitools.SegmentChain` and
    :class:`~plastid.genomics.roitools.Transcript` for full documentation
    of what these objects can do
 
- - :mod:`plastid.readers` subpackage, for readers
-   of other :term:`annotation` file formats
