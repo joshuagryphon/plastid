@@ -102,7 +102,9 @@ class _FromBED_StrAdaptor(object):
         return inp
 
 cdef class BigBedReader(_BBI_Reader):
-    """Reader for `BigBed`_ files. This class is useful for both iteration
+    """BigBedReader(filename, return_type = SegmentChain, add_three_for_stop = False, maxmem = 0)
+    
+    Reader for `BigBed`_ files. This class is useful for both iteration
     over genomic features one-by-one (like a reader), as well as random access to
     genomic features that overlap a region of interest (like a |GenomeHash|).  
     
@@ -129,6 +131,26 @@ cdef class BigBedReader(_BBI_Reader):
         >>> for feature in my_reader.__getitem__(roi,stranded=False):
                 pass # do something with that feature
                 ...
+
+    Parameters
+    ----------
+    filename : str
+        Path to `BigBed`_ file
+        
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+        feature. (Default: `False`)
+        
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        Does not include memory footprint of Python objects.
+        (Default: 0, no limit)
     
     
     Attributes
@@ -474,7 +496,9 @@ cdef class BigBedReader(_BBI_Reader):
 # But, cirTree.h, crTree.h, and BigBed.h don't give a convenient way to get
 # all the data from a node, so doing so would result in lots of reimplementation.
 def BigBedIterator(BigBedReader reader,maxmem=0):
-    """Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
+    """BigBedIterator(reader, maxmem = 0)
+    
+    Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
      
     Parameters
     ----------

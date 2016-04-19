@@ -34,7 +34,20 @@ from plastid.util.services.mini2to3 import safe_bytes, safe_str
 
 
 cdef class BigWigReader(_BBI_Reader):
-    """Reader providing random or sequential access to data stored in `BigWig`_ files.
+    """BigWigReader(filename, maxmem = 0)
+    
+    Reader providing random or sequential access to data stored in `BigWig`_ files.
+
+    Parameters
+    ----------
+    filename : str
+        Name of `bigwig`_ file
+
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        Does not include memory footprint of Python objects.
+        (Default: `0`, no limit)
     """
 
     def __cinit__(self, str filename, **kwargs): #, double fill = numpy.nan):
@@ -384,7 +397,9 @@ cdef class BigWigReader(_BBI_Reader):
 
 # can't be cdef'ed or cpdef'ed due to yield
 def BigWigIterator(BigWigReader reader, maxmem=0):
-    """Iterate over records in the `BigWig`_ file, sorted lexically by chromosome and position.
+    """BigWigIterator(reader, maxmem = 0)
+    
+    Iterate over records in the `BigWig`_ file, sorted lexically by chromosome and position.
 
     Parameters
     ----------
