@@ -143,9 +143,15 @@ them:
 Making custom extended BED files
 --------------------------------
 
+:term:`Extended BED <extended BED>` and `BigBed`_ files can contain extra columns,
+such as a gene ID.
+
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
-in a :term:`extended BED` format, pass the `extra_columns` keyword to the
-:meth:`plastid.genomics.roitools.SegmentChain.as_bed` method:
+in a :term:`extended BED` format, pass a list of the attribute names (from
+the dictionary `attr) to the `extra_columns` keyword of
+:meth:`plastid.genomics.roitools.SegmentChain.as_bed`. Attributes will be
+exported in the order they appear in `extra_columns`, and will be given an empty
+value of "" when they are not defined
 
 .. code-block:: python
 

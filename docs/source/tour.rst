@@ -1,13 +1,14 @@
 Tour
 ====
 
-This document contains a brief overview of the :ref:`tour-scripts` and
-:ref:`object types <tour-data-structures>` included in :data:`plastid`. Complete
-documentation may be found in :doc:`module documentation <generated/plastid>`.
+This document contains a brief overview of :data:`plastid` in the following
+sections:
 
 .. contents::
    :local:
 
+Detailed  documentation of classes & functions may be found in the
+:doc:`module documentation <generated/plastid>`.
 
 
 .. _tour-scripts:
@@ -19,8 +20,8 @@ Command-line scripts
 :term:`high-throughput sequencing` and :term:`ribosome profiling` analyses.
 These include, among others:
 
- - :doc:`Measuring read density </generated/plastid.bin.cs>` in regions
-   of interest (for example, to obtain gene expression values)
+ - :doc:`Measuring read counts or density density </generated/plastid.bin.cs>`
+   in regions of interest (for example, to obtain gene expression values)
 
  - :doc:`Determining P-site offsets </generated/plastid.bin.psite>` for
    :term:`ribosome profiling` experiments
@@ -28,9 +29,9 @@ These include, among others:
  - Performing :doc:`metagene analyses </generated/plastid.bin.metagene>`
 
  - :doc:`Creating browser tracks </generated/plastid.bin.make_wiggle>` 
-   from `BAM`_ or `bowtie`_ files, after applying read :term:`mapping rules`
-   to transform the alignments (e.g. for P-site assignment of 
-   :term:`ribosome profiling` data) 
+   from `BAM`_ or `bowtie`_ files, after applying :doc:`/concepts/mapping_rules`
+   to extract the biology of interst from the alignments (e.g. :term:`P-sites`
+   in :term:`ribosome profiling` data) 
 
 For a complete list, see :doc:`/scriptlist`.
 
