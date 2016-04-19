@@ -1,16 +1,21 @@
-Manipulating genomic sequence
-=============================
+Manipulating feature sequences
+==============================
 In this tutorial we will fetch the sequences of genomic `features <feature>`_,
-using the :doc:`/test_dataset`.
+like transcripts.
 
+.. contents::
+   :local:
 
-Fetching sequence from |SegmentChains|
---------------------------------------
-|SegmentChains| and |Transcripts| can fetch their own genomic sequence via
+Get the sequence of a feature or transcript
+-------------------------------------------
+
+Genomic features represented as |SegmentChains| and |Transcripts| can fetch
+their own genomic sequence via
 their :meth:`~plastid.genomics.roitools.SegmentChain.get_sequence` method.
+
 As an argument, the method expects a dictionary-like object of string-like
 objects, where the dictionary keys correspond to chromosome names, and
-the strings correspond to the forward-strand sequence.
+the strings correspond to the forward-strand sequence::
 
    >>> little_genome = { "chrA" : "NNNNNNNNNNTCTAGACGATACANNNNNNNNNNCTACGATA" }
 
@@ -52,12 +57,14 @@ Genomic sequence can be stored in a number of formats. Two of the most common ar
  - `FASTA`_: a non-indexed, text-base file of one or more sequences.
 
  - `2bit <twobit>`_: an indexed, binary format created for large (e.g. mammalian)
-    genomes. Beacause `2bit <twobit>`_ files are binary and indexed, they use
-    far less memory than `FASTA`_ files.
+   genomes. Because `2bit <twobit>`_ files are binary and indexed, they use
+   far less memory than `FASTA`_ files.
 
 :data:`plastid` doesn't implement any of its own sequence file readers, but it is compatible
-with any parser that returns sequences as a dictionary-like object of string-like
-objects. This allows users to use implementations in `Biopython`_ (for `FASTA`_, 
+with any parser that represents sequences as a dictionary-like object of string-like
+objects.
+
+This allows users to use implementations in `Biopython`_ (for `FASTA`_, 
 EMBL, & GenBank formats) and `twobitreader`_ (for `2bit <twobit>`_) files.
 For example, to load a FASTA file using `Biopython`_::
 
@@ -115,6 +122,9 @@ documentation for `Seq`_ and `SeqRecord`_.
 
 See also
 --------
- - `Biopython`_ documentation for manipulation of nucleic acid sequences
+
+ - `Biopython`_ documentation for manipulation of nucleic acid sequences.
+
  - `twobitreader`_ documentation
+
  - `UCSC file format FAQ`_ for details on sequence file formats

@@ -313,6 +313,7 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          library_dirs=LIBRARY_DIRS,
                          runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
                          extra_objects=EXTRA_OBJECTS,
+                         compiler_directives=CYTHON_ARGS,
                         ) for x in noinclude_pyx]
 
 bbifile = Extension(
@@ -448,7 +449,7 @@ class build_c_from_pyx(build_ext):
         if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
             self.run_command('clean')
             print("build_c_from_pyx: regenerating .c files from Cython")
-            extensions = cythonize(ext_modules)
+            extensions = cythonize(ext_modules,compiler_directives=CYTHON_ARGS)
             self.extensions = extensions
 
         build_ext.finalize_options(self)

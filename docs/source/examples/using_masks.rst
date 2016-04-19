@@ -1,69 +1,64 @@
 Excluding (masking) regions of the genome
 =========================================
 
-Often, it is important to exclude missing or unreliable data from analysis.
-For example, `numpy`_ and `SciPy`_ offer masking tools for numerical data
+It is often desirable to exclude missing or unreliable data from analysis.
+For this purpose, `numpy`_ and `SciPy`_ offer masking tools for numerical data
 in the modules :mod:`numpy.ma` and :mod:`scipy.stats.mstats`.
 
-In genomics, specific regions of the genome -- repetitive sequences --
+In genomics, specific regions of the genome -- e.g. transposons and repetitive
+sequences --
 are prone to yield missing or unreliable data, because reads from
 :term:`high-throughput sequencing` experiments will :term:`multimap <multimapping>`
 equally well to each instance of the repeated sequence, creating
 ambiguity in the data.
 
 In this tutorial we discuss how to exclude or *mask* regions of the genome
-from analysis. We use repetitive sequence as an example, but, any region
-could be masked. Masking is discussed in the following sections:
+from analysis using the :doc:`/test_dataset`. Masking is discussed in the
+following sections:
 
- - :ref:`masking-manual-mask` illustrates the effects of masking
-   on tabulation of :term:`feature` :term:`counts` and length
- 
- - :ref:`masking-mask-files` describes :term:`mask files <mask file>`,
-   and how to use them
-   :ref:`in interactive Python sessions <masking-mask-file-interactive>`
-   and
-   :ref:`in command-line scripts <masking-mask-file-command-line>`.
+.. contents::
+   :local:
+   
 
- - :ref:`masking-crossmap-script` explains how to use the |crossmap|
-   script to empirically annotate repetitive regions of the genome
-
-In this tutorial, we use the :doc:`/test_dataset`. You are
-encouraged to folow along.
 
 
 .. _masking-manual-mask:
 
-Manual masking of regions
--------------------------
+Manual masking
+--------------
 
-Genomic :term:`features <feature>` in :data:`plastid` are represented by
-|SegmentChains| and |Transcripts|, which are constructed from zero or
-more |GenomicSegments|.
-Because masks are :term:`features <feature>`, they are also represented
-as |SegmentChains| and |GenomicSegments|. Portions of |SegmentChains|
-and |Transcripts| can be masked using their
-:meth:`~plastid.genomics.roitools.SegmentChain.add_masks` methods::
+Creating & adding masks
+.......................
+
+Like all :term:`genomic features <feature>` in :data:`Plastid`, masks are 
+represented as |SegmentChains|, which can be used to mask other |SegmentChain|
+or |Transcript| objects.
+
+:meth:`~plastid.genomics.roitools.SegmentChain.add_masks` is used for this:
+
+.. code-block:: python
 
    >>> import numpy
    >>> from plastid import GenomicSegment, Transcript, BED_Reader, \
                            BAMGenomeArray, FivePrimeMapFactory
 
-   >>> # load transcripts and count data
+   # load transcripts and count data
    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"],FivePrimeMapFactory(offset=14))
    >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
-   >>> #this is ribosome profiling data, so we'll look at a coding region
+   # this is ribosome profiling data, so we'll look at a coding region,
+   # which we can fetch using get_cds()
    >>> demo_cds = transcripts[39].get_cds()
    >>> demo_cds_length = demo_cds.length
 
-   >>> # Now, add masks. We'll mask out the first and last 5 codons.
-   >>> # we can fetch these as subchains of the cds
-   >>> start_codon_masks = list(demo_cds.get_subchain(0,15))
-   >>> stop_codon_masks  = list(demo_cds.get_subchain(demo_cds_length-15,demo_cds_length))
-   >>> demo_cds.add_masks(*start_codon_masks)
-   >>> demo_cds.add_masks(*stop_codon_masks)
+   # Now, we'll mask out the first and last 5 codons.
+   # we can fetch these as subchains of the cds using get_subchain()
+   >>> start_codon_mask = list(demo_cds.get_subchain(0,15))
+   >>> stop_codon_mask  = list(demo_cds.get_subchain(demo_cds_length-15,demo_cds_length))
+   >>> demo_cds.add_masks(*start_codon_mask)
+   >>> demo_cds.add_masks(*stop_codon_mask)
 
-   >>> # save masks to a BED file
+   # save masks to a BED file
    >>> fout = open("merlin_start_codon_masks.bed","w")
    >>> for mask in start_codon_masks:
    >>>     fout.write(SegmentChain(mask).as_bed())
@@ -71,26 +66,34 @@ and |Transcripts| can be masked using their
    >>> fout.close()
 
 
+Uses of masks
+.............
 
 After masks are added, we can get a masked count vector by calling
 :meth:`~plastid.genomics.roitools.SegmentChain.get_masked_counts`. This method
 returns a :class:`numpy.ma.MaskedArray`, rather than a :class:`numpy.ndarray`.
 :class:`~numpy.ma.MaskedArray` objects because they contain all the values,
-but ignore masked values when performing operations::
+but ignore masked values when performing operations:
 
-   >>> # count reads, excluding those mapping to masked positions
+.. code-block:: python
+
+   # count reads, excluding those mapping to masked positions
    >>> demo_cds.get_masked_counts(alignments).sum()
    53.0
 
 Calling :meth:`~plastid.genomics.roitools.SegmentChain.get_counts` after adding
-masks will still return an *unmasked* :class:`numpy.ndarray`::
+masks will still return an *unmasked* :class:`numpy.ndarray`:
 
-   >>> # count all reads
+.. code-block:: python
+
+   # count all reads
    >>> demo_cds.get_counts(alignments).sum()
    67.0
 
 Masked positions are also excluded from length measurements, if and only if
-:meth:`~plastid.genomics.roitools.SegmentChain.get_masked_length` is called::
+:meth:`~plastid.genomics.roitools.SegmentChain.get_masked_length` is called:
+
+.. code-block:: python
 
    >>> demo_cds.masked_length # length, excluding masked nucleotides
    213
@@ -100,7 +103,9 @@ Masked positions are also excluded from length measurements, if and only if
 
 
 We can also retrieve masks that have been added to a |SegmentChain|, either
-as a list of |GenomicSegments| or as a |SegmentChain|::
+as a list of |GenomicSegments| or as a |SegmentChain|:
+
+.. code-block:: python
 
    >>> demo_cds.get_masks()
    [<GenomicSegment merlin:14615-14630 strand='+'>,
@@ -109,49 +114,50 @@ as a list of |GenomicSegments| or as a |SegmentChain|::
    >>> demo_cds.get_masks_as_segmentchain()
    <SegmentChain segments=2 bounds=merlin:14615-14858(+) name=merlin:14615-14630^14843-14858(+)>
 
-et c.
 
 .. _masking-mask-files:
 
 :term:`Mask files <mask file>`
 ------------------------------
-:term:`Mask files <mask file>` are :term:`annotation files <annotation>` whose
-features cover genomic regions that should be masked from analysis.
-:term:`Mask files <mask file>` can exist in any annotation format
-(e.g. `BED`_, `BigBed`_, `GFF3`_, or others), and can be used to mask any region,
--- not just repetitive sequence -- for any reason.
+:term:`Mask files <mask file>` annotate genomic regions that should be masked
+from analysis. As anny annotation file, these can be in any of many formats
+(e.g. `BED`_, `BigBed`_, `GFF3`_, or others).
 
 
 .. _masking-mask-file-interactive
 
-:mod:`GenomeHashes <plastid.genomics.genome_hash>` and :term:`mask files <mask file>` in interactive Python sessions
-....................................................................................................................
+In interactive Python sessions
+..............................
 
 :term:`Mask files <mask file>` can be loaded into a |GenomeHash|, which
-indexes mask by location in the genome. To create a |GenomeHash|::
+indexes mask by location in the genome. To create a |GenomeHash|:
+
+.. code-block:: python
 
    >>> from plastid import GenomeHash
 
-   >>> # get list of masks
+   # get list of masks
    >>> mask_features = list(BED_Reader(open("merlin_start_codon_masks.bed")))
 
-   >>> # use GenomeHash to index masks
+   # use GenomeHash to index masks
    >>> mask_hash = GenomeHash(mask_features)
 
-Then, we can search the |GenomeHash| for relevant masks to apply to features::
+Then, we can search the |GenomeHash| for relevant masks to apply to features:
 
+.. code-block:: python
+
+   # find masks
    >>> demo_masks = mask_hash[demo_cds]
    >>> demo_masks
    [<SegmentChain segments=1 bounds=merlin:14615-14630(+) name=merlin:14615-14630(+)>]
 
-   >>> # for each mask
+   # add to demo_cds
    >>> for mask_chain in demo_masks:
-   >>>     # unpack GenomicSegments from the chain and add each to the mask
    >>>    demo_cds.add_masks(*mask_chain)
 
 If the :term:`mask file` is very large, it should be converted to an
-:ref:`indexed file format` such as `BigBed`_, or a `tabix`_-compressed file
-so that mask features don't need to be held in memory by |GenomeHash|.
+:ref:`indexed file format` such as `BigBed`_ to save memory.
+
 These formats can instead be loaded into |BigBedGenomeHash| and
 |TabixGenomeHash|, which take advnatage of the indexes present in
 `BigBed`_ and `tabix`_-compressed files.
@@ -159,15 +165,15 @@ These formats can instead be loaded into |BigBedGenomeHash| and
 
 .. _masking-mask-file-command-line
 
-Using :term:`mask files <mask file>` in :mod:`command-line scripts <plastid.bin>`
-.................................................................................
+In command-line scripts
+.......................
 
 :term:`Mask files <mask file>` can be used by :mod:`command-line scripts <plastid.bin>`
-if a user supplies the argument ``--mask_annotation_files``. For example, to 
-mask regions when creating a :term:`metagene` window file:
+using the argument ``--mask_annotation_files``. For example:
 
 .. code-block:: shell
 
+   # create metagene file that excludes regions in mask_file.bed
    $ metagene generate outbase
                        --landmark cds_start \
                        --annotation_files annotation_file.gtf \
@@ -177,11 +183,16 @@ mask regions when creating a :term:`metagene` window file:
 
 .. _masking-crossmap-script:
 
-Creating a :term:`mask file` of repetitive genome sequence using the |crossmap| script
---------------------------------------------------------------------------------------
+Creating a mask file using the |crossmap| script
+------------------------------------------------
 
-The |crossmap| script creates a :term:`mask file` that empirically annotates repetitive
-genome sequence, using the following approach (introduced in :cite:`Ingolia2009`):
+The |crossmap| script empirically annotates genomic regions that multimap 
+under various alignment criteria, and saves these as a  :term:`mask file`.
+
+Algorithm
+.........
+
+|crossmap| uses the following approach (adapted from :cite:`Ingolia2009`):
 
 #. A genome is diced into pseudo-reads (:term:`k-mers <k-mer>`) of a given length.
    The length of the pseudo-read is chosen to conservatively approximate the expected
@@ -191,16 +202,18 @@ genome sequence, using the following approach (introduced in :cite:`Ingolia2009`
 
 #. The pseudo-reads are realigned to the genome sequence, permitting a user-configurable
    number of mismatches. Again, the number of mismatches should be chosen to conservatively
-   reflect the number of mismatches that will be permitted when data from the
-   :term:`high-throughput sequencing` experiment is aligned.
+   reflect the number of mismatches that will be permitted when the sequencing
+   data is aligned.
 
 #. The number of times each pseudo-read aligns is counted. When a pseudo-read
-   :term:`multimaps <multimapping>` equally well to multiple genomic coordinates,
+   :term:`multimaps <multimapping>` equally well to more than a single location,
    the genomic position that gave rise to that pseudo-read is annotated as
    repetitive under the given value for `k` and number of mismatches.
 
 #. Repetitive regions are saved in `BED`_ format.
 
+Running
+.......
 
 Because |crossmap| internally uses `bowtie`_ for alignments, `bowtie`_
 must be installed on your system. Once it is, use ``bowtie-build`` to
@@ -241,10 +254,14 @@ the documentation for `Jim Kent's utilities`_.
 See also
 --------
 
-- Module documentation for :mod:`plastid.genomics.genome_hash`
+- :mod:`plastid.genomics.genome_hash`, which includes additional genome hashes
+  for various binary or indexed file formats
+  
 - The |crossmap| script
-- Module documentation for :mod:`numpy.ma` and :mod:`scipy.stats.mstats`
+
+- :mod:`numpy.ma` and :mod:`scipy.stats.mstats`
   for lists of `numpy`_ and `SciPy`_ functions that operate on 
   :class:`~numpy.ma.MaskedArray` objects
+  
 - `Jim Kent's utilities`_ for `BigBed`_ conversion.
   
