@@ -842,7 +842,10 @@ cdef ExBool transcript_richcmp(Transcript chain1, Transcript chain2, int cmpval)
 #==============================================================================
 
 cdef class GenomicSegment:
-    """A continuous segment of the genome, defined by a chromosome name,
+    """
+    GenomicSegment(chrom,start,end,strand)
+    
+    A continuous segment of the genome, defined by a chromosome name,
     a start coordinate, and end coordinate, and a strand. Building block
     for a |SegmentChain| or a |Transcript|.
 
@@ -1160,7 +1163,10 @@ cdef class GenomicSegment:
             return self.c_strand
 
 cdef class SegmentChain(object):
-    """Base class for genomic features. |SegmentChains| can contain zero or more
+    """
+    SegmentChain(*segments,**attributes)
+    
+    Base class for genomic features. |SegmentChains| can contain zero or more
     |GenomicSegments|, and therefore can model discontinuous, features -- such
     as multi-exon transcripts or gapped alignments -- in addition,
     to continuous features.
@@ -1185,7 +1191,29 @@ cdef class SegmentChain(object):
     Intervals are sorted from lowest to greatest starting coordinate on their
     reference sequence, regardless of strand. Iteration over the SegmentChain
     will yield intervals from left-to-right in the genome.
+
+
+    Parameters
+    ----------
+    *segments : |GenomicSegment|
+        0 or more GenomicSegments on the same strand
     
+    **attr : keyword arguments
+        Arbitrary attributes, including, for example:
+    
+        ====================    ============================================
+        **Attribute**           **Description**
+        ====================    ============================================
+        ``type``                A feature type used for `GTF2`_/`GFF3`_ export
+                                of each interval in the |SegmentChain|. (Default: `'exon'`)
+        
+        ``ID``                  A unique ID for the |SegmentChain|.
+
+        ``transcript_id``       A transcript ID used for `GTF2`_ export
+
+        ``gene_id``             A gene ID used for `GTF2`_ export
+        ====================    ============================================    
+
 
     Attributes
     ----------
@@ -1200,7 +1228,12 @@ cdef class SegmentChain(object):
 
     attr : dict
         Any miscellaneous attributes or annotation data
-
+        
+    segments : list
+        List of |GenomicSegments| in the chain
+    
+    mask_segments : list
+        List of |GenomicSegments| that mask positions in the chain.
 
     See Also
     --------
@@ -1368,7 +1401,7 @@ cdef class SegmentChain(object):
         self._segments.sort()
         if self._mask_segments is not None:
             self._mask_segments.sort()
-
+        
     property chrom:
         """Chromosome the SegmentChain resides on"""
         def __get__(self):
@@ -3052,15 +3085,14 @@ cdef class SegmentChain(object):
         return chain
 
     def get_counts(self,ga,stranded=True):
-        """Return list of counts or values at each position in `self`
+        """Return list of counts or values drawn from `ga` at each position in `self`
         
         Parameters
         ----------
-        ga : non-abstract subclass of |AbstractGenomeArray|
-            GenomeArray from which to fetch counts
+        ga : GenomeArray from which to fetch counts
             
         stranded : bool, optional
-            If `True` and the SegmentChain is on the minus strand,
+            If `True` and `self` is on the minus strand,
             count order will be reversed relative to genome so that the
             array positions march from the 5' to 3' end of the chain.
             (Default: `True`)
@@ -3072,21 +3104,34 @@ cdef class SegmentChain(object):
             Array of counts from `ga` covering `self`
         """
         cdef:
-            long c, cend
-            GenomicSegment seg
-            numpy.ndarray[DOUBLE_t,ndim=1] count_array = numpy.zeros(self.length,dtype=DOUBLE)
+            GenomicSegment  seg
+            list segments = self._segments
+            numpy.ndarray   count_array
+            list count_arrays
+            list dims
+            int i, j, n
 
         if len(self) == 0:
             warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
+            return numpy.array([],dype=float)
 
-        c = 0
-        for seg in self:
-            cend = c + len(seg)
-            count_array[c:cend] = ga.get(seg,roi_order=False)
-            c = cend
+#        count_array = numpy.concatenate([ga.get(X,roi_order=False) for X in self._segments],axis=-1)
+        
+        # code block below is ugly compared to numpy.concatenate, but this is actually
+        # faster. must be something weird in implementation
+        count_arrays = [ga.get(X,roi_order=False) for X in segments]
+        dims         = list(count_arrays[0].shape)
+        dims[-1]     = self.length
+        count_array  = numpy.empty(dims,dtype=float)
+         
+        i = 0
+        for n,seg in enumerate(segments):
+            j = i + len(seg)
+            count_array[...,i:j] = count_arrays[n]
+            i = j
 
         if self.c_strand == reverse_strand and stranded is True:
-            count_array = count_array[::-1]
+            count_array = count_array[...,::-1]
             
         return count_array
 
@@ -3107,26 +3152,29 @@ cdef class SegmentChain(object):
             (Default: `True`)
 
         copy : bool, optional
-            If `False` (defualt) returns a view of the data; so changing
+            If `False` (default) returns a view of the data; so changing
             values in the view changes the values in the |GenomeArray|
             if it is mutable. If `True`, a copy is returned instead.
             
             
         Returns
         -------
-		:py:class:`numpy.ma.masked_array`
+        :py:class:`numpy.ma.masked_array`
         """
         cdef:
-            numpy.ndarray[DOUBLE_t,ndim=1] counts = self.get_counts(ga)
-            numpy.ndarray[int,ndim=1] mask
+            numpy.ndarray counts = self.get_counts2(ga)
+            numpy.ndarray mask, m
 
         if self._position_mask is None:
-            # TODO: check if this line is actually necessary
-            mask = numpy.zeros(len(counts),dtype=numpy.intc)
+            mask = numpy.zeros_like(counts)
         else:
-            mask = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
+            # need to use intc bc self._position_mask is an array.array
+            m = numpy.frombuffer(self._position_mask,dtype=numpy.intc)
             if self.c_strand == reverse_strand:
-                mask = mask[::-1]
+                m = m[::-1]
+            
+            mask = numpy.empty_like(counts)
+            mask[...,:] = m
 
         return MaskedArray(counts,mask=mask.astype(bool),copy=copy)
         
@@ -3348,11 +3396,39 @@ cdef class SegmentChain(object):
 
  
 cdef class Transcript(SegmentChain):
-    """Subclass of |SegmentChain| specifically for transcripts.
+    """
+    Transcript(*segments,**attributes)
+    
+    Subclass of |SegmentChain| specifically for transcripts.
     In addition to coordinate-conversion, count fetching, sequence fetching,
     and various other methods inherited from |SegmentChain|, |Transcript|
     provides convenience methods for fetching sub-chains corresponding to 
     CDS features, 5' UTRs, and 3' UTRs.
+
+
+    Parameters
+    ----------
+    *segments : |GenomicSegment|
+        0 or more GenomicSegments on the same strand
+    
+    **attr : keyword arguments
+        Arbitrary attributes, including, for example:
+    
+        ====================    ============================================
+        **Attribute**           **Description**
+        ====================    ============================================
+        ``cds_genome_start``    Location of CDS start, in genomic coordinates
+
+        ``cds_genome_start``    Location of CDS end, in genomic coordinates
+        
+        ``ID``                  A unique ID for the |SegmentChain|.
+
+        ``transcript_id``       A transcript ID used for `GTF2`_ export
+
+        ``gene_id``             A gene ID used for `GTF2`_ export
+        ====================    ============================================    
+
+
 
 
     Attributes
@@ -3382,6 +3458,12 @@ cdef class Transcript(SegmentChain):
 
     chrom : str
         The chromosome name
+        
+    segments : list
+        List of |GenomicSegments| in the chain
+    
+    mask_segments : list
+        List of |GenomicSegments| that mask positions in the chain.
 
     attr : dict
         Miscellaneous attributes
