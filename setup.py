@@ -66,7 +66,7 @@ try:
     pstr = foundstr % pysamver
 
     import Cython
-    from Cython.Distutils import build_ext
+    from Cython.Distutils import build_ext, Extension
     from Cython.Build import cythonize
     cythonver = version_tuple(Cython.__version__)
     cstr = foundstr % cythonver
@@ -313,7 +313,7 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          library_dirs=LIBRARY_DIRS,
                          runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
                          extra_objects=EXTRA_OBJECTS,
-                         compiler_directives=CYTHON_ARGS,
+                         cython_directives=CYTHON_ARGS,
                         ) for x in noinclude_pyx]
 
 bbifile = Extension(
@@ -324,6 +324,7 @@ bbifile = Extension(
     libraries=LIBRARIES + ["z"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
+    cython_directives=CYTHON_ARGS,
 )
 
 bigwig = Extension(
@@ -334,6 +335,7 @@ bigwig = Extension(
     libraries=LIBRARIES + ["z"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
+    cython_directives=CYTHON_ARGS,
 )
 
 bigbed = Extension(
@@ -344,6 +346,7 @@ bigbed = Extension(
     libraries=LIBRARIES + ["z"],
     library_dirs=LIBRARY_DIRS,
     runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
+    cython_directives=CYTHON_ARGS,
 )
 
 ext_modules.append(bbifile)
