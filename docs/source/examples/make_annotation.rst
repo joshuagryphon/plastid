@@ -1,5 +1,5 @@
-Creating `BED`_ and `GTF2`_ files
-=================================
+Creating custom BED and GTF2 annotation files
+=============================================
 
 In this tutorial, we describe how to make custom :term:`genome annotations <annotation>`
 in `BED`_ and `GTF2`_ formats. These can then be used as any other annotation file:
@@ -102,7 +102,7 @@ Make a BED file containing halves of each coding region
 Manually entering coordinates is laborious. More frequently, novel annotations
 are derived from existing ones. Let's suppose we'd like to make a `BED`_ file
 containing halves of coding regions. For this we'll use the
-:doc:` demo dataset <test_dataset>`.
+:doc:`demo dataset </test_dataset>`.
 
 We'll load the transcripts, create new |SegmentChains| from those, and save
 them:
@@ -148,8 +148,8 @@ such as a gene ID.
 
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
 in a :term:`extended BED` format, pass a list of the attribute names (from
-the dictionary `attr) to the `extra_columns` keyword of
-:meth:`plastid.genomics.roitools.SegmentChain.as_bed`. Attributes will be
+the dictionary `attr`) to the `extra_columns` keyword of
+:meth:`SegmentChain.as_bed <plastid.genomics.roitools.SegmentChain.as_bed>`. Attributes will be
 exported in the order they appear in `extra_columns`, and will be given an empty
 value of "" when they are not defined
 
