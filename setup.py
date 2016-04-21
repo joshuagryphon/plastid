@@ -48,28 +48,28 @@ if ver < (2,7) or ver[0] == 3 and ver[1] < 3:
 
 
 def version_tuple(inp):
-    return  tuple([int(X) for X in inp.split(".")])
+    return tuple([int(X) for X in inp.split(".")])
 
 
 # at present, setup/build can't proceed without numpy, Pysam, Cython
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before then.
-foundstr = "(found %s.%s.%s)"
+foundstr = "(found %s)"
 nstr = pstr = cstr = "(no version found)"
 try:
     import numpy
     numpyver = version_tuple(numpy.__version__)
-    nstr = foundstr % numpyver
+    nstr = foundstr % numpy.__version__
 
     import pysam
     pysamver = version_tuple(pysam.__version__)
-    pstr = foundstr % pysamver
+    pstr = foundstr % pysam.__version__
 
     import Cython
     from Cython.Distutils import build_ext, Extension
     from Cython.Build import cythonize
     cythonver = version_tuple(Cython.__version__)
-    cstr = foundstr % cythonver
+    cstr = foundstr % Cython.__version__
 
     if numpyver < NUMPY_VER_NUM or pysamver < PYSAM_VER_NUM or cythonver < CYTHON_VER_NUM:
         raise ImportError()
