@@ -3113,7 +3113,7 @@ cdef class SegmentChain(object):
 
         if len(self) == 0:
             warn("%s is a zero-length SegmentChain. Returning 0-length count vector." % self.get_name(),DataWarning)
-            return numpy.array([],dype=float)
+            return numpy.array([],dtype=float)
 
 #        count_array = numpy.concatenate([ga.get(X,roi_order=False) for X in self._segments],axis=-1)
         
