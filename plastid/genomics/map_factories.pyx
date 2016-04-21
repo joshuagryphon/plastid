@@ -1,4 +1,29 @@
-"""Cython implementations of :term:`mapping rules <mapping rule>`.
+"""Cython implementations of :term:`mapping rules <mapping rule>` for `BAM`_ files.
+
+Mapping rules must be callables, and can therefore be implemented as functions
+or classes. In order to give them configurable parameters, one could create
+function factories or use :func:`functools.partial` to supply the extra
+parameters. Here, we created classes that produce callable instances that mimic
+functions. We did this because early on we ran into trouble with limitations of
+:mod:`pickle` and :mod:`multiprocessing`, which can only capture functions and
+classes defined in the top-level scope. This limitation is no longer relevant
+to our purposes but is preserved here in history.
+
+Generally, the callable must accept two arguments: a list of read alignments
+(as :class:`pysam.AlignedSegment`) and a |GenomicSegment| representing a query
+interval. The callable must then return two values: a list of read alignments,
+and a :class:`numpy.ndarray` of values.
+
+Generally, all reads are mapped within the callable. Only those that contribute
+data to coordinates contained within the query interval are returned.
+
+The :class:`numpy.ndarray` of values may be multidimensional. The only stipulation
+is that the last dimension represent the positions in the query interval. For
+a 2D array, the positions would thus be columns. See
+|StratifiedVariableFivePrimeMapFactory| below for an example.
+
+
+ 
 
 See also
 --------
@@ -17,7 +42,7 @@ from plastid.util.services.exceptions import DataWarning, warn, warn_onceperfami
 from plastid.util.io.filters import CommentReader
 from plastid.util.scriptlib.argparsers import _parse_variable_offset_file
 
-
+DEF _BAD_OFFSET = -1
 INT    = np.int
 FLOAT  = np.float
 DOUBLE = np.double
@@ -40,10 +65,12 @@ ctypedef np.long_t   LONG_t
 
 
 cdef class CenterMapFactory:
-    """Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
-    A user-specified number of bases is removed from each side of each
-    read alignment, and the `N` remaining bases are each apportioned `1/N`
-    of the read count, so that the entire read is counted once.
+    """CenterMapFactory(nibble = 0)
+    
+    Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
+    `nibble` positions  is removed from each side of each read alignment, and
+    the `N` remaining positions are each apportioned `1/N` of the read count,
+    so that the entire read is counted once.
 
     Parameters
     ----------
@@ -85,6 +112,9 @@ cdef class CenterMapFactory:
             
         Returns
         -------
+        list
+            List of reads that were mapped into the output array
+
         :py:class:`numpy.ndarray`
             Vector of counts at each position in `seg`
         """
@@ -125,7 +155,7 @@ cdef class CenterMapFactory:
                 reads_out.append(read)
 
         if do_warn == 1:
-            warn("Data contains read alignments shorter than `2*nibble` value of %s nt. Ignoring these." % 2*nibble,
+            warn_onceperfamily("Data contains read alignments shorter than `2*nibble` value of '%s' nt. Ignoring these." % (2*nibble),
                   DataWarning)
         
         return reads_out, count_array
@@ -139,8 +169,11 @@ cdef class CenterMapFactory:
 
 
 cdef class FivePrimeMapFactory:
-    """Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+    """FivePrimeMapFactory(offset = 0)
+    
+    Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped at `offset` nucleotides from the fiveprime end of their
+    alignment.
      
     Parameters
     ----------
@@ -230,8 +263,10 @@ cdef class FivePrimeMapFactory:
 
      
 cdef class ThreePrimeMapFactory:
-    """Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
+    """ThreePrimeMapFactory(offset = 0)
+    
+    Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped `offset` nucleotides from the threeprime end of their alignments.
      
     Parameters
     ----------
@@ -322,9 +357,11 @@ cdef class ThreePrimeMapFactory:
 
 
 cdef class VariableFivePrimeMapFactory:
-    """Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
-    Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
-    The offset for a read of a given length is supplied in `offset_dict[readlen]`
+    """VariableFivePrimeMapFactory(offset_dict)
+    
+    Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
+    Reads are mapped at a user-specified offsets from the fiveprime end of each
+    alignment. The offset for a read of a given length is supplied in `offset_dict[readlen]`
      
     Parameters
     ----------
@@ -335,32 +372,63 @@ cdef class VariableFivePrimeMapFactory:
         enumerated in `offset_dict`
     """
 
-    def __cinit__(self, dict offset_dict not None):
+    def __cinit__(self, dict offset_dict, *args):
+        """
+        Parameters
+        ----------
+        offset_dict : dict
+            Dictionary mapping read lengths to offsets that should be applied
+            to reads of that length during mapping. A special key, `'default'` may
+            be supplied to provide a default value for lengths not specifically
+            enumerated in `offset_dict`
+        """
         cdef:
             int [:] fw_view = self.forward_offsets
             int [:] rc_view = self.reverse_offsets
             int offset
             object read_length # can be int or str
-        fw_view [:] = -1
-        rc_view [:] = 1
+            int i
+            
+        fw_view [:] = _BAD_OFFSET
+        rc_view [:] = _BAD_OFFSET
+        
+        # this might seem silly, because nobody would every make a 
+        # FivePrimeVariableMapFactory without an offset_dict, but this allows
+        # reuse of this __cinit__ in StratifiedVariableFivePrimeMapFactory.
+        if offset_dict is None:
+            offset_dict = { "default" : 0 }
+            
+        if "default" in offset_dict:
+            default = int(offset_dict["default"])
+            fw_view[default + 1:] = default
+            i = default + 1
+            while i < len(rc_view):
+                rc_view[i] = i - default - 1
+                i += 1
 
         # store offsets in c arrays for fast lookup
         # value for `default` in 0th place
         for read_length, offset in offset_dict.items():
-            if read_length == "default":
-                fw_view[0] = offset
-                rc_view[0] = - offset - 1
-            else:
+            if read_length != "default":
                 if offset >= read_length:
-                    warn_onceperfamily("Offset %s longer than read length %s. Ignoring %s-mers." % (offset, read_length, read_length),
-                         DataWarning)
+                    if read_length >= default:
+                        warn_onceperfamily("Given offset '%s' longer than read length '%s'. Falling back to default '%s'." % (offset, read_length, default),
+                             DataWarning)
+                        offset = default
+                    else:
+                        warn_onceperfamily("Given offset '%s' and default '%s' are longer than read length '%s'. Ignoring %s-mers." % (offset, default, read_length, read_length),
+                             DataWarning)
                     continue
+
                 fw_view[read_length] = offset
-                rc_view[read_length] = - offset - 1
+                rc_view[read_length] = read_length - offset - 1
     
     @staticmethod
     def from_file(object fn_or_fh):
-        """Create a :class:`VariableFivePrimeMapFactory` from a text file.
+        """
+        from_file(object fn_or_fh)
+        
+        Create a :class:`VariableFivePrimeMapFactory` from a text file.
 
         The text file should be formatted as by the :mod:`~plastid.bin.psite`
         script: a tab-delimited two-column text file in which the first column
@@ -390,7 +458,8 @@ cdef class VariableFivePrimeMapFactory:
             fh = CommentReader(fn_or_fh)
 
         return VariableFivePrimeMapFactory(_parse_variable_offset_file(fh))
-         
+
+    @cython.boundscheck(False) # valid because indices are explicitly checked in __cinit__
     def __call__(self, list reads not None, GenomicSegment seg not None):
         """Returns reads covering a region, and a count vector mapping reads
         to specific positions in the region, mapping reads at possibly varying
@@ -406,49 +475,42 @@ cdef class VariableFivePrimeMapFactory:
             
         Returns
         -------
+        list
+            List of reads that were mapped into the output array
+
         :py:class:`numpy.ndarray`
             Vector of counts at each position in `seg`
         """
         cdef:
+            int [:] offsets = self.forward_offsets
+            
             long seg_start = seg.start
-            long seg_end = seg.end
-            long seg_len = seg_end - seg_start
-            list reads_out = []
-            int no_offset_length = 0
-            int bad_offset_length = 0
-            int [10000] offsets = self.forward_offsets
-            int empty_val = -1
+            long seg_end   = seg.end
+            long seg_len   = seg_end - seg_start
+            
+            int no_offset_length
             int do_no_offset_warning = 0
-            int do_bad_default_warning = 0
-            int read_length, offset, p_site
+            
+            int            read_length, offset
+            long           p_site
             AlignedSegment read
-            np.ndarray[LONG_t,ndim=1] count_array = np.zeros(seg_len,dtype=LONG)
-            long [:] count_view = count_array
-            long psite
+            
+            np.ndarray count_array = np.zeros(seg_len,dtype=LONG)
+            long [:]   count_view  = count_array
+            list read_positions
+            list reads_out       = []
 
         if seg.c_strand == reverse_strand:
             offsets = self.reverse_offsets
-            empty_val = 1
 
         for read in reads:
             read_positions = <list>read.positions
-            read_length = len(read_positions)
-            fo = self.forward_offsets[read_length] # needed for read length test
-            offset = offsets[read_length]
+            read_length    = len(read_positions)
+            offset         = offsets[read_length]
 
-            # check value is defined, if not use default
-            if offset == empty_val:
-                offset = offsets[0]
-                fo = self.forward_offsets[0]
-                # if defaut not defined, ignore read and warn
-                if offset == empty_val:
-                    do_no_offset_warning = 1
-                    no_offset_length = read_length
-                    continue
-            
-            if fo >= read_length:
-                do_bad_default_warning = 1
-                bad_offset_length = read_length
+            if offset == _BAD_OFFSET:
+                do_no_offset_warning = 1
+                no_offset_length = read_length
                 continue
 
             p_site = read_positions[offset]
@@ -457,18 +519,155 @@ cdef class VariableFivePrimeMapFactory:
                 count_view[p_site - seg.start] += 1
 
         if do_no_offset_warning == 1:
-            warn_onceperfamily("No offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
-                 DataWarning)
-
-        if do_bad_default_warning == 1:
-            warn_onceperfamily("'Default' offset (%s nt) exceeds length of some reads found (%s nt). Ignoring these." % (self.forward_offsets[0], bad_offset_length),
+            warn_onceperfamily("No usable offset for reads of length %s nt in offset dict. Ignoring these." % (no_offset_length),
                  DataWarning)
 
         return reads_out, count_array
 
 
+cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
+    """StratifiedVariableFivePrimeMapFactory(offset_dict, min = 25, max = 35)   
+    
+    Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`, stratified by read length.
+    
+    Reads are mapped into a 2D array of counts at each position in a region of
+    interest (column), stratified by read length (row). Mapping is performed
+    by applying a user-specified offset from the fiveprime end of each alignment.
+    A unique offset may be supplied for each read length. 
+    
+    Reads outside of pre-specified minimum and maximum lengths are ignored.
+
+
+    Parameters
+    ----------
+    offset_dict : dict or `None`
+        Dictionary mapping read lengths to offsets that should be applied
+        to reads of that length during mapping. A special key, `'default'` may
+        be supplied to provide a default value for lengths not specifically
+        enumerated in `offset_dict.` If `None`, all reads are mapped to their
+        5' ends.
+        
+    min_length : int
+        Minimum length read to map
+        
+    max_length : int
+        Maximum length read to map, inclusive
+
+    
+    Attributes
+    ----------
+    row_keys : numpy.ndarray
+        1D numpy array indicating which read length is assigned to which row
+
+    shape : list of integers
+        size of each axis of output, excluding the final axis, which is
+        specified the length of incoming GenomicSegments.
+        
+     .. warning::
+     
+        The :meth:`~plastid.genomics.genome_array.BAMGenomeArray.to_variable_step`,
+        :meth:`~plastid.genomics.genome_array.BAMGenomeArray.to_bedgraph`,
+        :meth:`~plastid.genomics.genome_array.BAMGenomeArray.to_genome_array`,
+        of :class:`BAMGenoemArray` do not support multi-dimensional map
+        factories.-
+    """
+    def __cinit__(self, dict offset_dict, int min = 25, int max = 35):
+        """
+        Parameters
+        ----------
+        offset_dict : dict
+            Dictionary mapping read lengths to offsets that should be applied
+            to reads of that length during mapping. A special key, `'default'` may
+            be supplied to provide a default value for lengths not specifically
+            enumerated in `offset_dict`
+            
+        min_length : int
+            Minimum length read to map
+            
+        max_length : int
+            Maximum length read to map, inclusive
+        """
+        if max <= min:
+            raise ValueError("Max length '%s' must be >= min length '%s'. " % (max,min))
+        
+        self.min_length  = min
+        self.max_length  = max
+        self._numlengths = max - min + 1
+
+    @cython.boundscheck(False) # valid because indices are explicitly checked in VariableFivePrimeMapFactory.__cinit__
+    def __call__(self, list reads not None, GenomicSegment seg not None):
+        """Map reads covering `seg` into a 2D count array, in which reads at
+        each nucleotide position (column) are stratified by read length (row),
+        and, optionally, offset from their 5' ends.
+ 
+        Parameters
+        ----------
+        seg : |GenomicSegment|
+            Region of interest
+        
+        reads : list of :py:class:`pysam.AlignedSegment`
+            Reads to map
+            
+        Returns
+        -------
+        list
+            List of reads that were mapped into the output array
+
+        :py:class:`numpy.ndarray`
+            2D array, in which each cell value is the number of counts
+            of a given length (row) at  given position (column)
+        """
+        cdef:
+            long seg_start             = seg.start
+            long seg_end               = seg.end
+            long seg_len               = seg_end - seg_start
+
+            int [10000] offsets        = self.forward_offsets
+            int num_lengths            = self._numlengths
+            int min_length             = self.min_length
+            
+            list reads_out             = []
+            int read_length, offset, p_site
+            
+            AlignedSegment read
+            
+            np.ndarray count_array = np.zeros((num_lengths,seg_len),dtype=LONG)
+            long [:,:] count_view  = count_array
+            long psite
+
+        if seg.c_strand == reverse_strand:
+            offsets = self.reverse_offsets
+
+        for read in reads:
+            read_positions = <list>read.positions
+            read_length = len(read_positions)
+            if read_length >= min_length and read_length <= self.max_length:
+
+                offset = offsets[read_length]
+                p_site = read_positions[offset]
+                
+                if p_site >= seg_start and p_site < seg_end:
+                    reads_out.append(read)
+                    count_view[read_length - min_length, p_site - seg_start] += 1
+
+        return reads_out, count_array
+
+    property row_keys:
+        """numpy array of read lengths corresponding to each row of mapped data."""
+        def __get__(self):
+            return np.arange(self.min_length,self.max_length+1)
+        
+    property shape:
+        """list containing size of each axis of output, excluding the final axis,
+        which is specified the length of incoming GenomicSegments."""
+        def __get__(self):
+            return [self._numlengths]
+
+
 cdef class SizeFilterFactory:
-    """Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
+    """SizeFilterFactory(min = 1, max = -1_)
+    
+    Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
     using ::meth:`BAMGenomeArray.add_filter`
     
     Parameters
@@ -477,11 +676,8 @@ cdef class SizeFilterFactory:
         Minimum read length to pass filter, inclusive (Default: `1`)
     
     max : float or numpy.inf, optional
-        Maximum read length to pass filter, inclusive (Default: infinity)
-    
-    Returns
-    -------
-    function
+        Maximum read length to pass filter, inclusive. If set to `-1`,
+        then there is no maximum length filter. (Default: -1, no filter)
     """
 
     def __cinit__(self,int min = 1, int max = -1):

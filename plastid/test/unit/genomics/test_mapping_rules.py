@@ -2,12 +2,15 @@
 import numpy
 import pysam
 import warnings
+from pkg_resources import resource_filename
 from nose.tools import assert_true, assert_equal, assert_greater_equal
 from plastid.genomics.map_factories import FivePrimeMapFactory,\
                                        ThreePrimeMapFactory,\
                                        CenterMapFactory,\
-                                       VariableFivePrimeMapFactory
-from plastid.genomics.roitools import GenomicSegment
+                                       VariableFivePrimeMapFactory,\
+                                       StratifiedVariableFivePrimeMapFactory
+from plastid.genomics.roitools import GenomicSegment, SegmentChain
+from plastid.genomics.genome_array import BAMGenomeArray
 from plastid.util.services.mini2to3 import cStringIO
 
 
@@ -173,6 +176,31 @@ class TestBAM_MappingRules(object):
             for strand in self.strands:
                 yield self.check_unmappable_not_mapped_in_vector_or_returned, test_name, map_param, expected_num_reads, strand 
 
+    def test_variable_stratified_mapping_plus(self):
+        offsets = {
+            26 : 6,
+            27 : 22,
+            28 : 13,
+            29 : 4,
+            30 : 5
+        }
 
+        chains = {
+            "fw" : SegmentChain(GenomicSegment('chrII',392959,393180,'+'),
+                              GenomicSegment('chrII',393510,394742,'+'),
+                              GenomicSegment('chrII',394860,394901,'+'),
+                              ID='YBR078W_mRNA'),
+            "rc" : SegmentChain(GenomicSegment('chrVIII',189061,189749,'-'),
+                              GenomicSegment('chrVIII',189850,190017,'-'),
+                              ID='YHR041C_mRNA')
+        }
+        expected = {
+            "fw" : numpy.loadtxt(resource_filename("plastid","test/data/stratmap/strat_fw_vec.txt"),delimiter="\t"),
+            "rc" : numpy.loadtxt(resource_filename("plastid","test/data/stratmap/strat_rc_vec.txt"),delimiter="\t"),
+        }
+        ga = BAMGenomeArray([resource_filename("plastid","test/data/stratmap/strat.bam")])
+        ga.set_mapping(StratifiedVariableFivePrimeMapFactory(offsets,26,30))
 
+    def test_variable_stratified_mapping_minus(self):
+        pass
 

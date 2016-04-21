@@ -713,8 +713,11 @@ class BAMGenomeArray(AbstractGenomeArray):
         strand = roi.strand
         start  = roi.start
         end    = roi.end
+        
         if chrom not in self.chroms():
-            return [], numpy.zeros(len(roi))
+            # FIXME: generalize to N-D
+            shape = [1] + getattr(self.map_fn,"shape",[])
+            return [], numpy.zeros(shape)
 
         reads = itertools.chain.from_iterable((X.fetch(reference=chrom,
                                                start=start,
@@ -741,7 +744,7 @@ class BAMGenomeArray(AbstractGenomeArray):
             count_array = count_array / float(self.sum()) * 1e6
         
         if roi_order == True and strand == "-":
-            count_array = count_array[::-1]
+            count_array = count_array[...,::-1]
 
         return reads, count_array
 

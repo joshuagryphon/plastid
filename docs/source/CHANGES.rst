@@ -77,18 +77,19 @@ Command-line scripts
     relationships.
 
 
+Infrastructure
+""""""""""""""
 
-Interactive/developer
-"""""""""""""""""""""
-
-  - Reformatted warning output to improve legibility
+  - ``BAMGenomeArray`` can now use mapping functions that return multidimensional
+     arrays. As an example we added ``StratifiedVariableFivePrimeMapFactory``,
+     which produces a 2D array of counts at each position in a region (columns),
+     stratified by read length (rows).
+  
+  - Reformatted & colorized warning output to improve legibility
 
   - ``read_pl_table()`` convenience function for reading tables written
     by command-line scripts into DataFrames, preserving headers, formatting,
     et c
-
-  - ``colored()`` function to colorize text only when a terminal or stream
-    supports it
 
 
 Deprecated
