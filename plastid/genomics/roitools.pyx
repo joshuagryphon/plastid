@@ -3162,7 +3162,7 @@ cdef class SegmentChain(object):
         :py:class:`numpy.ma.masked_array`
         """
         cdef:
-            numpy.ndarray counts = self.get_counts2(ga)
+            numpy.ndarray counts = self.get_counts(ga)
             numpy.ndarray mask, m
 
         if self._position_mask is None:
