@@ -7,14 +7,12 @@ using matched samples of :term:`RNA-seq` and :term:`ribosome profiling` data.
 However, the analysis below can apply to any type of
 :term:`high-throughput sequencing` data (e.g. ClIP-seq, ChIP-seq, :term:`DMS-seq`, et c).
 
-We will do this two ways:
+This document aimed at beginners, and is broken into the following sections:
 
- #. :ref:`Manually <gene-expression-interactive>`, in an interactive
-    Python session
-
- #. Using the :mod:`~plastid.bin.counts_in_region` script to
-    :ref:`count expression automatically <gene-expression-scripts>`.
-
+.. contents::
+   :local:
+  
+ 
 The examples below the :doc:`/test_dataset`.
 
 
@@ -45,10 +43,10 @@ Via command-line scripts
 
 :data:`plastid` includes two scripts for measuring gene expression:
 
-  * :mod:`~plastid.bin.cs`, which pre-processes a genome anntation and makes
+  * :mod:`~plastid.bin.cs`, which pre-processes a genome annotation and makes
     various heuristic corrections to gene boundaries (e.g. if genes overlap)
 
-  * :mod:`~plastid.bin.counts_in_region`, which does not.
+  * :mod:`~plastid.bin.counts_in_region`, which does not
 
 The differences between the scripts are further explained in
 :ref:`faq-cs-vs-counts-in-region`. Here we will use :mod:`~plastid.bin.counts_in_region`.
@@ -609,9 +607,12 @@ This is similar to what we did above. In `R`_:
     > # sneak a peak
     > head(resOrdered)
 
+Finally
+"""""""
 
-The table `te_change_over_time.txt` can then be manipulated/visualized in your
-environment of choice.
+The table `te_change_over_time.txt` can then be further manipulated in `R`_, 
+Excel, or Python (using :func:`Pandas.read_table`).
+
 
 
  .. old discussion- the empirical test used by Nick Ingolia 
@@ -665,16 +666,16 @@ environment of choice.
 See also
 --------
 
-  - :doc:`/concepts/mapping_rules` and :mod:`plastid.genomics.genome_array` for
-    information on mapping rules and processing read alignments
-
-  - Documentation for |cs| and |counts_in_region| for further discussion 
-    of their algorithms
 
   - Website for `DESeq2`_, as well as :cite:`Anders2010`, :cite:`Anders2013` and
     :cite:`Love2014` for discussions of statistical models for differential gene
     expression, and examples on how to use `DESeq`_/`DESeq2`_ for various
     experimental designs
 
+  - Documentation for |cs| and |counts_in_region| for further discussion 
+    of their algorithms
+
   - :doc:`/examples/using_masks` for instructions on how to exclude parts of
-    the genome or transcriptome from analysis.
+    the genome or transcriptome from analysis, a step we skipped here
+
+    

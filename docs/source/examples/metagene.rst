@@ -1,6 +1,9 @@
 Performing metagene analyses
 ============================
 
+.. contents::
+   :local:
+
 Definition
 ----------
 A :term:`metagene` analysis is an average of quantitative data over one or more

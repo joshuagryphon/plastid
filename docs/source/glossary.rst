@@ -81,14 +81,24 @@ Glossary of terms
       See :cite:`Rouskin2014` for details.
 
    crossmap
+      A :term:`mask file` that regions of the genome that give rise to multimapping
+      reads under given alignment criteria. Crossmaps may be made using the
+      |crossmap| script
+   
+   indexed file format
+      A file that indexes its own data, enabling readers to selectively load
+      only the portions of data that are needed. This substantially saves
+      memory. Indexed data formats include `BAM`_, `BigWig`_, `BigBed`_ and
+      `tabix`_-compressed `GTF2`_, `GFF3`_, and `BED`_ files. 
+      See :ref:`concepts-data-formats` for further discussion.  
+   
    mask file
    mask annotation file
-      A genomic :term:`annotation` that identifies regions of the genome that
-      cannot give rise to uniquely-mapping reads due to repetitive sequence.
-      :term:`mask files <mask file>` are functions of genome sequence, read length, and alignment
-      parameters (e.g. the number of mismatches allowed). These may be
-      generated from genome sequence using the included
-      :py:mod:`~plastid.bin.crossmap` script.
+      An :term:`annotation` file that identifies regions of the genome to
+      exclude from analysis, such as repetitive regions.
+      
+      See :doc:`/examples/using_masks` for information on creating and using
+      mask files.
 
    factory function
       A function that produces functions

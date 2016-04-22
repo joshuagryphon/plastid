@@ -1,7 +1,7 @@
 Manipulating feature sequences
 ==============================
 In this tutorial we will fetch the sequences of genomic `features <feature>`_,
-like transcripts.
+like transcripts, in the following sections:
 
 .. contents::
    :local:
@@ -9,18 +9,16 @@ like transcripts.
 Get the sequence of a feature or transcript
 -------------------------------------------
 
-Genomic features represented as |SegmentChains| and |Transcripts| can fetch
-their own genomic sequence via
+|SegmentChains| and |Transcripts| can fetch their own genomic sequence via
 their :meth:`~plastid.genomics.roitools.SegmentChain.get_sequence` method.
 
 As an argument, the method expects a dictionary-like object of string-like
 objects, where the dictionary keys correspond to chromosome names, and
-the strings correspond to the forward-strand sequence::
+the strings correspond to the forward-strand sequence. For example::
 
    >>> little_genome = { "chrA" : "NNNNNNNNNNTCTAGACGATACANNNNNNNNNNCTACGATA" }
 
-Sequences are fully-spliced, if the |SegmentChain| contains one or more
-|GenomicSegment|::
+Sequences of multi-segment features are returned fully-spliced::
 
    >>> from plastid import GenomicSegment, SegmentChain
 
@@ -41,7 +39,7 @@ For reverse-strand features, sequences are automatically reverse-complemented::
    'TATCGTAGTGTATCGTCTAGA'
 
 
-For convenience, |SegmentChain| and |Transcript| also implement
+For convenience, |SegmentChain| and |Transcript| also implement a method called
 :meth:`~plastid.genomics.roitools.SegmentChain.get_fasta`, which formats output
 in `FASTA`_ format::
 
@@ -52,6 +50,7 @@ in `FASTA`_ format::
 
 Supported sequence file formats
 -------------------------------
+
 Genomic sequence can be stored in a number of formats. Two of the most common are:
 
  - `FASTA`_: a non-indexed, text-base file of one or more sequences.

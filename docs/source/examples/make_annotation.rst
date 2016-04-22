@@ -1,14 +1,22 @@
-Creating custom BED and GTF2 annotation files
-=============================================
+Creating custom BED, BigBed, and GTF2 annotation files
+======================================================
 
 In this tutorial, we describe how to make custom :term:`genome annotations <annotation>`
-in `BED`_ and `GTF2`_ formats. These can then be used as any other annotation file:
+in `BED`_, `BigBed`_ and `GTF2`_ formats. These can then be used like any other
+annotation file, for example:
 
- - to view custom regions of interest in a :term:`genome browser` like `IGV`_ or `UCSC`_
+ - to view custom regions of interest in a :term:`genome browser`
  
- - to perform analyses -- using pipelines in :data:`plastid` or other programs -- on
-   :term:`genomic features <feature>` that were manually constructed (e.g. reporter genes)
-   or annotated
+ - to perform analyses, using pipelines in :data:`plastid` or other programs
+
+.. note::
+
+   :data:`plastid` can also make custom `GFF3`_ files. For this see :doc:`/concepts/gff3`
+
+   For a detailed comparison of the various annotation formats, see
+   :ref:`data-annotation-format`.
+
+This document contains the following sections:
 
 .. contents::
    :local:
@@ -21,17 +29,17 @@ process is to:
 
 #. Enter an interactive Python session
 
-#. Manually construct |SegmentChains| and/or |Transcripts| that represent
+#. Construct |SegmentChains| and/or |Transcripts| that represent
    the :term:`features <feature>` of interest, using :term:`0-indexed`,
-   :term:`half-open` coordinates
+   :term:`half-open` coordinates. This can be done completely *de novo*, or 
+   using other features as starting points.
    
-#. Use the :meth:`~plastid.genomics.roitools.SegmentChain.as_bed`,
-   :meth:`~plastid.genomics.roitools.SegmentChain.as_gtf`, and 
-   :meth:`~plastid.genomics.roitools.SegmentChain.as_gff3` methods to export
-   the |SegmentChains| or |Transcripts| in the desired format. To make
-   `BigBed`_ files, see :ref:`make-annotation-bigbed`.
+#. Use the :meth:`~plastid.genomics.roitools.SegmentChain.as_bed` or
+   :meth:`~plastid.genomics.roitools.SegmentChain.as_gtf` methods to export
+   the |SegmentChains| or |Transcripts| in the desired format. To convert the
+   `BED`_ file to a `BigBed`_ file, see :ref:`make-annotation-bigbed`.
 
-:data:`plastid` automatically handles all coordinate conversions, splicing,
+:data:`plastid` will automatically handle all coordinate conversions, splicing,
 text formatting, and attribute conversion.
 
 
@@ -144,7 +152,7 @@ Making custom extended BED files
 --------------------------------
 
 :term:`Extended BED <extended BED>` and `BigBed`_ files can contain extra columns,
-such as a gene ID.
+such as a gene ID. This can be extremely useful.
 
 To export attributes of a |SegmentChain| or |Transcript| as extra columns
 in a :term:`extended BED` format, pass a list of the attribute names (from
@@ -182,10 +190,10 @@ If an attribute is not defined, the column will be left empty "":
 
 Making `BigBed`_ files
 ----------------------
-`BigBed`_ files are easily made from `BED`_ files using `Jim Kent's utilities`_.
-To make a `BigBed`_ file:
+`BigBed`_ files are easily made from `BED`_ or :term:`Extended BED <extended BED>`
+files using `Jim Kent's utilities`_. To make a `BigBed`_ file:
 
-#. Create a custom `BED`_ or :term:`extended BED`, file, following the examples above.
+#. Create a custom `BED`_ or :term:`extended BED` file.
    For :term:`extended BED` files, consider making an optional `autoSql`_ description
    of the names & data types of the extra columns. This will allow parsers to 
    convert these to native types when reading the `BigBed`_ file.
@@ -216,6 +224,8 @@ To make a `BigBed`_ file:
 
    Your annotation will be saved as ``my_annotation.bb``.
 
+.. TODO:: add sample autoSql
+
 
 -------------------------------------------------------------------------------
 
@@ -224,6 +234,8 @@ See also
 --------
  - :ref:`data-annotation-format` for a brief overview of the costs & benefits
    of `BED`_, `BigBed`_, `GTF2`_ and `GFF3`_ files.
+
+ - :doc:`/concepts/gff3` for information on making `GFF3`_ files
    
  - :class:`~plastid.genomics.roitools.SegmentChain` and
    :class:`~plastid.genomics.roitools.Transcript` for details on these classes

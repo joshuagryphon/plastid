@@ -5,8 +5,8 @@ It is often desirable to exclude missing or unreliable data from analysis.
 For this purpose, `numpy`_ and `SciPy`_ offer masking tools for numerical data
 in the modules :mod:`numpy.ma` and :mod:`scipy.stats.mstats`.
 
-In genomics, specific regions of the genome -- e.g. transposons and repetitive
-sequences --
+In genomics, specific regions of the genome -- e.g. paralogs, transposons and
+repetitive sequences --
 are prone to yield missing or unreliable data, because reads from
 :term:`high-throughput sequencing` experiments will :term:`multimap <multimapping>`
 equally well to each instance of the repeated sequence, creating
@@ -34,7 +34,8 @@ Like all :term:`genomic features <feature>` in :data:`Plastid`, masks are
 represented as |SegmentChains|, which can be used to mask other |SegmentChain|
 or |Transcript| objects.
 
-:meth:`~plastid.genomics.roitools.SegmentChain.add_masks` is used for this:
+First, let's load a transcripts, get its CDS, and create masks that cover
+the first and last 5 codons:
 
 .. code-block:: python
 
@@ -46,15 +47,21 @@ or |Transcript| objects.
    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"],FivePrimeMapFactory(offset=14))
    >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
 
-   # this is ribosome profiling data, so we'll look at a coding region,
-   # which we can fetch using get_cds()
+   # Get coding region using get_cds()
    >>> demo_cds = transcripts[39].get_cds()
-   >>> demo_cds_length = demo_cds.length
 
-   # Now, we'll mask out the first and last 5 codons.
-   # we can fetch these as subchains of the cds using get_subchain()
+   # Create SegmentChains covering the first and last 5 codons. 
+   # We'll use these as masks
    >>> start_codon_mask = list(demo_cds.get_subchain(0,15))
    >>> stop_codon_mask  = list(demo_cds.get_subchain(demo_cds_length-15,demo_cds_length))
+
+
+The |SegmentChains| we just created can be applied as masks using 
+:meth:`~plastid.genomics.roitools.SegmentChain.add_masks`:
+
+.. code-block:: python
+   
+   # Apply the masks to the demo_cds
    >>> demo_cds.add_masks(*start_codon_mask)
    >>> demo_cds.add_masks(*stop_codon_mask)
 
@@ -117,10 +124,10 @@ as a list of |GenomicSegments| or as a |SegmentChain|:
 
 .. _masking-mask-files:
 
-:term:`Mask files <mask file>`
-------------------------------
+Using mask files
+----------------
 :term:`Mask files <mask file>` annotate genomic regions that should be masked
-from analysis. As anny annotation file, these can be in any of many formats
+from analysis. As any annotation file, these can be in any of many formats
 (e.g. `BED`_, `BigBed`_, `GFF3`_, or others).
 
 
@@ -129,8 +136,9 @@ from analysis. As anny annotation file, these can be in any of many formats
 In interactive Python sessions
 ..............................
 
-:term:`Mask files <mask file>` can be loaded into a |GenomeHash|, which
-indexes mask by location in the genome. To create a |GenomeHash|:
+:term:`Mask files <mask file>` can be loaded into a |GenomeHash|, a
+dictionary-like object that indexes features by their locations in the genome.
+To create a |GenomeHash|:
 
 .. code-block:: python
 
@@ -142,7 +150,8 @@ indexes mask by location in the genome. To create a |GenomeHash|:
    # use GenomeHash to index masks
    >>> mask_hash = GenomeHash(mask_features)
 
-Then, we can search the |GenomeHash| for relevant masks to apply to features:
+We'll retrieve all the masks in `mask_hash` that overlap `demo_cds` by using
+it as a dictionary key:
 
 .. code-block:: python
 
@@ -156,10 +165,10 @@ Then, we can search the |GenomeHash| for relevant masks to apply to features:
    >>>    demo_cds.add_masks(*mask_chain)
 
 If the :term:`mask file` is very large, it should be converted to an
-:ref:`indexed file format` such as `BigBed`_ to save memory.
+:term:`indexed file format` such as `BigBed`_ to save memory.
 
-These formats can instead be loaded into |BigBedGenomeHash| and
-|TabixGenomeHash|, which take advnatage of the indexes present in
+Indexed annotation files can instead be loaded into |BigBedGenomeHash| and
+|TabixGenomeHash|, which take advantage of the indexes present in
 `BigBed`_ and `tabix`_-compressed files.
 
 

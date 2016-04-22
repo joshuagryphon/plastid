@@ -17,7 +17,7 @@ to their :term:`P-site offsets <P-site offset>` (:cite:`Ingolia2009`):
 
 
 :term:`Triplet periodicity` or :term:`sub-codon phasing`, is a useful
-feature, becuase it can be used to infer the reading frame(s) in which
+feature, because it can be used to infer the reading frame(s) in which
 a coding region is decoded:
 
 .. TODO: insert phasing chart figure
@@ -29,6 +29,16 @@ a coding region is decoded:
    :term:`triplet periodicity` provides unique signatures of reading frames
 
 
+
+
+In this tutorial, we show how to measure :term:`sub-codon phasing` in the 
+following sections:
+
+.. contents::
+   :local:
+
+The examples below use the :doc:`/test_dataset`.
+
 .. note::
 
    Heavily biased nucleases -- for example, micrococcal
@@ -36,16 +46,8 @@ a coding region is decoded:
    and *D. melanogaster* (:cite:`Dunn2013`) -- introduce uncertainty into
    P-site mapping, which obscures :term:`phasing <sub-codon phasing>`
    in these datasets.
-
-
-In this tutorial, we show how to measure :term:`sub-codon phasing`
-
- - :ref:`Manually <examples-phasing-manual>`, in an interactive Python session
- - :ref:`From the command-line <exampels-phasing-script>`, using the
-   |phase_by_size| script
-
-
-The examples below use the :doc:`/test_dataset`.
+   
+   Here we are using ribosome profiling data prepared with RNase I 
 
 
 .. _examples-phasing-manual
@@ -67,9 +69,9 @@ First, we need to open the read alignments and transcript annotation:
    >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
-:term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit variable
-phasing. So, we'll look at the most highly-phased population of reads, 33-mers. 
-To do so, we'll add a size filter:
+:term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit
+variable phasing. So, we'll look at this particular dataset's most highly-phased
+population of reads, 33-mers. To do so, we'll add a size filter:
 
 .. code-block:: python
 
@@ -82,15 +84,15 @@ Next, we can count phasing:
 
 .. code-block:: python
 
-   >>> # create a holder for phasing
+   # create a holder for phasing
    >>> phasing = numpy.zeros(3)
    
-   >>> # start codons are hyper-phased; stop codons can have differnt
-   >>> # phasing or even be de-phased depending on experimental protocol
-   >>> # so, we'll ignore 5 codons after the start, and 5 before the stop
+   # start codons are hyper-phased; stop codons can have differnt
+   # phasing or even be de-phased depending on experimental protocol
+   # so, we'll ignore 5 codons after the start, and 5 before the stop
    >>> codon_buffer = 5*3
 
-   >>> # count
+   # count
    >>> for my_transcript in transcripts:
    >>>     cds = my_transcript.get_cds()
    >>>     # if transcript is coding
@@ -110,39 +112,66 @@ Next, we can count phasing:
    >>>         except: # raise exception if coding region is not n*3 nucleotides long
    >>>             print("Length (%s nt) of CDS for `%s` contains partial codons. Frameshift?" % (len(counts),my_transcript.get_name()))
 
-   >>> # compute fraction of phased reads
+   # compute fraction of phased reads
    >>> phasing_proportions = phasing.astype(float) / phasing.sum()
    >>> phasing_proportions
    array([ 0.51042163,  0.29362327,  0.19595509])
 
 .. note::
 
-   If the transcript annotation includes multiple transcript isoforms
-   for the same gene, codons that appear in more than one isoform will
-   be double-counted in the phasing estimate. This may be avoided by
-   filtering the annotation file ahead of time.
+   Avoid double-counting
+      If the transcript annotation includes multiple transcript isoforms
+      for the same gene, codons that appear in more than one isoform will
+      be double-counted in the phasing estimate.
+      
+      This may be avoided by instead estimating phasing over
+      :term:`maximal spanning windows <maximal spanning window>` generated
+      by the |metagene| script.
    
-   If the annotation file contains overlapping coding regions which appear
-   in different frames, including these in the phasing tabulation will 
-   under-estimate phasing. It makes sense to exclude such areas using a
-   :term:`mask file`.
+   Dually-coding regions
+      If the annotation file contains overlapping coding regions which appear
+      in different frames, including these in the phasing tabulation will 
+      under-estimate phasing. It makes sense to exclude such areas using a
+      :term:`mask file`.
 
 
 .. _examples-phasing-script
 
-Measuring :term:`phasing <sub-codon phasing>` using the |phase_by_size| script
-..............................................................................
+Measuring :term:`phasing <sub-codon phasing>` using the phase_by_size script
+............................................................................
 
-The |phase_by_size| script automates the calculations described in 
-:ref:`examples-phasing-manual`, calculating phasing separately for
-:term:`read alignments` of each length.
+The |phase_by_size| script automates the steps given above. It separately
+calculates read phasing separately for :term:`read alignments` of each length
+between a user-defined minimum and maximum. Here, we'll use the 
+``--codon_buffer`` argument to exclude the 5 first and last five codons of each
+open reading frame, as these can have variable phasing. 
 
-The command line below examines phasing in 
-the :term:`ribosome profiling` dataset ``SRR609197_riboprofile_5hr_rep1.bam``,
-estimating the P-site as 14 nucleotides from the 5' end of each read.
-In addition, we exclude 5 codons near the start and stop codons (
-via the ``--codon_buffer`` argument), because these are often hyper-phased
-compared to coding regions:
+To avoid double-counting, it is ideal to use an *ROI file* of
+:term:`maximal spanning windows <maximal spanning window>` created by the 
+|metagene| script. To create the ROI file:
+
+.. code-block:: shell
+
+   # generate metagene `roi` file. See `metagene` documentation for details
+   $ metagene generate merlin_orfs \
+                       --landmark cds_start \
+                       --annotation_files merlin_orfs.gtf
+
+To use the ROI file, give its name as the first parameter:
+
+.. code-block:: shell
+
+   # use ROI file `merlin_orfs_cds_start_rois.txt` from metagne run above
+   $ phase_by_size merlin_orfs_cds_start_rois.txt SRR609197 \
+                   --count_files SRR609197_riboprofile_5hr_rep1.bam \
+                   --annotation_files merlin_orfs.bed \
+                   --annotation_format BED \
+                   --fiveprime --offset 14 \
+                   --codon_buffer 5 \
+                   --min_length 25 --max_length 35
+
+Alternatively, to use an annotation file, don't include the ROI file in the
+command call, and specify an annotation using ``--annotation_files``:
 
 .. code-block:: shell
 
@@ -154,10 +183,12 @@ compared to coding regions:
                    --codon_buffer 5 \
                    --min_length 25 --max_length 35
 
-|phase_by_size| will create a text file showing the proportion of reads
-whose P-sites map to each codon position for each read length (columns
+In either case, |phase_by_size| will create a text file showing the proportion
+of reads whose P-sites map to each codon position for each read length (columns
 *phase0, phase1,* & *phase0*) and the proportion of total reads that
 each read length represents (column *fraction_reads_counted*):
+
+.. TODO: Add visual of output
 
 .. code-block:: shell
 

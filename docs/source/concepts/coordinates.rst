@@ -1,32 +1,35 @@
 Coordinate systems used in genomics
 ===================================
 
-:data:`plastid` automatically handles coordinate conversions from 
-various file formats into a :term:`0-indexed` and :term:`half-open`
-coordinate space, so users don't need to worry about off-by-one
-errors in their annotations.
+:data:`plastid's <plastid>` readers automatically convert coordinates from 
+any of the supported file formats into a :term:`0-indexed` and :term:`half-open`
+space (i.e. following typical Python convention), so users don't need to worry
+about off-by-one errors in their annotations.
 
-This tutorial describes various coordinate representations used
-in genomics, and what goes on under the hood in :data:`plastid`.
+Nonetheless, this tutorial describes various coordinate representations used
+in genomics:
 
+
+.. contents::
+   :local:
 
 Coordinates
 -----------
 
 Genomic coordinates are typically specified as a set of:
   
-  - a chromosome name
-  - a start position
-  - an end position
-  - a chromosome strand:
+ - a chromosome name
+ - a start position
+ - an end position
+ - a chromosome strand:
   
-      - '+' for the forward strand
-      - '-' for the reverse stranded
-      - '.' for both strands / unstranded features
+    - '+' for the forward strand
+    - '-' for the reverse stranded
+    - '.' for both strands / unstranded features
 
 This gives rise to several non-obvious considerations:
 
-  .. _coordinates-start-end:
+.. _coordinates-start-end:
 
 start ≤ end
 -----------
@@ -37,19 +40,19 @@ the `start` coordinate actually denotes the 3' end of the feature, while the `en
 coordinate denotes the 5' end.
 
 
- .. _coordinates-index-0-vs-1:
+.. _coordinates-index-0-vs-1:
 
 Counting from 0 vs 1
 --------------------
 Coordinate systems can start counting from 0 (i.e. are :term:`0-indexed`) or
 from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on chromosome `chrI`::
 
-                               XbaI
-                              ______ 
-    ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
-                  |          |^^^^^^     |          |          |
-    0-index:      0          10          20         30         40 
-    1-index:      1          11          21         31         41
+                              XbaI
+                             ______ 
+   ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
+                 |          |^^^^^^     |          |          |
+   0-index:      0          10          20         30         40 
+   1-index:      1          11          21         31         41
 
   
 
@@ -62,43 +65,43 @@ formats use which representation, and automatically converts all coordinates
 to a :term:`0-indexed` representation, following Python idioms.
 
 
-  .. _coordinates-half-open-fully-closed:
+.. _coordinates-half-open-fully-closed:
 
 Half-open vs fully-closed coordinates
 -------------------------------------
 
 Similarly, coordinate systems can represent end coordinates in two ways:
  
- #. In a :term:`fully-closed` or :term:`end-inclusive` coordinate system,
-    positions are inclusive: the end coordinate corresponds to the last
-    position **IN** the feature.
+#. In a :term:`fully-closed` or :term:`end-inclusive` coordinate system,
+   positions are inclusive: the end coordinate corresponds to the last
+   position **IN** the feature.
 
-    So, in :term:`0-indexed`, :term:`fully-closed` representation,
-    the XbaI site would start at position 11, and end at position 16::
+   So, in :term:`0-indexed`, :term:`fully-closed` representation,
+   the XbaI site would start at position 11, and end at position 16::
 
-                                  XbaI
-                                 ______ 
-       ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
-                     |           ^^^^^^     |          |          |
-       0-index:      0           |    |     20         30         40 
-                                 |    |
-       Start & end:              11   16
+                                XbaI
+                               ______ 
+     ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
+                   |           ^^^^^^     |          |          |
+     0-index:      0           |    |     20         30         40 
+                               |    |
+     Start & end:              11   16
                                  
-    And the length of the feature equals:
+   And the length of the feature equals:
 
-     .. math::
+   .. math::
      
-         \ell = end - start + 1 = 16 - 11 + 1 = 6
+       \ell = end - start + 1 = 16 - 11 + 1 = 6
 
- #. In contrast, in  a :term:`half-open` coordinate system, the end coordinate
-    is defined as the
-    first position **NOT** included in the feature. In a :term:`0-indexed`,
-    :term:`half-open` representation, the XbaI site starts at position 11, and
-    ends at position 17. In this case, the length of the feature equals:
+#. In contrast, in  a :term:`half-open` coordinate system, the end coordinate
+   is defined as the
+   first position **NOT** included in the feature. In a :term:`0-indexed`,
+   :term:`half-open` representation, the XbaI site starts at position 11, and
+   ends at position 17. In this case, the length of the feature equals:
 
-     .. math::
+   .. math::
      
-         \ell = end - start = 17 - 11 = 6
+       \ell = end - start = 17 - 11 = 6
 
 
 Four possible coordinate representations
@@ -108,44 +111,43 @@ and :ref:`half-open or fully-closed <coordinates-half-open-fully-closed>`,
 genomic features can be can be represented in four possible ways. For the XbaI
 site in this example:
 
-    =============   =============    ==================
-         \          **Half-open**    **Fully-closed**
-    -------------   -------------    ------------------
-    **0-indexed**   start: 11        start: 11
-                    end: 17          end: 16
+   =============   =============    ==================
+        \          **Half-open**    **Fully-closed**
+   -------------   -------------    ------------------
+   **0-indexed**   start: 11        start: 11
+                   end: 17          end: 16
 
-    **1-indexed**   start: 12        start: 12
-                    end: 18          end: 17
-    =============   =============    ==================
+   **1-indexed**   start: 12        start: 12
+                   end: 18          end: 17
+   =============   =============    ==================
 
 
 Coordinate systems of some common file formats
 ----------------------------------------------
 
-    =============   =============   ====================
-    **Format**      **Index**       **End coordinates**
-    -------------   -------------   --------------------
-    `BED`_          0               Half-open
-    `BigBed`_       0               Half-open
-    `GTF2`_         1               Fully-closed
-    `GFF3`_         1               Fully closed
-    Other GFFs      Either          Either
-    `PSL`_          0               Half-open
-    -------------   -------------   --------------------
-    `SAM <BAM>`_    1               n/a
-    `BAM`_          0               n/a
-    bowtie          0               n/a
-    -------------   -------------   --------------------
-    `bedGraph`_     0               Half-open
-    `BigWig`_\*     0 or 1          Half-open or n/a          
-    `Wiggle`_       1               n/a
-    =============   =============   ====================
+   =============   =============   ====================
+   **Format**      **Index**       **End coordinates**
+   -------------   -------------   --------------------
+   `BED`_          0               Half-open
+   `BigBed`_       0               Half-open
+   `GTF2`_         1               Fully-closed
+   `GFF3`_         1               Fully closed
+   Other GFFs      Either          Either
+   `PSL`_          0               Half-open
+   -------------   -------------   --------------------
+   `SAM <BAM>`_    1               n/a
+   `BAM`_          0               n/a
+   bowtie          0               n/a
+   -------------   -------------   --------------------
+   `bedGraph`_     0               Half-open
+   `BigWig`_\*     0 or 1          Half-open or n/a          
+   `Wiggle`_       1               n/a
+   =============   =============   ====================
  
 *The coordinate representation used in `BigWig`_ files depends upon
-the format of the data blocks inside the file. If a `BigWig`_
-file contains `Wiggle`_-formatted data blocks, it is :term:`1-indexed`.
-If it contains `bedGraph`_-formatted data blocks, it is :term:`0-indexed`, 
-:term:`half-open`.
+the format of the data blocks inside the file, which can be represented
+as `wiggle`_ or `bedGraph`_ blocks.
+
 
 Conventions used in `plastid`
 -----------------------------
@@ -153,15 +155,14 @@ Following `Python`_ conventions, :data:`plastid` reports all coordinates in
 :term:`0-indexed` and :term:`half-open` representation.
 In this case, the coordinate would be::
 
-    chromosome/contig:  'ChrI'
-    start:              11
-    end:                17
-    strand:             '.' 
+   chromosome/contig:  'ChrI'
+   start:              11
+   end:                17
+   strand:             '.' 
 
 
 -------------------------------------------------------------------------------
 
 See also
 --------
-  - `UCSC file format FAQ`_ for detailed descriptions of various file formats
-  - `GFF3`_ specification for details on GFF3
+ - `UCSC file format FAQ`_ for detailed descriptions of various file formats

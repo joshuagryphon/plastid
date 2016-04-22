@@ -1,14 +1,23 @@
 Arrays of counts at each transcript position
 ============================================
 
-This tutorial shows how to obtain :class:`numpy array <numpy.ndarray>` of
-:term:`ribosome protected footprints <footprint>` at each position in a transcript
-in  :term:`ribosome profiling` data. With a few changes, the code below could be
-used to retrive arrays of virtually any type of data at each position in any type
-of feature. 
+Many next-generation sequencing assays capture interesting features of 
+biology with nucleotide precision. It is convenient to represent data from such
+an assay as an array of numbers, each position in the array corresponding to
+a position in some region of interest, like a transcript.
+
+This tutorial shows how to obtain such arrays (as
+:class:`numpy arrays <numpy.ndarray>`), which can be subsequently mainpulated
+by downstream tools. In this example, we'll extract arrays of the number of
+ribosomal P-sites at each position in a transcript from
+:term:`ribosome profiling` data. However, with appropriate
+:doc:`alignment mapping rules </concepts/mapping_rules>`, the code below could
+fetch arrays of virtually any biological feature captured in a set of read
+alignments.
 
 In the examples below, we use the :doc:`/test_dataset`.
 
+Contents:
 
 .. contents::
    :local:
@@ -27,11 +36,6 @@ To count :term:`read alignments` along a transcript, we need:
 
  #. An :term:`annotation` of transcript models. In this case, a `BED`_ file,
     which we'll read using a |BED_Reader|.
-    
-    Just as easily, we could have
-    read files from a `BigBed`_ file (using |BigBedReader|), a `GTF2`_ file (using
-    |GTF2_TranscriptAssembler|), a `GFF3`_ file (using |GFF3_TranscriptAssembler|),
-    et c. 
 
  #. A :term:`high-throughput sequencing` dataset. In this case, read alignments
     in a `BAM`_ file, imported into a |BAMGenomeArray|.
@@ -83,8 +87,8 @@ splicing of exons:
 Manipulating arrays
 ...................
 
-Now that we have the :class:`numpy arrays <numpy.ndarray>`, we can manipulate
-them like any other :class:`numpy arrays <numpy.ndarray>`: 
+Now that we have a list of :class:`numpy arrays <numpy.ndarray>`, we can
+manipulate them like any other :class:`numpy array <numpy.ndarray>`: 
 
 .. code-block:: python
 
@@ -164,10 +168,14 @@ This makes the following figure:
 
 Using the |get_count_vectors| script
 ------------------------------------
-The analysis above is implemented by the command-line script |get_count_vectors|.
-Again, we'll map at their estimated P-sites, 14 nucleotides from 
-their 5' ends using the arguments ``--fiveprime --offset 14``. The script may
-then be executed from the terminal:
+The analysis above is implemented by the command-line script |get_count_vectors|,
+which fetches an array for each feature in an annotation file, and saves it
+as a file named for that feature.
+
+As above, we'll use ribosome profiling data and map read alignments to their
+estimated P-sites, 14 nucleotides from  their 5' ends. The arguments
+``--fiveprime --offset 14`` handle this. The script may be executed from the
+terminal:
 
 .. code-block:: shell
 
@@ -176,14 +184,14 @@ then be executed from the terminal:
                        --count_files SRR609197_riboprofile_5hr_rep1.bam \
                        --fiveprime \
                        --offset 14 \
-                       folder_of_vectors
+                       folder_of_arrays
 
-Each output file will be saved in `folder_of_vectors` and named for the
+Each output file will be saved in `folder_of_arrays` and named for the
 `transcript_ID` or  `ID` attribute of the corresponding genomic :term:`feature`:
 
 .. code-block:: shell                        
 
-   $ ls folder_of_vectors
+   $ ls folder_of_arrays
    ORFL100C.txt               ORFL169C.txt                 ORFL237C.txt                    ORFL308C_(UL139).txt         ORFL85C_(UL30).txt
    ORFL101C.iORF1_(UL36).txt  ORFL16C.iORF1.txt            ORFL238W.iORF1.txt              ORFL309C.txt                 ORFL86W.txt
    ORFL101C.txt               ORFL16C.txt                  ORFL238W.txt                    ORFL30W.txt                  ORFL87W.txt
@@ -195,7 +203,7 @@ Each output file will be saved in `folder_of_vectors` and named for the
    (rest of output omitted)
 
 
-The output can be loaded into :class:`numpy vectors <numpy.ndarray>` using
+The output can be loaded into :class:`numpy arrays <numpy.ndarray>` using
 :func:`numpy.loadtxt`::
 
    >>> import numpy
@@ -210,8 +218,8 @@ The output can be loaded into :class:`numpy vectors <numpy.ndarray>` using
              3.,    9.,    7.,    8.,   24.])
 
 
-Masking out unwanted regions
-----------------------------
+Masking unwanted regions
+------------------------
 
 |get_count_vectors| can optionally take a :term:`mask file` to exclude
 problematic regions from analysis. Interactively, regions can be masked using
@@ -222,9 +230,8 @@ In these cases, vectors are returned as :class:`numpy.ma.MaskedArray` objects,
 and positions annotated in the :term:`mask file` are given the value
 :obj:`numpy.NaN` instead of their numerical values.
 
-See :doc:`/examples/using_masks` for a  discussion of
-:term:`mask files <mask file>` and how to make mask files annotating 
-multimapping regions of the genome them using the |crossmap| script.
+See :doc:`/examples/using_masks` for details on using masks and creating mask
+files using the |crossmap| script.
 
 
 -------------------------------------------------------------------------------
@@ -233,10 +240,10 @@ See also
 --------
  - :doc:`/concepts/mapping_rules`
 
- - :mod:`plastid.readers`, which contains readers for various
+ - :mod:`plastid.readers`, readers for various
    :ref:`file formats <file-format-table>` used in genomics
 
- - :mod:`plastid.genomics.genome_array`, which contains genome array
+ - :mod:`plastid.genomics.genome_array`, GenomeArray
    classes for `BigWig`_, `wiggle`_, `bedGraph`_ and `bowtie`_ files
 
  - :class:`~plastid.genomics.roitools.SegmentChain` and

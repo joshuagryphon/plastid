@@ -1,9 +1,7 @@
 Plotting tools
 ==============
 
-Plastid includes a number of plotting tools to simplify looking at genomics data.
-All of these are built atop `matplotlib`_. Most are useful in fields outside
-of genomics. The following are included:
+Plastid includes a number of plotting tools built atop `matplotlib`_:
 
  - :ref:`kdeplot`, a continuous analog of a histogram
 
@@ -47,7 +45,6 @@ Then, in Python:
 
 .. code-block:: python
 
-   >>> %matplotlib inline
    >>> import matplotlib.style
    >>> matplotlib.style.use("ggplot")
    >>> import matplotlib.pyplot as plt
@@ -237,8 +234,8 @@ as well:
 
 .. _profile-heatmap:
 
-Heatmaps with summary profiles (:term:`metagene` plots)
--------------------------------------------------------
+Heatmaps with summary profiles (metagene plots)
+-----------------------------------------------
 
 When viewing a :term:`metagene average`, it is often useful to look at the
 individual profiles underlying that average. This is the function of 

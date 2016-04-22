@@ -16,6 +16,11 @@ edges of the ribosome.
 
 We will use the :doc:`/test_dataset`. 
 
+The following sections appear in this document:
+
+.. contents::
+   :local:
+
 
 Strategy
 --------
@@ -73,13 +78,14 @@ This yields the following strategy:
          :term:`P-site offsets <P-site offset>` applied to read alignments
 
 
-Determining :term:`P-site offsets <P-site offset>` using the |psite| script
----------------------------------------------------------------------------
+Determining :term:`P-site offsets <P-site offset>` using the psite script
+-------------------------------------------------------------------------
 The strategy above is implemented by |psite|, which can be executed from
 the terminal.
 
 Because |psite| internally performs :term:`metagene analysis <metagene>`, we need
-to use a file produced by the |metagene| script. The command call to  |metagene|
+to use a file of :term:`maximal spanning windows <maximal spanning window>`
+produced by the |metagene| script. The command call to |metagene|
 is included below, and explained in detal in :doc:`/examples/metagene`.
 From the terminal:
 
@@ -219,7 +225,7 @@ In interactive sessions
 
 The mapping rule can be constructed by passing the offset file from |psite| to the 
 :meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
-method of |VariableFivePrimeMapFactory|::
+method of :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`::
 
    >>> from plastid import BAMGenomeArray, VariableFivePrimeMapFactory
 

@@ -1,168 +1,193 @@
 Working with GFF files
 ======================
 
+GFF and its descendants are the most flexible feature-rich annotation formats.
+From their flexibility arises considerable complexity. This can make them tricky
+to parse. This document describes how to work with one of GFF's descendants,
+`GFF3`_.
 
-GFF files are the most feature-rich annotation format. In the original
-specification, much of the file strucure was deliberately left
-unspecified, to allow users flexibility to change what they needed.
-For example, it was up to users to decide:
 
-  - whether coordinates were :term:`0-indexed` or :term:`1-indexed`,
-    and :term:`fully-closed` or :term:`half-open`
-  - what feature types can be represented
-  - what parent-child relationships exist (if any) between feature types
-  - how the ninth column, which can contain arbitrary text data,
-    including encoded attributes and values, should be formatted
+.. contents::
+   :local:
+
+
+Background
+----------
+
+In the original GFF specification, much of the file structure was deliberately
+left unspecified to maximize flexibility. For example, it was up to users to
+decide:
+
+ - whether coordinates were :term:`0-indexed` or :term:`1-indexed`,
+   and :term:`fully-closed` or :term:`half-open`
+ - what feature types can be represented
+ - what parent-child relationships exist (if any) between feature types
+ - how the ninth column, which can contain arbitrary text data,
+   including encoded attributes and values, should be formatted
 
 Because of this, several flavors of GFF exist today, each adding
 their own specifications. Two of the most common are:
 
-  - `GTF2`_, exlusively used for describing transcripts
-  - `GFF3`_, which allows a hierarchical set of feature relationships,
-    and which can describe any feature ontology.
+ - `GTF2`_, exlusively used for describing transcripts
+ - `GFF3`_, which allows a hierarchical set of feature relationships,
+   and which can describe any feature ontology.
 
-In this tutorial, we discuss briefly discuss handling `GFF3`_ files
-in :data:`plastid`. We recommend that users read the `GFF3 specification <GFF3>`_
-for full discussion of the file type. In `GFF3`_:
+GFF3 vs GFF
+-----------
 
-  - coordinates are :term:`1-indexed` and :term:`fully-closed`
-  - a ninth column containing key-value pairs of arbitary attributes
-  - that features can have parent-child relationships, specified by the
-    `Parent` attribute in the ninth column. All features that have
-    children additionally must have an `ID` attribute defined
-    in the ninth column. Values of a feature's `Parent` attribute must
-    match the `ID` of the parent feature.
+`GFF3`_ adds additional constraints to the original GFF format:
+
+
+ - coordinates are :term:`1-indexed` and :term:`fully-closed`
+ - a ninth column contains key-value pairs of arbitary attributes
+ - features can have parent-child relationships, specified by the
+   `Parent` attribute in the ninth column. All features that have
+   children additionally must have an `ID` attribute defined
+   in the ninth column. Values of a feature's `Parent` attribute must
+   match the `ID` of the parent feature.
+
+For more detail, see the `GFF3 specification <GFF3>`_.
 
 
 Parent-child relationships
 --------------------------
 Features in `GFF3`_ files can be hierarchical, in that they can have
-parents and children. Usually, features of a given type can only
-have children of specified types. For example, an `mRNA` feature
-can have children of type `exon` and `CDS`, but not `gene`. A
+*parents* and *children* defined in their ninth column. Usually, features of a
+given type can only have children of specified types. For example, an `mRNA`
+feature can have children of type `exon` and `CDS`, but not `gene`. A
 `gene` feature, however, could have an `mRNA` child.
 
 In addition, skipping levels of hierarchy is permitted. So,
 a `gene` feature could have direct children that are `exon` or `CDS`
 types, and an `mRNA` feature might not be explicitly represented.
 
-A specification of accepted parent-child relationships is called
-a feature :term:`ontology`. The `GFF3`_ standard deliberately does
-not specify which :term:`ontology` to use, which adds flexibility
-to the format but can complicate analysis.
+A specification of accepted parent-child relationships is called a
+*feature ontology*. The `GFF3`_ standard deliberately does not specify which
+ontology to use, which adds flexibility to the format but complicates handling.
 
 
- .. _gff3-feature-relationships
+.. _gff3-feature-relationships:
 
-Complex features
-----------------
-Discontinuous features, like transcripts or gapped alignments, can be
-represented in `GFF3`_ files as a set of related continuous sub-features.
-Relationships between sub-features can be represented in two ways:
+Representation of discontinuous features (e.g. multi-exon transcripts)
+----------------------------------------------------------------------
+Only continuous features (for example exons, but not multi-exon transcripts)
+can be represented directly in GFF formats.
 
-  - by a shared value in the `Parent` attribute
-  - by sharing an `ID` attribute
+Discontinuous features, like transcripts or gapped alignments, must be
+represented as a set of related continuous components. In `GFF3`_, relationships
+between a feature and its components can be represented in two ways:
+
+ - by a shared value in the `Parent` attribute
+ - by sharing an `ID` attribute
 
 For example, a transcript can be represented as a group of exons and
 coding regions, whose `Parent` attributes match the `ID` of the complex
 feature::
 
-    TODO example
+   TODO example
 
 Or, a transcript can be represented as a group of exons who share an `ID`::
 
-    TODO example
+   TODO example
     
 Some research groups prefer one representation over another, while others
 use both, even in the same file. 
 
 
- .. _gff3-reading-overview:
+.. _gff3-reading-overview:
 
 Reading `GFF3`_ files in :data:`plastid`
 ----------------------------------------
 
-Reading simple features
-.......................
+:data:`plastid` offers two ways to read `GFF3`_ files:
+
+ - reading them line-by-line, yielding each continuous feature as a separate
+   item (via |GFF3_Reader|)
+ 
+ - reading them processively, reconstructing transcripts from their constituent
+   exons and coding regions (via |GFF3_TranscriptAssembler|)
+
+
+GFF3_Reader reads individual features
+.....................................
 |GFF3_Reader| parses each line of a `GFF3`_ file and returns a single-segment
 |SegmentChain| corresponding to the feature described by the line::
     
-    >>> reader = GFF3_Reader(open("some_file.gff"))
-    >>> for feature in reader:
-    >>>     pass #do_something
+   >>> reader = GFF3_Reader(open("some_file.gff"))
+   >>> for feature in reader:
+   >>>     pass #do_something
 
 Attributes described in the ninth column of the `GFF3`_ file are placed 
 into the `attr` dictionary of the |SegmentChain|::
 
-    >>> feature.attr
+   >>> feature.attr
+   { "some_key" : "some_value", "some_other_key" : "some_other_value", ... }
 
 
-Assembling complex features
-...........................
-One reason to use a `GFF3`_ file is to preserve relationships between features,
-and/or to assemble complex, discontinuous features.
+GFF3_TranscriptAssembler assembles transcripts from their component features
+............................................................................
 
-However, because :ref:`relationships can be represented by common Parents or shared IDs <gff3-feature-relationships>`,
-and because `GFF3`_ is agnostic to the feature  :term:`ontology` used, 
-correctly assembling complex features from a `GFF3`_ file is not trivial.
+Reconstructing transcripts from `GFF3`_ files is tricky because:
 
-For convenience, |GFF3_TranscriptAssembler| is provided.
-By assuming the `GFF3`_ uses the `Sequence Ontology Project`_ 
-(used by many of the model organism databases,  including `SGD`_, `FlyBase`_,
-and `WormBase`_) version 2.5.3, it  assembles features into |Transcript| objects,
-first by `Parent` matching, and then by shared `ID`, if shared `ID` attributes
-are present.
+ - :ref:`relationships can be represented by common Parents or shared IDs <gff3-feature-relationships>`
 
-The reader behaves as an iterator, which assembles groups of transcripts lazily::
-
-    >>> reader = GFF3_TranscriptAssembler("some_file.gff")
-    >>> for transcript in reader:
-    >>>     pass # do something
-
-Any malformed/unparsable `GFF3`_ lines are kept in the `rejected`
-attribute:
-
- .. code-block:: python
-
-    >>> reader.rejected
-    [] # list of strings, corresponding to bad GFF3 lines
+ - `GFF3`_ allows any possible :term:`ontology` to be used, so the relationships
+   between parent and child feature types is not always clear
 
 
- .. _gff3-assembly-consequences:
+|GFF3_TranscriptAssembler| takes care of these two problems by:
 
-Consequences of assembly
-........................
-Because complex features are made of sub-features, a `GFF3`_ assembler 
-must keep many features in memory until it is certain it has collected
-all of a feature's sub-features. Three signals can indicate when
-it is time to assemble:
-
-  - The special line `###`, which indicates that Parent-child relationships
-    for preceding features have been fully resolved.
-  - In a sorted `GFF3`_ file, a change in chromosome (assuming no feature
-    spans multiple chromosomes)
-  - The end of the `GFF3`_ file
-
-Because so many features must be held in memory before a feature can 
-be assembled from subfeatures, assembling a transcript form a `GFF3`_ file
-requires much more memory than simply reading a transcript from a single
-line of a `BED`_ file.
+ - first attempting to assemble transcripts by matching the `Parent` attributes
+   of their component exons and coding regions, and then attempting a match
+   by shared `ID` attributes
+   
+ - assuming that the `GFF3`_ file follows version 2.5.3 of the ontology defined
+   by the `Sequence Ontology Project`_. This ontology is used by many of model
+   organism databases, including `SGD`_, `FlyBase`_, and `WormBase`_.
 
 
+The assembler behaves as an iterator, which assembles groups of transcripts lazily::
 
- .. TODO : gff3-write-assembler 
+   >>> reader = GFF3_TranscriptAssembler("some_file.gff")
+   >>> for transcript in reader: # transcripts are assembled from features when necessary
+   >>>     pass # do something with the current transcript
 
-    Writing your own assembler
-    ..........................
-    It is possible to write custom assemblers transcripts (or any complex feature)
-    from any :term:`ontology`. |AbstractGFF_Assembler| is provided 
-    as a base class.
+Any malformed/unparsable `GFF3`_ lines are kept in the `rejected` property:
 
-    handling attributes? pooled attribute func
-    stop feature?
+.. code-block:: python
 
-    TODO : finish section on writing own assembler
+   >>> reader.rejected
+   [] # list of strings, corresponding to bad GFF3 lines
 
+
+.. _gff3-assembly-consequences:
+
+Memory considerations
+.....................
+
+A `GFF3`_ assembler must keep many subfeatures in memory until it is sure
+that it has parsed all of the components necessary to reconstruct a given
+transcript. This guarantee can be made by any of the following signals:
+
+ - The special `GFF3`_ line `###`, which indicates that Parent-child
+   relationships for preceding features have been fully resolved.
+   
+ - In a sorted `GFF3`_ file, a change in chromosome (assuming no feature
+   spans multiple chromosomes)
+   
+ - The end of the `GFF3`_ file
+
+at which point, the assembler can purge feature components from memory and
+return a batch of transcripts.
+
+Because potentially many features must be held in memory before any transcripts
+can be returned, assembling transcripts from `GFF3`_ files can require
+substantially more memory than reading the same data represented as 
+pre-assembled transcripts line-by-line from a `BED`_ or `BigBed`_ file.
+
+For this reason, :data:`plastid` includes a script called
+:mod:`~plastid.bin.reformat_transcripts`, which can interconvert a number of
+annotation formats, including `GFF3`_. 
 
 
 -------------------------------------------------------------------------------
@@ -170,7 +195,7 @@ line of a `BED`_ file.
 See also
 --------
 
-  - The `GFF3 specification <GFF3>`_ for a full description of the file format
-  - The Sequence Ontology consortium's feature schema
-  - |GFF3_Reader|, |GTF2_Reader|,  |GFF3_TranscriptAssembler|, and |GTF2_TranscriptAssembler|
-
+ - The `GFF3 specification <GFF3>`_ for a full description of the file format
+ - The `Sequence Ontology Project`_ feature schema
+ - |GFF3_Reader|, |GTF2_Reader|,  |GFF3_TranscriptAssembler|, and |GTF2_TranscriptAssembler|
+ - :mod:`~plastid.bin.reformat_transcripts` script
