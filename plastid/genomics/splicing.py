@@ -8,6 +8,7 @@ import re
 #===============================================================================
 
 junction_pat = re.compile(r"([^@]+)@([0-9]+)\^([0-9]+)\(([+-])\)f([0-9]+)")
+"""Regex for matching splice junctions in plastid's notation"""
 
 def get_junction_tuple(ivc):
     """Convert an |SegmentChain| representing a splice junction to a tuple
