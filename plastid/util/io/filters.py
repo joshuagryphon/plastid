@@ -138,8 +138,8 @@ class AbstractReader(object):
         return "".join(self.readlines())
 
     def readline(self):
-        """Similar to :py:func:`file.readline`. You probably want to use next(self) instead.
-        Process a single line of data, assuming it is string-like
+        """Process a single line of data, assuming it is string-like
+        ``next(self)`` is more likely to behave as expected.
         
         Returns
         -------
@@ -169,7 +169,7 @@ class AbstractReader(object):
     @abstractmethod
     def filter(self,data):
         """Method that filters or processes each unit of data.
-        Override this in your subclass
+        Override this in subclasses
         
         Parameters
         ----------
@@ -357,7 +357,7 @@ class TeeListener(object):
     @abstractmethod
     def alert(self,data):
         """Process input from a |TeeReader|.
-        Override this method to implement whatever function you need.
+        Override this method to perform the appropriate behavior.
         
         Parameters
         ----------
@@ -425,7 +425,7 @@ class AbstractWriter(object):
     @abstractmethod
     def filter(self,data):
         """Method that filters or processes each unit of data.
-        Override this in your subclass
+        Override this in subclasses
         
         Parameters
         ----------

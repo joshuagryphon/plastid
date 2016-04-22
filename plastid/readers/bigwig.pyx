@@ -1,8 +1,34 @@
 """Reader for `BigWig`_ files, built atop `Jim Kent's utilities`_.
 
+`BigWig`_ is a binary, indexed, high-performance format that associates
+quantitative values with genomic positions. Because `BigWig`_ files are indexed,
+they allow both sequential and random access to data, and require substantially
+less memory than unindexed `wiggle`_ or `bedGraph`_ files. Like `wiggle`_ and `bedGraph`_ formats,
+`BigWig`_ is an unstranded format, so data for plus and minus strands must be
+stored in separate files.
+
+Examples
+--------
+
+
+Fetch counts over a |SegmentChain|::
+
+    TODO
+
+Iterate over a `BigWig`_ file::
+
+    TODO
+
+Get data covering a whole chromosome::
+
+    TODO
+
 
 See also
 --------
+:class:`~plastid.genomics.genome_array.BigWigGenomeArray`
+    A GenomeArray for `BigWig`_ files.
+
 `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
     Description of BigBed and BigWig formats. Especially see supplemental data.
 

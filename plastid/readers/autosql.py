@@ -51,15 +51,14 @@ Notes
   #. ``set`` and ``enum`` field types are parsed as ``sets`` of strings
 
   #. ``primary``, ``index``, and ``auto`` `autoSQL`_ tags are accepted in line declarations,
-      but are ignored because they are not relevant for parsing
+     but are ignored because they are not relevant for parsing
 
   #. The parsers assume that they will be parsing tab-delimited text blocks
   
   #. Although declarations are routinely nested as fields within other
      declarations in C ``struct`` s and in SQL databases, in the absence of a standard,
      it is unclear how these would be serialized within tab-delimited columns of `BigBed`_
-     or BigWig files. Therefore, we do not support this. If or when such a standard is
-     described, we will implement it.
+     files. Therefore, nested declarations are not supported..
 
 
 See Also

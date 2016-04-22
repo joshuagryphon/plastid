@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""This module contains |BED_Reader|, a parser that reads each line of a `BED`_
-file into a |SegmentChain|, |Transcript|, or similar object. 
+"""This module contains |BED_Reader|, an iterator that reads each line of a `BED`_
+or :term:`extended BED` file into a |SegmentChain|, |Transcript|, or similar object. 
 
 Examples
 --------
@@ -17,6 +17,11 @@ Retrieve a list of |SegmentChains| from a `BED`_ file::
     >>> my_chains[:5]
         [list of segment chains as output...]
 
+Open an :term:`extended BED` file, which contains additional columns for `gene_id`
+and `favorite_color`. Values for these attributes will be stored in the `attr`
+dict of each |Transcript|::
+
+    >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript,extra_columns=["gene_id","favorite_color"])
 
 Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
 they were one stream::
@@ -66,6 +71,10 @@ bed_x_formats = {
                         ("peptideRepeatCount",int)],
 
 }
+"""Column names and types for various :term:`extended BED` formats used by 
+the`ENCODE`_ project. These can be passed to the `extra_columns` keyword of
+:class:`BED_Reader`.""" 
+
 
 class BED_Reader(AssembledFeatureReader):
     """Reads `BED`_ and :term:`extended BED` files line-by-line into |SegmentChains|

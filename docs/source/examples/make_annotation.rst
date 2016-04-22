@@ -255,4 +255,5 @@ See also
    
  - `Jim Kent's utilities`_ for more info on making `BigBed`_ files.
 
+ - `autoSql Grammar specification <https://github.com/ENCODE-DCC/kentUtils/blob/36d6274459f644d5400843b8fa097b380b8f7867/src/hg/autoSql/autoSql.doc>`_
 

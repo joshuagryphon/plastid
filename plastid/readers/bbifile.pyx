@@ -1,5 +1,6 @@
-"""Base class for `BigWig`_ reader, implemented as a Python binding for the C
-library of Jim Kent's utilties for the UCSC genome browser.
+"""Base class for `BigBed`_ and `BigWig`_ readers, both of which are implemented
+as a Python binding for the C library of Jim Kent's utilties for the UCSC genome
+browser.
 
 
 See also
