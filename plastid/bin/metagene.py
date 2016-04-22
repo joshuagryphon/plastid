@@ -7,23 +7,24 @@ Generate
     in the vicinity of an interesting landmark (e.g. a start codon). Because
     genes can have multiple transcript isoforms that may cover different
     genomic positions, which transcript positions (and therefore which
-    genomic positions) to include in the average can be ambiguous.
+    genomic positions) to include in the average can be ambiguous when
+    the isoforms are not knnow.
     
-    To avoid this problem, we define for each gene a *maximum spanning window*
-    of unambiguous positions surrounding the landmark of interest, and save
-    these windows into an ROI file. The windows are defined by the following
-    algorithm: 
+    To handle this problem, we define for each gene the :term:`maximal spanning window`
+    over which every position at a given distance from the landmark of interest
+    (e.g. a start or stop codon) maps to the same genomic coordinates in all
+    transcript isoforms. The windows are defined by the following algorithm: 
     
-    1.  Transcripts are grouped by gene. If all transcripts share the same
-        genomic coordinate for the landmark of interest (e.g. if all 
-        transcripts share the same start codon), then all transcripts are
-        included in the analysis. If not, all transcripts and their associated
-        gene are excluded from further processing.
+    #.  Transcripts are grouped by gene.
     
-    2.  For each set of transcripts that pass step (1), the maximal spanning
+    #.  Landmarks are detected on each transcript for each gene. For genes in
+        which all transcripts do not share the same genomic coordinate for the
+        landmark of interest, no window can be defined, and that gene is
+        excluded from further analysis.
+    
+    #.  For each set of transcripts that passes step (2), the maximal spanning
         window is created by aligning the set of transcripts at the landmark, and
-        adding nucleotide positions in transcript coordinates to the growing
-        window in both 5' and 3' directions until either:
+        bidirectionally growing the maximal spanning window until either:
         
             - the next nucleotide position added no longer corresponds to 
               the same genomic position in all transcripts
@@ -32,8 +33,7 @@ Generate
 
     **Note**: if annotations are supplied as `BED`_ files, transcripts cannot be
     grouped by gene, because `BED`_ files don't contain this information.
-    In this case one ROI is generated per transcript. This may or may not
-    be what you want. You can filter later and decide.
+    In this case one ROI is generated per transcript.
     
     
     .. Rubric :: Output files
@@ -71,11 +71,12 @@ Generate
     
     
 Count
-    This program generate :term:`metagene` profiles from :term:`counts` or
-    :term:`alignments`, taking the following steps:
+    This program generates :term:`metagene` profiles from a dataset of
+    :term:`counts` or :term:`alignments`, taking the following steps:
     
-    1.  The **raw counts** at each position in each window (from the ``generate``
-        subprogram) are totaled to create a raw count vector for the window.
+    1.  The **raw counts** at each position in each :term:`maximal spanning window`
+        (from the ``generate`` subprogram) fetched as a raw count vector for the
+        window.
 
     2.  A **normalized count vector** is created for each window by dividing
         its raw count vector by the total number of counts occurring within a
@@ -486,9 +487,9 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
     1.  Transcripts are grouped by `group_by` attribute (default: by gene).
         If all transcripts in a group share the same
         genomic coordinate for the landmark of interest (for example, if all 
-        share the same start codon), then all transcripts are
-        included in the analysis. If not, all transcripts and their associated
-        gene are excluded from further processing.
+        share the same start codon), then the set of transcripts is
+        included in the analysis. If not, the set of transcripts and their
+        associated gene are excluded from further processing.
     
     2.  For each set of transcripts that pass step (1), the maximal spanning
         window is created by aligning the set of transcripts at the landmark, and

@@ -3,6 +3,10 @@
 a custom warning filter action, called `"onceperfamily"`, and monkey-patches
 warning output to improve legibility.
 
+Contents:
+
+.. contents::
+   :local:
 
 The `onceperfamily` action
 --------------------------
@@ -58,7 +62,7 @@ Warning types
 
 See also
 --------
-warnings
+:mod:`warnings`
     Warnings module
 """
 import re

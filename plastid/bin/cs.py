@@ -1,47 +1,48 @@
 #!/usr/bin/env python
 """Count the number of :term:`read alignments<alignment>` and calculate
-read densities (in :term:`RPKM`) specifically covering genes.
+read densities (in :term:`RPKM`) over genes, correcting gene boundaries
+for overlap with other genes or regions specified in a :term:`mask file`.
 
 :term:`Counts <counts>` and densities are calculated separately per gene for
 exons, 5' UTRs, coding regions, and 3' UTRs. In addition, positions overlapped
 by multiple genes are excluded, as are positions annotated in
 :term:`mask annotation files<crossmap>`, if one is provided.
 
-To avoid unnecessarily repeating calculations of gene overlap, the script's
-operation is divided into three subprograms:
+The script's operation is divided into three subprograms:
 
 Generate
-    The :func:`generate <do_generate>` mode first takes a gene annotation file,
-    finds all genes that share exons, and maps these to a "merged" genes that
-    represent their groups. The reason to do this is that in some genome
-    annotations, polycistronic messages (such as *polished rice* in
-    *D. melanogaster*) are annotated as entirely separate genes, when in reality
-    they are a single gene. Positions covered by more than one non-merged gene
-    on the same strand are excluded from analysis.
+    The :func:`generate <do_generate>` mode pre-process a genome annotation
+    as follows:
+    
+     #. All genes whose transcripts share exact exons are collapsed to 
+        "merged" genes. 
+        
+     #. Positions covered by more than one merged gene on the same strand
+        are excluded from analysis, and subtracted from each merged genes. 
+    
+     #. Remaining positions in each merged gene are then divided
+        into the following groups:
 
-    The remaining positions in each merged gene are then divided
-    into the following groups:
-
-        *exon*
-            all positions in all transcripts mapping to the merged gene
-
-        *CDS*
-            positions which appear in coding regions in *all* transcript
-            isoforms mapping to the merged gene. i.e. These positions
-            are never part of a fiveprime or threeprime UTR in *any*
-            transcript mapping to the merged gene
-
-        *UTR5*
-            positions which are annotated only as *5' UTR* in all
-            transcript isoforms mapping to the merged gene
-
-        *UTR3*
-            positions which are annotated only as *3 UTR* in all
-            transcript isoforms mapping to the merged gene
-
-        *masked*
-            positions excluded from analyses as directed in an optional
-            :term:`mask file`
+            *exon*
+                all positions in all transcripts mapping to the merged gene
+    
+            *CDS*
+                positions which appear in coding regions in *all* transcript
+                isoforms mapping to the merged gene. i.e. These positions
+                are never part of a fiveprime or threeprime UTR in *any*
+                transcript mapping to the merged gene
+    
+            *UTR5*
+                positions which are annotated only as *5' UTR* in all
+                transcript isoforms mapping to the merged gene
+    
+            *UTR3*
+                positions which are annotated only as *3 UTR* in all
+                transcript isoforms mapping to the merged gene
+    
+            *masked*
+                positions excluded from analyses as directed in an optional
+                :term:`mask file`
 
     .. Rubric :: Output files
 
@@ -60,34 +61,31 @@ Generate
 
         OUTBASE_gene_REGION.bed
              `BED`_ files showing position sets for `REGION`,
-             where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
+             where `REGION` is one of *exon*, *CDS*, *UTR5*, and *UTR3* or
              *masked*. These contain the same information in
              ``OUTBASE_gene.positions``, but can be visualized easily in a
              :term:`genome browser`
 
 
 Count
-    A :func:`count <do_count>` mode, in which the number of reads mapping to
-    each type of position (e.g. *exon*, *CDS*, *UTR5*, and *UTR3*) is tabulated
-    for each merged gene. Output is given in a tab-delimited text file that gives
-    raw read counts, as well as :term:`RPKM` and corrected lengths for each
-    feature.
+    The :func:`count <do_count>` mode counts the number and density of 
+    read alignments in each sub-region (*exon*, *CDS*, *UTR5*, and *UTR3*)
+    of each gene.
 
 
 Chart
-    A :func:`chart <do_chart>` mode, which takes output from the ``count`` mode
-    and generates several tables and charts that provide broad overviews
-    of the data.
+    The :func:`chart <do_chart>` mode takes output from one or more samples
+    run under :func:`count <do_count>` mode and generates several tables and
+    charts that provide broad overviews of the data.
 
 See command-line help for each subprogram for details on each mode
 
 See also
 --------
 :mod:`~plastid.bin.counts_in_region` script
-    Count the number of :term:`read alignments <alignment>` covering arbitrary
-    regions of interest -- rather than merged genes, as are counted here in
-    :mod:`~plastid.bin.cs` -- in the genome, and calculate read densities
-    (in reads per nucleotide and in :term:`RPKM`) over these regions.
+    Calculate  the number and density  of :term:`read alignments <alignment>`
+    covering any set of regions of interest, making no corrections for gene
+    boundaries.
 """
 import os
 import sys
@@ -482,8 +480,8 @@ def process_partial_group(transcripts,mask_hash,printer):
 def do_generate(args,annotation_parser,mask_parser):
     """Generate gene position files from gene annotations.
     
-    1.  Genes whose transcripts share exons are first merged into merged genes 
-        using :func:`merge_genes`.
+    #.  Genes whose transcripts share exons are first collapsed into merged
+        genes.
         
     2.  Within merged genes, all positions are classified. All positions are
         included in a set called *exon*. All positions that appear as coding
@@ -498,7 +496,8 @@ def do_generate(args,annotation_parser,mask_parser):
     4.  If a :term:`mask file` is supplied, positions annotated in the mask file
         are also excluded
     
-    5.  Output is written using :func:`write_output_files`
+    5.  Output is given as a series of `BED`_ files and a `positions` file
+        containing the same data.
     
     Parameters
     ----------
@@ -610,10 +609,8 @@ def do_generate(args,annotation_parser,mask_parser):
 #===============================================================================
 
 def do_count(args,alignment_parser):
-    """Count the number of reads falling within a gene (as specified in a
-position file made using the `generate` subcommand). Reads are reported
-both in raw :term:`counts` and as :term:`RPKM`, and saved to a 
-tab-delimited text file.
+    """Count the number and density covering each merged gene in an annotation
+made made using the `generate` subcommand).
     
     Parameters
     ----------
@@ -839,8 +836,9 @@ def do_scatter(x,y,count_mask,plot_parser,args,pearsonr=None,xlabel=None,ylabel=
 
 def do_chart(args,plot_parser):
     """Produce log-2 fold change histograms and scatter plots for :term:`count`
-and :term:`RPKM` values between two samples, as well as a chart plotting
-correlation coefficients as a function of summed read counts in both samples 
+and :term:`RPKM` values between each pair within multiple samples, as well as a
+chart plotting correlation coefficients as a function of summed read counts in
+both samples 
 
     Parameters
     ----------

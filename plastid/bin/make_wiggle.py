@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-"""Convert alignments in `bowtie`_ or `BAM`_ format to `bedGraph`_ or `wiggle`_ 
-files for use in :term:`genome browsers <genome browser>`, optionally applying
-a :term:`mapping rule` to convert alignments to :term:`counts` (e.g. for P-site
-mapping of ribosome profiling data) and/or normalization.
+"""Create :term:`genome browser` tracks from :term:`read alignments`, using
+:term:`mapping rules <mapping rule>` to extract the biology of interest
+(e.g. ribosomal P-sites, et c) from the alignments.
+
 
 Output files
 ------------
-Because `Wiggle`_ and `bedGraph`_ files are unstranded, two files are created:
+Tracks can be output in `wiggle`_ and `bedGraph`_ formats. Because these formats
+are unstranded, two files are created:
 
     OUTBASE_fw.wig
         Counts at each position for the plus/forward strand of each chromosome
@@ -19,8 +20,11 @@ where `OUTBASE` is given by the user.
 
 See also
 --------
-:py:mod:`~plastid.genomics.genome_array`
-    Explanations of mapping transformations and why they can be useful
+:doc:`/concepts/mapping_rules`
+    Explanations of mapping rules and why they can be useful
+
+:mod:`plastid.genomics.map_factories`
+    For lists of mapping rules and their parameters
 """
 __author__ = "joshua"
 __date__ = "2011-03-18"

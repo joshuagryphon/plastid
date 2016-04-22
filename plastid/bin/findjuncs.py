@@ -1,32 +1,34 @@
 #!/usr/bin/env python 
-"""Identify all the unique splice junctions in one or more transcript annotations,
-and output these as a `BED`_ file with one splice junction per line. Optionally,
-also export junctions as a `Tophat`_ ``.juncs`` file.
+"""This script identify all the unique splice junctions in one or more transcript
+annotations, and exports these as a `BED`_ file with one splice junction per line
+Optionally, this script can also export junctions as a `Tophat`_ ``.juncs`` file.
 
-If a splice junction is multiply annotated (e.g. used by more than one transcript),
+If a splice junction appears multiple times (e.g. used by more than one transcript),
 only the first occurrence of the junction will be reported. Scores, if present,
-are exported unaltered in `BED`_ output. Examples:
+are exported unaltered in `BED`_ output.
 
- .. code-block:: shell
+Examples:
 
-    # identify splice junctions from a transcript annotation supplied in GTF2
-    # creates output file 'annotation.bed'
-    $ findjuncs my_annotation --annotation_format GTF2 \\
-                --annotation_files transcripts.gtf
+
+.. code-block:: shell
+
+   # identify splice junctions from a transcript annotation supplied in GTF2
+   # creates output file 'annotation.bed'
+   $ findjuncs my_annotation --annotation_format GTF2 \\
+               --annotation_files transcripts.gtf
     
-    # merge unique annotations from annotation.bed and newly_discovered.bed,
-    #
-    # export only unique junctions to 'merged_unique.bed'
-    $ findjuncs merged_unique --annotation_format BED \\
-                --annotation_files annotation.bed newly_discovered.bed
+   # merge unique annotations from annotation.bed and newly_discovered.bed,
+   # export only unique junctions to 'merged_unique.bed'
+   $ findjuncs merged_unique --annotation_format BED \\
+               --annotation_files annotation.bed newly_discovered.bed
 
 
 See also
 --------
-:py:mod:`plastid.bin.slidejuncs`
-    Script that makes richer comparisons between discovered and annotated
-    junctions, using genomic sequence and :py:mod:`plastid.bin.crossmap`
-    results to classify junctions
+:mod:`plastid.bin.slidejuncs`
+   Script that makes richer comparisons between discovered and annotated
+   junctions, using genomic sequence and :py:mod:`plastid.bin.crossmap`
+   results to classify junctions
 """
 """
 From the Tophat specification for `.juncs` files:

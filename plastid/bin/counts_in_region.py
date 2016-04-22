@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Count the number of :term:`read alignments<alignment>` covering arbitrary
+"""Count the number of :term:`read alignments<alignment>` covering 
 regions of interest in the genome, and calculate read densities (in reads
 per nucleotide and in :term:`RPKM`) over these regions.
 

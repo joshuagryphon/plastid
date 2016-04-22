@@ -4,10 +4,12 @@ stratified by read length.
 
 Because ribosomes step three nucleotides in each cycle of translation elongation,
 in many :term:`ribosome profiling` datasets a triplet periodicity is observable
-in the distribution of :term:`ribosome-protected footprints <footprint>`,
-in which 70-90% of the reads on a codon fall within the first of the three codon
-positions. This allows deduction of translation reading frames, if the reading
-frame is not known *a priori.* See :cite:`Ingolia2009` for more details
+in the distribution of :term:`ribosome-protected footprints <footprint>`.
+
+In a good dataset, 70-90% of the reads on a codon fall within the first of the
+three codon positions. This allows deduction of translation reading frames, if
+the reading frame is not known *a priori.* See :cite:`Ingolia2009` for more
+details.
 
 Output files
 ------------
@@ -21,8 +23,10 @@ where `OUTBASE` is supplied by the user.
 
  .. note::
 
-    To avoid double-counting of codons, users should supply an :term:`annotation`
-    file that includes only one transcript isoform per gene.
+    To avoid double-counting of codons, users should either use an *ROI file*
+    made by the ``generate`` subprogram of the |metagene| script, or supply
+    an :term:`annotation` file that includes only one transcript isoform per
+    gene.
 
 """
 import sys

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-"""Empirically determine which positions in a genome cannot give rise to uniquely-
-mapping sequencing reads. These positions are then saved in a :term:`mask file`,
-so that they may be excluded as from further analyses.
+"""This script empirically determines which positions in a genome yield 
+multimapping reads under a given set of alignment parameters. These positions
+are saved in a `BED`_-formatted :term:`mask file`, so that they may be excluded
+as from further analyses.
 
-To identify such positions, a genome sequence is diced into :term:`k-mers <k-mer>`
-and the :term:`k-mers` aligned back to the genome. :term:`k-mers <k-mer>` that align to more than 
-one genomic location are then marked as deriving from repetitive regions of
-the genome. These regions are exported in a `BED`_ file.
+To identify multimapping regions, a genome sequence is diced into :term:`k-mers <k-mer>`
+and the :term:`k-mers` aligned back to the genome. Positions in the genome that
+give rise to :term:`k-mers <k-mer>` that align equally well to more than one
+genomic location are then marked as multimapping..
 
 `k` is specified by the user, as are the alignment parameters.
 
@@ -26,13 +27,13 @@ The following files are made:
 where:
 
   - `OUTBASE` is a name meaningful to the user
-  - `READLENGTH` is the k-mer length chosen by the user
+  - `READLENGTH` is the :term:`k-mer` length chosen by the user
   - `MISMATCHES` is the number of mismatches permitted during alignment,
     also set by the user.
 
  .. note::
  
-    This script internally uses `bowtie`_ and a bowtie index for alignments.
+    ``crossmap`` internally uses `bowtie`_ and a bowtie index for alignments.
     Make sure you have these installed.
     
  .. note::
