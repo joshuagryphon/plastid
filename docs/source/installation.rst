@@ -5,8 +5,8 @@ Installation
    :local:
  
 
-From PyPi
----------
+From PyPi (recommended)
+-----------------------
 
 Install package
 ...............
@@ -109,8 +109,8 @@ Troubleshooting on OSX
 
 On many Macintosh computers, :data:`plastid` installs without any problems.
 
-To install :data:`plastid`, Some OSX users have needed to enable special
-compiler flags or set environment variables. If you are having problems, see:
+However, some OSX users have needed to set environment variables or enable
+special compiler flags. If you are having problems, see:
 
   - :ref:`faq-locale-error-osx`
   - :ref:`faq-macintosh-cflags`
