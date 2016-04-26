@@ -92,9 +92,9 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
+    ga          = al.get_genome_array_from_args(args,printer=printer)
     transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
-    ga = al.get_genome_array_from_args(args,printer=printer)
-    crossmap = mp.get_genome_hash_from_args(args,printer=printer)
+    crossmap    = mp.get_genome_hash_from_args(args,printer=printer)
     
     ga_sum = ga.sum()
     normconst = 1000.0*1e6 / ga_sum
