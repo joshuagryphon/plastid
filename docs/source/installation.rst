@@ -62,6 +62,9 @@ adding to your ``.bashrc``, ``.bash_profile``, or ``.profile``:
 
     export PATH=~/bin:~/.local.bin:/usr/local/bin:$PATH
 
+Also, type the line above in any open terminal (or login and out again) to apply
+the changes.
+
 
 Development versions
 --------------------

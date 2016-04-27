@@ -1,39 +1,42 @@
 Getting started with analysis
 =============================
 
-This tutorial contains general advice for getting started with sequencing
-analysis. It is by no means comprehensive, and presumes prior knowledge of:
+This tutorial describes a sample workflow for sequencing analysis. It assumes 
+prior knowledge in:
 
-  - item 1
-  - item 2
-  
-  
- .. _starting-out-contents:
+
 
 Contents
 --------
 
-  - :ref:`annotation`
-  - :ref:`derivative-files`
-  - :ref:`alignments`
-  - :ref:`setup-ribosome-profiling`
-  
+.. contents::
+   :local:
 
- .. _starting-out-annotation:
+
+
+.. _starting-out-annotation:
  
 Obtain a genome sequence & matching annotation
 ----------------------------------------------
 
 
 
- .. _starting-out-derivative-files:
+
+.. _starting-out-derivative-files:
 
 Create derivative files
 -----------------------
 
+It is often useful to pre-compute a number of files for use later:
+
+ - BED/BigBed file of transcripts with gene IDs
+ - tophat .juncs file
+ - bowtie index
+ - maximal spanning windows around start codon
 
 
- .. _starting-out-aligments:
+
+.. _starting-out-aligments:
 
 Perform alignments
 ------------------
@@ -45,19 +48,33 @@ Chromosomal alignment
 .....................
 
 
- .. _starting-out-setup-ribosome-profiling:
 
-Starting ribosome profiling analysis
-------------------------------------
+
+Analysis
+--------
+
+Exploratory data analysis
+.........................
+
+
+Gene expression / read counting
+...............................
+
+
+Ribosome profiling
+..................
 
 P-site estimation
-.................
+"""""""""""""""""
 
 Quality control
-...............
+"""""""""""""""
 
 
- .. _starting-out-further-reading:
+
+
+
+.. _starting-out-further-reading:
  
  
  Further reading

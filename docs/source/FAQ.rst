@@ -75,20 +75,31 @@ with :data:`plastid` seeing an earlier version than `pip`. A few users have
 come across this problem when installing :data:`plastid` in a `conda`_/`Anaconda`_
 environment.
 
-Try installing inside a vanilla environment in a fresh `virtualenv`_
+A solution is to install inside a vanilla environment in a fresh `virtualenv`_
 (note: *not* a `conda`_/`Anaconda`_ environment):
 
 .. code-block:: shell
 
-   # install virtualenv if you don't have it
-   $ pip install virtualenv
+   # install virtualenv if you don't have it.
+   # use either "sudo" or "--user", not both.
 
-   # create & activate vanilla environment
+   # Use the line below system-wide install
+   $ sudo pip install virtualenv
+
+   # or, use this line for single user install
+   $ pip install --user virtualenv
+
+   # With virtualenv installed, create & activate vanilla environment
    # when prompted, do NOT give the virtualenv access to system packages
-   $ virtualenv /path/to/venv
-   $ source path/to/venv/bin/activate
 
-   # fresh install of plastid
+   # create
+   $ virtualenv ~/some/path/to/venv
+
+   # activate
+   $ source ~/some/path/to/venv/bin/activate
+
+   # Fresh install of plastid.
+   # Note- no use of `sudo` here. It confuses the virtualenv
    (venv) $ pip install numpy pysam cython
    (venv) $ pip install plastid
 
@@ -96,10 +107,10 @@ Try installing inside a vanilla environment in a fresh `virtualenv`_
    (venv) $ python -c "from plastid import *"
 
 
-If install succeeds, this suggests that there are in fact multiple versions of 
-one or more of plastid's dependencies installed on your system (as seen
-in :ref:`faq-install-conda`). In this case, ``plastid`` can be used inside
-the `virtualenv`_.
+If install succeeds in a `virtualenv`_, this suggests that there are in fact
+multiple versions of one or more of plastid's dependencies installed on your
+system. In this case, ``plastid`` can be used inside the `virtualenv`_.
+
 
 
 .. _faq-install-conda:
