@@ -195,7 +195,7 @@ def deprecated(func=None,version=None,instead=None):
             def new_func(*args,**kwargs):
                 func_code = get_func_code(func_or_class)
                 warn_explicit_onceperfamily(message,
-                                            category = DeprecationWarning,
+                                            category = FutureWarning,
                                             filename = func_code.co_filename,
                                             lineno = func_code.co_firstlineno + 1)
                 return func_or_class(*args,**kwargs)
@@ -209,7 +209,7 @@ def deprecated(func=None,version=None,instead=None):
             @functools.wraps(func_or_class.__init__)
             def new_func(self,*args,**kwargs):
                 warn_explicit_onceperfamily(message,
-                                            category = DeprecationWarning,
+                                            category = FutureWarning,
                                             filename = sys._getframe(1).f_globals["__name__"],
                                             lineno = sys._getframe(1).f_lineno )
                 return old_init(self,*args,**kwargs)
