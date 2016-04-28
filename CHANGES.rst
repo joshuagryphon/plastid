@@ -91,6 +91,14 @@ Infrastructure
     et c
 
 
+Fixed
+.....
+
+  - Version parsing bug in setup script. 
+
+  - ``@deprecated`` function decorator now gives ``FutureWarning`` s, 
+    as its documentation says it should
+
 Deprecated
 ..........
 

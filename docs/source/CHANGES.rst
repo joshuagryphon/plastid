@@ -18,7 +18,6 @@ still be used (see below), but users will be warned when using them that they
 will be removed in future versions of ``plastid``.
 
 
-
 Added/Changed
 .............
 
@@ -30,7 +29,7 @@ File formats
     `BigWig`_ files, and  ``BigWigGenomeArray``  handles them conveniently.
 
   - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
-    making it far faster.
+    making it far faster and more memory efficient.
 
 
 Command-line scripts
@@ -91,6 +90,14 @@ Infrastructure
     by command-line scripts into DataFrames, preserving headers, formatting,
     et c
 
+
+Fixed
+.....
+
+  - Version parsing bug in setup script. 
+
+  - ``@deprecated`` function decorator now gives ``FutureWarning`` s, 
+    as its documentation says it should
 
 Deprecated
 ..........

@@ -26,14 +26,21 @@ __author__ = "Joshua Griffin Dunn"
 import os
 import sys
 import glob
+import importlib
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+from pkg_resources import parse_version
+
 plastid_version = "0.4.6"
 
-PYSAM_VER_NUM = (0,8,4)
-NUMPY_VER_NUM = (1,9,0)
+PYSAM_VER_NUM  = (0,8,4)
+NUMPY_VER_NUM  = (1,9,0)
 CYTHON_VER_NUM = (0,22,0)
+
+PYSAM_VER_STR = parse_version(".".join([str(X) for X in PYSAM_VER_NUM]))
+NUMPY_VER_STR = parse_version(".".join([str(X) for X in NUMPY_VER_NUM]))
+CYTHON_VER_STR = parse_version(".".join([str(X) for X in CYTHON_VER_NUM]))
 
 NUMPY_VERSION  = "numpy>=%s.%s.%s"  % NUMPY_VER_NUM
 SCIPY_VERSION  = "scipy>=0.15.1"
@@ -47,32 +54,55 @@ if ver < (2,7) or ver[0] == 3 and ver[1] < 3:
     raise RuntimeError(version_message)
 
 
-def version_tuple(inp):
-    return tuple([int(X) for X in inp.split(".")])
-
 
 # at present, setup/build can't proceed without numpy, Pysam, Cython
 # adding these to setup_requires and/or install_requires doesn't work,
 # because they are needed before then.
 foundstr = "(found %s)"
 nstr = pstr = cstr = "(no version found)"
+numpyver = pysamver = cythonver = parse_version("0.0.0")
+have_requirements = True
+
+def check_version(modname):
+    """Try to import a module by name.
+    
+    Parameters
+    ----------
+    modname : str
+        Name of module
+
+    Returns
+    -------
+    module or `None`
+        imported module if it can be imported, otherwise `None`
+    """
+    try:
+        mod = importlib.import_module(modname)
+    except ImportError:
+        mod = None
+    return mod
+
 try:
-    import numpy
-    numpyver = version_tuple(numpy.__version__)
-    nstr = foundstr % numpy.__version__
+    numpy = check_version("numpy")
+    if numpy is not None:
+        numpyver = parse_version(numpy.__version__)
+        nstr = foundstr % (numpy.__version__)
 
-    import pysam
-    pysamver = version_tuple(pysam.__version__)
-    pstr = foundstr % pysam.__version__
+    pysam = check_version("pysam")
+    if pysam is not None:
+        pysamver = parse_version(pysam.__version__)
+        pstr = foundstr % (pysam.__version__)
 
-    import Cython
+    Cython = check_version("Cython")
+    if Cython is not None:
+        cythonver = parse_version(Cython.__version__)
+        cstr = foundstr % (Cython.__version__)
+        
+    if numpyver < NUMPY_VER_STR or pysamver < PYSAM_VER_STR or cythonver < CYTHON_VER_STR:
+        raise ImportError()
+
     from Cython.Distutils import build_ext, Extension
     from Cython.Build import cythonize
-    cythonver = version_tuple(Cython.__version__)
-    cstr = foundstr % Cython.__version__
-
-    if numpyver < NUMPY_VER_NUM or pysamver < PYSAM_VER_NUM or cythonver < CYTHON_VER_NUM:
-        raise ImportError()
 
 except ImportError:
     ltmp = []
