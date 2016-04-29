@@ -56,10 +56,38 @@ files. At present, the following are included:
    RNA-seq. 
 
 
+
+Examples
+--------
+
+Mapping functions are rarely called directly. Instead, they are invoked via
+:meth:`plastid.genomics.genome_array.BAMGenomeArray.set_mapping`:
+
+ .. code-block:: python
+
+    # open BAM file
+    >>> ga = BAMGenomeArray(["some_file.bam"])
+
+    # set mapping 15 bases from 3' end of read
+    >>> ga.set_mapping(ThreePrimeMapFactory(offset=15))
+
+    # set mapping to 5' end of read
+    >>> ga.set_mapping(FivePrimeMapFactory())
+
+    # cut 3 nt off each end of the read, and map fractionally over the rest
+    >>> ga.set_mapping(CenterMapFactory(nibble=12))
+
+    # access reads in some region
+    >>> ga[GenomicSegment("chrI",10000,100000,"+")]
+    # output is numpy array
+
+Other mapping functions are similarly invoked. See their docstrings for further details.
+
+
 Implementation
 --------------
 
-Mapping rules must be callables, and can therefore be implemented as functions
+Mapping functions must be callables, and can therefore be implemented as functions
 or classes. In order to give them configurable parameters, one could create
 function factories or use :func:`functools.partial` to supply the extra
 parameters. Here, we created classes that produce callable instances that mimic
