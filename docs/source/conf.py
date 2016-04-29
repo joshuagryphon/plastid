@@ -49,7 +49,7 @@ extensions = [
     #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'numpydoc', 
+#    'numpydoc', 
     'sphinxcontrib.bibtex',
     'sphinxcontrib.argdoc',
     ]
@@ -69,13 +69,14 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # sphinx autodoc config -------------------------------------------------------
 
 autodoc_default_flags = [
-    "show-inheritance",
+#    "show-inheritance",
     "undoc-members",
     "special-members",
     "private-members",
     "inherited-members",
 ]
 autodoc_member_order = "groupwise"
+autodoc_docstring_signature = True
 
 
 # never document these methods/attributes

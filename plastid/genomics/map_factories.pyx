@@ -1,4 +1,63 @@
-"""Cython implementations of :term:`mapping rules <mapping rule>` for `BAM`_ files.
+"""Numerous sequencing assays encode interesting biology in various properties of
+read alignments. For example:
+
+  - Ribosome profiling encodes the positions of ribosomal P-sites as a
+    function of both read length and alignment coordinates
+ 
+  - Bisulfite sequencing encodes methylation status as C-to-T transitions
+    within read alignments
+
+  - DMS-Seq and Pseudouridine profiling encode unstructured regions of RNA or
+    sites of pseudouridine modification, respectively, in the 5' termini fo
+    their read aligments.
+
+plastid uses configurable mapping functions to
+decode the biology of interest from read alignments.
+
+This design enables plastid's tools to operate on sequencing data from
+virtually any NGS assay, provided the appropriate  mapping function and
+parameters. Mapping rules are described in the following section: 
+
+This module contains Cython implementations of mapping functions for BAM
+files. At present, the following are included:
+
+
+*Fiveprime end mapping*
+   Each read alignment is mapped to its 5' end, or at a fixed offset (in
+   nucleotides) from its 5' end
+        
+*Variable fiveprime end mapping*
+   Each read alignment is mapped at a fixed distance from its 5' end, where
+   the distance is determined by the length of the read alignment.
+     
+   This is used for :term:`ribosome profiling` of yeast (:cite:`Ingolia2009`)
+   and mammalian cells (:cite:`Ingolia2011`).
+
+*Stratified variable fiveprime end mapping*
+   This multidimensional mapping rule behaves as variable fiveprime end mapping,
+   and additionally returns arrays that are stratified by read length.
+   
+   For each region of interest, a 2D array is returned, in which each row
+   represents a given read length, and each column a nucleotide position in the
+   region of interest. In other words, summing over the columns produces the
+   same array that would be given by variable fiveprime end mapping.
+
+*Threeprime end mapping*
+   Each read alignment is mapped to its 3' end, or at a fixed
+   offset (in nucleotides) from its 3' end.
+    
+*Entire* or *Center-weighted mapping*
+   Zero or more positions are trimmed from each end of the read alignment,
+   and the remaining `N` positions in the alignment are incremented by `1/N`
+   read counts (so that each read is still counted once, when integrated
+   over its mapped length).
+     
+   This is also used for ribosome profiling of E. coli and D. melanogaster, and
+   RNA-seq. 
+
+
+Implementation
+--------------
 
 Mapping rules must be callables, and can therefore be implemented as functions
 or classes. In order to give them configurable parameters, one could create
@@ -23,12 +82,11 @@ a 2D array, the positions would thus be columns. See
 |StratifiedVariableFivePrimeMapFactory| below for an example.
 
 
- 
 
 See also
 --------
 Module documentation for :mod:`~plastid.genomics.genome_array`
-    For a detailed discussion of :term:`mapping rules <mapping rule>`.
+    For a detailed discussion of :term:`mapping functions <mapping rule>`.
 """
 
 import numpy as np
@@ -66,7 +124,7 @@ ctypedef np.long_t   LONG_t
 
 cdef class CenterMapFactory:
     """CenterMapFactory(nibble = 0)
-    
+
     Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
     `nibble` positions  is removed from each side of each read alignment, and
     the `N` remaining positions are each apportioned `1/N` of the read count,
@@ -526,7 +584,7 @@ cdef class VariableFivePrimeMapFactory:
 
 
 cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
-    """StratifiedVariableFivePrimeMapFactory(offset_dict, min = 25, max = 35)   
+    """StratifiedVariableFivePrimeMapFactory(offset_dict, min = 25, max = 35)
     
     Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`, stratified by read length.
     
@@ -596,7 +654,8 @@ cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
 
     @cython.boundscheck(False) # valid because indices are explicitly checked in VariableFivePrimeMapFactory.__cinit__
     def __call__(self, list reads not None, GenomicSegment seg not None):
-        """Map reads covering `seg` into a 2D count array, in which reads at
+        """
+        Map reads covering `seg` into a 2D count array, in which reads at
         each nucleotide position (column) are stratified by read length (row),
         and, optionally, offset from their 5' ends.
  
@@ -665,7 +724,7 @@ cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
 
 
 cdef class SizeFilterFactory:
-    """SizeFilterFactory(min = 1, max = -1_)
+    """SizeFilterFactory(min = 1, max = -1)
     
     Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
     using ::meth:`BAMGenomeArray.add_filter`

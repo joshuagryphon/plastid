@@ -1,105 +1,106 @@
-Read mapping rules
-==================
+Read mapping functions
+======================
 
-.. TODO:: write better intro
+Numerous sequencing assays encode interesting biology in various properties of
+read alignments withu nucleotide precision. For example:
 
-Mapping rules are described in the following section:
+ - :term:`ribosome profiling` encodes the positions of ribosomal P-sites as a
+   function of both read length and alignment coordinates
+   (:cite:`Ingolia2009,Ingolia2011`)
+
+ - Bisulfite sequencing encodes methylation status as C-to-T transitions within
+   read alignments (:cite:)
+
+ - :term:`DMS-Seq` (:cite:`Rouskin2014`) and Pseudouridine profiling (:cite:)
+   encode unstructured regions of RNA or sites of pseudouridine modification,
+   respectively, in the 5' termini fo their read aligments.
+
+:data:`plastid` uses configurable :term:`mapping functions <mapping rule>` to
+decode the biology of interest from read alignments, and convert the decoded
+data into :class:`arrays <numpy.ndarray>` over regions of interest (such as an
+array of the number of ribosomes at each nucleotide in a coding region).
+
+This design enables :term:`plastid`'s tools to operate on sequencing data from
+virtually any NGS assay, provided the appropriate mapping function and
+parameters. 
+
+
+Mapping functions are described in the following sections: 
 
 .. contents::
    :local:
 
 
-.. _mapping-rules-definition:
-     
-Definition
-----------
-
-:term:`Mapping rules <mapping rule>` are functions that convert :term:`read alignments` to
-genomic coordinates. They are useful when performing positional analyses of
-alignments, specifically when the informative position is not the 5' or 3' end
-of an alignment. For example:
-
- - in :term:`ribosome profiling` experiments, the ribosomal P- and-A sites,
-   where peptide synthesis occurs, is of interest. This location is internal
-   to the read, usually 15 nucleotides from the 3' end, depending upon read
-   length.
-    
-   Mapping :term:`read alignments` from a :term:`ribosome profiling` experiment
-   to the P-site instead of the 5' end reveals features of translation, such
-   as translation initiation and termination sites, ribosome pauses, and
-   frameshifts (:cite:`Ingolia2009`).
-
- - in :term:`DMS-seq` experiments, the goal is to detect chemically modified RNA
-   bases. Given the library prepration protocol for :term:`DMS-seq`, the modified
-   base is actually the first nucleotide *upstream*  of (i.e. outside) the 5'
-   end of the read alignment (:cite:`Rouskin2014`).
-  
- - in ClIP- or ChIP-seq experiments, where the crosslink site (in some protocols
-   detectable as a mutation) is within the read alignment, rather than the 5' or 3'
-   end.
-
-----------------------------------------------------
-
 .. _mapping-rules-provided:
 
-Mapping rules included in ``plastid``
--------------------------------------
-The following mapping rules are provided, although users are encouraged to
-:ref:`write their own mapping rules <mapping-rules-roll-your-own>`
+Mapping functions included in ``plastid``
+----------------------------------------
+At present, the following mapping functions are provided, although users are
+encouraged to :ref:`write their own mapping functions <mapping-rules-roll-your-own>`
 as needed. These include:
 
 
-*Fiveprime end mapping:*
-    Each read alignment is mapped to its 5' end, or at a fixed offset (in
-    nucleotides) from its 5' end
+*Fiveprime end mapping*
+   Each read alignment is mapped to its 5' end, or at a fixed offset (in
+   nucleotides) from its 5' end
         
-*Variable fiveprime end mapping:*
-    Each read alignment is mapped at a fixed distance from its 5' end, where
-    the distance is determined by the length of the read alignment.
+*Variable fiveprime end mapping*
+   Each read alignment is mapped at a fixed distance from its 5' end, where
+   the distance is determined by the length of the read alignment.
      
-    This is used for :term:`ribosome profiling` of yeast (:cite:`Ingolia2009`)
-    and mammalian cells (:cite:`Ingolia2011`).
+   This is used for :term:`ribosome profiling` of yeast (:cite:`Ingolia2009`)
+   and mammalian cells (:cite:`Ingolia2011`).
+
+*Stratified variable fiveprime end mapping*
+   This multidimensional mapping function behaves as variable fiveprime end
+   mapping, and additionally returns arrays that are stratified by read length.
+   
+   For each region of interest, a 2D array is returned, in which each row
+   represents a given read length, and each column a nucleotide position in the
+   region of interest. In other words, summing over the columns produces the
+   same array that would be given by variable fiveprime end mapping.
+
+*Threeprime end mapping*
+   Each read alignment is mapped to its 3' end, or at a fixed
+   offset (in nucleotides) from its 3' end.
     
-*Threeprime end mapping:*
-    Each read alignment is mapped to its 3' end, or at a fixed
-    offset (in nucleotides) from its 3' end.
-    
-*Entire* or *Center-weighted mapping:*
-    Zero or more positions are trimmed from each end of the read alignment,
-    and the remaining `N` positions in the alignment are incremented by `1/N`
-    read counts (so that each read is still counted once, when integrated
-    over its mapped length).
+*Entire* or *Center-weighted mapping*
+   Zero or more positions are trimmed from each end of the read alignment,
+   and the remaining `N` positions in the alignment are incremented by `1/N`
+   read counts (so that each read is still counted once, when integrated
+   over its mapped length).
      
-    This is also used for :term:`ribosome profiling` of *E. coli* (:cite:`Oh2011`) and
-    *D. melanogaster* (:cite:`Dunn2013`), and RNA-seq. 
+   This is also used for :term:`ribosome profiling` of *E. coli* (:cite:`Oh2011`) and
+   *D. melanogaster* (:cite:`Dunn2013`), and RNA-seq. 
 
 In the image below, the same set of :term:`read alignments` from a
-:term:`ribosome profiling` experiment is mapped under various rules.
+:term:`ribosome profiling` experiment is mapped under various functions.
 Note the :term:`start codon peak` and :term:`stop codon peak` that appear when 
 reads are mapped to specific locations:
 
 .. figure:: /_static/images/mapping_rule_demo.png
-   :alt: Ribosome profiling data under different mapping rules
+   :alt: Ribosome profiling data under different mapping functions
    :figclass: captionfigure
    :width: 1080px
    :height: 683px
     
    **Top**: gene model. **Middle**: alignments of :term:`ribosome footprints`,
-   displayed as in the `IGV`_ genome browser without a mapping rule.
+   displayed as in the `IGV`_ genome browser without a mapping function.
    **Bottom rows**: :term:`Ribosome footprints` mapped under various mapping
-   rules.
+   functions.
 
 
 .. _mapping-rules-command-line:
  
-Choosing mapping rules in command-line scripts
-..............................................
+Choosing mapping functions in command-line scripts
+...................................................
 
-Mapping rules may be specified to :mod:`command-line scripts <plastid.bin>` using
-the following command-line arguments:
+Mapping functions may be specified to :mod:`command-line scripts <plastid.bin>` using
+the following command-line arguments (note, command-line scripts don't at
+present support mapping functions that return multidimensional arrays):
 
    ======================   ====================================
-   **Mapping rule**         **Argument**
+   **Mapping function**     **Argument**
    ----------------------   ------------------------------------
    Fiveprime                ``--fiveprime``
    
@@ -110,7 +111,7 @@ the following command-line arguments:
    Center/entire            ``--center``
    ======================   ====================================
 
-The following arguments additionally influence how mapping rules behave:
+The following arguments additionally influence how mapping functions behave:
 
    ====================  =======================================================
    **Argument**          **Behavior**
@@ -137,15 +138,15 @@ for a detailed discussion of their arguments.
 
 .. _mapping-rules-interactive: 
  
-Choosing mapping rules in interactive Python sessions
+Choosing mapping functions in interactive Python sessions
 .....................................................
 
-Mapping rules in :data:`plastid` are applied when :term:`read alignments` are imported.
+Mapping functions in :data:`plastid` are applied when :term:`read alignments` are imported.
 Read alignments are held in data structures called *GenomeArrays*
 (see :mod:`plastid.genomics.genome_array`).
 
 Alignments in `BAM`_ format can be imported into a |BAMGenomeArray|.
-Mapping rules are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.set_mapping`::
+Mapping functions are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.set_mapping`::
 
    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
@@ -154,14 +155,14 @@ Mapping rules are set via :meth:`~plastid.genomics.genome_array.BAMGenomeArray.s
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=5))
 
-and, the mapping rule for a |BAMGenomeArray| can be changed at any time::
+and, the mapping function for a |BAMGenomeArray| can be changed at any time::
 
    >>> # map reads along entire lengths
    >>> alignments.set_mapping(CenterMapFactory())
 
 
 Alignments in `bowtie`_ format can be imported into a |GenomeArray|. Because
-`bowtie`_ files are not sorted or indexed, mapping rules must be applied upon
+`bowtie`_ files are not sorted or indexed, mapping functions must be applied upon
 import, and cannot be changed afterwards::
 
    >>> from plastid.genomics.genome_array import GenomeArray, five_prime_map
@@ -175,34 +176,30 @@ import, and cannot be changed afterwards::
    >>> entire_alignments.add_from_bowtie(open("some_file.bowtie"),center_map)
 
 
-Method names for the various :term:`mapping rules <mapping rule>` appear below:
+Method names for the various :term:`mapping functions <mapping rule>` appear below:
 
-======================   ==============================================================    ==============================================================================
-**Mapping rule**         |GenomeArray|, |SparseGenomeArray|                                |BAMGenomeArray|
-----------------------   --------------------------------------------------------------    ------------------------------------------------------------------------------
+================================   ==============================================================    ==============================================================================
+**Mapping function**               |GenomeArray|, |SparseGenomeArray|                                |BAMGenomeArray|
+--------------------------------   --------------------------------------------------------------    ------------------------------------------------------------------------------
 
-Fiveprime                :func:`~plastid.genomics.genome_array.five_prime_map`             :class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
+Fiveprime                          :func:`~plastid.genomics.genome_array.five_prime_map`             :class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
 
-Fiveprime variable       :func:`~plastid.genomics.genome_array.variable_five_prime_map`    :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
+Fiveprime variable                 :func:`~plastid.genomics.genome_array.variable_five_prime_map`    :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 
-Fiveprime variable,      not implemented                                                   :class:`~plastid.genomics.map_factories.StratifiedVariableFivePrimeMapFactory`
-stratified by read
-length
+Stratified fiveprime variable      not implemented                                                   :class:`~plastid.genomics.map_factories.StratifiedVariableFivePrimeMapFactory`
 
-Threeprime               :func:`~plastid.genomics.genome_array.three_prime_map`            :class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
+Threeprime                         :func:`~plastid.genomics.genome_array.three_prime_map`            :class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
 
-Center/entire            :func:`~plastid.genomics.genome_array.center_map`                 :class:`~plastid.genomics.map_factories.CenterMapFactory`
-======================   ==============================================================    ==============================================================================
+Center/entire                      :func:`~plastid.genomics.genome_array.center_map`                 :class:`~plastid.genomics.map_factories.CenterMapFactory`
+================================   ==============================================================    ==============================================================================
 
-
-----------------------------------------------------
 
 .. _mapping-rules-roll-your-own:
 
-Writing new mapping rules
+Writing new mapping functions
 -------------------------
-Writing mapping rules in :data:`plastid` are implemented as callables (functions
-or callable class instances). Mapping rules for |BAMGenomeArray| require the
+Mapping functions in :data:`plastid` are implemented as callables (functions
+or callable class instances). Mapping functions for |BAMGenomeArray| require the
 following signatures:
 
 Parameters
@@ -220,13 +217,13 @@ Return values
 .............
 list
    A list of :term:`read alignments` (:class:`pysam.AlignedSegment`) that map
-   within `segment` under the mapping rule implemented by the function.
+   within `segment` under the mapping function implemented by the function.
 
 :class:`numpy.ndarray`
    An array of values at each position in `segment`, from left-to-right /
    lowest-to-highest coordinates relative to the genome (not relative to the segment).
    
-   More generally, if the mapping rule returns a multi-dimensional array, the
+   More generally, if the mapping function returns a multi-dimensional array, the
    last dimension must represent the positions in `segment` (e.g., for a 2D
    array, the columns would represent the nucleotide positions).
 
@@ -319,15 +316,15 @@ This mapping function may then be used as above::
    >>> alignments.set_mapping(mismatch_mapping_function)      
 
 
-----------------------------------------------------
 
 See also
 --------
- - :doc:`/devinfo/entrypoints` for details on making custom mapping rules
+ - :doc:`/devinfo/entrypoints` for details on making custom mapping functions
    accessible to command-line scripts
 
- - :doc:`P-site mapping </examples/p_site>` example, in which a mapping rule
+ - :doc:`P-site mapping </examples/p_site>` example, in which a mapping function
    for :term:`ribosome profiling` data is derived and applied
     
- - Module documentation for :mod:`plastid.genomics.genome_array`, which provides
-   more details on |BAMGenomeArrays|, |GenomeArrays|, and mapping functions
+ - Module documentation for :mod:`plastid.genomics.map_factories` and
+   :mod:`plastid.genomics.genome_array`, which provide
+   more details on mapping functions, |BAMGenomeArrays|, and |GenomeArrays|
