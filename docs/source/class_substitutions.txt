@@ -1,3 +1,9 @@
+.. |FivePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
+.. |ThreePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
+.. |CenterMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.CenterMapFactory`
+.. |VariableFivePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
+.. |StratifiedVariableFivePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.StratifiedVariableFivePrimeMapFactory`
+
 .. |FastaNameReader| replace:: :py:class:`~plastid.bin.crossmap.FastaNameReader`
 .. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <plastid.bin.crossmap.FastaNameReader>`
 .. |AbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.AbstractGenomeArray`
