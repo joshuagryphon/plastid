@@ -175,7 +175,7 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
 intersphinx_mapping = { "python" : ("http://docs.python.org",None),
                         "numpy"  : ("http://docs.scipy.org/doc/numpy/",None),
                         "scipy"  : ("http://docs.scipy.org/doc/scipy/reference/",None),
-                        "pysam"  : ("http://pysam.readthedocs.org/en/latest",None),
+                        "pysam"  : ("http://pysam.readthedocs.io/en/latest",None),
                         "pandas" : ("http://pandas-docs.github.io/pandas-docs-travis/",None),
                         "HTSeq"  : ("http://www-huber.embl.de/users/anders/HTSeq/doc",None),
                         "matplotlib"   : ("http://matplotlib.org/",None),

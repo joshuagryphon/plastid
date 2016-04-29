@@ -145,7 +145,7 @@ Added
         arguments they consume
   
     Detailed instructions for use in the *developer info* section
-    of `<plastid.readthedocs.org>`_.
+    of `<plastid.readthedocs.io>`_.
 
   - Argument parsing classes that replace methods deprecated below:
   

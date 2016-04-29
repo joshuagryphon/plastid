@@ -4,7 +4,7 @@ Citing ``plastid``
 If you find platid useful in your research, please cite us :data:`plastid` as follows:
 
    Dunn, J.G. (2016). *plastid:* a positional library for sequencing analysis.
-   `<http://plastid.readthedocs.org>`_.
+   `<http://plastid.readthedocs.io>`_.
 
 
 We are interested to know who has found :data:`plastid` useful, so please also give 

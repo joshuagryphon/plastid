@@ -2,8 +2,8 @@ Welcome to `plastid`!
 =====================
 
 For documentation, see `our home page
-<http://plastid.readthedocs.org/en/latest/>`_ on `ReadtheDocs.org
-<http://readthedocs.org>`_.
+<http://plastid.readthedocs.io/en/latest/>`_ on `ReadtheDocs
+<http://readthedocs.io>`_.
 
 To run the tests, download the `test dataset
 <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_
@@ -37,8 +37,8 @@ This package provides:
      ``plastid``.
 
   #. Extensive documentation, both in source code and at `our home page
-     <http://plastid.readthedocs.org/en/latest/>`_ on `ReadtheDocs.org
-     <http://readthedocs.org>`_.
+     <http://plastid.readthedocs.io/en/latest/>`_ on `ReadtheDocs
+     <http://readthedocs.io>`_.
 
 
 Installation
@@ -61,7 +61,7 @@ do this type::
 Links & help
 ------------
 
-  - `Documentation <http://plastid.readthedocs.org>`_
+  - `Documentation <http://plastid.readthedocs.io>`_
 
   - `Our github repo <https://github.com/joshuagryphon/plastid>`_
 

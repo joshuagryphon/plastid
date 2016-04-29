@@ -26,11 +26,11 @@
 .. _NumPy: http://docs.scipy.org/doc/numpy/reference/
 .. _SciPy: http://docs.scipy.org/doc/scipy/reference/
 .. _Pandas: http://pandas.pydata.org/
-.. _Pysam: http://pysam.readthedocs.org/en/latest/
+.. _Pysam: http://pysam.readthedocs.io/en/latest/
 .. _matplotlib: http://matplotlib.org/
 .. _Biopython: http://biopython.org/wiki/Biopython
 .. _Virtualenv: https://virtualenv.pypa.io/en/latest/
-.. _nose: https://nose.readthedocs.org/en/latest/
+.. _nose: https://nose.readthedocs.io/en/latest/
 .. _Sphinx: http://sphinx-doc.org/
 .. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 .. _twobitreader: https://pythonhosted.org/twobitreader/
@@ -63,7 +63,7 @@
 .. Non-Python software links
 
 .. _SAMtools: http://samtools.sourceforge.net/
-.. _bedtools: http://bedtools.readthedocs.org/
+.. _bedtools: http://bedtools.readthedocs.io/
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
 .. _Bowtie: http://bowtie-bio.sourceforge.net/manual.shtml
