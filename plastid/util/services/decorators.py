@@ -48,7 +48,7 @@ from plastid.util.services.exceptions import warn_explicit_onceperfamily
 def notimplemented(func):
     """NotImplemented annotation decorator.
     Calls to functions annotated with this decorator raise
-    |NotImplementedError|, which record attributes of function callers
+    :class:`NotImplementedError`, which record attributes of function callers
 
     Parameters
     ----------

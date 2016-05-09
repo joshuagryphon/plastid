@@ -7,19 +7,21 @@
   - parse those arguments into useful file types
   
 
-===========================================================   ======================================
-**Parameter/argument set**                                    **Parser building class**            
------------------------------------------------------------   --------------------------------------
-Generic parameters (e.g. for error reporting, logging)        :class:`BaseParser`
+Arguments are grouped into the following sets:
 
-:term:`Read alignments` or :term:`count files <count file>`   :class:`AlignmentParser`
-
-Genomic feature or mask annotations                           :class:`AnnotationParser`
-
-Genomic sequence files                                        :class:`SequenceParser`
-
-Plotting parameters for charts                                :class:`PlottingParser`
-===========================================================   ======================================
+    ===========================================================   ======================================
+    **Parameter/argument set**                                    **Parser building class**            
+    -----------------------------------------------------------   --------------------------------------
+    Generic parameters (e.g. for error reporting, logging)        :class:`BaseParser`
+    
+    :term:`Read alignments` or :term:`count files <count file>`   :class:`AlignmentParser`
+    
+    Genomic feature or mask annotations                           :class:`AnnotationParser`
+    
+    Genomic sequence files                                        :class:`SequenceParser`
+    
+    Plotting parameters for charts                                :class:`PlottingParser`
+    ===========================================================   ======================================
 
 
 Example
@@ -28,35 +30,36 @@ To use any of these in your own command line scripts, follow these steps:
 
   #. Import one or more of the classes above::
 
-         import argparse
-         from plastid.util.scriptlib.argparsers import AnnotationParser
+         >>> import argparse
+         >>> from plastid.util.scriptlib.argparsers import AnnotationParser
 
 
   #. Use the first function to create an  :class:`~argparse.ArgumentParser`,
      and supply this object as a `parent` when you build your script's
      :py:class:`~argparse.ArgumentParser`::
 
-         ap = AnnotationParser()
+         >>> ap = AnnotationParser()
         
          # create annotation file parser
-         annotation_file_parser = ap.get_parser(disabled=["some_option_to_disable"])
+         >>> annotation_file_parser = ap.get_parser(disabled=["some_option_to_disable"])
         
          # create my own parser, incorporating flags from annotation_file_parser
-         my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])     
+         >>>> my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])     
     
          # add script-specific arguments
-         my_own_parser.add_argument("--foo",type=int,default=5,help="Some option")
-         my_own_parser.add_argument("--bar",type=str,default="a string",help="Another option")
+         >>> my_own_parer.add_argument("positional_argument",type=str)
+         >>> my_own_parser.add_argument("--foo",type=int,default=5,help="Some option")
+         >>> my_own_parser.add_argument("--bar",type=str,default="a string",help="Another option")
      
   #. Then, use the second parse the arguments::
 
-         # parse args
-         args = parser.parse_args()
+         >>> args = parser.parse_args()
         
          # get transcript objects from arguments
-         transcripts = ap.get_transcripts_from_args(args)
+         # this will be an iterator over |Transcripts|
+         >>> transcripts = ap.get_transcripts_from_args(args)
         
-         pass # rest of your script
+         >>> pass # rest of your script
 
 
 Your script will then be able process whatever sorts of annotation files that
@@ -85,7 +88,7 @@ from plastid.util.services.decorators import deprecated
 #from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
 from plastid.util.io.filters import CommentReader
-
+from plastid.genomics.roitools import Transcript, SegmentChain
 from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
                                 _DEFAULT_GFF3_EXON_TYPES,\
                                 _DEFAULT_GFF3_CDS_TYPES
@@ -716,14 +719,8 @@ class AnnotationParser(Parser):
                    title=_DEFAULT_ANNOTATION_PARSER_TITLE,
                    description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
                    **kwargs):
-        """Return an :py:class:`~argparse.ArgumentParser` that opens
-        alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+        """Return an :class:`~argparse.ArgumentParser` that opens annotation files.
          
-        In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
-        rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
-        read length filters
-        
-        
         Parameters
         ----------
         title : str, optional
@@ -753,11 +750,7 @@ class AnnotationParser(Parser):
         return parser           
 
     def get_transcripts_from_args(self,args,printer=None,return_type=None,require_sort=False):
-        from plastid.genomics.roitools import Transcript
-        return self.get_segmentchains_from_args(args, printer=printer, return_type=Transcript, require_sort=require_sort)
-
-    def get_segmentchains_from_args(self,args,printer=None,return_type=None,require_sort=False):
-        """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
+        """Return a generator of |Transcript| objects from arguments parsed by :func:`get_annotation_file_parser`
         
         Parameters
         ----------
@@ -788,11 +781,45 @@ class AnnotationParser(Parser):
             Function that creates :py:class:`argparse.ArgumentParser` whose output
             :py:class:`~argparse.Namespace` is processed by this function    
         """
+
+        return self.get_segmentchains_from_args(args, printer=printer, return_type=Transcript, require_sort=require_sort)
+
+    def get_segmentchains_from_args(self,args,printer=None,return_type=None,require_sort=False):
+        """Return a generator of |SegmentChain| objects from arguments parsed by :py:func:`get_annotation_file_parser`
+        
+        Parameters
+        ----------
+        args : :py:class:`argparse.Namespace`
+            Namespace object from :py:func:`get_annotation_file_parser`
+        
+        printer : file-like, optional
+            A stream to which stderr-like info can be written (Default: |NullWriter|) 
+        
+        return_type : |SegmentChain| or subclass, optional
+            Type of object to return (Default: |Transcript|)
+    
+        require_sort : bool, optional
+            If True, quit if the annotation file(s) are not sorted or indexed
+        
+        Returns
+        -------
+        iterator
+            |SegmentChain| objects, either in order of appearance (if input was a
+            `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by chromosome,
+            start coordinate, end coordinate, and then strand (if input was `GTF2`_
+            or `GFF3`_).
+        
+        
+        See Also
+        --------
+        get_annotation_file_parser
+            Function that creates :py:class:`argparse.ArgumentParser` whose output
+            :py:class:`~argparse.Namespace` is processed by this function    
+        """
         if printer is None:
             printer = NullWriter()
             
         if return_type is None:
-            from plastid.genomics.roitools import SegmentChain
             return_type = SegmentChain
     
         args = PrefixNamespaceWrapper(args,self.prefix)
@@ -1017,14 +1044,9 @@ class MaskParser(AnnotationParser):
                    title=_MASK_PARSER_TITLE,
                    description=_MASK_PARSER_DESCRIPTION,
                    **kwargs):
-        """Return an :py:class:`~argparse.ArgumentParser` that opens
+        """Return an :py:class:`~argparse.ArgumentParser` that opens annotation files as masks
         alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
-        In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
-        rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
-        read length filters
-        
-        
         Parameters
         ----------
         title : str, optional
@@ -1751,7 +1773,6 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
-    from plastid.genomics.roitools import SegmentChain
     disabled.append([prefix+"add_three"])
     return get_transcripts_from_args(args,
                                      prefix=prefix,
