@@ -1,138 +1,133 @@
 #!/usr/bin/env python
-"""GenomeArrays are randomly-accessible array-like structures that map quantitative data
-or :term:`read alignments` to genomic positions. In this way, they function like
-`numpy`_ arrays, except over coordinates specified by |GenomicSegments|
-rather than slices of `start:end`. For example, to fetch data covering nucleotdies
-2000-2500 on the plus strand of chromosome `'chrA'`::
+"""GenomeArrays map quantitative data or :term:`read alignments` to genomic positions.
 
-    >>> genome_array = GenomeArray()
-    >>> genome_array.add_from_wiggle(open("some_file_fw.wig"),"+")
-    >>> genome_array.add_from_wiggle(open("some_file_rc.wig"),"-") 
+
+|SegmentChains| and |Transcripts| can be used to fetch arrays of
+data from GenomeArrays. The result is a :class:`numpy array <numpy.ndarray>`
+in which each position corresponds to a position in the |SegmentChain|, moving
+from 5' to 3', in the spliced |SegmentChain| or |Transcript|. For a |Transcript|
+called `my_transcript`::
+
+    >>> genome_array = BAMGenomeArray(["some_file.bam"])
+    >>> genome_array.set_mapping(FivePrimeMapFactory())
+
+    >>> my_data = my_transcript.get_counts(genome_array)
+    >>> my_data
+        # some numpy array
+
+Alternatively, |GenomicSegments| and |SegmentChains| can be used directly as
+dictionary keys::
+
+    >>> genome_array = BAMGenomeArray(["some_file.bam"])
+    >>> genome_array.set_mapping(FivePrimeMapFactory())
+    
     >>> segment = GenomicSegment('chrA',2000,2500,'+')
-    >>> my_data = some_genome_array[segment]
+    >>> my_data = genome_array[segment]
+    >>> my_data
         # some numpy array
 
 
-More commonly, GenomeArrays are used with |SegmentChains| and |Transcripts|, which
-via their :meth:`~plastid.genomics.roitools.SegmentChain.get_counts` methods
-can fetch arrays of data in which each array position corresponds to a position,
-moving from 5' to 3', in the spliced |SegmentChain| or |Transcript|:: 
-
-    >>> seg1 = GenomicSegment('chrA',2000,2500,'-')
-    >>> seg2 = GenomicSegment('chrA',3000,3250','-')
-    >>> seg3 = GenomicSegment('chrA',4000,4200,'-')
-    >>> segment_chain = SegmentChain(seg1,seg2,seg3,ID="my_chain")
-    >>> my_data = segment_chain.get_counts(some_genome_array)
-        # some numpy array
         
+GenomeArrays offer utilities for summing and normalization::
+
+    >>> genome_array.sum() # get sum
+    
+    # set sum to an arbitrary value- can be useful for normalizing between
+    # multiple alignment files
+    >>> genome_array.set_sum(61241234324)
+    
+    # reset sum to data in file
+    >>> genome_array.reset_sum()
+    
+    # normalize all arrays to counts per million in the sum
+    >>> genome_array.set_normalize(True)
+    >>> normalized_data = my_transcript.get_counts(genome_array) 
+
+They can also export data to `wiggle`_ or `bedGraph`_ formats. To export 
+forward-strand data to `some_file.wig`:
+
+    >>> genome_array.to_bedgraph(open("some_file.wig","w"),"my_track","+")
+    
 
 Types of GenomeArrays
 ---------------------
 
-Several subclasses are provided, depending on how the :term:`read alignments`
-or quantitative data is stored. All GenomeArrays present the same interfaces for:
+Several implementations are provided for data stored in various formats:
 
-    - retrieving vectors (as :py:class:`numpy.ndarray` s) of data at each position
-      of a |GenomicSegment|
-      
-    - tabulating the sum of the :term:`read alignments` or :term:`counts`
-      in a dataset via their :meth:`~AbstractGenomeArray.sum` methods
-    
-    - toggling normalization of fetched :term:`counts` to reads-per-million
-      via their :meth:`~AbstractGenomeArray.set_normalize` methods
+====================   ==================================   =====================   ===================================================
+**Implementation**     **Format of data**                   **Mutable in place**    **Use of mapping functions**
+--------------------   ----------------------------------   ---------------------   ---------------------------------------------------
+|BAMGenomeArray|       `BAM`_ file(s)                       No                      Inline; may be changed without reloading data
 
-    - export of data to variableStep `Wiggle`_ and `bedGraph`_ formats via their
-      methods :meth:`~GenomeArray.to_variable_step` and
-      :meth:`~GenomeArray.to_bedgraph`, respectively
-    
+|BigWigGenomeArray|    `BigWig`_ file(s)                    No                      n/a
 
-The following subclasses of GenomeArrays provide their own features in addition 
-to those above:
+|GenomeArray|          `bowtie`_, `wiggle`_, `bedGraph`_,   Yes                     On import from `bowtie`_ files only. Data must be
+                       or data in memory                                            reimported to change mapping
 
-
-    |BAMGenomeArray|
-        A GenomeArray for `BAM` files. Fetches alignments from one or more
-        `BAM`_ files, and applies :term:`mapping rules <mapping rule>` and
-        filter functions to convert these alignments to vectors of :term:`counts`
-        at runtime. As a result :term:`mapping rules <mapping rule>` and filter
-        functions can be changed at will without re-loading data, allowing rapid
-        prototyping / EDA.
-        
-    |BigWigGenomeArray|
-        A GenomeArray for data stored in one or more `BigWig`_ files.
-              
-    |GenomeArray|
-        A mutable GenomeArray. It allows:
-        
-            - import of quantitative data from `Wiggle`_ and `bedGraph`_ files
-
-            - import of :term:`read alignments` from native `bowtie`_ alignments,
-              and their conversion to :term:`counts` under configurable
-              :term:`mapping rules <mapping rule>`. However,
-              because :term:`mapping rules <mapping rule>` are applied upon import,
-              they cannot be changed once the data has been loaded into the array
-              
-            - setting values within the array
-    
-            - mathematical operations upon the array, such as addition and subtraction
-              of scalars, or positionwise addition and subtraction of other |GenomeArrays|
-    
-    |SparseGenomeArray|
-        A slower but more memory-efficient implementation of |GenomeArray|,
-        useful for large genomes or on computers with limited memory.
+|SparseGenomeArray|    `bowtie`_, `wiggle`_, `bedGraph`_,   Yes                     On import from `bowtie`_ files only. Data must be
+                       or data in memory                                            reimported to change mapping
+====================   ==================================   =====================   ===================================================
 
 
 
 
-Mapping rules
--------------
-In order to convert :term:`read alignments` to :term:`counts`, a :term:`mapping rule`
-must be applied. Depending on the data type and the purpose of the experiment,
-different rules may be appropriate. The following mapping rules are provided,
-although users are encouraged to provide their own if needed. These include:
+Mapping functions
+-----------------
+GenomeArrays use :term:`Mapping functions <mapping rule>` to extract the biology
+of interest from read alignments, and to vectorize these data over genomic
+positions.
 
-    #.  *Fiveprime end mapping:*
-        Each read alignment is mapped to its 5' end, or at a fixed
-        distance from its 5' end. This is common for RNA-seq or CLiP-seq
-        experiments.
-        
-    #.  *Variable fiveprime end mapping:*
-        Each read alignment is mapped at a fixed distance from its
-        5' end, where the distance is determined by the length of the read
-        alignment. This is commonly used for mapping :term:`ribosome-protected footprints`
-        to their P-sites in :term:`ribosome profiling` experiments.
-    
-    #.  *Threeprime end mapping:*
-        Each read alignment is mapped to its 3' end, or at a fixed
-        distance from its 3' end.
-    
-    #.  *Entire,* *Center-weighted,* or *nibble mapping:*
-        Zero or more positions are trimmed from each end of the read alignment,
-        and the remaining `N` positions in the alignment are incremented by `1/N`
-        read counts (so that each read is still counted once, when integrated
-        over its mapped length). This is also occasionally used for 
-        :term:`ribosome profiling` or RNA-seq. 
-
-Implementations of each mapping rule are provided. For |GenomeArray| and
-|SparseGenomeArray|, functions are provided as arguments to the
-method :meth:`~GenomeArray.add_from_bowtie`. For |BAMGenomeArray|, a function
-is generated from one of the :term:`factories <factory>` below, and passed to
-the method :meth:`BAMGenomeArray.set_mapping`:
-
-======================   ====================================    =====================================================================
-**Mapping rule**         |GenomeArray|, |SparseGenomeArray|      |BAMGenomeArray|
-----------------------   ------------------------------------    ---------------------------------------------------------------------
-
-Fiveprime                :func:`five_prime_map`                  :class:`~plastid.genomics.map_factories.FivePrimeMapFactory`
-
-Fiveprime variable       :func:`variable_five_prime_map`         :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
-
-Threeprime               :func:`three_prime_map`                 :class:`~plastid.genomics.map_factories.ThreePrimeMapFactory`
-
-Center/entire/nibble     :func:`center_map`                      :class:`~plastid.genomics.map_factories.CenterMapFactory`
-======================   ====================================    =====================================================================
+Depending on the data type and the purpose of the experiment, different functions
+may be appropriate. The following mapping rules are provided, although users are
+encouraged to provide their own if needed. These include:
 
 
+================================   ===================================================    =====================================
+**Mapping strategy**               **Description**                                        **Sample use**
+--------------------------------   ---------------------------------------------------    -------------------------------------
+
+Fiveprime                          Each read alignment is mapped to its 5' end, or        RNA-seq, ribosome profiling, DMS-seq
+                                   at a fixed distance from its 5' end. 
+
+Variable fiveprime                 Each read alignment is mapped at a fixed distance      Ribosome profiling
+                                   from its 5' end, where the distance is determined
+                                   by the length of the alignment
+
+Stratified variable fiveprime      Like variable fiveprime mapping, except reads are      Ribosome profiling
+                                   stratified by length into separate rows of an array
+
+Threeprime                         Each read alignment is mapped to its 5' end, or        RNA-seq, ribosome profiling
+                                   at a fixed distance from its 5' end. 
+
+Center/entire                      Zero or more positions are trimmed from each end       Ribosome profiling with micrococcal
+                                   of the read alignment, and the remaining `N`           nuclease, RNA-seq
+                                   positions are incremented by `1/N`
+================================   ===================================================    =====================================
+
+
+Mapping functions are rarely called directly. Instead, they are invoked via
+:meth:`BAMGenomeArray.set_mapping() <plastid.genomics.genome_array.BAMGenomeArray.set_mapping>`:
+
+ .. code-block:: python
+
+    # open BAM file
+    >>> ga = BAMGenomeArray(["some_file.bam"])
+
+    # set mapping 15 bases from 3' end of read
+    >>> ga.set_mapping(ThreePrimeMapFactory(offset=15))
+
+    # set mapping to 5' end of read
+    >>> ga.set_mapping(FivePrimeMapFactory())
+
+    # cut 3 nt off each end of the read, and map fractionally over the rest
+    >>> ga.set_mapping(CenterMapFactory(nibble=12))
+
+    # access reads in some region
+    >>> ga[GenomicSegment("chrI",10000,100000,"+")]
+    # output is numpy array
+
+For further details see :mod:`~plastid.genomics.map_factories` and
+:doc:`/concepts/mapping_rules`
 """
 __date__ =  "May 3, 2011"
 __author__ = "joshua"

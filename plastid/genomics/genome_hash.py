@@ -5,10 +5,10 @@ of interest in the genome. ``GenomeHashes`` index features by location,
 providing quick lookup. Several implementations are provided: 
 
 ====================    =========================================================
-Implementation          Data
+**Implementation**      **Format of feature data**
 --------------------    ---------------------------------------------------------
-|GenomeHash|            Objects in memory, or data from `BED`_, `GTF2`_, `GFF3`_,
-                        or `PSL`_ files
+|GenomeHash|            Objects in memory or in unindexed `BED`_, `GTF2`_,
+                        `GFF3`_, or `PSL`_ files
 
 |BigBedGenomeHash|      Annotations in `BigBed`_ files
 
