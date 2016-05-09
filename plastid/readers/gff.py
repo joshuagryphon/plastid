@@ -7,37 +7,61 @@ feature can be assembled from several component features; each component
 feature having its own record on its own line -- two interfaces for reading
 `GTF2`_/`GFF3`_ files are included:
 
+    Assembly of transcripts from exon, CDS, & UTR annotations
+        |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler| collect
+        individual exon and CDS features, and assemble these into |Transcripts|.
+        
+        Features are read from `GTF2`_/`GFF3`_ files, grouped by `transcript_id`,
+        `Parent`, or `ID` attributes, depending on file type. Assembled |Transcripts|
+        are yielded only when their component features have fully been collected.
+        
     Low-level parsing of simple features
-        |GTF2_Reader| and |GFF3_Reader| read `GTF2`_/`GFF3`_ files line-by-line, and yield a |SegmentChain|
-        for each line. These |SegmentChains| will represent things like individual
-        exons, stop codons, SNPs, genes, et c. Complex features (e.g. multi-exon
-        transcripts) may be assembled from these individual |SegmentChains| by the user.  
-
-    Assembly of exons, cds, & UTRs into full |Transcripts|
-        |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler|
-        collect individual exon and CDS features, and assemble these into 
-        |Transcripts|. They do this by reading `GTF2`_/`GFF3`_ files, keeping
-        track of `transcript_id`, `gene_id` and or `Parent` attributes, and
-        yielding an assembled |Transcript| only when they know they have
-        collected all of its component features.
-
+        |GTF2_Reader| and |GFF3_Reader| read raw features (such as individual
+        exons, stop codons, SNPs, et c) from `GTF2`_/`GFF3`_ files. Each line
+        is returned as a |SegmentChain|.
+        
 
 Examples
 --------
-Read individual features from a `GFF3`_ file::
 
-    >>> pass
+|GTF2_Reader| and |GFF3_Reader| return raw, unmodified features from `GTF2`_ or
+`GFF3`_ files -- e.g. exons, coding regions, stop codons -- without assembling
+them into transcripts::
 
+    >>> feature_reader = GTF2_Reader(open("some_file.gtf"))
+    >>> for feature in reader:
+    >>>     print(feature.get_name(),feature.attr["type"],str(feature))
+    ('YAL030W_mRNA',  'exon',        'chrI:87262-87387(+)')
+    ('YAL030W_mRNA',  'exon',        'chrI:87500-87857(+)')
+    ('YAL030W_mRNA',  'CDS',         'chrI:87285-87387(+)')
+    ('YAL030W_mRNA',  'CDS',         'chrI:87500-87749(+)')
+    ('YAL030W_mRNA',  'start_codon', 'chrI:87285-87288(+)')
+    ('YAL030W_mRNA',  'stop_codon',  'chrI:87749-87752(+)')
+    ('YBL092W_mRNA',  'exon',        'chrII:45643-45644(+)')
+    ('YBL092W_mRNA',  'exon',        'chrII:45977-46440(+)')
+    ('YBL092W_mRNA',  'CDS',         'chrII:45977-46367(+)')
+    ('YBL092W_mRNA',  'start_codon', 'chrII:45977-45980(+)')
+    [rest of output omitted]
 
-Assemble |Transcript| objects from features in a `GFF3`_ file::
+In contrast, |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler| reconstruct
+transcripts from their components, based upon their `transcript_id`, `ID`, or
+`Parent` attributes. Note how all features are of type `mRNA`, and how some
+contain multiple exons (coordinates separated by `'^'`):: 
 
-    >>> pass
-
-
-Assemble |Transcript| objects from features in a `GTF2`_ file::
-
-    >>> pass
-
+    >>> transcript_reader = GTF2_TranscriptAssembler(open("some_file.gtf"))
+    >>> for transcript in reader:
+    >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript))
+    ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
+    ('YBL092W_mRNA',   'mRNA',  'chrII:45643-45644^45977-46440(+)')
+    ('YBL057C_mRNA',   'mRNA',  'chrII:112749-113427^113444-113450(-)')
+    ('YBL040C_mRNA',   'mRNA',  'chrII:142033-142749^142846-142891(-)')
+    ('YBL018C_mRNA',   'mRNA',  'chrII:185961-186352^186427-186504(-)')
+    ('YBR012W-B',      'mRNA',  'chrII:259868-261173^261174-265140(+)')
+    ('YBR044C_mRNA',   'mRNA',  'chrII:324292-324336^324340-326127(-)')
+    ('YBR082C_mRNA',   'mRNA',  'chrII:406506-407027^407122-407379(-)')
+    ('YBR126W-B_mRNA', 'mRNA',  'chrII:490824-491202(+)')
+    ('YBR138C_mRNA',   'mRNA',  'chrII:513636-515391(-)')
+    [rest of output omitted]
 
 
 See Also
@@ -511,34 +535,52 @@ class AbstractGFF_Reader(AbstractReader):
 
     
 class GFF3_Reader(AbstractGFF_Reader):
-    """Parse each line of a `GFF3`_ into a |SegmentChain|.
-    Assumes input stream to be `GFF3`_-compliant, as specified at
-    the `Sequence Ontology GFF3 specification <http://song.sourceforge.net/gff3.shtml>`_.
+    """Read raw features in `GFF3`_ files as |SegmentChains|.
     
-    In short, this means the file is 1-indexed, uses a controlled
-    vocabulary, and follows a defined schema of parent-child
-    relationships between features. 
+    Users who wish to reconstruct |Transcripts| from raw features should instead
+    use |GFF3_TranscriptAssembler|, which performs this task automatically.
     
-    However, whether feature coordinates are end-included or not
-    depends on the organization that issues the `GFF3`_. 
-    `Flybase <http://flybase.org>`_, `SGD <http://www.yeastgenome.org>`_,
-    and IGV all use end-included GFFs. Users can control this
-    via the `end_included` keyword argument.
+    Assumes input stream to use 1-indexed coordinates, in compliance with the
+    `Sequence Ontology GFF3 specification <http://song.sourceforge.net/gff3.shtml>`_.
+
+    `GFF3`_ files may use half-open or fully-closed (end-included) coordinates. 
+    Users can control this via the `end_included` keyword argument (`True` by
+    default).
     
-    The SegmentChains that are returned by the reader all have
-    0-indexed, half-open coordinates, in keeping with Python 
-    conventions.
+    All features that are returned by the reader are normalized to 0-indexed,
+    half-open coordinates, in keeping with Python conventions.
     
-    `GFF3`_ attributes (from column 9) are stored in a dictionary called ``attr``
-    in each of the returned |SegmentChain| objects as unescaped strings. The values
-    for the attributes `Parent`, `Alias`, `Dbxref`, `dbxref`, and `Note`,
-    if present, are lists rather than strings, because the `GFF3`_ spec enables
-    these to have multiple values. 
+    `GFF3`_ attributes (from column 9) are stored in a dictionary called ``attr``.
+    Names and values of attributes are unescaped. The values for the attributes
+    `Parent`, `Alias`, `Dbxref`, `dbxref`, and `Note`, if present, are lists
+    rather than strings, because the `GFF3`_ spec enables these to have multiple
+    values. 
     
     Attributes
     ----------
     metadata : dict
         Dictionary of metadata found in file headers
+        
+        
+    Examples
+    --------
+    
+    Read raw features from a `GFF3`_ file::
+    
+        >>> feature_reader = GFF3_Reader(open("./some_file.gff"))
+        >>> for feature in feature_reader:
+        >>>     print(feature.get_name(), feature.attr["type"], str(feature))
+        ('chrI', 'chromosome', 'chrI:0-230218(.)')
+        ('TEL01L-TR', 'telomeric_repeat', 'chrI:0-62(-)')
+        ('TEL01L', 'telomere', 'chrI:0-801(-)')
+        ('TEL01L-XR', 'X_element_combinatorial_repeat', 'chrI:62-336(-)')
+        ('YAL069W', 'gene', 'chrI:334-649(+)')
+        ('TEL01L-XC', 'X_element', 'chrI:336-801(-)')
+        ('TEL01L-XC_nucleotide_match', 'nucleotide_match', 'chrI:752-763(-)')
+        ('TEL01L-XC_binding_site', 'binding_site', 'chrI:531-544(-)')
+        ('YAL068W-A', 'gene', 'chrI:537-792(+)')
+        ('ARS102', 'ARS', 'chrI:649-1791(.)')
+        [rest of output omitted]
     """
     
     def __init__(self,stream,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
@@ -593,13 +635,13 @@ class GFF3_Reader(AbstractGFF_Reader):
     
             
 class GTF2_Reader(AbstractGFF_Reader): 
-    """Parse `GTF2`_ streams line by line into |SegmentChain| objects.
-    Assumes input stream to be `GTF2`_-compliant, as specified at
-    the `GTF2 file specification <http://mblab.wustl.edu/GTF22.html>`_
+    """Read raw features from `GTF2`_ streams as |SegmentChain| objects.
     
-    In short, this means that coordinates in the file are 1-indexed
-    and fully closed, and that every feature has defined `"gene_id"`
-    and `"transcript_id"` attributes.
+    Assumes input to comply with the
+    `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_. Each element must:
+    
+      - use 1-indexed, fully-closed coordinates
+      - have defined `gene_id` and `transcript_id` attributes
     
     All |SegmentChain| objects returned by the reader have 0-indexed,
     half-open coordinates in keeping with Python conventions.
@@ -607,7 +649,27 @@ class GTF2_Reader(AbstractGFF_Reader):
     Attributes
     ----------
     metadata : dict
-        Dictionary of metadata found in file headers    
+        Dictionary of metadata found in file headers
+
+    Examples
+    --------
+    Read raw features from a `GTF2`_ file::
+    
+        >>> feature_reader = GTF2_Reader(open("some_file.gtf"))
+        >>> for feature in reader:
+        >>>     print(feature.get_name(),feature.attr["type"],str(feature))
+        ('YAL030W_mRNA',  'exon',        'chrI:87262-87387(+)')
+        ('YAL030W_mRNA',  'exon',        'chrI:87500-87857(+)')
+        ('YAL030W_mRNA',  'CDS',         'chrI:87285-87387(+)')
+        ('YAL030W_mRNA',  'CDS',         'chrI:87500-87749(+)')
+        ('YAL030W_mRNA',  'start_codon', 'chrI:87285-87288(+)')
+        ('YAL030W_mRNA',  'stop_codon',  'chrI:87749-87752(+)')
+        ('YBL092W_mRNA',  'exon',        'chrII:45643-45644(+)')
+        ('YBL092W_mRNA',  'exon',        'chrII:45977-46440(+)')
+        ('YBL092W_mRNA',  'CDS',         'chrII:45977-46367(+)')
+        ('YBL092W_mRNA',  'start_codon', 'chrII:45977-45980(+)')
+        [rest of output omitted]
+            
     """
     def __init__(self,stream,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
         """Create a |GTF2_Reader|
@@ -658,7 +720,6 @@ class GTF2_Reader(AbstractGFF_Reader):
             Dictionary of parsed tokens from ninth `GTF2`_ column
         """
         return parse_GTF2_tokens(inp)
-
 
 class AbstractGFF_Assembler(AssembledFeatureReader):
     """Abstract base class for readers that assemble composite features
@@ -830,13 +891,17 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
 
 
 class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
-    """Assemble features in one or more streams of `GTF2`_ data into an iterator over |Transcript| objects,
-    collecting exon and CDS features based upon shared ``transcript_id``.
+    """Assemble |Transcripts| from raw features in `GTF2`_ format.
+    
+    Exons and CDS features are grouped by shared ``transcript_id``.
     Attributes that have common values for all exons and CDS within a transcript
     are propagated up to the `attr` dict of the assembled |Transcript|. Other
     attributes from individual CDS or exon components are discarded.
      
-    Transcripts are returned in lexical order.
+    The assembler functions as an iterator. Within each chromosome, transcripts
+    are returned in lexical order.
+    
+    For access to raw features, instead use |GTF2_Reader|.
 
 
     Attributes
@@ -855,6 +920,27 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
 
     rejected : list
         A list of transcript IDs from transcripts that failed to assemble properly
+
+
+    Examples
+    --------
+    Assemble transcripts from a `GTF2`_ file::
+    
+        >>> transcript_reader = GTF2_TranscriptAssembler(open("some_file.gtf"))
+        >>> for transcript in reader:
+        >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript)) # do something
+    
+        ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
+        ('YBL092W_mRNA',   'mRNA',  'chrII:45643-45644^45977-46440(+)')
+        ('YBL057C_mRNA',   'mRNA',  'chrII:112749-113427^113444-113450(-)')
+        ('YBL040C_mRNA',   'mRNA',  'chrII:142033-142749^142846-142891(-)')
+        ('YBL018C_mRNA',   'mRNA',  'chrII:185961-186352^186427-186504(-)')
+        ('YBR012W-B',      'mRNA',  'chrII:259868-261173^261174-265140(+)')
+        ('YBR044C_mRNA',   'mRNA',  'chrII:324292-324336^324340-326127(-)')
+        ('YBR082C_mRNA',   'mRNA',  'chrII:406506-407027^407122-407379(-)')
+        ('YBR126W-B_mRNA', 'mRNA',  'chrII:490824-491202(+)')
+        ('YBR138C_mRNA',   'mRNA',  'chrII:513636-515391(-)')
+        [rest of output omitted]
 
     """
     # transcripts can be represented as collections of exons + cds
@@ -979,9 +1065,12 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
 
 
 class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
-    """Assemble features in one or more streams of `GFF3`_ data into an iterator over |Transcript| objects,
+    """Assemble |Transcripts| from raw features in `GFF3`_ format.
     
-    Transcripts are returned in lexical order.
+    Within a chromosome, transcripts are returned in lexical order. Features
+    that do not constitute portions of transcripts (e.g.  origins of replication)
+    are ignored. For access to those, read raw features using |GFF3_Reader|.
+    
 
     Attributes
     ----------
@@ -1001,63 +1090,82 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         A list of transcript IDs from transcripts that failed to assemble properly
 
 
-    Notes
-    -----
-    `GFF3`_ schemas vary
-        `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
-        by allowing users to supply `transcript_types` and `exon_types`, to indicate
-        which sorts of features should be included. By default, we use a 
-        subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
-
-        Briefly:
+    Examples
+    --------
+    Assemble transcripts from a `GFF3`_ file::
         
-         1. The GFF3 file is combed for transcripts of the types specified by
-            `transcript_types`, exons specified by `exon_types`, and CDS specified by 
-            types listed in `cds_types`.
-        
-         2. Exons and CDS are matched with their parent transcripts by matching
-            the `Parent` attributes of CDS and exons to the `ID` of transcripts.
-            Transcripts are then constructed from those intervals, and coding
-            regions set accordingly.
-
-         3. If exons and/or CDS features point to a `Parent` that is not
-            in `transcript_types`, they are grouped into a new transcript,
-            whose ID is set to the value of their shared `Parent`. However,
-            this value for `Parent` might refer to a gene rather than
-            a transcript; unfortunately this cannot be known without other
-            information. Attributes that are common to all CDS and exon
-            features are bubbled up to the transcript.
-
-         4. If exons and/or CDS features have no `Parent`, but share a common ID,
-            they are grouped by ID into a single transcript. Attributes common
-            to all CDS and exon features are bubbled up to the transcript.
-            The `Parent` attribute is left unset.
-
-         5. If a transcript feature is annotated but has no child CDS or exons,
-            the transcript is assumed to be non-coding and is assembled from
-            any transcript-type features that share its `ID` attribute.
-
-    Identity relationships between elements vary between `GFF3`_ files
-        Also, different `GFF3`_ files specify discontiguous features differently. For example,
-        in `Flybase`_, different exons of a transcript will have unique IDs, but will share
-        the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
-        exons of the same transcript will share the same ID. Here, we first
-        check for the Flybase style (by Parent), then fall back to Wormbase
-        style (by shared ID).
-
-    Transcript assembly
-        To save memory, transcripts are assembled using lazy evaluation.
-        Assembly proceeds as follows:
+        >>> transcript_reader = GFF3_TranscriptAssembler(open("some_file.gff"))
+        >>> for transcript in reader:
+        >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript)) # do something
     
-        #.  If there exist assembled transcripts in `self._transript_cache`, 
-            return the next transcript. Transcripts in the cache are stored
-            lexically.
+        ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
+        ('YBL092W_mRNA',   'mRNA',  'chrII:45643-45644^45977-46440(+)')
+        ('YBL057C_mRNA',   'mRNA',  'chrII:112749-113427^113444-113450(-)')
+        ('YBL040C_mRNA',   'mRNA',  'chrII:142033-142749^142846-142891(-)')
+        ('YBL018C_mRNA',   'mRNA',  'chrII:185961-186352^186427-186504(-)')
+        ('YBR012W-B',      'mRNA',  'chrII:259868-261173^261174-265140(+)')
+        ('YBR044C_mRNA',   'mRNA',  'chrII:324292-324336^324340-326127(-)')
+        ('YBR082C_mRNA',   'mRNA',  'chrII:406506-407027^407122-407379(-)')
+        ('YBR126W-B_mRNA', 'mRNA',  'chrII:490824-491202(+)')
+        ('YBR138C_mRNA',   'mRNA',  'chrII:513636-515391(-)')
+        [rest of output omitted]
+
+
+    .. note::
+       `GFF3`_ schemas vary
+           `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
+           by allowing users to supply `transcript_types` and `exon_types`, to indicate
+           which sorts of features should be included. By default, we use a 
+           subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+    
+           Briefly:
+            
+            1. The GFF3 file is combed for transcripts of the types specified by
+               `transcript_types`, exons specified by `exon_types`, and CDS specified by 
+               types listed in `cds_types`.
+            
+            2. Exons and CDS are matched with their parent transcripts by matching
+               the `Parent` attributes of CDS and exons to the `ID` of transcripts.
+               Transcripts are then constructed from those intervals, and coding
+               regions set accordingly.
+    
+            3. If exons and/or CDS features point to a `Parent` that is not
+               in `transcript_types`, they are grouped into a new transcript,
+               whose ID is set to the value of their shared `Parent`. However,
+               this value for `Parent` might refer to a gene rather than
+               a transcript; unfortunately this cannot be known without other
+               information. Attributes that are common to all CDS and exon
+               features are bubbled up to the transcript.
+    
+            4. If exons and/or CDS features have no `Parent`, but share a common ID,
+               they are grouped by ID into a single transcript. Attributes common
+               to all CDS and exon features are bubbled up to the transcript.
+               The `Parent` attribute is left unset.
+    
+            5. If a transcript feature is annotated but has no child CDS or exons,
+               the transcript is assumed to be non-coding and is assembled from
+               any transcript-type features that share its `ID` attribute.
+    
+       Identity relationships between elements vary between `GFF3`_ files
+           Different `GFF3`_ files specify discontiguous features differently. For example,
+           in `Flybase`_, different exons of a transcript will have unique IDs, but will share
+           the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
+           exons of the same transcript will share the same ID. Here, we first
+           check for the Flybase style (by Parent), then fall back to Wormbase
+           style (by shared ID).
+    
+       Transcript assembly
+           To save memory, transcripts are assembled lazily as follows:
         
-        #.  Otherwise, collect features from the `GFF3`_ stream until either a
-            '###' line or EOF is encountered. Then, assemble transcripts and
-            store them in `self._transcript_cache`. Delete unused features
-            from memory. If the `GFF3`_ is sorted, then a change in chromosome
-            name will also trigger assembly of collected features.
+           #.  If there exist assembled transcripts in `self._transript_cache`, 
+               return the next transcript. Transcripts in the cache are stored
+               lexically.
+            
+           #.  Otherwise, collect features from the `GFF3`_ stream until either a
+               `'###'` line or EOF is encountered. Then, assemble transcripts and
+               store them in `self._transcript_cache`. Delete unused features
+               from memory. If the `GFF3`_ is sorted, then a change in chromosome
+               name will also trigger assembly of collected features.
     """
 
     def __init__(self,*streams,**kwargs):
