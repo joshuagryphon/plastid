@@ -1,62 +1,53 @@
-"""Tools for looking up features in a region of interest within the a genome.
+"""This module contains tools for lookup of features in a region of interest within the a genome.
 
 It is frequently useful to retrieve features that overlap specific regions 
-of interest in the genome, for example, to find transcripts that overlap one
-another. However, it would be inefficient to compare features that are
-too far apart in the genome to overlap in the first place, or to scan through
-a large annotation every time.
+of interest in the genome. ``GenomeHashes`` index features by location,
+providing quick lookup. Several implementations are provided: 
 
-|GenomeHash|, |BigBedGenomeHash|, and |TabixGenomeHash| index annotations
-by genomic location to avoid making unnecessary computations.
+====================    =========================================================
+Implementation          Data
+--------------------    ---------------------------------------------------------
+|GenomeHash|            Objects in memory, or data from `BED`_, `GTF2`_, `GFF3`_,
+                        or `PSL`_ files
 
-A |GenomeHash| may be created from a list or dictionary of features (e.g. |SegmentChains| or
-|Transcripts|), or directly loaded from a genome annotation (in `BED`_, `GTF2`_,
-`GFF3`_, or `PSL`_ format).
+|BigBedGenomeHash|      Annotations in `BigBed`_ files
 
-|BigBedGenomeHash| and |TabixGenomeHash| are more memory efficient
-than |GenomeHash|, and take advantage of the indices already present in `BigBed`_ or 
-`Tabix <http://samtools.sourceforge.net/tabix.shtml>`_-compressed files. They
-thus avoid loading annotations into memory unless they are used.
-
-
-Types of GenomeHash
--------------------
-|GenomeHash|
-    GenomeHash that can be created from memory-resident objects, such as a
-    list or dict of |SegmentChains|, or an annotation file in `BED`_, `GTF2`_, `GFF3`_,
-    or `PSL`_ format. Features are indexed by position in genome, allowing
-    efficient lookup when, for example, comparing two genome annotations or
-    comparing transcript isoforms.
-
-|BigBedGenomeHash|
-    A memory-efficient GenomeHash for use with `BigBed`_ files.
-
-|TabixGenomeHash|
-    A memory-efficient GenomeHash for use with  `BED`_, `GTF2`_, `GFF3`_, or `PSL`_
-    files that have been compressed and indexed with `Tabix <http://samtools.sourceforge.net/tabix.shtml>`_.
+|TabixGenomeHash|       Annotations in `tabix`_-compressed `BED`_, `GTF2`_,
+                        `GFF3`_, or `PSL`_ files
+====================    =========================================================
 
 
 Examples
 --------
 Create a |GenomeHash|::
 
-    >> from plastid import *
-    >> my_hash = GenomeHash(list(GFF3_Reader(open("some_file.gff"))))
+    >>> from plastid import *
+
+    # from objects in memory
+    >>> one_hash = GenomeHash(list_of_transcripts)
+    
+    # from a non-indexed file
+    >>> my_hash = GenomeHash(list(GFF3_Reader(open("some_file.gff"))))
+    
+    # from a BigBed file
+    >>> bigbed_hash = BigBedGenomeHash("some_file.bb")
 
 
-Retrieve features overlapping a region of interest on chromosome II::
+To find features overlapping a region of interest, pass the feature coordinates
+to a |GenomeHash| as a |GenomicSegment|, |SegmentChain|, or |Transcript|::
 
-    # can use dictionary-like syntax, supplying a GenomicSegment
-    >> overlapping = my_hash[GenomicSegment("chrII",50,10000,"+")]
-    >> overlapping
+    >>> overlapping = my_hash[GenomicSegment("chrII",50,10000,"+")]
+    >>> overlapping
     [ list of SegmentChains / Transcripts, et c ]
     
-    # can also use SegmentChains & Transcripts. In this case, overlap
-    # is defined as sharing chromosomal positions on the same strand
-    >> tx = Transcript(GenomicSegment("chrII",50,300,"+"),GenomicSegment("chrII",9000,10000,"+"))
-    >> overlapping2 = my_hash[tx]
-    >> overlapping2
+    # SegmentChains & Transcripts can also be keys:
+    >>> tx = Transcript(GenomicSegment("chrII",50,300,"+"),GenomicSegment("chrII",9000,10000,"+"))
+    >>> overlapping2 = my_hash[tx]
+    >>> overlapping2
     [ list of SegmentChains / Transcripts, et c ]
+    
+    # find features that overlap `roi` on either strand
+    >>> either_strand_overlap = my_hash.get_overlapping_features(roi,stranded=False)
     
 """
 

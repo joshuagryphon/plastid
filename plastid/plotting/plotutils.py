@@ -29,9 +29,9 @@ import matplotlib.pyplot as plt
 
 
 def get_fig_axes(axes):
-    """Retrive fiegure and axes from `axes`. If `axes` is None, create figure and axes
-    This is predominantly used as a helper function to check arguments
-    of the plotting functions defined in :mod:`plastid.plotting.plots`.
+    """Retrive figure and axes from `axes`. If `axes` is None, create figure and
+    axes. This is predominantly used as a helper function to check arguments of
+    the plotting functions defined in :mod:`plastid.plotting.plots`.
 
 
     Parameters

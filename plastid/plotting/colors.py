@@ -48,7 +48,7 @@ def get_str_from_rgb(inp):
     return get_str_from_rgb255((255*numpy.array(inp).round()).astype(int))
     
 def get_str_from_rgb255(inp):
-    """Converts RGB tuples of ints from between 0 and 255 to RGB hex strings of type #RRGGBB
+    """Converts RGB tuples of ints from between 0 and 255 to RGB hex strings of type `#RRGGBB`
     
     Parameters
     ----------
@@ -83,12 +83,10 @@ def get_str_from_rgb255(inp):
 def lighten(data,amt=0.10,is255=False):
     """Lighten a vector of colors by fraction `amt` of remaining possible intensity.
     
-    New colors are calculated as:
-    
-     .. math::
+    New colors are calculated as::
      
-        new_colors = data + amt*(1.0-data)
-        new_colors[:,-1] = 1 # keep all alpha at 1.0
+        >>> new_colors = data + amt*(1.0-data)
+        >>> new_colors[:,-1] = 1 # keep all alpha at 1.0
     
     Parameters
     ----------
@@ -120,7 +118,7 @@ def lighten(data,amt=0.10,is255=False):
     return new_colors
 
 def darken(data,amt=0.10,is255=False):
-    """Darken a vector of colors by fraction 'amt' of current intensity.
+    """Darken a vector of colors by fraction `amt` of current intensity.
     
     Parameters
     ----------
