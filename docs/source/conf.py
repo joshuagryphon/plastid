@@ -49,7 +49,7 @@ extensions = [
     #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-#    'numpydoc', 
+    'numpydoc', 
     'sphinxcontrib.bibtex',
     'sphinxcontrib.argdoc',
     ]
@@ -157,6 +157,10 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     if skip == False:
         if name in exclude_always:
             skip = True
+        elif getattr(obj,"name","").startswith("Abstract"):
+            skip = True
+        elif getattr(obj,"name","").startswith("_"):
+            skip = True
         elif getattr(obj,"plastid_skipdoc",False) == True:
             skip = True
         elif name in exclude_if_no_redoc:
@@ -167,8 +171,6 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
                     except AttributeError:
                         base_doc = ""
                     skip |= obj.__doc__ == base_doc
-        elif name.startswith("_"):
-            skip = True
             
     return skip
 
