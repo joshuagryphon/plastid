@@ -10,18 +10,29 @@ stored in separate files.
 Examples
 --------
 
+Fetch counts over a |Transcript|/|SegmentChain| or |GenomicSegment|::
 
-Fetch counts over a |SegmentChain|::
+    >>> count_data = BigWigReader("some_file.bw")
 
-    TODO
+    # segment covering positions 5-2000 on chrI
+    >>> segment_counts = count_data[GenomicSegment("chrI",50,2000,"+")] 
 
-Iterate over a `BigWig`_ file::
+    # a transcript- normally this would come from a BED_Reader or similar
+    >>> my_transcript = Transcript(GenomicSegment("chrV",5000,5500,"+"),
+    >>>                            GenomicSegment("chrV",8000,9000,"+"),
+    >>>                            ID='some_transcript')
+    >>> transcript_counts = count_data[my_transcript]
 
-    TODO
+Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole chromosome::
 
-Get data covering a whole chromosome::
+    >>> chrI_counts = count_data.get_chromosome("chrI")
 
-    TODO
+Iterate over a `BigWig`_ file (this is unusual). Data are returned as tuples of
+(chromosome name, start coordinate, end coordinate, and the value over those 
+coordinates)::
+
+    >>> for chrom, my_start, my_end, value in count_data:
+    >>>     pass # do something interesting with those values
 
 
 See also
@@ -74,8 +85,35 @@ cdef class BigWigReader(_BBI_Reader):
         May be temporarily exceeded if large queries are requested.
         Does not include memory footprint of Python objects.
         (Default: `0`, no limit)
+        
+    Examples
+    --------
+    
+    Fetch counts over a |Transcript|/|SegmentChain| or |GenomicSegment|::
+    
+        >>> count_data = BigWigReader("some_file.bw")
+    
+        # segment covering positions 5-2000 on chrI
+        >>> segment_counts = count_data[GenomicSegment("chrI",50,2000,"+")] 
+    
+        # a transcript- normally this would come from a BED_Reader or similar
+        >>> my_transcript = Transcript(GenomicSegment("chrV",5000,5500,"+"),
+        >>>                            GenomicSegment("chrV",8000,9000,"+"),
+        >>>                            ID='some_transcript')
+        >>> transcript_counts = count_data[my_transcript]
+    
+    Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole chromosome::
+    
+        >>> chrI_counts = count_data.get_chromosome("chrI")
+    
+    Iterate over a `BigWig`_ file (this is unusual). Data are returned as tuples of
+    (chromosome name, start coordinate, end coordinate, and the value over those 
+    coordinates)::
+    
+        >>> for chrom, my_start, my_end, value in count_data:
+        >>>     pass # do something interesting with those values
+         
     """
-
     def __cinit__(self, str filename, **kwargs): #, double fill = numpy.nan):
         """Open a `BigWig`_ file.
         
@@ -212,7 +250,7 @@ cdef class BigWigReader(_BBI_Reader):
             warnings.warn("Summing over a large BigWig file can take a while.",DataWarning)
             try:
                 for chrom in self.chroms:
-                    vals    = self.c_get_chromosome(chrom)
+                    vals    = self.c_get_chromosome_counts(chrom)
                     length  = vals.chromSize
                     vbuf = vals.valBuf
                     while i < length:
@@ -237,7 +275,7 @@ cdef class BigWigReader(_BBI_Reader):
         """
         return self.c_sum()
     
-    cdef bigWigValsOnChrom* c_get_chromosome(self, str chrom):
+    cdef bigWigValsOnChrom* c_get_chromosome_counts(self, str chrom):
         """Retrieve values across an entire chromosome.
         
          .. note::
@@ -281,7 +319,7 @@ cdef class BigWigReader(_BBI_Reader):
         
         return vals
     
-    def get_chromosome(self, str chrom):
+    def get_chromosome_counts(self, str chrom):
         """Retrieve values across an entire chromosome more efficiently than
         using ``bigwig_reader[chromosome_roi]``
         
@@ -312,7 +350,7 @@ cdef class BigWigReader(_BBI_Reader):
         #         double *valBuf     # value for each base on chrom. Zero where no data
         #         Bits   *covBuf     # a bit for each base with data
         try:
-            vals    = self.c_get_chromosome(chrom)
+            vals    = self.c_get_chromosome_counts(chrom)
             length  = vals.chromSize
             if length > 0:
                 valview = <numpy.double_t[:length]> vals.valBuf

@@ -9,21 +9,6 @@
 
 |BundledPSL_Reader|
     Read `PSL`_ files, returning lists of |SegmentChains| grouped by query sequence.
-
-
-Examples
---------
-
-Read individual entries from a `PSL`_ file into |SegmentChain| objects::
-
-    >>>
-
-
-Group multiple entries from a `PSL`_ file by query sequence::
-
-    >>>
-
-
 """
 __date__ = "2011-09-01"
 __author__ = "joshua"

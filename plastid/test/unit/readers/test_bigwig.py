@@ -145,14 +145,14 @@ class TestBigWigReader(AbstractTestBBIFile):
     def test_random_windows_against_wig_rc(self):
         self.check_random_windows_against_wig("-")
     
-    def test_get_chromosome_zero_fill(self):
+    def test_get_chromosome_counts_zero_fill(self):
         ga = GenomeArray()
         with open(wigfile) as fin:
             ga.add_from_wiggle(fin,"+")
             for chrom, length in self.chrdict.items():
                 seg = GenomicSegment(chrom,0,length,"+")
                 expected = ga[seg]
-                found = self.bw.get_chromosome(chrom)
+                found = self.bw.get_chromosome_counts(chrom)
                 yield self.check_vals_against_wig, expected, found
 
 #     def test_get_chromosome_nan_fill(self):
@@ -163,7 +163,7 @@ class TestBigWigReader(AbstractTestBBIFile):
 #             for chrom, length in self.chrdict.items():
 #                 seg = GenomicSegment(chrom,0,length,"+")
 #                 expected = ga[seg]
-#                 found = bw.get_chromosome(chrom)
+#                 found = bw.get_chromosome_counts(chrom)
 #                 checkmask = ~numpy.isnan(found)
 #                 
 #                 # first to make sure no non-zero positions were masked

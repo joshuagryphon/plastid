@@ -63,5 +63,5 @@ cdef class BigWigReader(_BBI_Reader):
     
     cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
     cdef double c_sum(self)
-    cdef bigWigValsOnChrom * c_get_chromosome(self, str chrom)
+    cdef bigWigValsOnChrom * c_get_chromosome_counts(self, str chrom)
 
