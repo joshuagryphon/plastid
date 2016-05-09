@@ -4,14 +4,14 @@ or :term:`extended BED` file into a |SegmentChain|, |Transcript|, or similar obj
 
 Examples
 --------
-Open a `BED`_ file, convert each line to a |Transcript|, and do something
-with each transcript::
+Read entries in a `BED`_ file as |Transcripts|. `thickEnd` and `thickStart`
+columns will be interpreted as the endpoints of coding regions::
 
     >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript)
     >>> for transcript in bed_reader:
             pass # do something fun
 
-Retrieve a list of |SegmentChains| from a `BED`_ file::
+If `return_type` is unspecified, `BED`_ lines are read as |SegmentChains|::
 
     >>> my_chains = list(BED_Reader(open("some_file.bed")))
     >>> my_chains[:5]
@@ -27,7 +27,8 @@ Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
 they were one stream::
 
     >>> import pysam
-    >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) for X in ["file1.bed","file2.bed","file3.bed"]]
+    >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) \
+                    for X in ["file1.bed","file2.bed","file3.bed"]]
     >>> bed_reader = BED_Reader(*bed_files,tabix=True)
     >>> for chain in bed_reader:
             pass # do something more interesting
@@ -82,6 +83,32 @@ class BED_Reader(AssembledFeatureReader):
     in `self.metadata`. Malformed lines are stored in `self.rejected`, while
     parsing continues.
 
+
+    Examples
+    --------
+    Read entries in a `BED`_ file as |Transcripts|. `thickEnd` and `thickStart`
+    columns will be interpreted as the endpoints of coding regions::
+    
+        >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript)
+        >>> for transcript in bed_reader:
+                pass # do something fun
+    
+    Open an :term:`extended BED` file that contains additional columns for `gene_id`
+    and `favorite_color`. Values for these attributes will be stored in the `attr`
+    dict of each |Transcript|::
+    
+        >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript,extra_columns=["gene_id","favorite_color"])
+
+    Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
+    they were one stream::
+    
+        >>> import pysam
+        >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) \
+                        for X in ["file1.bed","file2.bed","file3.bed"]]
+        >>> bed_reader = BED_Reader(*bed_files,tabix=True)
+        >>> for chain in bed_reader:
+                pass # do something more interesting
+        
     
     Attributes
     ----------

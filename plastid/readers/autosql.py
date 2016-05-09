@@ -266,7 +266,7 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
         Parse autoSql-formatted blocks of text according to this declaration
     """
     
-    match_str  = r"".join([_pattern_bits[X] for X in ("start","declare_type_name","comment","field_text")])
+    match_str  = r"".join([_pattern_bits[_X] for _X in ("start","declare_type_name","comment","field_text")])
     match_pattern = re.compile(match_str,re.S)
 
     def __init__(self,autosql,parent=None,delim="\n"):
@@ -385,7 +385,7 @@ class AutoSqlField(AbstractAutoSqlElement):
     Attributes
     ----------
     attr : dict
-        Dictionary of descriptive attributes (e.g. *name,* *type,* et c) 
+        Dictionary of descriptive attributes (e.g. name, type, et c) 
 
     formatter : callable
         Callable/function that converts plain text into an object of the correct type
@@ -393,23 +393,17 @@ class AutoSqlField(AbstractAutoSqlElement):
     autosql : str
         Block of autoSql text specifying format of element
         
-    match_pattern : :py:class:`re.RegexObject`
+    match_pattern : :class:`re.RegexObject`
         Pattern that determines whether or not a block of autoSql matches this object
     
-    parent : instance of subclass of |AbstractAutoSqlObject|, or None
-        Parent / enclosing element. Default: None
+    parent : instance of subclass of :class:`AbstractAutoSqlObject` or `None`
+        Parent / enclosing element (Default: None)
     
     delim : str, optional
-        Text delimiter for fields in blocks called by :py:meth:~__call__~
-        (Default: "\n")
-        
-    Methods
-    -------
-    :py:meth:`AutoSqlField.__call__`
-        Parse autoSql-formatted blocks of text into the object type specified
-        by this field        
+        Text delimiter for fields in blocks called by :meth:`__call__`
+        (Default: newline)
     """
-    match_str = r"".join([_pattern_bits[X] for X in ("start","type","name","optionals","semi","comment")])
+    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","name","optionals","semi","comment")])
     match_pattern = re.compile(match_str)
 
     def __init__(self,autosql,parent=None,delim=""):
@@ -462,27 +456,27 @@ class AutoSqlField(AbstractAutoSqlElement):
 
 class SizedAutoSqlField(AutoSqlField):
     """Parser factory for autoSql fields of type ``fieldType `[` fieldSize `]` fieldName ';' comment``
-    
+
     Attributes
     ----------
     attr : dict
-        Dictionary of descriptive attributes (e.g. *name,* *size,* *type,* et c) 
-    
+        Dictionary of descriptive attributes (e.g. *name*, *size,* *type,* et c) 
+
     formatter : callable
         Callable/function that converts plain text into an object of the correct type
-    
+        
     autosql : str
         Block of autoSql text specifying format of element
         
-    match_pattern : :py:class:`re.RegexObject`
+    match_pattern : :class:`re.RegexObject`
         Pattern that determines whether or not a block of autoSql matches this object
     
-    parent : instance of subclass of |AbstractAutoSqlObject|, or None
-        Parent or enclosing element. Default: None
+    parent : instance of subclass of :class:`AbstractAutoSqlObject` or `None`
+        Parent / enclosing element (Default: None)
     
     delim : str, optional
-        Text delimiter for fields in blocks called by :py:meth:~__call__~
-        (Default: "\n")
+        Text delimiter for fields in blocks called by :meth:`__call__`
+        (Default: newline)
 
     Methods
     -------
@@ -490,7 +484,7 @@ class SizedAutoSqlField(AutoSqlField):
         Parse autoSql-formatted blocks of text into the tuples of the object type
         specified by this field  
     """    
-    match_str = r"".join([_pattern_bits[X] for X in ("start","type","size","name","optionals","semi","comment")])
+    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","size","name","optionals","semi","comment")])
     match_pattern = re.compile(match_str)
 
     def __init__(self,autosql,size=1,parent=None,delim=","):
@@ -560,7 +554,7 @@ class ValuesAutoSqlField(AbstractAutoSqlElement):
     where ``fieldType`` would typically be ``set`` or ``enum``
     """
     
-    match_str = r"".join([_pattern_bits[X] for X in ("start","type","values","name","optionals","semi","comment")])
+    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","values","name","optionals","semi","comment")])
     match_pattern = re.compile(match_str)
     
     def __init__(self,autosql,parent=None,delim=","):

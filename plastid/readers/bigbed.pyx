@@ -18,31 +18,25 @@ Iterate over all features in a `BigBed`_ file::
 
     >>> my_reader = BigBedReader("some_file.bb")
     >>> for feature in my_reader:
-            pass # do something with each feature
+    >>>    pass # do something with each feature
 
-
-Instead, find features overlapping a specific feature or region of interest `roi`,
-on the same strand as the `roi`::
+`BigBed`_ files can be accessed as dictionaries. To find features overlapping a
+region of interest::
 
     >>> roi = GenomicSegment("chrI",0,100000,"+")
     >>> for feature in my_reader[roi]:
-            pass # do something with that feature
+    >>>     pass # do something with that feature
             ...
-
     
-Find features overlapping a genomic region of interest `roi`,
-on either strand::
+Find features overlapping a genomic region of interest `roi` on either strand::
 
-    >>> for feature in my_reader.__getitem__(roi,stranded=False):
-            pass # do something with that feature
+    >>> for feature in my_reader.get(roi,stranded=False):
+    >>>     pass # do something with that feature
 
 
 
 See also
 --------
-|BigBedReader|
-    Class documentation for |BigBedReader|
-
 `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_
     Description of BigBed and BigWig formats. Especially see supplemental data.
 
@@ -108,29 +102,27 @@ cdef class BigBedReader(_BBI_Reader):
     over genomic features one-by-one (like a reader), as well as random access to
     genomic features that overlap a region of interest (like a |GenomeHash|).  
     
-    
     Examples
     --------
-    Iterate over all features in a BigBed file::
+    Iterate over all features in a `BigBed`_ file::
     
         >>> my_reader = BigBedReader("some_file.bb")
         >>> for feature in my_reader:
-                pass # do something with each feature
-
-
-    Instead, find features overlapping a specific region of interest `roi`,
-    on the same strand as the `roi`, and save these as a list::
+        >>>    pass # do something with each feature
     
+    `BigBed`_ files can be accessed as dictionaries. To find features overlapping
+    a region of interest::
+        
         >>> roi = GenomicSegment("chrI",0,100000,"+")
-        >>> overlapping_features = list(my_reader[roi])
-    
-
+        >>> for feature in my_reader[roi]:
+        >>>     pass # do something with that feature
+        
     Find features overlapping a genomic region of interest `roi`,
     on either strand::
     
-        >>> for feature in my_reader.__getitem__(roi,stranded=False):
-                pass # do something with that feature
-                ...
+        >>> for feature in my_reader.get(roi,stranded=False):
+        >>>     pass # do something with that feature
+
 
     Parameters
     ----------
@@ -546,6 +538,7 @@ def BigBedIterator(BigBedReader reader,maxmem=0):
 # INDEX: BPlusTree parser
 #===============================================================================
 
+@skipdoc
 @deprecated(version="0.5")
 class BPlusTree(object):
     """Decode B+ Trees, which are used to describe chromosomes and contigs
@@ -718,6 +711,8 @@ class BPlusTree(object):
 #===============================================================================
 # INDEX: R tree parser
 #===============================================================================
+
+@skipdoc
 @deprecated(version="0.5")
 class RTree(object):
     """Decode R Trees, which index genomic coordinates to file positions in `BigBed`_
