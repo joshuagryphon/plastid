@@ -3,6 +3,13 @@
 object specification language, used by the `UCSC genome browser`_, `BigBed`_ files
 and `BigWig`_ files.
 
+.. contents::
+   :local:
+   
+   
+Summary
+-------
+
 Parsers are constructed by initializing an |AutoSqlDeclaration| with a block of
 `autoSql`_ text::
 
@@ -30,9 +37,8 @@ The parser that is created can then be called to parse text records into diction
                  ("float_array",(1.1,1.2,1.3,1.4,1.5)),
                  ("alpha",{'a','b'}]))
 
-
-Classes
--------
+Module contents
+---------------
 |AutoSqlDeclaration|
     Parses `autoSql`_ declarations for `table`, `simple`, and `object`
     declaration types. Delegates parsing of individual fields to appropriate subclasses 

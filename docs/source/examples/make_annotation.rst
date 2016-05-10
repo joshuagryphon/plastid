@@ -224,7 +224,7 @@ files using `Jim Kent's utilities`_. To make a `BigBed`_ file:
 
    Your annotation will be saved as ``my_annotation.bb``.
 
-.. TODO:: add sample autoSql
+.. TODO :: add sample autoSql
 
 
 -------------------------------------------------------------------------------

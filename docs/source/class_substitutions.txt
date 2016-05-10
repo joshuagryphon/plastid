@@ -3,7 +3,6 @@
 .. |CenterMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.CenterMapFactory`
 .. |VariableFivePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`
 .. |StratifiedVariableFivePrimeMapFactory| replace:: :py:class:`~plastid.genomics.map_factories.StratifiedVariableFivePrimeMapFactory`
-
 .. |FastaNameReader| replace:: :py:class:`~plastid.bin.crossmap.FastaNameReader`
 .. |FastaNameReaders| replace:: :py:class:`FastaNameReaders <plastid.bin.crossmap.FastaNameReader>`
 .. |AbstractGenomeArray| replace:: :py:class:`~plastid.genomics.genome_array.AbstractGenomeArray`
@@ -32,8 +31,6 @@
 .. |SegmentChains| replace:: :py:class:`SegmentChains <plastid.genomics.roitools.SegmentChain>`
 .. |Transcript| replace:: :py:class:`~plastid.genomics.roitools.Transcript`
 .. |Transcripts| replace:: :py:class:`Transcripts <plastid.genomics.roitools.Transcript>`
-.. |_TwoBitSeqProxy| replace:: :py:class:`~plastid.genomics.seqtools._TwoBitSeqProxy`
-.. |_TwoBitSeqProxys| replace:: :py:class:`_TwoBitSeqProxys <plastid.genomics.seqtools._TwoBitSeqProxy>`
 .. |TwoBitSeqRecordAdaptor| replace:: :py:class:`~plastid.genomics.seqtools.TwoBitSeqRecordAdaptor`
 .. |TwoBitSeqRecordAdaptors| replace:: :py:class:`TwoBitSeqRecordAdaptors <plastid.genomics.seqtools.TwoBitSeqRecordAdaptor>`
 .. |AbstractAutoSqlElement| replace:: :py:class:`~plastid.readers.autosql.AbstractAutoSqlElement`
@@ -52,8 +49,8 @@
 .. |BigBedReaders| replace:: :py:class:`BigBedReaders <plastid.readers.bigbed.BigBedReader>`
 .. |BPlusTree| replace:: :py:class:`~plastid.readers.bigbed.BPlusTree`
 .. |BPlusTrees| replace:: :py:class:`BPlusTrees <plastid.readers.bigbed.BPlusTree>`
-.. |_FromBED_StrAdaptor| replace:: :py:class:`~plastid.readers.bigbed._FromBED_StrAdaptor`
-.. |_FromBED_StrAdaptors| replace:: :py:class:`_FromBED_StrAdaptors <plastid.readers.bigbed._FromBED_StrAdaptor>`
+.. |FromBED_StrAdaptor| replace:: :py:class:`~plastid.readers.bigbed._FromBED_StrAdaptor`
+.. |FromBED_StrAdaptors| replace:: :py:class:`FromBED_StrAdaptors <plastid.readers.bigbed._FromBED_StrAdaptor>`
 .. |RTree| replace:: :py:class:`~plastid.readers.bigbed.RTree`
 .. |RTrees| replace:: :py:class:`RTrees <plastid.readers.bigbed.RTree>`
 .. |BigWigReader| replace:: :py:class:`~plastid.readers.bigwig.BigWigReader`

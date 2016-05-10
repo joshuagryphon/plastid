@@ -18,6 +18,7 @@ to `BED`_, :term:`extended BED`, or `GTF2`_ format.
         simply share the same ID, and don't define a `Parent`. Here, both schemes
         are accepted, although what happens if they conflict within a single
         transcript is undefined.
+
 """
 import argparse
 import inspect
@@ -85,14 +86,6 @@ table bigbed_columns "%s columns"
 
 AUTOSQL_ROW_FMT_STR = '    string            %s;%s"description of custom field contents"' 
 
-"""
-    float my_floats; "some float values"
-    set(item1,item2,item3,item4) my_sets; "some set options"
-    int     my_ints; "signed integer values"
-    lstring my_strs; "str representation of transcripts"
-    uint[3] my_colors; "r,g,b colors"
-)
-"""
 
 def fix_name(inp,names_used):
     """Append a number if an autoSql field name is duplicated.

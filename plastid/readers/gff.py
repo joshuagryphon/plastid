@@ -2,6 +2,13 @@
 """Tools for reading, writing, analyzing, and manipulating GFF file subtypes
 (e.g. `GTF2`_ and `GFF3`_).
 
+.. contents::
+   :local:
+
+
+Summary
+-------
+
 Because `GTF2`_/`GFF3`_ files are hierarchically structured -- i.e. a complex 
 feature can be assembled from several component features; each component
 feature having its own record on its own line -- two interfaces for reading
@@ -20,6 +27,16 @@ feature having its own record on its own line -- two interfaces for reading
         exons, stop codons, SNPs, et c) from `GTF2`_/`GFF3`_ files. Each line
         is returned as a |SegmentChain|.
         
+Module contents
+---------------
+
+.. autosummary::
+
+   GTF2_Reader
+   GTF2_TranscriptAssembler
+   GFF3_Reader
+   GFF3_TranscriptAssembler
+
 
 Examples
 --------
@@ -635,7 +652,7 @@ class GFF3_Reader(AbstractGFF_Reader):
     
             
 class GTF2_Reader(AbstractGFF_Reader): 
-    """Read raw features from `GTF2`_ streams as |SegmentChain| objects.
+    """Read raw features in `GTF2`_ files as |SegmentChains|.
     
     Assumes input to comply with the
     `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_. Each element must:

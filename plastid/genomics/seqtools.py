@@ -1,5 +1,16 @@
 #!/usr/bin/env python
-"""Utilities for mutating and searching nucleic acid sequences"""
+"""Utilities for mutating and searching nucleic acid sequences.
+
+Contents
+--------
+
+.. autosummary::
+
+   TwoBitSeqRecordAdaptor
+   mutate_seqs
+   seq_to_regex
+   IUPAC_TABLE
+"""
 import random, re
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq

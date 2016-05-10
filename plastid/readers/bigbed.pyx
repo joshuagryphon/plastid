@@ -1,15 +1,31 @@
 #!/usr/bin/env python
-"""|BigBedReader|, a parser for `BigBed`_ files. In contrast to `BED`_, `GTF2`_,
-and `GFF3`_ files, `BigBed`_ files are binary, indexed, and randomly-accessible.
-This has several interesting implications:
+"""|BigBedReader|, a parser for `BigBed`_ files.
+
+.. contents::
+   :local:
+   
+   
+Summary
+-------
+
+In contrast to `BED`_, `GTF2`_, and `GFF3`_ files, `BigBed`_ files are binary,
+indexed, and randomly-accessible. This means:
 
     - |BigBedReader| can be used to iterate over records, like a reader, **or**
-      to fetch records that cover a region of interest, in the manner of a |GenomeHash|
+      to fetch records that cover a region of interest, in the manner of a
+      |GenomeHash|
     
-    - Because `BigBed`_ files are randomly accessible, their records don't need
-      to be loaded into memory to be parsed, which results in substantial memory
-      savings for large genomes. This, however, comes at a cost in speed, 
-      as `BigBed`_ files are highly compressed.
+    - `BigBed`_ use less memory, because their records don't need to be loaded
+      into memory to be parsed or accessed.
+
+
+Module Contents
+---------------
+
+.. autosummary::
+
+   BigBedReader
+   BigBedIterator
 
 
 Examples

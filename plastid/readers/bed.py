@@ -2,6 +2,17 @@
 """This module contains |BED_Reader|, an iterator that reads each line of a `BED`_
 or :term:`extended BED` file into a |SegmentChain|, |Transcript|, or similar object. 
 
+.. contents::
+   :local:
+
+Module contents
+---------------
+
+.. autosummary::
+
+   BED_Reader
+   bed_x_formats
+
 Examples
 --------
 Read entries in a `BED`_ file as |Transcripts|. `thickEnd` and `thickStart`
@@ -73,7 +84,7 @@ bed_x_formats = {
 
 }
 """Column names and types for various :term:`extended BED` formats used by 
-the`ENCODE`_ project. These can be passed to the `extra_columns` keyword of
+the `ENCODE`_ project. These can be passed to the `extra_columns` keyword of
 :class:`BED_Reader`.""" 
 
 

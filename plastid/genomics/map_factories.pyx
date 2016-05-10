@@ -1,4 +1,11 @@
-"""Numerous sequencing assays encode interesting biology in various properties of
+""":term:`Mapping functions` used by |BAMGenomeArray|
+
+.. contents::
+   :local:
+
+Summary
+-------
+Numerous sequencing assays encode interesting biology in various properties of
 read alignments. For example:
 
   - Ribosome profiling encodes the positions of ribosomal P-sites as a
@@ -9,7 +16,10 @@ read alignments. For example:
 
   - DMS-Seq and Pseudouridine profiling encode unstructured regions of RNA or
     sites of pseudouridine modification, respectively, in the 5' termini fo
-    their read aligments.
+    their read aligments
+
+Extended summary
+----------------
 
 plastid uses configurable mapping functions to
 decode the biology of interest from read alignments.

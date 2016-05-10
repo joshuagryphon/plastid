@@ -1,77 +1,88 @@
 #!/usr/bin/env python
-"""This module defines object types that describe features in a genome or contig.
+"""This module contains classes for representing and manipulating genomic features.
 
+.. contents::
+   :local:
+   
+   
+Summary
+-------
 
-Important classes
------------------
-|GenomicSegment|
-    A fundamental unit of a feature, similar to :py:class:`HTSeq.GenomicInterval`.
-    |GenomicSegment| describes a single region of a genome, and is fully specified
-    by a chromosome name, a start coordinate, an end coordinate, and a strand.
-    
-    |GenomicSegments| provide no feature annotation data, and are used
-    primarily to construct |SegmentChains| or |Transcripts|, which do
-    provide feature annotation data. |GenomicSegment| implements various methods
-    to test equality to, overlap with, and containment of other |GenomicSegment|
-    objects.
+Genomic features are represented as |SegmentChains|, which can contain zero or
+more continuous spans of the genome (|GenomicSegments|), as well as rich
+annotation data. For the specific case of RNA transcripts, a subclass of
+|SegmentChain|, called |Transcript| is provided.
 
-|SegmentChain|
-    Base class for genomic features with rich annotation data. |SegmentChains|
-    can contain zero or more |GenomicSegments|, and can therefore model
-    discontinuous features -- such as multi-exon transcripts or gapped alignments --
-    in addition to continuous features.  
-    
-    |SegmentChain| implements numerous convenience methods, e.g. for:
+Module contents
+...............
 
-        - Converting coordinates between the genome and the spliced space of the
-          |SegmentChain|
-        
-        - Fetching genomic sequence, read alignments, or count data over
-          the |SegmentChain|, accounting for splicing of the segments and, for
-          reverse-strand features, reverse-complementing of sequence
-
-        - Slicing or fetching sub-regions of a |SegmentChain|
-          
-        - Testing for equality, inequality, overlap, containment, or coverage
-          of other |SegmentChain| or |GenomicSegment| objects, in stranded 
-          or unstranded manners
-          
-        - Exporting to `BED`_, `GTF2`_, or `GFF3`_ formats, for use with other
-          software packages or within a genome browser.
-
-    In addition, |SegmentChain| objects have attribute dictionaries that allow
-    sotrage of arbitrary annotation information (e.g. gene IDs, GO terms, database
-    cross-references, or miscellaneous notes).
-
-|Transcript|
-     Subclass of |SegmentChain| that adds convenience methods for fetching CDS,
-     5' UTRs, and 3' UTRs, if the transcript is coding.
+.. autosummary::
+   
+   GenomicSegment
+   SegmentChain
+   Transcript
+   positions_to_segments
+   add_three_for_stop_codon
 
 
 Examples
 --------
-Construct a |SegmentChain| from |GenomicSegments|::
 
-    >>>
-    >>>
+|SegmentChains| may be read directly from annotation files using the readers
+in :mod:`plastid.readers`::
+
+    >>> from plastid import *
+    >>> chains = list(BED_Reader(open("some_file.bed")))
+
+or constructed from |GenomicSegments|:: 
+
+    >>> seg1 = GenomicSegment("chrA",5,200,"-")
+    >>> seg2 = GenomicSegment("chrA",250,300,"-")
+    >>> my_chain = SegmentChain(seg1,seg2,ID="some_chain", ... , some_attribute="some_value")
+
+|SegmentChains| contain convenience methods for a number of comman tasks, for
+example:
+
+  - converting coordinates between the spliced space of the chain, and the genome::
+  
+         # get coordinate of 50th position from 5' end
+        >>> my_chain.get_genomic_coordinate(50)
+        
+        # get coordinate of 51st position. splicing is taken care of!
+        >>> my_chain.get_genomic_coordinate(51)
+        
+        # get coordinate in chain corresponding to genomic coordinate 118
+        >>> my_chain.get_segmetnchain_coordinate("chrA",118,"-")
+        
+        # get a subchain containing positions 45-70
+        >>> my_chain.get_subchain(45,70)
+
+  - fetching :class:`numpy arrays <numpy.ndarray>` of data at each position
+    in the chain. The data is assumed to be kept in a
+    :mod:`GenomeArray <plastid.genomics.genome_array>`::
     
+        >>> ga = BAMGenomeArray(["some_file.bam"],mapping=ThreePrimeMapFactory(offset=15))
+        >>> my_chain.get_counts(ga)
+        
+  - similarly, fetching spliced sequence, reverse-complemented if necessary
+    for minus-strand features. As input, the |SegmentChain| expects a
+    dictionary-like object mapping chromosome names to string-like sequences
+    (e.g. as in `BioPython`_ or `twobitreader`_)::
+    
+        >>> seqdict = { "chrA" : "TCTACATA ..." } # some string of chrA sequence
+        >>> my_chain.get_sequence(seqdict)
+       
+        
+  - testing for overlap, containment, equality with other |SegmentChains|::
+  
+        >>>  
+        >>>
 
-Fetch a vector of spliced counts covering a |SegmentChain| from a |GenomeHash|::
-
-    >>>
-    >>>
-
-
-Fetch a sub-region of a chain::
-
-    >>>
-    >>>
-
-
-Find genomic coordinate of position 53 in a chain::
-
-    >>>
-    >>>
+  - export to `BED`_, `GTF2`_, or `GFF3`_::
+  
+        >>> my_chain.as_bed()
+        
+        >>> my_chain.as_gtf()
 
 
 """
@@ -843,11 +854,10 @@ cdef ExBool transcript_richcmp(Transcript chain1, Transcript chain2, int cmpval)
 
 cdef class GenomicSegment:
     """
-    GenomicSegment(chrom,start,end,strand)
+    GenomicSegment(chrom, start, end, strand)
     
-    A continuous segment of the genome, defined by a chromosome name,
-    a start coordinate, and end coordinate, and a strand. Building block
-    for a |SegmentChain| or a |Transcript|.
+    Building block for |SegmentChain|: a continuous segment of the genome
+    defined by a chromosome name, start coordinate,  end coordinate, and strand.
 
     Attributes
     ----------
@@ -888,7 +898,7 @@ cdef class GenomicSegment:
 
     They also provide a few convenience methods for containment or overlap. To be
     contained, a segment must be on the same chromosome and strand as its container,
-    and its coordinates must be within or equal to its endpoints
+    and its coordinates must be within or equal to its endpoints::
 
         >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",25,100,"+")
         True
@@ -1166,10 +1176,10 @@ cdef class SegmentChain(object):
     """
     SegmentChain(*segments,**attributes)
     
-    Base class for genomic features. |SegmentChains| can contain zero or more
-    |GenomicSegments|, and therefore can model discontinuous, features -- such
-    as multi-exon transcripts or gapped alignments -- in addition,
-    to continuous features.
+    Base class for genomic features, composed of zero or more |GenomicSegments|.
+    |SegmentChains| can therefore model discontinuous, features -- such as
+    multi-exon transcripts or gapped alignments -- in addition, to continuous
+    features.
     
     Numerous convenience functions are supplied for:
     
@@ -2303,7 +2313,7 @@ cdef class SegmentChain(object):
     
     # TODO: test optimality
     def as_gff3(self, str feature_type=None, bint escape=True, list excludes=None):
-        """Format a length-1 |SegmentChain| as a line of `GFF3`_ output.
+        """Format `self` as a line of `GFF3`_ output.
         
         Because `GFF3`_ files permit many schemas of parent-child hierarchy,
         and in order to reduce confusion and overhead, attempts to export
@@ -2327,6 +2337,7 @@ cdef class SegmentChain(object):
             List of attribute key names to exclude from column 9
             (Default: `[]`)
         
+        
         Returns
         -------
         str
@@ -2334,7 +2345,7 @@ cdef class SegmentChain(object):
         
             
         Raises
-        -----
+        ------
         AttributeError
             if the |SegmentChain| has multiple intervals
             
@@ -3399,7 +3410,7 @@ cdef class Transcript(SegmentChain):
     """
     Transcript(*segments,**attributes)
     
-    Subclass of |SegmentChain| specifically for transcripts.
+    Subclass of |SegmentChain| specifically for RNA transcripts.
     In addition to coordinate-conversion, count fetching, sequence fetching,
     and various other methods inherited from |SegmentChain|, |Transcript|
     provides convenience methods for fetching sub-chains corresponding to 

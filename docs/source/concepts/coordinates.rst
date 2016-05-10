@@ -45,8 +45,10 @@ coordinate denotes the 5' end.
 Counting from 0 vs 1
 --------------------
 Coordinate systems can start counting from 0 (i.e. are :term:`0-indexed`) or
-from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on chromosome `chrI`::
+from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on
+chromosome `chrI`:
 
+.. code-block:: none
                               XbaI
                              ______ 
    ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC
@@ -59,7 +61,7 @@ from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on chromoso
 In :term:`0-indexed` representation, the restriction site begins at position 11.
 In :term:`1-indexed` representation, it begins at position 12.
 
-In the context of genomics, both :term:`0- <0-indexed>` and :term:`1-indexed`
+In the context of genomics, both :term:`0-indexed` and :term:`1-indexed`
 systems are used, depending upon file format. :data:`plastid` knows which file
 formats use which representation, and automatically converts all coordinates
 to a :term:`0-indexed` representation, following Python idioms.
@@ -119,6 +121,7 @@ site in this example:
 
    **1-indexed**   start: 12        start: 12
                    end: 18          end: 17
+
    =============   =============    ==================
 
 
@@ -144,7 +147,7 @@ Coordinate systems of some common file formats
    `Wiggle`_       1               n/a
    =============   =============   ====================
  
-*The coordinate representation used in `BigWig`_ files depends upon
+\*The coordinate representation used in `BigWig`_ files depends upon
 the format of the data blocks inside the file, which can be represented
 as `wiggle`_ or `bedGraph`_ blocks.
 
@@ -153,7 +156,9 @@ Conventions used in `plastid`
 -----------------------------
 Following `Python`_ conventions, :data:`plastid` reports all coordinates in
 :term:`0-indexed` and :term:`half-open` representation.
-In this case, the coordinate would be::
+In this case, the coordinate would be:
+
+.. code-block:: none
 
    chromosome/contig:  'ChrI'
    start:              11

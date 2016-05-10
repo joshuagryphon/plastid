@@ -1,8 +1,20 @@
 """This module contains tools for lookup of features in a region of interest within the a genome.
 
+.. contents::
+   :local:
+
+Summary
+-------
+
 It is frequently useful to retrieve features that overlap specific regions 
 of interest in the genome. ``GenomeHashes`` index features by location,
-providing quick lookup. Several implementations are provided: 
+providing quick lookup.
+
+
+Module contents
+---------------
+
+Several implementations are provided, depending how the data are formatted:
 
 ====================    =========================================================
 **Implementation**      **Format of feature data**

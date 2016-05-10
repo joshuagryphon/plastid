@@ -1,11 +1,28 @@
 """Reader for `BigWig`_ files, built atop `Jim Kent's utilities`_.
 
+.. contents::
+   :local:
+   
+
+Summary
+-------
+
 `BigWig`_ is a binary, indexed, high-performance format that associates
 quantitative values with genomic positions. Because `BigWig`_ files are indexed,
 they allow both sequential and random access to data, and require substantially
 less memory than unindexed `wiggle`_ or `bedGraph`_ files. Like `wiggle`_ and `bedGraph`_ formats,
 `BigWig`_ is an unstranded format, so data for plus and minus strands must be
 stored in separate files.
+
+
+Module Contents
+---------------
+
+.. autosummary::
+
+   BigWigReader
+   BigWigIterator
+   
 
 Examples
 --------

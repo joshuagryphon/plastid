@@ -1,61 +1,48 @@
 #!/usr/bin/env python
 """GenomeArrays map quantitative data or :term:`read alignments` to genomic positions.
 
+.. contents::
+   :local:
 
-|SegmentChains| and |Transcripts| can be used to fetch arrays of
-data from GenomeArrays. The result is a :class:`numpy array <numpy.ndarray>`
-in which each position corresponds to a position in the |SegmentChain|, moving
-from 5' to 3', in the spliced |SegmentChain| or |Transcript|. For a |Transcript|
-called `my_transcript`::
+Summary
+-------
 
+GenomeArrays are typically accessed using |SegmentChains|.
+
+The :meth:`~plastid.genomics.roitools.SegmentChain.get_counts` method of
+|SegmentChain| and |Transcript| fetches arrays of data from GenomeArrays. The
+result is a :class:`numpy array <numpy.ndarray>` in which each position
+corresponds to a position in the |SegmentChain|, moving from 5' to 3', in the
+spliced |SegmentChain| or |Transcript|. For a |Transcript| called
+`my_transcript`::
+
+    >>> # open a BAM file, map reads 15 nucleotides from 3' end
     >>> genome_array = BAMGenomeArray(["some_file.bam"])
-    >>> genome_array.set_mapping(FivePrimeMapFactory())
+    >>> genome_array.set_mapping(ThreePrimeMapFactory(offset=15))
 
     >>> my_data = my_transcript.get_counts(genome_array)
     >>> my_data
         # some numpy array
 
-Alternatively, |GenomicSegments| and |SegmentChains| can be used directly as
+Alternatively, |SegmentChains| and |GenomicSegments| can be used directly as
 dictionary keys::
 
-    >>> genome_array = BAMGenomeArray(["some_file.bam"])
-    >>> genome_array.set_mapping(FivePrimeMapFactory())
-    
-    >>> segment = GenomicSegment('chrA',2000,2500,'+')
-    >>> my_data = genome_array[segment]
+    >>> my_data = genome_array[my_transcript]
     >>> my_data
         # some numpy array
 
 
-        
-GenomeArrays offer utilities for summing and normalization::
+Module contents
+---------------
 
-    >>> genome_array.sum() # get sum
-    
-    # set sum to an arbitrary value- can be useful for normalizing between
-    # multiple alignment files
-    >>> genome_array.set_sum(61241234324)
-    
-    # reset sum to data in file
-    >>> genome_array.reset_sum()
-    
-    # normalize all arrays to counts per million in the sum
-    >>> genome_array.set_normalize(True)
-    >>> normalized_data = my_transcript.get_counts(genome_array) 
+Several implementations are provided. These are tailored to data stored in 
+specific formats, or for specific purposes. For example, mutable GenomeArrays
+allow values to be changed in-place, e.g. via mathematical operations or manual
+setting.
 
-They can also export data to `wiggle`_ or `bedGraph`_ formats. To export 
-forward-strand data to `some_file.wig`:
-
-    >>> genome_array.to_bedgraph(open("some_file.wig","w"),"my_track","+")
-    
-
-Types of GenomeArrays
----------------------
-
-Several implementations are provided for data stored in various formats:
 
 ====================   ==================================   =====================   ===================================================
-**Implementation**     **Format of data**                   **Mutable in place**    **Use of mapping functions**
+**Implementation**     **Format of data**                   **Mutable**             **Use of mapping functions**
 --------------------   ----------------------------------   ---------------------   ---------------------------------------------------
 |BAMGenomeArray|       `BAM`_ file(s)                       No                      Inline; may be changed without reloading data
 
@@ -69,10 +56,13 @@ Several implementations are provided for data stored in various formats:
 ====================   ==================================   =====================   ===================================================
 
 
+Extended summary & examples
+---------------------------
 
 
 Mapping functions
------------------
+.................
+
 GenomeArrays use :term:`Mapping functions <mapping rule>` to extract the biology
 of interest from read alignments, and to vectorize these data over genomic
 positions.
@@ -128,6 +118,45 @@ Mapping functions are rarely called directly. Instead, they are invoked via
 
 For further details see :mod:`~plastid.genomics.map_factories` and
 :doc:`/concepts/mapping_rules`
+
+
+Export to browser tracks
+........................
+
+GenomeArrays can export data to `wiggle`_ or `bedGraph`_ formats. To export 
+forward-strand data to `some_file.wig`::
+
+    >>> genome_array.to_bedgraph(open("some_file.wig","w"),"my_track","+")
+
+
+Normalization
+.............
+        
+GenomeArrays also offer utilities for summing and normalization::
+
+    >>> genome_array.sum() # get sum
+    71292045
+    
+    # set sum to an arbitrary value- can be useful for normalizing between
+    # multiple alignment files
+    >>> genome_array.set_sum(61241234324)
+    >>> genome_array.sum()
+    61241234324
+    
+    # reset sum to data in file
+    >>> genome_array.reset_sum()
+    >>> genome_array.sum()
+    71292045
+    
+    # with set_normalize(), all arrays will be normalized to counts per million
+    # relative to the current sum
+    >>> genome_array.set_normalize(True)
+    >>> normalized_data = my_transcript.get_counts(genome_array)
+    # normalized numpy array 
+
+    # similarly, with set_normalize() on, browser tracks we'll be normalized 
+    >>> genome_array.to_bedgraph(open("some_file_normalized.wig","w"),"my_normalized_track","+")
+
 """
 __date__ =  "May 3, 2011"
 __author__ = "joshua"
@@ -1216,7 +1245,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
                 region = GenomicSegment(chrom,0,length,strand)
                 for reader in self._strand_dict.get(strand,[]):
                     old = ga.get(region,roi_order = False)
-                    new = old + reader.get_chromosome(chrom)
+                    new = old + reader.get_chromosome_counts(chrom)
                     ga.__setitem__(region,new,roi_order = False) 
 
         return ga
