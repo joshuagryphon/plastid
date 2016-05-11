@@ -47,15 +47,25 @@ example:
   
          # get coordinate of 50th position from 5' end
         >>> my_chain.get_genomic_coordinate(50)
-        
-        # get coordinate of 51st position. splicing is taken care of!
-        >>> my_chain.get_genomic_coordinate(51)
+        ('chrA', 199, '-')
+                
+        # get coordinate of 49th position. splicing is taken care of!
+        >>> my_chain.get_genomic_coordinate(49)
+        ('chrA', 250, '-')
         
         # get coordinate in chain corresponding to genomic coordinate 118
-        >>> my_chain.get_segmetnchain_coordinate("chrA",118,"-")
+        >>> my_chain.get_segmentchain_coordinate("chrA",118,"-")
+        131
         
         # get a subchain containing positions 45-70
-        >>> my_chain.get_subchain(45,70)
+        >>> subchain = my_chain.get_subchain(45,70)
+        >>> subchain
+        <SegmentChain segments=2 bounds=chrA:180-255(-) name=some_chain_subchain>
+
+        # the subchain preserves the discontinuity found in `my_chain`
+        >>> subchain.segments
+        [<GenomicSegment chrA:180-200 strand='-'>,
+         <GenomicSegment chrA:250-255 strand='-'>]
 
   - fetching :class:`numpy arrays <numpy.ndarray>` of data at each position
     in the chain. The data is assumed to be kept in a
@@ -63,7 +73,12 @@ example:
     
         >>> ga = BAMGenomeArray(["some_file.bam"],mapping=ThreePrimeMapFactory(offset=15))
         >>> my_chain.get_counts(ga)
-        
+        array([843, 854, 153,  86, 462, 359, 290,  38,  38, 758, 342, 299, 430,
+               628, 324, 437, 231, 417, 536, 673, 243, 981, 661, 415, 207, 446,
+               197, 520, 653, 468, 863,   3, 272, 754, 352, 960, 966, 913, 367,
+               ...
+               ])
+               
   - similarly, fetching spliced sequence, reverse-complemented if necessary
     for minus-strand features. As input, the |SegmentChain| expects a
     dictionary-like object mapping chromosome names to string-like sequences
@@ -71,20 +86,39 @@ example:
     
         >>> seqdict = { "chrA" : "TCTACATA ..." } # some string of chrA sequence
         >>> my_chain.get_sequence(seqdict)
-       
+        "ACTGTGTACTGTACGATCGATCGTACGTACGATCGATCGTACGTAGCTAGTCAGCTAGCTAGCTAGCTGA..." 
         
   - testing for overlap, containment, equality with other |SegmentChains|::
   
-        >>>  
-        >>>
+        >>> other_chain = SegmentChain(GenomicSegment("chrA",200,300,"-"),
+                                       GenomicSegment("chrA",800,900,"-"))
+                                       
+        >>>  my_chain.overlaps(other_chain)
+        True
+        
+        >>> other_chain in my_chain
+        False
+        
+        >>> my_chain in my_chain
+        True
+        
+        >>> my_chain.covers(other_chain)
+        False
+        
+        >>> my_chain == other_chain
+        False
+        
+        >>> my_chain == my_chain
+        True
 
   - export to `BED`_, `GTF2`_, or `GFF3`_::
   
         >>> my_chain.as_bed()
+        chrA    5    300    some_chain    0    -    5    5    0,0,0    2    195,50,    0,245,
         
         >>> my_chain.as_gtf()
-
-
+        chrA    .    exon    6    200    .    -    .    gene_id "gene_some_chain"; transcript_id "some_chain"; some_attribute "some_value"; ID "some_chain";
+        chrA    .    exon    251  300    .    -    .    gene_id "gene_some_chain"; transcript_id "some_chain"; some_attribute "some_value"; ID "some_chain";
 """
 
 
@@ -912,18 +946,8 @@ cdef class GenomicSegment:
         >>> GenomicSegment("chrA",50,100,"+") in GenomicSegment("chrA",75,200,"+")
         False
 
-
     Similarly, to overlap, |GenomicSegments| must be on the same strand and 
     chromosome.
-     
-    See also
-    --------
-    SegmentChain
-        Base class for genomic features, built from multiple |GenomicSegments|
-
-    Transcript
-        Subclass of |SegmentChain| that adds convenience methods for manipulating
-        coding regions, UTRs, et c
     """
     def __cinit__(self, str chrom, long start, long end, str strand):
         """Create a |GenomicSegment|
@@ -1159,7 +1183,7 @@ cdef class GenomicSegment:
             return self.chrom
 
     property strand:
-        """Strand of |GenomicSegment|:
+        """Strand of |GenomicSegment|
 
           - '+' for forward / Watson strand
           - '-' for reverse / Crick strand
@@ -1837,12 +1861,14 @@ cdef class SegmentChain(object):
         ----------
         other : |SegmentChain| or |GenomicSegment|
         	Query feature
+
          
         Returns
         -------
         bool
             `True` if `self` and `other` share a chromosome and strand, and all
             genomic positions in `other` are present in `self`. Otherwise `False`
+
         
         Raises
         ------
@@ -2313,11 +2339,11 @@ cdef class SegmentChain(object):
     
     # TODO: test optimality
     def as_gff3(self, str feature_type=None, bint escape=True, list excludes=None):
-        """Format `self` as a line of `GFF3`_ output.
+        """Format `self` as a line of GFF3 output.
         
         Because `GFF3`_ files permit many schemas of parent-child hierarchy,
         and in order to reduce confusion and overhead, attempts to export
-        a multi-interval |SegmentChain| will raise an :py:obj:`AttributeError`.
+        a multi-interval |SegmentChain| will raise an :class:`AttributeError`.
         
         Instead, users may export the individual features from which the
         multi-interval |SegmentChain| was constructed, or construct features
