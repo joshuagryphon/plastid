@@ -112,8 +112,7 @@ class AssembledFeatureReader(AbstractReader):
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed, and using the parser
-            :py:class:`pysam.asTuple` (Default: `False`)
+            `streams` are `tabix`_-compressed (Default: `False`)
 
         **kwargs
             Other keyword arguments used by specific parsers

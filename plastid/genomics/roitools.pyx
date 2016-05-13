@@ -45,7 +45,7 @@ example:
 
   - converting coordinates between the spliced space of the chain, and the genome::
   
-         # get coordinate of 50th position from 5' end
+        >>> # get coordinate of 50th position from 5' end
         >>> my_chain.get_genomic_coordinate(50)
         ('chrA', 199, '-')
                 
@@ -91,7 +91,7 @@ example:
   - testing for overlap, containment, equality with other |SegmentChains|::
   
         >>> other_chain = SegmentChain(GenomicSegment("chrA",200,300,"-"),
-                                       GenomicSegment("chrA",800,900,"-"))
+        >>>                            GenomicSegment("chrA",800,900,"-"))
                                        
         >>>  my_chain.overlaps(other_chain)
         True
@@ -2392,7 +2392,7 @@ cdef class SegmentChain(object):
                 9     Attributes                       
             ======== =========
 
-        For futher information, see
+        For further information, see
             - `GFF3 file format specification <http://www.sequenceontology.org/gff3.shtml>`_
             - `Sequence Ontology (SO) v2.53 <http://www.sequenceontology.org/browser/>`_
             - `SO releases <http://sourceforge.net/projects/song/files/SO_Feature_Annotation/>`_
@@ -2624,7 +2624,7 @@ cdef class SegmentChain(object):
             Color represented as RGB hex string.
             If not none, overrides the color in `self.attr['color']`
     
-        extra_columns : None or list, optional
+        extra_columns : None or list-like, optional
             If `None`, and the |SegmentChain| was imported using the `extra_columns`
             keyword of :meth:`~plastid.genomics.roitools.SegmentChain.from_bed`,
             the |SegmentChain| will be exported in BED 12+X format, in which

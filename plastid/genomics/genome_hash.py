@@ -43,6 +43,9 @@ Create a |GenomeHash|::
     
     # from a BigBed file
     >>> bigbed_hash = BigBedGenomeHash("some_file.bb")
+    
+    # from tabix-compressed BED file
+    >>> tabix_hash = TabixGenomeHash("some_file.bed.gz","BED")
 
 
 To find features overlapping a region of interest, pass the feature coordinates
@@ -533,7 +536,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return list(self.bigbedreader[roi])
+        return list(self.bigbedreader.get(roi,stranded=stranded))
     
 
 class TabixGenomeHash(AbstractGenomeHash):
@@ -572,6 +575,9 @@ class TabixGenomeHash(AbstractGenomeHash):
             `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'`
         """
         from pysam import Tabixfile
+        if isinstance(filenames,str):
+            filenames = [filenames]
+            
         self.filenames = filenames
         self.printer = NullWriter() if printer is None else printer
         try:

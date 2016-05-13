@@ -221,8 +221,7 @@ class BED_Reader(AssembledFeatureReader):
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed, and using the parser
-            :py:class:`pysam.asTuple` (Default: `False`)
+            `streams` are `tabix`_-compressed (Default: `False`)
         """
         AssembledFeatureReader.__init__(self,*args,**kwargs)
         self.extra_columns = kwargs.get("extra_columns",0)
