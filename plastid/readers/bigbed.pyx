@@ -284,6 +284,22 @@ cdef class BigBedReader(_BBI_Reader):
             else:
                 return self.return_type
 
+    property extension_indexes:
+        """Names of searchable extension fields"""
+        def __get__(self):
+            cdef:
+                slName *orig_name       = bigBedListExtraIndexes(self._bbifile)
+                slName *extension_names = orig_name
+                list    names           = []
+            
+            names.append(safe_str(extension_names.name))
+            while extension_names.next != NULL:
+                extension_names = extension_names.next
+                names.append(safe_str(extension_names.name))
+            
+            slFreeList(orig_name)
+            return names
+
     def __str__(self):
         return "<%s records=%s chroms=%s>" % (self.__class__.__name__,self.num_records,self.num_chroms)
 
@@ -311,7 +327,109 @@ cdef class BigBedReader(_BBI_Reader):
             freeMem(c_asql)
         
         return p_asql
+    
+    cdef list _bigbedinterval_to_bedtext(self, bigBedInterval * iv, Strand strand = unstranded):
+        """Convert `bigBedIntervals` to lists of BED-formatted text entries.
+        
+        Parameters
+        ----------
+        iv : *bigBedInterval
+            Pointer to first bigBedInterval
+            
+        strand : Strand, optional
+            Strand that must be overlapped for features to be returned
+            (Default: `unstranded`, return all entries)
+            
+            
+        Returns
+        -------
+        list
+            List of BED-formatted text entries
+        """
+        cdef:
+            str bed_row, rest
+            list ltmp     = []
+            dict chromids = self._chromids
 
+        if chromids is None:
+            self._define_chroms()
+            chromids = self._chromids
+            
+        while iv != NULL:
+            bed_row = "\t".join("%s" % X for X in [chromids[iv.chromId],iv.start,iv.end])
+             
+            if self.total_fields > 3: # if iv.rest is populated
+                rest = safe_str(iv.rest)
+                 
+                # if strand info is present and we care about it
+                if self.bed_fields >= 6:
+                    items = rest.split("\t")
+                    ivstrand = str_to_strand(items[2])
+                     
+                    # no overlap - restart loop at next iv
+                    if ivstrand & strand == 0:
+                        iv = iv.next
+                        continue
+             
+                bed_row = "%s\t%s" % (bed_row,rest)
+                 
+            ltmp.append(bed_row)
+            iv = iv.next
+
+        return ltmp
+
+    def search_field(self, field_name, value):
+        """Search indexed extension fields in the `BigBed`_ file for records matching `value`
+        See `self.extension_indexes` for names of indexed fields and
+        `self.extension_fields` for descriptions.
+        
+        
+        Parameters
+        ----------
+        field_name : str
+            Name of field to search
+        
+        value : str
+            Value to match 
+            
+            
+        Yields
+        ------
+        object
+            `self.return_type` of matching record in the `BigBed`_ file
+            
+            
+        Raises
+        ------
+        IndexError
+            If field `field_name` is not indexed
+        """
+        cdef:
+            int              fieldIdx
+            int            * idx = &fieldIdx
+            bptFile        * bpt
+            bigBedInterval * iv
+            lm             * buf = self._get_lm()
+            bytes            val = safe_bytes(value)
+            list             ltmp
+            object           outfunc   = self.return_type.from_bed
+            list             etypes    = list(self.extension_types.items())
+
+        if field_name not in self.extension_indexes:
+            raise IndexError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
+        else:
+            bpt = bigBedOpenExtraIndex(self._bbifile, field_name, idx)
+            
+        iv   = bigBedNameQuery(self._bbifile, bpt, fieldIdx, val, buf)
+        ltmp = self._bigbedinterval_to_bedtext(iv)
+        
+        bptFileDetach(&bpt)
+        
+        if self.add_three_for_stop == True:
+            return _GeneratorWrapper((add_three_for_stop_codon(outfunc(X,extra_columns=etypes)) for X in ltmp),"BigBed entries")
+        else:    
+            return _GeneratorWrapper((outfunc(X,extra_columns=etypes) for X in ltmp),"BigBed entries")
+        
     def get(self, roi, bint stranded=True, bint check_unique=True):
         """Iterate over features that share genomic positions with a region of interest
         
@@ -357,7 +475,7 @@ cdef class BigBedReader(_BBI_Reader):
             raise TypeError("BigBedReader.get(): Query interval must be a GenomicSegment or SegmentChain")
             
         return self._c_get(chain,stranded,check_unique=check_unique)
-    
+                    
     # TODO: direct C/Cython route to SegmentChain.from_bed
     # NB- no cache layer, which we  had in pure Python implementation (below)
     # will this be fast enough for repeated queries over the same region?
@@ -390,19 +508,13 @@ cdef class BigBedReader(_BBI_Reader):
         """
         cdef:
             bigBedInterval * iv
-            str              bed_row
-            str              rest
             list             ltmp      = []
             GenomicSegment   span      = chain.spanning_segment
             GenomicSegment   roi
             str              chrom     = span.chrom
-            Strand           strand    = span.c_strand
-            long             start     = span.start
-            long             end       = span.end
+            Strand           strand    = unstranded
             lm*              buf #       = self._get_lm()
-            dict             chromids  = self._chromids
             Strand           ivstrand
-            list             items
             object           outfunc   = self.return_type.from_bed
             list             etypes    = list(self.extension_types.items())
        
@@ -411,9 +523,8 @@ cdef class BigBedReader(_BBI_Reader):
         else:
             buf = self._get_lm()
 
-        if chromids is None:
-            self._define_chroms()
-            chromids = self._chromids
+        if stranded is True:
+            strand = span.c_strand
 
         for roi in chain:
             iv = bigBedIntervalQuery(self._bbifile,
@@ -422,34 +533,7 @@ cdef class BigBedReader(_BBI_Reader):
                                      roi.end,
                                      0,
                                      buf)
-            
-            while iv != NULL:
-                bed_row = "\t".join("%s" % X for X in [chromids[iv.chromId],iv.start,iv.end])
-                 
-                if self.total_fields > 3: # if iv.rest is populated
-                    rest = safe_str(iv.rest)
-                     
-                    # if strand info is present and we care about it
-                    if stranded == True and self.bed_fields >= 6:
-                        items = rest.split("\t")
-                        ivstrand = str_to_strand(items[2])
-                         
-                        # no overlap - restart loop at next iv
-                        if ivstrand & strand == 0:
-                            iv = iv.next
-                            continue
-                 
-                    bed_row = "%s\t%s" % (bed_row,rest)
-                     
-                # TO CONSIDER: could change this to a def insetad of a cdef,
-                # and then yield after each row. This would save memory compared
-                # to building up a big list of strings
-                #
-                # but then we wouldn't be able to check_unique
-                #
-                # not even sure a list of strings takes up that much space
-                ltmp.append(bed_row)
-                iv = iv.next
+            ltmp.extend(self._bigbedinterval_to_bedtext(iv, strand=strand))
         
         # filter for uniqueness
         if check_unique == True:

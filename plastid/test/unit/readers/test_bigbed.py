@@ -383,3 +383,6 @@ class test_BigBedReader(unittest.TestCase):
             for n, item in enumerate(bb):
                 for key in values:
                     self.assertEqual(values[key][n],item.attr[key])
+
+    def test_search_fields(self):
+        assert False
