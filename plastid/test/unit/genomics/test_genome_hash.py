@@ -476,6 +476,22 @@ class TestBigBedGenomeHash(AbstractGenomeHashHelper):
         cls.cds_dict = { X.get_name() : X for X in cls.coding_regions }
         shuffle(cls.shuffled_indices)
 
+    def test_works_with_str_filename(self):
+        one_hash = BigBedGenomeHash(self.tx_bbfile)
+        for tx in self.transcripts:
+            expected = self.tx_hash[tx]
+            found = one_hash[tx]
+            self.assertEqual(expected, found)
+                    
+    def test_works_with_multiple_files(self):
+        # check to make sure all files are queried by comparing results
+        # from a single hash to results from a double hash
+        double_hash = BigBedGenomeHash([self.tx_bbfile,self.cds_bbfile])
+        for tx in self.transcripts:
+            expected = self.tx_hash[tx] + self.cds_hash[tx]
+            found = double_hash[tx]
+            self.assertEqual(expected, found)
+
 
 @attr(test="unit")    
 class TestTabixGenomeHash(AbstractGenomeHashHelper):
@@ -509,6 +525,13 @@ class TestTabixGenomeHash(AbstractGenomeHashHelper):
     def test_unknown_reader_raises_error(self):
         self.assertRaises(KeyError,TabixGenomeHash, self.tx_file, "GARBAGE")
     
+    def test_works_with_str_filename(self):
+        one_hash = TabixGenomeHash(self.tx_file,"BED")
+        for tx in self.tx_dict.values():
+            found = one_hash[tx]
+            expected = self.tx_hash[tx]
+            self.assertEqual(expected,found)
+                    
     def test_works_with_multiple_files(self):
         # check to make sure all files are queried by comparing results
         # from a single hash to results from a double hash

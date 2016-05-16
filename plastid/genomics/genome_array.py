@@ -17,7 +17,7 @@ spliced |SegmentChain| or |Transcript|. For a |Transcript| called
 `my_transcript`::
 
     >>> # open a BAM file, map reads 15 nucleotides from 3' end
-    >>> genome_array = BAMGenomeArray(["some_file.bam"])
+    >>> genome_array = BAMGenomeArray("some_file.bam")
     >>> genome_array.set_mapping(ThreePrimeMapFactory(offset=15))
 
     >>> my_data = my_transcript.get_counts(genome_array)
@@ -116,7 +116,7 @@ Mapping functions are rarely called directly. Instead, they are invoked via
  .. code-block:: python
 
     # open BAM file
-    >>> ga = BAMGenomeArray(["some_file.bam"])
+    >>> ga = BAMGenomeArray("some_file.bam")
 
     # set mapping 15 bases from 3' end of read
     >>> ga.set_mapping(ThreePrimeMapFactory(offset=15))
@@ -210,7 +210,7 @@ from plastid.readers.bigwig import BigWigReader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from plastid.util.services.mini2to3 import xrange, ifilter
 from plastid.util.services.exceptions import DataWarning, warn
-from plastid.util.io.openers import NullWriter
+from plastid.util.io.openers import NullWriter, multiopen
 
 from plastid.genomics.map_factories import *
 
@@ -612,10 +612,10 @@ class BAMGenomeArray(AbstractGenomeArray):
         
         Parameters
         ----------
-        bamfile : list
-            A list of `BAM`_ filenames, or a list of open
-            :py:class:`pysam.AlignmentFile`  objects. Note: all `BAM`_ files must be
-            sorted and indexed by `samtools`_. 
+        bamfile : str, list of str, or list of :class:`pysam.AlignmentFile`
+            Filename(s) of `BAM`_ files, or list of open :class:`pysam.AlignmentFile`
+            to include in array. Note: all `BAM`_ files must be sorted and indexed
+            by `samtools`_. 
         
         mapping : func
             :term:`mapping function` that determines how each read alignment is mapped to a 
@@ -638,7 +638,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
-        bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
+        bamfiles = list(multiopen(bamfiles,fn=pysam.AlignmentFile,args=("rb",)))
+        #bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
         self.map_fn       = CenterMapFactory() if mapping is None else mapping
         self._strands     = ("+","-",".")

@@ -24,6 +24,7 @@ import sys
 import os
 import pandas as pd
 from plastid.util.io.filters import AbstractWriter
+from collections import Iterable
 
 class NullWriter(AbstractWriter):
     """Writes to system-dependent null location.
@@ -42,6 +43,59 @@ class NullWriter(AbstractWriter):
     
     def __str__(self):
         return self.__repr__()
+
+
+def multiopen(inp,fn=None,args=None,kwargs=None):
+    """Normalize filename/file-like/list of filename or file-like to a list of appropriate objects
+    
+    If not list-like, `inp` is converted to a list. Then, for each element `x` in
+    `inp`, if `x` is file-like, it is yielded. Otherwise, `fn` is applied to `x`,
+    and the result yielded. 
+    
+    
+    Parameters
+    ----------
+    inp : str, file-like, or list-like of either of those
+        Input describing file(s) to open
+    
+    fn : callable, optional
+        Callable to apply to input to open it
+    
+    args : tuple, optional
+        Tuple of positional arguments to pass to `fn`
+        
+    kwargs : keyword arguments
+        Arguments to pass to `fn`
+        
+    Yields
+    ------
+    Object
+        Result of applying `fn` to filename(s) in `inp` 
+    """
+    if fn is None:
+        fn = lambda x, **z: x
+    
+    if args is None:
+        args = ()
+    
+    if kwargs is None:
+        kwargs = {}
+        
+    if isinstance(inp,str):
+        out = [inp]
+    elif isinstance(inp,Iterable):
+        out = inp
+
+    for obj in out:
+#         if isinstance(obj,(safe_file,IOBase,StringIO.StringIO)): #cStringIO
+#             yield obj
+#         else:
+#             yield fn(obj,**kwargs)
+        if isinstance(obj,str):
+            yield fn(obj,*args,**kwargs)
+        else:
+            yield obj
+
 
 def opener(filename,mode="r",**kwargs):
     """Open a file, detecting whether it is compressed or not, based upon

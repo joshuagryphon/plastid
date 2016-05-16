@@ -75,6 +75,8 @@ from __future__ import print_function
 import sys
 import datetime
 from abc import abstractmethod
+from io import IOBase
+
 import termcolor
 
 # color detection hint from http://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
@@ -89,7 +91,7 @@ else:
 # INDEX: readers
 #===============================================================================
 
-class AbstractReader(object):
+class AbstractReader(IOBase):
     """Abstract base class for stream-reading filters. These may be wrapped around
     open-file like objects, for example, to remove comments or blank lines from text,
     or to convert units of input from one data type to another.
@@ -112,12 +114,21 @@ class AbstractReader(object):
             Input data
         """
         self.stream=stream
+
+    def isatty(self):
+        return hasattr(self.stream,"isatty") and self.stream.isatty()
     
-    def __del__(self):
-        try:
-            self.close()
-        except AttributeError:
-            pass
+    def writable(self):
+        return False
+    
+    def seekable(self):
+        return False
+    
+    def readable(self):
+        return True
+    
+    def fileno(self):
+        raise IOError()
         
     def __next__(self):
         return self.filter(next(self.stream))
@@ -164,7 +175,10 @@ class AbstractReader(object):
     
     def close(self):
         """Close stream"""
-        self.stream.close()
+        try:
+            self.stream.close()
+        except AttributeError:
+            pass
 
     @abstractmethod
     def filter(self,data):
@@ -377,13 +391,11 @@ class TestTeeListener(TeeListener):
 # INDEX: writers
 #===============================================================================
 
-class AbstractWriter(object):
+class AbstractWriter(IOBase):
     """Abstract base class for stream-writing filters.
     Create a filter by subclassing this, and defining self.filter().
     
-    See also
-    --------
-    NameDateWriter : a writer that prepends timestamps to text
+    Inherits `isatty()` from `self.stream`
     """
     def __init__(self,stream):
         """Create an AbstractWriter
@@ -393,15 +405,22 @@ class AbstractWriter(object):
         stream : file-like, open for writing
             Output stream to which filtered/formatted data will be written
         """
-        self.stream=stream
+        self.stream = stream
+
+    def isatty(self):
+        return hasattr(self.stream,"isatty") and self.stream.isatty()
+        
+    def writable(self):
+        return True
     
-    def __del__(self):
-        """Safely close streams and then destroy |AbstractWriter|
-        """
-        try:
-            self.close()
-        except:
-            pass
+    def seekable(self):
+        return False
+    
+    def readable(self):
+        return False
+    
+    def fileno(self):
+        raise IOError()
             
     def write(self,data):
         """Write data to `self.stream`
@@ -419,8 +438,11 @@ class AbstractWriter(object):
 
     def close(self):
         """flush and close `self.stream`"""
-        self.flush()
-        self.stream.close()
+        try:
+            self.flush()
+            self.stream.close()
+        except:
+            pass
     
     @abstractmethod
     def filter(self,data):

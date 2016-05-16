@@ -71,7 +71,7 @@ to a |GenomeHash| as a |GenomicSegment|, |SegmentChain|, or |Transcript|::
 #===============================================================================
 import copy
 from plastid.util.services.mini2to3 import cStringIO
-from plastid.util.io.openers import NullWriter
+from plastid.util.io.openers import NullWriter, multiopen
 from plastid.readers.bed import BED_Reader
 from plastid.readers.gff import GTF2_Reader, GFF3_Reader
 from plastid.readers.psl import PSL_Reader
@@ -459,13 +459,13 @@ class BigBedGenomeHash(AbstractGenomeHash):
        |BigBedReader| connecting to BigBed file 
     """
     
-    def __init__(self,filename,base_record_format="III",return_type=None,cache_depth=5):
+    def __init__(self,filenames,base_record_format="III",return_type=None,cache_depth=5):
         """Create a |BigBedGenomeHash|
         
         Parameters
         ----------
-        filename : filename
-            Path to `BigBed`_ file (NOT open filehandle)
+        filenames : str or list of str
+            Name of file to open or list of filenames to open (NOT open filehandles)
 
         base_record_format : str
             Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
@@ -481,12 +481,17 @@ class BigBedGenomeHash(AbstractGenomeHash):
             cost of increased memory use. (Default: `5`)
         """
         from plastid.readers.bigbed import BigBedReader
-        self.filename = filename
+        filenames = list(multiopen(filenames))
+        for filename in filenames:
+            if not isinstance(filename,str):
+                raise ValueError("`filename` must be a 'str'. Found a '%s'." % type(filename)) 
+        
+        self.filenames = filenames
         return_type = SegmentChain if return_type is None else return_type
-        self.bigbedreader = BigBedReader(filename,
-                                         base_record_format=base_record_format,
-                                         return_type=return_type,
-                                         cache_depth=cache_depth)
+        self.bigbedreaders = [BigBedReader(X,
+                                           base_record_format=base_record_format,
+                                           return_type=return_type,
+                                           cache_depth=cache_depth) for X in filenames]
     
     def get_overlapping_features(self,roi,stranded=True):
         """Return list of features overlapping `roi`
@@ -511,7 +516,11 @@ class BigBedGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return list(self.bigbedreader.get(roi,stranded=stranded))
+        ltmp = []
+        for reader in self.bigbedreaders:
+            ltmp.extend(reader.get(roi,stranded=stranded))
+            
+        return ltmp
 
     def __getitem__(self,roi,stranded=True):
         """Return list of features that overlap the region of interest (roi)
@@ -536,7 +545,7 @@ class BigBedGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return list(self.bigbedreader.get(roi,stranded=stranded))
+        return self.get_overlapping_features(roi,stranded=stranded)
     
 
 class TabixGenomeHash(AbstractGenomeHash):
@@ -549,8 +558,8 @@ class TabixGenomeHash(AbstractGenomeHash):
     
     Attributes
     ----------
-    filenames : list
-        List of files used by |TabixGenomeHash|
+    filenames : str or list
+        Name of file to open or list of filenames to open (NOT open filehandles)
         
     tabix_readers : list of :py:class:`pysam.Tabixfile`
        `Pysam`_ interfaces to underlying data files 
@@ -567,18 +576,15 @@ class TabixGenomeHash(AbstractGenomeHash):
         
         Parameters
         ----------
-        filenames : list of str
-            One or more paths to `Tabix`_-compressed files (NOT open filehandle)
+        filenames : str or list of str
+            Filename or list of filenames of `Tabix`_-compressed files
 
         data : str
             Format of tabix-compressed file(s). Choices are:
             `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'`
         """
         from pysam import Tabixfile
-        if isinstance(filenames,str):
-            filenames = [filenames]
-            
-        self.filenames = filenames
+        self.filenames = multiopen(filenames)
         self.printer = NullWriter() if printer is None else printer
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
