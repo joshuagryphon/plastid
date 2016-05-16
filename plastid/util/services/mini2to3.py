@@ -34,6 +34,7 @@ import itertools
 if sys.version_info >= (3,):
     import io as cStringIO
     import io as StringIO
+    import io
     xrange = range
     quote   = urllib.parse.quote
     unquote = urllib.parse.unquote
@@ -42,6 +43,7 @@ if sys.version_info >= (3,):
     ifilter = filter
     safe_bytes = lambda x: bytes(x,"utf-8")
     safe_str   = lambda x: x.decode("utf-8")
+    safe_file  = io.FileIO
     
     # function code
     _func_code_attr = "__code__"
@@ -56,6 +58,7 @@ else:
     ifilter = itertools.ifilter
     safe_bytes = bytes
     safe_str   = str
+    safe_file  = file
     
     # function code
     _func_code_attr = "func_code"
