@@ -18,6 +18,8 @@ indexed, and randomly-accessible. This means:
     - `BigBed`_ use less memory, because their records don't need to be loaded
       into memory to be parsed or accessed.
 
+    - Indexes `BigBed`_ files can be searched for matching records
+    
 
 Module Contents
 ---------------
@@ -44,10 +46,15 @@ region of interest::
     >>>     pass # do something with that feature
             ...
     
-Find features overlapping a genomic region of interest `roi` on either strand::
+Find features that match a certain keyword:: 
 
-    >>> for feature in my_reader.get(roi,stranded=False):
-    >>>     pass # do something with that feature
+    >>> # which fields are indexed and searchable?
+    >>> my_reader.indexed_fields
+    ['name', 'gene_id']
+    
+    >>> # find all entries whose 'gene_id' matches 'nanos'
+    >>> bb.search_field('gene_id','nanos')
+    [ list of matching segmentchains ]
 
 
 
@@ -284,8 +291,8 @@ cdef class BigBedReader(_BBI_Reader):
             else:
                 return self.return_type
 
-    property extension_indexes:
-        """Names of searchable extension fields"""
+    property indexed_fields:
+        """Names of indexed fields in BigBed file. These are searchable by `self.search_field`"""
         def __get__(self):
             cdef:
                 slName *orig_name       = bigBedListExtraIndexes(self._bbifile)
@@ -379,10 +386,9 @@ cdef class BigBedReader(_BBI_Reader):
         return ltmp
 
     def search_field(self, field_name, value):
-        """Search indexed extension fields in the `BigBed`_ file for records matching `value`
-        See `self.extension_indexes` for names of indexed fields and
-        `self.extension_fields` for descriptions.
-        
+        """Search indexed fields in the `BigBed`_ file for records matching `value`
+        See `self.indexed_fields` for names of indexed fields and
+        `self.extension_fields` for descriptions of extension fields.
         
         Parameters
         ----------
@@ -398,6 +404,21 @@ cdef class BigBedReader(_BBI_Reader):
         object
             `self.return_type` of matching record in the `BigBed`_ file
             
+
+        Examples
+        --------
+        Find all entries matching a given gene ID:: 
+        
+            >>> bb = BigBedFile("some_file.bb")
+            
+            # which fields are searchable?
+            >>> bb.indexed_fields
+            ['name', 'gene_id']
+            
+            # find all entries whose 'gene_id' matches 'nanos'
+            >>> bb.search_field('gene_id','nanos')
+            [ list of matching segmentchains ]
+
             
         Raises
         ------

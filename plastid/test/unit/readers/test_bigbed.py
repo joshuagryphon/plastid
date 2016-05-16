@@ -384,5 +384,8 @@ class test_BigBedReader(unittest.TestCase):
                 for key in values:
                     self.assertEqual(values[key][n],item.attr[key])
 
+    def test_indexed_fields(self):
+        assert False
+    
     def test_search_fields(self):
         assert False
