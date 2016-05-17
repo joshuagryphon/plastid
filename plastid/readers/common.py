@@ -57,7 +57,10 @@ def get_identical_attributes(features,exclude=None):
 #===============================================================================
 
 class AssembledFeatureReader(AbstractReader):
-    """Abstract base class for readers that yield complex or discontinuous features
+    """
+    AssembledFeatureReader(*streams, return_type=SegmentChain, add_three_for_stop=False, tabix=False, printer=None, **kwargs)
+    
+    Abstract base class for readers that yield complex or discontinuous features
     such as transcripts or gapped alignments.
     
     For memory efficiency, all readers function as iterators. Readers built
@@ -68,6 +71,30 @@ class AssembledFeatureReader(AbstractReader):
       - deciding how many subfeatures to hold in memory
       
       - overloading :meth:`~AssembledFeatureReader._assemble`
+      
+
+    Parameters
+    ----------
+    *streams : file-like
+        One or more open filehandles of input data.
+    
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+        feature. (Default: `False`)
+                    
+    printer : file-like, optional
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+    
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed (Default: `False`)
+
+    **kwargs
+        Other keyword arguments used by specific parsers
       
     
     Attributes

@@ -139,7 +139,24 @@ class AbstractGenomeHash(object):
 
 class GenomeHash(AbstractGenomeHash):
     """Index memory-resident features (e.g. |SegmentChains| or |Transcripts|) by genomic position for quick lookup later.
-    
+        
+     Parameters
+     ----------
+     features : dict or list, optional
+         dict or list of features, as |SegmentChain| objects or subclasses
+         (Default: `[]`)
+        
+     binsize : int, optional
+         Size in nucleotides of *neighborhood* for hash. (Default: %s)
+        
+     do_copy : bool
+         If `True`, features will be copied before being stored
+         in the hash. This comes at a speed cost, but will prevent unexpected
+         side effects if the features are being changed outside the hash. 
+         
+         If `False` (default), creation of the |GenomeHash| will be much faster.   
+         
+          
     Notes
     -----
     Because all features are stored in memory, for large genomes, a |TabixGenomeHash|
@@ -446,17 +463,24 @@ class GenomeHash(AbstractGenomeHash):
                 
 
 class BigBedGenomeHash(AbstractGenomeHash):
-    """A GenomeHash for `BigBed`_ files.
+    """BigBedGenomeHash(*filenames,return_type=SegmentChain)
     
-    Notes
-    -----
-    Because the underlying features are stored on disk, their data is immutable,
-    and items cannot be added to the |BigBedGenomeHash| after it is initialized.
+    Find features overlapping query regions in `BigBed`_ files.
+    
+        
+    Parameters
+    ----------
+    *filenames : str 
+        One or more filenames to open (NOT open filehandles)
+
+    return_type : class implementing a :py:meth:`from_bed` method
+        Class of object to return (Default: |SegmentChain|)
+        
     
     Attributes
     ----------
-    bigbedreader : |BigBedReader|
-       |BigBedReader| connecting to BigBed file 
+    bigbedreaders : |BigBedReader|
+       |BigBedReaders| connecting to BigBed file(s) 
     """
     
     def __init__(self,*filenames,**kwargs): #,base_record_format="III",return_type=None,cache_depth=5):
@@ -537,12 +561,20 @@ class BigBedGenomeHash(AbstractGenomeHash):
     
 
 class TabixGenomeHash(AbstractGenomeHash):
-    """A GenomeHash for a `tabix`_-indexed files
+    """
+    TabixGenomeHash(*filenames,data_format='GTF2')
     
-    Notes
-    -----
-    Because the underlying features are stored on disk, their data is immutable,
-    and items cannot be added to the |TabixGenomeHash| after it is initialized.
+    Find features overlapping query regions in `Tabix`_-indexed files.
+        
+    Parameters
+    ----------
+    filenames : str or list of str
+        Filename or list of filenames of `Tabix`_-compressed files
+
+    data_format : str
+        Format of tabix-compressed file(s). Choices are:
+        `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'` (Default: `GTF2`)
+    
     
     Attributes
     ----------

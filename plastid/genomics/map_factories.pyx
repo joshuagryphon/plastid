@@ -161,7 +161,8 @@ ctypedef np.long_t   LONG_t
 
 
 cdef class CenterMapFactory:
-    """CenterMapFactory(nibble = 0)
+    """
+    CenterMapFactory(nibble=0)
 
     Read mapping tool for :meth:`BAMGenomeArray.set_mapping`.
     `nibble` positions  is removed from each side of each read alignment, and
@@ -265,7 +266,8 @@ cdef class CenterMapFactory:
 
 
 cdef class FivePrimeMapFactory:
-    """FivePrimeMapFactory(offset = 0)
+    """
+    FivePrimeMapFactory(offset=0)
     
     Fiveprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at `offset` nucleotides from the fiveprime end of their
@@ -359,7 +361,8 @@ cdef class FivePrimeMapFactory:
 
      
 cdef class ThreePrimeMapFactory:
-    """ThreePrimeMapFactory(offset = 0)
+    """
+    ThreePrimeMapFactory(offset=0)
     
     Threeprime mapping factory for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped `offset` nucleotides from the threeprime end of their alignments.
@@ -453,7 +456,8 @@ cdef class ThreePrimeMapFactory:
 
 
 cdef class VariableFivePrimeMapFactory:
-    """VariableFivePrimeMapFactory(offset_dict)
+    """
+    VariableFivePrimeMapFactory(offset_dict)
     
     Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`.
     Reads are mapped at a user-specified offsets from the fiveprime end of each
@@ -622,7 +626,8 @@ cdef class VariableFivePrimeMapFactory:
 
 
 cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
-    """StratifiedVariableFivePrimeMapFactory(offset_dict, min = 25, max = 35)
+    """
+    StratifiedVariableFivePrimeMapFactory(offset_dict, min = 25, max = 35)
     
     Fiveprime-variable mapping for :py:meth:`BAMGenomeArray.set_mapping`, stratified by read length.
     
@@ -762,7 +767,8 @@ cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
 
 
 cdef class SizeFilterFactory:
-    """SizeFilterFactory(min = 1, max = -1)
+    """
+    SizeFilterFactory(min = 1, max = -1)
     
     Create a read-length filter can be applied at runtime to a |BAMGenomeArray|
     using ::meth:`BAMGenomeArray.add_filter`

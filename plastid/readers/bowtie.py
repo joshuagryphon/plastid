@@ -45,6 +45,12 @@ class BowtieReader(AbstractReader):
     See description of `bowtie`_ legacy format at
     http://bowtie-bio.sourceforge.net/manual.shtml
     
+    Parameters
+    ----------
+    stream : file-like
+        Stream of alignments in `bowtie`_'s legacy output format
+        
+    
     Yields
     -------
     |SegmentChain|

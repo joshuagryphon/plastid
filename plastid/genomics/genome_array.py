@@ -581,7 +581,10 @@ class MutableAbstractGenomeArray(AbstractGenomeArray):
 
 
 class BAMGenomeArray(AbstractGenomeArray):
-    """A GenomeArray for :term:`read alignments` in `BAM`_ files.
+    """
+    BAMGenomeArray(*bamfiles,mapping=CenterMapFactory())
+    
+    A GenomeArray for :term:`read alignments` in `BAM`_ files.
     
     When a user requests :term:`read alignments` or :term:`counts` at
     a set of genomic positions, |BAMGenomeArray| uses a :term:`mapping rule`
@@ -590,6 +593,20 @@ class BAMGenomeArray(AbstractGenomeArray):
     are not mapped until requested, and mapping rules are changeable at
     runtime via :meth:`BAMGenomeArray.set_mapping`
     
+    Parameters
+    ----------
+    bamfile : One or more filenames or open :class:`pysam.AlignmentFile`
+        Filename(s) of `BAM`_ files, or open :class:`pysam.AlignmentFile`
+        to include in array. Note: all `BAM`_ files must be sorted and indexed
+        by `samtools`_. 
+    
+    mapping : func
+        :term:`mapping function` that determines how each read alignment is mapped to a 
+        count at a genomic position. Examples include mapping reads to their
+        fiveprime ends, mapping reads to their threeprime ends, or mapping
+        somewhere in the middle. Factories to produce such functions are provided.
+        See references below. (Default: :func:`CenterMapFactory`)
+
     
     Attributes
     ----------
@@ -1087,8 +1104,18 @@ class BAMGenomeArray(AbstractGenomeArray):
 
 
 class BigWigGenomeArray(AbstractGenomeArray):
-    """High-performance GenomeArray for `BigWig`_ files."""
+    """BigWigGenomeArray(maxmem=0)
     
+    High-performance GenomeArray for `BigWig`_ files.
+
+    Parameters
+    ----------
+    maxmem : float
+        Maximum desired memory footprint for C objects, in megabytes.
+        May be temporarily exceeded if large queries are requested.
+        (Default: 0, No maximum)        
+    
+    """
     def __init__(self,maxmem=0,**kwargs): #,fill=0.0):
         """Create a |BigWigGenomeArray|.
         
@@ -1298,8 +1325,27 @@ class GenomeArray(MutableAbstractGenomeArray):
     
     |GenomeArray| supports basic mathematical operations elementwise, where elements
     are nucleotide positions.
-    """
     
+    Parameters
+    ----------
+    chr_lengths : dict or `None`, optional
+        Dictionary mapping chromosome names to lengths.
+        Suppyling this in advance yields considerable
+        speed improvements, as memory can be pre-allocated
+        for each chromosomal position. If not provided,
+        a minimum chromosome size will be guessed, and
+        chromosomes re-sized as needed.
+    
+    min_chr_size : int
+        If chr_lengths is not supplied, `min_chr_size` is 
+        the default first guess of a chromosome size. If
+        the genome has large chromosomes, it is much
+        much better, speed-wise, to provide `chr_lengths`
+        than to provide a guess here that is too small.
+    
+    strands : sequence
+        Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)    
+    """
     def __init__(self,chr_lengths=None,strands=None,
                  min_chr_size=MIN_CHR_SIZE):
         """Create a |GenomeArray|
@@ -2039,6 +2085,28 @@ class SparseGenomeArray(GenomeArray):
     """A memory-efficient sublcass of |GenomeArray| using sparse internal representation.
     Note, savings in memory may come at a cost in performance when repeatedly
     getting/setting values, compared to a |GenomeArray|.
+    
+
+    Parameters
+    ----------
+    chr_lengths : dict, optional
+        Dictionary mapping chromosome names to lengths.
+        Suppyling this parameter yields considerable
+        speed improvements, as memory can be pre-allocated
+        for each chromosomal position. If not provided,
+        a minimum chromosome size will be guessed, and
+        chromosomes re-sized as needed (Default: `{}` )
+    
+    min_chr_size : int,optional
+        If `chr_lengths` is not supplied, `min_chr_size` is 
+        the default first guess of a chromosome size. If
+        your genome has large chromosomes, it is much
+        much better, speed-wise, to provide a chr_lengths
+        dict than to provide a guess here that is too small.
+        (Default: %s)
+    
+    strands : sequence
+        Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)    
     """
     def __init__(self,chr_lengths=None,strands=None,min_chr_size=MIN_CHR_SIZE):
         """Create a |SparseGenomeArray|

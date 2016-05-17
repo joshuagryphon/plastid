@@ -236,6 +236,18 @@ class AbstractAutoSqlElement(object):
 class AutoSqlDeclaration(AbstractAutoSqlElement):
     """Parser factory that converts delimited text blocks into OrderedDicts,
     following the field names and types described by an autoSql declaration element
+
+    Parameters
+    ----------
+    autosql : str
+        Block of autoSql text specifying format of element
+        
+    parent : instance of subclass of |AbstractAutoSqlObject| or `None`, optional
+        Parent / enclosing element. Default: None
+    
+    delim : str, optional
+        Field delimiter (default: tab)    
+    
     
     Attributes
     ----------
@@ -387,6 +399,19 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
 
 class AutoSqlField(AbstractAutoSqlElement):
     """Parser factory for autoSql fields of type ``fieldType fieldName ';' comment``
+
+        
+    Parameters
+    ----------
+    autosql : str
+        Block of autoSql text specifying format of element
+        
+    parent : instance of subclass of |AbstractAutoSqlObject| or None, optional
+        Parent / enclosing element. Default: None
+    
+    delim : str, optional
+        Field delimiter (default: tab)
+        
     
     Attributes
     ----------
@@ -462,6 +487,19 @@ class AutoSqlField(AbstractAutoSqlElement):
 
 class SizedAutoSqlField(AutoSqlField):
     """Parser factory for autoSql fields of type ``fieldType `[` fieldSize `]` fieldName ';' comment``
+
+        
+    Parameters
+    ----------
+    autosql : str
+        Block of autoSql text specifying format of element
+        
+    parent : instance of subclass of |AbstractAutoSqlObject| or None, optional
+        Parent / enclosing element. Default: None
+    
+    delim : str, optional
+        Field delimiter (default: tab)
+
 
     Attributes
     ----------
@@ -558,6 +596,18 @@ class SizedAutoSqlField(AutoSqlField):
 class ValuesAutoSqlField(AbstractAutoSqlElement):
     """Parser factory for autoSql fields of type ``fieldType `(` fieldValues `)` fieldName ';' comment``
     where ``fieldType`` would typically be ``set`` or ``enum``
+    
+        
+    Parameters
+    ----------
+    autosql : str
+        Block of autoSql text specifying format of element
+        
+    parent : instance of subclass of |AbstractAutoSqlObject| or None, optional
+        Parent / enclosing element. Default: None
+    
+    delim : str, optional
+        Field delimiter (default: tab)    
     """
     
     match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","values","name","optionals","semi","comment")])

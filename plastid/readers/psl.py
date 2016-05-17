@@ -18,7 +18,35 @@ from plastid.genomics.roitools import SegmentChain
 from plastid.util.services.exceptions import FileFormatWarning, warn
 
 class PSL_Reader(AssembledFeatureReader): 
-    """Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
+    """
+    PSL_reader(*streams, return_type=SegmentChain, add_three_for_stop=False, tabix=False, printer=None, **kwargs)
+    
+    Read `PSL`_ files into |SegmentChain|  or |Transcript| objects
+
+
+    Parameters
+    ----------
+    *streams : file-like
+        One or more open filehandles of input data.
+    
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+        feature. (Default: `False`)
+                    
+    printer : file-like, optional
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+    
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed (Default: `False`)
+
+    **kwargs
+        Other keyword arguments used by specific parsers
+
     
     Attributes
     ----------
@@ -61,9 +89,36 @@ class PSL_Reader(AssembledFeatureReader):
 
 
 class BundledPSL_Reader(PSL_Reader):
-    """Read `PSL`_ files, returning lists of |SegmentChains| grouped by query sequence.
+    """
+    BundledPSL_reader(*streams, return_type=SegmentChain, add_three_for_stop=False, tabix=False, printer=None, **kwargs)
+    
+    Read `PSL`_ files, returning lists of |SegmentChains| grouped by query sequence.
     Use this when a given query sequence has multiple hits in your `PSL`_ file,
     and you want the output to be grouped.
+    
+
+    Parameters
+    ----------
+    *streams : file-like
+        One or more open filehandles of input data.
+    
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+        feature. (Default: `False`)
+                    
+    printer : file-like, optional
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+    
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed (Default: `False`)
+
+    **kwargs
+        Other keyword arguments used by specific parsers    
     """
 
     def filter(self,line):

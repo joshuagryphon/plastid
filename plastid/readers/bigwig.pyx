@@ -88,7 +88,8 @@ from plastid.util.services.mini2to3 import safe_bytes, safe_str
 
 
 cdef class BigWigReader(_BBI_Reader):
-    """BigWigReader(filename, maxmem = 0)
+    """
+    BigWigReader(filename, maxmem = 0)
     
     Reader providing random or sequential access to data stored in `BigWig`_ files.
 
@@ -102,6 +103,7 @@ cdef class BigWigReader(_BBI_Reader):
         May be temporarily exceeded if large queries are requested.
         Does not include memory footprint of Python objects.
         (Default: `0`, no limit)
+        
         
     Examples
     --------

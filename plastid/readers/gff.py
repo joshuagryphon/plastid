@@ -683,7 +683,8 @@ class GTF2_Reader(AbstractGFF_Reader):
     """
     GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
     
-    Read raw features in `GTF2`_ files as |SegmentChains|.
+    Read raw features in `GTF2`_ files as |SegmentChains|. To assemble transcripts
+    from raw features, use |GTF2_TranscriptAssembler|.
     
     Assumes input to comply with the
     `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_. Each element must:
