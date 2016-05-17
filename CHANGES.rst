@@ -31,6 +31,10 @@ File formats
   - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
     making it far faster and more memory efficient.
 
+  - ``BigBedReader`` can search indexes included in BigBed files, e.g. to find
+    transcripts with a given `gene_id` (if `gene_id` is included as an extension
+    column).
+
 
 Command-line scripts
 """"""""""""""""""""
@@ -78,6 +82,10 @@ Command-line scripts
 
 Infrastructure
 """"""""""""""
+
+  - Simplified file opening. Old syntax still works, but now filenames can be
+    directly passed to all feature readers, GenomeArrays, and GenomeHashes,
+    in place of open filehandles or lists of open filehandles
 
   - ``BAMGenomeArray`` can now use mapping functions that return multidimensional
      arrays. As an example we added ``StratifiedVariableFivePrimeMapFactory``,

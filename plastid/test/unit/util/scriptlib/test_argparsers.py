@@ -796,7 +796,7 @@ def check_mask_genome_hash(input_format,num_features):
     # check correct return type and make sure features are populated
     if input_format == "BigBed":
         assert_true(isinstance(mask_hash,BigBedGenomeHash))
-        assert_equal(mask_hash.bigbedreader.num_records,num_features)
+        assert_equal(mask_hash.bigbedreaders[0].num_records,num_features)
     else:
         assert_true(isinstance(mask_hash,GenomeHash))
         assert_equal(len(mask_hash.feature_dict),num_features)

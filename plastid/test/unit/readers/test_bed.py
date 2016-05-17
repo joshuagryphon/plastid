@@ -6,10 +6,8 @@
 
 See http://genome.ucsc.edu/FAQ/FAQformat.html
 """
-import unittest
 import functools
 import warnings
-import sys
 import pandas as pd
 
 from csv import QUOTE_NONE
