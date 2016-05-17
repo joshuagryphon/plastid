@@ -214,7 +214,7 @@ def _format_segmentchain(SegmentChain segchain):
     for iv in segchain:
         iv_ltmp.append("GenomicSegment('%s',%s,%s,'%s')" % (iv.chrom,iv.start,iv.end,iv.strand))
     
-    stmp = "SegmentChain(%s,%s)" % (",".join(iv_ltmp),
+    stmp = "SegmentChain(%s,%s)\n" % (",".join(iv_ltmp),
                                     _get_attr(segchain.attr)
                                                           )
     return stmp
@@ -235,10 +235,10 @@ def _format_transcript(Transcript tx):
     for iv in tx:
         iv_ltmp.append("GenomicSegment('%s',%s,%s,'%s')" % (iv.chrom,iv.start,iv.end,iv.strand))
     
-    stmp = "Transcript(%s,ID='%s',cds_genome_start=%s,cds_genome_end=%s)" % (",".join(iv_ltmp),
+    stmp = "Transcript(%s,ID='%s',cds_genome_start=%s,cds_genome_end=%s)\n" % (",".join(iv_ltmp),
                                                           tx.get_name(),
-                                                          tx.attr["cds_genome_start"],
-                                                          tx.attr["cds_genome_end"]
+                                                          tx.cds_genome_start,
+                                                          tx.cds_genome_end
                                                           )
     return stmp
 
