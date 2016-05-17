@@ -100,7 +100,7 @@ import copy
 import sys
 from abc import abstractmethod
 from plastid.util.io.filters import AbstractReader, SkipBlankReader
-from plastid.util.io.openers import NullWriter
+from plastid.util.io.openers import NullWriter, multiopen
 from plastid.readers.common import get_identical_attributes, \
                                    AssembledFeatureReader
 from plastid.genomics.roitools import Transcript, SegmentChain, \
@@ -380,13 +380,13 @@ class AbstractGFF_Reader(AbstractReader):
         Dictionary of metadata found in file headers
     """
     
-    def __init__(self,stream,adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False):
+    def __init__(self,*streams,**kwargs): #stream,adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False):
         """Create an |AbstractGFF_Reader|
         
         Parameters
         ----------
-        stream : file-like
-            Input stream pointing to GFF information
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to GFF information
         
         adjust_to_0 : bool, optional
             Boolean, whether or not to adjust feature
@@ -414,16 +414,19 @@ class AbstractGFF_Reader(AbstractReader):
             `stream` is `tabix`_-compressed, and
             using the parser :py:class:`pysam.asTuple` (Default: `False`)            
         """
-        if tabix == True:
+        #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
+        stream = itertools.chain.from_iterable(multiopen(streams))
+        if kwargs.get("tabix",False) == True:
             stream = ("\t".join(X) for X in stream)
         
         self.chromosomes  = {}
-        self.metadata   = {}
-        self.adjust_to_0  = adjust_to_0
-        self.end_included = end_included
+        self.metadata     = {}
         self.line_queue   = []
-        self.return_stopfeatures = return_stopfeatures
-        self.is_sorted = is_sorted
+
+        self.adjust_to_0         = kwargs.get("adjust_to_0",True)
+        self.end_included        = kwargs.get("end_included",True)
+        self.return_stopfeatures = kwargs.get("return_stopfeatures",True)
+        self.is_sorted           = kwargs.get("is_sorted",False)
         
         line = next(stream)
         while line[0:2] == "##":
@@ -600,13 +603,13 @@ class GFF3_Reader(AbstractGFF_Reader):
         [rest of output omitted]
     """
     
-    def __init__(self,stream,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
+    def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
         """Create a |GFF3_Reader|
         
         Parameters
         ----------
-        stream : file-like
-            Input stream pointing to `GFF3`_ information
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to GFF information
         
         end_included : bool, optional
             Boolean, whether the end coordinate is
@@ -629,11 +632,11 @@ class GFF3_Reader(AbstractGFF_Reader):
             `stream` is `tabix`_-compressed, and using the parser
             :py:class:`pysam.asTuple` (Default: `False`)            
          """
-        super(GFF3_Reader,self).__init__(stream,
-                                         adjust_to_0=True,
-                                         end_included=end_included,
-                                         return_stopfeatures=return_stopfeatures,
-                                         is_sorted=is_sorted,tabix=tabix)
+        super(GFF3_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
+#                                          adjust_to_0=True,
+#                                          end_included=end_included,
+#                                          return_stopfeatures=return_stopfeatures,
+#                                          is_sorted=is_sorted,tabix=tabix)
     
     def _parse_tokens(self,inp):
         """Parse column 9 of `GFF3`_ into attribute dictionary
@@ -688,13 +691,13 @@ class GTF2_Reader(AbstractGFF_Reader):
         [rest of output omitted]
             
     """
-    def __init__(self,stream,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
+    def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
         """Create a |GTF2_Reader|
         
         Parameters
         ----------
-        stream : file-like
-            Input stream pointing to `GTF2`_ information
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to GFF information
         
         end_included : bool, optional
             Boolean, whether the end coordinate is
@@ -717,11 +720,11 @@ class GTF2_Reader(AbstractGFF_Reader):
             `stream` is `tabix`_-compressed, and
             using the parser :py:class:`pysam.asTuple` (Default: `False`)
          """
-        super(GTF2_Reader,self).__init__(stream,
-                                         adjust_to_0=True,
-                                         end_included=end_included,
-                                         return_stopfeatures=return_stopfeatures,
-                                         is_sorted=is_sorted,tabix=tabix)
+        super(GTF2_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
+#                                          adjust_to_0=True,
+#                                          end_included=end_included,
+#                                          return_stopfeatures=return_stopfeatures,
+#                                          is_sorted=is_sorted,tabix=tabix)
         
     def _parse_tokens(self,inp):
         """Parse column 9 of `GTF2`_ into dictionary
@@ -767,8 +770,8 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         
         Parameters
         ----------
-        streams : file-like
-            One or more open streams of input data.
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to GFF information
 
         is_sorted : bool, optional
             GFF is sorted by chromosome name, allowing some memory savings
@@ -801,6 +804,8 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         return_stopfeatures = kwargs.get("return_stopfeatures",True)
         is_sorted = kwargs.get("is_sorted",False)
         reader_class = kwargs.get("reader_class")
+        
+        streams = multiopen(streams, open)
         
         iterables = []
         for stream in streams:
@@ -977,8 +982,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         
         Parameters
         ----------
-        streams : file-like
-            One or more open streams of `GTF2`_ data.
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to `GTF2`_ data
 
         is_sorted : bool, optional
             `GTF2`_ is sorted by chromosome name, allowing some memory savings
@@ -1190,8 +1195,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         
         Parameters
         ----------
-        streams : file-like
-            One or more open streams of `GFF3`_ data.
+        *streams : one or more str or file-like
+            One or more input streams or filenames pointing to `GFF3`_ data
         
         is_sorted : bool, optional
             `GFF3`_ is sorted by chromosome name, allowing some memory savings

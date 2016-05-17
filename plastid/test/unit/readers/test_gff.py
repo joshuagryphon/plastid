@@ -8696,6 +8696,14 @@ class TestGFF3(unittest.TestCase):
     def setUp(self):
         self.data = cStringIO.StringIO(self.data_str)
 
+    def test_multi_files(self):
+        test_reader = self.reader(cStringIO.StringIO(self.data_str),cStringIO.StringIO(self.data_str))
+        for c, (feature1, feature2) in enumerate(zip(self.features*2,self.reader(self.data))):
+            err_msg = "Failed identity test in reading: %s{%s} vs %s{%s}" % (feature1,feature1.attr,feature2,feature2.attr)
+            self.assertTrue(self.feature_identical(feature1,feature2),err_msg)
+
+        self.assertGreater(c,0,"No features read during test!")        
+        
     def feature_identical(self,feature1,feature2):
         """Determine whether two |SegmentChain| s are identical,
         requiring that their intervals, types, and all attributes be so.
