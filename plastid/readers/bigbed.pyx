@@ -437,7 +437,7 @@ cdef class BigBedReader(_BBI_Reader):
             object           outfunc   = self.return_type.from_bed
             list             etypes    = list(self.extension_types.items())
 
-        if field_name not in self.index_fields:
+        if field_name not in self.indexed_fields:
             raise IndexError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
         else:
             bpt = bigBedOpenExtraIndex(self._bbifile, field_name, idx)
