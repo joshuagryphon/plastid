@@ -9,6 +9,7 @@ See http://genome.ucsc.edu/FAQ/FAQformat.html
 import functools
 import warnings
 import pandas as pd
+import os
 
 from csv import QUOTE_NONE
 from nose.plugins.attrib import attr
@@ -17,7 +18,15 @@ from plastid.genomics.roitools import SegmentChain, GenomicSegment, Transcript
 from plastid.readers.bed import BED_Reader
 from nose.tools import assert_equal, assert_true, assert_dict_equal, assert_greater_equal
 
+from plastid.test.ref_files import RPATH, REF_FILES
+
 warnings.simplefilter("ignore",DeprecationWarning)
+
+TXBED  = os.path.join(RPATH,REF_FILES["100transcripts_bed"])
+CDSBED = os.path.join(RPATH,REF_FILES["100cds_bed"])
+
+from plastid.test.data.annotations.py100cds import control_cds
+from plastid.test.data.annotations.py100transcripts import control_transcripts
 
 #===============================================================================
 # INDEX: test suites
@@ -52,6 +61,26 @@ class TestBED():
             assert_equal(found,expected,msg)
         else:
             assert_equal(found,expected)
+    
+    def open_from_str(self):
+        for expected, found in zip(control_transcripts,BED_Reader(TXBED,return_type=Transcript)):
+            assert_equal(expected,found)
+        
+    
+    def open_from_multi_str(self):
+        for expected, found in zip(control_transcripts+control_cds,BED_Reader(TXBED,CDSBED,return_type=Transcript)):
+            assert_equal(expected,found)
+    
+    def open_from_fh(self):
+        with open(TXBED) as fh:
+            for expected, found in zip(control_transcripts,BED_Reader(fh,return_type=Transcript)):
+                assert_equal(expected,found)
+    
+    def open_from_multi_fh(self):
+        with open(TXBED) as fh:
+            with open(CDSBED) as fh2:
+                for expected, found in zip(control_transcripts+control_cds,BED_Reader(fh,fh2,return_type=Transcript)):
+                    assert_equal(expected,found)
 
     def test_bed_import_3to12plus4_columns_with_formatters(self):
         names = [("numcol",int),

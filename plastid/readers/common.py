@@ -15,7 +15,7 @@ Functions & classes
 """
 import itertools
 from plastid.util.io.filters import AbstractReader
-from plastid.util.io.openers import NullWriter
+from plastid.util.io.openers import NullWriter, multiopen
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript, add_three_for_stop_codon
 from abc import abstractmethod
 
@@ -94,6 +94,8 @@ class AssembledFeatureReader(AbstractReader):
     
     def __init__(self,*streams,**kwargs):
         """
+        AssembledFeatureReader(*streams, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False, **kwargs)
+        
         Parameters
         ----------
         streams : file-like
@@ -117,9 +119,10 @@ class AssembledFeatureReader(AbstractReader):
         **kwargs
             Other keyword arguments used by specific parsers
         """
-        # this is a hack, because tabix iterator can no longer spit out
-        # unparsed text
-        self.stream = itertools.chain.from_iterable(streams)
+        #self.stream = itertools.chain.from_iterable(streams)
+        self.stream = itertools.chain.from_iterable(multiopen(streams,fn=open))
+
+        # this is a hack, because tabix iterator can no longer spit out unparsed text
         if kwargs.get("tabix",False) == True:
             self.stream = ("\t".join(X) for X in self.stream)
 
