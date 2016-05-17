@@ -39,7 +39,7 @@ Create a |GenomeHash|::
     >>> one_hash = GenomeHash(list_of_transcripts)
     
     # from a non-indexed file
-    >>> my_hash = GenomeHash(list(GFF3_Reader(open("some_file.gff"))))
+    >>> my_hash = GenomeHash(list(GFF3_Reader("some_file.gff")))
     
     # from a BigBed file
     >>> bigbed_hash = BigBedGenomeHash("some_file.bb")

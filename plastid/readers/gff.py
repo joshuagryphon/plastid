@@ -45,7 +45,7 @@ Examples
 `GFF3`_ files -- e.g. exons, coding regions, stop codons -- without assembling
 them into transcripts::
 
-    >>> feature_reader = GTF2_Reader(open("some_file.gtf"))
+    >>> feature_reader = GTF2_Reader("some_file.gtf")
     >>> for feature in reader:
     >>>     print(feature.get_name(),feature.attr["type"],str(feature))
     ('YAL030W_mRNA',  'exon',        'chrI:87262-87387(+)')
@@ -65,7 +65,7 @@ transcripts from their components, based upon their `transcript_id`, `ID`, or
 `Parent` attributes. Note how all features are of type `mRNA`, and how some
 contain multiple exons (coordinates separated by `'^'`):: 
 
-    >>> transcript_reader = GTF2_TranscriptAssembler(open("some_file.gtf"))
+    >>> transcript_reader = GTF2_TranscriptAssembler("some_file.gtf")
     >>> for transcript in reader:
     >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript))
     ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
@@ -604,7 +604,8 @@ class GFF3_Reader(AbstractGFF_Reader):
     """
     
     def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
-        """Create a |GFF3_Reader|
+        """
+        GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
         
         Parameters
         ----------
@@ -692,7 +693,8 @@ class GTF2_Reader(AbstractGFF_Reader):
             
     """
     def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
-        """Create a |GTF2_Reader|
+        """
+        GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
         
         Parameters
         ----------
@@ -978,7 +980,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     dtmp = { "exon_like" : {}, "CDS_like" : {} }
 
     def __init__(self,*streams,**kwargs):
-        """Create a |GTF2_TranscriptAssembler|
+        """
+        GTF2_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
         
         Parameters
         ----------
@@ -1191,7 +1194,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     """
 
     def __init__(self,*streams,**kwargs):
-        """Create a |GFF3_TranscriptAssembler|
+        """
+        GFF3_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
         
         Parameters
         ----------

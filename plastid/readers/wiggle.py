@@ -23,6 +23,12 @@ class WiggleReader(object):
     See the `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_ for details.
     """
     def __init__(self,fh):
+        """
+        Parameters
+        ----------
+        fh : file-like
+            Open filehandle pointing to `wiggle`_ or `bedGraph`_ data
+        """
         self.fh = fh
         self.data_format = "bedGraph"
         self._reset() 

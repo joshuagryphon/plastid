@@ -18,13 +18,13 @@ Examples
 Read entries in a `BED`_ file as |Transcripts|. `thickEnd` and `thickStart`
 columns will be interpreted as the endpoints of coding regions::
 
-    >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript)
+    >>> bed_reader = BED_Reader("some_file.bed",return_type=Transcript)
     >>> for transcript in bed_reader:
             pass # do something fun
 
 If `return_type` is unspecified, `BED`_ lines are read as |SegmentChains|::
 
-    >>> my_chains = list(BED_Reader(open("some_file.bed")))
+    >>> my_chains = list(BED_Reader("some_file.bed"))
     >>> my_chains[:5]
         [list of segment chains as output...]
 
@@ -102,7 +102,7 @@ class BED_Reader(AssembledFeatureReader):
     
         >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript)
         >>> for transcript in bed_reader:
-                pass # do something fun
+        >>>     pass # do something fun
     
     Open an :term:`extended BED` file that contains additional columns for `gene_id`
     and `favorite_color`. Values for these attributes will be stored in the `attr`
@@ -115,10 +115,10 @@ class BED_Reader(AssembledFeatureReader):
     
         >>> import pysam
         >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) \
-                        for X in ["file1.bed","file2.bed","file3.bed"]]
+        >>>             for X in ["file1.bed","file2.bed","file3.bed"]]
         >>> bed_reader = BED_Reader(*bed_files,tabix=True)
         >>> for chain in bed_reader:
-                pass # do something more interesting
+        >>>     pass # do something more interesting
         
     
     Attributes
@@ -180,9 +180,11 @@ class BED_Reader(AssembledFeatureReader):
     """
     def __init__(self,*args,**kwargs):
         """
+        BED_Reader(*streams, return_type=SegmentChain, add_three_for_stop=False, extra_columns=0, printer=None, tabix=False)
+        
         Parameters
         ----------
-        streams : file-like
+        *streams : file-like
             One or more open filehandles of input data.
         
         return_type : |SegmentChain| or subclass, optional
