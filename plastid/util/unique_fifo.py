@@ -6,6 +6,18 @@ class UniqueFIFO(object):
     no element is removed from the FIFO. Elements are only removed when a 
     element not present in the FIFO is appended to the right end, and when
     the number of elements in the FIFO exceeds `self.max_size`.
+
+        
+    Parameters
+    ----------
+    idx : int
+        Index of item to fetch
+    
+    Returns
+    -------
+    object
+        Nth item in the |UniqueFIFO|
+        
     
     Attributes
     ----------

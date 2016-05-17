@@ -160,12 +160,27 @@ _DEFAULT_PLOTTING_TITLE = "Plotting options"
 #===============================================================================
 
 class Parser(object):
-    """Base class for argument parser factories used below"""
+    """Base class for argument parser factories used below
+        
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group. 
+        
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes    
+    """
     
     def __init__(self,groupname=None,prefix="",disabled=None,**kwargs):
         """Create a parser
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -257,6 +272,27 @@ class AlignmentParser(Parser):
     Checks for additional mapping rules and command-line arguments 
     by checking the entrypoints ``plastid.mapping_rules`` and
     ``plastid.mapping_options``
+    
+        
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group. 
+
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes
+
+    input_choices : list, optional
+        list of permitted alignment file type choices for input
+    
+    allow_mapping : bool, optional
+        Enable/disable user configuration of mapping rules (default: True)    
     """
     
     def __init__(self,prefix="",disabled=None,
@@ -265,7 +301,7 @@ class AlignmentParser(Parser):
                  allow_mapping=True):
         """Create a parser for read alignments and/or quantitative data
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -637,7 +673,28 @@ class AlignmentParser(Parser):
 #===============================================================================
 
 class AnnotationParser(Parser):
-    """Parser for annotation files in various formats"""
+    """Parser for annotation files in various formats
+    
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group.         
+    
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes
+
+    input_choices : list, optional
+        list of permitted alignment file type choices for input
+    
+    allow_mapping : bool, optional
+        Enable/disable user configuration of mapping rules (default: True)    
+    """
     
     def __init__(self,
                  prefix="",
@@ -647,7 +704,7 @@ class AnnotationParser(Parser):
                 ):
         """Create a parser for genomic features in an annotation file
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -1005,6 +1062,28 @@ class AnnotationParser(Parser):
 
 
 class MaskParser(AnnotationParser):
+    """Create a parser for masking genomic features given in an annotation file
+    
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group.         
+    
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes
+
+    input_choices : list, optional
+        list of permitted alignment file type choices for input
+    
+    allow_mapping : bool, optional
+        Enable/disable user configuration of mapping rules (default: True)
+    """
 
     def __init__(self,
                  prefix="mask_",
@@ -1014,7 +1093,7 @@ class MaskParser(AnnotationParser):
                 ):
         """Create a parser for genomic features in an annotation file
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -1074,7 +1153,25 @@ class MaskParser(AnnotationParser):
 #===============================================================================
         
 class SequenceParser(AnnotationParser):
-    """Parser for sequence files"""
+    """Parser for sequence files
+            
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group.         
+    
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes
+
+    input_choices : list, optional
+        list of permitted alignment file type choices for input
+    """
     
     def __init__(self,
                  groupname="sequence_options",
@@ -1084,7 +1181,7 @@ class SequenceParser(AnnotationParser):
                  ):
         """Create a parser for genomic sequence
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -1187,7 +1284,22 @@ class SequenceParser(AnnotationParser):
 #===============================================================================
 
 class PlottingParser(Parser):
-    """Parser for plotting options"""
+    """Parser for plotting options
+        
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group.         
+    
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes    
+    """
 
     def __init__(self,
                  groupname="plotting_options",
@@ -1195,7 +1307,7 @@ class PlottingParser(Parser):
                  disabled=None):
         """Create a parser for plotting arguments
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
@@ -1377,7 +1489,22 @@ class PlottingParser(Parser):
 #===============================================================================
 
 class BaseParser(Parser):
-    """Parser basic options"""
+    """Parser basic options
+    
+    Parameters
+    ----------
+    groupname : str, optional
+        Name of argument group. If not `None`, an argument group with
+        the specified name will be created and added to the parser.
+        If not, arguments will be in the main group.         
+    
+    prefix : str, optional
+        string prefix to add to default argument options (Default: "")
+
+    disabled : list, optional
+        list of parameter names that should be disabled from parser,
+        without preceding dashes    
+    """
     
     def __init__(self,
                  groupname="base_options",
@@ -1386,7 +1513,7 @@ class BaseParser(Parser):
                  ):
         """Create a parser for basic options for command-line scripts, such as warnings and logging
         
-    `   Parameters
+        Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with

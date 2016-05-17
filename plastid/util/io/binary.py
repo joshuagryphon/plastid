@@ -17,6 +17,19 @@ class BinaryParserFactory(object):
     Creates parsers that unpack binary byte streams into dictionaries
     that match field names to values. These parsers are most useful as components
     of binary file readers.
+
+        
+    Parameters
+    ----------
+    name : str
+        Name for parser
+    
+    fmt : str
+        String specifying binary format of data. See :py:mod:`struct`
+    
+    fields : list
+        Ordered list of field names to bind to data unpacked from binary file
+        
     
     Attributes
     ----------

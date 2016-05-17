@@ -199,7 +199,17 @@ class AbstractReader(IOBase):
 
 
 class FunctionReader(AbstractReader):
-    """Apply a function to each line in an input stream"""
+    """Apply a function to each line in an input stream
+    
+        
+    Parameters
+    ----------
+    stream : file-like
+        Input stream
+        
+    func : function
+        Function to apply to each unit of input in `stream`    
+    """
     
     def __init__(self,stream,func):
         """Create a FunctionReader
@@ -396,6 +406,11 @@ class AbstractWriter(IOBase):
     Create a filter by subclassing this, and defining self.filter().
     
     Inherits `isatty()` from `self.stream`
+        
+    Parameters
+    ----------
+    stream : file-like, open for writing
+        Output stream to which filtered/formatted data will be written    
     """
     def __init__(self,stream):
         """Create an AbstractWriter
@@ -464,6 +479,11 @@ class AbstractWriter(IOBase):
 
 class ColorWriter(AbstractWriter):
     """Detect whether output stream supports color, and enable/disable colored output
+        
+    Parameters
+    ----------
+    stream : file-like
+        Stream to write to (Default: :obj:`sys.stderr`)
     
     Methods
     -------
