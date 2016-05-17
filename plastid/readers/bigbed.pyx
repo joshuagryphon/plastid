@@ -119,7 +119,8 @@ class _FromBED_StrAdaptor(object):
         return inp
 
 cdef class BigBedReader(_BBI_Reader):
-    """BigBedReader(filename, return_type = SegmentChain, add_three_for_stop = False, maxmem = 0)
+    """
+    BigBedReader(filename, return_type = SegmentChain, add_three_for_stop = False, maxmem = 0)
     
     Reader for `BigBed`_ files. This class is useful for both iteration
     over genomic features one-by-one (like a reader), as well as random access to
@@ -161,7 +162,7 @@ cdef class BigBedReader(_BBI_Reader):
         CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
         feature. (Default: `False`)
         
-    maxmem : float
+    maxmem : float, optional
         Maximum desired memory footprint for C objects, in megabytes.
         May be temporarily exceeded if large queries are requested.
         Does not include memory footprint of Python objects.
@@ -436,7 +437,7 @@ cdef class BigBedReader(_BBI_Reader):
             object           outfunc   = self.return_type.from_bed
             list             etypes    = list(self.extension_types.items())
 
-        if field_name not in self.extension_indexes:
+        if field_name not in self.index_fields:
             raise IndexError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
         else:
             bpt = bigBedOpenExtraIndex(self._bbifile, field_name, idx)

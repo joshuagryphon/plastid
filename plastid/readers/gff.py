@@ -555,26 +555,50 @@ class AbstractGFF_Reader(AbstractReader):
 
     
 class GFF3_Reader(AbstractGFF_Reader):
-    """Read raw features in `GFF3`_ files as |SegmentChains|.
+    """
+    GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
+    
+    Read raw features in `GFF3`_ files as |SegmentChains|.
     
     Users who wish to reconstruct |Transcripts| from raw features should instead
     use |GFF3_TranscriptAssembler|, which performs this task automatically.
     
     Assumes input stream to use 1-indexed coordinates, in compliance with the
     `Sequence Ontology GFF3 specification <http://song.sourceforge.net/gff3.shtml>`_.
+    
+    `GFF3`_ attributes (from column 9) for each record are stored in its ``attr``
+    dictionary. Names and values of attributes are unescaped. The values for the
+    attributes `Parent`, `Alias`, `Dbxref`, `dbxref`, and `Note`, if present, are
+    lists rather than strings, because the `GFF3`_ spec enables these to have
+    multiple values. 
 
-    `GFF3`_ files may use half-open or fully-closed (end-included) coordinates. 
-    Users can control this via the `end_included` keyword argument (`True` by
-    default).
     
-    All features that are returned by the reader are normalized to 0-indexed,
-    half-open coordinates, in keeping with Python conventions.
+    Parameters
+    ----------
+    *streams : one or more str or file-like
+        One or more input streams or filenames pointing to GFF information
     
-    `GFF3`_ attributes (from column 9) are stored in a dictionary called ``attr``.
-    Names and values of attributes are unescaped. The values for the attributes
-    `Parent`, `Alias`, `Dbxref`, `dbxref`, and `Note`, if present, are lists
-    rather than strings, because the `GFF3`_ spec enables these to have multiple
-    values. 
+    end_included : bool, optional
+        Boolean, whether the end coordinate is included in the feature (closed
+        or 'end-included' intervals) or not (half-open intervals). All
+        coordinates will be normalized to 0-indexed, half-open (Default: `True`)
+
+    return_stopfeatures : bool, optional
+        If `True`, return a special |SegmentChain| called :py:obj:`StopFeature`
+        signifying that all previously emitted GFF entries may be assembled
+        into complete entities. These are emitted when the line "###"
+        is encountered in a `GFF3`_. (Default: `False`)
+
+    is_sorted : bool, optional
+        If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is sorted.
+        The reader will return :obj:`StopFeature` when the chromosome name
+        of a given feature differs from that of the previous feature.
+        (Default: `False`)
+        
+    tabix : boolean, optional
+        `stream` is `tabix`_-compressed, and using the parser
+        :py:class:`pysam.asTuple` (Default: `False`)   
+        
     
     Attributes
     ----------
@@ -656,7 +680,10 @@ class GFF3_Reader(AbstractGFF_Reader):
     
             
 class GTF2_Reader(AbstractGFF_Reader): 
-    """Read raw features in `GTF2`_ files as |SegmentChains|.
+    """
+    GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
+    
+    Read raw features in `GTF2`_ files as |SegmentChains|.
     
     Assumes input to comply with the
     `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_. Each element must:
@@ -666,12 +693,35 @@ class GTF2_Reader(AbstractGFF_Reader):
     
     All |SegmentChain| objects returned by the reader have 0-indexed,
     half-open coordinates in keeping with Python conventions.
-
-    Attributes
+    
+        
+    Parameters
     ----------
-    metadata : dict
-        Dictionary of metadata found in file headers
+    *streams : one or more str or file-like
+        One or more input streams or filenames pointing to GFF information
+    
+    end_included : bool, optional
+        Boolean, whether the end coordinate is included in the feature (closed
+        or 'end-included' intervals) or not (half-open intervals).
+        (Default: `True`)
 
+    return_stopfeatures : bool, optional
+        If `True`, will return a special |SegmentChain|  called :py:obj:`StopFeature`
+        signifying that all previously emitted SegmentChains may be assembled
+        into complete entities. These are emitted when the line "###"
+        is encountered in a `GTF2`_. (Default: `False`)
+
+    is_sorted : bool, optional
+        If `True` and `return_stopfeatures` is `True`, assume the `GTF2`_ is sorted
+        by chromosome. The reader will return :obj:`StopFeature` when
+        the chromosome name of a given feature differs from that of the previous
+        feature. (Default: `False`)
+        
+    tabix : boolean, optional
+        `stream` is `tabix`_-compressed, and
+        using the parser :py:class:`pysam.asTuple` (Default: `False`)
+    
+    
     Examples
     --------
     Read raw features from a `GTF2`_ file::
@@ -690,7 +740,12 @@ class GTF2_Reader(AbstractGFF_Reader):
         ('YBL092W_mRNA',  'CDS',         'chrII:45977-46367(+)')
         ('YBL092W_mRNA',  'start_codon', 'chrII:45977-45980(+)')
         [rest of output omitted]
-            
+
+
+    Attributes
+    ----------
+    metadata : dict
+        Dictionary of metadata found in file headers
     """
     def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
         """
@@ -915,7 +970,10 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
 
 
 class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
-    """Assemble |Transcripts| from raw features in `GTF2`_ format.
+    """
+    GTF2_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
+        
+    Assemble |Transcripts| from raw features in `GTF2`_ format.
     
     Exons and CDS features are grouped by shared ``transcript_id``.
     Attributes that have common values for all exons and CDS within a transcript
@@ -928,22 +986,30 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     For access to raw features, instead use |GTF2_Reader|.
 
 
-    Attributes
+    Parameters
     ----------
-    streams : file-like
-        Input streams, usually constructed from one or more open filehandles
+    *streams : one or more str or file-like
+        One or more input streams or filenames pointing to `GTF2`_ data
+
+    is_sorted : bool, optional
+        `GTF2`_ is sorted by chromosome name, allowing some memory savings
+        (Default: `False`)
     
-    metadata : dict
-        Various attributes gleaned from the streams, if any
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
-    counter : int
-        Cumulative line number counter over all streams
-
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, UNLESS the annotated transcript contains explicit `stop_codon`
+        feature. (Default: `False`)
+    
     printer : file-like, optional
-        Logger implementing a ``write()`` method.
-
-    rejected : list
-        A list of transcript IDs from transcripts that failed to assemble properly
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+        
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed, and
+        using the parser :py:class:`pysam.asTuple` (Default: `False`)
 
 
     Examples
@@ -966,6 +1032,23 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         ('YBR138C_mRNA',   'mRNA',  'chrII:513636-515391(-)')
         [rest of output omitted]
 
+
+    Attributes
+    ----------
+    streams : file-like
+        Input streams, usually constructed from one or more open filehandles
+    
+    metadata : dict
+        Various attributes gleaned from the streams, if any
+
+    counter : int
+        Cumulative line number counter over all streams
+
+    printer : file-like, optional
+        Logger implementing a ``write()`` method.
+
+    rejected : list
+        A list of transcript IDs from transcripts that failed to assemble properly
     """
     # transcripts can be represented as collections of exons + cds
     # or cds + UTRs, et c. We consider all UTR and exons as exons
@@ -1090,29 +1173,53 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
 
 
 class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
-    """Assemble |Transcripts| from raw features in `GFF3`_ format.
+    """
+    GFF3_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
+    
+    Assemble |Transcripts| from raw features in `GFF3`_ format.
     
     Within a chromosome, transcripts are returned in lexical order. Features
     that do not constitute portions of transcripts (e.g.  origins of replication)
     are ignored. For access to those, read raw features using |GFF3_Reader|.
     
-
-    Attributes
-    ----------
-    streams : file-like
-        Input stream, usually constructed from or more open filehandles
     
-    metadata : dict
-        Various attributes gleaned from the stream, if any
+    Parameters
+    ----------
+    streams : one or more str or file-like
+        One or more input streams or filenames pointing to `GFF3`_ data
+    
+    is_sorted : bool, optional
+        `GFF3`_ is sorted by chromosome name, allowing some memory savings
+        (Default: `False`)
+    
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
-    counter : int
-        Cumulative line number counter over all streams
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation. (Default: `False`)
+    
+    transcript_types : list, optional
+        List of `GFF3`_ feature types that should be considered as transcripts
+        (Default: as specified in SO 2.5.3 )
 
+    exon_types : list, optional
+        List of `GFF3`_ feature types that should be considered as exons or
+        contributing to transcript nucleotide positions
+        during transcript assembly (Default: as specified in SO 2.5.3 )
+    
+    cds_types : list, optional
+        List of `GFF3`_ feature types that should be considered as CDS or
+        contributing to transcript coding regions during transcript assembly
+        (Default: as specified in SO 2.5.3 )
+    
     printer : file-like, optional
-        Logger implementing a ``write()`` method.
-
-    rejected : list
-        A list of transcript IDs from transcripts that failed to assemble properly
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+        
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed, and
+        using the parser :py:class:`pysam.asTuple` (Default: `False`)    
 
 
     Examples
@@ -1136,61 +1243,80 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         [rest of output omitted]
 
 
-    .. note::
-       `GFF3`_ schemas vary
-           `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
-           by allowing users to supply `transcript_types` and `exon_types`, to indicate
-           which sorts of features should be included. By default, we use a 
-           subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+    Attributes
+    ----------
+    streams : file-like
+        Input stream, usually constructed from or more open filehandles
     
-           Briefly:
-            
-            1. The GFF3 file is combed for transcripts of the types specified by
-               `transcript_types`, exons specified by `exon_types`, and CDS specified by 
-               types listed in `cds_types`.
-            
-            2. Exons and CDS are matched with their parent transcripts by matching
-               the `Parent` attributes of CDS and exons to the `ID` of transcripts.
-               Transcripts are then constructed from those intervals, and coding
-               regions set accordingly.
+    metadata : dict
+        Various attributes gleaned from the stream, if any
+
+    counter : int
+        Cumulative line number counter over all streams
+
+    printer : file-like, optional
+        Logger implementing a ``write()`` method.
+
+    rejected : list
+        A list of transcript IDs from transcripts that failed to assemble properly
     
-            3. If exons and/or CDS features point to a `Parent` that is not
-               in `transcript_types`, they are grouped into a new transcript,
-               whose ID is set to the value of their shared `Parent`. However,
-               this value for `Parent` might refer to a gene rather than
-               a transcript; unfortunately this cannot be known without other
-               information. Attributes that are common to all CDS and exon
-               features are bubbled up to the transcript.
-    
-            4. If exons and/or CDS features have no `Parent`, but share a common ID,
-               they are grouped by ID into a single transcript. Attributes common
-               to all CDS and exon features are bubbled up to the transcript.
-               The `Parent` attribute is left unset.
-    
-            5. If a transcript feature is annotated but has no child CDS or exons,
-               the transcript is assumed to be non-coding and is assembled from
-               any transcript-type features that share its `ID` attribute.
-    
-       Identity relationships between elements vary between `GFF3`_ files
-           Different `GFF3`_ files specify discontiguous features differently. For example,
-           in `Flybase`_, different exons of a transcript will have unique IDs, but will share
-           the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
-           exons of the same transcript will share the same ID. Here, we first
-           check for the Flybase style (by Parent), then fall back to Wormbase
-           style (by shared ID).
-    
-       Transcript assembly
-           To save memory, transcripts are assembled lazily as follows:
+
+    Notes
+    -----
+   `GFF3`_ schemas vary
+       `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
+       by allowing users to supply `transcript_types` and `exon_types`, to indicate
+       which sorts of features should be included. By default, we use a 
+       subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+
+       Briefly:
         
-           #.  If there exist assembled transcripts in `self._transript_cache`, 
-               return the next transcript. Transcripts in the cache are stored
-               lexically.
-            
-           #.  Otherwise, collect features from the `GFF3`_ stream until either a
-               `'###'` line or EOF is encountered. Then, assemble transcripts and
-               store them in `self._transcript_cache`. Delete unused features
-               from memory. If the `GFF3`_ is sorted, then a change in chromosome
-               name will also trigger assembly of collected features.
+        1. The GFF3 file is combed for transcripts of the types specified by
+           `transcript_types`, exons specified by `exon_types`, and CDS specified by 
+           types listed in `cds_types`.
+        
+        2. Exons and CDS are matched with their parent transcripts by matching
+           the `Parent` attributes of CDS and exons to the `ID` of transcripts.
+           Transcripts are then constructed from those intervals, and coding
+           regions set accordingly.
+
+        3. If exons and/or CDS features point to a `Parent` that is not
+           in `transcript_types`, they are grouped into a new transcript,
+           whose ID is set to the value of their shared `Parent`. However,
+           this value for `Parent` might refer to a gene rather than
+           a transcript; unfortunately this cannot be known without other
+           information. Attributes that are common to all CDS and exon
+           features are bubbled up to the transcript.
+
+        4. If exons and/or CDS features have no `Parent`, but share a common ID,
+           they are grouped by ID into a single transcript. Attributes common
+           to all CDS and exon features are bubbled up to the transcript.
+           The `Parent` attribute is left unset.
+
+        5. If a transcript feature is annotated but has no child CDS or exons,
+           the transcript is assumed to be non-coding and is assembled from
+           any transcript-type features that share its `ID` attribute.
+
+   Identity relationships between elements vary between `GFF3`_ files
+       Different `GFF3`_ files specify discontiguous features differently. For example,
+       in `Flybase`_, different exons of a transcript will have unique IDs, but will share
+       the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
+       exons of the same transcript will share the same ID. Here, we first
+       check for the Flybase style (by Parent), then fall back to Wormbase
+       style (by shared ID).
+
+   Transcript assembly
+       To save memory, transcripts are assembled lazily as follows:
+    
+       #.  If there exist assembled transcripts in `self._transript_cache`, 
+           return the next transcript. Transcripts in the cache are stored
+           lexically.
+        
+       #.  Otherwise, collect features from the `GFF3`_ stream until either a
+           `'###'` line or EOF is encountered. Then, assemble transcripts and
+           store them in `self._transcript_cache`. Delete unused features
+           from memory. If the `GFF3`_ is sorted, then a change in chromosome
+           name will also trigger assembly of collected features.
     """
 
     def __init__(self,*streams,**kwargs):

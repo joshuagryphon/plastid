@@ -89,11 +89,57 @@ the `ENCODE`_ project. These can be passed to the `extra_columns` keyword of
 
 
 class BED_Reader(AssembledFeatureReader):
-    """Reads `BED`_ and :term:`extended BED` files line-by-line into |SegmentChains|
+    """
+    BED_Reader(*streams, return_type=SegmentChain, add_three_for_stop=False, extra_columns=0, printer=None, tabix=False)
+    
+    Reads `BED`_ and :term:`extended BED` files line-by-line into |SegmentChains|
     or |Transcripts|. Metadata, if present in a track declaration, is saved
     in `self.metadata`. Malformed lines are stored in `self.rejected`, while
     parsing continues.
 
+    Parameters
+    ----------
+    *streams : file-like
+        One or more open filehandles of input data.
+    
+    return_type : |SegmentChain| or subclass, optional
+        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+
+    add_three_for_stop : bool, optional
+        Some annotation files exclude the stop codon from CDS annotations. If set to
+        `True`, three nucleotides will be added to the threeprime end of each
+        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon 
+        feature. (Default: `False`)
+
+    extra_columns: int or list optional
+        Extra, non-BED columns in :term:`extended BED` format file corresponding
+        to feature attributes. This is common in `ENCODE`_-specific `BED`_ variants.
+        
+        if `extra-columns` is:
+        
+          - an :class:`int`: it is taken to be the
+            number of attribute columns. Attributes will be stored in
+            the `attr` dictionary of the |SegmentChain|, under names like
+            `custom0`, `custom1`, ... , `customN`.
+
+          - a :class:`list` of :class:`str`, it is taken to be the names
+            of the attribute columns, in order, from left to right in the file.
+            In this case, attributes in extra columns will be stored under
+            their respective names in the `attr` dict.
+
+          - a :class:`list` of :class:`tuple`, each tuple is taken
+            to be a pair of `(attribute_name, formatter_func)`. In this case,
+            the value of `attribute_name` in the `attr` dict of the |SegmentChain|
+            will be set to `formatter_func(column_value)`.
+        
+        (Default: 0)
+                    
+    printer : file-like, optional
+        Logger implementing a ``write()`` method. Default: |NullWriter|
+    
+    tabix : boolean, optional
+        `streams` are `tabix`_-compressed (Default: `False`)
+        
 
     Examples
     --------
@@ -119,7 +165,7 @@ class BED_Reader(AssembledFeatureReader):
         >>> bed_reader = BED_Reader(*bed_files,tabix=True)
         >>> for chain in bed_reader:
         >>>     pass # do something more interesting
-        
+
     
     Attributes
     ----------
