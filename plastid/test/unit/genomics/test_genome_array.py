@@ -1325,10 +1325,16 @@ class TestBAMGenomeArray(AbstractExportableGenomeArrayHelper):
         z = BAMGenomeArray(os.path.join(self.test_folder,_TEST_FILES["bam"]))
         self.assertEqual(z.sum(),self.bga.sum())
 
-    def test_open_multi(self):
+    def test_open_multi_list(self):
         v = [os.path.join(self.test_folder,_TEST_FILES["bam"])]*2
         z = BAMGenomeArray(v)
         self.assertEqual(z.sum(),2*self.bga.sum())
+
+    def test_open_multi_filename(self):
+        f = os.path.join(self.test_folder,_TEST_FILES["bam"])
+        z = BAMGenomeArray(f,f)
+        self.assertEqual(z.sum(),2*self.bga.sum())
+
         
     def mutable_conversion_helper(self,new_class):
         """Helper function to test conversion of |BAMGenomeArray| to various |MutableAbstractGenomeArray| types

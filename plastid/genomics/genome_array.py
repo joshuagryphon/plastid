@@ -607,13 +607,13 @@ class BAMGenomeArray(AbstractGenomeArray):
     |GenomeArray| or |SparseGenomeArray| via :meth:`~BAMGenomeArray.to_genome_array`
     """
     
-    def __init__(self,bamfiles,mapping=None):
+    def __init__(self,*bamfiles,**kwargs): #mapping=None):
         """Create a |BAMGenomeArray|
         
         Parameters
         ----------
-        bamfile : str, list of str, or list of :class:`pysam.AlignmentFile`
-            Filename(s) of `BAM`_ files, or list of open :class:`pysam.AlignmentFile`
+        bamfile : One or more filenames or open :class:`pysam.AlignmentFile`
+            Filename(s) of `BAM`_ files, or open :class:`pysam.AlignmentFile`
             to include in array. Note: all `BAM`_ files must be sorted and indexed
             by `samtools`_. 
         
@@ -638,10 +638,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
+        if len(bamfiles) == 1 and isinstance(bamfiles[0],list):
+            bamfiles = bamfiles[0]
+            
         bamfiles = list(multiopen(bamfiles,fn=pysam.AlignmentFile,args=("rb",)))
         #bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
         self.bamfiles     = bamfiles
-        self.map_fn       = CenterMapFactory() if mapping is None else mapping
+        self.map_fn       = kwargs.get("mapping",CenterMapFactory()) # if mapping is None else mapping
         self._strands     = ("+","-",".")
         self._normalize   = False
         

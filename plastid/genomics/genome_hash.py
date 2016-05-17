@@ -459,39 +459,27 @@ class BigBedGenomeHash(AbstractGenomeHash):
        |BigBedReader| connecting to BigBed file 
     """
     
-    def __init__(self,filenames,base_record_format="III",return_type=None,cache_depth=5):
+    def __init__(self,*filenames,**kwargs): #,base_record_format="III",return_type=None,cache_depth=5):
         """Create a |BigBedGenomeHash|
         
         Parameters
         ----------
-        filenames : str or list of str
-            Name of file to open or list of filenames to open (NOT open filehandles)
-
-        base_record_format : str
-            Format string for :py:func:`struct.unpack`, excluding endian-ness prefix
-            and any notion of a null-terminated string. (Default: `III`)
+        *filenames : str 
+            One or more filenames to open (NOT open filehandles)
 
         return_type : class implementing a :py:meth:`from_bed` method
             Class of object to return (Default: |SegmentChain|)
-            
-        cache_depth : int, optional
-            Number of previously-fetched datablocks from `BigBed`_ file to keep
-            resident in memory, to save time over repeated fetches to the same
-            genomic regions. Increasing this number increases speed at the
-            cost of increased memory use. (Default: `5`)
         """
         from plastid.readers.bigbed import BigBedReader
+        return_type = kwargs.get("return_type",SegmentChain)
+        
         filenames = list(multiopen(filenames))
         for filename in filenames:
             if not isinstance(filename,str):
                 raise ValueError("`filename` must be a 'str'. Found a '%s'." % type(filename)) 
         
         self.filenames = filenames
-        return_type = SegmentChain if return_type is None else return_type
-        self.bigbedreaders = [BigBedReader(X,
-                                           base_record_format=base_record_format,
-                                           return_type=return_type,
-                                           cache_depth=cache_depth) for X in filenames]
+        self.bigbedreaders = [BigBedReader(X,return_type=return_type) for X in filenames]
     
     def get_overlapping_features(self,roi,stranded=True):
         """Return list of features overlapping `roi`
@@ -571,7 +559,7 @@ class TabixGenomeHash(AbstractGenomeHash):
                  "PSL"  : PSL_Reader,
                 }
     
-    def __init__(self,filenames,data_format,printer=None):
+    def __init__(self,*filenames,**kwargs): #data_format=None,printer=None):
         """Create a |BigBedGenomeHash|
         
         Parameters
@@ -579,18 +567,22 @@ class TabixGenomeHash(AbstractGenomeHash):
         filenames : str or list of str
             Filename or list of filenames of `Tabix`_-compressed files
 
-        data : str
+        data_format : str
             Format of tabix-compressed file(s). Choices are:
-            `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'`
+            `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'` (Default: `GTF2`)
         """
         from pysam import Tabixfile
-        self.filenames = multiopen(filenames)
-        self.printer = NullWriter() if printer is None else printer
+        if len(filenames) == 1 and isinstance(filenames[0],list):
+            filenames = filenames[0]
+            
+        self.filenames = list(multiopen(filenames))
+        self.printer = kwargs.get("printer",NullWriter())
+        data_format  = kwargs.get("data_format","GTF2")
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
         except ValueError:
             msg = "Supported file formats for TabixGenomeHash are: %s" % ", ".join(sorted(TabixGenomeHash._READERS.keys()))
-            printer.write(msg)
+            self.printer.write(msg)
             raise ValueError(msg)
         
         self.tabix_readers = [Tabixfile(X) for X in self.filenames]

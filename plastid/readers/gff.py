@@ -415,7 +415,7 @@ class AbstractGFF_Reader(AbstractReader):
             using the parser :py:class:`pysam.asTuple` (Default: `False`)            
         """
         #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
-        stream = itertools.chain.from_iterable(multiopen(streams))
+        stream = itertools.chain.from_iterable(multiopen(streams,fn=open))
         if kwargs.get("tabix",False) == True:
             stream = ("\t".join(X) for X in stream)
         

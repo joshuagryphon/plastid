@@ -486,7 +486,7 @@ class TestBigBedGenomeHash(AbstractGenomeHashHelper):
     def test_works_with_multiple_files(self):
         # check to make sure all files are queried by comparing results
         # from a single hash to results from a double hash
-        double_hash = BigBedGenomeHash([self.tx_bbfile,self.cds_bbfile])
+        double_hash = BigBedGenomeHash(self.tx_bbfile,self.cds_bbfile)
         for tx in self.transcripts:
             expected = self.tx_hash[tx] + self.cds_hash[tx]
             found = double_hash[tx]
@@ -504,9 +504,9 @@ class TestTabixGenomeHash(AbstractGenomeHashHelper):
         cls.cds_file    = REF_FILES["100cds_bed_tabix"]
         cls.as_cds_file = REF_FILES["100as_cds_bed_tabix"]
 
-        cls.tx_hash     = TabixGenomeHash([cls.tx_file],"BED")
-        cls.cds_hash    = TabixGenomeHash([cls.cds_file],"BED")
-        cls.as_cds_hash = TabixGenomeHash([cls.as_cds_file],"BED")
+        cls.tx_hash     = TabixGenomeHash(cls.tx_file,data_format="BED")
+        cls.cds_hash    = TabixGenomeHash(cls.cds_file,data_format="BED")
+        cls.as_cds_hash = TabixGenomeHash(cls.as_cds_file,data_format="BED")
 
         # use BigBeds as reference        
         # TODO: change to Transcript objects
@@ -523,10 +523,10 @@ class TestTabixGenomeHash(AbstractGenomeHashHelper):
         shuffle(cls.shuffled_indices)
     
     def test_unknown_reader_raises_error(self):
-        self.assertRaises(KeyError,TabixGenomeHash, self.tx_file, "GARBAGE")
+        self.assertRaises(KeyError,TabixGenomeHash, self.tx_file, data_format="GARBAGE")
     
     def test_works_with_str_filename(self):
-        one_hash = TabixGenomeHash(self.tx_file,"BED")
+        one_hash = TabixGenomeHash(self.tx_file,data_format="BED")
         for tx in self.tx_dict.values():
             found = one_hash[tx]
             expected = self.tx_hash[tx]
@@ -535,7 +535,16 @@ class TestTabixGenomeHash(AbstractGenomeHashHelper):
     def test_works_with_multiple_files(self):
         # check to make sure all files are queried by comparing results
         # from a single hash to results from a double hash
-        double_hash = TabixGenomeHash([self.tx_file,self.cds_file],"BED")
+        double_hash = TabixGenomeHash(self.tx_file,self.cds_file,data_format="BED")
+        for tx in self.tx_dict.values():
+            df = double_hash[tx]
+            expected = self.tx_hash[tx] + self.cds_hash[tx]
+            self.assertEqual(len(df),len(expected))
+
+    def test_works_with_multiple_files_list(self):
+        # check to make sure all files are queried by comparing results
+        # from a single hash to results from a double hash
+        double_hash = TabixGenomeHash([self.tx_file,self.cds_file],data_format="BED")
         for tx in self.tx_dict.values():
             df = double_hash[tx]
             expected = self.tx_hash[tx] + self.cds_hash[tx]
