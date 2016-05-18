@@ -411,8 +411,8 @@ class AbstractGFF_Reader(AbstractReader):
             (Default: `False`)
             
         tabix : boolean, optional
-            `stream` is `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)            
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)        
         """
         #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
         stream = itertools.chain.from_iterable(multiopen(streams,fn=open))
@@ -596,8 +596,8 @@ class GFF3_Reader(AbstractGFF_Reader):
         (Default: `False`)
         
     tabix : boolean, optional
-        `stream` is `tabix`_-compressed, and using the parser
-        :py:class:`pysam.asTuple` (Default: `False`)   
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         
     
     Attributes
@@ -654,8 +654,8 @@ class GFF3_Reader(AbstractGFF_Reader):
             (Default: `False`)
             
         tabix : boolean, optional
-            `stream` is `tabix`_-compressed, and using the parser
-            :py:class:`pysam.asTuple` (Default: `False`)            
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
          """
         super(GFF3_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
 #                                          adjust_to_0=True,
@@ -719,9 +719,8 @@ class GTF2_Reader(AbstractGFF_Reader):
         feature. (Default: `False`)
         
     tabix : boolean, optional
-        `stream` is `tabix`_-compressed, and
-        using the parser :py:class:`pysam.asTuple` (Default: `False`)
-    
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)    
     
     Examples
     --------
@@ -775,9 +774,9 @@ class GTF2_Reader(AbstractGFF_Reader):
             feature. (Default: `False`)
             
         tabix : boolean, optional
-            `stream` is `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)
-         """
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
+        """
         super(GTF2_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
 #                                          adjust_to_0=True,
 #                                          end_included=end_included,
@@ -850,9 +849,9 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
             |GFF3_Reader| or |GTF2_Reader|
 
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)
-                    
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
+                                
         **kwargs
             Other keyword arguments used by specific parsers
         """
@@ -1009,8 +1008,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         Logger implementing a ``write()`` method. Default: |NullWriter|
         
     tabix : boolean, optional
-        `streams` are `tabix`_-compressed, and
-        using the parser :py:class:`pysam.asTuple` (Default: `False`)
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
 
 
     Examples
@@ -1089,8 +1088,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
             Logger implementing a ``write()`` method. Default: |NullWriter|
             
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         """
         AbstractGFF_Assembler.__init__(self,*streams,reader_class=GTF2_Reader,**kwargs)
         self._feature_cache = { "exon_like" : {}, "CDS_like" : {}}
@@ -1219,8 +1218,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         Logger implementing a ``write()`` method. Default: |NullWriter|
         
     tabix : boolean, optional
-        `streams` are `tabix`_-compressed, and
-        using the parser :py:class:`pysam.asTuple` (Default: `False`)    
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
 
 
     Examples
@@ -1359,8 +1358,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             Logger implementing a ``write()`` method. Default: |NullWriter|
             
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed, and
-            using the parser :py:class:`pysam.asTuple` (Default: `False`)
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)        
         
         
         Notes

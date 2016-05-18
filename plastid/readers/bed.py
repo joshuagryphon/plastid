@@ -37,12 +37,9 @@ dict of each |Transcript|::
 Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
 they were one stream::
 
-    >>> import pysam
-    >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) \
-                    for X in ["file1.bed","file2.bed","file3.bed"]]
-    >>> bed_reader = BED_Reader(*bed_files,tabix=True)
+    >>> bed_reader = BED_Reader("file1.bed.gz","file2.bed.gz",tabix=True)
     >>> for chain in bed_reader:
-            pass # do something more interesting
+    >>>     pass # do something more interesting
                                 
 
 See Also
@@ -138,7 +135,8 @@ class BED_Reader(AssembledFeatureReader):
         Logger implementing a ``write()`` method. Default: |NullWriter|
     
     tabix : boolean, optional
-        `streams` are `tabix`_-compressed (Default: `False`)
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         
 
     Examples
@@ -157,12 +155,9 @@ class BED_Reader(AssembledFeatureReader):
         >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript,extra_columns=["gene_id","favorite_color"])
 
     Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
-    they were one stream::
+    they were one uncompressed stream::
     
-        >>> import pysam
-        >>> bed_files = [pysam.tabix_iterator(open(X), pysam.asTuple()) \
-        >>>             for X in ["file1.bed","file2.bed","file3.bed"]]
-        >>> bed_reader = BED_Reader(*bed_files,tabix=True)
+        >>> bed_reader = BED_Reader("file1.bed.gz","file2.bed.gz",tabix=True)
         >>> for chain in bed_reader:
         >>>     pass # do something more interesting
 
