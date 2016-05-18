@@ -37,12 +37,12 @@ warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 MAKE_BIGBED_MESSAGE =\
-"""The BED-formatted file `%(outbase)s.bed` has been exported with extended BED
+"""The BED-formatted file `%(outbase)s` has been exported with extended BED
 columns. Plastid and other software can detect these automatically if you convert
 `%(outbase)s` to a BigBed file using Jim Kent's bedToBigBed utility, as follows:
 
-    $ sort -k1,1 -k2,2n %(outbase)s.bed >%(outbase)s_sorted.bed
-    $ bedToBigBed -tab -type=bed12+%(numcols)s -as fields.as %(outbase)s.bed chrom.sizes %(outbase)s.bb
+    $ sort -k1,1 -k2,2n -t"\t" %(outbase)s >%(outbase)s_sorted.bed
+    $ bedToBigBed -tab -type=bed12+%(numcols)s -as=fields.as %(outbase)s.bed -extraIndex=name chrom.sizes %(outbase)s.bb
 
 where `chrom.sizes` is a two-column, tab-delimited table of chromosome name & size,
 and `fields.as` is an autoSql declaration describing the types & names of the extra
@@ -126,6 +126,8 @@ def main(argv=sys.argv[1:]):
                         help="Format of output file. (default: GTF2)")
     parser.add_argument("--extra_columns",nargs="+",default=[],type=str,
                         help="Attributes (e.g. 'gene_id' to output as extra columns in extended BED format (BED output only).")
+    parser.add_argument("--empty_value",default="na",type=str,
+                        help="Value to use of an attribute in `extra_columns` is not defined for a particular record (Default: 'na'")
     parser.add_argument("outfile",metavar="outfile.[ bed | gtf ]",type=str,
                         help="Output file")
     args = parser.parse_args(argv)
@@ -142,7 +144,7 @@ def main(argv=sys.argv[1:]):
             autosql_str = "\n".join(AUTOSQL_ROW_FMT_STR % (X," "*max(15-len(X),2)) for X in asql_names)
             
             file_info = {
-                "outbase" : args.outfile[:-4],
+                "outbase" : args.outfile.replace(".bed","").replace(".gtf",""),
                 "numcols" : len(extra_cols),
                 "autosql" : DEFAULT_AUTOSQL_STR % (os.path.basename(args.outfile[:-4]),autosql_str),
                          
@@ -160,9 +162,9 @@ def main(argv=sys.argv[1:]):
             if args.output_format == "GTF2":
                 fout.write(transcript.as_gtf(escape=args.no_escape))
             elif args.output_format == "BED":
-                fout.write(transcript.as_bed(extra_columns=extra_cols))
+                fout.write(transcript.as_bed(extra_columns=extra_cols,empty_value=args.empty_value))
             if c % 1000 == 1:
-                printer.write("Processed %s transcripts..." % c)
+                printer.write("Processed %s transcripts ..." % c)
             c += 1
     
     printer.write("Processed %s transcripts total." % c)
