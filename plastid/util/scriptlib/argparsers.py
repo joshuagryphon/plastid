@@ -618,7 +618,7 @@ class AlignmentParser(Parser):
                 # wiggle/bedGraph
                 if args.countfile_format == "wiggle":
                     for align_file in args.count_files:
-                        printer.write("Opening wiggle files %s..." % align_file)
+                        printer.write("Opening wiggle files %s ..." % align_file)
                         with open("%s_fw.wig" % align_file) as fh:
                             ga.add_from_wiggle(fh,"+")
                         with open("%s_rc.wig" % align_file) as fh:
@@ -656,13 +656,13 @@ class AlignmentParser(Parser):
                         with opener(infile) as my_file:
                             ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
                 
-        printer.write("Counted %s total reads..." % ga.sum())
+        printer.write("Counted %s total reads." % ga.sum())
         
         if "sum" not in disabled and args.sum is not None:
             ga.set_sum(args.sum)
             
         if "normalize" not in disabled and args.normalize == True:
-            printer.write("Normalizing to reads per million...")
+            printer.write("Normalizing to reads per million.")
             ga.set_normalize(True)
         
         return ga
@@ -900,7 +900,7 @@ class AnnotationParser(Parser):
                     printer.write(GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format))
                     sys.exit(1)
     
-        printer.write("Parsing features in %s..." % ", ".join(args.annotation_files))
+        printer.write("Parsing features in %s ..." % ", ".join(args.annotation_files))
         
         if "tabix" not in disabled:
             tabix = args.tabix
@@ -1026,7 +1026,7 @@ class AnnotationParser(Parser):
         args = PrefixNamespaceWrapper(args,prefix)
         
         if len(args.annotation_files) > 0:
-            printer.write("Opening mask annotation file(s) %s..." % ", ".join(args.annotation_files))
+            printer.write("Opening mask annotation file(s) %s ..." % ", ".join(args.annotation_files))
             if args.annotation_format in ("BED","GTF2","GFF3") and args.tabix == False:
                 msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
     Consider converting to BigBed or using tabix to index your mask file."""
