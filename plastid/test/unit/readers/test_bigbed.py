@@ -104,6 +104,9 @@ class test_BigBedReader(unittest.TestCase):
                            }
         cls.bonus_col_file = resource_filename("plastid","test/data/annotations/bonus_bed_columns.txt")
         
+        # BigBed file with indexes
+        cls.bb_indexed = resource_filename("plastid","test/data/annotations/dmel-bonus-cols.bb")
+        
 #    def test_parse_header(self):
 #        for col,my_reader in self.bbs.items():
 #            my_headers = my_reader.header
@@ -385,7 +388,57 @@ class test_BigBedReader(unittest.TestCase):
                     self.assertEqual(values[key][n],item.attr[key])
 
     def test_indexed_fields(self):
-        assert False
+        reader = BigBedReader(self.bb_indexed)
+        self.assertEqual(sorted(["gene_id","name","Name","Alias"]),sorted(reader.indexed_fields))
+
+    def test_indexed_fields_no_as_no_index(self):
+        reader = BigBedReader(self.bb_bonuscols["bb12no_as"])
+        self.assertEqual([],reader.indexed_fields)
+
+    def test_indexed_fields_as_no_index(self):
+        reader = BigBedReader(self.bb_bonuscols["bb4as"])
+        self.assertEqual([],reader.indexed_fields)
+
+    def test_search_fields_invalid_raises_error(self):
+        reader = BigBedReader(self.bb_indexed)
+        self.assertRaises(KeyError,reader.search,"garbage_field","garbage_value")
     
-    def test_search_fields(self):
-        assert False
+    def test_search_fields_singlevalue(self):
+        reader = BigBedReader(self.bb_indexed)
+        found = list(reader.search("name","should_have_no_match"))
+        self.assertEqual([],found)
+         
+        found = list(reader.search("Name","Sam-S-RE"))
+        expected = [
+            SegmentChain(GenomicSegment('2L',106902,107000,'+'),GenomicSegment('2L',107764,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RE', 'CG2674-RE']'",ID='FBtr0089437',Name='Sam-S-RE',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+                    ]
+        self.assertEqual(expected,found)
+ 
+        found = list(reader.search("gene_id","FBgn0005278"))
+        expected = [
+            SegmentChain(GenomicSegment('2L',106902,107000,'+'),GenomicSegment('2L',107764,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RE', 'CG2674-RE']'",ID='FBtr0089437',Name='Sam-S-RE',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107760,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,111337,'+'),Alias='na',ID='FBtr0308091',Name='Sam-S-RK',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='110900',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107760,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111004,111117,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114210,'+'),Alias="'['M(2)21AB-RB', 'CG2674-RB']'",ID='FBtr0089428',Name='Sam-S-RB',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='112741',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107760,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RA', 'CG2674-RA']'",ID='FBtr0089429',Name='Sam-S-RA',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107760,107956,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias='na',ID='FBtr0330656',Name='Sam-S-RL',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='112781',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107936,108226,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114210,'+'),Alias="'['M(2)21AB-RH', 'CG2674-RH']'",ID='FBtr0089432',Name='Sam-S-RH',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107936,108101,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RD', 'CG2674-RD']'",ID='FBtr0089430',Name='Sam-S-RD',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107936,108101,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111004,111117,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RC', 'CG2674-RC']'",ID='FBtr0089431',Name='Sam-S-RC',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',108088,108226,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RF', 'CG2674-RF']'",ID='FBtr0089433',Name='Sam-S-RF',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',108132,108346,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RI', 'CG2674-RI']'",ID='FBtr0089434',Name='Sam-S-RI',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',108132,108226,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111004,111117,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RJ', 'CG2674-RJ']'",ID='FBtr0089435',Name='Sam-S-RJ',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',109593,109793,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111004,111117,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114210,'+'),Alias="'['M(2)21AB-RG', 'CG2674-RG']'",ID='FBtr0089436',Name='Sam-S-RG',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='109750',type='exon')                    ,
+        ]
+        self.assertEqual(sorted(expected),sorted(found))
+         
+    def test_search_fields_multivalue(self):
+        reader = BigBedReader(self.bb_indexed)
+        found = list(reader.search("name","should_have_no_match","should_also_have_no_match"))
+        self.assertEqual([],found)
+        found = list(reader.search("Name","Sam-S-RE","Sam-S-RK"))
+        expected = [
+            SegmentChain(GenomicSegment('2L',106902,107000,'+'),GenomicSegment('2L',107764,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,110877,'+'),GenomicSegment('2L',111906,112019,'+'),GenomicSegment('2L',112689,113369,'+'),GenomicSegment('2L',113433,114432,'+'),Alias="'['M(2)21AB-RE', 'CG2674-RE']'",ID='FBtr0089437',Name='Sam-S-RE',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='113542',thickstart='108685',type='exon'),
+            SegmentChain(GenomicSegment('2L',107760,107838,'+'),GenomicSegment('2L',108587,108809,'+'),GenomicSegment('2L',110405,110483,'+'),GenomicSegment('2L',110754,111337,'+'),Alias='na',ID='FBtr0308091',Name='Sam-S-RK',color='#000000',gene_id='FBgn0005278',score='0.0',thickend='110900',thickstart='108685',type='exon'),
+        ]
+        self.assertEqual(expected,found)
+ 

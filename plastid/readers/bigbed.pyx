@@ -46,14 +46,14 @@ region of interest::
     >>>     pass # do something with that feature
             ...
     
-Find features that match a certain keyword:: 
+Find features that match keyword(s) in a certain field:: 
 
     >>> # which fields are indexed and searchable?
     >>> my_reader.indexed_fields
     ['name', 'gene_id']
     
     >>> # find all entries whose 'gene_id' matches 'nanos'
-    >>> bb.search_field('gene_id','nanos')
+    >>> bb.search('gene_id','nanos')
     [ list of matching segmentchains ]
 
 
@@ -71,7 +71,7 @@ import zlib
 import itertools
 import sys
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, add_three_for_stop_codon
 from plastid.readers.autosql import AutoSqlDeclaration
 from plastid.util.io.binary import BinaryParserFactory, find_null_bytes
@@ -89,7 +89,7 @@ from plastid.genomics.c_common cimport strand_to_str, str_to_strand, Strand, \
                                        error_strand,\
                                        _GeneratorWrapper
 
-
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 #===============================================================================
 # INDEX: BigBedReader
 #===============================================================================
@@ -293,19 +293,21 @@ cdef class BigBedReader(_BBI_Reader):
                 return self.return_type
 
     property indexed_fields:
-        """Names of indexed fields in BigBed file. These are searchable by `self.search_field`"""
+        """Names of indexed fields in BigBed file. These are searchable by `self.search`"""
         def __get__(self):
             cdef:
                 slName *orig_name       = bigBedListExtraIndexes(self._bbifile)
                 slName *extension_names = orig_name
                 list    names           = []
             
-            names.append(safe_str(extension_names.name))
-            while extension_names.next != NULL:
-                extension_names = extension_names.next
+            if orig_name != NULL:
                 names.append(safe_str(extension_names.name))
-            
-            slFreeList(orig_name)
+                while extension_names.next != NULL:
+                    extension_names = extension_names.next
+                    names.append(safe_str(extension_names.name))
+                
+                slFreeList(orig_name)
+
             return names
 
     def __str__(self):
@@ -386,7 +388,7 @@ cdef class BigBedReader(_BBI_Reader):
 
         return ltmp
 
-    def search_field(self, field_name, value):
+    def search(self, field_name, *values):
         """Search indexed fields in the `BigBed`_ file for records matching `value`
         See `self.indexed_fields` for names of indexed fields and
         `self.extension_fields` for descriptions of extension fields.
@@ -396,8 +398,9 @@ cdef class BigBedReader(_BBI_Reader):
         field_name : str
             Name of field to search
         
-        value : str
-            Value to match 
+        *values : one or more str
+            Value(s) to match. If multiple are given, records matching any
+            value will be returned. 
             
             
         Yields
@@ -417,7 +420,11 @@ cdef class BigBedReader(_BBI_Reader):
             ['name', 'gene_id']
             
             # find all entries whose 'gene_id' matches 'nanos'
-            >>> bb.search_field('gene_id','nanos')
+            >>> bb.search('gene_id','nanos')
+            [ list of matching segmentchains ]
+
+            # find all entries whose 'gene_id' matches 'nanos' or 'oskar'
+            >>> bb.search('gene_id','nanos','oskar')
             [ list of matching segmentchains ]
 
             
@@ -432,19 +439,34 @@ cdef class BigBedReader(_BBI_Reader):
             bptFile        * bpt
             bigBedInterval * iv
             lm             * buf = self._get_lm()
-            bytes            val = safe_bytes(value)
             list             ltmp
             object           outfunc   = self.return_type.from_bed
             list             etypes    = list(self.extension_types.items())
 
+            str              stmp
+            bytes            val
+            char**           vals
+            int              n, num_vals
+
         if field_name not in self.indexed_fields:
-            raise IndexError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
+            raise KeyError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
         else:
             bpt = bigBedOpenExtraIndex(self._bbifile, field_name, idx)
-            
-        iv   = bigBedNameQuery(self._bbifile, bpt, fieldIdx, val, buf)
-        ltmp = self._bigbedinterval_to_bedtext(iv)
+
+        if len(values) == 1:
+            val  = safe_bytes(values[0])
+            iv   = bigBedNameQuery(self._bbifile, bpt, fieldIdx, val, buf)
+        else:
+            num_vals = len(values)
+            vals     = <char**> PyMem_Malloc(num_vals*sizeof(char*))
+            for n, stmp in enumerate(values):
+                val = safe_bytes(stmp)
+                vals[n] = val
+                
+            iv  = bigBedMultiNameQuery(self._bbifile, bpt, fieldIdx, vals, num_vals, buf)
+            PyMem_Free(vals)
         
+        ltmp = self._bigbedinterval_to_bedtext(iv)
         bptFileDetach(&bpt)
         
         if self.add_three_for_stop == True:
