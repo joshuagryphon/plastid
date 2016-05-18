@@ -1693,6 +1693,30 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
             for i in range(5):
                 shuffle(ltmp2)
                 self.assertListEqual(ltmp,sorted(ltmp2),"%s did not sort lexically. Expected %s, got %s." % (c.__name__,ltmp,sorted(ltmp2)))
+
+    @skip_if_abstract
+    def test_as_bed_empty_value(self):
+        chain = self.test_class(GenomicSegment("chrA",100,500,"+"),
+                                GenomicSegment("chrA",550,550,"+"),
+                                ID="some_chain",A="dafd",B="123")
+        
+        self.assertEqual(chain.as_bed(),
+                         'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\n'
+                         )
+        self.assertEqual(chain.as_bed(extra_columns=['ID']),
+                         'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\tsome_chain\n'
+                         )
+        self.assertEqual(chain.as_bed(extra_columns=['ID','A']),
+                        'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\tsome_chain\tdafd\n'
+                         )
+        self.assertEqual(chain.as_bed(extra_columns=['ID','A','Z']),
+                         'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\tsome_chain\tdafd\t\n'
+                         )
+        self.assertEqual(chain.as_bed(extra_columns=['ID','A','Z'],empty_value=4),
+                         'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\tsome_chain\tdafd\t4\n'
+                         )
+        
+        
  
 
 @attr(test="unit")
