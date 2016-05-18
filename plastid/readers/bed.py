@@ -20,7 +20,7 @@ columns will be interpreted as the endpoints of coding regions::
 
     >>> bed_reader = BED_Reader("some_file.bed",return_type=Transcript)
     >>> for transcript in bed_reader:
-            pass # do something fun
+            pass # do something fun with each Transcript/SegmentChain
 
 If `return_type` is unspecified, `BED`_ lines are read as |SegmentChains|::
 
@@ -32,14 +32,14 @@ Open an :term:`extended BED` file, which contains additional columns for `gene_i
 and `favorite_color`. Values for these attributes will be stored in the `attr`
 dict of each |Transcript|::
 
-    >>> bed_reader = BED_Reader(open("some_file.bed"),return_type=Transcript,extra_columns=["gene_id","favorite_color"])
+    >>> bed_reader = BED_Reader("some_file.bed",return_type=Transcript,extra_columns=["gene_id","favorite_color"])
 
 Open several `Tabix`_-compressed `BED`_ files, and iterate over them as if
 they were one stream::
 
     >>> bed_reader = BED_Reader("file1.bed.gz","file2.bed.gz",tabix=True)
     >>> for chain in bed_reader:
-    >>>     pass # do something more interesting
+    >>>     pass # do something interesting with each chain
                                 
 
 See Also

@@ -34,17 +34,17 @@ Examples
 --------
 Iterate over all features in a `BigBed`_ file::
 
-    >>> my_reader = BigBedReader("some_file.bb")
+    >>> my_reader = BigBedReader("some_file.bb",return_type=Transcript)
     >>> for feature in my_reader:
-    >>>    pass # do something with each feature
+    >>>    pass # do something with each Transcript
 
 `BigBed`_ files can be accessed as dictionaries. To find features overlapping a
 region of interest::
 
     >>> roi = GenomicSegment("chrI",0,100000,"+")
-    >>> for feature in my_reader[roi]:
-    >>>     pass # do something with that feature
-            ...
+    >>> overlapping_features = my_reader[roi]
+    >>> list(overlapping_features)
+    [ list of SegmentChains/Transcripts ]
     
 Find features that match keyword(s) in a certain field:: 
 
@@ -53,8 +53,8 @@ Find features that match keyword(s) in a certain field::
     ['name', 'gene_id']
     
     >>> # find all entries whose 'gene_id' matches 'nanos'
-    >>> bb.search('gene_id','nanos')
-    [ list of matching segmentchains ]
+    >>> list(bb.search('gene_id','nanos'))
+    [ list of matching SegmentChains/Transcripts ]
 
 
 

@@ -39,10 +39,18 @@ Fetch counts over a |Transcript|/|SegmentChain| or |GenomicSegment|::
     >>>                            GenomicSegment("chrV",8000,9000,"+"),
     >>>                            ID='some_transcript')
     >>> transcript_counts = count_data[my_transcript]
-
+    >>> transcript_counts
+    array([ 36, 171,  65,  95, 109, 178, 211,  71,  25, 208,  20, 189, 205,
+           182, 102, 159, 154, 148,  15,  65, 237, 104, 211, 162,  22,   4,
+           254,  85,  53, 160,  58,  74, 199,  85, 205, 242, 162,  23, 246,
+           ...
+           (rest of output omitted) ])
+           
 Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole chromosome::
 
     >>> chrI_counts = count_data.get_chromosome("chrI")
+    >>> chrI_counts
+    [ numpy array of counts covering chromosome chrI ]
 
 Iterate over a `BigWig`_ file (this is unusual). Data are returned as tuples of
 (chromosome name, start coordinate, end coordinate, and the value over those 

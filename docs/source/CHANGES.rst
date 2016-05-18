@@ -22,14 +22,13 @@ Added/Changed
 File formats
 """"""""""""
 
- - Support for `BigWig`_ files, a high-performance file format used to store
-   quantitative data associated with genomic positions. ``BigWigReader`` reads
+ - Support for `BigWig`_ files. ``BigWigReader`` reads
    `BigWig`_ files, and  ``BigWigGenomeArray``  handles them conveniently.
 
  - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
    making it far faster and more memory efficient.
 
- - ``BigBedReader.search_field()`` created to search indexes included in BigBed
+ - ``BigBedReader.search()`` created to search indexed fields included in BigBed
    files, e.g. to find transcripts with a given `gene_id` (if `gene_id` is included
    as an extension column and indexed). To see which fields are searchable,
    use ``BigBedReader.indexed_fields``
@@ -40,21 +39,27 @@ Infrastructure
 
  - Simplified file opening. All readers can now take filenames in addition
    to open filehandles. No need to wrap filenames in lists any more.
-   E.g:
+   For example:
     
    .. code-block:: python
 
-      # old way
+      # old way to open GTF2 file
       >>> data = GTF2_TranscriptAssembler(open("some_file.gtf"))
 
-      # new way
+      # new way. Also works with BED_Reader, GTF2_Reader, GFF3_TranscriptAssembler, and others
       >>> data = GTF2_TranscriptAssembler("some_file.gtf")
 
-      # old way
+      # old way to get read alignments from BAM files
       >>> alignments = BAMGenomeArray(["some_file.bam","some_other_file.bam"])
 
       # new way
       >>> alignemnts = BAMGenomeArray("some_file.bam","some_other_file.bam")
+
+      # old way to open a tabix-indexed file
+      >>> data = BED_Reader(pysam.tabix_iterator(open("some_file.bed.gz"),pysam.asTuple()),tabix=True)
+
+      # new way
+      >>> data = BED_Reader("some_file.bed.gz",tabix=True)
 
 
    To maintain backward compatibility, the old syntax still works
