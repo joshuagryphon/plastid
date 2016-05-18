@@ -101,7 +101,7 @@ present support mapping functions that return multidimensional arrays):
 
    ======================   ====================================
    **Mapping function**     **Argument**
-   ----------------------  ------------------------------------
+   ----------------------  -------------------------------------
    Fiveprime                ``--fiveprime``
    
    Fiveprime variable       ``--fiveprime_variable``
@@ -110,7 +110,7 @@ present support mapping functions that return multidimensional arrays):
    
    Center/entire            ``--center``
    
-   ======================  ====================================
+   ======================   ====================================
 
 The following arguments additionally influence how mapping functions behave:
 
@@ -128,7 +128,7 @@ The following arguments additionally influence how mapping functions behave:
                          represents the offset from the five prime end at
                          which reads of that length should be mapped.
    -------------------- -------------------------------------------------------
-   ``--nibble X``      ``X`` is taken to be the number of bases to trim
+   ``--nibble X``        ``X`` is taken to be the number of bases to trim
                          from each end of the read before mapping.
    ==================== =======================================================
 
@@ -151,7 +151,7 @@ functions are set via
 
    >>> from plastid.genomics.genome_array import BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
 
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam"]
    
    >>> # map reads 5 nucleotides downstream from their 5' ends
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=5))
@@ -271,7 +271,7 @@ to mapping functions. To specify an offset, use a wrapper function::
    >>>
    >>>    return new_func
 
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    >>> alignments.set_mapping(MyFivePrimeMapFactory(offset=5))   
 
 

@@ -44,8 +44,8 @@ the first and last 5 codons:
                            BAMGenomeArray, FivePrimeMapFactory
 
    # load transcripts and count data
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"],FivePrimeMapFactory(offset=14))
-   >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam",FivePrimeMapFactory(offset=14))
+   >>> transcripts = list(BED_Reader("merlin_orfs.bed",return_type=Transcript))
 
    # Get coding region using get_cds()
    >>> demo_cds = transcripts[39].get_cds()
@@ -145,7 +145,7 @@ To create a |GenomeHash|:
    >>> from plastid import GenomeHash
 
    # get list of masks
-   >>> mask_features = list(BED_Reader(open("merlin_start_codon_masks.bed")))
+   >>> mask_features = list(BED_Reader("merlin_start_codon_masks.bed"))
 
    # use GenomeHash to index masks
    >>> mask_hash = GenomeHash(mask_features)

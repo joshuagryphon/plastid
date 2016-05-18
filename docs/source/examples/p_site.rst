@@ -111,11 +111,11 @@ For most users, two of the output files are of interest:
 #. A graphic (in this example, ``SRR609197_riboprofile_p_offsets.svg``),
    showing the metagene profile for each read length:
 
-    .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
-       :figclass: captionfigure
-       :alt: Output of P-site script
+   .. figure:: /_static/images/SRR609197_riboprofile_p_offsets.png
+      :figclass: captionfigure
+      :alt: Output of P-site script
 
-       Graphical output of |psite| script.
+      Graphical output of |psite| script.
 
    From this image we can see that there are few 29- and 35-mers, so
    their P-site mapping is likely to be off. We'll adjust these
@@ -231,7 +231,7 @@ method of :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`::
 
    >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
    
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    >>> alignments.set_mapping(maprule)
 
 

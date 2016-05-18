@@ -63,10 +63,10 @@ First, we need to open the read alignments and transcript annotation:
    >>> from plastid import Transcript, BED_Reader, BAMGenomeArray, FivePrimeMapFactory
 
    >>> # retrieve an iterator over transcripts
-   >>> transcripts = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
+   >>> transcripts = BED_Reader("merlin_orfs.bed",return_type=Transcript)
 
    >>> # open read alignments and map to P-sites
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))
 
 :term:`Ribosome-protected footprints <footprint>` of varying lengths exhibit
@@ -77,7 +77,7 @@ population of reads, 33-mers. To do so, we'll add a size filter:
 
    >>> from plastid import SizeFilterFactory
    >>> size_filter = SizeFilterFactory(min=33,max=34)
-   >>> >>> alignments.add_filter("size",size_filter)
+   >>> alignments.add_filter("size",size_filter)
 
 
 Next, we can count phasing:

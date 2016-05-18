@@ -120,7 +120,7 @@ them:
    >>> from plastid import BED_Reader
 
    # read transcripts   
-   >>> reader = BED_Reader(open(""))
+   >>> reader = BED_Reader("some_file.bed")
 
    # open file for writing
    >>> halfbed = open("cds_halves.bed","w") 

@@ -144,7 +144,7 @@ files (see :mod:`plastid.readers`)::
    >>> from plastid import BED_Reader
 
    >>> # get an iterator over transcripts in file
-   >>> reader = BED_Reader(open("merlin_orfs.bed"),return_type=Transcript)
+   >>> reader = BED_Reader("merlin_orfs.bed",return_type=Transcript)
 
    >>> # do something with transcripts. here we just look at their names & attribute dictionaries
    >>> for transcript in reader:
@@ -159,7 +159,7 @@ files (see :mod:`plastid.readers`)::
 and the genome::
 
    >>> # load transcripts into a dictionary keyed on transcript ID
-   >>> transcript_dict = { X.get_name() : X for X in BED_Reader(open("merlin_orfs.bed"),return_type=Transcript) }
+   >>> transcript_dict = { X.get_name() : X for X in BED_Reader("merlin_orfs.bed",return_type=Transcript) }
 
    >>> # we'll use the two-exon, minus-strand gene ORFL83C as an example
    >>> demo_tx = transcript_dict["ORFL83C_(UL29)"]
@@ -190,7 +190,7 @@ ends of sequencing reads appear at each position in a chain::
    >>> from plastid import BAMGenomeArray, FivePrimeMapFactory
 
    >>> # load read alignments, and map them to 5' ends
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile.bam")
    >>> alignments.set_mapping(FivePrimeMapFactory())
 
    >>> # fetch the number of 5' ends of alignments at positions 300-320

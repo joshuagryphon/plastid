@@ -53,7 +53,7 @@ First read the transcripts:
 
    # load the transcript annotations from the BED file. 
    # BED_Reader returns an iterator, so here we convert it to a list.
-   >>> transcripts = list(BED_Reader(open("merlin_orfs.bed"),return_type=Transcript))
+   >>> transcripts = list(BED_Reader("merlin_orfs.bed",return_type=Transcript))
 
 Then, load the :term:`ribosome profiling` data. We'll map :term:`read alignments`
 to their corresponding :term:`P-sites <P-site offset>`, estimating the P-site to
@@ -62,7 +62,7 @@ be 14 nucleotides from the 5' end:
 .. code-block:: python
 
    # load ribosome profiling data
-   >>> alignments = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam"])
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    
    # set P-site mapping as 14 nucleotides from 5' end
    >>> alignments.set_mapping(FivePrimeMapFactory(offset=14))

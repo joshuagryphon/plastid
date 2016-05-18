@@ -458,14 +458,14 @@ Here we use the ``window_biggest_spike()`` function we just wrote::
 
    >>> # window_biggest_spike() needs read alignments stored in a variable
    >>> # called ALIGNMENTS. so let's load some
-   >>> ALIGNMENTS = BAMGenomeArray(["SRR609197_riboprofile_5hr_rep1.bam")])
+   >>> ALIGNMENTS = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    >>> ALIGNMENTS.set_mapping(FivePrimeMapFactory(offset=14))
 
    >>> # skip masking out any repetitive regions for purpose of demo
    >>> dummy_mask_hash = GenomeHash()
 
    >>> #load features, in our case, transcripts
-   >>> transcripts = list(GTF2_TranscriptAssembler(open("merlin_orfs.gtf")))
+   >>> transcripts = list(GTF2_TranscriptAssembler("merlin_orfs.gtf"))
 
    >>> # include 100 nucleotides up- and downstream of feature
    >>> flank_upstream = flank_downstream = 100
