@@ -2,11 +2,13 @@
 """Tests for data structures defined in :py:mod:`plastid.readers.common`
 """
 import unittest
+import pysam
 import copy
 from nose.plugins.attrib import attr
 from plastid.readers.common import add_three_for_stop_codon, \
-                                                get_identical_attributes
-
+                                   get_identical_attributes, \
+                                   AssembledFeatureReader
+from plastid.test.ref_files import REF_FILES
 from plastid.genomics.roitools import GenomicSegment,\
                                       SegmentChain, \
                                       Transcript
@@ -40,4 +42,61 @@ class TestGetIdenticalAttributes(unittest.TestCase):
     def test_on_SegmentChain_exclude(self):
         features = [SegmentChain(self.ivs[n],**self.attrs[n]) for n in range(len(self.ivs))]
         self.assertEqual(get_identical_attributes(features,exclude=["type"]),self.common_attr)
-        
+
+
+class MockReader(AssembledFeatureReader):
+    """AssembledFeatureReader that returns string literals from files"""
+    def _assemble(self,data):
+        return data
+    
+   
+class test_AssembledFeatureReader(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.tabix_ref = REF_FILES["100transcripts_tabixbed"]
+        cls.bed_ref   = REF_FILES["100transcripts_bed"]
+        bed_fh = open(cls.bed_ref) 
+        cls.bed_lines = bed_fh.readlines()
+        bed_fh.close()
+    
+    # methods below test tabix keyword on opening strings, open filehandles,
+    # or pysam.tabix_iterators by comparing string output to expected string literals 
+    def test_tabix_str_open(self):
+        reader = MockReader(self.tabix_ref,tabix=True)
+        for expected, found in zip(reader,self.bed_lines):
+            self.assertEqual(expected.strip("\n"),found.strip("\n"))
+    
+    def test_tabix_multi_str_open(self):
+        reader = MockReader(self.tabix_ref,self.tabix_ref,tabix=True)
+        for expected, found in zip(reader,self.bed_lines+self.bed_lines):
+            self.assertEqual(expected.strip("\n"),found.strip("\n"))
+     
+    def test_tabix_fh_open(self):
+        with open(self.tabix_ref) as fh1:
+            reader = MockReader(fh1,self.tabix_ref,tabix=True)
+            for expected, found in zip(reader,self.bed_lines):
+                self.assertEqual(expected.strip("\n"),found.strip("\n"))
+              
+    def test_tabix_multi_fh_open(self):
+        with open(self.tabix_ref) as fh1:
+            with open(self.tabix_ref) as fh2:
+                reader = MockReader(fh1,fh2,self.tabix_ref,tabix=True)
+                for expected, found in zip(reader,self.bed_lines+self.bed_lines):
+                    self.assertEqual(expected.strip("\n"),found.strip("\n"))
+ 
+    def test_tabix_ps_open(self):
+        with open(self.tabix_ref) as fh1:
+            ps1 = pysam.tabix_iterator(fh1,pysam.asTuple())
+            reader = MockReader(ps1,self.tabix_ref,tabix=True)
+            for expected, found in zip(reader,self.bed_lines):
+                self.assertEqual(expected.strip("\n"),found.strip("\n"))
+              
+    def test_tabix_multi_ps_open(self):
+        with open(self.tabix_ref) as fh1:
+            with open(self.tabix_ref) as fh2:
+                ps1 = pysam.tabix_iterator(fh1,pysam.asTuple())
+                ps2 = pysam.tabix_iterator(fh2,pysam.asTuple())
+                reader = MockReader(ps1,ps2,self.tabix_ref,tabix=True)
+                for expected, found in zip(reader,self.bed_lines+self.bed_lines):
+                    self.assertEqual(expected.strip("\n"),found.strip("\n"))

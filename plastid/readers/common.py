@@ -14,6 +14,7 @@ Functions & classes
 
 """
 import itertools
+import pysam
 from plastid.util.io.filters import AbstractReader
 from plastid.util.io.openers import NullWriter, multiopen
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript, add_three_for_stop_codon
@@ -126,7 +127,7 @@ class AssembledFeatureReader(AbstractReader):
         Parameters
         ----------
         streams : file-like
-            One or more open filehandles of input data.
+            One or more fileneames or open filehandles of input data.
         
         return_type : |SegmentChain| or subclass, optional
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
@@ -141,17 +142,18 @@ class AssembledFeatureReader(AbstractReader):
             Logger implementing a ``write()`` method. Default: |NullWriter|
         
         tabix : boolean, optional
-            `streams` are `tabix`_-compressed (Default: `False`)
+            `streams` point to `tabix`_-compressed files or are open
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
 
         **kwargs
             Other keyword arguments used by specific parsers
         """
-        #self.stream = itertools.chain.from_iterable(streams)
-        self.stream = itertools.chain.from_iterable(multiopen(streams,fn=open))
-
-        # this is a hack, because tabix iterator can no longer spit out unparsed text
+        streams = multiopen(streams,fn=open)
+        
         if kwargs.get("tabix",False) == True:
-            self.stream = ("\t".join(X) for X in self.stream)
+            self.stream = itertools.chain.from_iterable((_tabix_iteradaptor(X) for X in streams))
+        else:
+            self.stream = itertools.chain.from_iterable(streams)
 
         self.counter = 0
 
@@ -183,3 +185,23 @@ class AssembledFeatureReader(AbstractReader):
             Next feature assembled from `self.streams`, type specified by `self.return_type`
         """
         return self._finalize(self._assemble(data))
+
+
+def _tabix_iteradaptor(stream):
+    """Open `stream` as an iterator over a `tabix`_ file, returning raw strings from tabix data.
+    
+    Parameters
+    ----------
+    streams : open file-like, :class:`pysam.ctabix.tabix_generic_iterator`, or :class:`pysam.ctabix.tabix_file_iterator`, 
+    
+    Returns
+    -------
+    generator
+        Generator of tab-delimited string records in `tabix`_ file
+    """
+    if not isinstance(stream,(pysam.ctabix.tabix_generic_iterator,
+                              pysam.ctabix.tabix_file_iterator)
+                      ):
+        stream = pysam.tabix_iterator(stream,pysam.asTuple())
+    
+    return (str(X) for X in stream)

@@ -75,6 +75,7 @@ REF_FILES = {
               "100cds_bed"          :  os.path.join(RPATH,"annotations","100cds.bed"),
               "100cds_antisense_bed":  os.path.join(RPATH,"annotations","100cds_antisense.bed"),
 
+              "100transcripts_tabixbed" :  os.path.join(RPATH,"annotations","100transcripts_sorted.bed.gz"),
               "100transcripts_bigbed" :  os.path.join(RPATH,"annotations","100transcripts.bb"),
               "100cds_bigbed"          :  os.path.join(RPATH,"annotations","100cds.bb"),
               "100cds_antisense_bigbed":  os.path.join(RPATH,"annotations","100cds_antisense.bb"),
