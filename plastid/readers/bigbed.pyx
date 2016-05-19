@@ -451,7 +451,7 @@ cdef class BigBedReader(_BBI_Reader):
         if field_name not in self.indexed_fields:
             raise KeyError("BigBed file '%s' has no index named '%s'" % (self.filename,field_name))
         else:
-            bpt = bigBedOpenExtraIndex(self._bbifile, field_name, idx)
+            bpt = bigBedOpenExtraIndex(self._bbifile, safe_bytes(field_name), idx)
 
         if len(values) == 1:
             val  = safe_bytes(values[0])
