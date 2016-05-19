@@ -413,6 +413,7 @@ cdef class BigBedReader(_BBI_Reader):
         --------
         Find all entries matching a given gene ID:: 
         
+            # open file
             >>> bb = BigBedFile("some_file.bb")
             
             # which fields are searchable?
@@ -459,6 +460,9 @@ cdef class BigBedReader(_BBI_Reader):
         else:
             num_vals = len(values)
             vals     = <char**> PyMem_Malloc(num_vals*sizeof(char*))
+            if not vals:
+                raise MemoryError("BigBedReader.search(%s,%s): could not allocate memory" % (field_name,",".join(values)))
+            
             for n, stmp in enumerate(values):
                 val = safe_bytes(stmp)
                 vals[n] = val
