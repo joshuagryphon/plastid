@@ -148,7 +148,7 @@ class AssembledFeatureReader(AbstractReader):
         **kwargs
             Other keyword arguments used by specific parsers
         """
-        streams = multiopen(streams,fn=open)
+        streams = multiopen(streams,fn=open,kwargs=dict(mode="rb"))
         
         if kwargs.get("tabix",False) == True:
             self.stream = itertools.chain.from_iterable((_tabix_iteradaptor(X) for X in streams))
@@ -192,7 +192,7 @@ def _tabix_iteradaptor(stream):
     
     Parameters
     ----------
-    streams : open file-like, :class:`pysam.ctabix.tabix_generic_iterator`, or :class:`pysam.ctabix.tabix_file_iterator`, 
+    streams : open file-like, :class:`pysam.ctabix.tabix_file_iterator`
     
     Returns
     -------
@@ -202,6 +202,6 @@ def _tabix_iteradaptor(stream):
     if not isinstance(stream,(pysam.ctabix.tabix_generic_iterator,
                               pysam.ctabix.tabix_file_iterator)
                       ):
-        stream = pysam.tabix_iterator(stream,pysam.asTuple())
+        stream = pysam.tabix_file_iterator(stream,pysam.asTuple())
     
     return (str(X) for X in stream)

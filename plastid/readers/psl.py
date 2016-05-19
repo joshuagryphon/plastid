@@ -40,9 +40,11 @@ class PSL_Reader(AssembledFeatureReader):
                     
     printer : file-like, optional
         Logger implementing a ``write()`` method. Default: |NullWriter|
-    
-    tabix : boolean, optional
-        `streams` are `tabix`_-compressed (Default: `False`)
+
+    tabix : bool, optional
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
+
 
     **kwargs
         Other keyword arguments used by specific parsers
@@ -114,8 +116,9 @@ class BundledPSL_Reader(PSL_Reader):
     printer : file-like, optional
         Logger implementing a ``write()`` method. Default: |NullWriter|
     
-    tabix : boolean, optional
-        `streams` are `tabix`_-compressed (Default: `False`)
+    tabix : bool, optional
+        `streams` point to `tabix`_-compressed files or are open
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
 
     **kwargs
         Other keyword arguments used by specific parsers    

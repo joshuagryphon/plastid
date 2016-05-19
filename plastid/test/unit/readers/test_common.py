@@ -73,30 +73,30 @@ class test_AssembledFeatureReader(unittest.TestCase):
             self.assertEqual(expected.strip("\n"),found.strip("\n"))
      
     def test_tabix_fh_open(self):
-        with open(self.tabix_ref) as fh1:
+        with open(self.tabix_ref,"rb") as fh1:
             reader = MockReader(fh1,self.tabix_ref,tabix=True)
             for expected, found in zip(reader,self.bed_lines):
                 self.assertEqual(expected.strip("\n"),found.strip("\n"))
               
     def test_tabix_multi_fh_open(self):
-        with open(self.tabix_ref) as fh1:
-            with open(self.tabix_ref) as fh2:
+        with open(self.tabix_ref,"rb") as fh1:
+            with open(self.tabix_ref,"rb") as fh2:
                 reader = MockReader(fh1,fh2,self.tabix_ref,tabix=True)
                 for expected, found in zip(reader,self.bed_lines+self.bed_lines):
                     self.assertEqual(expected.strip("\n"),found.strip("\n"))
  
     def test_tabix_ps_open(self):
-        with open(self.tabix_ref) as fh1:
-            ps1 = pysam.tabix_iterator(fh1,pysam.asTuple())
+        with open(self.tabix_ref,"rb") as fh1:
+            ps1 = pysam.tabix_file_iterator(fh1,pysam.asTuple())
             reader = MockReader(ps1,self.tabix_ref,tabix=True)
             for expected, found in zip(reader,self.bed_lines):
                 self.assertEqual(expected.strip("\n"),found.strip("\n"))
               
     def test_tabix_multi_ps_open(self):
-        with open(self.tabix_ref) as fh1:
-            with open(self.tabix_ref) as fh2:
-                ps1 = pysam.tabix_iterator(fh1,pysam.asTuple())
-                ps2 = pysam.tabix_iterator(fh2,pysam.asTuple())
+        with open(self.tabix_ref,"rb") as fh1:
+            with open(self.tabix_ref,"rb") as fh2:
+                ps1 = pysam.tabix_file_iterator(fh1,pysam.asTuple())
+                ps2 = pysam.tabix_file_iterator(fh2,pysam.asTuple())
                 reader = MockReader(ps1,ps2,self.tabix_ref,tabix=True)
                 for expected, found in zip(reader,self.bed_lines+self.bed_lines):
                     self.assertEqual(expected.strip("\n"),found.strip("\n"))
