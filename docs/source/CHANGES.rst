@@ -7,13 +7,15 @@ guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
-Unreleased
-----------
+plastid [0.4.6] = [2016-05-20]
+------------------------------
 
-This release adds support for `BigWig`_ files, and includes major usability
-improvements in command-line scripts. **Note**: a number of script behaviors have
-been replaced with more sensible/robust/intuitive alternatives. Old syntax still
-works, but users will be warned to migrate.
+Highlights
+
+ - Support for `BigWig`_ files
+ - Reimplementation of `BigBed`_ file support
+ - Simplification of syntax / removal of annoyances in both command-line
+   scripts and in infrastructure
 
 
 Added/Changed
@@ -22,11 +24,11 @@ Added/Changed
 File formats
 """"""""""""
 
- - Support for `BigWig`_ files. ``BigWigReader`` reads
-   `BigWig`_ files, and  ``BigWigGenomeArray``  handles them conveniently.
+ - Support for `BigWig`_ files. ``BigWigReader`` reads `BigWig`_ files, and 
+   ``BigWigGenomeArray``  handles them conveniently.
 
- - ``BigBedReader`` has been reimplemented. It now wraps Jim Kent's C library,
-   making it far faster and more memory efficient.
+ - ``BigBedReader`` has been reimplemented using Jim Kent's C library, making
+   it far faster and more memory efficient.
 
  - ``BigBedReader.search()`` created to search indexed fields included in BigBed
    files, e.g. to find transcripts with a given `gene_id` (if `gene_id` is included
