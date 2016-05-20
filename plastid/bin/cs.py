@@ -44,8 +44,6 @@ Generate
                 positions excluded from analyses as directed in an optional
                 :term:`mask file`
 
-    .. Rubric :: Output files
-
     The following files are output, where `OUTBASE` is a name supplied
     by the user:
 
@@ -133,22 +131,22 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 def write_output_files(table,title,args):
     """Write gene info table from :py:func:`do_generate` to several output files:
 
-        OUTBASE_gene.positions
-            Tab-delimited text file. Each line is a merged gene, and columns
-            indicate the genomic coordinates and lengths of each of the position
-            sets above.
+    OUTBASE_gene.positions
+        Tab-delimited text file. Each line is a merged gene, and columns
+        indicate the genomic coordinates and lengths of each of the position
+        sets above.
 
-        OUTBASE_transcript.positions
-            Tab-delimited text file. Each line is a transcript, and columns
-            indicate the genomic coordinates and lengths of each of the position
-            sets above.
+    OUTBASE_transcript.positions
+        Tab-delimited text file. Each line is a transcript, and columns
+        indicate the genomic coordinates and lengths of each of the position
+        sets above.
 
-        OUTBASE_gene_REGION.bed
-             `BED`_ files showing position sets for `REGION`,
-             where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
-             *masked*. These contain the same information in
-             ``OUTBASE_gene.positions``, but can be visualized easily in a
-             :term:`genome browser`
+    OUTBASE_gene_REGION.bed
+         `BED`_ files showing position sets for `REGION`,
+         where `REGION` is one of *exon*, *utr5*, *cds*, *utr3*, or
+         *masked*. These contain the same information in
+         ``OUTBASE_gene.positions``, but can be visualized easily in a
+         :term:`genome browser`
 
 
     Parameters
@@ -480,23 +478,23 @@ def process_partial_group(transcripts,mask_hash,printer):
 def do_generate(args,annotation_parser,mask_parser):
     """Generate gene position files from gene annotations.
     
-    #.  Genes whose transcripts share exons are first collapsed into merged
+     1. Genes whose transcripts share exons are first collapsed into merged
         genes.
         
-    2.  Within merged genes, all positions are classified. All positions are
+     2. Within merged genes, all positions are classified. All positions are
         included in a set called *exon*. All positions that appear as coding
         regions in all transcripts (i.e. are never part of a 5'UTR or 3'UTR)
         included in a set called *CDS*. Similarly, all positions that appear
         as 5' UTR or 3' UTR in all transcripts are included in sets called
         *UTR5* or *UTR3*, respectively.
     
-    3.  Genomic positions that are overlapped by multiple merged genes are
+     3. Genomic positions that are overlapped by multiple merged genes are
         excluded from the position sets for those genes.
     
-    4.  If a :term:`mask file` is supplied, positions annotated in the mask file
+     4. If a :term:`mask file` is supplied, positions annotated in the mask file
         are also excluded
     
-    5.  Output is given as a series of `BED`_ files and a `positions` file
+     5. Output is given as a series of `BED`_ files and a `positions` file
         containing the same data.
     
     Parameters
@@ -609,8 +607,7 @@ def do_generate(args,annotation_parser,mask_parser):
 #===============================================================================
 
 def do_count(args,alignment_parser):
-    """Count the number and density covering each merged gene in an annotation
-made made using the `generate` subcommand).
+    """Count the number and density covering each merged gene in an annotation made made using the `generate` subcommand).
     
     Parameters
     ----------
@@ -694,8 +691,7 @@ def read_count_file(fh,genes_to_include=None):
 
 @skipdoc
 def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
-    """Bins genes into groups based upon the summed counts in samples
-    `rep_a` and `rep_b`
+    """Bins genes into groups based upon the summed counts in samples `rep_a` and `rep_b`
     
     Parameters
     ----------
@@ -733,8 +729,7 @@ def get_bin_mask_by_summed_key(rep_a,rep_b,bins,key="exon_reads"):
 
 @skipdoc
 def get_nonzero_either_mask(vector_a,vector_b):
-    """Returns a numpy array of boolean values indicating where values in two
-    vectors are both greater than zero.
+    """Returns a numpy array of boolean values indicating where values in two vectors are both greater than zero.
     
     Parameters
     ----------
@@ -754,8 +749,7 @@ def get_nonzero_either_mask(vector_a,vector_b):
                         
 @skipdoc
 def get_short_samplename(inp):
-    """Creates a sample legend label from a sample filename
-    by removing everything including and after ``".txt"``
+    """Creates a sample legend label from a sample filename by removing everything including and after ``".txt"``
 
     Parameters
     ----------
@@ -835,10 +829,10 @@ def do_scatter(x,y,count_mask,plot_parser,args,pearsonr=None,xlabel=None,ylabel=
 
 
 def do_chart(args,plot_parser):
-    """Produce log-2 fold change histograms and scatter plots for :term:`count`
-and :term:`RPKM` values between each pair within multiple samples, as well as a
-chart plotting correlation coefficients as a function of summed read counts in
-both samples 
+    """Produce a set of charts comparing multiple samples pairwise.
+    
+    Charts include histograms of log2 fold changes and scatter plots with
+    correlation coefficients, both generated for raw count and RPKM data.
 
     Parameters
     ----------

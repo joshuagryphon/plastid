@@ -1,23 +1,21 @@
- .. |counts_in_region|  replace:: :py:mod:`~plastid.bin.counts_in_region`
- .. |crossmap|  replace:: :py:mod:`~plastid.bin.crossmap`
- .. |cs|  replace:: :py:mod:`~plastid.bin.cs`
- .. |demux_reads|  replace:: :py:mod:`~plastid.bin.demux_reads`
- .. |findjuncs|  replace:: :py:mod:`~plastid.bin.findjuncs`
- .. |get_count_vectors|  replace:: :py:mod:`~plastid.bin.get_count_vectors`
- .. |gff_parent_types|  replace:: :py:mod:`~plastid.bin.gff_parent_types`
- .. |make_wiggle|  replace:: :py:mod:`~plastid.bin.make_wiggle`
- .. |metagene|  replace:: :py:mod:`~plastid.bin.metagene`
- .. |phase_by_size|  replace:: :py:mod:`~plastid.bin.phase_by_size`
- .. |psite|  replace:: :py:mod:`~plastid.bin.psite`
- .. |reformat_transcripts|  replace:: :py:mod:`~plastid.bin.reformat_transcripts`
- .. |slidejuncs|  replace:: :py:mod:`~plastid.bin.slidejuncs`
+.. |counts_in_region| replace:: :py:mod:`~plastid.bin.counts_in_region`
+.. |crossmap| replace:: :py:mod:`~plastid.bin.crossmap`
+.. |cs| replace:: :py:mod:`~plastid.bin.cs`
+.. |demux_reads| replace:: :py:mod:`~plastid.bin.demux_reads`
+.. |findjuncs| replace:: :py:mod:`~plastid.bin.findjuncs`
+.. |get_count_vectors| replace:: :py:mod:`~plastid.bin.get_count_vectors`
+.. |gff_parent_types| replace:: :py:mod:`~plastid.bin.gff_parent_types`
+.. |make_wiggle| replace:: :py:mod:`~plastid.bin.make_wiggle`
+.. |metagene| replace:: :py:mod:`~plastid.bin.metagene`
+.. |phase_by_size| replace:: :py:mod:`~plastid.bin.phase_by_size`
+.. |psite| replace:: :py:mod:`~plastid.bin.psite`
+.. |reformat_transcripts| replace:: :py:mod:`~plastid.bin.reformat_transcripts`
+.. |slidejuncs| replace:: :py:mod:`~plastid.bin.slidejuncs`
 
-
- .. |bin|  replace:: :py:obj:`plastid.bin`
- .. |genomics|  replace:: :py:obj:`plastid.genomics`
- .. |readers|  replace:: :py:obj:`plastid.readers`
- .. |plotting| replace:: :py:obj:`plastid.plotting`
- .. |scriptlib|  replace:: :py:obj:`plastid.util.scriptlib`
- .. |util|  replace:: :py:obj:`plastid.util`
- .. |test|  replace:: :py:obj:`plastid.test`
-
+.. |bin| replace:: :py:obj:`plastid.bin`
+.. |genomics| replace:: :py:obj:`plastid.genomics`
+.. |readers| replace:: :py:obj:`plastid.readers`
+.. |plotting| replace:: :py:obj:`plastid.plotting`
+.. |scriptlib| replace:: :py:obj:`plastid.util.scriptlib`
+.. |util| replace:: :py:obj:`plastid.util`
+.. |test| replace:: :py:obj:`plastid.test`

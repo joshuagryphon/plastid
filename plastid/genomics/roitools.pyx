@@ -2339,11 +2339,11 @@ cdef class SegmentChain(object):
     
     # TODO: test optimality
     def as_gff3(self, str feature_type=None, bint escape=True, list excludes=None):
-        """Format `self` as a line of GFF3 output.
+        """Format `self` as a line of `GFF3`_ output.
         
         Because `GFF3`_ files permit many schemas of parent-child hierarchy,
         and in order to reduce confusion and overhead, attempts to export
-        a multi-interval |SegmentChain| will raise an :class:`AttributeError`.
+        a multi-interval |SegmentChain| will raise an AttributeError.
         
         Instead, users may export the individual features from which the
         multi-interval |SegmentChain| was constructed, or construct features
@@ -2357,7 +2357,7 @@ cdef class SegmentChain(object):
             If not None, overrides the `type` attribute of `self.attr`
         
         escape : bool, optional
-            Escape tokens in column 9 of `GFF3`_ output (Default: `True*)
+            Escape tokens in column 9 of `GFF3`_ output (Default: `True`)
         
         excludes : list, optional
             List of attribute key names to exclude from column 9
@@ -3993,7 +3993,7 @@ cdef class Transcript(SegmentChain):
             If not None, overrides the `'type'` attribute of `self.attr`
         
         escape : bool, optional
-            URL escape tokens in column 9 of `GTF`_ output (Default: `True`)
+            URL escape tokens in column 9 of `GTF2`_ output (Default: `True`)
         
         
         Returns
@@ -4021,7 +4021,8 @@ cdef class Transcript(SegmentChain):
             explicitly that only the attributes `gene_id` and `transcript_id`
             are supported.
             
-        Columns of `GTF2`_ are as follows
+        Columns of `GTF2`_ are as follows:
+        
             ======== =========
             Column   Contains
             ======== =========

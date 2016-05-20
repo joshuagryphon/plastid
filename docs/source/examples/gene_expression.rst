@@ -277,9 +277,8 @@ control::
 .. figure:: /_static/images/demo_gene_expr_teff_vs_tx.png
 
    :class: captionfigure
-   :caption: Translation efficiency vs transcription levels
    :alt: Translation efficiency vs transcription levels
-
+   :caption: Translation efficiency vs transcription levels
 
 
 Testing for differential expression

@@ -471,10 +471,10 @@ def profile_heatmap(data,profile=None,x=None,axes=None,sort_fn=sort_max_position
 
     cmap : :class:`~matplotlib.colors.Colormap`, optional
         Colormap to use in heatmap. It not `None`, overrides any value
-        in `im_args`. (Default: None) 
+        in `im_args`. (Default: `None`) 
 
     nancolor : str or matplotlib colorspec
-        Color used for plotting `nan`s and other illegal or masked values
+        Color used for plotting `nan` and other illegal or masked values
         
     im_args : dict
         Keyword arguments to pass to :func:`matplotlib.pyplot.imshow`
@@ -643,7 +643,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
 
     min_x, min_y, max_x, max_y : number, optional
         If supplied, set values below `min_x` to `min_x`, values larger
-        than `max_x` to `max_x` and so for `min_y` and `max-y`
+        than `max_x` to `max_x` and so for `min_y` and `max_y`
 
     log : str, "", "x", "xy", or "xy", optional
         Plot these axes on a log scale (Default: "" for no log axes)
@@ -658,7 +658,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
 
     bw_method : str
         Bandwith estimation method. See documentation for
-        :obj:`scipy.stats.gaussian_kde`. (Default: "scott")
+        :obj:`scipy.stats.gaussian_kde`. (Default: `"scott"`)
 
 
     Returns
@@ -668,7 +668,7 @@ def scatterhist_x(x,y,color=None,axes=None,label=None,
 
     dict
         Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
-        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+        Other panels will be mapped to `'top'`, `'left'` et c, if they are created.
     """
     fig, axes = _scatterhist_help(axes=axes,top_height=top_height)
     xlog = False
@@ -746,7 +746,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
 
     min_x, min_y, max_x, max_y : number, optional
         If supplied, set values below `min_x` to `min_x`, values larger
-        than `max_x` to `max_x` and so for `min_y` and `max-y`
+        than `max_x` to `max_x` and so for `min_y` and `max_y`
 
     log : str, "", "x", "xy", or "xy", optional
         Plot these axes on a log scale (Default: "" for no log axes)
@@ -770,7 +770,7 @@ def scatterhist_y(x,y,color=None,axes=None,label=None,
 
     dict
         Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
-        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+        Other panels will be mapped to `'top'`, `'left'` et c, if they are created.
     """
     fig, axes = _scatterhist_help(axes=axes,right_width=right_width)
     ylog = False
@@ -973,15 +973,15 @@ def ma_plot(x,y,axes=None,color=None,label=None,xlabel=None,ylabel=None,title=No
 
     min_x, min_y, max_x, max_y : number, optional
         If supplied, set values below `min_x` to `min_x`, values larger
-        than `max_x` to `max_x` and so for `min_y` and `max-y`
+        than `max_x` to `max_x` and so for `min_y` and `max_y`
 
     log : str, "", "x", "xy", or "xy", optional
         Plot these axes on a log scale (Default: "xy")
 
     scargs : Keyword arguments, optional
         Arguments to pass to :func:`~matplotlib.pyplot.scatter`
-        (Default: :obj:`plastid_default_scatter`). We highly recommend
-        setting `rasterized` to `True`!
+        (Default: :obj:`plastid_default_scatter` ). Recommend: set `rasterized`
+        to `True`
 
     kdalpha : float, optional
         Alpha level (transparency) for marginal distributions (Default: 0.7)
@@ -994,7 +994,7 @@ def ma_plot(x,y,axes=None,color=None,label=None,xlabel=None,ylabel=None,title=No
 
     dict
         Dictionary of axes. `'orig'` refers to `ax`. The central panel is `'main'`.
-        Other panels will be mapped to `'top'`, `'left`' et c, if they are created.
+        Other panels will be mapped to `'top'`, `'left'` et c, if they are created.
     """
 
     do_setup = axes is None

@@ -15,12 +15,12 @@ read alignments withu nucleotide precision. For example:
    encode unstructured regions of RNA or sites of pseudouridine modification,
    respectively, in the 5' termini fo their read aligments.
 
-:data:`plastid` uses configurable :term:`mapping functions <mapping rule>` to
+:obj:`plastid` uses configurable :term:`mapping functions <mapping rule>` to
 decode the biology of interest from read alignments, and convert the decoded
 data into :class:`arrays <numpy.ndarray>` over regions of interest (such as an
 array of the number of ribosomes at each nucleotide in a coding region).
 
-This design enables :term:`plastid`'s tools to operate on sequencing data from
+This design enables :obj:`plastid`'s tools to operate on sequencing data from
 virtually any NGS assay, provided the appropriate mapping function and
 parameters. 
 
@@ -84,10 +84,10 @@ are mapped to specific locations:
    :width: 1080px
    :height: 683px
     
-   **Top**: gene model. **Middle**: alignments of :term:`ribosome footprints`,
+   **Top**: gene model. **Middle**: alignments of :term:`ribosome-protected footprints <ribosome protected footprint>`,
    displayed as in the `IGV`_ genome browser without a mapping function.
-   **Bottom rows**: :term:`Ribosome footprints` mapped under various mapping
-   functions.
+   **Bottom rows**: :term:`Ribosome footprints  <ribosome protected footprint>`
+   mapped under various mapping functions.
 
 
 .. _mapping-rules-command-line:
@@ -101,7 +101,7 @@ present support mapping functions that return multidimensional arrays):
 
    ======================   ====================================
    **Mapping function**     **Argument**
-   ----------------------  -------------------------------------
+   ----------------------   ------------------------------------
    Fiveprime                ``--fiveprime``
    
    Fiveprime variable       ``--fiveprime_variable``

@@ -2,25 +2,24 @@
 """This module contains utility functions for plotting:
 
     :func:`get_fig_axes`
-        Helper function to check arguments of plotting functions.
-        Retrieve figure and axes from `axes`. If `axes` is None,
-        create figure and axes, and return those.
+        Helper function to check arguments of plotting functions. Retrieve figure
+        and axes from `axes`. If `axes` is None, create figure and axes, and
+        return those.
 
     :func:`split_axes`
-        Split a :class:`matplotlib.axes.Axes` into one or more panels,
-        with tied x and y axes. Also hides overlapping tick labels
+        Split a :class:`matplotlib.axes.Axes` into one or more panels, with tied
+        x and y axes. Also hides overlapping tick labels
 
     :func:`clean_invalid`
-        Remove pairs of values from two arrays of data if either 
-        element in the pair is `nan` or `inf`. Used to prepare data
-        for histogram or violin plots; as even masked `nan`s and `inf`s
-        are not handled by these functions.
+        Remove pairs of values from two arrays of data if either  element in the
+        pair is `nan` or `inf`. Used to prepare data for histogram or violin
+        plots; as even masked `nan` and `inf` values are not handled by these
+        functions.
 
     :func:`get_kde`
-        Evaluate a kernel density estimate over observed data in linear
-        or log-transformed space (e.g. for making violin plots in log
-        space, but having kernels appropriately scaled).
-
+        Evaluate a kernel density estimate over observed data in linear or
+        log-transformed space (e.g. for making violin plots in log space,
+        but having kernels appropriately scaled).
 """
 import numpy
 import scipy.stats
@@ -28,10 +27,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-def get_fig_axes(axes):
-    """Retrive figure and axes from `axes`. If `axes` is None, create figure and
-    axes. This is predominantly used as a helper function to check arguments of
-    the plotting functions defined in :mod:`plastid.plotting.plots`.
+def get_fig_axes(axes=None):
+    """Retrieve figure and axes from `axes`. If `axes` is None, both.
+    
+    Used as a helper function for replotting atop existing axes, by functions
+    defined in :mod:`plastid.plotting.plots`.
 
 
     Parameters
@@ -59,7 +59,7 @@ def get_fig_axes(axes):
 
 def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_ax_kwargs={},
                 other_ax_kwargs={}):
-    """Split the spaces taken by one axes into one or more panes. The original axes is made invisible.
+    """Split the spaces taken by one axes into one or more panes, setting the original axes invisible.
 
     Parameters
     ----------
@@ -184,7 +184,7 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
     return axes
 
 def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
-    """Remove corresponding values from x and y when one or both of those is nan or inf,
+    """Remove corresponding values from x and y when one or both of those is `nan` or `inf`,
     and optionally truncate values to minima and maxima
 
     Parameters
@@ -194,14 +194,14 @@ def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=nu
 
     min_x, min_y, max_x, max_y : number, optional
         If supplied, set values below `min_x` to `min_x`, values larger
-        than `max_x` to `max_x` and so for `min_y` and `max-y`
+        than `max_x` to `max_x` and so for `min_y` and `max_y`
 
     Returns
     -------
-    :class:`numpy.ndarray
+    :class:`numpy.ndarray`
         A shortened version of `x`, excluding invalid values
 
-    :class:`numpy.ndarray
+    :class:`numpy.ndarray`
         A shortened version of `y`, excluding invalid values
     """
     x = numpy.array(x).astype(float)

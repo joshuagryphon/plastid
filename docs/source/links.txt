@@ -59,6 +59,7 @@
 .. _galaxy: https://galaxyproject.org/
 .. _Sequence Ontology Project: http://www.sequenceontology.org/
 .. _modENCODE: http://www.modencode.org
+.. _GenBank: http://www.ncbi.nlm.nih.gov/genbank/
 
 .. Non-Python software links
 

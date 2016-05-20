@@ -49,6 +49,7 @@ from 1 (:term:`1-indexed`). Suppose we have an XbaI restriction site on
 chromosome `chrI`:
 
 .. code-block:: none
+
                               XbaI
                              ______ 
    ChrI:         ACCGATGCTAGCTCTAGACTACATCTACTCCGTCGTCTAGCATGATGCTAGCTGAC

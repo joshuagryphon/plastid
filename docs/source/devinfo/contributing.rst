@@ -57,8 +57,8 @@ Document
    by the change or addition.
 
 #. If you use technical terms, please check if a synonym of your term is already defined
-   in the :doc:`glossary <glossary>`, and then use that. If no synonym is present, please
-   add the :doc:`glossary <glossary>`, and refer to it using the ``:term:`` directive.
+   in the :doc:`glossary </glossary>`, and then use that. If no synonym is present, please
+   add the :doc:`glossary </glossary>`, and refer to it using the ``:term:`` directive.
 
 
 Submit

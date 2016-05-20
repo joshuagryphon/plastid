@@ -1,8 +1,8 @@
 Extending plastid
 =================
 
-Plastid defines the following :term:`entry points` to enable users to write
-plug-in functions that can be accessed from the command line:
+Plastid defines the following entry points to enable users to write plug-in
+functions that can be accessed from the command line:
 
 
    ===========================    =================================================== 

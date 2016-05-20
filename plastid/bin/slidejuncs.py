@@ -186,13 +186,14 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
     
     To be classified as within the range, the boundaries of a known
     junction must be:
-        1.  within `minus_range...plus_range` of the boundaries
-            of the the discovered junction.
+    
+      1. within `minus_range...plus_range` of the boundaries
+         of the the discovered junction.
             
-        2.  separated by a nucleotide distance equal to the distance 
-            separating the junction in `query_junc`.
+      2. separated by a nucleotide distance equal to the distance 
+         separating the junction in `query_junc`.
         
-        3.  On the same chromosome and strand.
+      3. on the same chromosome and strand.
     
     
     Parameters
@@ -210,7 +211,7 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
         to the right without reducing sequence support for the junction
         see :py:func:`find_match_range`
     
-    knownjunctions : list<|SegmentChain|>
+    knownjunctions : list of |SegmentChains|
         known splice junctions
         
     Returns
@@ -251,13 +252,13 @@ def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals
     To be classified as within the range, the boundaries of the canonical
     junction must be:
     
-        1.  within `minus_range...plus_range` of the boundaries
-            of the the discovered junction.
+      1. within `minus_range...plus_range` of the boundaries
+         of the the discovered junction.
             
-        2.  separated by a nucleotide distance equal to the distance 
-            separating the junction in `query_junc`.
+      2. separated by a nucleotide distance equal to the distance 
+         separating the junction in `query_junc`.
         
-        3.  On the same chromosome and strand.
+      3. On the same chromosome and strand.
         
     
     Parameters
