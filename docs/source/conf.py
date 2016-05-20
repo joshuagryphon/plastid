@@ -18,8 +18,6 @@ import unittest
 import datetime
 import mock
 import plastid
-import warnings
-warnings.filterwarnings("ignore",message="toctree contains reference to nonexisting document")
 
 # -- General configuration ------------------------------------------------
 
@@ -72,11 +70,12 @@ autodoc_default_flags = [
 #    "show-inheritance",
     "undoc-members",
     "special-members",
-    "private-members",
+#     "private-members",
     "inherited-members",
 ]
-autodoc_member_order = "groupwise"
-autodoc_docstring_signature = True
+autodoc_member_order           = "groupwise"
+autodoc_docstring_signature    = True
+numpydoc_class_members_toctree = False
 
 
 # never document these methods/attributes
@@ -136,7 +135,7 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
         Type of object (e.g. "module", "function", "class")
     
     name : str
-        Fully-qualified name of object
+        Name of object within module scope
     
     obj : object
         Object to skip or not
@@ -157,9 +156,9 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
     if skip == False:
         if name in exclude_always:
             skip = True
-        elif getattr(obj,"name","").startswith("Abstract"):
+        elif name.startswith("Abstract") or ".Abstract" in name:
             skip = True
-        elif getattr(obj,"name","").startswith("_"):
+        elif name.startswith("_"):
             skip = True
         elif getattr(obj,"plastid_skipdoc",False) == True:
             skip = True

@@ -84,9 +84,9 @@ are mapped to specific locations:
    :width: 1080px
    :height: 683px
     
-   **Top**: gene model. **Middle**: alignments of :term:`ribosome-protected footprints <ribosome protected footprint>`,
+   **Top**: gene model. **Middle**: alignments of :term:`ribosome-protected footprints <ribosome-protected footprint>`,
    displayed as in the `IGV`_ genome browser without a mapping function.
-   **Bottom rows**: :term:`Ribosome footprints  <ribosome protected footprint>`
+   **Bottom rows**: :term:`Ribosome footprints  <ribosome-protected footprint>`
    mapped under various mapping functions.
 
 
