@@ -127,6 +127,7 @@ import re
 import copy
 import array
 import numpy
+import warnings
  
 cimport numpy
  
@@ -134,6 +135,8 @@ from numpy.ma import MaskedArray as MaskedArray
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
+from Bio.SeqFeature import (BeforePosition, AfterPosition,
+                            UncertainPosition, UnknownPosition)
  
 from plastid.util.services.exceptions import DataWarning, warn
 from plastid.util.services.decorators import deprecated
@@ -179,6 +182,14 @@ ctypedef numpy.long_t   LONG_t
 
 # cdef class SegmentChain
 # cdef class Transcript(SegmentChain)
+
+
+_FUZZY = (BeforePosition, AfterPosition, UncertainPosition, UnknownPosition)
+_BIOPYTHON_STRANDS = {
+    1  : "+",
+    0  : ".",
+   -1  : "-",
+}
 
 #==============================================================================
 # Exported object
@@ -3367,7 +3378,7 @@ cdef class SegmentChain(object):
 
         
     @staticmethod
-    def from_psl(psl_line):
+    def from_psl(str psl_line):
         """Create a |SegmentChain| from a line from a `PSL`_ (BLAT) file
 
         See the `PSL spec <http://pombe.nci.nih.gov/genome/goldenPath/help/blatSpec.html>`_
@@ -3433,6 +3444,74 @@ cdef class SegmentChain(object):
 
         return SegmentChain(*segs,**attr)        
 
+    @staticmethod
+    def from_biopython_seqfeature(feature, str chrom, return_type=None):
+        """Create a `SegmentChain` from a :class:`Bio.SeqFeature.SeqFeature`
+        
+        Parameters
+        ----------
+        feature : :class:`Bio.SeqFeature.SeqFeature`
+        
+        chrom : str
+            Name of chromosome, contig, or plasmid that `feature` is on
+        
+        return_type : class
+            Type to return. |SegmentChain| or subclass
+        
+        Returns
+        -------
+        SegmentChain
+            SegmentChain corresponding to coordinates in `feature`
+            
+            
+        Notes
+        -----
+        Fuzzy coordinates are normalized to `segment.nofuzzy_start`
+        and `segment.nofuzzy_end` for each segment in `feature.location.parts`.
+        """
+        if return_type is None:
+            return_type = SegmentChain
+            
+        warn_start = warn_stop = False
+    
+        attr   = { }
+        attr["type"]  = feature.type
+        for k,v in feature.qualifiers.items():
+            if isinstance(v,list) and len(v) == 1:
+                attr[k] = v[0]
+            else:
+                attr[k] = v
+                
+        segs   = []
+        strand = _BIOPYTHON_STRANDS[feature.location.parts[0].strand]
+        for n, seg in enumerate(feature.location.parts):
+            if isinstance(seg.start,_FUZZY):
+                warn_start = True
+            if isinstance(seg.end,_FUZZY):
+                warn_stop = True
+    
+            if warn_start or warn_stop:
+                feature_id = feature.id
+                feature_id = feature_id if feature_id is not "<unknown_id>" else attr.get("locus_tag","<unknown_id>")
+                coords = tuple([str(X) for X in (n,
+                                                 feature_id,
+                                                 chrom,
+                                                 seg.start,
+                                                 seg.end,
+                                                 strand,
+                                                 chrom,
+                                                 seg.nofuzzy_start,
+                                                 seg.nofuzzy_end,
+                                                 strand
+                                                 )])
+                warnings.warn("Segment %s of feature %s has fuzzy coordinates '%s:%s-%s(%s)'. Normalizing to '%s:%s-%s(%s)'." % coords,
+                              DataWarning)
+    
+            segs.append(GenomicSegment(chrom,seg.nofuzzy_start,seg.nofuzzy_end,strand))
+
+        chain = SegmentChain(**attr)
+        chain._set_segments(sorted(segs))    
+        return chain
 
  
 cdef class Transcript(SegmentChain):

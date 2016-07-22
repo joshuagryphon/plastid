@@ -7,6 +7,13 @@ guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
+[Unreleased]
+------------
+
+ - ``SegmentChain.from_biopython_seqfeature()`` created for interoperability
+   with ``BioPython``
+
+
 plastid [0.4.6] = [2016-05-20]
 ------------------------------
 

@@ -7,6 +7,13 @@ guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
+[Unreleased]
+------------
+
+ - ``SegmentChain.from_biopython_seqfeature()`` created for interoperability
+   with ``BioPython``
+
+
 plastid [0.4.6] = [2016-05-20]
 ------------------------------
 
@@ -480,8 +487,8 @@ Changed
  - pandas compatibility: header rows in all output files no longer have
    starting '#.  meaning UPDATE YOUR OLD POSITIONS/ROI FILES
  - __getitem__ from GenomeArrays now returns vectors 5' to 3' relative to
-   GenomicSegment rather than to genome. This is more consistent with user
-   expectations.
+  GenomicSegment rather than to genome. This is more consistent with user
+  expectations.
  - _get_valid_X methods of SegmentChain changed to _get_masked_X for
    consistency with documentation and with numpy notation
 
