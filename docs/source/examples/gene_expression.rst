@@ -55,7 +55,7 @@ Our first dataset is :term:`ribosome profiling`, and we will map the ribosomal
 P-site at 14 nucleotides from the 5' end of each read (approximating :cite:`Stern-Ginossar2012`).
 To specify this, we use the arguments ``--fiveprime --offset 14``.
 
-The data we want to count is in the file ``SRR609197_riboprofile_rep1.bam``, which we pass
+The data we want to count is in the file ``SRR609197_riboprofile_5hr_rep1.bam``, which we pass
 via ``--count_files``. The genes we are interested in counting in this example
 are on chromosome I, in the annotation file ``merlin_orfs.gtf``. Finally,
 we will tell the script to save the output in ``riboprofile.txt``.
@@ -64,7 +64,7 @@ Putting this together, the script is run from the terminal as:
 
  .. code-block:: shell
 
-    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile_rep1.bam \
+    $ counts_in_region riboprofile.txt --count_files SRR609197_riboprofile_5hr_rep1.bam \
                                        --annotation_files merlin_orfs.gtf \
                                        --fiveprime --offset 14
 
@@ -110,9 +110,7 @@ First, we need to import a few things::
    >>> import copy
    >>> import pandas as pd
    >>> import matplotlib.pyplot as plt
-   >>> from plastid import Transcript BED_Reader, \
-                           BAMGenomeArray, FivePrimeMapFactory, CenterMapFactory
-
+   >>> from plastid import * 
 
 First, open the :term:`read alignments`, storing each dataset in a |BAMGenomeArray|::
 
@@ -267,7 +265,7 @@ control::
    >>>             marker="o",alpha=0.2,facecolor="none",edgecolor="#007ADF")
    >>> plt.xlabel("Transcript levels (RPKM of mRNA fragments over all exons)")
    >>> plt.ylabel("Translation efficiency")
-   >>> plt.xlim(1,plt.get_xlim()[1])
+   >>> plt.xlim(1,plt.xlim()[1])
    >>> plt.ylim(plt.ylim()[0]/10.0,100)
 
    >>> plt.show()
@@ -356,9 +354,9 @@ on each biological sample to obtain counts. Here, we'll use RNA-seq data:
 .. code-block:: shell
 
    $ counts_in_region rnaseq_5hr_rep1.txt --count_files  SRR592963_rnaseq_5hr_rep1.bam   --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
-   $ counts_in_region rnaseq_5hr_rep3.txt --count_files  SRR2064027_rnaseq_5hr_rep2.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+   $ counts_in_region rnaseq_5hr_rep2.txt --count_files  SRR2064027_rnaseq_5hr_rep2.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
    $ counts_in_region rnaseq_24hr_rep1.txt --count_files SRR592964_rnaseq_24hr_rep1.bam  --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
-   $ counts_in_region rnaseq_24hr_rep3.txt --count_files SRR2064029_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
+   $ counts_in_region rnaseq_24hr_rep2.txt --count_files SRR2064029_rnaseq_24hr_rep2.bam --fiveprime --annotation_files merlin_orfs.bed --annotation_format BED
 
 We combine the data into a single table in Python:
 
@@ -461,7 +459,7 @@ be loaded into `R`_:
    >             file="5_vs_24hr_rnaseq_p_values.txt")
 
    > # or, just select genes whose adjusted P-values meet significance level
-   > res[res$padj < 0.05]
+   > res[res$padj < 0.05,]
 
    > # look at MA plot
    > plotMA(res,main="DESeq2")

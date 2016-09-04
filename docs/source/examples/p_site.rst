@@ -162,17 +162,18 @@ In this case, it is possible to estimate the P-site offset from aggregate
 read counts at each position, instead of median normalized read density.
 
 The aggregate measurement is potentially noisier, but more sensitive to low read
-counts. To do so, run the script with the ``--aggregate`` flag:
+counts. To do so, run the script with the ``--aggregate`` flag. We'll also add
+``--keep`` to keep some intermediate files, for the next section:
 
 .. code-block:: shell
 
    # re-run the psite script using --aggregate
-   $ psite merlin_orfs_rois.txt SRR609197_riboprofile \
+   $ psite merlin_orfs_rois.txt merlin_orfs \
                                 --min_length 29 \
                                 --max_length 35 \
                                 --require_upstream \
                                 --count_files SRR609197_riboprofile_5hr_rep1.bam \
-                                --aggregate
+                                --aggregate --keep
 
 
 Or, manually load the appropriate data matrix from the previous run (named
@@ -183,19 +184,19 @@ Or, manually load the appropriate data matrix from the previous run (named
    >>> import numpy
    >>> import matplotlib.pyplot as plt
    
-   >>> counts26  = numpy.loadtxt("merlin_orfs_26_rawcounts.txt.gz")
-   >>> profile26 = numpy.nansum(counts26,axis=0)
+   >>> counts29  = numpy.loadtxt("merlin_orfs_29_rawcounts.txt.gz")
+   >>> profile29 = numpy.nansum(counts29,axis=0)
    
    # assuming we used `--upstream 50 --downstream 50` in call to `metagene generate`
    # change ranges below to match what you used
    >>> x = numpy.arange(-50,50)
    
    # estimate offset as highest peak upstream of start codon
-   >>> offset = 0 - x[profile26[x <= 0].argmax()]
+   >>> offset = 0 - x[profile29[x <= 0].argmax()]
    
    # plot
-   >>> plt.plot(x,profile26,label="26 mers")
-   >>> plt.axvline(offset,dashes=[2,2],label="%s nt offset" % offset)
+   >>> plt.plot(x,profile29,label="29 mers")
+   >>> plt.axvline(-offset,dashes=[2,2],label="%s nt offset" % offset)
    
    # check estimate to see if it is reasonable
    >>> plt.show()
@@ -227,9 +228,9 @@ The mapping rule can be constructed by passing the offset file from |psite| to t
 :meth:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory.from_file`
 method of :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`::
 
-   >>> from plastid import BAMGenomeArray, VariableFivePrimeMapFactory
+   >>> from plastid import *
 
-   >>> maprule = VariableFivePrimeMapFactory.from_file("SRR609197_riboprofile_p_offsets_adjusted.txt")
+   >>> maprule = VariableFivePrimeMapFactory.from_file(open("merlin_orfs_p_offsets_adjusted.txt"))
    
    >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam")
    >>> alignments.set_mapping(maprule)
@@ -238,9 +239,9 @@ method of :class:`~plastid.genomics.map_factories.VariableFivePrimeMapFactory`::
 For alignments in `bowtie`_-format use |GenomeArray| and
 :func:`~plastid.genomics.genome_array.variable_five_prime_map`::
 
-   >>> from plastid import GenomeArray, variable_five_prime_map
-   >>> from plastid.genomics.util.scriptlib import _parse_variable_offset_file as pvof
-   >>> offset_dict = pvof(open("SRR609197_riboprofile_p_offsets_adjusted.txt"))
+   >>> from plastid.util.io.filters import *
+   >>> from plastid.util.scriptlib.argparsers import _parse_variable_offset_file as pvof
+   >>> offset_dict = pvof(CommentReader(open("SRR609197_riboprofile_p_offsets_adjusted.txt")))
 
    >>> alignments = GenomeArray()
    >>> alignments.add_from_bowtie("some_file.bowtie",variable_five_prime_map,offset=offset_dict)

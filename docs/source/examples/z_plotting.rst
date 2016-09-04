@@ -27,17 +27,21 @@ below. From the terminal enter the following:
    $ tar -jxvf plastid_demo.tar.bz2 
 
    # gene expression - for various scatter plots
-   $ counts_in_region rp.txt --annotation_files ./test_package/merlin_orfs.gtf \
-                             --count_files test_package/SRR609197_riboprofile.bam \
+   $ counts_in_region rp.txt --annotation_files merlin_orfs.gtf \
+                             --count_files SRR609197_riboprofile_5hr_rep1.bam \
                              --fiveprime --offset 14
-   $ counts_in_region mrna.txt --annotation_files ./test_package/merlin_orfs.gtf \
-                               --count_files test_package/SRR592963_rnaseq.bam \
+   $ counts_in_region mrna.txt --annotation_files merlin_orfs.gtf \
+                               --count_files SRR592963_rnaseq_5hr_rep1.bam \
                                --center
 
    # for metagene demo
+   $ metagene generate merlin_start\
+                       --upstream 50 --downstream 100 \
+                       --annotation_files  merlin_orfs.gtf
    $ metagene count merlin_start_rois.txt merlin_metagene \
-                                          --count_files SRR609197_riboprofile.bam \
-                                          --fiveprime --offset 14 --norm_region 70 150
+                                          --count_files SRR609197_riboprofile_5hr_rep1.bam \
+                                          --fiveprime --offset 14 --normalize_over 20 100 \
+                                          --keep
 
 Then, in Python:
 
@@ -49,23 +53,20 @@ Then, in Python:
    >>> 
    >>> import numpy
    >>> import pandas as pd
+   >>> from plastid import *
    >>> from plastid.plotting.plots import *
-   >>> 
-   >>> # change this line below
-   >>> f = "/path/to/where/you/unpacked/test/data"
-   >>> 
-   >>> # load data
-   >>> rp = pd.read_csv(f+"rp.txt",sep="\t",comment="#",header=0)
-   >>> mrna = pd.read_csv(f+"mrna.txt",sep="\t",comment="#",header=0)
+   
+   # load data
+   >>> rp = read_pl_table("rp.txt")
+   >>> mrna = read_pl_table("mrna.txt")
+
 
    # create some aliases for later 
    # we require positivity for log plots for convenience
-
    >>> rpcounts = rp["counts"][rp["counts"] > 0]
    >>> mcounts = mrna["counts"][rp["counts"] > 0]
    >>> mcpn = mrna["counts_per_nucleotide"][mrna["counts_per_nucleotide"] > 0]
    >>> lengths = rp["length"][rp["counts"] > 0]
-
 
 Now, we're ready to go.
 
@@ -245,30 +246,30 @@ is made by taking the columnwise median of the data matrix. To make a plot:
 .. code-block:: python
 
    # load raw and normalized count output from metagene
-   >>> rc = numpy.loadtxt(f+"merlin_metagene_rawcounts.txt.gz")
-   >>> nc = numpy.ma.masked_invalid(numpy.loadtxt(f+"merlin_metagene_normcounts.txt.gz"))
+   >>> rc = numpy.loadtxt("merlin_metagene_rawcounts.txt.gz")
+   >>> nc = numpy.ma.masked_invalid(numpy.loadtxt("merlin_metagene_normcounts.txt.gz"))
 
    # exclude rows with few raw counts
    >>> sums = (rc.sum(1) > 15)
-
+    
    # this dataset has extreme values, so we create a color normalizer
    # to logscale colors, making them easier to see across the whole
    # range of values
    >>> norm = matplotlib.colors.SymLogNorm(0.0125,vmin=nc.min(),
    >>>                                     vmax=nc.max(),clip=True)
-   >>> 
-   
+    
+       
    >>> fig, ax = profile_heatmap(nc[sums],#numpy.log(0.01+nc[sums]),
    >>>                           x=numpy.arange(-50,100),
    >>>                           cmap=matplotlib.cm.Blues,
    >>>                           im_args=dict(norm=norm))
-
-
+    
+    
    # set titles and labels on specific axes
    >>> ax["main"].set_xlabel("Distance from start codon (nt)")
    >>> ax["main"].set_ylabel("Row-normalized ribosome density")
    >>> ax["top"].set_title("Ribosome density surrounding start codons - Merlin data",y=1.8)
-
+    
 
 This yields:
 

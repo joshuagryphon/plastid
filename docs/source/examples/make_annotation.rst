@@ -171,7 +171,7 @@ value of "" when they are not defined
    >>> my_chain = Transcript(GenomicSegment("chrA",100,150,"+"),
                              GenomicSegment("chrA",500,550,"+"),
                              **attr)
-   >>> print(my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"]))
+   >>> print(my_chain.as_bed()
    chrA    100    550    some feature ID    0    +    100    100    0,0,0    2    50,50,    0,400,
 
    >>> print(my_chain.as_bed(extra_columns=["extra_field_1","extra_field_2"]))
