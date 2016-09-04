@@ -9,10 +9,10 @@ and in :doc:`examples`. It consists of feature :term:`annotations`,
 
 Downloads:
 
- - `Demo dataset <https://www.dropbox.com/s/abktvrngn1lnzpb/plastid_demo.tar.bz2?dl=0>`_, for the tutorials
+ - `demo dataset part one`_, for all of the tutorials
  
- - `Additional data <https://www.dropbox.com/s/43xsvu7dz00k3q0/plastid_demo_part2.tar.bz2?dl=0>`_, specifically
-   used in :doc:`/examples/gene_expression`.
+ - `demo dataset part two`_, specifically used in
+   :doc:`/examples/gene_expression`.
 
 
 

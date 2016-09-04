@@ -284,7 +284,7 @@ control::
 Testing for differential expression
 -----------------------------------
 
-This portion requires `part 2 of the demo dataset <https://www.dropbox.com/s/43xsvu7dz00k3q0/plastid_demo_part2.tar.bz2?dl=0>`_.
+This portion requires part two of the :doc:`demo dataset </test_dataset>`.
 Download it and place it in the same folder as part 1 of the dataset.
 
 

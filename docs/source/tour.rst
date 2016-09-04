@@ -341,6 +341,7 @@ files for use in a :term:`genome browser`::
 using the :meth:`~plastid.genomics.genome_array.GenomeArray.add_from_wiggle`
 method::
 
+   >>> from plastid import GenomeArray
    >>> new_data = GenomeArray()
    >>> new_data.add_from_wiggle(open("alignments_rc.wig"),"-")
     

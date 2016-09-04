@@ -11,8 +11,8 @@ Workflow
 
 Download the test dataset
 .........................
-Get the test dataset from `here <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2>`_
-and unpack it into ``plastid/test/``. The archive will create a folder called `data` and you'll be good to go.
+Get the `test dataset`_ and unpack it into ``plastid/test/``. The archive will
+create a folder called `data` and you'll be good to go.
 
 
 Start with a ticket

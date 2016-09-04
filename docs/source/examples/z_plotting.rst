@@ -18,8 +18,8 @@ Plastid includes a number of plotting tools built atop `matplotlib`_:
 
 
 Here, as elsewhere, we use the :doc:`/test_dataset`. Before starting, we
-download and unpack it, and also run a few scripts to produce files
-we'll use below. From the terminal:
+download and unpack it, and also run a few scripts to produce files we'll use
+below. From the terminal enter the following:
 
 .. code-block:: shell
 
@@ -35,8 +35,6 @@ we'll use below. From the terminal:
                                --center
 
    # for metagene demo
-   $ metagene count merlin_start_rois.txt --count_files SRR609197_riboprofile.bam \
-                                          --fiveprime --offset 14 --norm_region 70 150
    $ metagene count merlin_start_rois.txt merlin_metagene \
                                           --count_files SRR609197_riboprofile.bam \
                                           --fiveprime --offset 14 --norm_region 70 150
