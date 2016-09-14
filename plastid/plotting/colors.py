@@ -45,7 +45,7 @@ def get_str_from_rgb(inp):
     ------
     ValueError if values are out of range
     """    
-    return get_str_from_rgb255((255*numpy.array(inp).round()).astype(int))
+    return get_str_from_rgb255((255*numpy.array(inp)).round().astype(int))
     
 def get_str_from_rgb255(inp):
     """Converts RGB tuples of ints from between 0 and 255 to RGB hex strings of type `#RRGGBB`
