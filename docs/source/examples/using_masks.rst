@@ -40,11 +40,10 @@ the first and last 5 codons:
 .. code-block:: python
 
    >>> import numpy
-   >>> from plastid import GenomicSegment, Transcript, BED_Reader, \
-                           BAMGenomeArray, FivePrimeMapFactory
-
+   >>> from plastid import *
+   
    # load transcripts and count data
-   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam",FivePrimeMapFactory(offset=14))
+   >>> alignments = BAMGenomeArray("SRR609197_riboprofile_5hr_rep1.bam",mapping=FivePrimeMapFactory(offset=14))
    >>> transcripts = list(BED_Reader("merlin_orfs.bed",return_type=Transcript))
 
    # Get coding region using get_cds()
@@ -53,7 +52,7 @@ the first and last 5 codons:
    # Create SegmentChains covering the first and last 5 codons. 
    # We'll use these as masks
    >>> start_codon_mask = list(demo_cds.get_subchain(0,15))
-   >>> stop_codon_mask  = list(demo_cds.get_subchain(demo_cds_length-15,demo_cds_length))
+   >>> stop_codon_mask  = list(demo_cds.get_subchain(demo_cds.length-15,demo_cds.length))
 
 
 The |SegmentChains| we just created can be applied as masks using 
@@ -67,7 +66,7 @@ The |SegmentChains| we just created can be applied as masks using
 
    # save masks to a BED file
    >>> fout = open("merlin_start_codon_masks.bed","w")
-   >>> for mask in start_codon_masks:
+   >>> for mask in start_codon_mask:
    >>>     fout.write(SegmentChain(mask).as_bed())
    >>>
    >>> fout.close()
@@ -114,7 +113,7 @@ as a list of |GenomicSegments| or as a |SegmentChain|:
 
 .. code-block:: python
 
-   >>> demo_cds.get_masks()
+   >>> demo_cds.mask_segments
    [<GenomicSegment merlin:14615-14630 strand='+'>,
     <GenomicSegment merlin:14843-14858 strand='+'>]
 
@@ -141,8 +140,6 @@ dictionary-like object that indexes features by their locations in the genome.
 To create a |GenomeHash|:
 
 .. code-block:: python
-
-   >>> from plastid import GenomeHash
 
    # get list of masks
    >>> mask_features = list(BED_Reader("merlin_start_codon_masks.bed"))

@@ -208,7 +208,7 @@ The output can be loaded into :class:`numpy arrays <numpy.ndarray>` using
 
    >>> import numpy
    
-   >>> my_reloaded_vector = numpy.loadtxt("folder_of_vectors/ORFL46W.iORF1_(UL13).txt")
+   >>> my_reloaded_vector = numpy.loadtxt("folder_of_arrays/ORFL46W.iORF1_(UL13).txt")
    >>> my_reloaded_vector[200:250]
    array([   7.,   25.,   18.,   13.,    5.,    1.,   10.,    3.,    0.,
              1.,   24.,    9.,   27.,   27.,   18.,    3.,   16.,   20.,

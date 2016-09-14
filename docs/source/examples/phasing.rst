@@ -60,6 +60,7 @@ First, we need to open the read alignments and transcript annotation:
 
 .. code-block:: python
 
+   >>> import numpy
    >>> from plastid import Transcript, BED_Reader, BAMGenomeArray, FivePrimeMapFactory
 
    >>> # retrieve an iterator over transcripts
@@ -153,7 +154,7 @@ To avoid double-counting, it is ideal to use an *ROI file* of
 .. code-block:: shell
 
    # generate metagene `roi` file. See `metagene` documentation for details
-   $ metagene generate merlin_orfs \
+   $ metagene generate merlin_orfs_cds_start \
                        --landmark cds_start \
                        --annotation_files merlin_orfs.gtf
 
@@ -164,8 +165,6 @@ To use the ROI file, give its name as the first parameter:
    # use ROI file `merlin_orfs_cds_start_rois.txt` from metagne run above
    $ phase_by_size merlin_orfs_cds_start_rois.txt SRR609197 \
                    --count_files SRR609197_riboprofile_5hr_rep1.bam \
-                   --annotation_files merlin_orfs.bed \
-                   --annotation_format BED \
                    --fiveprime --offset 14 \
                    --codon_buffer 5 \
                    --min_length 25 --max_length 35

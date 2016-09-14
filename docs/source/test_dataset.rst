@@ -9,14 +9,14 @@ and in :doc:`examples`. It consists of feature :term:`annotations`,
 
 Downloads:
 
- - `Demo dataset <https://www.dropbox.com/s/abktvrngn1lnzpb/plastid_demo.tar.bz2?dl=0>`_, for the tutorials
+ - `demo dataset part one`_, for all of the tutorials
  
- - `Additional data <https://www.dropbox.com/s/43xsvu7dz00k3q0/plastid_demo_part2.tar.bz2?dl=0>`_, specifically
-   used in :doc:`/examples/gene_expression`.
+ - `demo dataset part two`_, specifically used in
+   :doc:`/examples/gene_expression`.
 
 
 
-The following files are included:
+Part 1 includes the following files:
 
    ======================================================  =======================================================================  ====================================================================================================================================
    **Filename**                                            **Contents**                                                             **Source**
@@ -26,13 +26,13 @@ The following files are included:
    ``merlin_orfs.bed``, ``merlin_orfs.gtf``                Coding region models for hCMV strain, plus estimated UTRs                :cite:`Stern-Ginossar2012` (CDS).
                                                                                                                                     5' UTRs estimated as 50 nt upstream of CDS. 3' UTRs estimated as 100 nt downstream of CDS. 
 
-   ``SRR609197_riboprofile_rep1_5hr.bam``                  :term:`Ribosome profiling` data, 5 hours post hCMV infection,            :cite:`Stern-Ginossar2012`,
+   ``SRR609197_riboprofile_5hr_rep1.bam``                  :term:`Ribosome profiling` data, 5 hours post hCMV infection,            :cite:`Stern-Ginossar2012`,
                                                            aligned to hCMV merlin strain genome sequence                            raw data available at `SRA, accession no. SRR609197 <http://www.ncbi.nlm.nih.gov/sra/?term=SRR609197>`_
 
-   ``SRR592963_rnaseq_rep1_5hr.bam``                       :term:`RNA-seq` data, 5 hours post CMV infection,                        :cite:`Stern-Ginossar2012`,
+   ``SRR592963_rnaseq_5hr_rep1.bam``                       :term:`RNA-seq` data, 5 hours post CMV infection,                        :cite:`Stern-Ginossar2012`,
                                                            aligned to hCMV merlin strain genome sequence                            raw data available at `SRA, accession no. SRR592963 <http://www.ncbi.nlm.nih.gov/sra/?term=SRR592963>`_
    ======================================================  =======================================================================  ====================================================================================================================================
 
 
-The additional dataset includes further replicates, as well as timepoint data
-from 24 hours post-infection.
+Part 2 includes further replicates, as well as timepoint data from 24 hours
+post-infection.

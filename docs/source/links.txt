@@ -86,3 +86,6 @@
 .. _plastid_repo: https://github.com/joshuagryphon/plastid
 .. _plastid_issues: https://github.com/joshuagryphon/plastid/issues
 .. _Weissman lab: http://weissmanlab.ucsf.edu
+.. _demo dataset part one: https://www.dropbox.com/s/abktvrngn1lnzpb/plastid_demo.tar.bz2?dl=0
+.. _demo dataset part two: https://www.dropbox.com/s/43xsvu7dz00k3q0/plastid_demo_part2.tar.bz2?dl=0
+.. _test dataset: https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0

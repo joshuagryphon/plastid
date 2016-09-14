@@ -408,9 +408,8 @@ Tests
 
 The tests won't run
 ...................
-In order to run the tests, you need to download the
-`test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_
-and unpack it into ``plastid/test/``.
+In order to run the tests, you need to download the `test dataset`_ and unpack
+it into ``plastid/test/``.
 
 We decided not to include the test data in the main package in order to keep
 the package download and the github repository small.
