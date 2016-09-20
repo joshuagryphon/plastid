@@ -158,12 +158,20 @@ If the output looks blank for one or more read lengths
 ......................................................
    
 This occurs in datasets in which there are few reads of any given length.
-In this case, it is possible to estimate the P-site offset from aggregate
-read counts at each position, instead of median normalized read density.
+In this case, there are a couple of options:
 
-The aggregate measurement is potentially noisier, but more sensitive to low read
-counts. To do so, run the script with the ``--aggregate`` flag. We'll also add
-``--keep`` to keep some intermediate files, for the next section:
+ #. Raise the number of minimum counts required to be included in the analysis
+    using the ``--min_counts`` argument
+    
+ #. Estimate the P-site offset from aggregate read counts at each position,
+    instead of median normalized read density, using the ``--aggregate``
+    argument.
+
+    The columnwise aggregate measurement is potentially noisier than the
+    columnwise median, but more sensitive to low read counts. 
+    
+In either case, it is useful to add the ``--keep`` argument to keep some
+intermediate files, in case we wish to aggregate or filter them manually:
 
 .. code-block:: shell
 
@@ -176,8 +184,8 @@ counts. To do so, run the script with the ``--aggregate`` flag. We'll also add
                                 --aggregate --keep
 
 
-Or, manually load the appropriate data matrix from the previous run (named
-``SAMPLE_LENGTH_rawcounts.txt.gz``), and make the profile manually:
+To manipulate the data manually, load the appropriate data matrix from the
+previous run (named ``SAMPLE_LENGTH_rawcounts.txt.gz``):
 
 .. code-block:: python
 

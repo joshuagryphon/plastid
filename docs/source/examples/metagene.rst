@@ -181,18 +181,21 @@ Specifically, :ref:`count <metagene-count>` performs the following steps:
    in the average to a tab-delimited text file.
 
 To call the :ref:`count <metagene-count>` program, type into a terminal window.
-In this example, the parameters ``--fiveprime --offset 14`` specify ou
+In this example, the parameters ``--fiveprime --offset 14`` specify our
 :term:`mapping rule` for the :term:`P-site offset`, estimating the offset as
 14 nucleotides from the 5' end of each :term:`read alignment`. The parameter
 ``--normalize_over 30 200`` indicates that each vector should be normalized
 to the total number of counts it contains in the region from 30 to 200 nucleotides
-downstream of the start codon.
+downstream of the start codon. The parameter ``--min_counts 50`` ensures
+that we're only including genes that have at least 50 counts in the region
+we're normalizing over:
 
 .. code-block:: shell
 
    $ metagene count merlin_cds_start_rois.txt SRR609197_riboprofile \
                     --count_files SRR609197_riboprofile_5hr_rep1.bam \
-                    --fiveprime --offset 14 --normalize_over 30 200
+                    --fiveprime --offset 14 --normalize_over 30 200 \
+                    --min_counts 50 --cmap Blues --title "Metagene demo"
 
 
 A number of files are created and may be used for further processing. In our
