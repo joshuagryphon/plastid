@@ -7,6 +7,15 @@ guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
+Unreleased
+----------
+
+ - ``write_pl_table()`` added as a convenience function
+ - ``--use_mean`` flag added to ``metagene``
+ - Documentation updates
+
+
+
 plastid [0.4.6] = [2016-05-20]
 ------------------------------
 
