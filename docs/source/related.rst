@@ -5,8 +5,12 @@ If you are interested in :data:`plastid`, the following projects might also
 be helpful for you:
 
 
-Similar projects, for interactive analysis of sequencing data
--------------------------------------------------------------
+Toolkits for interactive analysis of sequencing data
+----------------------------------------------------
+
+`Bioconductor`_
+    The `R`_ community's massive toolset for computational biology 
+    
 `HTSeq`_
     A Python package designed for analysis of high-throughput
     sequencing data.
@@ -18,23 +22,32 @@ Similar projects, for interactive analysis of sequencing data
     types. In addition, it includes nice plotting utilities
     for interactive analysis
 
-`riboseqr`_
-    A toolkit for analysis of :term:`ribosome profiling` data,
-    written in `R`_. It implements many standard workflows.
+
+Ribosome profiling
+------------------
+
+`ORF-RATER`_
+    Weissman lab tool to annotate potentially overlapping constellations of ORFs
+    using ribosome profiling data, an estimate their respective amounts. See
+    :cite:`FieldsRodriguez2015`.
    
 `ribogalaxy`_
     A web-based platform for analysis of :term:`ribosome profiling`
     data, integrating `riboseqr`_, `galaxy`_, and other tools.
 
+`riboseqr`_
+    A toolkit for analysis of :term:`ribosome profiling` data,
+    written in `R`_. It implements many standard workflows.
+     
 
-Gene expression analysis
-------------------------
-`DESeq`_
+Differential gene expression
+----------------------------
+`DESeq2`_
     Statistical models for assessment of differential gene expression,
     applicable to RNA-seq, :term:`ribosome profiling`, and many other
     types of :term:`high-throughput sequencing` data
     
-    `DESeq`_ can be used to test for significant differences in expression
+    `DESeq2`_ can be used to test for significant differences in expression
     counts obtained using the :mod:`~plastid.bin.cs` or
     :mod:`~plastid.bin.counts_in_region` scripts
 

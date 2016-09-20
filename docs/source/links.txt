@@ -43,6 +43,8 @@
 .. _conda: http://conda.pydata.org
 .. _Anaconda: http://docs.continuum.io/anaconda/index
 .. _Cython: http://cython.org
+.. _ORF-RATER: http://github.com/alexfields/ORF-RATER
+
 
 .. Genome browsers & data sources
 
@@ -76,6 +78,7 @@
 .. _DESeq: http://www-huber.embl.de/users/anders/DESeq/
 .. _DESeq2: http://bioconductor.org/packages/release/bioc/html/DESeq2.html
 .. _kallisto: http://pachterlab.github.io/kallisto/
+.. _Bioconductor: http://www.bioconductor.org/
 .. _R: http://www.r-project.org
 .. _fastx toolkit: http://hannonlab.cshl.edu/fastx_toolkit/
 .. _riboseqr: http://bioconductor.org/packages/release/bioc/html/riboSeqR.html
