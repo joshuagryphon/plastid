@@ -10,9 +10,17 @@ that a `0` is prepended (i.e. our version scheme is era.major.minor).
 Unreleased
 ----------
 
+Added
+.....
+
  - ``write_pl_table()`` added as a convenience function
  - ``--use_mean`` flag added to ``metagene``
- - Documentation updates
+
+
+Fixed
+.....
+
+ - rounding error in ``get_str_from_rgb()``
 
 
 
