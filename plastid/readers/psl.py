@@ -72,7 +72,7 @@ class PSL_Reader(AssembledFeatureReader):
         """Read `PSL`_ files line-by-line into types specified by ``self.return_type``"""
         self.counter += 1
         if line.strip() == "":
-            return self.__next()
+            return self.__next__()
         elif line.startswith("psLayout"):
             return self.__next__()
         elif line.lstrip().startswith("match"):
