@@ -84,9 +84,10 @@ class PSL_Reader(AssembledFeatureReader):
         else:
             try:
                 return self.return_type.from_psl(line)
-            except:
+            except Exception as e:
                 self.rejected.append(line)
-                warn("Rejecting line %s: %s" % (self.counter,line),FileFormatWarning)
+                warn("Rejecting line %s because of %s: %s" %
+                        (self.counter,e.message,line),FileFormatWarning)
                 return self.__next__()        
 
 

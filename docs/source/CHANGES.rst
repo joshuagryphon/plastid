@@ -21,6 +21,8 @@ Fixed
 .....
 
  - rounding error in ``get_str_from_rgb()``
+ - ``PSL_Reader()`` now capable of parsing strands from translated `blat` output
+ - Fixed bug in header parsing in ``PSL_reader``
 
 
 
