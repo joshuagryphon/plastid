@@ -863,7 +863,12 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         numpy.savetxt(mask_fn,norm_counts.mask,delimiter="\t")
      
     try:
-        profile = numpy.ma.median(norm_counts[row_select],axis=0)
+        if args.use_mean == True:
+            pfunc = numpy.ma.mean
+        else:
+            pfunc = numpy.ma.median
+            
+        profile = pfunc(norm_counts[row_select],axis=0)
     except IndexError:
         profile = numpy.zeros(norm_counts.shape[0])
     except ValueError:
@@ -917,7 +922,7 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
     title = args.title if args.title is not None else "Metagene overview for %s" % outbase
     fig.suptitle(title)
 
-    ax["main"].set_ylabel("Row-normalized ribosome density (au)")
+    ax["main"].set_ylabel("Normalized ribosome density (au), by gene")
     landmark = args.landmark
     if args.landmark is not None:
         ax["main"].set_xlabel("Distance (nt) from %s" % landmark)
@@ -1081,6 +1086,9 @@ def main(argv=sys.argv[1:]):
                               " distance, from 5\' end of window. (Default: 70 100)")
     cparser.add_argument("--landmark",type=str,default=None,
                          help="Name of landmark at zero point, optional.")
+    cparser.add_argument("--use_mean",default=False,action="store_true",
+                         help="If supplied, use columnwise mean to generate profile (Default: use median)"
+                         )
     cparser.add_argument("--keep",default=False,action="store_true",
                         help="Save intermediate count files. Useful for additional computations (Default: False)")
     cparser.add_argument("outbase",type=str,

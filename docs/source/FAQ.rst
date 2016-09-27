@@ -286,6 +286,31 @@ data using your favorite aligner (e.g. `tophat`_ with the argument
 ``--library-type=fr-second``).
 
 
+.. _faq-paired-end:
+
+Can ``plastid`` be used with paired-end data?
+.............................................
+
+Because there are few nucleotide-resolution assays that used paried-end sequencing,
+it has been unclear what sorts of :term:`mapping functions <mapping funcgtion>`
+might be useful. If you have a suggestion for one, please submit your suggestion
+with a use case on our `issue tracker <plastid_issues>`_.
+
+For simple gene expression counting, it is possible to use the ``--fiveprime`` 
+(implemented in :class:`~plastid.genomics.roitools.FivePrimeMapFactory`)
+mapping function with zero offset. Accuracy can be improved by counting a single
+read from each pair, rather than both, in case one of a pair is not mapped.
+Simply select read1 from each pair using ``samtools``:
+
+.. code-block:: shell
+
+   $ samtools view  -f 65 -b -o read1_only.bam paired_end_file.bam
+
+Then use `read1_only.bam` with ``plastid`` as usual.
+
+
+
+
 .. _faq-psite-use-aggregate:
 
 The P-site script shows zero reads in its output

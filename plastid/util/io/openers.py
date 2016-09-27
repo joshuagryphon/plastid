@@ -146,6 +146,7 @@ def opener(filename,mode="r",**kwargs):
     
     return call_func(filename,mode,**kwargs)
 
+
 # needs unittest
 def read_pl_table(filename,**kwargs):
     """Open a table saved by one of :data:`plastid`'s command-line scripts,
@@ -182,6 +183,25 @@ def read_pl_table(filename,**kwargs):
     args.update(kwargs)
     table = pd.read_table(filename,**args)
     return table
+
+
+# needs unit test
+def write_pl_table(df,filename,sep="\t",header=True,index=None,**kwargs):
+    """Wrapper function to write DataFrame `df` to a tab-delimited table, with header
+
+    Parameters
+    ----------
+    df : :class:`~pandas.DataFrame`
+        DataFrame to save
+
+    filename : str
+        Name of file to create
+
+    **kwargs : keyword arguments, optional
+        Any keyword argument readable by :meth:`pandas.DataFrame.to_csv`. 
+    """
+    return df.to_csv(filename,sep=sep,header=header,index=index,**kwargs)
+
 
 def get_short_name(inpt,separator=os.path.sep,terminator=""):
     """Gives the basename of a filename or module name passed as a string.
