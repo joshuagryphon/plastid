@@ -3387,6 +3387,7 @@ cdef class SegmentChain(object):
             dict attr = {}
             long t_start, block_size
             str st, sb
+            str strand
             GenomicSegment seg
             list block_sizes, sq_starts, st_starts
             list t_starts = []
@@ -3402,7 +3403,7 @@ cdef class SegmentChain(object):
         attr["query_gap_bases"]  = int(items[5])
         attr["target_gap_count"] = int(items[6])
         attr["target_gap_bases"] = int(items[7])
-        attr["strand"]           = items[8]
+        
         attr["query_length"]     = int(items[10])
         attr["query_start"]      = int(items[11])
         attr["query_end"]        = int(items[12])
@@ -3413,7 +3414,18 @@ cdef class SegmentChain(object):
         attr["ID"]               = attr["query_name"]
         #block_count           = int(items[17])
 
-        block_sizes = items[18].strip(",").split(",")
+        # for translated alignments, "++" or "+-" are results,
+        # the second result indicating the genomic strand
+        strand = items[8]
+        if len(strand) == 2:
+            if strand[0] == "+":
+                strand = strand[:-1]
+            elif strand[0] == "-":
+                strand = "+" if strand[:-1] == "-" else "+"
+
+        attr["strand"] = strand
+ 
+        block_sizes  = items[18].strip(",").split(",")
         sq_starts    = items[19].strip(",").split(",")
         st_starts    = items[20].strip(",").split(",")        
 
