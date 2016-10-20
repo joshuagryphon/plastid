@@ -166,7 +166,8 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
 #==============================================================================
 
 def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
-            log=False,base=10,points=500,bw_method="scott"):
+            log=False,base=10,points=500,bw_method="scott",rescale=False,
+            zorder=None):
     """Plot a kernel density estimate of `data` on `axes`.
 
     Parameters
@@ -220,6 +221,9 @@ def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
         color = next(get_color_cycle(axes))
 
     a, b = get_kde(data,log=log,base=base,points=points,bw_method=bw_method)
+    
+    if rescale == True:
+      b /= b.max()
 
     fbargs = { "alpha" : alpha,
                "facecolor" : lighten(color),
