@@ -25,7 +25,7 @@ repeat installation passing the ``--verbose`` flag to ``pip``:
    $ pip install --verbose plastid
 
 Then find the corresponding error message below. If the error is not listed,
-let us know by filing a bug report at `our bug tracker <plastid_issues>`_. 
+let us know by filing a bug report at `our issue tracker`_. 
 
 
 .. _faq-install-numpy-first:
@@ -76,36 +76,8 @@ come across this problem when installing :data:`plastid` in a `conda`_/`Anaconda
 environment.
 
 A solution is to install inside a vanilla environment in a fresh `virtualenv`_
-(note: *not* a `conda`_/`Anaconda`_ environment):
-
-.. code-block:: shell
-
-   # install virtualenv if you don't have it.
-   # use either "sudo" or "--user", not both.
-
-   # Use the line below system-wide install
-   $ sudo pip install virtualenv
-
-   # or, use this line for single user install
-   $ pip install --user virtualenv
-
-   # With virtualenv installed, create & activate vanilla environment
-   # when prompted, do NOT give the virtualenv access to system packages
-
-   # create
-   $ virtualenv ~/some/path/to/venv
-
-   # activate
-   $ source ~/some/path/to/venv/bin/activate
-
-   # Fresh install of plastid.
-   # Note- no use of `sudo` here. It confuses the virtualenv
-   (venv) $ pip install numpy pysam cython
-   (venv) $ pip install plastid
-
-   # test
-   (venv) $ python -c "from plastid import *"
-
+(note: *not* a `conda`_/`Anaconda`_ environment). See instructions at
+:ref:`Install inside a virtualenv <install-inside-venv>`.
 
 If install succeeds in a `virtualenv`_, this suggests that there are in fact
 multiple versions of one or more of plastid's dependencies installed on your
@@ -121,8 +93,10 @@ Install fails inside a `conda`_/`Anaconda`_ environment
 Two users have reported difficulties installing inside `conda`_/`Anaconda`_
 environments. Despite having up-to-date versions of `numpy`_, `pysam`_, and
 `Cython`_ installed in the `conda`_ environment, during the build process
-``pip`` found an incompatible version of `Cython`_ or of `pysam`_.  See the
-workaround in :ref:`faq-install-fails-with-prereqs` for instructions.
+``pip`` found an incompatible version of `Cython`_ or of `pysam`_.
+
+A workaround is to install inside a `virtualenv`_, instructions for which can be
+found at :ref:`Install inside a virtualenv <install-inside-venv>`.
 
 
 .. _faq-locale-error-osx:
@@ -282,8 +256,7 @@ original strand that was cloned.
 To use this data in :data:`plastid`, reverse-complement your FASTQ file using the
 `fastx_reverse_complement <http://hannonlab.cshl.edu/fastx_toolkit/commandline.html#fastx_revcomp_usage>`_
 tool from the Hanon lab's `fastx toolkit`_. Then align the reverse-complemented
-data using your favorite aligner (e.g. `tophat`_ with the argument
-``--library-type=fr-second``).
+data using your favorite aligner.
 
 
 .. _faq-paired-end:
@@ -291,35 +264,59 @@ data using your favorite aligner (e.g. `tophat`_ with the argument
 Can ``plastid`` be used with paired-end data?
 .............................................
 
-Because there are few nucleotide-resolution assays that used paried-end sequencing,
-it has been unclear what sorts of :term:`mapping functions <mapping funcgtion>`
-might be useful. If you have a suggestion for one, please submit your suggestion
-with a use case on our `issue tracker <plastid_issues>`_.
+Yes, but two points:
 
-For simple gene expression counting, it is possible to use the ``--fiveprime`` 
-(implemented in :class:`~plastid.genomics.roitools.FivePrimeMapFactory`)
-mapping function with zero offset. Accuracy can be improved by counting a single
-read from each pair, rather than both, in case one of a pair is not mapped.
-Simply select read1 from each pair using ``samtools``:
+ - Because there are few nucleotide-resolution assays that used paried-end sequencing,
+   it has been unclear what sorts of :term:`mapping functions <mapping funcgtion>`
+   might be useful.
+   
+   If you have a suggestion for one, please submit your suggestion
+   with a use case on `our issue tracker`_. It would be helpful!
 
-.. code-block:: shell
+ - For simple gene expression counting, it is possible to use the ``--fiveprime`` 
+   (implemented in :class:`~plastid.genomics.roitools.FivePrimeMapFactory`)
+   mapping function with zero offset. Accuracy can be improved by counting a single
+   read from each pair in which both reads are mapped.
+   
+   However, it is critical to retain the read that appears on the same strand
+   as the gene from which it arose.
+   
+   If the library was prepared using dUTP chemistry, as in many paired-end 
+   prep kits, select `read2` from each pair using ``samtools``:
+   
+   .. code-block:: shell
 
-   $ samtools view  -f 65 -b -o read1_only.bam paired_end_file.bam
+      $ samtools view  -f 129 -b -o single_from_pair.bam paired_end_file.bam
+       
+   Otherwise, select `read1`:
+    
+   .. code-block:: shell
 
-Then use `read1_only.bam` with ``plastid`` as usual.
-
+      $ samtools view  -f 65 -b -o single_from_pair.bam paired_end_file.bam
+     
+  Then use `single_from_pair.bam` with ``plastid`` as usual.
 
 
 
 .. _faq-psite-use-aggregate:
 
-The P-site script shows zero reads in its output
-................................................
+The P-site and/or Metagene scripts show few or zero read in their output
+........................................................................
 
-This occurs in datasets with few counts of any given length, because |psite| 
-plots the median density at each position. In this case, the P-site can be
-estimated from aggregate counts (as opposed to median density) at each position
-using the ``--aggregate`` argument, as shown :ref:`here <psite-use-aggregate>`.
+This occurs in datasets with few counts, because |psite| and |metagene| plots
+the median density at each position. In this case, there are a few options:
+
+ - increase the minimum counts required to be included in the metagene / P-site
+   estimate. Set ``--min_counts`` argument to a high number (e.g. for a 100 nt
+   normalization region, choose >= 100 counts)
+ 
+ - the metagene profile or P-site can be estimated from aggregate counts (as
+   opposed to median density) at each position using the ``--aggregate`` argument,
+   as shown :ref:`here <psite-use-aggregate>`.
+   
+   This might add some noise to the data, but it should still be interpretable
+   if the gene models are good
+
 
 
 .. _faq-zero-counts-because-antisense:
@@ -331,12 +328,14 @@ The default behavior for all of the scripts and tools in :data:`plastid` is to
 exclude reads that are antisense to any given genomic feature when calculating
 coverage over that feature.
 
-Libraries prepared with dUTP sequencing or a number of other protocols will
-contain read alignments antisense to the original mRNAs, causing these reads
-to be considered antisense to genes, and therefore excluded from gene expression
-totals.
+Paired end libraries, and single-end libraries that have been prepared with dUTP
+sequencing or a number of other protocols will contain read alignments antisense
+to the original mRNAs, causing these reads to be considered antisense to genes,
+and therefore excluded from gene expression totals.
 
-See :ref:`faq-dutp-data` for instructions on how to reverse-complement your data.
+See :ref:`faq-dutp-data` for instructions on how to reverse-complement your data
+for single-end dUTP data; or :ref:`faq-paired-end` for info on using 
+:data:`plastid` with paired-end data.
 
 
 .. _faq-analysis-fractional-counts:
