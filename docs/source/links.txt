@@ -2,8 +2,8 @@
 
 .. _Wiggle: http://genome.ucsc.edu/goldenpath/help/wiggle.html
 .. _bedGraph: http://genome.ucsc.edu/goldenpath/help/bedgraph.html
-.. _SAM: https://samtools.github.io/hts-specs/SAMv1.pdf
-.. _BAM: http://genome.ucsc.edu/goldenpath/help/bam.html
+.. _SAM: http://samtools.github.io/hts-specs/ 
+.. _BAM: http://samtools.github.io/hts-specs/
 .. _BED: http://genome.ucsc.edu/FAQ/FAQformat.html#format1
 .. _BigBed: http://genome.ucsc.edu/goldenPath/help/bigBed.html
 .. _BigWig: http://genome.ucsc.edu/goldenPath/help/bigWig.html
@@ -13,7 +13,6 @@
 .. _VCF: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40
 .. _autoSql: http://genomewiki.ucsc.edu/index.php/AutoSql
 .. _UCSC file format FAQ: http://genome.ucsc.edu/FAQ/FAQformat.html
-.. _tabix: http://samtools.sourceforge.net/tabix.shtml 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _fasta: https://en.wikipedia.org/wiki/FASTA_format
 .. _twobit: http://genome.ucsc.edu/FAQ/FAQformat.html#format7
@@ -50,6 +49,10 @@
 
 .. _IGV: https://www.broadinstitute.org/igv/
 .. _UCSC genome browser: https://genome.ucsc.edu
+.. _galaxy: https://galaxyproject.org/
+
+
+.. Organism databases
 .. _UCSC: https://genome.ucsc.edu
 .. _Ensembl: http://www.ensembl.org
 .. _RefSeq: http://www.ncbi.nlm.nih.gov/refseq/ 
@@ -58,14 +61,21 @@
 .. _Wormbase: http://www.wormbase.org
 .. _ENCODE: https://www.encodeproject.org/
 .. _GENCODE: www.gencodegenes.org 
-.. _galaxy: https://galaxyproject.org/
-.. _Sequence Ontology Project: http://www.sequenceontology.org/
 .. _modENCODE: http://www.modencode.org
 .. _GenBank: http://www.ncbi.nlm.nih.gov/genbank/
+.. _NCBI Assembly: https://www.ncbi.nlm.nih.gov/assembly
+.. _JGI: http://jgi.doe.gov
+.. _Joint Genome Institute: http://jgi.doe.gov
+.. _GEO: https://www.ncbi.nlm.nih.gov/geo/
+.. _APPRIS: http://appris.bioinfo.cnio.es/#/
 
 .. Non-Python software links
 
-.. _SAMtools: http://samtools.sourceforge.net/
+.. _Sequence Ontology Project: http://www.sequenceontology.org/
+.. _SAMtools: http://www.htslib.org/
+.. _htslib: http://www.htslib.org
+.. _bgzf: http://www.htslib.org/doc/tabix.html
+.. _tabix: http://samtools.github.io/hts-specs/
 .. _bedtools: http://bedtools.readthedocs.io/
 .. _Jim Kent's utilities: https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
 .. _Tophat: http://tophat.cbcb.umd.edu/
@@ -73,6 +83,7 @@
 .. _Bowtie 2: http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml
 .. _cufflinks: http://cole-trapnell-lab.github.io/cufflinks/
 .. _BWA: http://bio-bwa.sourceforge.net
+.. _STAR: https://github.com/alexdobin/STAR
 .. _blat: http://genome.cshlp.org/content/12/4/656.full
 .. _Cigar: https://samtools.github.io/hts-specs/SAMv1.pdf
 .. _DESeq: http://www-huber.embl.de/users/anders/DESeq/
@@ -83,6 +94,7 @@
 .. _fastx toolkit: http://hannonlab.cshl.edu/fastx_toolkit/
 .. _riboseqr: http://bioconductor.org/packages/release/bioc/html/riboSeqR.html
 .. _ribogalaxy: http://ribogalaxy.ucc.ie
+.. _Trimmomatic: http://www.usadellab.org/cms/?page=trimmomatic
 
 .. Our links
 

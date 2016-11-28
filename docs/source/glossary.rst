@@ -81,9 +81,9 @@ Glossary of terms
       See :cite:`Rouskin2014` for details.
 
    crossmap
-      A :term:`mask file` that regions of the genome that give rise to multimapping
-      reads under given alignment criteria. Crossmaps may be made using the
-      |crossmap| script
+      A :term:`mask file` that annotates regions of the genome that give rise to
+      multimapping reads under given alignment criteria. Crossmaps may be made
+      using the |crossmap| script
    
    indexed file format
       A file that indexes its own data, enabling readers to selectively load
@@ -177,6 +177,7 @@ Glossary of terms
       See :doc:`/examples/metagene` and/or the module documentation for the
       :py:mod:`~plastid.bin.metagene` script for more explanation.
 
+   multimap
    multimapping
       A read that aligns equally well (or nearly-equally well) to multiple
       regions in a genome or transcriptome is said to be :term:`multimapping`

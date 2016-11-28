@@ -1,71 +1,37 @@
-Getting started with analysis
-=============================
+Getting started: sample processing
+==================================
 
-This tutorial is under construction. When complete, it will describe a sample
-workflow for sequencing analysis, using :data:`plastid` and other tools.
+This tutorial covers a rudimentary workflow for aligning reads and doing some
+QC on the dataset. It assumes that the genome has been set up, as described in 
+:doc:`/examples/a1_genome_setup.rst`.
 
+.. note::
 
-
-.. contents::
-   :local:
-
-
-Download some tools
--------------------
-
-In this tutorial, we use the following tools. They are useful to have on-hand
-in many circumstances:
-
- - `samtools`_ to index and manipulate `BAM`_ files
-
- - `bowtie`_ or another short read aligner, and possibly also `TopHat`_
-
- - The Hannon Lab's `fastx toolkit`_ for removing cloning adaptors
- 
- - `Jim Kent's utilities`_ for making `BigBed`_ or `BigWig`_ files
-
-
-
-.. _starting-out-annotation:
- 
-Obtain a genome sequence & matching annotation
-----------------------------------------------
-
-TODO
-
-
-.. _starting-out-derivative-files:
-
-Create derivative files
------------------------
-
-TODO
-
-.. It is often useful to pre-compute a number of files for use later:
-
-   - A `BED`_/`BigBed`_ file of transcripts with gene IDs, rather than a `GTF2`_
-     or `GFF3`_ annotation
-
-   - A ``.juncs`` file for aligning data in `TopHat`_
-   - A `bowtie`_ index
-   - maximal spanning windows around start codon
-
-
+   This tutorial is very much under consruction.
+   
 
 .. _starting-out-aligments:
 
-Perform alignments
-------------------
+Prepare reads
+-------------
 
 Remove cloning adaptors, if present
 ...................................
 
 If your pipeline does not automatically remove cloning adaptor sequences, you
-may need to remove these manually. A good option for this is the
-``fastx_clipper`` utility from the `fastx toolkit`_. See their documentation for
-detailed instructions.
+may need to remove these manually.
+
+Good options for this include: 
+
+ - the ``fastx_clipper`` utility from the `fastx toolkit`_
+   
+ - `Trimmomatic`_
 
 
+
+
+Perform alignments
+------------------
 
 Prealignment against rRNA
 .........................
@@ -168,7 +134,7 @@ following steps to assess the quality of your data.
 P-site estimation
 """""""""""""""""
 
-Estimation of ribosomal :term:`P-site offsets` is important for position-wise
+Estimation of ribosomal :term:`P-site offsets <P-site offset>` is important for position-wise
 analysis in ribosomal profiling. See :doc:`/examples/p_site` for background and
 instructions.
 
@@ -176,7 +142,7 @@ instructions.
 Sub-codon phasing
 """""""""""""""""
 
-After determining :term:`P-site offests`, it is possible to examine the
+After determining :term:`P-site offsets <P-site offset>`, it is possible to examine the
 :term:`sub-codon phasing` found in your ribosome profiling data. See
 :doc:`/examples/phasing` for information on the |phase_by_size| script.
 
@@ -200,5 +166,4 @@ To export transformed data as a browser track in `bedGraph`_ or `wiggle`_
 formats, see the |make_wiggle| script. If working on a large (e.g. plant or
 metazoan) genome, it might be helpful to convert the `bedGraph`_ or `wiggle`_
 track to a `BigWig`_ file, using `Jim Kent's utilities`_ from UCSC.
-
 
