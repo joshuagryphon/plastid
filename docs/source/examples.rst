@@ -29,6 +29,10 @@ Cookbook
 ============================================================================    ===========================================================================================
 **Tutorial**                                                                    **Contents**
 ----------------------------------------------------------------------------    -------------------------------------------------------------------------------------------
+:doc:`/examples/a1_genome_setup`                                                Set up a genome for downstream analysis, using :data:`plastid` or other toolkits
+
+:doc:`/examples/a2_sample_processing`                                           Simplified workflow of how to align sequencing data
+
 :doc:`/examples/count_vector`                                                   Retrieve a vector of :term:`high-throughput sequencing` :term:`counts`
                                                                                 at each position in a transcript
 

@@ -1,17 +1,22 @@
 Getting started
 ===============
 
-Genomic analysis requires some setup. This page describes the pieces that
-suffice in many cases.
+Genomic analysis requires some setup. This page provides a quick overview
+of those pieces.
 
-For those looking to try :data:`plastid` out, or to explore sequencing concepts,
-we have included a :doc:`/test_dataset`, which includes sequence and annotation
-for the hCMV genome, and :term:`ribosome profiling` and RNA-seq datasets. 
 
 To get started, you need:
 
 .. contents::
    :local:
+
+
+For those looking to try :data:`plastid` out, or to explore sequencing concepts,
+we have included a :doc:`/test_dataset`, which includes sequence and annotation
+for the hCMV genome, and :term:`ribosome profiling` and RNA-seq datasets. 
+
+For those setting up their own data, please continue reading:
+
 
 A genome sequence & annotation
 ------------------------------
@@ -29,23 +34,32 @@ coordinates, so be sure to download corresponding versions from a single build
 (i.e. it is unhelpful to mix mouse the *mm9* genome sequence with the *mm10*
 annotation).
 
+Often it is useful to do some pre-processing of files once they have been
+downloaded. Detailed discussion is provided in :doc:`/examples/a1_genome_setup`
+
 
 Aligned sequence data
 ---------------------
 
 The starting point for analysis with :data:`Plastid` is aligned sequence data,
 preferably in `BAM`_ format.
- 
-For help on performing alignments, and a discussion of the subtleties of
-choosing alignment parameters, see the documentation for the read alignment
-program you use (e.g. `Bowtie`_, `Bowtie 2`_, `Tophat`_, `bwa`_). 
+
+An brief overview of the relevant steps in setting up alignments and exploring 
+data may be found in  :doc:`/examples/a2_sample_processing`.
+
+That said, choice of alignment parameters merits careful consideration, which
+is a weighty topic, beyond the scope of this tutorial. For a more detailed
+discussion, see the documentation for the read alignment program you use (e.g.
+`Bowtie`_, `Bowtie 2`_, `Tophat`_, `bwa`_, `STAR`_).
+
 
  
-Background
-----------
+Other background info
+---------------------
+
 Most of the :data:`plastid` documentation assumes familiarty with a handful 
 of concepts and conventions. We encourage those new to sequencing analysis
-to check :ref:`tutorials <examples-concepts>` and browse as needed.
+to check the :doc:`/examples` and :doc:`/glossary` as needed.
   
 
   

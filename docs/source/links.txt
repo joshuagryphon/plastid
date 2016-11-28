@@ -95,6 +95,7 @@
 .. _riboseqr: http://bioconductor.org/packages/release/bioc/html/riboSeqR.html
 .. _ribogalaxy: http://ribogalaxy.ucc.ie
 .. _Trimmomatic: http://www.usadellab.org/cms/?page=trimmomatic
+.. _FastQC: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 
 .. Our links
 

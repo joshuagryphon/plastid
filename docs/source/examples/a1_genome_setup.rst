@@ -377,11 +377,13 @@ These are built from `fasta`_ files of genome sequence. From the terminal:
 This will create six files, all beginning with `my_genome_index`.
 
 
+.. _starting-out-juncs-file: 
+
 .juncs file for Tophat
 ......................
 
 `Tophat`_ uses a custom file format (``.juncs``) to specify splice junctions.
-While `Tophat1`_ can extract junctions from a `GTF2`_ file, it is often convenient
+While `Tophat`_ can extract junctions from a `GTF2`_ file, it is often convenient
 to have a pre-built ``.juncs`` file. Plastid includes a script called |findjuncs|
 for this. To use it, type from the terminal:
 
@@ -439,6 +441,7 @@ output from |crossmap|, or  :ref:`above <starting-out-make-bigbed>`.
 Examples below assume you have made a :term:`crossmap`. If you decide not to,
 drop all of the ``--mask_annotation*`` arguments from the examples below.
 
+.. _starting-out-maximal-spanning-windows: 
 
 Maximal spanning windows
 ........................
