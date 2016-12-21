@@ -427,8 +427,27 @@ little shorter, to be conservative):
 
 .. code-block:: shell
 
-   $ crossmap -k 26 --mismatches 2 my_file.fa /path/to/bowtie/indexes/my_genome_index my_crossmap 
+   $ crossmap -k 26 --mismatches 2 --sequence_file my_file.fa /path/to/bowtie/indexes/my_genome_index my_crossmap 
 
+
+.. note::
+
+   Mismatches
+      Enabling mismatches with short read sizes will make the crossmap build 
+      take a lot longer, because it dramatically increases the search space
+      that bowtie needs to traverse.
+
+   Memory usage
+      Building a crossmap on a large (e.g. mouse, human, or plant) genome
+      requires a lot of memory if the genome sequence is stored in a fasta
+      file. Converting the fasta file to a `2bit`_ file will save substantial
+      amounts of memory
+
+   Processes
+      Using multiple processes will speed |crossmap|'s execution time, but will
+      also increase the memory footprint, because each process needs its own
+      memory space
+      
 
 For further discusison of |crossmap| and examples of how to use its output,
 see :doc:`/examples/using_masks`. 
@@ -440,6 +459,7 @@ output from |crossmap|, or  :ref:`above <starting-out-make-bigbed>`.
 
 Examples below assume you have made a :term:`crossmap`. If you decide not to,
 drop all of the ``--mask_annotation*`` arguments from the examples below.
+
 
 .. _starting-out-maximal-spanning-windows: 
 

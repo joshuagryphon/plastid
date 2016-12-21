@@ -31,15 +31,33 @@ where:
   - `MISMATCHES` is the number of mismatches permitted during alignment,
     also set by the user.
 
- .. note::
- 
-    ``crossmap`` internally uses `bowtie`_ and a bowtie index for alignments.
-    Make sure you have these installed.
-    
- .. note::
+   
 
-    For large genomes, it is highly recommended to convert the `BED`_-format output
-    to a `BigBed`_, using Jim Kent's ``bedToBigBed`` utility as follows
+Considerations for large genomes
+--------------------------------
+
+For large genomes (e.g. vertebrate, plant, or some *very* big amoebas):
+
+  - |crossmap| can require a ton of memory if genome sequence is stored 
+    in a fasta file. If |crossmap| maxes out your system's memory, it may
+    be terminated by your system before it completes.
+   
+    Consider converting the file to a `2bit`_ file to save memory and
+    avoid this potential problem
+
+  - Enabling mismatches with short read sizes will make |crossmap| take
+    a lot longer, especially on large genomes. Consider using ``--mismatches
+    0`` if you run into this problem 
+
+  - Using multiple processes (e.g. via ``-p 2``) will speed |crossmap|'s
+    execution time, but will increase its memory footprint, as each process
+    will need its own memory space to create and align k-mers from chromosomal
+    sequence
+
+  - By default, |crossmap| creates `BED`_ files. Consider converting these to
+    `BigBed`_ files will save substantial amounts of time and memory in the future.
+
+    This can be achieved using Jim Kent's ``bedToBigBed`` utility as follows
     (from the terminal)::
 
         $ bowtie-inspect --summary BOWTIE_INDEX | grep Sequence |\\
@@ -47,9 +65,6 @@ where:
         $ sort -k1,1 -k2,2n OUTBASE.bed > OUTBASE_sorted.bed
         $ bedToBigBed OUTBASE_sorted.bed OUTBASE.sizes OUTBASE_sorted.bb
 
-
-    For small genomes (e.g. yeast, E. coli), this is unnecessary, and comes at a
-    cost in speed.
 
     See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
     for download & documentation of Kent utilities

@@ -241,18 +241,32 @@ allowing 2 mismatches during alignment:
               merlin_NC006273-2
 
 
-In this example, the `BED`_ file that is produced is quite small.
-But, if it were larger, converting it to a `BigBed`_ file using Jim
-Kent's ``bedToBigBed`` would
-result in memory savings. For instructions on that conversion, see
-the documentation for `Jim Kent's utilities`_.
+..
 
-.. note::
 
-   For mammalian genomes, |crossmap| can take several days to run,
-   especially if mismatches are allowed. We intend to host precomputed
-   versions of these for a handful of commonly-used genomes to save
-   time.
+Considerations for large genomes
+................................
+
+For large genomes (e.g. vertebrate, plant, or some *very* big amoebas):
+
+ - |crossmap| can require a ton of memory if genome sequence is stored 
+   in a fasta file. If |crossmap| maxes out your system's memory, it may
+   be terminated by your system before it completes.
+   
+   Consider converting the file to a `2bit`_ file to save memory and
+   avoid this potential problem
+
+ - |crossmap| can take several days to run, especially if mismatches are
+   allowed. Consider using ``--mismatches 0`` if you run into this problem 
+
+ - Using more processes (e.g. via ``-p 2``) will speed |crossmap|'s runtime,
+   but will increase its memory footprint, as each process will need its own
+   memory space to create and align k-mers from chromosomal sequence
+
+ - By default, |crossmap| creates `BED`_ files. Consider converting these to
+   `BigBed`_ files will save substantial amounts of time and memory in the future.
+   For instructions, see the documentation for `Jim Kent's utilities`_
+
 
 
 -------------------------------------------------------------------------------
