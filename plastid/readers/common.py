@@ -15,6 +15,12 @@ Functions & classes
 """
 import itertools
 import pysam
+
+try:
+    from pysam.ctabix import tabix_generic_iterator, tabix_file_iterator
+except ImportError:
+    from pysam.libctabix import tabix_generic_iterator, tabix_file_iterator
+
 from plastid.util.io.filters import AbstractReader
 from plastid.util.io.openers import NullWriter, multiopen
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript, add_three_for_stop_codon
@@ -199,9 +205,9 @@ def _tabix_iteradaptor(stream):
     generator
         Generator of tab-delimited string records in `tabix`_ file
     """
-    if not isinstance(stream,(pysam.ctabix.tabix_generic_iterator,
-                              pysam.ctabix.tabix_file_iterator)
+    if not isinstance(stream,(tabix_generic_iterator,
+                              tabix_file_iterator)
                       ):
-        stream = pysam.tabix_file_iterator(stream,pysam.asTuple())
+        stream = tabix_file_iterator(stream,pysam.asTuple())
     
     return (str(X) for X in stream)
