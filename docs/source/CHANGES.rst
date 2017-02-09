@@ -13,6 +13,8 @@ Unreleased
 Added
 .....
 
+
+ - Support for Pysam >= 0.10.0
  - ``write_pl_table()`` added as a convenience function
  - ``--use_mean`` flag added to ``metagene``
 
