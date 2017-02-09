@@ -47,6 +47,10 @@ SCIPY_VERSION  = "scipy>=0.15.1"
 CYTHON_VERSION = "cython>=%s.%s.%s" % CYTHON_VER_NUM
 PYSAM_VERSION  = "pysam>=%s.%s.%s"  % PYSAM_VER_NUM
 
+# trick from SciPy
+CWD = os.path.abspath(os.path.dirname(__file__))
+
+
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
 ver = sys.version_info
@@ -163,11 +167,11 @@ In this case, Plastid can be installed and run within a virtual environment
 # Simple stuff
 #===============================================================================
 
-with open("README.rst") as f:
+with open(os.path.join(CWD,"README.rst")) as f:
     long_description = f.read()
 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
-packages = find_packages()
+packages = find_packages(where=CWD)
 
 
 def get_scripts():
@@ -180,7 +184,7 @@ def get_scripts():
     """
     binscripts = [X.replace(".py","") for X in filter(lambda x: x.endswith(".py") and \
                                                                 "__init__" not in x,
-                                                      os.listdir(os.path.join("plastid","bin")))]
+                                                      os.listdir(os.path.join(CWD,"plastid","bin")))]
     return ["%s = plastid.bin.%s:main" % (X,X) for X in binscripts]
 
 
@@ -242,10 +246,8 @@ CYTHON_DEFAULTS = [False]
 
 
 # add headers from numpy & pysam to include paths for pyx, c files
-base_path = os.getcwd()
-
-INCLUDE_PATH = [os.path.join(base_path,"kentUtils","src","inc"),
-                os.path.join(base_path,"kentUtils","samtabix")
+INCLUDE_PATH = [os.path.join(CWD,"kentUtils","src","inc"),
+                os.path.join(CWD,"kentUtils","samtabix")
                 ]
 
 for mod in (numpy,pysam):
@@ -259,10 +261,12 @@ for mod in (numpy,pysam):
 
 
 # other flags; fill in as needed
-LIBRARIES=[]
-LIBRARY_DIRS=[]
-RUNTIME_LIBRARY_DIRS=[]
-EXTRA_OBJECTS=[]
+LIBRARIES               = []
+LIBRARY_DIRS            = []
+RUNTIME_LIBRARY_DIRS    = []
+EXTRA_OBJECTS           = []
+DEFINE_MACROS           = pysam.get_defines()
+EXTRA_LINK_ARGS         = pysam.get_libraries()
 CYTHON_COMPILE_TIME_ENV = {
     "PYSAM10" : pysam10,
 }
@@ -330,8 +334,8 @@ kent_sources = [
 ]
 
 
-kent_deps  = [os.path.join(base_path,"kentUtils","samtabix",X) for X in kent_samtabix]
-kent_deps += [os.path.join(base_path,"kentUtils","src","lib",X) for X in kent_sources]
+kent_deps  = [os.path.join(CWD,"kentUtils","samtabix",X) for X in kent_samtabix]
+kent_deps += [os.path.join(CWD,"kentUtils","src","lib",X) for X in kent_sources]
 
 
 #===============================================================================
@@ -340,8 +344,8 @@ kent_deps += [os.path.join(base_path,"kentUtils","src","lib",X) for X in kent_so
 
 
 # Cython extensions without dependencies on KentUtils
-noinclude_pyx = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
-ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").replace(os.sep,"."),
+noinclude_pyx = glob.glob(os.path.join(CWD,"plastid","genomics","*.pyx"))
+ext_modules = [Extension(x.replace(CWD+os.sep,"").replace(".pyx","").replace(os.sep,"."),
                          [x],
                          include_dirs         = INCLUDE_PATH,
                          libraries            = LIBRARIES,
@@ -349,12 +353,14 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          runtime_library_dirs = RUNTIME_LIBRARY_DIRS,
                          extra_objects        = EXTRA_OBJECTS,
                          cython_directives    = CYTHON_ARGS,
+                         define_macros        = DEFINE_MACROS,
+                         extra_link_args      = EXTRA_LINK_ARGS,
                          cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
                         ) for x in noinclude_pyx]
 
 bbifile = Extension(
     "plastid.readers.bbifile",
-    ["plastid/readers/bbifile.pyx"] + kent_deps,
+    [os.path.join(CWD,"plastid","readers","bbifile.pyx")] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -365,7 +371,7 @@ bbifile = Extension(
 
 bigwig = Extension(
     "plastid.readers.bigwig",
-    ["plastid/readers/bigwig.pyx"] + kent_deps,
+    [os.path.join(CWD,"plastid","readers","bigwig.pyx")] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -376,7 +382,7 @@ bigwig = Extension(
 
 bigbed = Extension(
     "plastid.readers.bigbed",
-    ["plastid/readers/bigbed.pyx"] + kent_deps,
+    [os.path.join(CWD,"plastid","readers","bigbed.pyx")] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -558,10 +564,10 @@ setup(
 
     # packaging info
     zip_safe = False,
-    packages = find_packages() + ["kentUtils",
-                                  "kentUtils.src.inc",
-                                  "kentUtils.src.lib",
-                                  "kentUtils.samtabix"],
+    packages = packages + ["kentUtils",
+                           "kentUtils.src.inc",
+                           "kentUtils.src.lib",
+                           "kentUtils.samtabix"],
 
     package_data = { 
         "" : ["*.pyx","*.pxd"],
@@ -572,11 +578,11 @@ setup(
     },
 
     package_dir = {
-        "plastid"            : "plastid",
-        "kentUtils"          : "kentUtils",
-        "kentUtils.src.inc"  : os.path.join("kentUtils","src","inc"),
-        "kentUtils.src.lib"  : os.path.join("kentUtils","src","lib"),
-        "kentUtils.samtabix" : os.path.join("kentUtils","samtabix"),
+        "plastid"            : os.path.join(CWD,"plastid"),
+        "kentUtils"          : os.path.join(CWD,"kentUtils"),
+        "kentUtils.src.inc"  : os.path.join(CWD,"kentUtils","src","inc"),
+        "kentUtils.src.lib"  : os.path.join(CWD,"kentUtils","src","lib"),
+        "kentUtils.samtabix" : os.path.join(CWD,"kentUtils","samtabix"),
     },
  
     entry_points = {
