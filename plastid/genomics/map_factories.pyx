@@ -131,7 +131,11 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-from pysam.calignmentfile cimport AlignedSegment
+IF PYSAM10:
+    from pysam.libcalignmentfile cimport AlignedSegment
+ELSE:
+    from pysam.calignmentfile cimport AlignedSegment
+
 from plastid.genomics.c_common cimport forward_strand, reverse_strand, unstranded
 from plastid.genomics.roitools cimport GenomicSegment
 from plastid.util.services.exceptions import DataWarning, warn, warn_onceperfamily

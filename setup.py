@@ -91,7 +91,8 @@ try:
     pysam = check_version("pysam")
     if pysam is not None:
         pysamver = parse_version(pysam.__version__)
-        pstr = foundstr % (pysam.__version__)
+        pstr     = foundstr % (pysam.__version__)
+        pysam10 = pysamver >= parse_version("0.10.0")
 
     Cython = check_version("Cython")
     if Cython is not None:
@@ -101,7 +102,8 @@ try:
     if numpyver < NUMPY_VER_STR or pysamver < PYSAM_VER_STR or cythonver < CYTHON_VER_STR:
         raise ImportError()
 
-    from Cython.Distutils import build_ext, Extension
+    from Cython.Distutils import build_ext
+    from Cython.Distutils.extension import Extension
     from Cython.Build import cythonize
 
 except ImportError:
@@ -137,7 +139,7 @@ check the most up-to-date versions by typing:
 
 If version numbers reported by `pip list` differ from those reported above,
 please check your system to make sure there are not multiple versions 
-of each package installed. This can be a problem e.g. if using anaconda.
+of each package installed. This can be a problem e.g. if using conda.
 In this case, Plastid can be installed and run within a virtual environment
 (not a conda environment):
 
@@ -149,8 +151,8 @@ In this case, Plastid can be installed and run within a virtual environment
     $ source /path/to/new/venv/bin/activate
 
     # install plastid in virtualenv
-    $ pip install numpy pysam cython
-    $ pip install --verbose plastid | tee install_log.txt
+    (venv) $ pip install numpy pysam cython
+    (venv) $ pip install --verbose plastid | tee install_log.txt
 
 
 """ % tuple(ltmp))
@@ -261,6 +263,9 @@ LIBRARIES=[]
 LIBRARY_DIRS=[]
 RUNTIME_LIBRARY_DIRS=[]
 EXTRA_OBJECTS=[]
+CYTHON_COMPILE_TIME_ENV = {
+    "PYSAM10" : pysam10,
+}
 
 
 #===============================================================================
@@ -334,16 +339,17 @@ kent_deps += [os.path.join(base_path,"kentUtils","src","lib",X) for X in kent_so
 #===============================================================================
 
 
-# Cython extensions without external dependencies
+# Cython extensions without dependencies on KentUtils
 noinclude_pyx = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
 ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").replace(os.sep,"."),
                          [x],
-                         include_dirs=INCLUDE_PATH,
-                         libraries=LIBRARIES,
-                         library_dirs=LIBRARY_DIRS,
-                         runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
-                         extra_objects=EXTRA_OBJECTS,
-                         cython_directives=CYTHON_ARGS,
+                         include_dirs         = INCLUDE_PATH,
+                         libraries            = LIBRARIES,
+                         library_dirs         = LIBRARY_DIRS,
+                         runtime_library_dirs = RUNTIME_LIBRARY_DIRS,
+                         extra_objects        = EXTRA_OBJECTS,
+                         cython_directives    = CYTHON_ARGS,
+                         cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
                         ) for x in noinclude_pyx]
 
 bbifile = Extension(
@@ -482,7 +488,10 @@ class build_c_from_pyx(build_ext):
         if "--%s" % CYTHONIZE_ARG in self.distribution.script_args or CYTHONIZE_COMMAND in self.distribution.script_args:
             self.run_command('clean')
             print("build_c_from_pyx: regenerating .c files from Cython")
-            extensions = cythonize(ext_modules,compiler_directives=CYTHON_ARGS)
+            extensions = cythonize(ext_modules,
+                                   compiler_directives     = CYTHON_ARGS,
+                                   compile_time_env = CYTHON_COMPILE_TIME_ENV,
+                                   )
             self.extensions = extensions
 
         build_ext.finalize_options(self)
