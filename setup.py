@@ -167,11 +167,11 @@ In this case, Plastid can be installed and run within a virtual environment
 # Simple stuff
 #===============================================================================
 
-with open(os.path.join(CWD,"README.rst")) as f:
+with open("README.rst") as f:
     long_description = f.read()
 
 setup_requires = [NUMPY_VERSION,PYSAM_VERSION,CYTHON_VERSION]
-packages = find_packages(where=CWD)
+packages = find_packages()
 
 
 def get_scripts():
@@ -184,7 +184,7 @@ def get_scripts():
     """
     binscripts = [X.replace(".py","") for X in filter(lambda x: x.endswith(".py") and \
                                                                 "__init__" not in x,
-                                                      os.listdir(os.path.join(CWD,"plastid","bin")))]
+                                                      os.listdir(os.path.join("plastid","bin")))]
     return ["%s = plastid.bin.%s:main" % (X,X) for X in binscripts]
 
 
@@ -246,8 +246,10 @@ CYTHON_DEFAULTS = [False]
 
 
 # add headers from numpy & pysam to include paths for pyx, c files
-INCLUDE_PATH = [os.path.join(CWD,"kentUtils","src","inc"),
-                os.path.join(CWD,"kentUtils","samtabix")
+base_path = os.getcwd()
+
+INCLUDE_PATH = [os.path.join(base_path,"kentUtils","src","inc"),
+                os.path.join(base_path,"kentUtils","samtabix")
                 ]
 
 for mod in (numpy,pysam):
@@ -334,8 +336,8 @@ kent_sources = [
 ]
 
 
-kent_deps  = [os.path.join(CWD,"kentUtils","samtabix",X) for X in kent_samtabix]
-kent_deps += [os.path.join(CWD,"kentUtils","src","lib",X) for X in kent_sources]
+kent_deps  = [os.path.join(base_path,"kentUtils","samtabix",X) for X in kent_samtabix]
+kent_deps += [os.path.join(base_path,"kentUtils","src","lib",X) for X in kent_sources]
 
 
 #===============================================================================
@@ -344,8 +346,8 @@ kent_deps += [os.path.join(CWD,"kentUtils","src","lib",X) for X in kent_sources]
 
 
 # Cython extensions without dependencies on KentUtils
-noinclude_pyx = glob.glob(os.path.join(CWD,"plastid","genomics","*.pyx"))
-ext_modules = [Extension(x.replace(CWD+os.sep,"").replace(".pyx","").replace(os.sep,"."),
+noinclude_pyx = glob.glob(os.path.join(base_path,"plastid","genomics","*.pyx"))
+ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").replace(os.sep,"."),
                          [x],
                          include_dirs         = INCLUDE_PATH,
                          libraries            = LIBRARIES,
@@ -360,7 +362,7 @@ ext_modules = [Extension(x.replace(CWD+os.sep,"").replace(".pyx","").replace(os.
 
 bbifile = Extension(
     "plastid.readers.bbifile",
-    [os.path.join(CWD,"plastid","readers","bbifile.pyx")] + kent_deps,
+    ["plastid/readers/bbifile.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -371,7 +373,7 @@ bbifile = Extension(
 
 bigwig = Extension(
     "plastid.readers.bigwig",
-    [os.path.join(CWD,"plastid","readers","bigwig.pyx")] + kent_deps,
+    ["plastid/readers/bigwig.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -382,7 +384,7 @@ bigwig = Extension(
 
 bigbed = Extension(
     "plastid.readers.bigbed",
-    [os.path.join(CWD,"plastid","readers","bigbed.pyx")] + kent_deps,
+    ["plastid/readers/bigbed.pyx"] + kent_deps,
     language="c",
     include_dirs=INCLUDE_PATH,
     libraries=LIBRARIES + ["z"],
@@ -543,12 +545,13 @@ setup(
     platforms        = "OS Independent",
  
     classifiers      = [
-         'Development Status :: 4 - Beta',
+         'Development Status :: 5 - Production/Stable',
 
          'Programming Language :: Python :: 2.7',
          'Programming Language :: Python :: 3.3',
          'Programming Language :: Python :: 3.4',
          'Programming Language :: Python :: 3.5',
+         'Programming Language :: Python :: 3.6',
 
          'Topic :: Scientific/Engineering :: Bio-Informatics',
          'Topic :: Software Development :: Libraries',
@@ -578,11 +581,11 @@ setup(
     },
 
     package_dir = {
-        "plastid"            : os.path.join(CWD,"plastid"),
-        "kentUtils"          : os.path.join(CWD,"kentUtils"),
-        "kentUtils.src.inc"  : os.path.join(CWD,"kentUtils","src","inc"),
-        "kentUtils.src.lib"  : os.path.join(CWD,"kentUtils","src","lib"),
-        "kentUtils.samtabix" : os.path.join(CWD,"kentUtils","samtabix"),
+        "plastid"            : "plastid",
+        "kentUtils"          : "kentUtils",
+        "kentUtils.src.inc"  : os.path.join("kentUtils","src","inc"),
+        "kentUtils.src.lib"  : os.path.join("kentUtils","src","lib"),
+        "kentUtils.samtabix" : os.path.join("kentUtils","samtabix"),
     },
  
     entry_points = {
