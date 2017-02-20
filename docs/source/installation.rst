@@ -63,14 +63,14 @@ Also, type the line above in any open terminal (or login and out again) to apply
 
 .. _install-inside-venv:
 
-Inside a `virtualenv`
----------------------
+Inside a virtualenv
+-------------------
 
 Often users or systems administrators need to install multiple versions of the
 same package for different scientific purposes. To do so they use *sandboxes*
 that insulate packages from each other.
 
-The easiest wsay to install :data:`Plastid` inside a sandbox is to use
+The easiest way to install :data:`Plastid` inside a sandbox is to use
 `virtualenv`_:
 
 .. code-block:: shell
@@ -112,16 +112,14 @@ To fetch the latest development versions, clone it from `our github repository <
    # get the source
    $ git clone git://github.com/joshuagryphon/plastid.git
 
-   # Do to a quirk in Python setup scripts, numpy,
-   # and pysam must must be installed first:
+   # Do to a quirk in Python setup scripts (fixed in new versions of pip),
+   # numpy, cython, and pysam must must be installed first:
    $ pip install --user --upgrade numpy pysam
 
-   # Install in develop mode
-   # Use `--recythonize` flag to link code against your
-   # versions of numpy and pysam, if they are different
-   # from ours
+   # Install in develop mode. Use `--recythonize` flag to regenerate
+   # C files if necessary (e.g. after upgrading pysam)
    $ cd plastid
-   $ python setup.py develop --user --recythonize
+   $ pip install --install-option='--recythonize' --user -e .
 
 
 Non-Python Dependencies
@@ -133,7 +131,7 @@ Plastid has a number of non-Python dependencies:
  - `zlib <www.zlib.net>`_, including its headers
 
 
-The following are not required for full functionality, but are recommended for specific functions:
+The following are not required for full functionality, but are required for specific functions or just plain useful:
 
  - `bowtie`_ (not `bowtie 2`_) for use in  :py:mod:`~plastid.bin.crossmap`
  - `Jim Kent's utilities`_ for converting BED to BigBed files
@@ -144,11 +142,31 @@ The following are not required for full functionality, but are recommended for s
 Troubleshooting
 ---------------
 
-:data:`plastid` installs fairly easily in most Linux and Macintosh setups.
+:data:`plastid` installs fairly easily in most Linux and Macintosh setups. If
+you run into issues running or installing, please see our
+FAQ section on :ref:`installation <faq-run>`
+and then `our issue tracker`_ to see if anybody else has encountered your issue,
+and if instructions already exist.
 
-One exception is under `Anaconda`_, which, depending upon your setup, can require 
-custom work to get going. If you need to run :data:`plastid` inside a sandbox,
-we strongly recommend using `virtualenv`_ rather than `Anaconda`_ for this
-purpose. To do so, see :ref:`install_inside_venv`, above.
+Frequently, problems can be solved by installing :data:`plastid` in a clean
+environment. For instructions, see :ref:`install-inside-venv`, above.
+
+
+Notes on `conda`_
+.................
+
+Numerous users have reported unexpected behaviors when installing
+:data:`plastid` in `conda`_/`Anaconda`_ environments. These can appear
+`at runtime <http://>`_,
+or
+`after installation <http://>`_.
+Notably, :data:`plastid` is not the only package to experience this
+incompatibility.
+
+These issues can take a long time to resolve and frequently the solution is 
+installation inside a clean environment that does not use `conda`_. We're
+looking into this issue to improve our compatibility, but at present, `conda`_
+is not supported. If you need to run :data:`plastid` inside a sandbox,
+we strongly recommend using `virtualenv`_. To do so, see :ref:`install-inside-venv`, above.
 
 For other troubleshooting, please see our FAQ section on :ref:`installation <faq-run>`.
