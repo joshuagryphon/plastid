@@ -156,8 +156,11 @@ from plastid.genomics.roitools import SegmentChain, positions_to_segments
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.services.exceptions import ArgumentWarning, DataWarning
-from plastid.util.scriptlib.argparsers import (AnnotationParser, AlignmentParser,
+from plastid.util.services.exceptions import (ArgumentWarning,
+                                              DataWarning,
+                                              FileFormatWarning)
+from plastid.util.scriptlib.argparsers import (AnnotationParser,
+                                               AlignmentParser,
                                                PlottingParser,
                                                MaskParser, BaseParser)
 
@@ -624,73 +627,77 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
         except StopIteration:
             do_loop = False
 
-        # end of chromosome or end of file
-        if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
-            last_chrom = tx.spanning_segment.chrom
-            if do_loop == True:
-                source = itertools.chain([tx],source)
+        try:
+            # end of chromosome or end of file
+            if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
+                last_chrom = tx.spanning_segment.chrom
+                if do_loop == True:
+                    source = itertools.chain([tx],source)
 
-            for tx_chain in transcripts:
-                # if attr is missing, use transcript name, which should be unique
-                attr = tx_chain.attr
-                if group_by == "gene_id":
-                    if "gene_id" in attr:
-                        group_attr = attr["gene_id"]
+                for tx_chain in transcripts:
+                    # if attr is missing, use transcript name, which should be unique
+                    attr = tx_chain.attr
+                    if group_by == "gene_id":
+                        if "gene_id" in attr:
+                            group_attr = attr["gene_id"]
+                        else:
+                            group_attr = tx_chain.get_gene()
+                            warnings.warn("Region '%s' has no gene_id. Inferring gene_id to be '%s'" % (tx_chain.get_name(), group_attr),
+                                          DataWarning)
                     else:
-                        group_attr = tx_chain.get_gene()
-                        warnings.warn("Region '%s' has no gene_id. Inferring gene_id to be '%s'" % (tx_chain.get_name(), group_attr),
-                                      DataWarning)
-                else:
-                    if group_by in attr:
-                        group_attr = attr[group_by]
-                    else:
-                        warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Using region name as default group." % (tx_chain.get_name(),group_by),
-                                      DataWarning)
-                        group_attr = tx_chain.get_name()
+                        if group_by in attr:
+                            group_attr = attr[group_by]
+                        else:
+                            warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Using region name as default group." % (tx_chain.get_name(),group_by),
+                                          DataWarning)
+                            group_attr = tx_chain.get_name()
 
-                try:
-                    group_transcript[group_attr].append(tx_chain)
-                except KeyError:
-                    group_transcript[group_attr] = [tx_chain]
+                    try:
+                        group_transcript[group_attr].append(tx_chain)
+                    except KeyError:
+                        group_transcript[group_attr] = [tx_chain]
 
-            # for each gene, find maximal window in which all points
-            # are represented in all transcripts. return window and offset
-            for region_id, tx_list in group_transcript.items():
-                c += 1
-                if c % 1000 == 1:
-                    printer.write("Processed %s genes, included %s ..." % (c,len(list(dtmp.values())[0])))
+                # for each gene, find maximal window in which all points
+                # are represented in all transcripts. return window and offset
+                for region_id, tx_list in group_transcript.items():
+                    c += 1
+                    if c % 1000 == 1:
+                        printer.write("Processed %s genes, included %s ..." % (c,len(list(dtmp.values())[0])))
 
-                name = region_id # name regions after gene id
-                max_spanning_window, offset =  maximal_spanning_window(tx_list,
-                                                                       mask_hash,
-                                                                       flank_upstream,
-                                                                       flank_downstream,
-                                                                       window_func=window_func,
-                                                                       name=name,
-                                                                       printer=printer)
+                    name = region_id # name regions after gene id
+                    max_spanning_window, offset =  maximal_spanning_window(tx_list,
+                                                                           mask_hash,
+                                                                           flank_upstream,
+                                                                           flank_downstream,
+                                                                           window_func=window_func,
+                                                                           name=name,
+                                                                           printer=printer)
 
-                if len(max_spanning_window) > 0:
-                    mask_chain = max_spanning_window.get_masks_as_segmentchain()
-                    dtmp["region_id"].append(region_id)
-                    dtmp["window_size"].append(window_size)
-                    dtmp["region"].append(str(max_spanning_window)) # need to cast to string to keep numpy from converting to array
-                    dtmp["masked"].append(str(mask_chain))
-                    dtmp["alignment_offset"].append(offset)
-                    dtmp["zero_point"].append(flank_upstream)
-                    dtmp["region_bed"].append(max_spanning_window.as_bed())
-                    dtmp["region_length"].append(max_spanning_window.length)
-                    dtmp["threeprime_offset"].append(window_size - offset - max_spanning_window.length)
+                    if len(max_spanning_window) > 0:
+                        mask_chain = max_spanning_window.get_masks_as_segmentchain()
+                        dtmp["region_id"].append(region_id)
+                        dtmp["window_size"].append(window_size)
+                        dtmp["region"].append(str(max_spanning_window)) # need to cast to string to keep numpy from converting to array
+                        dtmp["masked"].append(str(mask_chain))
+                        dtmp["alignment_offset"].append(offset)
+                        dtmp["zero_point"].append(flank_upstream)
+                        dtmp["region_bed"].append(max_spanning_window.as_bed())
+                        dtmp["region_length"].append(max_spanning_window.length)
+                        dtmp["threeprime_offset"].append(window_size - offset - max_spanning_window.length)
 
-            # clean up
-            del transcripts
-            del group_transcript
-            gc.collect()
-            del gc.garbage[:]
-            transcripts = []
-            group_transcript = {}
+                # clean up
+                del transcripts
+                del group_transcript
+                gc.collect()
+                del gc.garbage[:]
+                transcripts = []
+                group_transcript = {}
 
-        else:
-            transcripts.append(tx)
+            else:
+                transcripts.append(tx)
+
+        except UnboundLocalError:
+            pass
 
     df = pd.DataFrame(dtmp)
     df.sort_values(["region_id"],inplace=True)
@@ -1125,6 +1132,25 @@ def main(argv=sys.argv[1:]):
             
         # open annotations
         printer.write("Opening annotation files: %s ..." % ", ".join(args.annotation_files))
+
+
+        annotation_message = """`metagene` relies upon relationships between
+        transcripts/genes to make maximal spanning windows that cover them. The
+        `%s` attribute used to group these is not found in your %s file.
+        Consider either (1) using a GTF2 or GFF3 file, (2) creating an extended
+        BED file with this additional column, or (3) creating a BigBed file
+        containing this extra column.  """.replace("        ","").replace("\n"," ") % (args.group_by, args.annotation_format)
+
+        if args.annotation_format == "BED":
+            if not isinstance(args.bed_extra_columns, list) or args.group_by not in args.bed_extra_columns:
+                warnings.warn(annotation_message, FileFormatWarning)
+        elif args.annotation_format == "BigBed":
+            reader = BigBedReader(args.annotation_files[0])
+            if args.group_by not in reader.extension_fields:
+                warnings.warn(annotation_message, FileFormatWarning)
+
+            reader.close()
+
         transcripts = an.get_transcripts_from_args(args,printer=printer)
         mask_hash = mp.get_genome_hash_from_args(args)
         
