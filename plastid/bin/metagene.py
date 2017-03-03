@@ -163,7 +163,7 @@ from plastid.util.scriptlib.argparsers import (AnnotationParser,
                                                AlignmentParser,
                                                PlottingParser,
                                                MaskParser, BaseParser)
-
+from plastid.readers.bigbed import BigBedReader
 
 warnings.simplefilter("once",DataWarning)
 
@@ -1139,7 +1139,7 @@ def main(argv=sys.argv[1:]):
         `%s` attribute used to group these is not found in your %s file.
         Consider either (1) using a GTF2 or GFF3 file, (2) creating an extended
         BED file with this additional column, or (3) creating a BigBed file
-        containing this extra column.  """.replace("        ","").replace("\n"," ") % (args.group_by, args.annotation_format)
+        containing this extra column.""".replace("        ","").replace("\n"," ") % (args.group_by, args.annotation_format)
 
         if args.annotation_format == "BED":
             if not isinstance(args.bed_extra_columns, list) or args.group_by not in args.bed_extra_columns:
@@ -1148,8 +1148,6 @@ def main(argv=sys.argv[1:]):
             reader = BigBedReader(args.annotation_files[0])
             if args.group_by not in reader.extension_fields:
                 warnings.warn(annotation_message, FileFormatWarning)
-
-            reader.close()
 
         transcripts = an.get_transcripts_from_args(args,printer=printer)
         mask_hash = mp.get_genome_hash_from_args(args)
