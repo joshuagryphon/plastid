@@ -1061,7 +1061,7 @@ def main(argv=sys.argv[1:]):
     gparser.add_argument("--group_by",type=str,default="gene_id",
                          help="Attribute (e.g. in GTF2/GFF3 column 9) by which to group regions "+ \
                               "before generating maximal spanning windows "+ \
-                              "(Default: group transripts by gene using 'gene_id' attribute from GTF2, or 'Parent' attribute in GFF3)")
+                              "(Default: group transcripts by gene using 'gene_id' attribute from GTF2, or 'Parent' attribute in GFF3)")
     gparser.add_argument("outbase",type=str,
                          help="Basename for output files")
     
