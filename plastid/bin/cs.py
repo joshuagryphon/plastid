@@ -115,10 +115,11 @@ from plastid.util.io.openers import opener, get_short_name, argsopener, read_pl_
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.services.sets import merge_sets
 from plastid.util.services.decorators import skipdoc
-from plastid.util.services.exceptions import DataWarning
+from plastid.util.services.exceptions import DataWarning, FileFormatWarning
 import numpy.ma as ma
 from plastid.plotting.plots import scatterhist_xy, ma_plot, clean_invalid
 from plastid.plotting.colors import process_black
+from plastid.readers.bigbed import BigBedReader
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -544,6 +545,24 @@ def do_generate(args,annotation_parser,mask_parser):
     is_sorted = (args.sorted == True) or \
                 (args.tabix == True) or \
                 (args.annotation_format == "BigBed")
+
+    annotation_message = """`cs` relies upon relationships between
+    transcripts and genes to collapse transcripts to genes for quantitation.
+    Gene-transcript relationships are not generally preserved in BED or BigBed
+    files, and a `gene_id` column could not be found in the input data. This
+    may yield nonsensical results in the output.
+
+    Consider either (1) using a GTF2 or GFF3 file or (2) creating an extended
+    BED or BigBed file with a `gene_id` column.""".replace("    ","").replace("\n"," ")
+
+    if args.annotation_format == "BED":
+        if not isinstance(args.bed_extra_columns, list) or 'gene_id' not in args.bed_extra_columns:
+            warnings.warn(annotation_message, FileFormatWarning)
+    elif args.annotation_format == "BigBed":
+        reader = BigBedReader(args.annotation_files[0])
+        if 'gene_id' not in reader.extension_fields:
+            warnings.warn(annotation_message, FileFormatWarning)
+
     source = annotation_parser.get_transcripts_from_args(args,printer=printer)
     mask_hash = mask_parser.get_genome_hash_from_args(args)
     
@@ -559,29 +578,34 @@ def do_generate(args,annotation_parser,mask_parser):
         except StopIteration:
             do_loop = False
 
-        # if chromosome is completely processed or EOF
-        if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
-            if do_loop == True:
-                source = itertools.chain([tx],source)
+        try:
+            # if chromosome is completely processed or EOF
+            if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
+                if do_loop == True:
+                    source = itertools.chain([tx],source)
 
-            if last_chrom is not None or do_loop == False:
-                printer.write("Merging genes on chromosome/contig '%s'" % last_chrom)
-                my_gene_table, my_transcript_table,my_merged_genes = process_partial_group(transcripts,mask_hash,printer)
-                gene_table = pd.concat((gene_table,my_gene_table),axis=0)
-                transcript_table = pd.concat((transcript_table,my_transcript_table),axis=0)
-                merged_genes.update(my_merged_genes)
+                if last_chrom is not None or do_loop == False:
+                    printer.write("Merging genes on chromosome/contig '%s'" % last_chrom)
+                    my_gene_table, my_transcript_table,my_merged_genes = process_partial_group(transcripts,mask_hash,printer)
+                    gene_table = pd.concat((gene_table,my_gene_table),axis=0)
+                    transcript_table = pd.concat((transcript_table,my_transcript_table),axis=0)
+                    merged_genes.update(my_merged_genes)
 
-            del transcripts
-            gc.collect()
-            del gc.garbage[:]
-            transcripts = {}
+                del transcripts
+                gc.collect()
+                del gc.garbage[:]
+                transcripts = {}
 
-            # reset last chrom
-            last_chrom = tx.spanning_segment.chrom
+                # reset last chrom
+                last_chrom = tx.spanning_segment.chrom
 
-        # otherwise, remember transcript
-        else:
-            transcripts[tx.get_name()] = tx
+            # otherwise, remember transcript
+            else:
+                transcripts[tx.get_name()] = tx
+
+        # exit gracefully if no transcripts found
+        except UnboundLocalError:
+            pass
    
     # write output
     printer.write("Writing output ...")
