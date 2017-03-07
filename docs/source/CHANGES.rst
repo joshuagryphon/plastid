@@ -7,23 +7,33 @@ guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
 that a `0` is prepended (i.e. our version scheme is era.major.minor).
 
 
-Unreleased
-----------
+plastid [0.4.7] = [2017-03-06]
+------------------------------
+
+This update is minor compared to the release 0.4.6, and was mainly motivated by
+updates, bugfixes, and changes required for compatibility with new versions of
+``Pysam``
+
 
 Added
 .....
 
+ - Support for ``Pysam`` >= 0.10.0
 
- - Support for Pysam >= 0.10.0
  - ``write_pl_table()`` added as a convenience function
+
  - ``--use_mean`` flag added to ``metagene``
+
+ - Warnings / better help text
 
 
 Fixed
 .....
 
  - rounding error in ``get_str_from_rgb()``
+
  - ``PSL_Reader()`` now capable of parsing strands from translated `blat` output
+
  - Fixed bug in header parsing in ``PSL_reader``
 
 
