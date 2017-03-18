@@ -134,8 +134,8 @@ them:
    >>>         halflength = cds.length // 2
    >>>
    >>>         # get halves, name each half after the parent CDS
-   >>>         first_half  = cds.get_subchain(0,first_half,ID=name + "_firsthalf")
-   >>>         second_half = cds.get_subchain(first_half,cds.length,ID=name + "_secondhalf")
+   >>>         first_half  = cds.get_subchain(0,halflength,ID=name + "_firsthalf")
+   >>>         second_half = cds.get_subchain(halflength,cds.length,ID=name + "_secondhalf")
    >>>
    >>>         # save output
    >>>         halfbed.write(first_half.as_bed())
