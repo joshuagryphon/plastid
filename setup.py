@@ -268,7 +268,7 @@ LIBRARY_DIRS            = []
 RUNTIME_LIBRARY_DIRS    = []
 EXTRA_OBJECTS           = []
 DEFINE_MACROS           = pysam.get_defines()
-EXTRA_LINK_ARGS         = pysam.get_libraries()
+#EXTRA_LINK_ARGS         = pysam.get_libraries()
 CYTHON_COMPILE_TIME_ENV = {
     "PYSAM10" : pysam10,
 }
@@ -356,7 +356,7 @@ ext_modules = [Extension(x.replace(base_path+os.sep,"").replace(".pyx","").repla
                          extra_objects        = EXTRA_OBJECTS,
                          cython_directives    = CYTHON_ARGS,
                          define_macros        = DEFINE_MACROS,
-                         extra_link_args      = EXTRA_LINK_ARGS,
+#                         extra_link_args      = EXTRA_LINK_ARGS,
                          cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
                         ) for x in noinclude_pyx]
 
