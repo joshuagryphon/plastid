@@ -6,7 +6,7 @@ project follow the conventions described in :pep:`440` and
 `Semantic versioning 2.0.0 <http://semver.org/>`_.
 
 
-plastid [0.4.8] = [2017-04-09]
+Unreleased
 ------------------------------
 
  - Fixed a change in `setup.py` that caused Plastid compilation to fail in
