@@ -43,7 +43,7 @@ To do so, first make sure all the dependencies are installed. Then type:
 
 .. code-block:: shell
 
-   $ pip install --verbose --user --install-option="--recythonize" plastid
+   $ pip install --verbose --user --no-cache-dir --install-option="--recythonize" plastid
 
 And then re-test the installation. If installation continues to fail, please see
 :ref:`faq-install-fails` for common errors or `our issue tracker`_ to report a
@@ -96,7 +96,7 @@ The easiest way to install :data:`Plastid` inside a sandbox is to use
    # Fresh install of plastid.
    # Note- no use of `sudo` here. It confuses the virtualenv
    (venv) $ pip install numpy pysam cython
-   (venv) $ pip install plastid
+   (venv) $ pip install --no-cache-dir plastid
 
    # test
    (venv) $ python -c "from plastid import *"

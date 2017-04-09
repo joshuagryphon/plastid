@@ -2,9 +2,16 @@ Change log
 ==========
 
 Major changes to ``plastid`` are documented here. Version numbers for the
-project follow the conventions described in :pep:`440`, along with the 
-guidelines in `Semantic versioning <http://semver.org/>`_, with the exception
-that a `0` is prepended (i.e. our version scheme is era.major.minor).
+project follow the conventions described in :pep:`440` and
+`Semantic versioning 2.0.0 <http://semver.org/>`_.
+
+
+plastid [0.4.8] = [2017-04-09]
+------------------------------
+
+ - Fixed a change in `setup.py` that caused Plastid compilation to fail in
+   Macintosh environments. Sorry Mac users!
+
 
 
 plastid [0.4.7] = [2017-03-06]

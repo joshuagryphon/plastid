@@ -22,10 +22,12 @@ repeat installation passing the ``--verbose`` flag to ``pip``:
 
 .. code-block:: shell
 
-   $ pip install --verbose plastid
+   $ pip install --no-cache-dir --verbose plastid | tee 2>&1 plastid_install_log.txt
 
 Then find the corresponding error message below. If the error is not listed,
-let us know by filing a bug report at `our issue tracker`_. 
+let us know by filing a bug report at `our issue tracker`_. Please attach
+`plastid_install_log.txt` to your report to help us figure out what is going
+on.
 
 
 .. _faq-install-numpy-first:
