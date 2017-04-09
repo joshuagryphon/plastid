@@ -32,7 +32,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from pkg_resources import parse_version
 
-plastid_version = "0.4.7"
+plastid_version = "0.4.8"
 
 PYSAM_VER_NUM  = (0,8,4)
 NUMPY_VER_NUM  = (1,9,0)
