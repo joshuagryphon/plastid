@@ -167,7 +167,7 @@ def stacked_bar(data,axes=None,labels=None,lighten_by=0.1,cmap=None,**kwargs):
 
 def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
             log=False,base=10,points=500,bw_method="scott",rescale=False,
-            zorder=None):
+            zorder=None, fill=True):
     """Plot a kernel density estimate of `data` on `axes`.
 
     Parameters
@@ -233,12 +233,14 @@ def kde_plot(data,axes=None,color=None,label=None,alpha=0.7,vert=False,
         fbargs["label"] = label
 
     if vert == True:
-        axes.fill_betweenx(a,b,0,**fbargs)
+        if fill == True:
+            axes.fill_betweenx(a,b,0,**fbargs)
         axes.plot(b,a,color=color,alpha=alpha,label=label) # this is a bit of a hack to get labels to print; fill_between doesn't work with legends
         if log == True:
             axes.semilogy()
     else:
-        axes.fill_between(a,b,0,**fbargs)
+        if fill == True:
+            axes.fill_between(a,b,0,**fbargs)
         axes.plot(a,b,color=color,alpha=alpha,label=label)
         if log == True:
             axes.semilogx()
