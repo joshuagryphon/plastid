@@ -54,7 +54,8 @@ from plastid.genomics.genome_hash import (GenomeHash,
                                           TabixGenomeHash,
                                           BigBedGenomeHash)
 
-from plastid.genomics.map_factories import (VariableFivePrimeMapFactory,
+from plastid.genomics.map_factories import (StratifiedVariableFivePrimeMapFactory,
+                                            VariableFivePrimeMapFactory,
                                             FivePrimeMapFactory,
                                             CenterMapFactory,
                                             ThreePrimeMapFactory,
