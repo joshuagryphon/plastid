@@ -5,6 +5,19 @@ Major changes to ``plastid`` are documented here. Version numbers for the
 project follow the conventions described in :pep:`440` and
 `Semantic versioning 2.0.0 <http://semver.org/>`_.
 
+Unreleased
+----------
+
+Fixed
+.....
+
+ - ``VariableFivePrimeMapFactory.from_file()`` and
+   ``StratifiedVariableFivePrimeMapFactory.from_file()`` now work on filenames
+   as well as file handles, as they were supposed to
+
+ - ``StratifiedVariableFivePrimeMapFactory`` now imported by typing
+   ``from plastid import *``
+
 
 plastid [0.4.8] = [2017-04-09]
 ------------------------------
