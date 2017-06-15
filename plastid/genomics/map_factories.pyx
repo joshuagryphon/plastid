@@ -527,10 +527,10 @@ cdef class VariableFivePrimeMapFactory:
                 fw_view[read_length] = offset
                 rc_view[read_length] = read_length - offset - 1
     
-    @staticmethod
-    def from_file(object fn_or_fh):
+    @classmethod
+    def from_file(cls, object fn_or_fh):
         """
-        from_file(object fn_or_fh)
+        from_file(fn_or_fh)
         
         Create a :class:`VariableFivePrimeMapFactory` from a text file.
 
@@ -556,12 +556,15 @@ cdef class VariableFivePrimeMapFactory:
             should be an open file-like object pointing to the data that
             would be in the text file.
         """
-        if isinstance(fn_or_fh,str):
-            fh = CommentReader(open(str))
+        if isinstance(fn_or_fh, str):
+            with open(fn_or_fh) as my_fh:
+                mapper = cls(_parse_variable_offset_file(my_fh))
+                my_fh.close()
+                return mapper
         else:
             fh = CommentReader(fn_or_fh)
 
-        return VariableFivePrimeMapFactory(_parse_variable_offset_file(fh))
+        return cls(_parse_variable_offset_file(fh))
 
     @cython.boundscheck(False) # valid because indices are explicitly checked in __cinit__
     def __call__(self, list reads not None, GenomicSegment seg not None):
