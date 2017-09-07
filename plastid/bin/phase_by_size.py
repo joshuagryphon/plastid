@@ -187,12 +187,12 @@ def main(argv=sys.argv[1:]):
                     counts = counts[::-1]
                
                 if len(counts) % 3 == 0:
-                    counts = counts.reshape((len(counts)/3,3))
+                    counts = counts.reshape((int(len(counts)/3), 3))
                 else:
                     if using_roi == False:
                         message = "Length of '%s' coding region (%s nt) is not divisible by 3. Ignoring last partial codon." % (roi.get_name(),len(counts))
                         warnings.warn(message,DataWarning)
-                    newlen = len(counts)//3
+                    newlen = int(len(counts) // 3)
                     counts = counts[:3*newlen]
                     counts = counts.reshape(newlen,3)
     
