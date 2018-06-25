@@ -26,23 +26,43 @@ analysis. It is released under the BSD 3-Clause license.
 
 This package provides:
 
-  #. A set of scripts that implement common sequencing analyses
+#. A set of scripts that implement common sequencing analyses
 
-  #. A set of classes for exploratory data anlysis. These provide simple
-     and consistent interfaces for manipulating genomic features,
-     read alignments, and quantitative data; and readily interface with
-     existing scientific tools, like the SciPy stack.
+#. A set of classes for exploratory data anlysis. These provide simple
+   and consistent interfaces for manipulating genomic features,
+   read alignments, and quantitative data; and readily interface with
+   existing scientific tools, like the SciPy stack.
 
-  #. Script writing tools that make it easy to use the objects implemented in
-     ``plastid``.
+#. Script writing tools that make it easy to use the objects implemented in
+   ``plastid``.
 
-  #. Extensive documentation, both in source code and at `our home page
-     <http://plastid.readthedocs.io/en/latest/>`_ on `ReadtheDocs
-     <http://readthedocs.io>`_.
+#. Extensive documentation, both in source code and at `our home page
+   <http://plastid.readthedocs.io/en/latest/>`_ on `ReadtheDocs
+   <http://readthedocs.io>`_.
 
 
 Installation
 ------------
+
+Bioconda
+........
+
+.. image:: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square
+   :target: http://bioconda.github.io/recipes/plastid/README.html
+   :alt: install with bioconda
+
+``Bioconda`` is a channel for the conda package manager with a focus on
+bioinformatics software. Once you have ``Bioconda`` installed, installing
+``plastid`` is as easy as running::
+
+    $ conda create -n plastid plastid
+    $ source activate plastid
+
+This will install all of the necesary dependencies for ``plastid`` in an
+isolated environment.
+
+PyPI
+....
 
 ``plastid`` can be installed directly from PyPI, but requires numpy, pysam,
 and cython to be installed first i.e.::
@@ -61,13 +81,15 @@ do this type::
 Links & help
 ------------
 
-  - `Documentation <http://plastid.readthedocs.io>`_
+- `Documentation <http://plastid.readthedocs.io>`_
 
-  - `Our github repo <https://github.com/joshuagryphon/plastid>`_
+- `Our github repo <https://github.com/joshuagryphon/plastid>`_
 
-  - Subscribe to our mailing list by emailing ``listserv@listserv.ucsf.edu``
-    with the message *subscribe plastidinfo firstname lastname* and an empty
-    subject line
+- Subscribe to our mailing list by emailing ``listserv@listserv.ucsf.edu``
+  with the message *subscribe plastidinfo firstname lastname* and an empty
+  subject line
 
-  - `Test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
-    for development or validation of installations
+- `Test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
+  for development or validation of installations
+
+- `Bioconda <bioconda.github.io>`_

@@ -3,11 +3,30 @@ Installation
 
 .. contents::
    :local:
- 
 
 
-From PyPi (recommended)
------------------------
+Bioconda
+--------
+
+.. image:: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square
+  :target: http://bioconda.github.io/recipes/plastid/README.html
+  :alt: install with bioconda
+
+``Bioconda`` is a channel for the conda package manager with a focus on
+bioinformatics software. Once you have ``Bioconda`` installed, installing
+``plastid`` is as easy as running:
+
+.. code-block:: shell
+
+   $ conda create -n plastid plastid
+   $ source activate plastid
+
+This will install all of the necesary dependencies for ``plastid`` in an
+isolated environment.
+
+
+PyPi
+----
 
 Install package
 ...............
@@ -127,7 +146,7 @@ Non-Python Dependencies
 
 Plastid has a number of non-Python dependencies:
 
- - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_ or `clang <clang.llvm.org>`_) 
+ - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_ or `clang <clang.llvm.org>`_)
  - `zlib <www.zlib.net>`_, including its headers
 
 
@@ -135,7 +154,7 @@ The following are not required for full functionality, but are required for spec
 
  - `bowtie`_ (not `bowtie 2`_) for use in  :py:mod:`~plastid.bin.crossmap`
  - `Jim Kent's utilities`_ for converting BED to BigBed files
- - `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_   
+ - `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_
 
 
 
@@ -150,23 +169,5 @@ and if instructions already exist.
 
 Frequently, problems can be solved by installing :data:`plastid` in a clean
 environment. For instructions, see :ref:`install-inside-venv`, above.
-
-
-Notes on `conda`_
-.................
-
-Numerous users have reported unexpected behaviors when installing
-:data:`plastid` in `conda`_/`Anaconda`_ environments. These can appear
-`at runtime <http://>`_,
-or
-`after installation <http://>`_.
-Notably, :data:`plastid` is not the only package to experience this
-incompatibility.
-
-These issues can take a long time to resolve and frequently the solution is 
-installation inside a clean environment that does not use `conda`_. We're
-looking into this issue to improve our compatibility, but at present, `conda`_
-is not supported. If you need to run :data:`plastid` inside a sandbox,
-we strongly recommend using `virtualenv`_. To do so, see :ref:`install-inside-venv`, above.
 
 For other troubleshooting, please see our FAQ section on :ref:`installation <faq-run>`.
