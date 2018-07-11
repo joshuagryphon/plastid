@@ -38,7 +38,7 @@ class TestTestDataframeEquality(unittest.TestCase):
          "objB"   : numpy.array([GenomicSegment("chrC",X,X+Y,"+") for X,Y in zip(range(size),numpy.random.randint(2,high=1000,size=size))]),
        }
 
-    def test_dataframe_quality_when_identical(self):
+    def test_dataframe_equality_when_identical(self):
         df1 = pd.DataFrame(self.cols)
         self.assertTrue(checkeq(df1,df1))
 
@@ -151,14 +151,6 @@ class TestTestDataframeEquality(unittest.TestCase):
         df2 = pd.DataFrame({ K : self.cols[K][shuffidx] for K in self.cols.keys()})
         self.assertTrue(checkeq(df1,df2,sort_columns=["idxA"]))
         self.assertTrue(checkeq(df2,df1,sort_columns=["idxA"]))
-
-    def test_dataframe_equality_without_sort(self):
-        shuffidx = numpy.arange(size)
-        shuffle(shuffidx)
-        df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({ K : self.cols[K][shuffidx] for K in self.cols.keys()})
-        self.assertFalse(checkeq(df1,df2))
-        self.assertFalse(checkeq(df2,df1))
  
     def test_dataframe_equality_with_multi_sort(self):
         shuffidx = numpy.arange(size)
