@@ -208,7 +208,7 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     err_str = ("Failed %s (up: %s, down: %s). " % (test_name,flank_up,flank_down)) + "%s unequal (%s vs %s)"
     tx_ivcs = (_TRANSCRIPTS[X] for X in test_group)
     roi_table = group_regions_make_windows(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
-    roi_table.sort(columns=["region"],inplace=True)
+    roi_table.sort_values("region", inplace=True)
     trows = [X[1] for X in roi_table.iterrows()]
     result_groups = sorted(result_groups,key=lambda x: x[0])
     REGION = 0
