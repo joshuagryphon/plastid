@@ -8,8 +8,21 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ----------
 
+Added
+.....
+
+ - BioConda support (special thanks to @lparsons)
+
+ - Testing streamlined via ``tox``
+
+
 Fixed
 .....
+
+ - Removed references to deprecated ``pandas.DataFrame.sort()``, enabling
+   compatibility with ``pandas`` versions above 0.2.0
+
+ - Improved compatibility with ``numpy`` versions above 1.31.1
 
  - ``VariableFivePrimeMapFactory.from_file()`` and
    ``StratifiedVariableFivePrimeMapFactory.from_file()`` now work on filenames
@@ -17,6 +30,9 @@ Fixed
 
  - ``StratifiedVariableFivePrimeMapFactory`` now imported by typing
    ``from plastid import *``
+
+ - And others as well
+
 
 
 plastid [0.4.8] = [2017-04-09]
