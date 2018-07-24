@@ -132,8 +132,8 @@ def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWri
         df1 = df1.sort_index(axis=1).sort_values(sort_columns, axis=0)
         df2 = df2.sort_index(axis=1).sort_values(sort_columns, axis=0)
     else:
-        df1 = df1.sort_index(axis=1).sort_values(list(df1.columns), axis=0)
-        df2 = df2.sort_index(axis=1).sort_values(list(df2.columns), axis=0)
+        df1 = df1.sort_values(list(df1.columns), axis=0).sort_index()
+        df2 = df2.sort_values(list(df2.columns), axis=0).sort_index()
 
     failures = []
     keys1 = set(df1.columns)

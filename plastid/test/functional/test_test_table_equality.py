@@ -66,15 +66,16 @@ def test_exit_status():
     table1["extra"] = 2**7 * numpy.random.random(size=size)
     table1.to_csv(headerfile_extra_cols        , index=False , header=True  , sep="\t")
     table1.to_csv(noheaderfile_extra_cols      , index=False , header=False , sep="\t",
-                  columns=["extra"]+keyorder)
+                  columns=["extra"] + keyorder)
+
     headerfile_extra_cols.close()
     noheaderfile_extra_cols.close()
 
     table1["extra"] += 10**-4 * numpy.random.random(size=size)
     table1.to_csv(headerfile_extra_cols_diff   , index=False , header=True  , sep="\t")
     table1.to_csv(noheaderfile_extra_cols_diff , index=False , header=False , sep="\t",
+                  columns=["extra"] + keyorder)
 
-                   columns=["extra"]+keyorder)
     headerfile_extra_cols_diff.close()
     noheaderfile_extra_cols_diff.close()
 
@@ -103,13 +104,13 @@ def test_exit_status():
     #   -Expected exit code/returns status for :py:func:`main`
     tests = [
         ("same",
-            "%s %s" % (headerfile.name,headerfile.name),
+            "%s %s" % (headerfile.name, headerfile.name),
             0),
         ("diff_column_names",
-            "%s %s" % (headerfile.name,headerfile_extra_cols.name),
+            "%s %s" % (headerfile.name, headerfile_extra_cols.name),
             1),
         ("extra_column_names_ignored",
-            "%s %s --exclude extra" % (headerfile.name,headerfile_extra_cols.name),
+            "%s %s --exclude extra" % (headerfile.name, headerfile_extra_cols.name),
             0),
         ("shuffled_rows",
             "%s %s" % (headerfile.name, headerfile_shuffled.name),
