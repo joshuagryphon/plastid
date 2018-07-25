@@ -71,21 +71,6 @@ packages = find_packages() + [
 ]
 
 
-def get_scripts():
-    """Detect command-line scripts automatically
-
-    Returns
-    -------
-    list
-        list of strings describing command-line scripts
-    """
-    binscripts = [X.replace(".py", "") for X in filter(lambda x: x.endswith(".py") and \
-                                                                "__init__" not in x,
-                                                      os.listdir(os.path.join("plastid",  "bin")))]
-    return ["%s = plastid.bin.%s:main" % (X, X) for X in binscripts]
-
-
-
 # trim dependencies if on readthedocs server, where many dependencies are mocked
 on_rtd = os.environ.get("READTHEDOCS",  None) == "True"
 
@@ -100,6 +85,20 @@ if not on_rtd:
                         ] + setup_requires
 else:
     install_requires = ["cython", "numpy", "pysam", "biopython", "termcolor"]
+
+
+def get_scripts():
+    """Detect command-line scripts automatically
+
+    Returns
+    -------
+    list
+        list of strings describing command-line scripts
+    """
+    binscripts = [X.replace(".py", "") for X in filter(lambda x: x.endswith(".py") and \
+                                                                "__init__" not in x,
+                                                      os.listdir(os.path.join("plastid",  "bin")))]
+    return ["%s = plastid.bin.%s:main" % (X, X) for X in binscripts]
 
 
 
@@ -140,11 +139,11 @@ CYTHON_DEFAULTS = [False]
 
 # Build an extension of portions of Jim Kent's utilities,  which are needed by
 # BigWigReader. The Kent utilities come under a permissive license that
-# allows redistribution and modification for any use,  including commercial,
-# with the exception of src/portimpl.h,  which appears to have its own license.
+# allows redistribution and modification for any use, including commercial,
+# with the exception of src/portimpl.h, which appears to have its own license.
 # Sources included here have therefore been modified not to depend on portimpl.h.
 #
-# JK's utilities are compiled into plastid.readers.bigwig,  plastid.readers.bigbed,
+# JK's utilities are compiled into plastid.readers.bigwig, plastid.readers.bigbed,
 # and plastid.readers.bbi_file
 
 kent_samtabix = [
@@ -205,11 +204,11 @@ kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in ken
 #===============================================================================
 # [PLACEHOLDERS]
 # 
-# Placeholders used to build egg_info if c-dependencies are not installed.
+# Placeholders used to build egg_info if C dependencies are not installed.
 #
-# These enable `pip` to read this file, identify and install dependencies, and 
-# then re-run this file _after_ dependencies are installed to enable
-# compilation of C extensions.
+# These placeholders enable `pip` to read this file, identify and install
+# dependencies, and then re-run this file _after_ dependencies are installed to
+# enable compilation of C extensions.
 #
 # If dependencies for compiled extensions are installed, these are overwritten
 # or extended below in [REDEFINES]
@@ -231,15 +230,12 @@ command_classes = {}
 
 
 
-
 #===============================================================================
 # [REDEFINES]
 #
 # Detect if dependencies required to build C extensions are pre-installed
 # if so, overwrite values fromi the section above
 #===============================================================================
-
-
 
 try:
     import numpy
@@ -268,16 +264,15 @@ try:
         "PYSAM10" : parse_version(pysam.__version__) >= parse_version("0.10.0")
     }
 
+    
+    # define extensions -------------------------------------------------------
+
     # redefine extensions
     extension_kwargs = {
         "include_dirs"      : INCLUDE_PATH,
         "language"          : "c",
         "cython_directives" : CYTHON_ARGS,
     }
-    print(INCLUDE_PATH)
-
-    
-    # define extensions -------------------------------------------------------
 
     # These extensions have no dependencies on kentUtils,
     # but do have dependencies on pysam
@@ -290,7 +285,7 @@ try:
                                  **extension_kwargs
                             ) for x in noinclude_pyx]
 
-    # The following extensions do link to kentUtils
+    # The following extensions do link to kentUtils, and also zlib
     bbifile = Extension(
         "plastid.readers.bbifile",
         ["plastid/readers/bbifile.pyx"] + kent_deps,
@@ -316,6 +311,8 @@ try:
     ext_modules.append(bigbed)
 
 
+    # define helper functions & classes for build -----------------------------
+
     # paths to sources
     PYX_PATHS = []
     for ex in ext_modules:
@@ -323,8 +320,6 @@ try:
 
     C_PATHS = [X.replace(".pyx", ".c") for X in PYX_PATHS]
 
-
-    # define helper functions & classes for build -----------------------------
 
     def wrap_command_classes(baseclass):
         """Add custom command-line `--recythonize` options to
@@ -430,7 +425,6 @@ try:
             pass
 
 
-
     # setup command classes ---------------------------------------------------
 
     command_classes = {
@@ -442,7 +436,7 @@ try:
     }
 
 except ImportError:
-    print("Not all requirements pre-installed. Will need to bootstrap.")
+    print("plastid: Not all requirements pre-installed. Will need to bootstrap.")
 
 
 
@@ -453,7 +447,6 @@ except ImportError:
 
 setup(
 
-    # package metadata
     name             = "plastid",
     version          = plastid_version,
     author           = "Joshua Griffin Dunn",
@@ -490,7 +483,6 @@ setup(
     ],
 
 
-    # packaging info
     zip_safe = False,
     packages = packages,
     package_data = {
