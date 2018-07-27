@@ -8,16 +8,22 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ----------
 
+Changes are predominantly for maintenance, bugfixes, and streamlining.
+
+
 Added
 .....
 
- - BioConda support (special thanks to @lparsons)
+ - BioConda support (special thanks to ``@lparsons``)
 
  - Testing streamlined via ``tox``
 
 
 Fixed
 .....
+
+ - Rewrote ``setup.py`` to remove requirement for pre-installation of
+   ``cython``, ``numpy``, and ``pysam``
 
  - Removed references to deprecated ``pandas.DataFrame.sort()``, enabling
    compatibility with ``pandas`` versions above 0.2.0
