@@ -61,17 +61,19 @@ class test_BigBedReader(unittest.TestCase):
         for col in cls.cols:
             cls.bedfiles[col] = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bed" % col) 
             cls.bbfiles[col]  = resource_filename("plastid","test/data/annotations/100transcripts_bed%s.bb" % col)
-        
+
         cls.chrom_sizes = { }
-        for line in open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")):
-            chrom,size = line.strip().split("\t")
-            cls.chrom_sizes[chrom] = int(size)
-        
+        with open(resource_filename("plastid","test/data/annotations/sacCer3.sizes")) as fh:
+            for line in fh: 
+                chrom,size = line.strip().split("\t")
+                cls.chrom_sizes[chrom] = int(size)
+
         cls.bbs = { K : BigBedReader(cls.bbfiles[K],return_type=Transcript) for K in cls.cols }
 
         # comparisons against genome hash
         cls.binsize = 10000
-        transcripts    = list(BED_Reader(open(cls.bedfiles[12]),return_type=Transcript))
+        with open(cls.bedfiles[12]) as fh:
+            transcripts = list(BED_Reader(fh, return_type=Transcript))
 
         cls.tx_dict     = {}
         cls.cds_dict    = {}
@@ -113,7 +115,7 @@ class test_BigBedReader(unittest.TestCase):
 #            
 #            # test magic number parsing
 #            self.assertEqual(my_headers["magic"],0x8789F2EB)
-#            
+#
 #            # assert number of columns is correct
 #            self.assertEqual(my_headers["field_count"],col)
 #            self.assertEqual(my_headers["bed_field_count"],col)
@@ -122,43 +124,45 @@ class test_BigBedReader(unittest.TestCase):
         for _,my_reader in self.bbs.items():
             # make sure we have all records
             self.assertEqual(my_reader.num_records,100)
-    
+
     def test_num_chroms(self):
         for _,my_reader in self.bbs.items():
             self.assertEqual(my_reader.num_chroms,17)
-            
+
     def test_chrom_sizes(self):
         for _,my_reader in self.bbs.items():
             for k,v in self.chrom_sizes.items():
                 self.assertEqual(my_reader.chroms[k],v)   
-   
+
     def test_iter_same_as_bed_reader_various_columns(self):
         # implicitly tests iterate_over_chunk over all bed files, too
         # this tests BigBed equality with various ranges of columns
         # and various custom columns
         for col in self.cols:
             bigbed = self.bbs[col]
-            bed    = BED_Reader(open(self.bedfiles[col]),return_type=Transcript)
-               
-            for n, (tx1, tx2) in enumerate(zip(bed,bigbed)):
-                msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
-                self.assertTrue(transcript_identical(tx1,tx2),msg)
-               
-            self.assertEqual(n,100-1)
-        
+            with open(self.bedfiles[col]) as fh:
+                bed = BED_Reader(fh, return_type=Transcript)
+
+                for n, (tx1, tx2) in enumerate(zip(bed,bigbed)):
+                    msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
+                    self.assertTrue(transcript_identical(tx1,tx2),msg)
+
+            self.assertEqual(n, 100-1)
+
     def test_iter_same_as_bed_reader_flydata(self):
         # test more complex transcript models
         # we cast them to lists, sadly, because Python's lexical chromosome sorting
         # differs from unix command-line sort; so even though the records are
         # in the same order in both files, they are returned with different sorts
         flybb  = BigBedReader(self.flybbfile,return_type=Transcript)
-        flybed = BED_Reader(open(self.flybedfile),return_type=Transcript)
-        for n, (tx1,tx2) in enumerate(zip(flybed,flybb)):
-            msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
-            self.assertTrue(transcript_identical(tx1,tx2),msg)
-         
-        self.assertEqual(n,32682-1)
-  
+        with open(self.flybedfile) as fh:
+            flybed = BED_Reader(fh, return_type=Transcript)
+            for n, (tx1,tx2) in enumerate(zip(flybed,flybb)):
+                msg = "Transcript mismatch in BigBed file at record %s. Expected '%s'. Got '%s'." % (n,tx1,tx2)
+                self.assertTrue(transcript_identical(tx1,tx2),msg)
+
+        self.assertEqual(n, 32682-1)
+
 #    def test_iterate_over_chunk(self):
 #        # we will have to hard-code the answers to this
 #        flybb = BigBedReader(self.flybbfile)
@@ -297,7 +301,9 @@ class test_BigBedReader(unittest.TestCase):
     def test_get_autosql_str(self):
         for k in (4,12): 
             bbplus_as = BigBedReader(self.bb_bonuscols["bb%sas" % k])
-            expected_as = open(resource_filename("plastid","test/data/annotations/bed%s_bonus_bed_columns.as" % k)).read()
+            with open(resource_filename("plastid","test/data/annotations/bed%s_bonus_bed_columns.as" % k)) as fh:
+                expected_as = fh.read()
+
             self.assertEqual(bbplus_as._get_autosql_str(),expected_as)
 
     def test_get_no_autosql_str(self):
@@ -316,7 +322,7 @@ class test_BigBedReader(unittest.TestCase):
             fn = "bb%sas" % k
             bb = BigBedReader(self.bb_bonuscols[fn])
             self.assertEqual(bb.extension_fields,expected)
-     
+
     def test_custom_columns_names_without_autosql(self):
         expected = OrderedDict([("custom_0","no description"),
                                 ("custom_1","no description"),
@@ -336,19 +342,19 @@ class test_BigBedReader(unittest.TestCase):
                    "my_strs"   : [],
                    "my_colors" : [],
                   }
-        bfile = open(self.bonus_col_file)
-        for line in bfile:
-            items = line.strip("\n").split("\t")
-            values["my_floats"].append(float(items[0]))
-            if items[1] == "":
-                values["my_sets"].append(set())
-            else:
-                values["my_sets"].append(set([X.strip() for X in items[1].split(",")]))
-            values["my_ints"].append(int(items[2]))
-            values["my_strs"].append(items[3])
-            values["my_colors"].append(tuple([int(X) for X in items[4].split(",")]))
 
-        bfile.close()
+        with open(self.bonus_col_file) as bfile:
+            for line in bfile:
+                items = line.strip("\n").split("\t")
+                values["my_floats"].append(float(items[0]))
+                if items[1] == "":
+                    values["my_sets"].append(set())
+                else:
+                    values["my_sets"].append(set([X.strip() for X in items[1].split(",")]))
+                values["my_ints"].append(int(items[2]))
+                values["my_strs"].append(items[3])
+                values["my_colors"].append(tuple([int(X) for X in items[4].split(",")]))
+
         for k in (4,12):
             fn = "bb%sas" % k
             # ignore a Warning caused by trying to turn the BED color field
@@ -370,16 +376,15 @@ class test_BigBedReader(unittest.TestCase):
                         
     def test_custom_columns_retval_type_without_autosql(self):
         values = { "custom_%s" % X : copy.deepcopy([])for X in range(5) }
-        bfile = open(self.bonus_col_file)
-        for line in bfile:
-            items = line.strip("\n").split("\t")
-            values["custom_0"].append(items[0])
-            values["custom_1"].append(items[1])
-            values["custom_2"].append(items[2])
-            values["custom_3"].append(items[3])
-            values["custom_4"].append(items[4])
+        with open(self.bonus_col_file) as bfile:
+            for line in bfile:
+                items = line.strip("\n").split("\t")
+                values["custom_0"].append(items[0])
+                values["custom_1"].append(items[1])
+                values["custom_2"].append(items[2])
+                values["custom_3"].append(items[3])
+                values["custom_4"].append(items[4])
 
-        bfile.close()
         for k in (4,12):
             fn = "bb%sno_as" % k
             bb = BigBedReader(self.bb_bonuscols[fn])

@@ -47,11 +47,12 @@ def tearDownModule():
 
 @attr(test="unit")
 class TestParseVariableOffsetFile(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.ref_file = REF_FILES["yeast_psite"]
-        cls.lines = CommentReader(open(cls.ref_file)).read().strip("\n").split("\n")
+        with open(cls.ref_file) as fh:
+            cls.lines = CommentReader(fh).read().strip("\n").split("\n")
         cls.expected = { 26 : 12,
                          27 : 12,
                          28 : 13,
@@ -60,7 +61,7 @@ class TestParseVariableOffsetFile(unittest.TestCase):
                          31 : 13,
                          "default" : 13,
                         }
-    
+
     def test_no_default(self):
         my_expected = copy.deepcopy(self.expected)
         my_expected.pop("default")
@@ -69,7 +70,8 @@ class TestParseVariableOffsetFile(unittest.TestCase):
         self.assertDictEqual(my_expected,dtmp)
 
     def test_with_default(self):
-        dtmp = _parse_variable_offset_file(CommentReader(open(self.ref_file)))
+        with open(self.ref_file) as fh:
+            dtmp = _parse_variable_offset_file(CommentReader(fh))
         self.assertDictEqual(self.expected,dtmp)
 
     def test_only_default(self):
@@ -143,7 +145,9 @@ bamfilename    = MINI["bamfile"]
 bowtiefilename = MINI["bowtie_file"]
 wigglefilename = MINI["wig_bedgraph"]
 bigwigfilename = MINI["bigwig"]
-regions = list(BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain))
+with open(MINI["bed_file"]) as fh:
+    regions = list(BED_Reader(fh, return_type=SegmentChain))
+
 spliced_regions = [X for X in regions if len(X) > 1] # set(filter(lambda x: len(x) > 1, regions))
 unique_regions  = [X for X in regions if "repeat" not in X.get_name()] #set(filter(lambda x: "repeat" not in x.get_name(), regions))
 introns = [X for X in regions if "intron" not in X.get_name()] #set(filter(lambda x: "intron" in x.get_name(),regions))
@@ -595,32 +599,33 @@ def check_get_transcript_from_args_add_three(parser,fmt,add_three,n=1):
     gtf_offset = 3 if fmt == "GTF2" else 0
     bed_ref = MINI["bed_file"]
     dtmp = {}
-    for line in open(bed_ref):
-        items = line.strip("\n").split("\t")
-        name = items[3]
-        strand = items[5]
-        cds_start = int(items[6])
-        cds_end   = int(items[7])
-        if cds_start < cds_end:
-            if strand == "+":
-                cds_end -= gtf_offset
-            else:
-                cds_start += gtf_offset
-                
-            if add_three == True:
+    with open(bed_ref) as fh:
+        for line in fh:
+            items = line.strip("\n").split("\t")
+            name = items[3]
+            strand = items[5]
+            cds_start = int(items[6])
+            cds_end   = int(items[7])
+            if cds_start < cds_end:
                 if strand == "+":
-                    cds_end += 3
+                    cds_end -= gtf_offset
                 else:
-                    cds_start -= 3
-            dtmp[name] = (cds_start,cds_end)
-        else:
-            dtmp[name] = (None,None)
-    
+                    cds_start += gtf_offset
+
+                if add_three == True:
+                    if strand == "+":
+                        cds_end += 3
+                    else:
+                        cds_start -= 3
+                dtmp[name] = (cds_start,cds_end)
+            else:
+                dtmp[name] = (None,None)
+
     files = " ".join([MINI["%s_file" % fmt.lower()]] * n)
     argstr = "--annotation_format %s --annotation_files %s " % (fmt,files)
     if add_three == True:
         argstr += " --add_three"
-    
+
     args = parser.parse_args(shlex.split(argstr))
     transcripts = list(get_transcripts_from_args(args))
     for tx in transcripts:
@@ -667,25 +672,26 @@ def check_get_transcript_from_args_add_three_tabix(fmt):
     bed_ref = REF_FILES["100transcripts_bed"]
     cds = {}
     tx  = {}
-    for line in open(bed_ref):
-        items = line.strip("\n").split("\t")
-        name = items[3]
+    with open(bed_ref) as fh:
+        for line in fh:
+            items = line.strip("\n").split("\t")
+            name = items[3]
 
-        tx_start = int(items[1])
-        tx_end   = int(items[2])
-        tx[name] = (tx_start,tx_end)
-        
-        cds_start = int(items[6])
-        cds_end   = int(items[7])
-        if cds_start < cds_end:
-            cds[name] = (cds_start,cds_end)
-        else:
-            cds[name] = (None,None)
-    
+            tx_start = int(items[1])
+            tx_end   = int(items[2])
+            tx[name] = (tx_start,tx_end)
+
+            cds_start = int(items[6])
+            cds_end   = int(items[7])
+            if cds_start < cds_end:
+                cds[name] = (cds_start,cds_end)
+            else:
+                cds[name] = (None,None)
+
     ref_files = {
              "BED"  : REF_FILES["100transcripts_bed_tabix"],
              "GTF2" : REF_FILES["100transcripts_gtf_tabix"]
-             }    
+             }
     parser = get_annotation_file_parser()
     argstr = "--annotation_format %s --annotation_files %s --tabix" % (fmt,ref_files[fmt])
     args = parser.parse_args(shlex.split(argstr))

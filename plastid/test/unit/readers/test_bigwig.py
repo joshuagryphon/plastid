@@ -44,10 +44,11 @@ class AbstractTestBBIFile():
     def test_chrom_sizes(self):
         found = self.bw.chroms
         expected = {}
-        for line in open(os.path.join(base_path,"annotations","sacCer3.sizes")):
-            k,v = line.strip().split("\t")
-            expected[k] = int(v)
-        
+        with open(os.path.join(base_path,"annotations","sacCer3.sizes")) as fh:
+            for line in fh:
+                k,v = line.strip().split("\t")
+                expected[k] = int(v)
+
         # these two happen not to be in the dataset
         expected.pop("chrVI")
         expected.pop("chrmt")
@@ -220,39 +221,40 @@ class TestBigWigReader(AbstractTestBBIFile):
 #         
 #         assert_true(numpy.isnan(fillnan[seg]).all(),
 #                     "nanfill didn't work")
-        
+
         assert_true((fill0[seg] == 0).all(),
                     "0-fill didn't work")
-        
+
 #         assert_true((fill10[seg] == 10).all(),
 #                     "10-fill didn't work")
-    
+
     def test_sum(self):
         bw = BigWigReader(os.path.join(base_path,"mini","wig","bw_fiveprime_15_fw.bw"))
         assert_equal(bw.sum(),4000)
-    
+
     def test_iter(self):
-        wig = WiggleReader(open(wigfile))
-        bw  = BigWigReader(bigwigfile)
-        
-        for found in bw:
-            expected = next(wig)
-            fchrom = found[0]
-            echrom = expected[0]
-            assert_equal(fchrom,echrom,"Chromosome mismatch. Expected '%s', found '%s'." % (fchrom,echrom))
+        with open(wigfile) as fh:
+            wig = WiggleReader(fh)
+            bw  = BigWigReader(bigwigfile)
 
-            fstart = found[1]
-            estart = expected[1]
-            assert_equal(fstart,estart,"Start mismatch. Expected '%s', found '%s'." % (fstart,estart))
+            for found in bw:
+                expected = next(wig)
+                fchrom = found[0]
+                echrom = expected[0]
+                assert_equal(fchrom,echrom,"Chromosome mismatch. Expected '%s', found '%s'." % (fchrom,echrom))
 
-            fend = found[2]
-            eend = expected[2]
-            assert_equal(fend,eend,"End mismatch. Expected '%s', found '%s'." % (fend,eend))
+                fstart = found[1]
+                estart = expected[1]
+                assert_equal(fstart,estart,"Start mismatch. Expected '%s', found '%s'." % (fstart,estart))
 
-            fval = found[3]
-            eval_ = expected[3]
-            diff = abs(fval-eval_)
-            assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
+                fend = found[2]
+                eend = expected[2]
+                assert_equal(fend,eend,"End mismatch. Expected '%s', found '%s'." % (fend,eend))
+
+                fval = found[3]
+                eval_ = expected[3]
+                diff = abs(fval-eval_)
+                assert_true(diff < TOL,"Difference %s exceeds tolerance '%s'. Expected '%s', found '%s'." % (diff,TOL,fval,eval_))
 
 # Disabled until we decide what to do with summarize()            
 #     def test_summarize(self):

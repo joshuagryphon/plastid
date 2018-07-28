@@ -416,12 +416,15 @@ class AbstractSegmentChainHelper(unittest.TestCase):
         gtf_text.close()
 
         print("test_export_bed_gtf: able to write")
-        bed_transcripts = {X.get_name() : X  for X in BED_Reader(open(bed_text.name),return_type=self.test_class) }
+        with open(bed_text.name) as fh:
+            bed_transcripts = {X.get_name() : X  for X in BED_Reader(fh, return_type=self.test_class) }
+
         print("test_export_bed_gtf: able to read bed")
-        gtf_transcripts = {X.get_name() : X  for X in GTF2_TranscriptAssembler(open(gtf_text.name),
-                                                                               add_three_for_stop=False,
-                                                                               return_type=self.test_class) }
-        print("test_export_bed_gtf: able to read gtf")
+        with open(gtf_text.name) as fh:
+            gtf_transcripts = {X.get_name() : X  for X in GTF2_TranscriptAssembler(fh,
+                                                                                   add_three_for_stop=False,
+                                                                                   return_type=self.test_class) }
+            print("test_export_bed_gtf: able to read gtf")
 
         # Test equality of imported & exported keysets
         self.assertEquals(set(self.bed_dict.keys()),set(bed_transcripts.keys()))
@@ -435,7 +438,7 @@ class AbstractSegmentChainHelper(unittest.TestCase):
             self.assertTrue(self.is_identical(tx,gtf_transcripts[txid]),err_msg)
 
         print("tested identity of reimported transcripts")
-        
+
         # Test inequality of those that should be different
         c = 0
         for k1, k2 in zip(self.sorted_keys,self.shuffled_keys):
@@ -1412,35 +1415,40 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     # FIXME: move ref_transcripts to list of actual Transcript objects
     @skip_if_abstract    
     def test_from_psl(self):
-        ref_transcripts = { X.get_name() : X for X in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class) }
+        with open(MINI["bed_file"]) as fh:
+            ref_transcripts = { X.get_name() : X for X in BED_Reader(fh, return_type=self.test_class) }
+
         # PSL file won't have knowledge of CDS, so we set these to none in our reference transcripts
         if self.test_class == Transcript:
             for tx in ref_transcripts.values():
                 tx.cds_start = tx.cds_end = None
                 tx.cds_genome_start = tx.cds_genome_end = None
-        for line in open(MINI["psl_file"]):
-            if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
-                psl = self.test_class.from_psl(line)
-                ivc_id = psl.get_name()
-                if not "repeat_1" in ivc_id and not "repeat_2" in ivc_id:
-                    # repeat regions BLAT to wrong place, for obvious regions. so we ignore them
-                    ref = ref_transcripts[ivc_id]
-                    err_msg = "SegmentChain %s fails PSL import: \n    bed: %s \n    psl: %s." % (ivc_id, str(ref),str(psl))
-                    self.assertTrue(self.is_identical(ref,psl),err_msg)
-            
-    @skip_if_abstract    
+
+        with open(MINI["psl_file"]) as fh:
+            for line in fh:
+                if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
+                    psl = self.test_class.from_psl(line)
+                    ivc_id = psl.get_name()
+                    if not "repeat_1" in ivc_id and not "repeat_2" in ivc_id:
+                        # repeat regions BLAT to wrong place, for obvious regions. so we ignore them
+                        ref = ref_transcripts[ivc_id]
+                        err_msg = "SegmentChain %s fails PSL import: \n    bed: %s \n    psl: %s." % (ivc_id, str(ref),str(psl))
+                        self.assertTrue(self.is_identical(ref,psl),err_msg)
+
+    @skip_if_abstract
     def test_to_psl_raises_error_if_attributes_not_defined(self):
         for chain in BED_Reader(open(MINI["bed_file"]),return_type=self.test_class):
             self.assertRaises(AttributeError,chain.as_psl)
-    
-    @skip_if_abstract    
+
+    @skip_if_abstract
     def test_to_from_psl_identity(self):
-        for line in open(MINI["psl_file"]):
-            if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
-                psl = SegmentChain.from_psl(line)
-                line_out = psl.as_psl()
-                self.assertEqual(line.strip("\n"),line_out.strip("\n"),"PSL export doesn't match input: \n    %s\n    %s" % (line,line_out)) 
-        
+        with open(MINI["psl_file"]) as fh:
+            for line in fh:
+                if not line.startswith("psLayout") and not line.startswith("match") and not line.startswith("---") and not line.startswith(" "):
+                    psl = SegmentChain.from_psl(line)
+                    line_out = psl.as_psl()
+                    self.assertEqual(line.strip("\n"),line_out.strip("\n"),"PSL export doesn't match input: \n    %s\n    %s" % (line,line_out)) 
+
     @skip_if_abstract
     def test_as_bed_extra_columns(self):
         attr = { "ID" : "some feature ID",
@@ -1715,9 +1723,9 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         self.assertEqual(chain.as_bed(extra_columns=['ID','A','Z'],empty_value=4),
                          'chrA\t100\t550\tsome_chain\t0\t+\t100\t100\t0,0,0\t2\t400,0,\t0,450,\tsome_chain\tdafd\t4\n'
                          )
-        
-        
- 
+
+
+
 
 @attr(test="unit")
 class TestSegmentChain(AbstractSegmentChainHelper):
@@ -1726,26 +1734,30 @@ class TestSegmentChain(AbstractSegmentChainHelper):
     @classmethod
     def setUpClass(cls):
         cls.test_class = SegmentChain
-        
-        cls.bed_list = list(BED_Reader(CommentReader(open(ANNOTATION_FILES["bed100"])),return_type=SegmentChain))
-        cls.gff_list = list(GFF3_TranscriptAssembler(open(ANNOTATION_FILES["gff100"]),
-                                                   exon_types=["exon"],add_three_for_stop=False,
-                                                   return_type=SegmentChain))
-        cls.gtf_list = list(GTF2_TranscriptAssembler(open(ANNOTATION_FILES["gtf100"]),
-                                                   return_type=SegmentChain,
-                                                   add_three_for_stop=False))      
-        
+
+        with open(ANNOTATION_FILES["bed100"]) as fh:
+            cls.bed_list = list(BED_Reader(CommentReader(fh), return_type=SegmentChain))
+        with open(ANNOTATION_FILES["gff100"]) as fh:
+            cls.gff_list = list(GFF3_TranscriptAssembler(fh,
+                                                         exon_types=["exon"],
+                                                         add_three_for_stop=False,
+                                                         return_type=SegmentChain))
+        with open(ANNOTATION_FILES["gtf100"]) as fh:
+            cls.gtf_list = list(GTF2_TranscriptAssembler(fh,
+                                                         return_type=SegmentChain,
+                                                         add_three_for_stop=False))
+
         cls.gff_list = cls._to_segmentchain(cls.gff_list)
         cls.gtf_list = cls._to_segmentchain(cls.gff_list)
-        
+
         cls.bed_dict = { X.get_name() : X for X in cls.bed_list }
         cls.gff_dict = { X.get_name() : X for X in cls.gff_list }
         cls.gtf_dict = { X.get_name() : X for X in cls.gtf_list }
-        
+
         cls.sorted_keys = sorted(cls.bed_dict.keys())
         cls.shuffled_keys = cls.sorted_keys[:]
         shuffle(cls.shuffled_keys)
-        
+
         cls.ivs  = {}
         cls.ivcs = {}
 
@@ -1915,22 +1927,27 @@ class TestTranscript(AbstractSegmentChainHelper):
         cls.test_class = Transcript
 
         #TestSegmentChain.setUp(cls)
-        cls.bed_list = list(BED_Reader(CommentReader(open(ANNOTATION_FILES["bed100"])),return_type=Transcript))
-        cls.gff_list = GFF3_TranscriptAssembler(open(ANNOTATION_FILES["gff100"]),
-                                                exon_types=["exon"],add_three_for_stop=False,
-                                                return_type=Transcript)
-        # stop codon features in GTF make add_three_for_stop unnecessary
-        cls.gtf_list = GTF2_TranscriptAssembler(open(ANNOTATION_FILES["gtf100"]),add_three_for_stop=False,
-                                                return_type=Transcript)
-        
-        cls.bed_dict = { X.get_name() : X for X in cls.bed_list }
-        cls.gff_dict = { X.get_name() : X for X in cls.gff_list }
-        cls.gtf_dict = { X.get_name() : X for X in cls.gtf_list }
+        with open(ANNOTATION_FILES["bed100"]) as fh:
+            cls.bed_list = list(BED_Reader(CommentReader(fh), return_type=Transcript))
+            cls.bed_dict = { X.get_name() : X for X in cls.bed_list }
+
+        with open(ANNOTATION_FILES["gff100"]) as fh:
+            cls.gff_list = GFF3_TranscriptAssembler(fh,
+                                                    exon_types=["exon"],add_three_for_stop=False,
+                                                    return_type=Transcript)
+            cls.gff_dict = { X.get_name() : X for X in cls.gff_list }
+
+        with open(ANNOTATION_FILES["gtf100"]) as fh:
+            # stop codon features in GTF make add_three_for_stop unnecessary
+            cls.gtf_list = GTF2_TranscriptAssembler(fh,
+                                                    add_three_for_stop=False,
+                                                    return_type=Transcript)
+            cls.gtf_dict = { X.get_name() : X for X in cls.gtf_list }
 
         cls.sorted_keys = sorted(cls.bed_dict.keys())
         cls.shuffled_keys = cls.sorted_keys[:]
         shuffle(cls.shuffled_keys)
-        
+
         cls.ivs  = {}
         cls.ivcs = {}
 
@@ -2271,7 +2288,8 @@ class TestTranscript(AbstractSegmentChainHelper):
 
     def test_get_utr5(self):
         """Test fetching of CDS, UTR5, UTR3"""
-        utr5_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr5_100"]),return_type=SegmentChain)}
+        with open(ANNOTATION_FILES["utr5_100"]) as fh:
+            utr5_dict = { X.get_name() : X for X in BED_Reader(fh, return_type=SegmentChain)}
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             utr5_ivc = tx.get_utr5()
@@ -2280,31 +2298,35 @@ class TestTranscript(AbstractSegmentChainHelper):
                 self.assertTrue(self.is_identical_no_cds(utr5_ivc,utr5_dict[txid]))
             else:
                 print("No utr5 for %s, %s, %s, %s" % (txid,tx,tx.cds_start,tx.cds_end))
-    
+
         self.assertGreater(i,0,"test_get_utr5: No 5' UTRs tested?!")
-    
+
     def test_get_cds(self):
         """Test fetching of CDS, UTR5, UTR3"""
-        cds_dict  = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["cds100"]),return_type=Transcript)}
+        with open(ANNOTATION_FILES["cds100"]) as fh:
+            cds_dict  = { X.get_name() : X for X in BED_Reader(fh, return_type=Transcript)}
+
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             cds_ivc  = tx.get_cds()
             if cds_ivc.length > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(cds_ivc,cds_dict[txid]))
-    
+
         self.assertGreater(i,0,"test_get_cds: No CDS tested?!")
 
     def test_get_utr3(self):
         """Test fetching of CDS, UTR5, UTR3"""
-        utr3_dict = { X.get_name() : X for X in BED_Reader(open(ANNOTATION_FILES["utr3_100"]),return_type=SegmentChain)}
+        with open(ANNOTATION_FILES["utr3_100"]) as fh:
+            utr3_dict = { X.get_name() : X for X in BED_Reader(fh, return_type=SegmentChain)}
+
         i = 0
         for txid, tx in TestTranscript.bed_dict.items():
             utr3_ivc = tx.get_utr3()
             if utr3_ivc.length > 0:
                 i += 1
                 self.assertTrue(self.is_identical_no_cds(utr3_ivc,utr3_dict[txid]))
-    
+
         self.assertGreater(i,0,"test_get_utr3: No 3' UTRs tested?!")
 
    # overridden to use Transcript.from_bed() to preserve CDS info
@@ -2313,7 +2335,7 @@ class TestTranscript(AbstractSegmentChainHelper):
         for ivc_id, ivc in TestTranscript.bed_dict.items():
             err_msg = "SegmentChain %s fails BED io." % ivc_id
             self.assertTrue(self.is_identical(ivc,Transcript.from_bed(ivc.as_bed())),err_msg)    
-    
+
     # overridden because str(Transcript) does not preserve CDS Info
     def test_to_from_str_identity(self):
         """Test import to and from str representation"""
@@ -2325,7 +2347,7 @@ class TestTranscript(AbstractSegmentChainHelper):
             tmp.cds_genome_start = None
             tmp.cds_genome_end = None
             self.assertTrue(TestSegmentChain.is_identical(tmp,Transcript.from_str(str(tmp))),err_msg)
-    
+
     # overriden to use is_identical_no_cds() as identity metric
     def test_get_subchain(self):
         """Test fetching of subregions of SegmentChains as SegmentChains"""
@@ -2384,11 +2406,11 @@ class TestTranscript(AbstractSegmentChainHelper):
             ref_transcripts = list(GTF2_TranscriptAssembler(f))
             for tx in ref_transcripts:
                 buf.write(tx.as_gff3())
-        
+
         buf.seek(0)
         test_transcripts = list(GFF3_TranscriptAssembler(buf))
         buf.close()
-        
+
         for tx1, tx2 in zip(ref_transcripts, test_transcripts):
             self.assertEqual(tx1.get_position_set(),tx2.get_position_set())
             self.assertEqual(tx1.get_name(),tx2.get_name())
@@ -2399,7 +2421,7 @@ class TestTranscript(AbstractSegmentChainHelper):
             else:
                 self.assertEqual(tx1.cds_genome_start,tx2.cds_genome_start)
                 self.assertEqual(tx1.cds_genome_end,tx2.cds_genome_end)
-            
+
 
 #===============================================================================
 # INDEX: Test case for GenomicSegment

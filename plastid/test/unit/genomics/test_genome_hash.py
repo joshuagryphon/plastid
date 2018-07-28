@@ -174,25 +174,30 @@ class AbstractGenomeHashHelper(unittest.TestCase):
                 ol_features = list(self.cds_hash.get_overlapping_features(utr5,stranded=False))
                 self.assertNotIn(txid,(X.get_name() for X in ol_features),
                                  msg="%s 5' UTR fetched CDS on same strand" % txid)
-    
+
                 ol_features = list(self.as_cds_hash.get_overlapping_features(utr5,stranded=False))
                 self.assertNotIn(txid,(X.get_name() for X in ol_features),
                                  msg="%s 5' UTR fetched CDS on opposite strand" % txid)
-            
+
             self.assertGreater(u,0)
 
 @attr(test="unit")
 class TestGenomeHash(AbstractGenomeHashHelper):
     """Test case for :py:class:`GenomeHash`"""
-    
+
     @classmethod
     def setUpClass(cls):
         """Set up test data for `TestGenomeHash`"""
         cls.binsize = 10000
 
-        cls.transcripts    = list(BED_Reader(CommentReader(open(REF_FILES["100transcripts_bed"])),return_type=Transcript))
-        cls.coding_regions = list(BED_Reader(CommentReader(open(REF_FILES["100cds_bed"])),return_type=Transcript))
-        cls.coding_antisense = list(BED_Reader(CommentReader(open(REF_FILES["100cds_antisense_bed"])),return_type=Transcript))
+        with open(REF_FILES["100transcripts_bed"]) as fh:
+            cls.transcripts    = list(BED_Reader(CommentReader(fh),return_type=Transcript))
+
+        with open(REF_FILES["100cds_bed"]) as fh:
+            cls.coding_regions = list(BED_Reader(CommentReader(fh),return_type=Transcript))
+
+        with open(REF_FILES["100cds_antisense_bed"]) as fh:
+            cls.coding_antisense = list(BED_Reader(CommentReader(fh), return_type=Transcript))
 
         cls.tx_dict  = { X.get_name() : X for X in cls.transcripts }
         cls.cds_dict = { X.get_name() : X for X in cls.coding_regions }
@@ -201,14 +206,14 @@ class TestGenomeHash(AbstractGenomeHashHelper):
         cls.tx_hash     = GenomeHash(cls.tx_dict,do_copy=False,binsize=cls.binsize)
         cls.cds_hash    = GenomeHash(cls.cds_dict,do_copy=False,binsize=cls.binsize)
         cls.as_cds_hash = GenomeHash(cls.as_cds_dict,do_copy=False,binsize=cls.binsize)
-        
+
         cls.shuffled_indices = list(range(len(cls.transcripts)))
         shuffle(cls.shuffled_indices)
-    
+
     def test_genomehash_create_from_dict(self):
 #        """Test creation `GenomeHash`es from dictionaries without loss of information"""
         gh = GenomeHash(self.tx_dict,do_copy=True)
-        
+
         found    = sorted(list(gh.feature_dict.values()),key=_name_sort)
         expected = sorted(list(self.tx_dict.values()),key=_name_sort)
         self.assertEquals(len(expected),len(found),"Features lost in creation of GenomeHash from dict. Expected %s, found %s." % (len(expected),len(found)))

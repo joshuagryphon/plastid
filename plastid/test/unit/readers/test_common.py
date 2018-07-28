@@ -48,50 +48,49 @@ class MockReader(AssembledFeatureReader):
     """AssembledFeatureReader that returns string literals from files"""
     def _assemble(self,data):
         return data
-    
-   
+
+
 class test_AssembledFeatureReader(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.tabix_ref = REF_FILES["100transcripts_tabixbed"]
         cls.bed_ref   = REF_FILES["100transcripts_bed"]
-        bed_fh = open(cls.bed_ref) 
-        cls.bed_lines = bed_fh.readlines()
-        bed_fh.close()
-    
+        with open(cls.bed_ref) as bed_fh:
+            cls.bed_lines = bed_fh.readlines()
+
     # methods below test tabix keyword on opening strings, open filehandles,
     # or pysam.tabix_iterators by comparing string output to expected string literals 
     def test_tabix_str_open(self):
         reader = MockReader(self.tabix_ref,tabix=True)
         for expected, found in zip(reader,self.bed_lines):
             self.assertEqual(expected.strip("\n"),found.strip("\n"))
-    
+
     def test_tabix_multi_str_open(self):
         reader = MockReader(self.tabix_ref,self.tabix_ref,tabix=True)
         for expected, found in zip(reader,self.bed_lines+self.bed_lines):
             self.assertEqual(expected.strip("\n"),found.strip("\n"))
-     
+
     def test_tabix_fh_open(self):
         with open(self.tabix_ref,"rb") as fh1:
             reader = MockReader(fh1,self.tabix_ref,tabix=True)
             for expected, found in zip(reader,self.bed_lines):
                 self.assertEqual(expected.strip("\n"),found.strip("\n"))
-              
+
     def test_tabix_multi_fh_open(self):
         with open(self.tabix_ref,"rb") as fh1:
             with open(self.tabix_ref,"rb") as fh2:
                 reader = MockReader(fh1,fh2,self.tabix_ref,tabix=True)
                 for expected, found in zip(reader,self.bed_lines+self.bed_lines):
                     self.assertEqual(expected.strip("\n"),found.strip("\n"))
- 
+
     def test_tabix_ps_open(self):
         with open(self.tabix_ref,"rb") as fh1:
             ps1 = pysam.tabix_file_iterator(fh1,pysam.asTuple())
             reader = MockReader(ps1,self.tabix_ref,tabix=True)
             for expected, found in zip(reader,self.bed_lines):
                 self.assertEqual(expected.strip("\n"),found.strip("\n"))
-              
+
     def test_tabix_multi_ps_open(self):
         with open(self.tabix_ref,"rb") as fh1:
             with open(self.tabix_ref,"rb") as fh2:

@@ -201,7 +201,8 @@ def _read_bowtie_files_to_genome_arrays(base_folder,test_class=GenomeArray):
         trans_key = "nibble" if mapping == "center" else "offset"
         trans_args = { trans_key : int(offset) }
         gnds[k] = test_class()
-        gnds[k].add_from_bowtie(open(os.path.join(base_folder,_TEST_FILES["bowtie"])),_GA_MAP_FUNCTIONS[k.split("_")[0]],**trans_args)
+        with open(os.path.join(base_folder,_TEST_FILES["bowtie"])) as fh:
+            gnds[k].add_from_bowtie(fh, _GA_MAP_FUNCTIONS[k.split("_")[0]], **trans_args)
     
     return gnds
 
@@ -435,20 +436,22 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
         for k,v in self.gnds.items():
             fw_out = tempfile.NamedTemporaryFile(mode="w",delete=False)
             rc_out = tempfile.NamedTemporaryFile(mode="w",delete=False)
-            
+
             export_function(v,fw_out,"test","+",**kwargs)
             export_function(v,rc_out,"test","-",**kwargs)
-    
+
             fw_out.close()
             rc_out.close()
-            
+
             new_gnd = input_class()
-            new_gnd.add_from_wiggle(open(fw_out.name),"+")
-            new_gnd.add_from_wiggle(open(rc_out.name),"-")
+            with open(fw_out.name) as fh:
+                new_gnd.add_from_wiggle(fh, "+")
+            with open(rc_out.name) as fh:
+                new_gnd.add_from_wiggle(fh, "-")
 
             self.assertGreater(v.lengths()["chrA"],0)
             self.assertGreater(new_gnd.lengths()["chrA"],0)
-            
+
             ivplus  = GenomicSegment("chrA",0,v.lengths()["chrA"],"+")
             ivminus = GenomicSegment("chrA",0,v.lengths()["chrA"],"-")
 
@@ -462,7 +465,7 @@ class AbstractGenomeArrayHelper(unittest.TestCase):
                             "%s wiggle output on minus strand failed positionwise tolerance %s for test %s" % (wiggle_type,self.tol,k))
             self.assertGreater(new_gnd[ivminus].sum(),0,
                                "No counts found for %s reimport test %s" % (wiggle_type,k))
-            
+
             # ground-truth test against numpy arrays for unique regions
             for region in self.region_classes["unique"]:
                 strand_key = STRAND_KEYS[region.spanning_segment.strand]
@@ -779,13 +782,15 @@ class TestGenomeArray(AbstractExportableGenomeArrayHelper):
             Type of wiggle file. "variable_step" or "bedgraph"
         """
         gnd = self.test_class()
-        gnd.add_from_wiggle(open(os.path.join(self.test_folder,_TEST_FILES["%s_%s" % (wiggle_type,"fw")])),"+")
-        gnd.add_from_wiggle(open(os.path.join(self.test_folder,_TEST_FILES["%s_%s" % (wiggle_type,"rc")])),"-")
+        with open(os.path.join(self.test_folder,_TEST_FILES["%s_%s" % (wiggle_type,"fw")])) as fh:
+            gnd.add_from_wiggle(fh, "+")
+        with open(os.path.join(self.test_folder,_TEST_FILES["%s_%s" % (wiggle_type,"rc")])) as fh:
+            gnd.add_from_wiggle(fh, "-")
 
         # Make sure imported counts are nonzero
         self.assertGreater(gnd.sum(),0,"Import of %s yielded no counts!" % wiggle_type)
         chrA_len = gnd.lengths()["chrA"]
-        
+
         for strand,trackstub,label in [("+","fw","plus"),("-","rc","minus")]:
             my_vec = self.count_vecs["fiveprime_0_%s" % trackstub]
             vec_len = len(my_vec)
@@ -1199,35 +1204,39 @@ class TestBigWigGenomeArray(AbstractGenomeArrayHelper):
         bigwigrc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_rc.bw")
         wigfw = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_fw.wig")
         wigrc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_center_12_rc.wig")
-        
+
         bw = BigWigGenomeArray(fill=0)
         bw.add_from_bigwig(bigwigfw, "+")
         bw.add_from_bigwig(bigwigfw, "+")
         bw.add_from_bigwig(bigwigrc, "-")
         bw.add_from_bigwig(bigwigrc, "-")
-        
+
         ga = GenomeArray(bw.lengths())
-        ga.add_from_wiggle(open(wigfw),"+")
-        ga.add_from_wiggle(open(wigrc),"-")
-        
+        with open(wigfw) as fh:
+            ga.add_from_wiggle(fh, "+")
+        with open(wigrc) as fh:
+            ga.add_from_wiggle(fh, "-")
+
         for chrom, length in bw.lengths().items():
             for strand in bw.strands():
                 seg = GenomicSegment(chrom,0,length,strand)
                 maxdiff = abs(bw[seg] - 2*ga[seg]).max()
                 msg = "Maximum difference for multiple_strand_fetch (%s) exceeds tolerance (%s)"% (maxdiff,self.tol)
                 self.assertLessEqual(maxdiff, self.tol, msg)
-     
+
     def test_to_genome_array(self):
         for test, orig in self.gnds.items():
             fw = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_%s_fw.wig" % test)
             rc = os.path.join(TestBigWigGenomeArray.test_folder,"wig","bw_%s_rc.wig" % test)            
-            
+
             expected = GenomeArray()
-            expected.add_from_wiggle(open(fw), "+")
-            expected.add_from_wiggle(open(rc), "-")
-            
+            with open(fw) as fh:
+                expected.add_from_wiggle(fh, "+")
+            with open(rc) as fh:
+                expected.add_from_wiggle(fh, "-")
+
             found = orig.to_genome_array()
-            
+
             for chrom, length in expected.lengths().items():
                 for strand in ("+","-"):
                     seg = GenomicSegment(chrom,0,length,strand)
@@ -1420,7 +1429,7 @@ class TestBAMGenomeArray(AbstractExportableGenomeArrayHelper):
 
 def _detect_or_create_folders(base_folder):
     """Creates and tests folder hierarchy needed for unit/integrative tests below.
-    
+
     Parameters
     ----------
     base_folder : str
@@ -1433,27 +1442,27 @@ def _detect_or_create_folders(base_folder):
         sf = os.path.join(base_folder,name)
         if not os.path.isdir(sf):
             os.mkdir(sf)
-    
+
     # BED file for use later        
-    fout = open(os.path.join(base_folder,_TEST_FILES["bed"]),"w") 
-    fout.write(TEST_CHR_BED)
-    fout.close()
-    
+    with open(os.path.join(base_folder,_TEST_FILES["bed"]),"w") as fout:
+        fout.write(TEST_CHR_BED)
+        fout.close()
+
     # .juncs file for tophat
-    fout = open(os.path.join(base_folder,_TEST_FILES["juncs"]),"w")
-    fout.write(TEST_CHR_JUNCS)
-    fout.close()
+    with open(os.path.join(base_folder,_TEST_FILES["juncs"]),"w") as fout:
+        fout.write(TEST_CHR_JUNCS)
+        fout.close()
 
 def detect_base_folder(func):
     """Decorator function to ensure that folders required by functions below exist.
     For this decorator to work, the function it wraps MUST require base_folder
     as its first parameter.
-    
+
     Parameters
     ----------
     func : Function
         Function to decorate
-    
+
     Returns
     -------
     Function : wrapped function
@@ -1503,9 +1512,10 @@ def create_synthetic_genome(base_folder):
     
     # write to FASTA
     total_genome = ("N"*ustart) + unique_region + "N"*spacer_length + duplicated_region + "N"*spacer_length + splice_region + "N"*100
-    fh = open(os.path.join(base_folder,_TEST_FILES["genome"]),"w")
-    fh.write(">%s\n%s\n" % ("chrA",total_genome))
-    fh.close()
+    with open(os.path.join(base_folder,_TEST_FILES["genome"]),"w") as fh:
+        fh.write(">%s\n%s\n" % ("chrA",total_genome))
+        fh.close()
+
     return total_genome
 
 @detect_base_folder
@@ -1599,18 +1609,18 @@ def generate_reads(base_folder,
 
     reads_per_region : int
         Number of reads to generate in each region
-    
+
     read_length : int
         Length of reads to generate
-    
+
     Returns
     -------
     dict : dictionary of numpy.ndarrays corresponding to expected number of counts
            at each genomic position, under various read alignment mapping rules 
     """
-    genome = SeqIO.to_dict(SeqIO.parse(open(os.path.join(base_folder,"fasta","chrA.fa")),
-                                       "fasta"))
-    
+    with open(os.path.join(base_folder,"fasta","chrA.fa")) as fh:
+        genome = SeqIO.to_dict(SeqIO.parse(fh), "fasta")
+
     len_A = len(genome["chrA"])
     count_vectors = { "fiveprime_0_fw"   : numpy.zeros(len_A).astype(int),
                       "fiveprime_15_fw"  : numpy.zeros(len_A).astype(int),
@@ -1618,76 +1628,69 @@ def generate_reads(base_folder,
                       "threeprime_15_fw" : numpy.zeros(len_A).astype(int),
                       "center_0_fw"      : numpy.zeros(len_A),
                       "center_12_fw"     : numpy.zeros(len_A),
-                      
+
                       "fiveprime_0_rc"   : numpy.zeros(len_A).astype(int),
                       "fiveprime_15_rc"  : numpy.zeros(len_A).astype(int),
                       "threeprime_0_rc"  : numpy.zeros(len_A).astype(int),
                       "threeprime_15_rc" : numpy.zeros(len_A).astype(int),
                       "center_0_rc"      : numpy.zeros(len_A),
-                      "center_12_rc"     : numpy.zeros(len_A),                     
+                      "center_12_rc"     : numpy.zeros(len_A),
                      }
-    
-    read_fh  = open(os.path.join(base_folder,_TEST_FILES["reads"]),"w")
-    
-    regions = filter(lambda x: "intron" not in x.get_name()\
-                               and "entire" not in x.get_name(),
-                               fetch_regions())
-    
-    for region in regions:
-        strand_key = STRAND_KEYS[region.spanning_segment.strand]
-        my_seq    = region.get_sequence(genome)
-        
-        # choose 5' read locations
-        read_locs = numpy.random.randint(0,high=len(my_seq)-read_length+1,size=reads_per_region)
-        
-        # generate FASTA File
-        # and save read positions to count vectors under various alignment mapping rules
-        for n,loc in enumerate(read_locs):
-            # write reads
-            read_fh.write(">%s_%s\n%s\n" % (region.get_name(),n,my_seq[loc:loc+read_length]))
-            _,position,_ = region.get_genomic_coordinate(loc)
 
-            # populate 5' and 3' mapped count vectors
-            for offset in (0,15):
-                _,position,_ = region.get_genomic_coordinate(loc + offset)
-                count_vectors["fiveprime_%s_%s" % (offset,strand_key)][position] += 1
-                _,position,_ = region.get_genomic_coordinate(loc + read_length - offset - 1 )
-                count_vectors["threeprime_%s_%s" % (offset,strand_key)][position] += 1
-            
-            # populate center-mapped count vectors
-            read_positions = region.get_subchain(loc,loc+read_length).get_position_list()
-            assert len(read_positions) == read_length
-            for pos in read_positions:
-                count_vectors["center_0_%s" % strand_key][pos] += 1.0/len(read_positions)
-            assert len(read_positions[12:-12]) == read_length - 24
-            for pos in read_positions[12:-12]:
-                count_vectors["center_12_%s" % strand_key][pos] += 1.0/(len(read_positions)-24)
+    with open(os.path.join(base_folder, _TEST_FILES["reads"]), "w") as read_fh:
 
-    for k,v in count_vectors.items():
-        numpy.savetxt(os.path.join(base_folder,"count_vectors","%s.txt" % k),v)
+        regions = filter(lambda x: "intron" not in x.get_name()\
+                                   and "entire" not in x.get_name(),
+                                   fetch_regions())
 
-    read_fh.close()
-    
+        for region in regions:
+            strand_key = STRAND_KEYS[region.spanning_segment.strand]
+            my_seq    = region.get_sequence(genome)
+
+            # choose 5' read locations
+            read_locs = numpy.random.randint(0,high=len(my_seq)-read_length+1,size=reads_per_region)
+
+            # generate FASTA File
+            # and save read positions to count vectors under various alignment mapping rules
+            for n,loc in enumerate(read_locs):
+                # write reads
+                read_fh.write(">%s_%s\n%s\n" % (region.get_name(),n,my_seq[loc:loc+read_length]))
+                _,position,_ = region.get_genomic_coordinate(loc)
+
+                # populate 5' and 3' mapped count vectors
+                for offset in (0,15):
+                    _,position,_ = region.get_genomic_coordinate(loc + offset)
+                    count_vectors["fiveprime_%s_%s" % (offset,strand_key)][position] += 1
+                    _,position,_ = region.get_genomic_coordinate(loc + read_length - offset - 1 )
+                    count_vectors["threeprime_%s_%s" % (offset,strand_key)][position] += 1
+
+                # populate center-mapped count vectors
+                read_positions = region.get_subchain(loc,loc+read_length).get_position_list()
+                assert len(read_positions) == read_length
+                for pos in read_positions:
+                    count_vectors["center_0_%s" % strand_key][pos] += 1.0/len(read_positions)
+                assert len(read_positions[12:-12]) == read_length - 24
+                for pos in read_positions[12:-12]:
+                    count_vectors["center_12_%s" % strand_key][pos] += 1.0/(len(read_positions)-24)
+
+        for k,v in count_vectors.items():
+            numpy.savetxt(os.path.join(base_folder,"count_vectors","%s.txt" % k),v)
+
     # export 5' mapped BEDGraph files
-    bedgraph_fw = open(os.path.join(base_folder,_TEST_FILES["bedgraph_fw"]),"w")
-    bedgraph_rc = open(os.path.join(base_folder,_TEST_FILES["bedgraph_rc"]),"w")
-    
-    _ndarray_to_bedgraph(count_vectors["fiveprime_0_fw"],bedgraph_fw,base_folder)
-    _ndarray_to_bedgraph(count_vectors["fiveprime_0_rc"],bedgraph_rc,base_folder)
-    
-    bedgraph_fw.close()
-    bedgraph_rc.close()
+    with open(os.path.join(base_folder,_TEST_FILES["bedgraph_fw"]),"w") as bedgraph_fw:
+        _ndarray_to_bedgraph(count_vectors["fiveprime_0_fw"],bedgraph_fw,base_folder)
+
+    with open(os.path.join(base_folder,_TEST_FILES["bedgraph_rc"]),"w") as bedgraph_rc:
+        _ndarray_to_bedgraph(count_vectors["fiveprime_0_rc"],bedgraph_rc,base_folder)
 
     # export 5' mapped variableStep wiggle files
-    vs_fw = open(os.path.join(base_folder,_TEST_FILES["variable_step_fw"]),"w")
-    vs_rc = open(os.path.join(base_folder,_TEST_FILES["variable_step_rc"]),"w")
+    with open(os.path.join(base_folder,_TEST_FILES["variable_step_fw"]),"w") as vs_fw:
+        _ndarray_to_variable_step(count_vectors["fiveprime_0_fw"],vs_fw,base_folder)
 
-    _ndarray_to_variable_step(count_vectors["fiveprime_0_fw"],vs_fw,base_folder)
-    _ndarray_to_variable_step(count_vectors["fiveprime_0_rc"],vs_rc,base_folder)
 
-    vs_fw.close()
-    vs_rc.close()
-    
+    with open(os.path.join(base_folder,_TEST_FILES["variable_step_rc"]),"w") as vs_rc:
+        _ndarray_to_variable_step(count_vectors["fiveprime_0_rc"],vs_rc,base_folder)
+
     return count_vectors
 
 @detect_base_folder

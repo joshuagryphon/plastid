@@ -18,18 +18,22 @@ from plastid.test.ref_files import MINI
 class TestPSL_Reader(unittest.TestCase):
      
     def test_iter_finds_all(self):
-        bed_transcripts = [X for X in BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain) if "intron" not in X.get_name()]
-        bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
-        psl_transcripts = [X for X in PSL_Reader(open(MINI["psl_file"])) if "repeat" not in X.get_name()]
-        
+        with open(MINI["bed_file"]) as fh:
+            bed_transcripts = [X for X in BED_Reader(fh, return_type=SegmentChain) if "intron" not in X.get_name()]
+            bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
+        with open(MINI["psl_file"]) as fh:
+            psl_transcripts = [X for X in PSL_Reader(fh) if "repeat" not in X.get_name()]
+
         self.assertEqual(len(bed_transcripts),len(psl_transcripts),"Length mismatch: %s vs %s" %(len(bed_transcripts),len(psl_transcripts)))
         self.assertGreater(len(bed_transcripts),0)
 
     def test_iter_reads_correct(self):
-        bed_transcripts = [X for X in BED_Reader(open(MINI["bed_file"]),return_type=SegmentChain) if "intron" not in X.get_name()]
-        bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
-        psl_transcripts = [X for X in PSL_Reader(open(MINI["psl_file"])) if "repeat" not in X.get_name()]        
-        for bed, psl in zip(bed_transcripts,psl_transcripts):
+       with open(MINI["bed_file"]) as fh:
+            bed_transcripts = [X for X in BED_Reader(fh, return_type=SegmentChain) if "intron" not in X.get_name()]
+            bed_transcripts = [X for X in bed_transcripts if "repeat" not in X.get_name()]
+       with open(MINI["psl_file"]) as fh:
+            psl_transcripts = [X for X in PSL_Reader(fh) if "repeat" not in X.get_name()]
+       for bed, psl in zip(bed_transcripts,psl_transcripts):
             bed_name = bed.get_name()
             psl_name = psl.get_name()
             self.assertEqual(bed_name,psl_name,"Name mismatch: %s vs %s" % (bed_name,psl_name))
@@ -46,26 +50,28 @@ class TestPSL_Reader(unittest.TestCase):
 
 @attr(test="unit")
 class TestBundledPSL_Reader(unittest.TestCase):
-    
+
     def test_iter_bundles(self):
         # create a list of entries with same query name, so that these will be bundled by reader
-        psl_transcripts = list(PSL_Reader(open(MINI["psl_file"])))
+        with open(MINI["psl_file"]) as fh:
+            psl_transcripts = list(PSL_Reader(fh))
+
         repeats = numpy.random.randint(1,high=10,size=len(psl_transcripts))
         stmp = ""
         for tx, r in zip(psl_transcripts,repeats):
             for _ in range(r):
                 stmp += tx.as_psl()
-            
+
         fakefile = cStringIO.StringIO(stmp)
         reader = BundledPSL_Reader(fakefile)
         for n,tx_group in enumerate(reader):
             # make sure groups are correct length
             self.assertEqual(len(tx_group),repeats[n])
-            
+
             # make sure each group has the correct query name
             names = [X.get_name() for X in tx_group]
             self.assertEqual(len(set(names)),1)
             self.assertEqual(names[0],psl_transcripts[n].get_name())
-        
+
         self.assertEqual(n+1,len(repeats))
         self.assertEqual(n+1,len(psl_transcripts))
