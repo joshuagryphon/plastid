@@ -245,9 +245,9 @@ def create_test_suite(module_names,base_path,overwrite=False,printer=NullWriter(
         output_fn  = os.path.join(base_path,"test_%s.py" % short_name)
         if overwrite or not os.path.exists(output_fn):
             printer.write("Writing %s" % output_fn)
-            fout = open(output_fn,"w")
-            fout.write(output_str)
-            fout.close()
+            with open(output_fn,"w") as fout:
+                fout.write(output_str)
+                fout.close()
 
 def main(argv=sys.argv[1:]):
     """Command-line program to generate functional test suites for command-line

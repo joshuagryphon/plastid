@@ -52,14 +52,16 @@ _default_scores = { ("BED", "BED" )   : 0.0,
 
 def check_files_applying_sort(ref_file,test_file,infmt,outfmt):
     opener, args = _reader_funcs[outfmt]
-    ref_transcripts  = sorted(list(opener(open(ref_file),**args)))
-    test_transcripts = sorted(list(opener(open(test_file),**args)))
-    
+    with open(ref_file) as fh:
+        ref_transcripts  = sorted(list(opener(fh,**args)))
+    with open(test_file) as fh:
+        test_transcripts = sorted(list(opener(fh,**args)))
+
     assert_equal(len(ref_transcripts),len(test_transcripts),"%s to %s: Length mismatch in discovered transcripts. Expected '%s'. Found '%s'" % (infmt,outfmt,len(ref_transcripts),
                                                                                                                                   len(test_transcripts)))
     for tx1, tx2 in zip(ref_transcripts,test_transcripts):
         assert_equal(tx1.get_name(),tx2.get_name(),"%s to %s: Found unordered transcripts. Expected '%s'. Found '%s"'' %(infmt,outfmt,tx1.get_name(),tx2.get_name()))
-        
+
         set1 = tx1.get_position_set()
         set2 = tx2.get_position_set()
         assert_set_equal(set1,set2,"%s to %s: Difference in position sets. Expected '%s'. Found '%s'" % (infmt,outfmt,set1,set2))
@@ -78,7 +80,7 @@ def check_files_applying_sort(ref_file,test_file,infmt,outfmt):
         keyset = set(attr1.keys()) & set(attr2.keys()) - { "score" }
         if infmt in ("BED","BigBed") and outfmt != "BED":
             keyset -= { "gene_id" }
-            
+
         for k in keyset:
             assert_equal(attr1[k],attr2[k],"%s to %s: Difference in attribute %s. Expected '%s'. Found '%s'" % (infmt,outfmt,k,attr1[k],attr2[k]))
         #assert_dict_equal(attr1,attr2,"%s to %s: Difference in attributes. Expected %s. Found %s" % (infmt,outfmt,attr1,attr2))

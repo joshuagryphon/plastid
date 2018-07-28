@@ -12,8 +12,8 @@ from plastid.test.functional.base import execute_helper
 from plastid.test.ref_files import RPATH, REF_FILES, \
                                              COUNT_OPTIONS, \
                                              ANNOTATION_OPTIONS, \
-                                             MASK_OPTIONS  
-from plastid.genomics.genome_array import GenomeArray                                             
+                                             MASK_OPTIONS
+from plastid.genomics.genome_array import GenomeArray
 from plastid.bin.make_wiggle import main
 from plastid.util.services.decorators import catch_stderr
 
@@ -63,18 +63,18 @@ for k,v in samples.items():
 
 
 #===============================================================================
-# INDEX: test functions and helpers 
+# INDEX: test functions and helpers
 #===============================================================================
 
 def do_check(argstr,ref_files,test_files):
     """Check that test wiggle files match reference files
-    
+
     Parameters
     ----------
     ref_files : tuple
         Tuple of filenames corresponding to forward and reverse strand wiggles
         for reference dataset
-    
+
     test_files : list
         Tuple of filenames corresponding to forward and reverse strand wiggles
         for test dataset
@@ -83,10 +83,14 @@ def do_check(argstr,ref_files,test_files):
     test_info["test_method"](shlex.split(argstr))
     ref_ga  = GenomeArray()
     test_ga = GenomeArray()
-    ref_ga.add_from_wiggle(open(ref_files[0]),"+")
-    ref_ga.add_from_wiggle(open(ref_files[1]),"-")
-    test_ga.add_from_wiggle(open(test_files[0]),"+")
-    test_ga.add_from_wiggle(open(test_files[1]),"-")
+    with open(ref_files[0]) as fh:
+        ref_ga.add_from_wiggle(fh,"+")
+    with open(ref_files[1]) as fh:
+        ref_ga.add_from_wiggle(fh,"-")
+    with open(test_files[0]) as fh:
+        test_ga.add_from_wiggle(fh,"+")
+    with open(test_files[1]) as fh:
+        test_ga.add_from_wiggle(fh,"-")
     nose.tools.assert_true(ref_ga.__eq__(test_ga,tol=1e-8),err_message)
 
 @attr(test="functional")
@@ -100,6 +104,6 @@ def tearDownModule():
     """Remove test dataset files after unit tests are complete"""
     if test_info["temp_file_path"] != "":
         shutil.rmtree(test_info["temp_file_path"])
-            
+
     cleanup_resources()
 

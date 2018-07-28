@@ -46,28 +46,30 @@ MASK_FILE    = REF_FILES["slidejuncs_crossmap"]
 
 def get_junction_names_from_file(filename):
     """Return a set of names of splice junctions in a file
-    
+
     Parameters
     ----------
     filename : str
         Fully-qualified path to file
-    
+
     Returns
     -------
     set
-        Set of splice junction names found in ``filename``    
+        Set of splice junction names found in ``filename``
     """
-    return set([X.spanning_segment.chrom for X in BED_Reader(CommentReader(open(filename)),return_type=SegmentChain)])
-    
+    with open(filename) as fh:
+        return set([X.spanning_segment.chrom for X in BED_Reader(CommentReader(fh),
+                                                                 return_type=SegmentChain)])
+
 def get_junction_names_from_category(cat):
     """Helper function to deduce names of splice junctions/genes in each
     junction category from input files
-    
+
     Parameters
     ----------
     cat : str
         Category of splice junction. Must be present in ``junction_categories``
-    
+
     Returns
     -------
     set

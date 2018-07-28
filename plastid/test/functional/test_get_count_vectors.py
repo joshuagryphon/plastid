@@ -9,7 +9,7 @@ from plastid.test.functional.base import execute_helper
 from plastid.test.ref_files import RPATH, REF_FILES, \
                                               COUNT_OPTIONS, \
                                               ANNOTATION_OPTIONS, \
-                                              MASK_OPTIONS  
+                                              MASK_OPTIONS
 from plastid.bin.get_count_vectors import main
 from plastid.util.services.decorators import catch_stderr
 from plastid.util.services.mini2to3 import cStringIO
@@ -33,10 +33,11 @@ get_count_vectors_test_info = {
 # 4. A list of strings specifying how equality should be evaluated
 ref_files = []
 out_files = []
-for line in open(REF_FILES["yeast_mini_bed"]):
-    fn = line.split("\t")[3]
-    ref_files.append(os.path.join(get_count_vectors_test_info["ref_file_path"], "%s.txt" % fn))            
-    out_files.append(os.path.join(get_count_vectors_test_info["temp_file_path"],"%s.txt" % fn))
+with open(REF_FILES["yeast_mini_bed"]) as fh:
+    for line in fh:
+        fn = line.split("\t")[3]
+        ref_files.append(os.path.join(get_count_vectors_test_info["ref_file_path"], "%s.txt" % fn))
+        out_files.append(os.path.join(get_count_vectors_test_info["temp_file_path"],"%s.txt" % fn))
 
 get_count_vectors_tests = [
     ( get_count_vectors_test_info["temp_file_path"] + COUNT_OPTIONS + MASK_OPTIONS + " --annotation_format BED --annotation_file " + REF_FILES["yeast_mini_bed"],
