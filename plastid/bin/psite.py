@@ -69,7 +69,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
-from plastid.util.scriptlib.argparsers import 
+from plastid.util.scriptlib.argparsers import (
     AlignmentParser,
     PlottingParser,
     BaseParser,
