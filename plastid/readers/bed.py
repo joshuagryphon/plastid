@@ -47,42 +47,42 @@ See Also
 `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_.
     BED format specification at UCSC
 """
-__date__ =  "Aug 23, 2011"
+__date__ = "Aug 23, 2011"
 __author__ = "joshua"
 
 import shlex
 from plastid.readers.common import AssembledFeatureReader
 from plastid.util.services.exceptions import FileFormatWarning, warn
 
-
 bed_x_formats = {
-    "bedDetail" : [("ID",str),
-                   ("description",str),
-                  ],
-    "narrowPeak" : [("signalValue",float),
-                    ("pValue",float),
-                    ("qValue",float),
-                    ("peak",int)],
-    "broadPeak"  : [("signalValue",float),
-                    ("pValue",float),
-                    ("qValue",float)],
-    "gappedPeak" : [("signalValue",float),
-                    ("pValue",float),
-                    ("qValue",float)],
-    "tagAlign"   : [("sequence",str),
-                    ("score",float),
-                    ("strand",str)],
-    "pairedTagAlign" : [("seq1",str),
-                        ("seq2",str)],
-    "peptideMapping" : [("rawScore",float),
-                        ("spectrumId",str),
-                        ("peptideRank",int),
-                        ("peptideRepeatCount",int)],
-
+    "bedDetail": [
+        ("ID", str),
+        ("description", str),
+    ],
+    "narrowPeak": [("signalValue", float),
+                   ("pValue", float),
+                   ("qValue", float),
+                   ("peak", int)],
+    "broadPeak": [("signalValue", float),
+                  ("pValue", float),
+                  ("qValue", float)],
+    "gappedPeak": [("signalValue", float),
+                   ("pValue", float),
+                   ("qValue", float)],
+    "tagAlign": [("sequence", str),
+                 ("score", float),
+                 ("strand", str)],
+    "pairedTagAlign": [("seq1", str),
+                       ("seq2", str)],
+    "peptideMapping":
+    [("rawScore", float),
+     ("spectrumId", str),
+     ("peptideRank", int),
+     ("peptideRepeatCount", int)],
 }
 """Column names and types for various :term:`extended BED` formats used by 
 the `ENCODE`_ project. These can be passed to the `extra_columns` keyword of
-:class:`BED_Reader`.""" 
+:class:`BED_Reader`."""
 
 
 class BED_Reader(AssembledFeatureReader):
@@ -219,7 +219,8 @@ class BED_Reader(AssembledFeatureReader):
           - if not, it assumes 0 non-`BED`_ fields are present, and that all columns
             are `BED`_ formatted.
     """
-    def __init__(self,*args,**kwargs):
+
+    def __init__(self, *args, **kwargs):
         """
         BED_Reader(*streams, return_type=SegmentChain, add_three_for_stop=False, extra_columns=0, printer=None, tabix=False)
         
@@ -266,10 +267,10 @@ class BED_Reader(AssembledFeatureReader):
         tabix : boolean, optional
             `streams` are `tabix`_-compressed (Default: `False`)
         """
-        AssembledFeatureReader.__init__(self,*args,**kwargs)
-        self.extra_columns = kwargs.get("extra_columns",0)
+        AssembledFeatureReader.__init__(self, *args, **kwargs)
+        self.extra_columns = kwargs.get("extra_columns", 0)
 
-    def _parse_track_line(self,inp):
+    def _parse_track_line(self, inp):
         """Parse track line from `BED`_ / extended BED file
         
         Parameters
@@ -285,13 +286,16 @@ class BED_Reader(AssembledFeatureReader):
         self.metadata = {}
         ltmp = shlex.split(inp.strip("\n"))
         for item in ltmp:
-            k,v = item.split("=")
+            k, v = item.split("=")
             self.metadata[k] = v
 
-        track_type = self.metadata.get("type",None)
+        track_type = self.metadata.get("type", None)
         if track_type is not None:
             if track_type in bed_x_formats:
-                self.printer.write("Found track type '%s' in track definition line. Assuming extra columns follow UCSC definitions." % track_type)
+                self.printer.write(
+                    "Found track type '%s' in track definition line. Assuming extra columns follow UCSC definitions."
+                    % track_type
+                )
                 if self.extra_columns == 0:
                     self.extra_columns = bed_x_formats[track_type]
                 elif self.extra_columns != bed_x_formats[track_type]:
@@ -302,20 +306,20 @@ class BED_Reader(AssembledFeatureReader):
                     self.metadata["type"] = "custom"
             else:
                 self.printer.write("Found track type '%s' in track definition line." % track_type)
-        
+
     def _get_extra_column_names(self):
         """Return names of extra columns in extended BED file)"""
-        if isinstance(self.extra_columns,int):
+        if isinstance(self.extra_columns, int):
             my_columns = "%s unnamed columns" % self.extra_columns
-        elif isinstance(self.extra_columns,list):
-            if all([isinstance(X,tuple) for X in self.extra_columns]):
+        elif isinstance(self.extra_columns, list):
+            if all([isinstance(X, tuple) for X in self.extra_columns]):
                 my_columns = ",".join([X[0] for X in self.extra_columns])
-            elif all([isinstance(X,str) for X in self.extra_columns]):
+            elif all([isinstance(X, str) for X in self.extra_columns]):
                 my_columns = ",".join(self.extra_columns)
 
         return my_columns
 
-    def _assemble(self,line):
+    def _assemble(self, line):
         """Read `BED`_ files line-by-line into types specified by `self.return_type`"""
         self.counter += 1
         if line.strip() == "":
@@ -330,17 +334,23 @@ class BED_Reader(AssembledFeatureReader):
             return self.__next__()
         else:
             try:
-                return self.return_type.from_bed(line,extra_columns=self.extra_columns)
+                return self.return_type.from_bed(line, extra_columns=self.extra_columns)
             except:
                 self.rejected.append(line)
                 msg = "Cannot parse BED line number %s. " % self.counter
-                if self.metadata.get("type",None) is not None:
-                    msg += ("Are you sure this is a %s BED file with extra columns (%s)?" % (self.metadata.get("type"),self._get_extra_column_names()))
+                if self.metadata.get("type", None) is not None:
+                    msg += (
+                        "Are you sure this is a %s BED file with extra columns (%s)?" %
+                        (self.metadata.get("type"), self._get_extra_column_names())
+                    )
                 elif self.extra_columns != 0:
-                    msg += ("Are you sure this BED file has extra columns (%s)?" % self._get_extra_column_names())
+                    msg += (
+                        "Are you sure this BED file has extra columns (%s)?" %
+                        self._get_extra_column_names()
+                    )
                 else:
                     msg += "Maybe this BED has extra columns (i.e. is an extended BED file)?"
 
                 msg += ("\n    %s" % line)
-                warn(msg,FileFormatWarning)
+                warn(msg, FileFormatWarning)
                 return self.__next__()

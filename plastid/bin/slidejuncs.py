@@ -76,7 +76,7 @@ than a transcript:
 where `OUTBASE` is given by the user.
 
 """
-__date__ =  "Aug 23, 2011"
+__date__ = "Aug 23, 2011"
 __author__ = "joshua"
 
 import sys
@@ -95,12 +95,12 @@ warnings.simplefilter("once")
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-
 #===============================================================================
-# INDEX : helper functions that classify/manipulate splice junctions 
+# INDEX : helper functions that classify/manipulate splice junctions
 #===============================================================================
 
-def find_match_range(seg,genome,maxslide):
+
+def find_match_range(seg, genome, maxslide):
     """Find maximum distance over which a splice junction can be moved up-
     or down-stream without reducing sequencing support for that junction.
     
@@ -130,29 +130,29 @@ def find_match_range(seg,genome,maxslide):
         Maximum number of nucleotides splice junction point could be moved 
         to the right without reducing sequence support for the junction
     """
-    iv1,iv2 = seg[0],seg[1]
+    iv1, iv2 = seg[0], seg[1]
     chrom = seg.chrom
-    
-    plus_range  = 0
+
+    plus_range = 0
     minus_range = 0
-    check_plus  = True
+    check_plus = True
     check_minus = True
-    
+
     # Discovery of match range. Suppose we have a splice junction as follows:
-    #     
+    #
     #        Exon 1 [0,6)            Intron                                  Exon 2 [16,24)
     #        ---------------------   --------------------------------------  ------------------------------
     # Seq    G   C   T   C   T   A   C   T   A   G   N   N   N   C   T   A   C   T   A   G   A   T   G   G
     # Pos    0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22  23
-    # 
-    # 
+    #
+    #
     # Exon 1 start: 0
     # Exon 1 end:   6
     # Exon 2 start: 16
     # Exon 2 end:   24
-    # 
+    #
     # Match range: -3, 4
-    # 
+    #
     # Then seq[ex1.end    ] == seq[6] == C == seq[16] == seq[ex2.start    ]
     # ---------------------------------------------------------------------
     # Then seq[ex1.end - 3] == seq[3] == C == seq[13] == seq[ex2.start - 3]
@@ -162,25 +162,27 @@ def find_match_range(seg,genome,maxslide):
     # Then seq[ex1.end + 1] == seq[7] == T == seq[17] == seq[ex2.start + 1]
     # Then seq[ex1.end + 2] == seq[8] == A == seq[18] == seq[ex2.start + 2]
     # Then seq[ex1.end + 3] == seq[9] == G == seq[19] == seq[ex2.start + 3]
-    # 
+    #
     # We must therefore search for known, repetitive, or canonical splice junctions
-    # by iterating our offset ``i`` over [-3,3] = ``range(minus_range, plus_range+1)`` 
+    # by iterating our offset ``i`` over [-3,3] = ``range(minus_range, plus_range+1)``
 
-    for i in range(maxslide+1):
+    for i in range(maxslide + 1):
         if check_plus is True and\
         genome[chrom][iv1.end + i] == genome[chrom][iv2.start + i]:
-            plus_range = i+1 #+=1
+            plus_range = i + 1  #+=1
         else:
             check_plus = False
-            
+
         if check_minus is True and i > 0:
             if genome[chrom][iv1.end - i] == genome[chrom][iv2.start - i]:
-                minus_range = -i #-=1
+                minus_range = -i  #-=1
             else:
                 check_minus = False
-    return minus_range, plus_range            
 
-def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
+    return minus_range, plus_range
+
+
+def find_known_in_range(query_junc, minus_range, plus_range, knownjunctions):
     """Find any known splice junctions within in `minus_range...plus_range`
     of `query_junc`
     
@@ -222,11 +224,11 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
     """
     exact_match = None
     ltmp = []
-    iv1,iv2  = query_junc[0], query_junc[1]
-    iv1end   = iv1.end
+    iv1, iv2 = query_junc[0], query_junc[1]
+    iv1end = iv1.end
     iv2start = iv2.start
-    qstrand  = query_junc.strand
-    qchrom   = query_junc.chrom
+    qstrand = query_junc.strand
+    qchrom = query_junc.chrom
 
     for ivc in knownjunctions:
         if qchrom != ivc.chrom:
@@ -236,7 +238,7 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
         elif query_junc == ivc:
             exact_match = query_junc
             break
-        kiv1, kiv2 = ivc[0],ivc[1]
+        kiv1, kiv2 = ivc[0], ivc[1]
         kend = kiv1.end
         kstart = kiv2.start
         if  kend   in set(range(iv1end+minus_range,  iv1end  +plus_range+1))\
@@ -244,8 +246,9 @@ def find_known_in_range(query_junc,minus_range,plus_range,knownjunctions):
             if kstart - kend == iv2start - iv1end:
                 ltmp.append(ivc)
     return [exact_match] if exact_match is not None else ltmp
-        
-def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals):
+
+
+def find_canonicals_in_range(query_junc, minus_range, plus_range, genome, canonicals):
     """Find any canonical splice junctions within in `minus_range...plus_range`
     of `query_junc`
     
@@ -289,31 +292,26 @@ def find_canonicals_in_range(query_junc,minus_range,plus_range,genome,canonicals
     list
         List of |SegmentChains| representing canonical splice junctions in
         `minus_range...plus_range` of `query_junc`
-    """    
+    """
     ltmp = []
-    chrom  = query_junc.chrom
+    chrom = query_junc.chrom
     strand = query_junc.strand
-    iv1,iv2 = query_junc[0], query_junc[1]
+    iv1, iv2 = query_junc[0], query_junc[1]
 
     iv1start, iv1end = iv1.start, iv1.end
     iv2start, iv2end = iv2.start, iv2.end
-    for i in range(minus_range,plus_range+1):
+    for i in range(minus_range, plus_range + 1):
         for pair in canonicals:
             if str(genome[chrom][iv1end + i:iv1end + i + 2].seq) == pair[0]\
             and str(genome[chrom][iv2start - 2 + i:iv2start + i].seq) == pair[1]:
-                new_iv1 = GenomicSegment(chrom,
-                                          iv1start,
-                                          iv1end + i,
-                                          strand)
-                new_iv2 = GenomicSegment(chrom,
-                                          iv2start + i,
-                                          iv2end,
-                                          strand)
-                ltmp.append(SegmentChain(new_iv1,new_iv2))
-    
-    return ltmp            
+                new_iv1 = GenomicSegment(chrom, iv1start, iv1end + i, strand)
+                new_iv2 = GenomicSegment(chrom, iv2start + i, iv2end, strand)
+                ltmp.append(SegmentChain(new_iv1, new_iv2))
 
-def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
+    return ltmp
+
+
+def covered_by_repetitive(query_junc, minus_range, plus_range, cross_hash):
     """Determine whether one or both ends of a splice site overlap with
     a repetitive area of the genome.
     
@@ -348,20 +346,18 @@ def covered_by_repetitive(query_junc,minus_range,plus_range,cross_hash):
     strand = query_junc.spanning_segment.strand
     qend = query_junc[0].end
     qstart = query_junc[1].start
-    fiveprime_splice_area = GenomicSegment(chrom,
-                                           qend + minus_range,
-                                           qend + plus_range + 1,
-                                           strand)
-    threeprime_splice_area = GenomicSegment(chrom,
-                                            qstart + minus_range,
-                                            qstart + plus_range + 1,
-                                            strand)
-    support_region = SegmentChain(fiveprime_splice_area,threeprime_splice_area)
+    fiveprime_splice_area = GenomicSegment(chrom, qend + minus_range, qend + plus_range + 1, strand)
+    threeprime_splice_area = GenomicSegment(
+        chrom, qstart + minus_range, qstart + plus_range + 1, strand
+    )
+    support_region = SegmentChain(fiveprime_splice_area, threeprime_splice_area)
     return len(cross_hash.get_overlapping_features(support_region)) > 0
 
+
 #===============================================================================
-# INDEX : program body 
+# INDEX : program body
 #===============================================================================
+
 
 def main(argv=sys.argv[1:]):
     """Command-line program
@@ -379,62 +375,72 @@ def main(argv=sys.argv[1:]):
     sp = SequenceParser()
     mp = MaskParser()
     bp = BaseParser()
-    
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[bp.get_parser(),sp.get_parser(),mp.get_parser()],
-                                     )
-    parser.add_argument("--maxslide",type=int,default=10,
-                        help="Maximum number of nt to search 5\' and 3\' of intron"+
-                             " boundaries (Default: 10)")
-    parser.add_argument("--ref",type=str,metavar="ref.bed",default=None,
-                        help="Reference file describing known splice junctions")
-    parser.add_argument("--slide_canonical",action="store_true",default=False,
-                        help="Slide junctions to canonical junctions if present within equal support region")
-    parser.add_argument("infile",type=str,metavar="input.bed",
-                        help="BED file describing discovered junctions")
-    parser.add_argument("outbase",type=str,
-                        help="Basename for output files")
+
+    parser = argparse.ArgumentParser(
+        description=format_module_docstring(__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[bp.get_parser(), sp.get_parser(),
+                 mp.get_parser()],
+    )
+    parser.add_argument(
+        "--maxslide",
+        type=int,
+        default=10,
+        help="Maximum number of nt to search 5\' and 3\' of intron" + " boundaries (Default: 10)"
+    )
+    parser.add_argument(
+        "--ref",
+        type=str,
+        metavar="ref.bed",
+        default=None,
+        help="Reference file describing known splice junctions"
+    )
+    parser.add_argument(
+        "--slide_canonical",
+        action="store_true",
+        default=False,
+        help="Slide junctions to canonical junctions if present within equal support region"
+    )
+    parser.add_argument(
+        "infile", type=str, metavar="input.bed", help="BED file describing discovered junctions"
+    )
+    parser.add_argument("outbase", type=str, help="Basename for output files")
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
-    
+
     printer.write("Opening genome from %s..." % args.sequence_file)
     genome = sp.get_seqdict_from_args(args)
-    
-    # load crossmap    
+
+    # load crossmap
     cross_hash = mp.get_genome_hash_from_args(args)
 
     # load ref junctions
     if args.ref is not None:
         printer.write("Loading reference junctions from %s" % args.ref)
-        known_hash = GenomeHash(list(BED_Reader(open(args.ref))),do_copy=False)
+        known_hash = GenomeHash(list(BED_Reader(open(args.ref))), do_copy=False)
     else:
         known_hash = GenomeHash()
 
-    # set up variables    
-    canonicals_plus = [("GT","AG"),
-                       ("GC","AG")
-                      ]
-    
-    canonicals_minus = [("CT","AC"),
-                        ("CT","GC")
-                       ]
-    
-    known_in_range     = 0
+    # set up variables
+    canonicals_plus = [("GT", "AG"), ("GC", "AG")]
+
+    canonicals_minus = [("CT", "AC"), ("CT", "GC")]
+
+    known_in_range = 0
     canonical_in_range = 0
-    repetitive         = 0
-    untouched          = 0
+    repetitive = 0
+    untouched = 0
     c = 0
-    
+
     seen_already = []
 
     outfiles = {
-                 "repetitive" : "%s_repetitive.bed" % args.outbase,
-                 "known"      : "%s_shifted_known.bed" % args.outbase,
-                 "canonical"  : "%s_shifted_canonical.bed" % args.outbase,
-                 "untouched"  : "%s_untouched.bed" % args.outbase,
-                }
-    outfiles = { K : argsopener(V,args,"w") for K,V in outfiles.items() }
+        "repetitive": "%s_repetitive.bed" % args.outbase,
+        "known"     : "%s_shifted_known.bed" % args.outbase,
+        "canonical" : "%s_shifted_canonical.bed" % args.outbase,
+        "untouched" : "%s_untouched.bed" % args.outbase,
+    } # yapf: disable
+    outfiles = {K: argsopener(V, args, "w") for K, V in outfiles.items()}
 
     # process data
     printer.write("Opening junctions from %s..." % args.infile)
@@ -445,14 +451,14 @@ def main(argv=sys.argv[1:]):
         if c % 1000 == 0 and c > 0:
             printer.write("Processed: %s\tknown: %s\tshifted to canonical: %s\trepetitive: %s\tuntouched: %s" % \
                     (c, known_in_range, canonical_in_range, repetitive, untouched))
-                   
+
         assert len(ivc) == 2
+
         strand = ivc.strand
-        
-        minus_range, plus_range = find_match_range(ivc,genome,args.maxslide)
-        
+        minus_range, plus_range = find_match_range(ivc, genome, args.maxslide)
+
         # see if either end of splice junction +- match_range lands in repetitive areas of genome
-        if covered_by_repetitive(ivc,minus_range,plus_range,cross_hash):
+        if covered_by_repetitive(ivc, minus_range, plus_range, cross_hash):
             repetitive += 1
             outfiles["repetitive"].write(ivc.as_bed())
             processed = True
@@ -460,7 +466,9 @@ def main(argv=sys.argv[1:]):
         # see if one or more known junctions in range
         if processed == False and args.ref is not None:
             # find_known_in_range(query_ivc,minus_range,plus_range,knownjunctions)
-            known_juncs = find_known_in_range(ivc,minus_range,plus_range,known_hash.get_nearby_features(ivc))
+            known_juncs = find_known_in_range(
+                ivc, minus_range, plus_range, known_hash.get_nearby_features(ivc)
+            )
             if len(known_juncs) > 0:
                 known_in_range += 1
                 for my_known in known_juncs:
@@ -468,14 +476,16 @@ def main(argv=sys.argv[1:]):
                     if tup not in seen_already:
                         outfiles["known"].write(my_known.as_bed())
                         seen_already.append(tup)
-                    
+
                 processed = True
-            
+
         # see if one or more canonical junctions in range
         if processed == False and args.slide_canonical == True:
             canonicals = canonicals_plus if strand == "+" else canonicals_minus
             #find_canonicals_in_range(query_ivc,minus_range,plus_range,genome,canonicals)
-            canonical_juncs = find_canonicals_in_range(ivc,minus_range,plus_range,genome,canonicals)
+            canonical_juncs = find_canonicals_in_range(
+                ivc, minus_range, plus_range, genome, canonicals
+            )
             if len(canonical_juncs) > 0:
                 canonical_in_range += 1
                 for can in canonical_juncs:
@@ -485,20 +495,20 @@ def main(argv=sys.argv[1:]):
                         seen_already.append(tup)
 
                 processed = True
-                    
+
         if processed == False:
             outfiles["untouched"].write(ivc.as_bed())
             untouched += 1
-            
+
         c += 1
 
     # save output
     printer.write("Totals: %s\tknown: %s\tshifted to canonical: %s\trepetitive: %s\tuntouched: %s" % \
-            (c, known_in_range, canonical_in_range, repetitive, untouched))    
+            (c, known_in_range, canonical_in_range, repetitive, untouched))
 
     for v in outfiles.values():
         v.close()
-    
+
     printer.write("Done.")
 
 

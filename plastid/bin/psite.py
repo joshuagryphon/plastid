@@ -69,8 +69,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from collections import OrderedDict
-from plastid.util.scriptlib.argparsers import (AlignmentParser, PlottingParser,
-                                               BaseParser)
+from plastid.util.scriptlib.argparsers import 
+    AlignmentParser,
+    PlottingParser,
+    BaseParser,
+)
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter, opener
 from plastid.util.io.filters import NameDateWriter
@@ -84,8 +87,17 @@ warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 
-
-def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,aggregate=False,printer=NullWriter()):
+def do_count(
+        roi_table,
+        ga,
+        norm_start,
+        norm_end,
+        min_counts,
+        min_len,
+        max_len,
+        aggregate=False,
+        printer=NullWriter()
+):
     """Calculate a :term:`metagene profile` for each read length in the dataset
     
     Parameters
@@ -138,30 +150,30 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,aggrega
         all windows, and the number of windows included in the calculation of each
         median, stratified by read length
     """
-    window_size    = roi_table["window_size"][0]
+    window_size = roi_table["window_size"][0]
     upstream_flank = roi_table["zero_point"][0]
-    
-    raw_count_dict  = OrderedDict()
+
+    raw_count_dict = OrderedDict()
     norm_count_dict = OrderedDict()
-    shape = (len(roi_table),window_size)
-    for i in range(min_len,max_len+1):
+    shape = (len(roi_table), window_size)
+    for i in range(min_len, max_len + 1):
         # mask all by default
-        raw_count_dict[i] = numpy.ma.MaskedArray(numpy.tile(numpy.nan,shape),
-                                                 mask=numpy.tile(True,shape),
-                                                 dtype=float)
-    
-    for i,row in roi_table.iterrows():
+        raw_count_dict[i] = numpy.ma.MaskedArray(
+            numpy.tile(numpy.nan, shape), mask=numpy.tile(True, shape), dtype=float
+        )
+
+    for i, row in roi_table.iterrows():
         if i % 1000 == 0:
-            printer.write("Counted %s ROIs ..." % (i+1))
-            
-        roi    = SegmentChain.from_str(row["region"])
-        mask   = SegmentChain.from_str(row["masked"])
+            printer.write("Counted %s ROIs ..." % (i + 1))
+
+        roi = SegmentChain.from_str(row["region"])
+        mask = SegmentChain.from_str(row["masked"])
         roi.add_masks(*mask)
         valid_mask = roi.get_masked_counts(ga).mask
-        
+
         offset = int(round((row["alignment_offset"])))
         assert offset + roi.length <= window_size
-        
+
         count_vectors = {}
         for k in raw_count_dict:
             count_vectors[k] = []
@@ -172,58 +184,57 @@ def do_count(roi_table,ga,norm_start,norm_end,min_counts,min_len,max_len,aggrega
             for k in raw_count_dict:
                 read_dict[k] = []
 
-            for read in filter(lambda x: len(x.positions) in read_dict,reads):
+            for read in filter(lambda x: len(x.positions) in read_dict, reads):
                 read_dict[len(read.positions)].append(read)
-            
+
             for k in read_dict:
-                count_vector = ga.map_fn(read_dict[k],seg)[1]
+                count_vector = ga.map_fn(read_dict[k], seg)[1]
                 count_vectors[k].extend(count_vector)
-                
+
         for k in raw_count_dict:
             if roi.strand == "-":
                 count_vectors[k] = count_vectors[k][::-1]
 
-            raw_count_dict[k].data[i,offset:offset+roi.length] = numpy.array(count_vectors[k])
-            raw_count_dict[k].mask[i,offset:offset+roi.length] = valid_mask
-    
-    profile_table = { "x" : numpy.arange(-upstream_flank,window_size-upstream_flank) }
-    
-    printer.write("Counted %s ROIs total." % (i+1))
+            raw_count_dict[k].data[i, offset:offset + roi.length] = numpy.array(count_vectors[k])
+            raw_count_dict[k].mask[i, offset:offset + roi.length] = valid_mask
+
+    profile_table = {"x": numpy.arange(-upstream_flank, window_size - upstream_flank)}
+
+    printer.write("Counted %s ROIs total." % (i + 1))
     for k in raw_count_dict:
         k_raw = raw_count_dict[k]
-        
-        denominator = numpy.nansum(k_raw[:,norm_start:norm_end],axis=1)
+
+        denominator = numpy.nansum(k_raw[:, norm_start:norm_end], axis=1)
         norm_count_dict[k] = (k_raw.T.astype(float) / denominator).T
-        
+
         # copy mask from raw counts, then add nans and infs
-        norm_counts = numpy.ma.MaskedArray(norm_count_dict[k],
-                                           mask=k_raw.mask)
+        norm_counts = numpy.ma.MaskedArray(norm_count_dict[k], mask=k_raw.mask)
         norm_counts.mask[numpy.isnan(norm_counts)] = True
         norm_counts.mask[numpy.isinf(norm_counts)] = True
-        
+
         with warnings.catch_warnings():
             # ignore numpy mean of empty slice warning, given by numpy in Python 2.7-3.4
-            warnings.filterwarnings("ignore",".*mean of empty.*",RuntimeWarning)
+            warnings.filterwarnings("ignore", ".*mean of empty.*", RuntimeWarning)
             try:
                 if aggregate == False:
-                    profile = numpy.ma.median(norm_counts[denominator >= min_counts],axis=0)
+                    profile = numpy.ma.median(norm_counts[denominator >= min_counts], axis=0)
                 else:
-                    profile = numpy.nansum(k_raw[denominator >= min_counts],axis=0)
-                    
+                    profile = numpy.nansum(k_raw[denominator >= min_counts], axis=0)
+
             # in numpy under Python3.5, this is an IndexError instead of a warning
             except IndexError:
-                profile = numpy.zeros_like(profile_table["x"],dtype=float)
+                profile = numpy.zeros_like(profile_table["x"], dtype=float)
             # in new versions of numpy, this is a ValueEror instead of an IndexError
             except ValueError:
-                profile = numpy.zeros_like(profile_table["x"],dtype=float)
+                profile = numpy.zeros_like(profile_table["x"], dtype=float)
 
         num_genes = ((~norm_counts.mask)[denominator >= min_counts]).sum(0)
 
-        profile_table["%s-mers" % k]            = profile
+        profile_table["%s-mers" % k] = profile
         profile_table["%s_regions_counted" % k] = num_genes
-        
+
     profile_table = pd.DataFrame(profile_table)
-    
+
     return raw_count_dict, norm_count_dict, profile_table
 
 
@@ -240,157 +251,199 @@ def main(argv=sys.argv[1:]):
         Default: `sys.argv[1:]`. The command-line arguments, if the script is
         invoked from the command line
     """
-    ap = AlignmentParser(allow_mapping=False,input_choices=["BAM"],
-                         disabled=["normalize","big_genome",])
+    ap = AlignmentParser(
+        allow_mapping=False, input_choices=["BAM"], disabled=[
+            "normalize",
+            "big_genome",
+        ]
+    )
     bp = BaseParser()
     alignment_file_parser = ap.get_parser()
     base_parser = bp.get_parser()
-    
+
     pp = PlottingParser()
     plotting_parser = pp.get_parser()
 
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[base_parser,
-                                              alignment_file_parser,
-                                              plotting_parser])
-    
-    parser.add_argument("--min_counts",type=int,default=10,metavar="N",
-                         help="Minimum counts required in normalization region "+
-                              "to be included in metagene average (Default: 10)")
-    parser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
-                         default=None,
-                         #default=(20,50),
-                         help="Portion of each window against which its individual raw count profile"+
-                              " will be normalized. Specify two integers, in nucleotide"+
-                              " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)")
-    parser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
-                         default=None,
-                         help="Deprecated. Use ``--normalize_over`` instead. "+
-                              "Formerly, Portion of each window against which its individual raw count profile"+
-                              " will be normalized. Specify two integers, in nucleotide"+
-                              " distance, from 5\' end of window. (Default: 70 100)")
-    parser.add_argument("--require_upstream",default=False,action="store_true",
-                        help="If supplied, the P-site offset is taken to be the distance "+
-                             "between the largest peak upstream of the start codon and "+
-                             "the start codon itself. Otherwise, the P-site offset is taken "+
-                             "to be the distance between the largest peak in the entire ROI "+
-                             "and the start codon. Ignored if ``--constrain`` is used."
-                        )
-    parser.add_argument("--constrain",type=int,nargs=2,default=None,metavar="X",
-                        help="Constrain P-site offset to be between specified distance from "+
-                             "start codon. Useful for noisy data. "+
-                             "(Reasonable set: 10 15; default: not constrained)")
-    parser.add_argument("--aggregate",default=False,action="store_true",
-                        help="Estimate P-site from aggregate reads at each position, instead "+
-                             "of median normalized read density. Noisier, but helpful for "+
-                             "lower-count data or read lengths with few counts. (Default: False)"
-                        ),
-    parser.add_argument("--keep",default=False,action="store_true",
-                        help="Save intermediate count files. Useful for additional computations (Default: False)")
-    parser.add_argument("--default",type=int,default=13,
-                        help="Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset. Unaffected by ``--constrain`` (Default: 13)")
+    parser = argparse.ArgumentParser(
+        description=format_module_docstring(__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[base_parser, alignment_file_parser, plotting_parser]
+    )
 
-    parser.add_argument("roi_file",type=str,
-                        help="ROI file surrounding start codons, from ``metagene generate`` subprogram")
-    
-    parser.add_argument("outbase",type=str,help="Basename for output files")
-    
+    parser.add_argument(
+        "--min_counts",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Minimum counts required in normalization region " +
+        "to be included in metagene average (Default: 10)"
+    )
+    parser.add_argument(
+        "--normalize_over",
+        type=int,
+        nargs=2,
+        metavar="N",
+        default=None,
+        #default=(20,50),
+        help="Portion of each window against which its individual raw count profile" +
+        " will be normalized. Specify two integers, in nucleotide" +
+        " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)"
+    )
+    parser.add_argument(
+        "--norm_region",
+        type=int,
+        nargs=2,
+        metavar="N",
+        default=None,
+        help="Deprecated. Use ``--normalize_over`` instead. " +
+        "Formerly, Portion of each window against which its individual raw count profile" +
+        " will be normalized. Specify two integers, in nucleotide" +
+        " distance, from 5\' end of window. (Default: 70 100)"
+    )
+    parser.add_argument(
+        "--require_upstream",
+        default=False,
+        action="store_true",
+        help="If supplied, the P-site offset is taken to be the distance " +
+        "between the largest peak upstream of the start codon and " +
+        "the start codon itself. Otherwise, the P-site offset is taken " +
+        "to be the distance between the largest peak in the entire ROI " +
+        "and the start codon. Ignored if ``--constrain`` is used."
+    )
+    parser.add_argument(
+        "--constrain",
+        type=int,
+        nargs=2,
+        default=None,
+        metavar="X",
+        help="Constrain P-site offset to be between specified distance from " +
+        "start codon. Useful for noisy data. " + "(Reasonable set: 10 15; default: not constrained)"
+    )
+    parser.add_argument(
+        "--aggregate",
+        default=False,
+        action="store_true",
+        help="Estimate P-site from aggregate reads at each position, instead " +
+        "of median normalized read density. Noisier, but helpful for " +
+        "lower-count data or read lengths with few counts. (Default: False)"
+    ),
+    parser.add_argument(
+        "--keep",
+        default=False,
+        action="store_true",
+        help="Save intermediate count files. Useful for additional computations (Default: False)"
+    )
+    parser.add_argument(
+        "--default",
+        type=int,
+        default=13,
+        help=
+        "Default 5\' P-site offset for read lengths that are not present or evaluated in the dataset. Unaffected by ``--constrain`` (Default: 13)"
+    )
+
+    parser.add_argument(
+        "roi_file",
+        type=str,
+        help="ROI file surrounding start codons, from ``metagene generate`` subprogram"
+    )
+
+    parser.add_argument("outbase", type=str, help="Basename for output files")
+
     # set manual options
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
     # set defaults
     args.mapping = "fiveprime"
-    args.offset  = 0
-    args.nibble  = 0
+    args.offset = 0
+    args.nibble = 0
 
-    
     # process arguments
     min_len = args.min_length
     max_len = args.max_length
     profiles = max_len + 1 - min_len
-    lengths = list(range(min_len,max_len+1))
+    lengths = list(range(min_len, max_len + 1))
     outbase = args.outbase
-    title  = "Fiveprime read offsets by length" if args.title is None else args.title
-    
+    title = "Fiveprime read offsets by length" if args.title is None else args.title
+
     pp.set_style_from_args(args)
-    colors = pp.get_colors_from_args(args,profiles)
- 
+    colors = pp.get_colors_from_args(args, profiles)
+
     printer.write("Opening ROI file %s ..." % args.roi_file)
     with opener(args.roi_file) as roi_fh:
-        roi_table = pd.read_table(roi_fh,sep="\t",comment="#",index_col=None,header=0)
+        roi_table = pd.read_table(roi_fh, sep="\t", comment="#", index_col=None, header=0)
         roi_fh.close()
-        
-    printer.write("Opening count files %s ..." % ",".join(args.count_files))
-    ga = ap.get_genome_array_from_args(args,printer=printer)
 
-    
+    printer.write("Opening count files %s ..." % ",".join(args.count_files))
+    ga = ap.get_genome_array_from_args(args, printer=printer)
+
     # remove default size filters
     my_filters = ga._filters.keys()
     for f in my_filters:
         ga.remove_filter(f)
 
-    norm_start, norm_end = _get_norm_region(roi_table,args)
-    
+    norm_start, norm_end = _get_norm_region(roi_table, args)
+
     # count
-    count_dict, norm_count_dict, metagene_profile = do_count(roi_table,
-                                                             ga,
-                                                             norm_start,
-                                                             norm_end,
-                                                             args.min_counts,
-                                                             min_len,
-                                                             max_len,
-                                                             aggregate=args.aggregate,
-                                                             printer=printer)
-    
+    count_dict, norm_count_dict, metagene_profile = do_count(
+        roi_table,
+        ga,
+        norm_start,
+        norm_end,
+        args.min_counts,
+        min_len,
+        max_len,
+        aggregate=args.aggregate,
+        printer=printer
+    )
+
     # save counts
     profile_fn = "%s_metagene_profiles.txt" % outbase
-    with argsopener(profile_fn,args,"w") as metagene_out:
-        metagene_profile.to_csv(metagene_out,
-                                sep="\t",
-                                header=True,
-                                index=False,
-                                na_rep="nan",
-                                columns=["x"]+["%s-mers" % X for X in lengths])
+    with argsopener(profile_fn, args, "w") as metagene_out:
+        metagene_profile.to_csv(
+            metagene_out,
+            sep="\t",
+            header=True,
+            index=False,
+            na_rep="nan",
+            columns=["x"] + ["%s-mers" % X for X in lengths]
+        )
         metagene_out.close()
 
     if args.keep == True:
         printer.write("Saving raw and normalized counts ...")
         for k in count_dict:
-            count_fn     = "%s_%s_rawcounts.txt.gz"  % (outbase,k)
-            normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase,k)
-            mask_fn      = "%s_%s_mask.txt.gz" % (outbase,k)
-            numpy.savetxt(count_fn,count_dict[k],delimiter="\t")
-            numpy.savetxt(normcount_fn,norm_count_dict[k],delimiter="\t")
-            numpy.savetxt(mask_fn,norm_count_dict[k].mask,delimiter="\t")
-    
+            count_fn = "%s_%s_rawcounts.txt.gz" % (outbase, k)
+            normcount_fn = "%s_%s_normcounts.txt.gz" % (outbase, k)
+            mask_fn = "%s_%s_mask.txt.gz" % (outbase, k)
+            numpy.savetxt(count_fn, count_dict[k], delimiter="\t")
+            numpy.savetxt(normcount_fn, norm_count_dict[k], delimiter="\t")
+            numpy.savetxt(mask_fn, norm_count_dict[k].mask, delimiter="\t")
+
     # plotting & offsets
     printer.write("Plotting and determining offsets ...")
-    offset_dict = OrderedDict() 
+    offset_dict = OrderedDict()
 
     # Determine scaling factor for plotting metagene profiles
-    max_y = numpy.nan 
+    max_y = numpy.nan
     with warnings.catch_warnings():
         # ignore warnings for slices that contain only NaNs
-        warnings.simplefilter("ignore",category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         for k in lengths:
-            max_y = numpy.nanmax([max_y,
-                                  numpy.nanmax(metagene_profile["%s-mers"% k].values)])
+            max_y = numpy.nanmax([max_y, numpy.nanmax(metagene_profile["%s-mers" % k].values)])
 
     if numpy.isnan(max_y) or max_y == 0:
         max_y = 1.0
 
-
     # parse arguments & set styles
     mplrc = matplotlib.rcParams
-    plt_incr  = 1.2
+    plt_incr = 1.2
 
     # use this figsize if not specified on command line
-    figheight = 1.0 + 0.25*(profiles-1) + 0.75*(profiles)
-    default_figsize = (7.5,figheight)
+    figheight = 1.0 + 0.25 * (profiles - 1) + 0.75 * (profiles)
+    default_figsize = (7.5, figheight)
 
-    fig = pp.get_figure_from_args(args,figsize=default_figsize)
+    fig = pp.get_figure_from_args(args, figsize=default_figsize)
 
     ax = plt.gca()
     plt.title(title)
@@ -399,36 +452,39 @@ def main(argv=sys.argv[1:]):
         plt.ylabel("Aggregate read counts (au)")
     else:
         plt.ylabel("Median normalized read density (au)")
-        
-    plt.axvline(0.0,color=mplrc["axes.edgecolor"],dashes=[3,2])
+
+    plt.axvline(0.0, color=mplrc["axes.edgecolor"], dashes=[3, 2])
 
     x = metagene_profile["x"].values
     xmin = x.min()
     xmax = x.max()
-    
+
     if args.constrain is not None:
-        mask = numpy.tile(True,len(x))
-        
-        zp = (x==0).argmax()
-        l,r = args.constrain
+        mask = numpy.tile(True, len(x))
+
+        zp = (x == 0).argmax()
+        l, r = args.constrain
         if l == r:
-            warnings.warn("Minimum and maximum distance constraints are equal (both '%s'). This is silly." % l,ArgumentWarning)
-            
-        mindist = min(l,r)
-        maxdist = max(l,r)
-        
-        mask[zp-maxdist:zp-mindist+1] = False
+            warnings.warn(
+                "Minimum and maximum distance constraints are equal (both '%s')." % l,
+                ArgumentWarning
+            )
+
+        mindist = min(l, r)
+        maxdist = max(l, r)
+
+        mask[zp - maxdist:zp - mindist + 1] = False
     elif args.require_upstream == True:
         mask = x >= 0
     else:
-        mask = numpy.tile(False,len(x))
+        mask = numpy.tile(False, len(x))
 
-    for n,k in enumerate(lengths):
+    for n, k in enumerate(lengths):
         color = colors[n]
-        baseline = plt_incr*n
+        baseline = plt_incr * n
         y = metagene_profile["%s-mers" % k].values
         #ymask = y[mask]
-        ymask = numpy.ma.MaskedArray(y,mask=mask)
+        ymask = numpy.ma.MaskedArray(y, mask=mask)
 
         if numpy.isnan(y).all():
             plot_y = numpy.zeros_like(x)
@@ -437,15 +493,20 @@ def main(argv=sys.argv[1:]):
                 plot_y = y / max_y
             else:
                 plot_y = y.astype(float) / numpy.nanmax(y) * 0.9
- 
+
         # plot metagene profiles on common scale, offset by baseline from bottom to top
-        ax.plot(x,baseline + plot_y,color=color)
-        ax.text(xmin,baseline,"%s-mers" % k,
-                ha="left",
-                va="bottom",
-                color=color,
-                transform=matplotlib.transforms.offset_copy(ax.transData,fig,
-                                                            x=6.0,y=3.0,units="points"))
+        ax.plot(x, baseline + plot_y, color=color)
+        ax.text(
+            xmin,
+            baseline,
+            "%s-mers" % k,
+            ha="left",
+            va="bottom",
+            color=color,
+            transform=matplotlib.transforms.offset_copy(
+                ax.transData, fig, x=6.0, y=3.0, units="points",
+            )
+        )
 
         ymax = baseline + numpy.nanmax(plot_y)
 
@@ -461,39 +522,42 @@ def main(argv=sys.argv[1:]):
         if usedefault == False:
             yadj = ymax - 0.2 * plt_incr
 
-            ax.plot([-offset,0],[yadj,yadj],color=color,dashes=[3,2])
-            ax.text(-offset / 2.0,
-                     yadj,
-                     "%s nt" % (offset),
-                     color=color,
-                     ha="center",
-                     va="bottom",
-                     transform=matplotlib.transforms.offset_copy(ax.transData,fig,
-                                                                 x=0.0,y=3.0,units="points")
-                    )   
+            ax.plot([-offset, 0], [yadj, yadj], color=color, dashes=[3, 2])
+            ax.text(
+                -offset / 2.0,
+                yadj,
+                "%s nt" % (offset),
+                color=color,
+                ha="center",
+                va="bottom",
+                transform=matplotlib.transforms.offset_copy(
+                    ax.transData, fig, x=0.0, y=3.0, units="points",
+                )
+            )
 
-    plt.xlim(xmin,xmax)
-    plt.ylim(-0.1,plt_incr+baseline)
+    plt.xlim(xmin, xmax)
+    plt.ylim(-0.1, plt_incr + baseline)
     ax.yaxis.set_ticks([])
 
     # save data as p-site offset table
     fn = "%s_p_offsets.txt" % outbase
-    fout = argsopener(fn,args)
+    fout = argsopener(fn, args)
     printer.write("Writing offset table to %s ..." % fn)
     fout.write("length\tp_offset\n")
     for k in offset_dict:
-        fout.write("%s\t%s\n" % (k,offset_dict[k]))
-    
+        fout.write("%s\t%s\n" % (k, offset_dict[k]))
+
     fout.write("default\t%s" % args.default)
-    
+
     fout.close()
 
     # save plot
-    plot_fn ="%s_p_offsets.%s" % (outbase,args.figformat) 
+    plot_fn = "%s_p_offsets.%s" % (outbase, args.figformat)
     printer.write("Saving plot to %s ..." % plot_fn)
-    plt.savefig(plot_fn,dpi=args.dpi,bbox_inches="tight")
+    plt.savefig(plot_fn, dpi=args.dpi, bbox_inches="tight")
 
     printer.write("Done.")
+
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,8 @@ from plastid.readers.common import AssembledFeatureReader
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.services.exceptions import FileFormatWarning, warn
 
-class PSL_Reader(AssembledFeatureReader): 
+
+class PSL_Reader(AssembledFeatureReader):
     """
     PSL_reader(*streams, return_type=SegmentChain, add_three_for_stop=False, tabix=False, printer=None, **kwargs)
     
@@ -68,7 +69,8 @@ class PSL_Reader(AssembledFeatureReader):
     metadata : dict
         Various attributes gleaned from the stream, if any    
     """
-    def _assemble(self,line):
+
+    def _assemble(self, line):
         """Read `PSL`_ files line-by-line into types specified by ``self.return_type``"""
         self.counter += 1
         if line.strip() == "":
@@ -80,15 +82,17 @@ class PSL_Reader(AssembledFeatureReader):
         elif line.startswith("--"):
             return self.__next__()
         elif line.startswith("#"):
-            return self.__next__()        
+            return self.__next__()
         else:
             try:
                 return self.return_type.from_psl(line)
             except Exception as e:
                 self.rejected.append(line)
-                warn("Rejecting line %s because of %s: %s" %
-                        (self.counter,e.message,line),FileFormatWarning)
-                return self.__next__()        
+                warn(
+                    "Rejecting line %s because of %s: %s" % (self.counter, e.message, line),
+                    FileFormatWarning
+                )
+                return self.__next__()
 
 
 class BundledPSL_Reader(PSL_Reader):
@@ -125,7 +129,7 @@ class BundledPSL_Reader(PSL_Reader):
         Other keyword arguments used by specific parsers    
     """
 
-    def filter(self,line):
+    def filter(self, line):
         """Process lines of `PSL`_ files input into |SegmentChain|, and group
         these by query sequence.
          
@@ -147,8 +151,8 @@ class BundledPSL_Reader(PSL_Reader):
                 ltmp.append(aln)
                 line = next(self.stream)
                 aln = SegmentChain.from_psl(line)
-                
-            self.stream = itertools.chain([line],self.stream)
+
+            self.stream = itertools.chain([line], self.stream)
             return ltmp
         except StopIteration:
             # send final bundle

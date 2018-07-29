@@ -16,6 +16,7 @@ Methods
 
 from plastid.util.services.misc import guess_formatter
 
+
 def parse_list(inp):
     """Restore non-nested lists of Python primitives from string representation of list
     Additionally parses `numpy.nan`, `numpy.inf`, and `-numpy.inf` to correct values
@@ -42,6 +43,7 @@ def parse_list(inp):
     assert inp[0] == '[' and inp[-1] == ']'
     return [guess_formatter(X.strip().strip("'")) for X in inp[1:-1].split(",")]
 
+
 # Adapted from http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
 def flatten_nested_lists_to_generator(l):
     """Flatten a tree of nested lists into a generator, from left-to-right and top-to-bottom.
@@ -57,13 +59,14 @@ def flatten_nested_lists_to_generator(l):
     object
         Next item in flattened list
     """
-    assert isinstance(l,list)
+    assert isinstance(l, list)
     for el in l:
         if isinstance(el, list):
             for sub in flatten_nested_lists_to_generator(el):
                 yield sub
         else:
             yield el
+
 
 def flatten_nested_lists_to_list(inp):
     """Flatten a tree of lists into a single list of items, from left-to-right and top-to-bottom.

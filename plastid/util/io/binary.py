@@ -11,6 +11,7 @@ import sys
 import struct
 from collections import namedtuple
 
+
 class BinaryParserFactory(object):
     """Parser factory for different types of binary records.
     
@@ -67,8 +68,8 @@ class BinaryParserFactory(object):
     struct
         For information on format strings
     """
-    
-    def __init__(self,name,fmt,fields):
+
+    def __init__(self, name, fmt, fields):
         """Create a |BinaryParserFactory|
         
         Parameters
@@ -82,18 +83,18 @@ class BinaryParserFactory(object):
         fields : list
             Ordered list of field names to bind to data unpacked from binary file
         """
-        self.name   = name
-        self.fmt    = fmt
+        self.name = name
+        self.fmt = fmt
         self.fields = fields
-        self.nt = namedtuple(name,fields)
-    
+        self.nt = namedtuple(name, fields)
+
     def __str__(self):
-        return "<%s fmt='%s' fields='%s'>" % (self.name,self.fmt,",".join(self.fields)) 
-    
+        return "<%s fmt='%s' fields='%s'>" % (self.name, self.fmt, ",".join(self.fields))
+
     def __repr__(self):
         return str(self)
 
-    def __call__(self,fh,byte_order="<"):
+    def __call__(self, fh, byte_order="<"):
         """Parse data from `fh` into a dictionary mapping field names to their values
         
         Parameters
@@ -110,21 +111,22 @@ class BinaryParserFactory(object):
         :py:class:`~collections.OrderedDict`
             Dictionary mapping field names from `self.fields` to their values
         """
-        tmp_dict = self.nt._make(struct.unpack(byte_order+self.fmt,
-                                               fh.read(self.calcsize(byte_order))))._asdict()
+        tmp_dict = self.nt._make(
+            struct.unpack(byte_order + self.fmt, fh.read(self.calcsize(byte_order)))
+        )._asdict()
         for k in tmp_dict:
-            if isinstance(tmp_dict[k],bytes):
+            if isinstance(tmp_dict[k], bytes):
                 # Python 3.x returns bytes
                 # convert byte objects to strings
                 tmp_dict[k] = tmp_dict[k].decode("ascii")
-            if sys.version_info < (3,) and isinstance(tmp_dict[k],unicode):
+            if sys.version_info < (3, ) and isinstance(tmp_dict[k], unicode):
                 # Python 2.x returns unicodes
                 # convert unicode to strings
                 tmp_dict[k] = str(tmp_dict[k].decode("ascii"))
-        
+
         return tmp_dict
 
-    def calcsize(self,byte_order="<"):
+    def calcsize(self, byte_order="<"):
         """Return calculated size, in bytes, of record
 
         Parameters
@@ -137,10 +139,10 @@ class BinaryParserFactory(object):
         int
             Calculated size of record, in bytes
         """
-        return struct.calcsize(byte_order+self.fmt)
+        return struct.calcsize(byte_order + self.fmt)
 
 
-def find_null_bytes(inp,null=b"\x00"):
+def find_null_bytes(inp, null=b"\x00"):
     """Finds all null characters in a byte-formatted input string
     
     Parameters
@@ -157,6 +159,6 @@ def find_null_bytes(inp,null=b"\x00"):
     last_found = inp.find(null)
     while last_found > -1:
         indices.append(last_found)
-        last_found = inp.find(null,1+last_found)
-    
+        last_found = inp.find(null, 1 + last_found)
+
     return numpy.array(indices)

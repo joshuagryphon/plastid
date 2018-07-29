@@ -57,8 +57,15 @@ def get_fig_axes(axes=None):
 
     return fig, ax
 
-def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_ax_kwargs={},
-                other_ax_kwargs={}):
+def split_axes(
+        ax,
+        top_height      = 0,
+        left_width      = 0,
+        right_width     = 0,
+        bottom_height   = 0,
+        main_ax_kwargs  = {},
+        other_ax_kwargs = {}
+): # yapf: disable
     """Split the spaces taken by one axes into one or more panes, setting the original axes invisible.
 
     Parameters
@@ -88,75 +95,61 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
     """
     fig = ax.figure
     ax.set_visible(False)
-    axes = { "orig" : ax }
+    axes = {"orig": ax}
     mplrc = matplotlib.rcParams
 
+    # yapf: disable
     buf_left  = mplrc["figure.subplot.left"]
     buf_bot   = mplrc["figure.subplot.bottom"]
-    buf_right = 1.0 - mplrc["figure.subplot.right"] 
+    buf_right = 1.0 - mplrc["figure.subplot.right"]
     buf_top   = 1.0 - mplrc["figure.subplot.top"]
 
     hscale = 1.0 - buf_top - buf_bot
     wscale = 1.0 - buf_left - buf_right
 
-    main_height = (1.0 - bottom_height - top_height)*hscale
-    main_width  = (1.0 - left_width - right_width)*wscale
+    main_height = (1.0 - bottom_height - top_height) * hscale
+    main_width = (1.0 - left_width - right_width) * wscale
 
     bottom_height *= hscale
     top_height    *= hscale
     left_width    *= wscale
     right_width   *= wscale
 
-    main_left  = buf_left + left_width
+    main_left  = buf_left  + left_width
     main_right = main_left + main_width
-    main_bot   = buf_bot + bottom_height
-    main_top   = main_bot + main_height
+    main_bot   = buf_bot   + bottom_height
+    main_top   = main_bot  + main_height
+    # yapf: enable
 
-
-    # each rect is left,bottom,width,height
+    # each rect is (left, bottom, width, height)
     rects = {}
-    rects["main"] = [main_left,
-                     main_bot,
-                     main_width,
-                     main_height]
+    rects["main"] = [main_left, main_bot, main_width, main_height]
     if left_width > 0:
-        rects["left"] = [buf_left,
-                         main_bot,
-                         left_width,
-                         main_height]
+        rects["left"] = [buf_left, main_bot, left_width, main_height]
     if right_width > 0:
-        rects["right"] = [main_right,
-                          main_bot,
-                          right_width,
-                          main_height]
+        rects["right"] = [main_right, main_bot, right_width, main_height]
     if bottom_height > 0:
-        rects["bottom"] = [main_left,
-                           main_bot,
-                           main_width,
-                           bottom_height]
+        rects["bottom"] = [main_left, main_bot, main_width, bottom_height]
     if top_height > 0:
-        rects["top"] = [main_left,
-                        main_top,
-                        main_width,
-                        top_height]
+        rects["top"] = [main_left, main_top, main_width, top_height]
 
-    axes["main"] = fig.add_axes(rects["main"],zorder=100,**main_ax_kwargs)
+    axes["main"] = fig.add_axes(rects["main"], zorder=100, **main_ax_kwargs)
 
     for axes_name, rect in rects.items():
         if axes_name == "main":
             pass
         else:
             ax_kwargs = other_ax_kwargs
-            if axes_name in ("right","left"):
+            if axes_name in ("right", "left"):
                 ax_kwargs["sharey"] = axes["main"]
                 if "sharex" in ax_kwargs:
                     ax_kwargs.pop("sharex")
-            if axes_name in ("top","bottom"):
+            if axes_name in ("top", "bottom"):
                 ax_kwargs["sharex"] = axes["main"]
                 if "sharey" in ax_kwargs:
                     ax_kwargs.pop("sharey")
 
-            axes[axes_name] = fig.add_axes(rect,zorder=50,**ax_kwargs)
+            axes[axes_name] = fig.add_axes(rect, zorder=50, **ax_kwargs)
 
     if "top" in axes:
         axes["top"].xaxis.tick_top()
@@ -179,11 +172,11 @@ def split_axes(ax,top_height=0,left_width=0,right_width=0,bottom_height=0,main_a
         axes["right"].yaxis.tick_right()
         axes["main"].yaxis.tick_left()
         axes["right"].xaxis.get_ticklabels()[0].set_visible(False)
-        
 
     return axes
 
-def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=numpy.inf):
+
+def clean_invalid(x, y, min_x=-numpy.inf, min_y=-numpy.inf, max_x=numpy.inf, max_y=numpy.inf):
     """Remove corresponding values from x and y when one or both of those is `nan` or `inf`,
     and optionally truncate values to minima and maxima
 
@@ -211,15 +204,15 @@ def clean_invalid(x,y,min_x=-numpy.inf,min_y=-numpy.inf,max_x=numpy.inf,max_y=nu
     x[x > max_x] = max_x
     y[y < min_y] = min_y
     y[y > max_y] = max_y
-    
-    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y) 
+
+    newmask = numpy.isinf(x) | numpy.isnan(x) | numpy.isinf(y) | numpy.isnan(y)
     x = x[~newmask]
     y = y[~newmask]
 
+    return x, y
 
-    return x,y 
 
-def get_kde(data,log=False,base=2,points=100,bw_method="scott"):
+def get_kde(data, log=False, base=2, points=100, bw_method="scott"):
     """Estimate a kernel density (kde) over `data`
 
     Parameters
@@ -261,11 +254,11 @@ def get_kde(data,log=False,base=2,points=100,bw_method="scott"):
             raise ValueError("kde: Base must be 2, 10, or numpy.e")
 
         data = func(data)
-        domain = func(numpy.logspace(data.min(),data.max(),base=base,num=points))
+        domain = func(numpy.logspace(data.min(), data.max(), base=base, num=points))
     else:
-        domain = numpy.linspace(data.min(),data.max(),points)
+        domain = numpy.linspace(data.min(), data.max(), points)
 
-    kde = scipy.stats.gaussian_kde(data,bw_method=bw_method)
+    kde = scipy.stats.gaussian_kde(data, bw_method=bw_method)
 
     curve = kde.evaluate(domain)
 
@@ -273,4 +266,3 @@ def get_kde(data,log=False,base=2,points=100,bw_method="scott"):
         domain = base**domain
 
     return domain, curve
-

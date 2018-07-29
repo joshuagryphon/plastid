@@ -72,19 +72,18 @@ import linecache
 import textwrap
 from plastid.util.io.filters import colored
 
-_wrapper = textwrap.TextWrapper(break_long_words=False,width=77) 
-
-
+_wrapper = textwrap.TextWrapper(break_long_words=False, width=77)
 
 #===============================================================================
 # INDEX: Warning and exception classes
 #===============================================================================
 
+
 class MalformedFileError(Exception):
     """Exception class for when files cannot be parsed as they should be
     """
-    
-    def __init__(self,filename,message,line_num=None):
+
+    def __init__(self, filename, message, line_num=None):
         """Create a |MalformedFileError|
         
         Parameters
@@ -99,15 +98,16 @@ class MalformedFileError(Exception):
             Number of line causing problems
         """
         self.filename = filename
-        self.msg      = message
+        self.msg = message
         self.line_num = line_num
-    
+
     def __str__(self):
         if self.line is None:
             return "Error opening file '%s': %s" % (self.filename, self.msg)
         else:
-            return "Error opening file '%s' at line %s: %s" % (self.filename, self.line_num, self.msg)
-
+            return "Error opening file '%s' at line %s: %s" % (
+                self.filename, self.line_num, self.msg
+            )
 
 
 class ArgumentWarning(Warning):
@@ -132,7 +132,6 @@ class DataWarning(Warning):
     """
 
 
-
 #===============================================================================
 # INDEX: Plastid's extensions to Python warnings
 #===============================================================================
@@ -140,10 +139,11 @@ class DataWarning(Warning):
 pl_once_registry = {}
 """Registry of `onceperfamily` warnings that have been seen in the current execution context"""
 
-pl_filters       = []
+pl_filters = []
 """Plastid's own warnings filters, which allow additional actions compared to Python's"""
 
-def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=0):
+
+def filterwarnings(action, message="", category=Warning, module="", lineno=0, append=0):
     """Insert an entry into the warnings filter. Behaviors are as in :func:`warnings.filterwarnings`,
     except the additional action `'onceperfamily'` can be used to allow one warning per `family`
     of messages, specified by a regex. 
@@ -185,7 +185,7 @@ def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=
     warnings.filterwarnings
         Python's warnings filter
     """
-    tup = (action,re.compile(message,re.I),category,re.compile(module),lineno)
+    tup = (action, re.compile(message, re.I), category, re.compile(module), lineno)
     if action == "onceperfamily":
         if tup in pl_filters:
             return
@@ -193,13 +193,14 @@ def filterwarnings(action,message="",category=Warning,module="",lineno=0,append=
             if append == 1:
                 pl_filters.append(tup)
             else:
-                pl_filters.insert(0,tup)
+                pl_filters.insert(0, tup)
     else:
-        warnings.filterwarnings(action,message=message,
-                                category=category,module=module,
-                                lineno=lineno,append=append)
+        warnings.filterwarnings(
+            action, message=message, category=category, module=module, lineno=lineno, append=append
+        )
 
-def warn_onceperfamily(message,pattern=None,category=None,stacklevel=1):
+
+def warn_onceperfamily(message, pattern=None, category=None, stacklevel=1):
     """Issue a warning and create a warning filter for that warning if it does not already exist
     
     Parameters
@@ -228,12 +229,21 @@ def warn_onceperfamily(message,pattern=None,category=None,stacklevel=1):
     """
     if pattern is None:
         pattern = message
-        filterwarnings("onceperfamily",message=pattern,category=category)
-        
-    warn(message,category=category,stacklevel=stacklevel)
+        filterwarnings("onceperfamily", message=pattern, category=category)
 
-def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
-                                module=None,registry=None,module_globals=None):
+    warn(message, category=category, stacklevel=stacklevel)
+
+
+def warn_explicit_onceperfamily(
+        message,
+        category,
+        filename,
+        lineno,
+        pattern=None,
+        module=None,
+        registry=None,
+        module_globals=None
+):
     """Low-level interface to issue warnings, allowing `plastid`-specific warnings filters
 
     Parameters
@@ -273,9 +283,9 @@ def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
     """
     if pattern is None:
         pattern = message
-        filterwarnings("onceperfamily",message=pattern,category=category)
+        filterwarnings("onceperfamily", message=pattern, category=category)
 
-    if module is None:# or module_globals is None:
+    if module is None:  # or module_globals is None:
         frame = inspect.currentframe()
         if frame is None:
             module = __name__
@@ -284,10 +294,19 @@ def warn_explicit_onceperfamily(message,category,filename,lineno,pattern=None,
                 module = inspect.getmodule(frame.f_back.f_code).__name__
             finally:
                 del frame
-        
-    warn_explicit(pattern,category,filename,lineno,module=module,registry=registry,module_globals=module_globals)
 
-def warn(message,category=None,stacklevel=1):
+    warn_explicit(
+        pattern,
+        category,
+        filename,
+        lineno,
+        module=module,
+        registry=registry,
+        module_globals=module_globals
+    )
+
+
+def warn(message, category=None, stacklevel=1):
     """Issue a non-essential warning to users, allowing `plastid`-specific warnings filters
     
     Parameters
@@ -311,11 +330,14 @@ def warn(message,category=None,stacklevel=1):
     """
     if category is None:
         category = UserWarning
-        
-    _, filename, lineno, _, _, _ = inspect.stack()[stacklevel]
-    warn_explicit(message,category,filename,lineno,module=filename)
 
-def warn_explicit(message,category,filename,lineno,module=None,registry=None,module_globals=None):
+    _, filename, lineno, _, _, _ = inspect.stack()[stacklevel]
+    warn_explicit(message, category, filename, lineno, module=filename)
+
+
+def warn_explicit(
+        message, category, filename, lineno, module=None, registry=None, module_globals=None
+):
     """Low-level interface to issue warnings, allowing `plastid`-specific warnings filters
 
     Parameters
@@ -351,7 +373,7 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
         Python's warning system, which this wraps
     """
     global pl_once_registry
-    if module is None: # or module_globals is None:
+    if module is None:
         frame = inspect.currentframe()
         if frame is None:
             module = __name__
@@ -365,20 +387,26 @@ def warn_explicit(message,category,filename,lineno,module=None,registry=None,mod
         if pat.match(message) and issubclass(category,filter_category) and\
            (module is None or mod.match(module)) and\
            (filter_line == 0 or filter_line == lineno):
-            
-            tup =(pat.pattern,filter_category,mod,filter_line) 
+
+            tup = (pat.pattern, filter_category, mod, filter_line)
             if tup in pl_once_registry:
                 return
             else:
                 pl_once_registry[tup] = 1
                 break
-            
-    warnings.warn_explicit(message,category,filename,lineno,
-                           module=module,registry=registry,
-                           module_globals=module_globals)
+
+    warnings.warn_explicit(
+        message,
+        category,
+        filename,
+        lineno,
+        module=module,
+        registry=registry,
+        module_globals=module_globals
+    )
 
 
-def formatwarning(message,category,filename,lineno,file=None,line=None):
+def formatwarning(message, category, filename, lineno, file=None, line=None):
     """Wrapper to colorize warnings for readability. Overrides :func:`warnings.formatwarning`
     
     Parameters
@@ -407,33 +435,34 @@ def formatwarning(message,category,filename,lineno,file=None,line=None):
     str
         Pretty-printed warning message
     """
-    sep     = colored("-"*75,color="cyan")
+    sep = colored("-" * 75, color="cyan")
     message = str(message)
     if not "\n" in message:
         message = _wrapper.fill(str(message))
-        
-    message = colored(message,color="white",attrs=["bold"])
-    name    = colored(category.__name__,color="cyan",attrs=["bold"])
+
+    message = colored(message, color="white", attrs=["bold"])
+    name = colored(category.__name__, color="cyan", attrs=["bold"])
 
     if line is None:
-        numwidth = len(str(lineno+3))
-        fmtstr   = "{0: >%ss} {1}" % (numwidth)
-        lines    = []
-        for x in range(max(0,lineno-2),lineno+3):
-            tmpline = linecache.getline(filename,x).strip("\n")
+        numwidth = len(str(lineno + 3))
+        fmtstr = "{0: >%ss} {1}" % (numwidth)
+        lines = []
+        for x in range(max(0, lineno - 2), lineno + 3):
+            tmpline = linecache.getline(filename, x).strip("\n")
             if tmpline:
                 attrs = ["bold"] if x == lineno else []
-                lines.append(fmtstr.format(colored(x,color="green",attrs=attrs),
-                                           colored(tmpline,attrs=attrs)
-                                           ))
+                lines.append(
+                    fmtstr.format(
+                        colored(x, color="green", attrs=attrs), colored(tmpline, attrs=attrs)
+                    )
+                )
         line = "\n".join(lines)
 
-    filename = "in %s, line %s:" % (colored(filename,color="cyan"),lineno)
+    filename = "in %s, line %s:" % (colored(filename, color="cyan"), lineno)
 
-    ltmp = [sep,name,message,filename,"",line,"",sep,""]
+    ltmp = [sep, name, message, filename, "", line, "", sep, ""]
 
     return "\n".join(ltmp)
 
-    
-warnings.formatwarning = formatwarning
 
+warnings.formatwarning = formatwarning

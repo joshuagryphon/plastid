@@ -18,10 +18,10 @@ import pandas as pd
 from plastid.util.io.openers import opener, get_short_name, NullWriter
 from plastid.util.io.filters import NameDateWriter, CommentReader
 
-
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
 _NUMERIC_DTYPES = "biufc"
+
 
 def equal_enough(col1, col2, tol=1e-10, printer=NullWriter()):
     """If `col1` and `col2` are both numeric, test that
@@ -53,7 +53,7 @@ def equal_enough(col1, col2, tol=1e-10, printer=NullWriter()):
         `True` if `abs(col1 - col2) <= tol` for numeric data;
         `False` otherwise
     """
-    dtype_test  = col1.dtype.kind in _NUMERIC_DTYPES
+    dtype_test = col1.dtype.kind in _NUMERIC_DTYPES
     dtype_test &= col2.dtype.kind in _NUMERIC_DTYPES
 
     if dtype_test:
@@ -82,14 +82,25 @@ def equal_enough(col1, col2, tol=1e-10, printer=NullWriter()):
     elif col1.dtype.kind not in _NUMERIC_DTYPES and col2.dtype.kind not in _NUMERIC_DTYPES:
         diff_test = (col1 == col2)
         if not diff_test.all():
-            ltmp = ["%s, %s, %s" % (N, val1, val2) for N, (val1, val2) in enumerate(zip(col1[~diff_test], col2[~diff_test]))]
+            ltmp = [
+                "%s, %s, %s" % (N, val1, val2) for N,
+                (val1, val2) in enumerate(zip(col1[~diff_test], col2[~diff_test]))
+            ]
             printer.write("Differences:\n%s" % "\n".join(ltmp))
         return diff_test.all()
     else:
         return False
 
 
-def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWriter(), print_verbose=False, return_verbose=False):
+def test_dataframe_equality(
+        df1,
+        df2,
+        tol            = 1e-8,
+        sort_columns   = [],
+        printer        = NullWriter(),
+        print_verbose  = False,
+        return_verbose = False
+): # yapf: disable
     """Test equality of dataframes over multiple columns, with verbose output.
     If `NaNs` or `Infs` are present, these must be present in corresponding cells
     in both dataframes for the dataframes to evaluate as equal.
@@ -140,18 +151,21 @@ def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWri
     keys2 = set(df2.columns)
     retval = True
     if keys1 != keys2:
-        failstrs = ["Tables contain different columns (unique keys shown below):",
-                    "    %s: %s" % (1, ",  ".join([str(X) for X in keys1 - keys2])),
-                    "    %s: %s" % (2, ",  ".join([str(X) for X in keys2 - keys1]))
-                   ]
+        failstrs = [
+            "Tables contain different columns (unique keys shown below):",
+            "    %s: %s" % (1, ",  ".join([str(X) for X in keys1 - keys2])),
+            "    %s: %s" % (2, ",  ".join([str(X) for X in keys2 - keys1]))
+        ]
         printer.write("\n".join(failstrs))
         failures.extend(failstrs)
         retval = False
 
     if len(df1) != len(df2):
-        failstrs = ["Tables contain different numbers of rows:",
-                    "    %s: %s" % (1, len(df1)),
-                    "    %s: %s" % (2, len(df2))]
+        failstrs = [
+            "Tables contain different numbers of rows:",
+            "    %s: %s" % (1, len(df1)),
+            "    %s: %s" % (2, len(df2))
+        ]
         printer.write("\n".join(failstrs))
         failures.extend(failstrs)
         retval = False
@@ -161,7 +175,9 @@ def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWri
             printer.write("Sorting data...")
 
         if print_verbose == True:
-            printer.write("Testing equality of values by column with numerical tolerance %.3e..." % tol)
+            printer.write(
+                "Testing equality of values by column with numerical tolerance %.3e..." % tol
+            )
 
         unequal = []
         for k in keys1:
@@ -177,7 +193,9 @@ def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWri
                 if print_verbose == True:
                     printer.write("        %s is identical" % k)
 
-        failstr = "Column values are unequal for columns: %s" % (", ".join([str(X) for X in sorted(unequal)]))
+        failstr = "Column values are unequal for columns: %s" % (
+            ", ".join([str(X) for X in sorted(unequal)])
+        )
         if len(unequal) > 0:
             printer.write(failstr)
             failures.append(failstr)
@@ -187,6 +205,7 @@ def test_dataframe_equality(df1, df2, tol=1e-8, sort_columns=[], printer=NullWri
         return retval, failures
     else:
         return retval
+
 
 def main(argv=sys.argv[1:], verbose=False):
     """Command-line program
@@ -214,31 +233,50 @@ def main(argv=sys.argv[1:], verbose=False):
         Only returned if `verbose` is selected. String describing how
         tables are unequal (e.g. which columns failed, et c).
     """
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("file1", type=str)
     parser.add_argument("file2", type=str)
-    parser.add_argument("-v", dest="verbose", default=False, action="store_true",
-                        help="Give verbose output")
-    parser.add_argument("--sort_keys", default=None, metavar="key", nargs="+",
-                        help="If specified,  values will be sorted by the column(s) corresponding to these name or numbers (0-indexed) before comparison")
-    parser.add_argument("--exclude", type=str, default=[], nargs="+", metavar="key",
-                        help="Key or number (0-indexed) of columns to exclude")
+    parser.add_argument(
+        "-v", dest="verbose", default=False, action="store_true", help="Give verbose output"
+    )
+    parser.add_argument(
+        "--sort_keys",
+        default=None,
+        metavar="key",
+        nargs="+",
+        help=
+        "If specified,  values will be sorted by the column(s) corresponding to these name or numbers (0-indexed) before comparison"
+    )
+    parser.add_argument(
+        "--exclude",
+        type=str,
+        default=[],
+        nargs="+",
+        metavar="key",
+        help="Key or number (0-indexed) of columns to exclude"
+    )
     parser.add_argument("--no_header", default=False, action="store_true",
                         help="If specified,  no header row is present. Columns "+\
                              "for all other command-line flags "+\
                              "must be referenced by number (starting at zero) "+\
                              "rather than name,  and will be assumed to be in "+\
                              "the same order in both files.")
-    parser.add_argument("--tol", type=float, default=1e-8,
-                        help="Tolerance by which floats are allowed to differ (Default: 1e-8)")
+    parser.add_argument(
+        "--tol",
+        type=float,
+        default=1e-8,
+        help="Tolerance by which floats are allowed to differ (Default: 1e-8)"
+    )
 
     args = parser.parse_args(argv)
 
-    kwargs = { "sep"       : "\t",
-               "index_col" : args.sort_keys,
-               "comment"   : "#",
-              }
+    kwargs = {
+        "sep": "\t",
+        "index_col": args.sort_keys,
+        "comment": "#",
+    }
     exclude = args.exclude
     if args.no_header is True:
         if args.sort_keys is not None:
@@ -267,7 +305,9 @@ def main(argv=sys.argv[1:], verbose=False):
         if k in df2:
             df2.pop(k)
 
-    test_result,  messages = test_dataframe_equality(df1, df2, printer=printer, print_verbose=True, return_verbose=True, tol=args.tol) #test_3(df1, df2)
+    test_result, messages = test_dataframe_equality(
+        df1, df2, printer=printer, print_verbose=True, return_verbose=True, tol=args.tol
+    )
 
     if test_result == True:
         printer.write("Files contain equivalent data.")
@@ -283,6 +323,7 @@ def main(argv=sys.argv[1:], verbose=False):
             return exit_code, messages
         else:
             return exit_code
+
 
 if __name__ == "__main__":
     main()

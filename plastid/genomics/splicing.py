@@ -10,6 +10,7 @@ import re
 junction_pat = re.compile(r"([^@]+)@([0-9]+)\^([0-9]+)\(([+-])\)f([0-9]+)")
 """Regex for matching splice junctions in plastid's notation"""
 
+
 def get_junction_tuple(ivc):
     """Convert a |SegmentChain| representing a splice junction to a tuple
     
@@ -23,4 +24,4 @@ def get_junction_tuple(ivc):
     tuple
         `(chromosome name, half-open end of fiveprime exon, first position of threeprime exon, strand)`
     """
-    return (ivc.spanning_segment.chrom,ivc[0].end,ivc[1].start,ivc.spanning_segment.strand)
+    return (ivc.spanning_segment.chrom, ivc[0].end, ivc[1].start, ivc.spanning_segment.strand)

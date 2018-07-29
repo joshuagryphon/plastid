@@ -14,6 +14,7 @@ See also
     Array-like objects that store and index quantitative data over genomes
 """
 
+
 class WiggleReader(object):
     """Read `wiggle`_ and `bedGraph`_ files line-by-line, returning tuples
     of `(chromosome, start position, stop position, value)`. Tuple 
@@ -27,7 +28,8 @@ class WiggleReader(object):
     fh : file-like
         Open filehandle pointing to `wiggle`_ or `bedGraph`_ data    
     """
-    def __init__(self,fh):
+
+    def __init__(self, fh):
         """
         Parameters
         ----------
@@ -36,19 +38,19 @@ class WiggleReader(object):
         """
         self.fh = fh
         self.data_format = "bedGraph"
-        self._reset() 
-    
-    def _reset(self): 
+        self._reset()
+
+    def _reset(self):
         """Reset positional counters"""
-        self.chrom   = None
-        self.step    = 1
-        self.span    = 1 #default span is 1 (e.g. things span 1 base)
-        self.counter = 1 #chromosomal positions are 1-indexed
-        
+        self.chrom = None
+        self.step = 1
+        self.span = 1  #default span is 1 (e.g. things span 1 base)
+        self.counter = 1  #chromosomal positions are 1-indexed
+
     def __iter__(self):
         return self
-    
-    def _get_lineinfo(self,line):
+
+    def _get_lineinfo(self, line):
         """Determine line type and return a dictionary containing key-value
         pairs of any parameters defined in the line.
 
@@ -69,8 +71,8 @@ class WiggleReader(object):
             If a header line, also contains values for the current
             `'stepsize'` and `'span'`
         """
-        dReturn   = {}
-        items     = line.split()
+        dReturn = {}
+        items = line.split()
         line_type = None
         if items[0] == "track":
             line_type = "fileHeader"
@@ -88,7 +90,7 @@ class WiggleReader(object):
                 if "description" in item:
                     break
                 elif "=" in item:
-                    key,val = item.split("=")
+                    key, val = item.split("=")
                     dReturn[key] = val
                 else:
                     dReturn[key] = 'true'
@@ -99,7 +101,7 @@ class WiggleReader(object):
 
     def __next__(self):
         return self.next()
-    
+
     def next(self):
         """Yield a tuple of `(chromosome, start, stop, value)`  for each data line.
         Header lines are processed internally and not exposed to the user.
@@ -122,7 +124,7 @@ class WiggleReader(object):
             value on chromosome between start and end
         """
         while True:
-            line = self._next_line() #self.fh.next()
+            line = self._next_line()
             if line.isspace():
                 continue
             if line[0] == "#":
@@ -136,12 +138,13 @@ class WiggleReader(object):
                 self.file_info = line_info
                 continue
             elif line_type == "bedGraph":
+                # bedGraph is 0-indexed, half open
                 self._reset()
                 self.data_format = "bedGraph"
                 chrom = line_items[0]
-                start = int(line_items[1]) #bedGraph is zero-based half open already. no corrections!
-                stop  = int(line_items[2])
-                val   = float(line_items[3])
+                start = int(line_items[1])
+                stop = int(line_items[2])
+                val = float(line_items[3])
                 return (chrom, start, stop, val)
             elif line_type == "dataHeader":
                 self._reset()
@@ -156,14 +159,16 @@ class WiggleReader(object):
                     self.counter = int(line_info["start"])
                 continue
             elif line_type == "data":
+                # variableStep and fixedStep are 1-indexed
+                # variableStep is also fully-closed
                 if self.data_format == "variableStep":
-                    start = int(line_items[0]) - 1 #move to 0-based index
-                    stop  = start + self.span      #leave alone. this will make half-open interval
-                    val   = float(line_items[1])
+                    start = int(line_items[0]) - 1
+                    stop = start + self.span  #leave alone. this will make half-open interval
+                    val = float(line_items[1])
                     return (self.chrom, start, stop, val)
                 if self.data_format == "fixedStep":
-                    start = self.counter - 1 # move to 0-based index
-                    stop  = start + self.span
-                    val   = float(line.strip())
+                    start = self.counter - 1
+                    stop = start + self.span
+                    val = float(line.strip())
                     self.counter += self.step
                     return (self.chrom, start, stop, val)

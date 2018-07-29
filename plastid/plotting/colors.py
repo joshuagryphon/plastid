@@ -8,6 +8,7 @@ from matplotlib.colors import colorConverter
 
 process_black = "#222222"
 
+
 def get_rgb255(inp):
     """Fetch `r, g, b` values where `r, g, b` are integers ranging from 0 to 255
 
@@ -24,9 +25,10 @@ def get_rgb255(inp):
         Numpy array of `r, g, b` tuples where `r, g, b` take integer values from 0 to 255
     """
     data = colorConverter.to_rgba_array(inp)
-    data = (255 * data[:,  :3]).round().astype(int).ravel()
+    data = (255 * data[:, :3]).round().astype(int).ravel()
 
     return data
+
 
 def get_str_from_rgb(inp):
     """Converts RGB tuples of floats from between 0.0 and 1.0 to RGB hex strings of type #RRGGBB
@@ -47,6 +49,7 @@ def get_str_from_rgb(inp):
     """
     return get_str_from_rgb255((255 * numpy.array(inp)).round().astype(int))
 
+
 def get_str_from_rgb255(inp):
     """Converts RGB tuples of ints from between 0 and 255 to RGB hex strings of type `#RRGGBB`
 
@@ -65,7 +68,9 @@ def get_str_from_rgb255(inp):
     ------
     ValueError if values are out of range
     """
-    err_msg = "Cannot convert malformed tuple to string. Should be (0..255, 0..255, 0..255). Is: (%s)" % ", ".join([str(X) for X in inp])
+    err_msg = "Cannot convert malformed tuple to string. Should be (0..255, 0..255, 0..255). Is: (%s)" % ", ".join(
+        [str(X) for X in inp]
+    )
     try:
         assert len(inp) == 3
         for x in inp:
@@ -79,6 +84,7 @@ def get_str_from_rgb255(inp):
         raise ValueError(err_msg)
     except TypeError:
         raise ValueError(err_msg)
+
 
 def lighten(data, amt=0.10, is255=False):
     """Lighten a vector of colors by fraction `amt` of remaining possible intensity.
@@ -117,6 +123,7 @@ def lighten(data, amt=0.10, is255=False):
 
     return new_colors
 
+
 def darken(data, amt=0.10, is255=False):
     """Darken a vector of colors by fraction `amt` of current intensity.
 
@@ -143,4 +150,3 @@ def darken(data, amt=0.10, is255=False):
     new_colors[:, -1] = data[:, -1]
 
     return new_colors
-

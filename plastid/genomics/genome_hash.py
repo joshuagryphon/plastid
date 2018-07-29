@@ -78,15 +78,16 @@ from plastid.readers.psl import PSL_Reader
 from plastid.genomics.roitools import GenomicSegment, SegmentChain
 from abc import abstractmethod
 
-DEFAULT_BIN_SIZE=20000
+DEFAULT_BIN_SIZE = 20000
 
 
 class AbstractGenomeHash(object):
     """Abstract base class for objects that index |SegmentChains| by genomic position,
     allowing quick lookup for comparisons of overlap or other behavior
     """
+
     @abstractmethod
-    def get_overlapping_features(self,roi,stranded=True):
+    def get_overlapping_features(self, roi, stranded=True):
         """Return list of features that overlap `roi`
         
         Parameters
@@ -113,7 +114,7 @@ class AbstractGenomeHash(object):
         pass
 
     @abstractmethod
-    def __getitem__(self,roi):
+    def __getitem__(self, roi):
         """Return list of features that overlap a region of interest (`roi`)
         on the same strand
         
@@ -162,7 +163,8 @@ class GenomeHash(AbstractGenomeHash):
     Because all features are stored in memory, for large genomes, a |TabixGenomeHash|
     or |BigBedGenomeHash| is much more memory-efficient. 
     """
-    def __init__(self,features=None,binsize=DEFAULT_BIN_SIZE,do_copy=False):
+
+    def __init__(self, features=None, binsize=DEFAULT_BIN_SIZE, do_copy=False):
         """Create a |GenomeHash|
         
          Parameters
@@ -187,17 +189,16 @@ class GenomeHash(AbstractGenomeHash):
         self.binsize = binsize
         features = [] if features is None else features
         self.update(features)
-    
+
     def __repr__(self):
-        return "<%s features=%s binsize=%s chrs=%s>" % (self.__class__.__name__,
-                                                        len(self.feature_dict),
-                                                        self.binsize,
-                                                        self._feature_hash.keys())
+        return "<%s features=%s binsize=%s chrs=%s>" % (
+            self.__class__.__name__, len(self.feature_dict), self.binsize, self._feature_hash.keys()
+        )
 
     def __str__(self):
         return repr(self)
-    
-    def update(self,features):
+
+    def update(self, features):
         """Add features to the |GenomeHash|
         
         Parameters
@@ -210,9 +211,9 @@ class GenomeHash(AbstractGenomeHash):
         except ValueError:
             # if empty dictionary
             start = 0
-        
-        if isinstance(features,dict):
-            for n,(feature_name,feature) in enumerate(features.items()):
+
+        if isinstance(features, dict):
+            for n, (feature_name, feature) in enumerate(features.items()):
                 feature_id = start + n
                 self._id_to_names[feature_id] = feature_name
                 if self.copy == True:
@@ -220,7 +221,7 @@ class GenomeHash(AbstractGenomeHash):
                 else:
                     self.feature_dict[feature_id] = feature
         else:
-            for n,feature in enumerate(features):
+            for n, feature in enumerate(features):
                 feature_id = start + n
                 feature_name = feature.get_name()
                 self._id_to_names[feature_id] = feature_name
@@ -228,9 +229,9 @@ class GenomeHash(AbstractGenomeHash):
                     self.feature_dict[feature_id] = copy.deepcopy(feature)
                 else:
                     self.feature_dict[feature_id] = feature
-        
+
         self._feature_hash = self._make_hash()
-        
+
     def _make_hash(self):
         """Create the |GenomeHash|
            
@@ -241,8 +242,8 @@ class GenomeHash(AbstractGenomeHash):
         """
         my_hash = {}
         for feature_id, feature in self.feature_dict.items():
-            bins   = self._get_hash_bins(feature)
-            chrom  = feature.spanning_segment.chrom
+            bins = self._get_hash_bins(feature)
+            chrom = feature.spanning_segment.chrom
             strand = feature.spanning_segment.strand
             if chrom not in my_hash.keys():
                 my_hash[chrom] = {}
@@ -254,8 +255,8 @@ class GenomeHash(AbstractGenomeHash):
                 except KeyError:
                     my_hash[chrom][strand][b] = [feature_id]
         return my_hash
-        
-    def _get_hash_bins(self,roi):
+
+    def _get_hash_bins(self, roi):
         """Returns a list of genome bins that a given roi falls into
         
         Parameters
@@ -275,9 +276,9 @@ class GenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        if isinstance(roi,GenomicSegment):
+        if isinstance(roi, GenomicSegment):
             rois = [roi]
-        elif isinstance(roi,SegmentChain):
+        elif isinstance(roi, SegmentChain):
             rois = roi
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
@@ -285,11 +286,11 @@ class GenomeHash(AbstractGenomeHash):
         for seg in rois:
             bin_start = seg.start // self.binsize
             bin_end = seg.end // self.binsize
-            bins.extend(range(bin_start,bin_end+1))
+            bins.extend(range(bin_start, bin_end + 1))
 
         return list(set(bins))
-    
-    def _get_nearby_feature_ids(self,roi,stranded=True):
+
+    def _get_nearby_feature_ids(self, roi, stranded=True):
         """Return unique IDs of |SegmentChain| s in all the bins occupied by `roi`
         
         Parameters
@@ -313,9 +314,9 @@ class GenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not |GenomicSegment| or |SegmentChain|
         """
-        if isinstance(roi,GenomicSegment):
+        if isinstance(roi, GenomicSegment):
             iv = roi
-        elif isinstance(roi,SegmentChain):
+        elif isinstance(roi, SegmentChain):
             iv = roi.spanning_segment
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
@@ -325,30 +326,30 @@ class GenomeHash(AbstractGenomeHash):
             nearby_hash = self._feature_hash[iv.chrom][iv.strand]
         except KeyError:
             nearby_hash = {}
-        
+
         for b in feature_ranges:
             try:
                 nearby_feature_ids.extend(nearby_hash[b])
             except KeyError:
                 pass
-        
+
         if stranded is False:
-            other_strand = "+" if iv.strand == "-" else "-" if iv.strand == "+" else "." #FIXED
+            other_strand = "+" if iv.strand == "-" else "-" if iv.strand == "+" else "."
             try:
                 nearby_hash = self._feature_hash[iv.chrom][other_strand]
             except KeyError:
                 nearby_hash = {}
-        
+
             for b in feature_ranges:
                 try:
                     nearby_feature_ids.extend(nearby_hash[b])
                 except KeyError:
                     pass
-        
+
         nearby_feature_ids = set(nearby_feature_ids)
         return nearby_feature_ids
 
-    def get_nearby_features(self,roi,stranded=True):
+    def get_nearby_features(self, roi, stranded=True):
         """Return list of features in all the bins occupied by `roi`
         
         Parameters
@@ -372,10 +373,10 @@ class GenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        nearby_feature_ids = self._get_nearby_feature_ids(roi,stranded=stranded)
+        nearby_feature_ids = self._get_nearby_feature_ids(roi, stranded=stranded)
         return [self.feature_dict[X] for X in nearby_feature_ids]
 
-    def get_nearby_feature_names(self,roi,stranded=True):
+    def get_nearby_feature_names(self, roi, stranded=True):
         """Return list of the names of features in all the bins occupied by `roi`
         
         Parameters
@@ -398,10 +399,10 @@ class GenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        nearby_feature_ids = self._get_nearby_feature_ids(roi,stranded=stranded)
+        nearby_feature_ids = self._get_nearby_feature_ids(roi, stranded=stranded)
         return [self._id_to_names[X] for X in nearby_feature_ids]
 
-    def get_overlapping_features(self,roi,stranded=True):
+    def get_overlapping_features(self, roi, stranded=True):
         """Return list of features overlapping `roi`.
         
         Parameters
@@ -425,7 +426,7 @@ class GenomeHash(AbstractGenomeHash):
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
         nearby_features = self.get_nearby_features(roi, stranded=stranded)
-        if isinstance(roi,GenomicSegment):
+        if isinstance(roi, GenomicSegment):
             roi = SegmentChain(roi)
 
         if stranded == False:
@@ -433,8 +434,8 @@ class GenomeHash(AbstractGenomeHash):
         else:
             fn = roi.overlaps
         return [X for X in nearby_features if fn(X) == True]
-    
-    def __getitem__(self,roi):
+
+    def __getitem__(self, roi):
         """Return list of features that overlap a region of interest (roi),
         on same strand.
         
@@ -459,8 +460,8 @@ class GenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| |SegmentChain|
         """
-        return self.get_overlapping_features(roi,stranded=True)
-                
+        return self.get_overlapping_features(roi, stranded=True)
+
 
 class BigBedGenomeHash(AbstractGenomeHash):
     """BigBedGenomeHash(*filenames,return_type=SegmentChain)
@@ -482,8 +483,8 @@ class BigBedGenomeHash(AbstractGenomeHash):
     bigbedreaders : |BigBedReader|
        |BigBedReaders| connecting to BigBed file(s) 
     """
-    
-    def __init__(self,*filenames,**kwargs): #,base_record_format="III",return_type=None,cache_depth=5):
+
+    def __init__(self, *filenames, **kwargs):
         """Create a |BigBedGenomeHash|
         
         Parameters
@@ -495,17 +496,17 @@ class BigBedGenomeHash(AbstractGenomeHash):
             Class of object to return (Default: |SegmentChain|)
         """
         from plastid.readers.bigbed import BigBedReader
-        return_type = kwargs.get("return_type",SegmentChain)
-        
+        return_type = kwargs.get("return_type", SegmentChain)
+
         filenames = list(multiopen(filenames))
         for filename in filenames:
-            if not isinstance(filename,str):
-                raise ValueError("`filename` must be a 'str'. Found a '%s'." % type(filename)) 
-        
+            if not isinstance(filename, str):
+                raise ValueError("`filename` must be a 'str'. Found a '%s'." % type(filename))
+
         self.filenames = filenames
-        self.bigbedreaders = [BigBedReader(X,return_type=return_type) for X in filenames]
-    
-    def get_overlapping_features(self,roi,stranded=True):
+        self.bigbedreaders = [BigBedReader(X, return_type=return_type) for X in filenames]
+
+    def get_overlapping_features(self, roi, stranded=True):
         """Return list of features overlapping `roi`
         
         Parameters
@@ -530,11 +531,11 @@ class BigBedGenomeHash(AbstractGenomeHash):
         """
         ltmp = []
         for reader in self.bigbedreaders:
-            ltmp.extend(reader.get(roi,stranded=stranded))
-            
+            ltmp.extend(reader.get(roi, stranded=stranded))
+
         return ltmp
 
-    def __getitem__(self,roi,stranded=True):
+    def __getitem__(self, roi, stranded=True):
         """Return list of features that overlap the region of interest (roi)
         
         Parameters
@@ -557,8 +558,8 @@ class BigBedGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return self.get_overlapping_features(roi,stranded=stranded)
-    
+        return self.get_overlapping_features(roi, stranded=stranded)
+
 
 class TabixGenomeHash(AbstractGenomeHash):
     """
@@ -584,14 +585,15 @@ class TabixGenomeHash(AbstractGenomeHash):
     tabix_readers : list of :py:class:`pysam.Tabixfile`
        `Pysam`_ interfaces to underlying data files 
     """
-    
-    _READERS = { "GTF2" : GTF2_Reader,
-                 "GFF3" : GFF3_Reader,
-                 "BED"  : BED_Reader,
-                 "PSL"  : PSL_Reader,
-                }
-    
-    def __init__(self,*filenames,**kwargs): #data_format=None,printer=None):
+
+    _READERS = {
+        "GTF2": GTF2_Reader,
+        "GFF3": GFF3_Reader,
+        "BED": BED_Reader,
+        "PSL": PSL_Reader,
+    }
+
+    def __init__(self, *filenames, **kwargs):
         """Create a |BigBedGenomeHash|
         
         Parameters
@@ -604,21 +606,23 @@ class TabixGenomeHash(AbstractGenomeHash):
             `'GTF2'`,`'GFF3'`,`'BED'`,`'PSL'` (Default: `GTF2`)
         """
         from pysam import Tabixfile
-        if len(filenames) == 1 and isinstance(filenames[0],list):
+        if len(filenames) == 1 and isinstance(filenames[0], list):
             filenames = filenames[0]
-            
+
         self.filenames = list(multiopen(filenames))
-        self.printer = kwargs.get("printer",NullWriter())
-        data_format  = kwargs.get("data_format","GTF2")
+        self.printer = kwargs.get("printer", NullWriter())
+        data_format = kwargs.get("data_format", "GTF2")
         try:
             self._reader_class = TabixGenomeHash._READERS[data_format]
         except ValueError:
-            msg = "Supported file formats for TabixGenomeHash are: %s" % ", ".join(sorted(TabixGenomeHash._READERS.keys()))
+            msg = "Supported file formats for TabixGenomeHash are: %s" % ", ".join(
+                sorted(TabixGenomeHash._READERS.keys())
+            )
             self.printer.write(msg)
             raise ValueError(msg)
-        
+
         self.tabix_readers = [Tabixfile(X) for X in self.filenames]
-    
+
     def __del__(self):
         try:
             for reader in self.tabix_readers:
@@ -628,8 +632,8 @@ class TabixGenomeHash(AbstractGenomeHash):
                     pass
         except:
             pass
-            
-    def get_overlapping_features(self,roi,stranded=True):
+
+    def get_overlapping_features(self, roi, stranded=True):
         """Return list of features overlapping `roi`
         
         Parameters
@@ -651,9 +655,9 @@ class TabixGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        return list(self.__getitem__(roi,stranded=stranded))
+        return list(self.__getitem__(roi, stranded=stranded))
 
-    def __getitem__(self,roi,stranded=True):
+    def __getitem__(self, roi, stranded=True):
         """Return list of features that overlap the region of interest (roi).
         
         Parameters
@@ -676,23 +680,22 @@ class TabixGenomeHash(AbstractGenomeHash):
         TypeError
             if `roi` is not a |GenomicSegment| or |SegmentChain|
         """
-        if isinstance(roi,GenomicSegment):
-            #roi_chain = SegmentChain(roi)
+        if isinstance(roi, GenomicSegment):
             roi_seg = roi
             roi_chain = SegmentChain(roi)
-        elif isinstance(roi,SegmentChain):
+        elif isinstance(roi, SegmentChain):
             roi_chain = roi
             roi_seg = roi.spanning_segment
         else:
             raise TypeError("Query feature must be a GenomicSegment or SegmentChain")
-        
+
         chrom = roi_seg.chrom
         feature_text = "\n".join(["\n".join(list(R.fetch(chrom,
                                                          X.start,
                                                          X.end))) \
                                                          for R in self.tabix_readers \
                                                          for X in roi_chain])
-            
+
         features = (self._reader_class(cStringIO.StringIO(feature_text)))
         if stranded == True:
             features = [X for X in features if roi_chain.overlaps(X)]

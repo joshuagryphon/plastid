@@ -85,14 +85,13 @@ import pysam
 from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning,\
                                              DataWarning, FileFormatWarning, filterwarnings
 from plastid.util.services.decorators import deprecated
-#from plastid.genomics.roitools import SegmentChain, Transcript
 from plastid.util.io.openers import opener, NullWriter
 from plastid.util.io.filters import CommentReader
 from plastid.genomics.roitools import Transcript, SegmentChain
 from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
                                 _DEFAULT_GFF3_EXON_TYPES,\
                                 _DEFAULT_GFF3_CDS_TYPES
-                                
+
 #===============================================================================
 # INDEX: Constants used in parsers below
 #===============================================================================
@@ -136,28 +135,20 @@ GFF_SORT_MESSAGE = \
 See http://www.htslib.org/doc/tabix.html for download and documentation of
 tabix and bgzip."""
 
-
-
 _MASK_PARSER_TITLE = "mask file options (optional)"
 _MASK_PARSER_DESCRIPTION = \
 """Add mask file(s) that annotate regions that should be excluded from analyses
 (e.g. repetitive genomic regions)."""
 
-
-
 _DEFAULT_SEQUENCE_PARSER_TITLE = "sequence options"
 _DEFAULT_SEQUENCE_PARSER_DESCRIPTION = ""
 
-
-
 _DEFAULT_PLOTTING_TITLE = "Plotting options"
-
-
-
 
 #===============================================================================
 # INDEX: Base class for parsers
 #===============================================================================
+
 
 class Parser(object):
     """Base class for argument parser factories used below
@@ -176,8 +167,8 @@ class Parser(object):
         list of parameter names that should be disabled from parser,
         without preceding dashes    
     """
-    
-    def __init__(self,groupname=None,prefix="",disabled=None,**kwargs):
+
+    def __init__(self, groupname=None, prefix="", disabled=None, **kwargs):
         """Create a parser
         
         Parameters
@@ -197,11 +188,13 @@ class Parser(object):
         self.prefix = prefix
         self.disabled = [] if disabled is None else disabled
         self.groupname = groupname
-        
+
         # define in __init__ of subclass
         self.arguments = []
-    
-    def get_parser(self,parser=None,groupname=None,arglist=None,title=None,description=None,**kwargs):
+
+    def get_parser(
+            self, parser=None, groupname=None, arglist=None, title=None, description=None, **kwargs
+    ):
         """Create an populate :class:`argparse.ArgumentParser` with arguments
         
         Parameters
@@ -247,19 +240,20 @@ class Parser(object):
 
         if parser is None:
             if groupname is None:
-                parser = argparse.ArgumentParser(description=description,add_help=False,**kwargs)
+                parser = argparse.ArgumentParser(description=description, add_help=False, **kwargs)
             else:
-                parser = argparse.ArgumentParser(add_help=False,**kwargs)
-        
+                parser = argparse.ArgumentParser(add_help=False, **kwargs)
+
         addto = parser
         if groupname is not None:
-            addto = parser.add_argument_group(title=title,description=description)
-            
+            addto = parser.add_argument_group(title=title, description=description)
+
         arglist = self.arguments if arglist is None else arglist
-        for arg_name, arg_opts in filter(lambda x: x[0] not in self.disabled,arglist):
-            addto.add_argument("--%s%s" % (self.prefix,arg_name),**arg_opts)
-            
+        for arg_name, arg_opts in filter(lambda x: x[0] not in self.disabled, arglist):
+            addto.add_argument("--%s%s" % (self.prefix, arg_name), **arg_opts)
+
         return parser
+
 
 #===============================================================================
 # INDEX: Alignment & count file parser
@@ -294,11 +288,14 @@ class AlignmentParser(Parser):
     allow_mapping : bool, optional
         Enable/disable user configuration of mapping rules (default: True)    
     """
-    
-    def __init__(self,prefix="",disabled=None,
-                 input_choices=("BAM","bigwig","bowtie","wiggle"),
-                 groupname="alignment_options",
-                 allow_mapping=True):
+    def __init__(
+            self,
+            prefix="",
+            disabled=None,
+            input_choices=("BAM", "bigwig", "bowtie", "wiggle"),
+            groupname="alignment_options",
+            allow_mapping=True
+    ): # yapf: disable
         """Create a parser for read alignments and/or quantitative data
         
         Parameters
@@ -321,13 +318,13 @@ class AlignmentParser(Parser):
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
-        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        Parser.__init__(self, groupname=groupname, prefix=prefix, disabled=disabled)
         self.input_choices = input_choices
         self.allow_mapping = allow_mapping
-        
+
         self.bamfuncs = {}
         self.bowtiefuncs = {}
-        
+
         self.arguments = [
             ("count_files"     , dict(type=str,
                                       default=[],
@@ -343,124 +340,177 @@ class AlignmentParser(Parser):
             ("sum"              , dict(type=float,default=None,
                                        help="Sum used in normalization of counts and RPKM/RPNT calculations "+\
                                             "(Default: total mapped reads/counts in dataset)")),
-                          
+
             ]
-        
+
         length_ops = [
-            ("min_length"       , dict(type=int,
-                                       default=25,
-                                       metavar="N",
-                                       help="Minimum read length required to be included"+
-                                            " (BAM & bowtie files only. Default: %(default)s)")),
-            ("max_length"       , dict(type=int,
-                                       default=100,
-                                       metavar="N",
-                                       help="Maximum read length permitted to be included"+
-                                            " (BAM & bowtie files only. Default: %(default)s)")),
-            ]
+            (
+                "min_length",
+                dict(
+                    type=int,
+                    default=25,
+                    metavar="N",
+                    help="Minimum read length required to be included" +
+                    " (BAM & bowtie files only. Default: %(default)s)"
+                )
+            ),
+            (
+                "max_length",
+                dict(
+                    type=int,
+                    default=100,
+                    metavar="N",
+                    help="Maximum read length permitted to be included" +
+                    " (BAM & bowtie files only. Default: %(default)s)"
+                )
+            ),
+        ]
 
         big_genome = [
-            ("big_genome"       , dict(action="store_true",
-                                       default=False,
-                                       help="Use slower but memory-efficient implementation "+
-                                            "for big genomes or for memory-limited computers. For wiggle & bowtie files only.")),
-            ]
+            (
+                "big_genome",
+                dict(
+                    action="store_true",
+                    default=False,
+                    help="Use slower but memory-efficient implementation " +
+                    "for big genomes or for memory-limited computers. For wiggle & bowtie files only."
+                )
+            ),
+        ]
 
         maxmem = [
-            ("maxmem"           , dict(type=float,default=0,
-                                       help="Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)")), 
-            ]
-        
+            (
+                "maxmem",
+                dict(
+                    type=float,
+                    default=0,
+                    help=
+                    "Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)"
+                )
+            ),
+        ]
+
         # filetype-specific options
         self.filetype_options = {
-             "BAM"    : length_ops,
-             "bowtie" : length_ops + big_genome,
-             "wiggle" : big_genome,
-             "bigwig" : maxmem,
-                                 
-             }
+            "BAM": length_ops,
+            "bowtie": length_ops + big_genome,
+            "wiggle": big_genome,
+            "bigwig": maxmem,
+        }
 
         if self.allow_mapping == False:
             self.map_rules = []
             self.map_ops = []
         else:
             map_rules = [
-                ("fiveprime_variable" , dict(action="store_const",
-                                             const="fiveprime_variable",
-                                             dest="%smapping" % prefix,
-                                             help="Map read alignment to a variable offset from 5' position of read, "+
-                                                  "with offset determined by read length. Requires `--offset` below")),
-                ("fiveprime"        , dict(action="store_const",
-                                            const="fiveprime",
-                                            dest="%smapping" % prefix,
-                                            help="Map read alignment to 5' position.")),
-                ("threeprime"       , dict(action="store_const",
-                                            const="threeprime",
-                                            dest="%smapping" % prefix,
-                                            help="Map read alignment to 3' position")),
-                ("center"           , dict(action="store_const",
-                                            const="center",
-                                            dest="%smapping" % prefix,
-                                            help="Subtract N positions from each end of read, "+
-                                                 "and add 1/(length-N), to each remaining position, "+
-                                                 "where N is specified by `--nibble`")),
-                ]
+                (
+                    "fiveprime_variable",
+                    dict(
+                        action="store_const",
+                        const="fiveprime_variable",
+                        dest="%smapping" % prefix,
+                        help="Map read alignment to a variable offset from 5' position of read, " +
+                        "with offset determined by read length. Requires `--offset` below"
+                    )
+                ),
+                (
+                    "fiveprime",
+                    dict(
+                        action="store_const",
+                        const="fiveprime",
+                        dest="%smapping" % prefix,
+                        help="Map read alignment to 5' position."
+                    )
+                ),
+                (
+                    "threeprime",
+                    dict(
+                        action="store_const",
+                        const="threeprime",
+                        dest="%smapping" % prefix,
+                        help="Map read alignment to 3' position"
+                    )
+                ),
+                (
+                    "center",
+                    dict(
+                        action="store_const",
+                        const="center",
+                        dest="%smapping" % prefix,
+                        help="Subtract N positions from each end of read, " +
+                        "and add 1/(length-N), to each remaining position, " +
+                        "where N is specified by `--nibble`"
+                    )
+                ),
+            ]
             map_ops = [
-                ("offset"           , dict(default=0,
-                                            metavar="OFFSET",
-                                            help="For `--fiveprime` or `--threeprime`, provide an integer "+
-                                              "representing the offset into the read, "+
-                                              "starting from either the 5\' or 3\' end, at which data "+
-                                              "should be plotted. For `--fiveprime_variable`, "+
-                                              "provide the filename of a two-column tab-delimited text "+
-                                              "file, in which first column represents read length or the "+
-                                              "special keyword `'default'`, and the second column represents "+
-                                              "the offset from the five prime end of that read length at which the read should be mapped. (Default: %(default)s)")),
-                ("nibble"           , dict(type=int,
-                                            default=0,
-                                            metavar="N",
-                                            help="For use with `--center` only. nt to remove from each "+
-                                                 "end of read before mapping (Default: %(default)s)")),
-                ]
-            
+                (
+                    "offset",
+                    dict(
+                        default=0,
+                        metavar="OFFSET",
+                        help="For `--fiveprime` or `--threeprime`, provide an integer " +
+                        "representing the offset into the read, " +
+                        "starting from either the 5\' or 3\' end, at which data " +
+                        "should be plotted. For `--fiveprime_variable`, " +
+                        "provide the filename of a two-column tab-delimited text " +
+                        "file, in which first column represents read length or the " +
+                        "special keyword `'default'`, and the second column represents " +
+                        "the offset from the five prime end of that read length at which the read should be mapped. (Default: %(default)s)"
+                    )
+                ),
+                (
+                    "nibble",
+                    dict(
+                        type=int,
+                        default=0,
+                        metavar="N",
+                        help="For use with `--center` only. nt to remove from each " +
+                        "end of read before mapping (Default: %(default)s)"
+                    )
+                ),
+            ]
+
             for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_rules"):
                 reg_name = epoint.name
                 pdict = epoint.load()
                 if "name" in pdict:
                     reg_name = pdict.pop("name")
-                    
-                pdict["const"]  = reg_name
+
+                pdict["const"] = reg_name
                 pdict["action"] = "store_const"
-                pdict["dest"]   = "%smapping" % self.prefix
-                
-                bamfunc = pdict.get("bamfunc",None)
-                bowtiefunc = pdict.get("bowtiefunc",None)
-                    
+                pdict["dest"] = "%smapping" % self.prefix
+
+                bamfunc = pdict.get("bamfunc", None)
+                bowtiefunc = pdict.get("bowtiefunc", None)
+
                 if bamfunc is not None:
                     self.bamfuncs[reg_name] = bamfunc
                     pdict.pop("bamfunc")
-                    
+
                 if bowtiefunc is not None:
                     self.bowtiefuncs[reg_name] = bowtiefunc
                     pdict.pop("bowtiefunc")
-                        
-                map_rules.append((reg_name,pdict))
-            
+
+                map_rules.append((reg_name, pdict))
+
             for epoint in pkg_resources.iter_entry_points(group="plastid.mapping_options"):
                 reg_name = epoint.name
                 pdict = epoint.load()
                 if "name" in pdict:
                     reg_name = pdict.pop("name")
-                    
-                map_ops.append((reg_name,pdict))
-            
+
+                map_ops.append((reg_name, pdict))
+
             self.map_rules = map_rules
             self.map_ops = map_ops
-    
-    def get_parser(self,
-                   title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
-                   description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
-                   **kwargs):
+
+    def get_parser(
+            self,
+            title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
+            description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
+            **kwargs
+    ):
         """Return an :py:class:`~argparse.ArgumentParser` that opens
         alignment (`BAM`_,  or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
@@ -489,40 +539,42 @@ class AlignmentParser(Parser):
         Returns
         -------
         :class:`argparse.ArgumentParser`
-        """        
-        parser = Parser.get_parser(self,title=title,description=description,**kwargs)
+        """
+        parser = Parser.get_parser(self, title=title, description=description, **kwargs)
         extra_args = []
         for k in self.input_choices:
-            arglist = self.filetype_options.get(k,[])
+            arglist = self.filetype_options.get(k, [])
             for arg in arglist:
                 if arg not in extra_args:
                     extra_args.append(arg)
-                
+
         if len(extra_args) > 0:
             # use mutator function- add new parser to `parser`
-            Parser.get_parser(self,
-                              parser=parser,
-                              arglist=extra_args,title=title,description=description)
-        
+            Parser.get_parser(
+                self, parser=parser, arglist=extra_args, title=title, description=description
+            )
+
         if self.allow_mapping == True:
-            Parser.get_parser(self,
-                              parser=parser,
-                              groupname="mapping_options",
-                              arglist=self.map_rules,
-                              title=_MAPPING_RULE_TITLE,
-                              description=_MAPPING_RULE_DESCRIPTION,
-                              )
-            Parser.get_parser(self,
-                              parser=parser,
-                              groupname="sub_options",
-                              arglist=self.map_ops,
-                              title=_MAPPING_OPTION_TITLE,
-                              description=_MAPPING_OPTION_DESCRIPTION,
-                              )
-        
+            Parser.get_parser(
+                self,
+                parser=parser,
+                groupname="mapping_options",
+                arglist=self.map_rules,
+                title=_MAPPING_RULE_TITLE,
+                description=_MAPPING_RULE_DESCRIPTION,
+            )
+            Parser.get_parser(
+                self,
+                parser=parser,
+                groupname="sub_options",
+                arglist=self.map_ops,
+                title=_MAPPING_OPTION_TITLE,
+                description=_MAPPING_OPTION_DESCRIPTION,
+            )
+
         return parser
-    
-    def get_genome_array_from_args(self,args,printer=None):
+
+    def get_genome_array_from_args(self, args, printer=None):
         """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
         from arguments parsed by :py:func:`get_alignment_file_parser`
         
@@ -547,29 +599,29 @@ class AlignmentParser(Parser):
                                                    five_prime_map,  \
                                                    three_prime_map, \
                                                    center_map,      \
-                                                   variable_five_prime_map        
-        
-        args = PrefixNamespaceWrapper(args,self.prefix)
+                                                   variable_five_prime_map
+
+        args = PrefixNamespaceWrapper(args, self.prefix)
         disabled = self.disabled
         map_rule = args.mapping
-    
+
         if printer is None:
             printer = NullWriter()
-        
+
         # require at least one countfile
         if len(args.count_files) == 0:
             printer.write("Please include at least one input file.")
             sys.exit(1)
-        
+
         # require mapping rules unless wiggle
-        if map_rule is None and args.countfile_format in ("BAM","bowtie"):
+        if map_rule is None and args.countfile_format in ("BAM", "bowtie"):
             printer.write("Please specify a read mapping rule.")
             sys.exit(1)
-        
+
         if "countfile_format" not in disabled:
-            
-            if args.countfile_format in ("BAM","CRAM"):
-                count_files = [pysam.Samfile(X,"rb") for X in args.count_files]
+
+            if args.countfile_format in ("BAM", "CRAM"):
+                count_files = [pysam.Samfile(X, "rb") for X in args.count_files]
                 try:
                     ga = BAMGenomeArray(count_files)
                 except ValueError:
@@ -580,9 +632,9 @@ class AlignmentParser(Parser):
                     printer.write("")
                     printer.write("Exiting.")
                     sys.exit(1)
-                    
-                size_filter = SizeFilterFactory(min=args.min_length,max=args.max_length)
-                ga.add_filter("size:%s-%s" % (args.min_length,args.max_length) ,size_filter)
+
+                size_filter = SizeFilterFactory(min=args.min_length, max=args.max_length)
+                ga.add_filter("size:%s-%s" % (args.min_length, args.max_length), size_filter)
                 if map_rule == "fiveprime":
                     map_function = FivePrimeMapFactory(int(args.offset))
                 elif map_rule == "threeprime":
@@ -591,23 +643,27 @@ class AlignmentParser(Parser):
                     map_function = CenterMapFactory(args.nibble)
                 elif map_rule == "fiveprime_variable":
                     if str(args.offset) == "0":
-                        printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
+                        printer.write(
+                            "Please specify a filename to use for fiveprime variable offsets in --offset."
+                        )
                         sys.exit(1)
                     offset_dict = _parse_variable_offset_file(CommentReader(open(args.offset)))
                     map_function = VariableFivePrimeMapFactory(offset_dict)
                 elif map_rule in self.bamfuncs:
-                    map_function = functools.partial(self.bamfuncs[map_rule],args=args)
+                    map_function = functools.partial(self.bamfuncs[map_rule], args=args)
                 else:
-                    printer.write("Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule)
+                    printer.write(
+                        "Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule
+                    )
                     sys.exit(1)
                 ga.set_mapping(map_function)
-                
+
             elif args.countfile_format == "bigwig":
                 ga = BigWigGenomeArray(maxmem=args.maxmem)
                 for align_file in args.count_files:
-                    ga.add_from_bigwig("%s_fw.bw" % align_file,"+")
-                    ga.add_from_bigwig("%s_rc.bw" % align_file,"-")
-            
+                    ga.add_from_bigwig("%s_fw.bw" % align_file, "+")
+                    ga.add_from_bigwig("%s_rc.bw" % align_file, "-")
+
             # wiggle/bedGraph and bowtie
             else:
                 if "big_genome" not in disabled and args.big_genome == True:
@@ -620,21 +676,25 @@ class AlignmentParser(Parser):
                     for align_file in args.count_files:
                         printer.write("Opening wiggle files %s ..." % align_file)
                         with open("%s_fw.wig" % align_file) as fh:
-                            ga.add_from_wiggle(fh,"+")
+                            ga.add_from_wiggle(fh, "+")
                         with open("%s_rc.wig" % align_file) as fh:
-                            ga.add_from_wiggle(fh,"-")
+                            ga.add_from_wiggle(fh, "-")
 
                 # bowtie
                 elif args.countfile_format == "bowtie":
-                    trans_args = { "nibble" : int(args.nibble) }
+                    trans_args = {"nibble": int(args.nibble)}
                     if map_rule == "fiveprime_variable":
                         transformation = variable_five_prime_map
                         if str(args.offset) == "0":
-                            printer.write("Please specify a filename to use for fiveprime variable offsets in --offset.")
+                            printer.write(
+                                "Please specify a filename to use for fiveprime variable offsets in --offset."
+                            )
                             sys.exit(1)
                         else:
                             with open(args.offset) as myfile:
-                                trans_args["offset"] = _parse_variable_offset_file(CommentReader(myfile))
+                                trans_args["offset"] = _parse_variable_offset_file(
+                                    CommentReader(myfile)
+                                )
                     else:
                         trans_args["offset"] = int(args.offset)
                         if map_rule == "fiveprime":
@@ -645,32 +705,42 @@ class AlignmentParser(Parser):
                             transformation = center_map
                         elif map_rule == "center":
                             transformation = center_map
-                        elif  map_rule in self.bowtiefuncs:
+                        elif map_rule in self.bowtiefuncs:
                             transformation = self.bowtiefuncs[map_rule]
                             trans_args["args"] = args
                         else:
-                            printer.write("Mapping rule '%s' not implemented for bowtie input. Exiting." % map_rule)
+                            printer.write(
+                                "Mapping rule '%s' not implemented for bowtie input. Exiting." %
+                                map_rule
+                            )
                             sys.exit(1)
-                
+
                     for infile in args.count_files:
                         with opener(infile) as my_file:
-                            ga.add_from_bowtie(my_file,transformation,min_length=args.min_length,max_length=args.max_length,**trans_args)
-                
+                            ga.add_from_bowtie(
+                                my_file,
+                                transformation,
+                                min_length=args.min_length,
+                                max_length=args.max_length,
+                                **trans_args
+                            )
+
         printer.write("Counted %s total reads." % ga.sum())
-        
+
         if "sum" not in disabled and args.sum is not None:
             ga.set_sum(args.sum)
-            
+
         if "normalize" not in disabled and args.normalize == True:
             printer.write("Normalizing to reads per million.")
             ga.set_normalize(True)
-        
+
         return ga
 
 
 #===============================================================================
 # INDEX: Annotation file parser
 #===============================================================================
+
 
 class AnnotationParser(Parser):
     """Parser for annotation files in various formats
@@ -695,13 +765,14 @@ class AnnotationParser(Parser):
     allow_mapping : bool, optional
         Enable/disable user configuration of mapping rules (default: True)    
     """
-    
-    def __init__(self,
-                 prefix="",
-                 disabled=None,
-                 groupname="annotation_options",
-                 input_choices=("BED","BigBed","GTF2","GFF3")
-                ):
+
+    def __init__(
+            self,
+            prefix="",
+            disabled=None,
+            groupname="annotation_options",
+            input_choices=("BED", "BigBed", "GTF2", "GFF3")
+    ):
         """Create a parser for genomic features in an annotation file
         
         Parameters
@@ -724,26 +795,59 @@ class AnnotationParser(Parser):
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
-        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        Parser.__init__(self, groupname=groupname, prefix=prefix, disabled=disabled)
         self.input_choices = input_choices
         self.arguments = [
-                ("annotation_files"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),# | psl]",
-                                              type=str,nargs="+",default=[],
-                                              help="Zero or more annotation files (max 1 file if BigBed)")),                               
-                ("annotation_format"   , dict(choices=input_choices,
-                                              default="GTF2",
-                                              help="Format of %sannotation_files (Default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file." % prefix)),    
-                ("add_three"           , dict(default=False,
-                                              action="store_true",
-                                              help="If supplied, coding regions will be extended by 3 nucleotides at their 3\' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS.")),
-                ("tabix"               , dict(default=False,
-                                              action="store_true",
-                                              help="%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files." % prefix)),
-                ("sorted"              , dict(default=False,
-                                              action="store_true",
-                                              help="%sannotation_files are sorted by chromosomal position (Default: False)" % prefix)),
-            ]
-        
+            (
+                "annotation_files",
+                dict(
+                    metavar="infile.[%s]" % " | ".join(input_choices),  # | psl]",
+                    type=str,
+                    nargs="+",
+                    default=[],
+                    help="Zero or more annotation files (max 1 file if BigBed)"
+                )
+            ),
+            (
+                "annotation_format",
+                dict(
+                    choices=input_choices,
+                    default="GTF2",
+                    help=
+                    "Format of %sannotation_files (Default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file."
+                    % prefix
+                )
+            ),
+            (
+                "add_three",
+                dict(
+                    default=False,
+                    action="store_true",
+                    help=
+                    "If supplied, coding regions will be extended by 3 nucleotides at their 3\' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS."
+                )
+            ),
+            (
+                "tabix",
+                dict(
+                    default=False,
+                    action="store_true",
+                    help=
+                    "%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files."
+                    % prefix
+                )
+            ),
+            (
+                "sorted",
+                dict(
+                    default=False,
+                    action="store_true",
+                    help="%sannotation_files are sorted by chromosomal position (Default: False)" %
+                    prefix
+                )
+            ),
+        ]
+
         # options for specific filetypes
         self.filetype_options = {
             "BED" : [("bed_extra_columns", dict(default=0,
@@ -753,8 +857,8 @@ class AnnotationParser(Parser):
                     ],
             "BigBed" : [
                 ("maxmem"           , dict(type=float,default=0,
-                                           help="Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)")), 
-                        
+                                           help="Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)")),
+
                         ],
             "GFF3" : [("gff_transcript_types", dict(type=str,
                                                     default=_DEFAULT_GFF3_TRANSCRIPT_TYPES,
@@ -772,10 +876,12 @@ class AnnotationParser(Parser):
                      ]
              }
 
-    def get_parser(self,
-                   title=_DEFAULT_ANNOTATION_PARSER_TITLE,
-                   description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
-                   **kwargs):
+    def get_parser(
+            self,
+            title=_DEFAULT_ANNOTATION_PARSER_TITLE,
+            description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
+            **kwargs
+    ):
         """Return an :class:`~argparse.ArgumentParser` that opens annotation files.
          
         Parameters
@@ -792,21 +898,24 @@ class AnnotationParser(Parser):
         Returns
         -------
         :class:`argparse.ArgumentParser`
-        """        
-        parser = Parser.get_parser(self,title=title,description=description,**kwargs)
-        
+        """
+        parser = Parser.get_parser(self, title=title, description=description, **kwargs)
+
         for k in self.input_choices:
             arglist = self.filetype_options.get(k)
             if arglist is not None:
                 # use mutator function- add new parser to `parser`
-                Parser.get_parser(self,
-                                  parser=parser,
-                                  groupname="%s_%s_options" % (self.groupname,k),
-                                  title="%s-specific options" % k,arglist=arglist)
-        
-        return parser           
+                Parser.get_parser(
+                    self,
+                    parser=parser,
+                    groupname="%s_%s_options" % (self.groupname, k),
+                    title="%s-specific options" % k,
+                    arglist=arglist
+                )
 
-    def get_transcripts_from_args(self,args,printer=None,return_type=None,require_sort=False):
+        return parser
+
+    def get_transcripts_from_args(self, args, printer=None, return_type=None, require_sort=False):
         """Return a generator of |Transcript| objects from arguments parsed by :func:`get_annotation_file_parser`
         
         Parameters
@@ -839,9 +948,11 @@ class AnnotationParser(Parser):
             :py:class:`~argparse.Namespace` is processed by this function    
         """
 
-        return self.get_segmentchains_from_args(args, printer=printer, return_type=Transcript, require_sort=require_sort)
+        return self.get_segmentchains_from_args(
+            args, printer=printer, return_type=Transcript, require_sort=require_sort
+        )
 
-    def get_segmentchains_from_args(self,args,printer=None,return_type=None,require_sort=False):
+    def get_segmentchains_from_args(self, args, printer=None, return_type=None, require_sort=False):
         """Return a generator of |SegmentChain| objects from arguments parsed by :py:func:`get_annotation_file_parser`
         
         Parameters
@@ -875,77 +986,87 @@ class AnnotationParser(Parser):
         """
         if printer is None:
             printer = NullWriter()
-            
+
         if return_type is None:
             return_type = SegmentChain
-    
-        args = PrefixNamespaceWrapper(args,self.prefix)
+
+        args = PrefixNamespaceWrapper(args, self.prefix)
         disabled = self.disabled
-    
+
         if require_sort == True and 'sorted' not in disabled:
             if args.annotation_format in ("BED","GTF2","GFF3") and \
                 args.sorted == False and 'tabix' not in disabled and\
                 args.tabix == False:
-                printer.write("Using unsorted/unindexed annotation files requires impractical amounts of memory.")
+                printer.write(
+                    "Using unsorted/unindexed annotation files requires impractical amounts of memory."
+                )
                 if args.annotation_format == "BED":
-                    printer.write("""Convert BED to BigBed using Jim Kent's bedToBigBed utility as follows:
+                    printer.write(
+                        """Convert BED to BigBed using Jim Kent's bedToBigBed utility as follows:
     
         $ sort -k1,1 -k2,2n my_file > my_file_sorted.bed
         $ bedToBigBed my_file_sorted.bed chrom.sizes my_file_sorted.bb
     
     See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
-    for download & documentation of Kent utilities""")
+    for download & documentation of Kent utilities"""
+                    )
                     sys.exit(1)
                 else:
-                    printer.write(GFF_SORT_MESSAGE.replace("FORMAT",args.annotation_format))
+                    printer.write(GFF_SORT_MESSAGE.replace("FORMAT", args.annotation_format))
                     sys.exit(1)
-    
+
         printer.write("Parsing features in %s ..." % ", ".join(args.annotation_files))
-        
+
         if "tabix" not in disabled:
             tabix = args.tabix
         else:
             tabix = False
-            
+
         if "add_three" not in disabled:
             add_three = args.add_three
         else:
             add_three = False
-    
+
         if "bed_extra_columns" not in disabled:
             bed_extra_columns = args.bed_extra_columns
-            if not(isinstance(bed_extra_columns,list)):
+            if not (isinstance(bed_extra_columns, list)):
                 try:
                     bed_extra_columns = int(bed_extra_columns)
                 except ValueError:
                     pass
         else:
             bed_extra_columns = 0
-        
+
         if args.annotation_format.lower() == "bigbed":
             if len(args.annotation_files) > 1:
                 printer.write("Bad arguments: we can only process one BigBed file.")
                 sys.exit(2)
             if tabix == True:
-                warnings.warn("Tabix compression is incompatible with BigBed files. Ignoring.",ArgumentWarning)
-    
+                warnings.warn(
+                    "Tabix compression is incompatible with BigBed files. Ignoring.",
+                    ArgumentWarning
+                )
+
             from plastid.readers.bigbed import BigBedReader
-            transcripts = iter(BigBedReader(args.annotation_files[0],
-                                       return_type=return_type,
-                                       cache_depth=1,
-                                       add_three_for_stop=add_three,
-                                       printer=printer,
-                                       maxmem=args.maxmem))
-            
+            transcripts = iter(
+                BigBedReader(
+                    args.annotation_files[0],
+                    return_type=return_type,
+                    cache_depth=1,
+                    add_three_for_stop=add_three,
+                    printer=printer,
+                    maxmem=args.maxmem
+                )
+            )
+
         elif tabix == True:
-            #streams = [pysam.tabix_iterator(opener(X), lambda x,y: x) for X in args.annotation_files] # used to work in earlier pysam
-            # string parsing by supplying None instead of `asTuple()` no longer works
-            # nor do anonymous lambda functions
-            streams = [pysam.tabix_iterator(opener(X), pysam.asTuple()) for X in args.annotation_files]
+            streams = [
+                pysam.tabix_iterator(opener(X), pysam.asTuple()) for X in args.annotation_files
+            ]
         else:
             streams = (opener(X) for X in args.annotation_files)
-    
-        if args.annotation_format in ("GFF3","GTF2"):
+
+        if args.annotation_format in ("GFF3", "GTF2"):
             from plastid.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
             if 'sorted' not in disabled and args.sorted == False and \
                'tabix' not in disabled and args.tabix == False and \
@@ -954,44 +1075,51 @@ class AnnotationParser(Parser):
     Consider using a sorted file with the '--sorted' flag and/or tabix-compression.
     """
                 msg += GFF_SORT_MESSAGE
-                msg = msg.replace("FORMAT",args.annotation_format)
-                warnings.warn(msg,ArgumentWarning)
-        
+                msg = msg.replace("FORMAT", args.annotation_format)
+                warnings.warn(msg, ArgumentWarning)
+
         if args.annotation_format.lower() == "gff3":
-            transcripts = GFF3_TranscriptAssembler(*streams,
-                                                   transcript_types=args.gff_transcript_types,
-                                                   exon_types=args.gff_exon_types,
-                                                   cds_types=args.gff_cds_types,
-                                                   printer=printer,
-                                                   add_three_for_stop=add_three,
-                                                   tabix=tabix,
-                                                   return_type=return_type,
-                                                   is_sorted=args.sorted)
+            transcripts = GFF3_TranscriptAssembler(
+                *streams,
+                transcript_types=args.gff_transcript_types,
+                exon_types=args.gff_exon_types,
+                cds_types=args.gff_cds_types,
+                printer=printer,
+                add_three_for_stop=add_three,
+                tabix=tabix,
+                return_type=return_type,
+                is_sorted=args.sorted
+            )
         elif args.annotation_format.lower() == "gtf2":
-            transcripts = GTF2_TranscriptAssembler(*streams,
-                                                   printer=printer,
-                                                   tabix=tabix,
-                                                   return_type=return_type,
-                                                   add_three_for_stop=add_three,
-                                                   is_sorted=args.sorted)
-            
+            transcripts = GTF2_TranscriptAssembler(
+                *streams,
+                printer=printer,
+                tabix=tabix,
+                return_type=return_type,
+                add_three_for_stop=add_three,
+                is_sorted=args.sorted
+            )
+
         elif args.annotation_format.lower() == "bed":
             from plastid.readers.bed import BED_Reader
-            transcripts = BED_Reader(*streams,
-                                     add_three_for_stop=add_three,
-                                     tabix=tabix,
-                                     return_type=return_type,printer=printer,
-                                     extra_columns=bed_extra_columns)
-    
+            transcripts = BED_Reader(
+                *streams,
+                add_three_for_stop=add_three,
+                tabix=tabix,
+                return_type=return_type,
+                printer=printer,
+                extra_columns=bed_extra_columns
+            )
+
         elif args.annotation_format.lower() == "psl":
             from plastid.readers.psl import PSL_Reader
-            transcripts = PSL_Reader(*streams,
-                                     tabix=tabix,
-                                     return_type=return_type,printer=printer)
-            
+            transcripts = PSL_Reader(
+                *streams, tabix=tabix, return_type=return_type, printer=printer
+            )
+
         return transcripts
-        
-    def get_genome_hash_from_args(self,args,printer=None):
+
+    def get_genome_hash_from_args(self, args, printer=None):
         """Return a |GenomeHash| of regions from command-line arguments
     
         Parameters
@@ -1021,17 +1149,19 @@ class AnnotationParser(Parser):
         from plastid.readers.psl import PSL_Reader
         if printer is None:
             printer = NullWriter()
-            
+
         prefix = self.prefix
-        args = PrefixNamespaceWrapper(args,prefix)
-        
+        args = PrefixNamespaceWrapper(args, prefix)
+
         if len(args.annotation_files) > 0:
-            printer.write("Opening mask annotation file(s) %s ..." % ", ".join(args.annotation_files))
-            if args.annotation_format in ("BED","GTF2","GFF3") and args.tabix == False:
+            printer.write(
+                "Opening mask annotation file(s) %s ..." % ", ".join(args.annotation_files)
+            )
+            if args.annotation_format in ("BED", "GTF2", "GFF3") and args.tabix == False:
                 msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
     Consider converting to BigBed or using tabix to index your mask file."""
-                warnings.warn(msg,ArgumentWarning)
-    
+                warnings.warn(msg, ArgumentWarning)
+
             if len(args.annotation_files) > 0:
                 if args.annotation_format == "BigBed":
                     if len(args.annotation_files) > 1:
@@ -1039,7 +1169,9 @@ class AnnotationParser(Parser):
                         sys.exit(2)
                     return BigBedGenomeHash(args.annotation_files[0])
                 elif "tabix" not in self.disabled and args.tabix == True:
-                    return TabixGenomeHash(args.annotation_files,args.annotation_format,printer=printer)
+                    return TabixGenomeHash(
+                        args.annotation_files, args.annotation_format, printer=printer
+                    )
                 else:
                     streams = (opener(X) for X in args.annotation_files)
                     if args.annotation_format == "BED":
@@ -1052,13 +1184,12 @@ class AnnotationParser(Parser):
                         reader = PSL_Reader
                     else:
                         assert False
-                        
+
                     hash_ivcs = list(reader(*streams))
 
                     return GenomeHash(hash_ivcs)
         else:
             return GenomeHash()
-
 
 
 class MaskParser(AnnotationParser):
@@ -1085,12 +1216,13 @@ class MaskParser(AnnotationParser):
         Enable/disable user configuration of mapping rules (default: True)
     """
 
-    def __init__(self,
-                 prefix="mask_",
-                 disabled=None,
-                 groupname="mask_options",
-                 input_choices=("BED","BigBed","GTF2","GFF3","PSL")
-                ):
+    def __init__(
+            self,
+            prefix="mask_",
+            disabled=None,
+            groupname="mask_options",
+            input_choices=("BED", "BigBed", "GTF2", "GFF3", "PSL")
+    ):
         """Create a parser for genomic features in an annotation file
         
         Parameters
@@ -1113,16 +1245,15 @@ class MaskParser(AnnotationParser):
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
-        AnnotationParser.__init__(self,
-                                  prefix=prefix,
-                                  disabled=disabled,
-                                  groupname=groupname,
-                                  input_choices=("BED","BigBed","GTF2","GFF3","PSL"))
+        AnnotationParser.__init__(
+            self,
+            prefix=prefix,
+            disabled=disabled,
+            groupname=groupname,
+            input_choices=("BED", "BigBed", "GTF2", "GFF3", "PSL")
+        )
 
-    def get_parser(self,
-                   title=_MASK_PARSER_TITLE,
-                   description=_MASK_PARSER_DESCRIPTION,
-                   **kwargs):
+    def get_parser(self, title=_MASK_PARSER_TITLE, description=_MASK_PARSER_DESCRIPTION, **kwargs):
         """Return an :py:class:`~argparse.ArgumentParser` that opens annotation files as masks
         alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
          
@@ -1145,13 +1276,15 @@ class MaskParser(AnnotationParser):
         Returns
         -------
         :class:`argparse.ArgumentParser`
-        """        
-        return AnnotationParser.get_parser(self,title=title,description=description,**kwargs)
-        
+        """
+        return AnnotationParser.get_parser(self, title=title, description=description, **kwargs)
+
+
 #===============================================================================
 # INDEX: Sequence parser
 #===============================================================================
-        
+
+
 class SequenceParser(AnnotationParser):
     """Parser for sequence files
             
@@ -1172,13 +1305,14 @@ class SequenceParser(AnnotationParser):
     input_choices : list, optional
         list of permitted alignment file type choices for input
     """
-    
-    def __init__(self,
-                 groupname="sequence_options",
-                 prefix="",
-                 disabled=None,
-                 input_choices=("fasta","fastq","twobit","genbank","embl"),
-                 ):
+
+    def __init__(
+            self,
+            groupname="sequence_options",
+            prefix="",
+            disabled=None,
+            input_choices=("fasta", "fastq", "twobit", "genbank", "embl"),
+    ):
         """Create a parser for genomic sequence
         
         Parameters
@@ -1198,21 +1332,33 @@ class SequenceParser(AnnotationParser):
         input_choices : list, optional
             list of permitted alignment file type choices for input
         """
-        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        Parser.__init__(self, groupname=groupname, prefix=prefix, disabled=disabled)
         self.input_choices = input_choices
         self.arguments = [
-                ("sequence_file"     , dict(metavar="infile.[%s]" % " | ".join(input_choices),
-                                            type=str,
-                                            help="A file of DNA sequence")),                               
-                ("sequence_format"   , dict(choices=input_choices,
-                                            default="fasta",
-                                            help="Format of %ssequence_file (Default: fasta)." % prefix)),    
-            ]
-        
-    def get_parser(self,
-                   title=_DEFAULT_SEQUENCE_PARSER_TITLE,
-                   description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION,
-                   **kwargs):
+            (
+                "sequence_file",
+                dict(
+                    metavar="infile.[%s]" % " | ".join(input_choices),
+                    type=str,
+                    help="A file of DNA sequence"
+                )
+            ),
+            (
+                "sequence_format",
+                dict(
+                    choices=input_choices,
+                    default="fasta",
+                    help="Format of %ssequence_file (Default: fasta)." % prefix
+                )
+            ),
+        ]
+
+    def get_parser(
+            self,
+            title=_DEFAULT_SEQUENCE_PARSER_TITLE,
+            description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION,
+            **kwargs
+    ):
         """Return an :py:class:`~argparse.ArgumentParser` that opens sequence files
          
         Parameters
@@ -1238,11 +1384,11 @@ class SequenceParser(AnnotationParser):
         get_seqdict_from_args
             function that parses the :py:class:`~argparse.Namespace` returned
             by this :py:class:`~argparse.ArgumentParser`
-        """        
-        
-        return Parser.get_parser(self,title=title,description=description,**kwargs)
+        """
 
-    def get_seqdict_from_args(self,args,index=True,printer=None):
+        return Parser.get_parser(self, title=title, description=description, **kwargs)
+
+    def get_seqdict_from_args(self, args, index=True, printer=None):
         """Retrieve a dictionary-like object of sequences
     
         Parameters
@@ -1266,8 +1412,8 @@ class SequenceParser(AnnotationParser):
         """
         if printer is None:
             printer = NullWriter()
-            
-        args = PrefixNamespaceWrapper(args,self.prefix)
+
+        args = PrefixNamespaceWrapper(args, self.prefix)
         printer.write("Opening sequence file '%s'." % args.sequence_file)
         if args.sequence_format == "twobit":
             from plastid.genomics.seqtools import TwoBitSeqRecordAdaptor
@@ -1275,13 +1421,15 @@ class SequenceParser(AnnotationParser):
         else:
             from Bio import SeqIO
             if index == True:
-                return SeqIO.index(args.sequence_file,args.sequence_format)
+                return SeqIO.index(args.sequence_file, args.sequence_format)
             else:
-                return SeqIO.to_dict(SeqIO.parse(args.sequence_file,args.sequence_format))    
+                return SeqIO.to_dict(SeqIO.parse(args.sequence_file, args.sequence_format))
+
 
 #===============================================================================
 # INDEX: Plotting parser
 #===============================================================================
+
 
 class PlottingParser(Parser):
     """Parser for plotting options
@@ -1301,10 +1449,7 @@ class PlottingParser(Parser):
         without preceding dashes    
     """
 
-    def __init__(self,
-                 groupname="plotting_options",
-                 prefix="",
-                 disabled=None):
+    def __init__(self, groupname="plotting_options", prefix="", disabled=None):
         """Create a parser for plotting arguments
         
         Parameters
@@ -1320,46 +1465,71 @@ class PlottingParser(Parser):
         disabled : list, optional
             list of parameter names that should be disabled from parser,
             without preceding dashes
-        """        
-        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        """
+        Parser.__init__(self, groupname=groupname, prefix=prefix, disabled=disabled)
         from matplotlib.backend_bases import FigureCanvasBase as fcb
         if len(prefix) > 0:
             prefix += "_"
-    
+
         try:
             filetypes = sorted(fcb.get_supported_filetypes().keys())
             default_ftype = fcb.get_default_filetype()
-        except: # matplotlib < 1.4.0
-            filetypes = ["eps","jpeg","pdf","png","svg"]
+        except:  # matplotlib < 1.4.0
+            filetypes = ["eps", "jpeg", "pdf", "png", "svg"]
             default_ftype = "pdf"
-        
+
         self.arguments = [
-                ("figformat",dict(default=default_ftype,type=str,choices=filetypes,
-                                  help="File format for figure(s); Default: %(default)s)")),
-                ("figsize",  dict(nargs=2,default=None,type=float,metavar="N",
-                                  help="Figure width and height, in inches. (Default: use matplotlibrc params)"
-                                  )),
-                ("title",    dict(type=str,default=None,help="Base title for plot(s).")),
-                ("cmap",     dict(type=str,default=None,
-                                  help="Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use colors from ``--stylesheet`` if given, or color cycle in matplotlibrc)"
-                                  )),
-                ("dpi",      dict(type=int,default=150,
-                                  help="Figure resolution (Default: %(default)s)")),
-            ]
-        
+            (
+                "figformat",
+                dict(
+                    default=default_ftype,
+                    type=str,
+                    choices=filetypes,
+                    help="File format for figure(s); Default: %(default)s)"
+                )
+            ),
+            (
+                "figsize",
+                dict(
+                    nargs=2,
+                    default=None,
+                    type=float,
+                    metavar="N",
+                    help="Figure width and height, in inches. (Default: use matplotlibrc params)"
+                )
+            ),
+            ("title", dict(type=str, default=None, help="Base title for plot(s).")),
+            (
+                "cmap",
+                dict(
+                    type=str,
+                    default=None,
+                    help=
+                    "Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use colors from ``--stylesheet`` if given, or color cycle in matplotlibrc)"
+                )
+            ),
+            ("dpi", dict(type=int, default=150, help="Figure resolution (Default: %(default)s)")),
+        ]
+
         try:
             import matplotlib.style
             stylesheets = matplotlib.style.available
-    
+
             if "stylesheet" not in self.disabled:
-                self.arguments.append(("stylesheet",
-                                       dict(default=None,choices=stylesheets,
-                                            help="Use this matplotlib stylesheet instead of matplotlibrc params")
-                                     ))
-        except ImportError: # matplotlib < 1.4.0
+                self.arguments.append(
+                    (
+                        "stylesheet",
+                        dict(
+                            default=None,
+                            choices=stylesheets,
+                            help="Use this matplotlib stylesheet instead of matplotlibrc params"
+                        )
+                    )
+                )
+        except ImportError:  # matplotlib < 1.4.0
             pass
-            
-    def get_parser(self,title=_DEFAULT_PLOTTING_TITLE,description=None):
+
+    def get_parser(self, title=_DEFAULT_PLOTTING_TITLE, description=None):
         """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
     
         Parameters
@@ -1376,10 +1546,9 @@ class PlottingParser(Parser):
         -------
         :class:`argparse.ArgumentParser`
         """
-        return Parser.get_parser(self,title=title,description=description)
+        return Parser.get_parser(self, title=title, description=description)
 
-
-    def set_style_from_args(self,args):
+    def set_style_from_args(self, args):
         """Parse style information, if present on system and defined in `args`
 
         Parameters
@@ -1389,12 +1558,12 @@ class PlottingParser(Parser):
         """
         try:
             import matplotlib.style
-            if getattr(args,"stylesheet",None) is not None:
+            if getattr(args, "stylesheet", None) is not None:
                 matplotlib.style.use(args.stylesheet)
         except ImportError:
             pass
 
-    def get_figure_from_args(self,args,**kwargs):
+    def get_figure_from_args(self, args, **kwargs):
         """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
     
         A new figure is created with parameters specified in `args`. If these are 
@@ -1416,24 +1585,24 @@ class PlottingParser(Parser):
             Matplotlib figure
         """
         import matplotlib.pyplot as plt
-        args = PrefixNamespaceWrapper(args,self.prefix)
-    
+        args = PrefixNamespaceWrapper(args, self.prefix)
+
         fargs = {}
         # keep this loop in place in case we add additional command line attributes as fig properties later
-        for attr in ("figsize",): #,"dpi"): # dpi if applied in plt.figure() doesn't get used in saving; 
+        for attr in ("figsize", ):
             if attr in kwargs:
                 v = kwargs[attr]
             else:
-                v = getattr(args,attr,None)
+                v = getattr(args, attr, None)
 
             if v is not None:
                 fargs[attr] = v
-    
+
         # copy values from fargs
         kwargs.update(fargs)
         return plt.figure(**kwargs)
 
-    def get_colors_from_args(self,args,num_colors):
+    def get_colors_from_args(self, args, num_colors):
         """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
     
         If a matplotlib colormap is specified in `args.figcolors`, colors will be
@@ -1461,32 +1630,33 @@ class PlottingParser(Parser):
             List of matplotlib colors
         """
         import matplotlib.cm
-        args       = PrefixNamespaceWrapper(args,self.prefix)
-        figcolors  = getattr(args,"cmap",None)
-    
+        args = PrefixNamespaceWrapper(args, self.prefix)
+        figcolors = getattr(args, "cmap", None)
+
         if figcolors is not None:
             import numpy
-            cmap = matplotlib.cm.get_cmap(figcolors) 
+            cmap = matplotlib.cm.get_cmap(figcolors)
             if num_colors > 1:
-                colors = cmap(numpy.linspace(0,1.0,num_colors))
+                colors = cmap(numpy.linspace(0, 1.0, num_colors))
             else:
                 colors = [cmap(0.5)]
-        else:   
+        else:
             from itertools import cycle
             try:
-                
+
                 color_cycle = cycle(matplotlib.rcParams["axes.prop_cycle"].by_key()["color"])
             except KeyError:
                 color_cycle = cycle(matplotlib.rcParams["axes.color_cycle"])
 
             colors = [next(color_cycle) for _ in range(num_colors)]
-    
+
         return colors
 
 
 #===============================================================================
 # INDEX: Parser for generic command-line options (e.g. warning control)
 #===============================================================================
+
 
 class BaseParser(Parser):
     """Parser basic options
@@ -1505,12 +1675,13 @@ class BaseParser(Parser):
         list of parameter names that should be disabled from parser,
         without preceding dashes    
     """
-    
-    def __init__(self,
-                 groupname="base_options",
-                 prefix="",
-                 disabled=None,
-                 ):
+
+    def __init__(
+            self,
+            groupname="base_options",
+            prefix="",
+            disabled=None,
+    ):
         """Create a parser for basic options for command-line scripts, such as warnings and logging
         
         Parameters
@@ -1527,11 +1698,13 @@ class BaseParser(Parser):
             list of parameter names that should be disabled from parser,
             without preceding dashes
         """
-        Parser.__init__(self,groupname=groupname,prefix=prefix,disabled=disabled)
+        Parser.__init__(self, groupname=groupname, prefix=prefix, disabled=disabled)
         self.arguments = []
+
+
 #         self.level_desc = ["--silent","--quiet","--verbose","--raise"]
-        
-    def get_parser(self,title=None,description=None):
+
+    def get_parser(self, title=None, description=None):
         """Return an :py:class:`~argparse.ArgumentParser`     
     
         Parameters
@@ -1550,127 +1723,124 @@ class BaseParser(Parser):
         """
         p = Parser.get_parser(self)
         g = p.add_argument_group(title="warning/error options")
-        
-        
-        g.add_argument("-q","--quiet",dest="warnlevel",action="store_const",const=-1,
-                       help="Suppress all warning messages. Cannot use with '-v'.")
-        g.add_argument("-v","--verbose",dest="warnlevel",action="count",
-                       help="Increase verbosity. With '-v', show every warning. With '-vv', turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)")
-        
-#         g.add_argument("--silent",dest="warnlevel",action="store_const",const=0,
-#                        help="Suppress all warning messages")
-#         g.add_argument("--quiet",dest="warnlevel",action="store_const",const=1,
-#                        help="Show each type of warning once (Default)")
-#         g.add_argument("--verbose",dest="warnlevel",action="store_const",const=2,
-#                        help="Show every warning instance")
-#         g.add_argument("--raise",dest="warnlevel",action="store_const",const=3,
-#                        help="Raise exceptions instead of warnings")
+
+        g.add_argument(
+            "-q",
+            "--quiet",
+            dest="warnlevel",
+            action="store_const",
+            const=-1,
+            help="Suppress all warning messages. Cannot use with '-v'."
+        )
+        g.add_argument(
+            "-v",
+            "--verbose",
+            dest="warnlevel",
+            action="count",
+            help=
+            "Increase verbosity. With '-v', show every warning. With '-vv', turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)"
+        )
         p.set_defaults(warnlevel=0)
 
         return p
 
-    def get_base_ops_from_args(self,args):
-        
+    def get_base_ops_from_args(self, args):
+
         global warnings
-        
-        args = PrefixNamespaceWrapper(args,self.prefix)
+
+        args = PrefixNamespaceWrapper(args, self.prefix)
         warnlevel = args.warnlevel
-        actions = ["ignore",
-                   "onceperfamily",
-                   "always",
-                   "error"]
-#         desc = self.level_desc
-        
-#         if len(set(desc) & set(sys.argv[1:])) > 1:
-#             warnings.warn("Only one of [%s] is permitted. Using %s" % (", ".join(desc),desc[warnlevel]),
-#                            ArgumentWarning)
-            
+        actions = ["ignore", "onceperfamily", "always", "error"]
+
         if warnlevel >= len(actions) - 1:
             warnlevel = len(actions) - 2
         try:
-            action = actions[warnlevel+1]
+            action = actions[warnlevel + 1]
         except IndexError:
-            warnings.warn("Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." % warnlevel,UserWarning)
+            warnings.warn(
+                "Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." %
+                warnlevel, UserWarning
+            )
             action = actions[1]
-        
-        for type_, msg in PLASTID_WARNINGS:
-            filterwarnings(action,message=msg,category=type_)
 
+        for type_, msg in PLASTID_WARNINGS:
+            filterwarnings(action, message=msg, category=type_)
 
 PLASTID_WARNINGS = [
-                    
+
     # mapping rules
-    (DataWarning,"File contains read alignments shorter"),
-    (DataWarning,"No offset for reads of length"),
-    (DataWarning,"longer than read length"),
-    
+    (DataWarning, "File contains read alignments shorter"),
+    (DataWarning, "No offset for reads of length"),
+    (DataWarning, "longer than read length"),
+
     # genome_array
-    (DataWarning,"Temporarily turning off normalization"),
-    
+    (DataWarning, "Temporarily turning off normalization"),
+
     # roi_tools
-    (DataWarning,"is a zero-length SegmentChain. Returning 0-length count vector"),
-    
+    (DataWarning, "is a zero-length SegmentChain. Returning 0-length count vector"),
+
     # metagene
-    (Warning,r"IndexError finding common positions at region.*"),
-    (DataWarning,"has no gene_id. Inferring gene_id"),
-    (DataWarning,"has no attribute"),
-    (DataWarning,"Ignoring labels"),
-    
+    (Warning, r"IndexError finding common positions at region.*"),
+    (DataWarning, "has no gene_id. Inferring gene_id"),
+    (DataWarning, "has no attribute"),
+    (DataWarning, "Ignoring labels"),
+
     # phase_by_size
-    (DataWarning,"is not divisible by 3. Ignoring last partial codon."),
-    
+    (DataWarning, "is not divisible by 3. Ignoring last partial codon."),
+
     # util.io.filters
-    (Warning,"Could not alert listener"),
+    (Warning, "Could not alert listener"),
 
     # util.services.decorators
-    (DeprecationWarning,"is deprecated and will be removed from module"),
-    
+    (DeprecationWarning, "is deprecated and will be removed from module"),
+
     # gff
-    (DataWarning,"because it contains exons on multiple chromosomes or strands"),
-    (DataWarning,"because start or stop codons are outside exon boundaries"),
-    (DataWarning,"with no `Parent` or `ID`. Ignoring."),
-    (DataWarning,"because it contains exons on multiple strands"),
-    (DataWarning,"because start or stop codons are outside exon boundaries."),
+    (DataWarning, "because it contains exons on multiple chromosomes or strands"),
+    (DataWarning, "because start or stop codons are outside exon boundaries"),
+    (DataWarning, "with no `Parent` or `ID`. Ignoring."),
+    (DataWarning, "because it contains exons on multiple strands"),
+    (DataWarning, "because start or stop codons are outside exon boundaries."),
 
     # bed
-    (FileFormatWarning,"Extra columns specified by."),
-    (FileFormatWarning,"Are you sure this is a"),
-    (FileFormatWarning,"Are you sure this BED file has extra columns"),
-    (FileFormatWarning,"Maybe this BED has extra columns"),
-    
+    (FileFormatWarning, "Extra columns specified by."),
+    (FileFormatWarning, "Are you sure this is a"),
+    (FileFormatWarning, "Are you sure this BED file has extra columns"),
+    (FileFormatWarning, "Maybe this BED has extra columns"),
+
     # gff_tokens
-    (FileFormatWarning,"Found duplicate attribute key"),
+    (FileFormatWarning, "Found duplicate attribute key"),
 
     # BigBed
-    (FileFormatWarning,"Could not find or could not parse autoSql declaration in BigBedFile"),
-    
+    (FileFormatWarning, "Could not find or could not parse autoSql declaration in BigBedFile"),
+
     # autoSql
-    (DataWarning,"Could not convert autoSql value"),
-    
+    (DataWarning, "Could not convert autoSql value"),
+
     # psl
-    (FileFormatWarning,"Rejecting line")
-
+    (FileFormatWarning, "Rejecting line")
 ]
-
 
 #===============================================================================
 # INDEX: Deprecated alignment functions, now aliased to classes above
 #===============================================================================
 
 
-@deprecated(version="0.5.0",instead="AlignmentParser")
-def get_alignment_file_parser(input_choices=("BAM","bigwig","bowtie","wiggle"),
-                              disabled=None,
-                              prefix="",
-                              title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
-                              description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
-                              map_desc=_MAPPING_RULE_DESCRIPTION,
-                              return_subparsers=False):
-    tmp = AlignmentParser(input_choices=input_choices,prefix=prefix,disabled=disabled)
+@deprecated(version="0.5.0", instead="AlignmentParser")
+def get_alignment_file_parser(
+        input_choices=("BAM", "bigwig", "bowtie", "wiggle"),
+        disabled=None,
+        prefix="",
+        title=_DEFAULT_ALIGNMENT_FILE_PARSER_TITLE,
+        description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
+        map_desc=_MAPPING_RULE_DESCRIPTION,
+        return_subparsers=False
+):
+    tmp = AlignmentParser(input_choices=input_choices, prefix=prefix, disabled=disabled)
     return tmp.get_parser(title=title, description=description)
 
-@deprecated(version="0.5.0",instead="AlignmentParser.get_genome_array_from_args()")
-def get_genome_array_from_args(args,prefix="",disabled=None,printer=None):
+
+@deprecated(version="0.5.0", instead="AlignmentParser.get_genome_array_from_args()")
+def get_genome_array_from_args(args, prefix="", disabled=None, printer=None):
     """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
     from arguments parsed by :py:func:`get_alignment_file_parser`
     
@@ -1703,21 +1873,24 @@ def get_genome_array_from_args(args,prefix="",disabled=None,printer=None):
         Function that creates :py:class:`~argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function        
     """
-    tmp = AlignmentParser(prefix=prefix,disabled=disabled)
-    return tmp.get_genome_array_from_args(args,printer=printer)
+    tmp = AlignmentParser(prefix=prefix, disabled=disabled)
+    return tmp.get_genome_array_from_args(args, printer=printer)
 
 
 #===============================================================================
 # INDEX: deprecated annotation file parser, and helper functions
 #===============================================================================
 
-@deprecated(version="0.5.0",instead="AnnotationParser")
-def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
-                               disabled=[],
-                               prefix="",
-                               title=_DEFAULT_ANNOTATION_PARSER_TITLE,
-                               description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
-                               return_subparsers=False):
+
+@deprecated(version="0.5.0", instead="AnnotationParser")
+def get_annotation_file_parser(
+        input_choices=["BED", "BigBed", "GTF2", "GFF3"],
+        disabled=[],
+        prefix="",
+        title=_DEFAULT_ANNOTATION_PARSER_TITLE,
+        description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION,
+        return_subparsers=False
+):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
      
@@ -1755,15 +1928,20 @@ def get_annotation_file_parser(input_choices=["BED","BigBed","GTF2","GFF3"],
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    tmp = AnnotationParser(groupname="annotation_options",
-                           prefix=prefix,
-                           disabled=disabled,
-                           input_choices=input_choices)
+    tmp = AnnotationParser(
+        groupname="annotation_options",
+        prefix=prefix,
+        disabled=disabled,
+        input_choices=input_choices
+    )
     parser = tmp.get_parser(title, description)
     return parser
 
-@deprecated(version="0.5.0",instead="AnnotationParser.get_transcripts_from_args()")
-def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),return_type=None,require_sort=False):
+
+@deprecated(version="0.5.0", instead="AnnotationParser.get_transcripts_from_args()")
+def get_transcripts_from_args(
+        args, prefix="", disabled=[], printer=NullWriter(), return_type=None, require_sort=False
+):
     """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
     
     Parameters
@@ -1805,20 +1983,20 @@ def get_transcripts_from_args(args,prefix="",disabled=[],printer=NullWriter(),re
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
-    tmp = AnnotationParser(groupname="annotation_options",
-                       prefix=prefix,
-                       disabled=disabled)
-    return tmp.get_transcripts_from_args(args,
-                                         printer=printer,
-                                         return_type=return_type,
-                                         require_sort=require_sort)
+    tmp = AnnotationParser(groupname="annotation_options", prefix=prefix, disabled=disabled)
+    return tmp.get_transcripts_from_args(
+        args, printer=printer, return_type=return_type, require_sort=require_sort
+    )
 
-@deprecated(version="0.5.0",instead="AnnotationParser.get_parser()")
-def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PSL"],
-                                 disabled=[],
-                                 prefix="",
-                                 title=_DEFAULT_ANNOTATION_PARSER_TITLE,
-                                 description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION):
+
+@deprecated(version="0.5.0", instead="AnnotationParser.get_parser()")
+def get_segmentchain_file_parser(
+        input_choices=["BED", "BigBed", "GTF2", "GFF3", "PSL"],
+        disabled=[],
+        prefix="",
+        title=_DEFAULT_ANNOTATION_PARSER_TITLE,
+        description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION
+):
     """Create an :class:`~argparse.ArgumentParser` to open annotation files as |SegmentChains|
     
     Parameters
@@ -1852,15 +2030,20 @@ def get_segmentchain_file_parser(input_choices=["BED","BigBed","GTF2","GFF3","PS
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    disabled.append([prefix+"add_three"])
-    return get_annotation_file_parser(input_choices=input_choices,
-                                      prefix=prefix,
-                                      title=title,
-                                      disabled=disabled,
-                                      description=description)
+    disabled.append([prefix + "add_three"])
+    return get_annotation_file_parser(
+        input_choices=input_choices,
+        prefix=prefix,
+        title=title,
+        disabled=disabled,
+        description=description
+    )
 
-@deprecated(version="0.5.0",instead="AnnotationParser.get_transcripts_from_args()")
-def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),require_sort=False):
+
+@deprecated(version="0.5.0", instead="AnnotationParser.get_transcripts_from_args()")
+def get_segmentchains_from_args(
+        args, prefix="", disabled=[], printer=NullWriter(), require_sort=False
+):
     """Return a list of |SegmentChain| objects from arguments parsed by an
     :py:class:`~argparse.ArgumentParser` created by :py:func:`get_segmentchain_file_parser`
     
@@ -1900,16 +2083,19 @@ def get_segmentchains_from_args(args,prefix="",disabled=[],printer=NullWriter(),
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function    
     """
-    disabled.append([prefix+"add_three"])
-    return get_transcripts_from_args(args,
-                                     prefix=prefix,
-                                     disabled=disabled,
-                                     printer=printer,
-                                     return_type=SegmentChain,
-                                     require_sort=require_sort)
+    disabled.append([prefix + "add_three"])
+    return get_transcripts_from_args(
+        args,
+        prefix=prefix,
+        disabled=disabled,
+        printer=printer,
+        return_type=SegmentChain,
+        require_sort=require_sort
+    )
 
-@deprecated(version="0.5.0",instead="AnnotationParser")
-def get_mask_file_parser(prefix="mask_",disabled=[]):
+
+@deprecated(version="0.5.0", instead="AnnotationParser")
+def get_mask_file_parser(prefix="mask_", disabled=[]):
     """Create an :class:`~argparse.ArgumentParser` to open annotation files that describe regions of the genome to mask from analyses
     
     Parameters
@@ -1931,14 +2117,17 @@ def get_mask_file_parser(prefix="mask_",disabled=[]):
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`    
     """
-    tmp = AnnotationParser(groupname="%s_options" % prefix,
-                           prefix=prefix,
-                           disabled=disabled,
-                           input_choices=["BED","GTF2","GFF3","BigBed","PSL"])
-    return tmp.get_parser(_MASK_PARSER_TITLE, _MASK_PARSER_DESCRIPTION) 
+    tmp = AnnotationParser(
+        groupname="%s_options" % prefix,
+        prefix=prefix,
+        disabled=disabled,
+        input_choices=["BED", "GTF2", "GFF3", "BigBed", "PSL"]
+    )
+    return tmp.get_parser(_MASK_PARSER_TITLE, _MASK_PARSER_DESCRIPTION)
 
-@deprecated(version="0.5.0",instead="AnnotationParser.get_genome_hash()")
-def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
+
+@deprecated(version="0.5.0", instead="AnnotationParser.get_genome_hash()")
+def get_genome_hash_from_mask_args(args, prefix="mask_", printer=NullWriter()):
     """Return a |GenomeHash| of regions from command-line arguments
 
     Parameters
@@ -1967,19 +2156,23 @@ def get_genome_hash_from_mask_args(args,prefix="mask_",printer=NullWriter()):
         Function that creates :py:class:`argparse.ArgumentParser` whose output
         :py:class:`~argparse.Namespace` is processed by this function  
     """
-    tmp = AnnotationParser(groupname="mask_options",prefix=prefix)
+    tmp = AnnotationParser(groupname="mask_options", prefix=prefix)
     return tmp.get_genome_hash_from_args(args, printer=printer)
+
 
 #===============================================================================
 # INDEX: deprecated sequence file parser
 #===============================================================================
 
-@deprecated(version="0.5.0",instead="SequenceParser")
-def get_sequence_file_parser(input_choices=("fasta","fastq","twobit","genbank","embl"),
-                             disabled=(),
-                             prefix="",
-                             title=_DEFAULT_SEQUENCE_PARSER_TITLE,
-                             description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION):
+
+@deprecated(version="0.5.0", instead="SequenceParser")
+def get_sequence_file_parser(
+        input_choices=("fasta", "fastq", "twobit", "genbank", "embl"),
+        disabled=(),
+        prefix="",
+        title=_DEFAULT_SEQUENCE_PARSER_TITLE,
+        description=_DEFAULT_SEQUENCE_PARSER_DESCRIPTION
+):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
      
@@ -2014,11 +2207,12 @@ def get_sequence_file_parser(input_choices=("fasta","fastq","twobit","genbank","
         function that parses the :py:class:`~argparse.Namespace` returned
         by this :py:class:`~argparse.ArgumentParser`
     """
-    tmp = SequenceParser(disabled=disabled,prefix=prefix,input_choices=input_choices)
-    return tmp.get_parser(title=title,description=description)
+    tmp = SequenceParser(disabled=disabled, prefix=prefix, input_choices=input_choices)
+    return tmp.get_parser(title=title, description=description)
 
-@deprecated(version="0.5.0",instead="SequenceParser.get_seqdict_from_args()")
-def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
+
+@deprecated(version="0.5.0", instead="SequenceParser.get_seqdict_from_args()")
+def get_seqdict_from_args(args, index=True, prefix="", printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
 
     Parameters
@@ -2054,8 +2248,8 @@ def get_seqdict_from_args(args,index=True,prefix="",printer=NullWriter()):
 #===============================================================================
 
 
-@deprecated(version="0.5.0",instead="PlottingParser")
-def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
+@deprecated(version="0.5.0", instead="PlottingParser")
+def get_plotting_parser(prefix="", disabled=[], title=_DEFAULT_PLOTTING_TITLE):
     """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
 
     Parameters
@@ -2085,11 +2279,12 @@ def get_plotting_parser(prefix="",disabled=[],title=_DEFAULT_PLOTTING_TITLE):
     get_colors_from_args
         parse colors and/or colormaps from this argument parser
     """
-    tmp = PlottingParser(prefix=prefix,disabled=disabled)
+    tmp = PlottingParser(prefix=prefix, disabled=disabled)
     return tmp.get_parser(title=title)
 
-@deprecated(version="0.5.0",instead="PlottingParser.get_figure_from_args()")
-def get_figure_from_args(args,**kwargs):
+
+@deprecated(version="0.5.0", instead="PlottingParser.get_figure_from_args()")
+def get_figure_from_args(args, **kwargs):
     """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
 
     A new figure is created with parameters specified in `args`. If these are 
@@ -2111,10 +2306,11 @@ def get_figure_from_args(args,**kwargs):
         Matplotlib figure
     """
     tmp = PlottingParser()
-    return tmp.get_figure_from_args(args,**kwargs)
+    return tmp.get_figure_from_args(args, **kwargs)
 
-@deprecated(version="0.5.0",instead="PlottingParser.get_colors_from_args()")
-def get_colors_from_args(args,num_colors):
+
+@deprecated(version="0.5.0", instead="PlottingParser.get_colors_from_args()")
+def get_colors_from_args(args, num_colors):
     """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
 
     If a matplotlib colormap is specified in `args.figcolors`, colors will be
@@ -2142,12 +2338,13 @@ def get_colors_from_args(args,num_colors):
         List of matplotlib colors
     """
     tmp = PlottingParser()
-    return tmp.get_colors_from_args(args,num_colors)
+    return tmp.get_colors_from_args(args, num_colors)
 
 
 #===============================================================================
 # INDEX: Utility classes
 #===============================================================================
+
 
 class PrefixNamespaceWrapper(object):
     """Wrapper class to facilitate processing of :py:class:`~argparse.Namespace`
@@ -2175,8 +2372,8 @@ class PrefixNamespaceWrapper(object):
     
     get_transcripts_from_args
     """
-    
-    def __init__(self,namespace,prefix):
+
+    def __init__(self, namespace, prefix):
         """Create a |PrefixNamespaceWrapper|
         
         Parameters
@@ -2190,8 +2387,8 @@ class PrefixNamespaceWrapper(object):
         """
         self.namespace = namespace
         self.prefix = prefix
-    
-    def __getattr__(self,k):
+
+    def __getattr__(self, k):
         """Fetch an attribute from `self.namespace`, appending `self.prefix` to `k`
         before fetching
         
@@ -2200,11 +2397,13 @@ class PrefixNamespaceWrapper(object):
         k : str
             Attribute to fetch
         """
-        return getattr(self.namespace,"%s%s" % (self.prefix,k))
+        return getattr(self.namespace, "%s%s" % (self.prefix, k))
+
 
 #===============================================================================
 # INDEX: Utility functions
 #===============================================================================
+
 
 def _parse_variable_offset_file(fh):
     """Read a variable-offset text file into a dictionary.
@@ -2229,24 +2428,31 @@ def _parse_variable_offset_file(fh):
             continue
         items = line.strip("\n").split("\t")
         if len(items) != 2:
-            name = getattr(fh,"__name__","Variable offset file")
-            raise MalformedFileError(name,"More or fewer than two columns on line:\n\t%s" % line.strip("\n"))
+            name = getattr(fh, "__name__", "Variable offset file")
+            raise MalformedFileError(
+                name, "More or fewer than two columns on line:\n\t%s" % line.strip("\n")
+            )
         if items[0] == "length":
             continue
         key = items[0]
         try:
             key = key if key == "default" else int(key)
         except ValueError:
-            name = getattr(fh,"__name__","Variable offset file")
-            raise MalformedFileError(name,"Non integer value for key '%s' on line:\n\t%s" % (key,line.strip("\n")))
+            name = getattr(fh, "__name__", "Variable offset file")
+            raise MalformedFileError(
+                name, "Non integer value for key '%s' on line:\n\t%s" % (key, line.strip("\n"))
+            )
         if key in my_dict:
-            name = getattr(fh,"__name__","Variable offset file")
-            raise MalformedFileError(name,"multiple offsets defined for read length %s" % key)
+            name = getattr(fh, "__name__", "Variable offset file")
+            raise MalformedFileError(name, "multiple offsets defined for read length %s" % key)
         else:
             try:
                 my_dict[key] = int(items[1])
             except ValueError:
-                name = getattr(fh,"__name__","Variable offset file")
-                raise MalformedFileError(name,"Non integer value for value '%s' on line:\n\t%s" % (items[1],line.strip("\n")))
-            
+                name = getattr(fh, "__name__", "Variable offset file")
+                raise MalformedFileError(
+                    name, "Non integer value for value '%s' on line:\n\t%s" %
+                    (items[1], line.strip("\n"))
+                )
+
     return my_dict
