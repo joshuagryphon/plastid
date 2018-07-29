@@ -46,7 +46,8 @@ Fetch counts over a |Transcript|/|SegmentChain| or |GenomicSegment|::
            ...
            (rest of output omitted) ])
 
-Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole chromosome::
+Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole
+chromosome::
 
     >>> chrI_counts = count_data.get_chromosome("chrI")
     >>> chrI_counts
@@ -92,7 +93,7 @@ from plastid.readers.bbifile cimport (
     lmCleanup,
     lmAlloc,
     lm,
-    bitFindClear
+    bitFindClear,
 )
 
 from plastid.readers.bbifile cimport WARN_CHROM_NOT_FOUND
@@ -109,7 +110,8 @@ cdef class BigWigReader(_BBI_Reader):
     """
     BigWigReader(filename, maxmem = 0)
 
-    Reader providing random or sequential access to data stored in `BigWig`_ files.
+    Reader providing random or sequential access to data stored in `BigWig`_
+    files.
 
     Parameters
     ----------
@@ -138,13 +140,14 @@ cdef class BigWigReader(_BBI_Reader):
         >>>                            ID='some_transcript')
         >>> transcript_counts = count_data[my_transcript]
 
-    Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole chromosome::
+    Efficiently fetch a :class:`numpy.ndarray` of counts covering a whole
+    chromosome::
 
         >>> chrI_counts = count_data.get_chromosome("chrI")
 
-    Iterate over a `BigWig`_ file (this is unusual). Data are returned as tuples of
-    (chromosome name, start coordinate, end coordinate, and the value over
-    those coordinates)::
+    Iterate over a `BigWig`_ file (this is unusual). Data are returned as
+    tuples of (chromosome name, start coordinate, end coordinate, and the value
+    over those coordinates)::
 
         >>> for chrom, my_start, my_end, value in count_data:
         >>>     pass # do something interesting with those values
@@ -165,8 +168,9 @@ cdef class BigWigReader(_BBI_Reader):
             """
 #         """ fill : float Value to use when there is no data covering a base
 #         (e.g. zero, nan, et c. Default: `numpy.nan`) """
-        self._bbifile = bigWigFileOpen(safe_bytes(filename)) self.fill = 0.0
-        #fill self._sum = numpy.nan
+        self._bbifile = bigWigFileOpen(safe_bytes(filename))
+        self.fill = 0.0
+        self._sum = numpy.nan
 
     def __iter__(self):
         return _GeneratorWrapper(BigWigIterator(self, maxmem=self._maxmem), "BigWig values")

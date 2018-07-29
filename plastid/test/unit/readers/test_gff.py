@@ -24,48 +24,378 @@ from plastid.util.services.decorators import skip_if_abstract
 #===============================================================================
 
 _GFF3_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',0,230218,'.'),ID='chrI',Name='chrI',dbxref=['NCBI:NC_001133'],phase='.',score='.',source='SGD',type='chromosome'),
-    SegmentChain(GenomicSegment('chrI',0,62,'-'),ID='TEL01L-TR',Name='TEL01L-TR',Note=['Terminal telomeric repeats on the left arm of Chromosome I'],dbxref=['SGD:S000028864'],display='Terminal telomeric repeats on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomeric_repeat'),
-    SegmentChain(GenomicSegment('chrI',0,801,'-'),ID='TEL01L',Name='TEL01L',Note=['Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'],dbxref=['SGD:S000028862'],display='Telomeric region on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomere'),
-    SegmentChain(GenomicSegment('chrI',62,336,'-'),ID='TEL01L-XR',Name='TEL01L-XR',Note=['Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'],dbxref=['SGD:S000028866'],display='Telomeric X element combinatorial repeat on the left arm of Chr I',phase='.',score='.',source='SGD',type='X_element_combinatorial_repeat'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W',Name='YAL069W',Note=['Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'],Ontology_term=['GO:0003674','GO:0005575','GO:0008150'],dbxref=['SGD:S000002143'],display='Dubious open reading frame',orf_classification='Dubious',phase='.',score='.',source='SGD',type='gene'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),Name='YAL069W_CDS',Parent=['YAL069W_mRNA'],orf_classification='Dubious',phase='0',score='.',source='SGD',type='CDS'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',Name='YAL069W_mRNA',Parent=['YAL069W'],phase='.',score='.',source='SGD',type='mRNA'),
-    SegmentChain(GenomicSegment('chrI',336,801,'-'),ID='TEL01L-XC',Name='TEL01L-XC',Note=['Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'],dbxref=['SGD:S000028865'],display='Telomeric X element Core sequence on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='X_element'),
-    SegmentChain(GenomicSegment('chrII',752,763,'-'),ID='TEL02L-XC_nucleotide_match',Name='TEL02L-XC_nucleotide_match',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='nucleotide_match'),
-    SegmentChain(GenomicSegment('chrII',531,544,'-'),ID='TEL02L-XC_binding_site',Name='TEL02L-XC_binding_site',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='binding_site'),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 230218, '.'),
+        ID='chrI',
+        Name='chrI',
+        dbxref=['NCBI:NC_001133'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='chromosome'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 62, '-'),
+        ID='TEL01L-TR',
+        Name='TEL01L-TR',
+        Note=['Terminal telomeric repeats on the left arm of Chromosome I'],
+        dbxref=['SGD:S000028864'],
+        display='Terminal telomeric repeats on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomeric_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 801, '-'),
+        ID='TEL01L',
+        Name='TEL01L',
+        Note=[
+            'Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'
+        ],
+        dbxref=['SGD:S000028862'],
+        display='Telomeric region on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomere'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 62, 336, '-'),
+        ID='TEL01L-XR',
+        Name='TEL01L-XR',
+        Note=[
+            'Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'
+        ],
+        dbxref=['SGD:S000028866'],
+        display='Telomeric X element combinatorial repeat on the left arm of Chr I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element_combinatorial_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W',
+        Name='YAL069W',
+        Note=[
+            'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'
+        ],
+        Ontology_term=['GO:0003674', 'GO:0005575', 'GO:0008150'],
+        dbxref=['SGD:S000002143'],
+        display='Dubious open reading frame',
+        orf_classification='Dubious',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='gene'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        Name='YAL069W_CDS',
+        Parent=['YAL069W_mRNA'],
+        orf_classification='Dubious',
+        phase='0',
+        score='.',
+        source='SGD',
+        type='CDS'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        Name='YAL069W_mRNA',
+        Parent=['YAL069W'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='mRNA'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 336, 801, '-'),
+        ID='TEL01L-XC',
+        Name='TEL01L-XC',
+        Note=[
+            'Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'
+        ],
+        dbxref=['SGD:S000028865'],
+        display='Telomeric X element Core sequence on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 752, 763, '-'),
+        ID='TEL02L-XC_nucleotide_match',
+        Name='TEL02L-XC_nucleotide_match',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='nucleotide_match'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 531, 544, '-'),
+        ID='TEL02L-XC_binding_site',
+        Name='TEL02L-XC_binding_site',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='binding_site'
+    ),
 ]
 
 _GFF3_STOP_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',0,230218,'.'),ID='chrI',Name='chrI',dbxref=['NCBI:NC_001133'],phase='.',score='.',source='SGD',type='chromosome'),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 230218, '.'),
+        ID='chrI',
+        Name='chrI',
+        dbxref=['NCBI:NC_001133'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='chromosome'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',0,62,'-'),ID='TEL01L-TR',Name='TEL01L-TR',Note=['Terminal telomeric repeats on the left arm of Chromosome I'],dbxref=['SGD:S000028864'],display='Terminal telomeric repeats on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomeric_repeat'),
-    SegmentChain(GenomicSegment('chrI',0,801,'-'),ID='TEL01L',Name='TEL01L',Note=['Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'],dbxref=['SGD:S000028862'],display='Telomeric region on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomere'),
-    SegmentChain(GenomicSegment('chrI',62,336,'-'),ID='TEL01L-XR',Name='TEL01L-XR',Note=['Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'],dbxref=['SGD:S000028866'],display='Telomeric X element combinatorial repeat on the left arm of Chr I',phase='.',score='.',source='SGD',type='X_element_combinatorial_repeat'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W',Name='YAL069W',Note=['Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'],Ontology_term=['GO:0003674','GO:0005575','GO:0008150'],dbxref=['SGD:S000002143'],display='Dubious open reading frame',orf_classification='Dubious',phase='.',score='.',source='SGD',type='gene'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),Name='YAL069W_CDS',Parent=['YAL069W_mRNA'],orf_classification='Dubious',phase='0',score='.',source='SGD',type='CDS'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',Name='YAL069W_mRNA',Parent=['YAL069W'],phase='.',score='.',source='SGD',type='mRNA'),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 62, '-'),
+        ID='TEL01L-TR',
+        Name='TEL01L-TR',
+        Note=['Terminal telomeric repeats on the left arm of Chromosome I'],
+        dbxref=['SGD:S000028864'],
+        display='Terminal telomeric repeats on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomeric_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 801, '-'),
+        ID='TEL01L',
+        Name='TEL01L',
+        Note=[
+            'Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'
+        ],
+        dbxref=['SGD:S000028862'],
+        display='Telomeric region on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomere'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 62, 336, '-'),
+        ID='TEL01L-XR',
+        Name='TEL01L-XR',
+        Note=[
+            'Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'
+        ],
+        dbxref=['SGD:S000028866'],
+        display='Telomeric X element combinatorial repeat on the left arm of Chr I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element_combinatorial_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W',
+        Name='YAL069W',
+        Note=[
+            'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'
+        ],
+        Ontology_term=['GO:0003674', 'GO:0005575', 'GO:0008150'],
+        dbxref=['SGD:S000002143'],
+        display='Dubious open reading frame',
+        orf_classification='Dubious',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='gene'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        Name='YAL069W_CDS',
+        Parent=['YAL069W_mRNA'],
+        orf_classification='Dubious',
+        phase='0',
+        score='.',
+        source='SGD',
+        type='CDS'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        Name='YAL069W_mRNA',
+        Parent=['YAL069W'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='mRNA'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',336,801,'-'),ID='TEL01L-XC',Name='TEL01L-XC',Note=['Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'],dbxref=['SGD:S000028865'],display='Telomeric X element Core sequence on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='X_element'),
-    SegmentChain(GenomicSegment('chrII',752,763,'-'),ID='TEL02L-XC_nucleotide_match',Name='TEL02L-XC_nucleotide_match',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='nucleotide_match'),
-    SegmentChain(GenomicSegment('chrII',531,544,'-'),ID='TEL02L-XC_binding_site',Name='TEL02L-XC_binding_site',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='binding_site'),
+    SegmentChain(
+        GenomicSegment('chrI', 336, 801, '-'),
+        ID='TEL01L-XC',
+        Name='TEL01L-XC',
+        Note=[
+            'Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'
+        ],
+        dbxref=['SGD:S000028865'],
+        display='Telomeric X element Core sequence on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 752, 763, '-'),
+        ID='TEL02L-XC_nucleotide_match',
+        Name='TEL02L-XC_nucleotide_match',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='nucleotide_match'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 531, 544, '-'),
+        ID='TEL02L-XC_binding_site',
+        Name='TEL02L-XC_binding_site',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='binding_site'
+    ),
     StopFeature,
 ]
 
 _GFF3_STOP_CHROM_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',0,230218,'.'),ID='chrI',Name='chrI',dbxref=['NCBI:NC_001133'],phase='.',score='.',source='SGD',type='chromosome'),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 230218, '.'),
+        ID='chrI',
+        Name='chrI',
+        dbxref=['NCBI:NC_001133'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='chromosome'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',0,62,'-'),ID='TEL01L-TR',Name='TEL01L-TR',Note=['Terminal telomeric repeats on the left arm of Chromosome I'],dbxref=['SGD:S000028864'],display='Terminal telomeric repeats on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomeric_repeat'),
-    SegmentChain(GenomicSegment('chrI',0,801,'-'),ID='TEL01L',Name='TEL01L',Note=['Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'],dbxref=['SGD:S000028862'],display='Telomeric region on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='telomere'),
-    SegmentChain(GenomicSegment('chrI',62,336,'-'),ID='TEL01L-XR',Name='TEL01L-XR',Note=['Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'],dbxref=['SGD:S000028866'],display='Telomeric X element combinatorial repeat on the left arm of Chr I',phase='.',score='.',source='SGD',type='X_element_combinatorial_repeat'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W',Name='YAL069W',Note=['Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'],Ontology_term=['GO:0003674','GO:0005575','GO:0008150'],dbxref=['SGD:S000002143'],display='Dubious open reading frame',orf_classification='Dubious',phase='.',score='.',source='SGD',type='gene'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),Name='YAL069W_CDS',Parent=['YAL069W_mRNA'],orf_classification='Dubious',phase='0',score='.',source='SGD',type='CDS'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',Name='YAL069W_mRNA',Parent=['YAL069W'],phase='.',score='.',source='SGD',type='mRNA'),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 62, '-'),
+        ID='TEL01L-TR',
+        Name='TEL01L-TR',
+        Note=['Terminal telomeric repeats on the left arm of Chromosome I'],
+        dbxref=['SGD:S000028864'],
+        display='Terminal telomeric repeats on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomeric_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 0, 801, '-'),
+        ID='TEL01L',
+        Name='TEL01L',
+        Note=[
+            'Telomeric region on the left arm of Chromosome I; composed of an X element core sequence, X element combinatorial repeats, and a short terminal stretch of telomeric repeats'
+        ],
+        dbxref=['SGD:S000028862'],
+        display='Telomeric region on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='telomere'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 62, 336, '-'),
+        ID='TEL01L-XR',
+        Name='TEL01L-XR',
+        Note=[
+            'Telomeric X element combinatorial repeat on the left arm of Chr I; contains repeats of the D, C, B and A types, as well as Tbf1p binding sites; formerly called SubTelomeric Repeats'
+        ],
+        dbxref=['SGD:S000028866'],
+        display='Telomeric X element combinatorial repeat on the left arm of Chr I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element_combinatorial_repeat'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W',
+        Name='YAL069W',
+        Note=[
+            'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data'
+        ],
+        Ontology_term=['GO:0003674', 'GO:0005575', 'GO:0008150'],
+        dbxref=['SGD:S000002143'],
+        display='Dubious open reading frame',
+        orf_classification='Dubious',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='gene'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        Name='YAL069W_CDS',
+        Parent=['YAL069W_mRNA'],
+        orf_classification='Dubious',
+        phase='0',
+        score='.',
+        source='SGD',
+        type='CDS'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        Name='YAL069W_mRNA',
+        Parent=['YAL069W'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='mRNA'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',336,801,'-'),ID='TEL01L-XC',Name='TEL01L-XC',Note=['Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'],dbxref=['SGD:S000028865'],display='Telomeric X element Core sequence on the left arm of Chromosome I',phase='.',score='.',source='SGD',type='X_element'),
+    SegmentChain(
+        GenomicSegment('chrI', 336, 801, '-'),
+        ID='TEL01L-XC',
+        Name='TEL01L-XC',
+        Note=[
+            'Telomeric X element Core sequence on the left arm of Chromosome I; contains an ARS consensus sequence, an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W)'
+        ],
+        dbxref=['SGD:S000028865'],
+        display='Telomeric X element Core sequence on the left arm of Chromosome I',
+        phase='.',
+        score='.',
+        source='SGD',
+        type='X_element'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrII',752,763,'-'),ID='TEL02L-XC_nucleotide_match',Name='TEL02L-XC_nucleotide_match',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='nucleotide_match'),
-    SegmentChain(GenomicSegment('chrII',531,544,'-'),ID='TEL02L-XC_binding_site',Name='TEL02L-XC_binding_site',dbxref=['SGD:S000028865'],phase='.',score='.',source='SGD',type='binding_site'),
+    SegmentChain(
+        GenomicSegment('chrII', 752, 763, '-'),
+        ID='TEL02L-XC_nucleotide_match',
+        Name='TEL02L-XC_nucleotide_match',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='nucleotide_match'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 531, 544, '-'),
+        ID='TEL02L-XC_binding_site',
+        Name='TEL02L-XC_binding_site',
+        dbxref=['SGD:S000028865'],
+        phase='.',
+        score='.',
+        source='SGD',
+        type='binding_site'
+    ),
     StopFeature,
 ]
 
@@ -97,7 +427,9 @@ chrI    SGD    CDS    335    649    .    +    0    Parent=YAL069W_mRNA;Name=YAL0
 chrI    SGD    mRNA    335    649    .    +    .    ID=YAL069W_mRNA;Name=YAL069W_mRNA;Parent=YAL069W
 chrI    SGD    X_element    337    801    .    -    .    ID=TEL01L-XC;Name=TEL01L-XC;Note=Telomeric X element Core sequence on the left arm of Chromosome I%3B contains an ARS consensus sequence%2C an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W);display=Telomeric X element Core sequence on the left arm of Chromosome I;dbxref=SGD:S000028865
 chrII    SGD    nucleotide_match    753    763    .    -    .    ID=TEL02L-XC_nucleotide_match;Name=TEL02L-XC_nucleotide_match;dbxref=SGD:S000028865
-chrII    SGD    binding_site    532    544    .    -    .    ID=TEL02L-XC_binding_site;Name=TEL02L-XC_binding_site;dbxref=SGD:S000028865""".replace("    ","\t")
+chrII    SGD    binding_site    532    544    .    -    .    ID=TEL02L-XC_binding_site;Name=TEL02L-XC_binding_site;dbxref=SGD:S000028865""".replace(
+    "    ", "\t"
+)
 
 # This data taken from SGD on 2014-11-16 at www.yeastgenome.org
 _GFF3_STOP_FEATURE_TEXT = """##gff-version 3
@@ -130,51 +462,441 @@ chrI    SGD    mRNA    335    649    .    +    .    ID=YAL069W_mRNA;Name=YAL069W
 chrI    SGD    X_element    337    801    .    -    .    ID=TEL01L-XC;Name=TEL01L-XC;Note=Telomeric X element Core sequence on the left arm of Chromosome I%3B contains an ARS consensus sequence%2C an Abf1p binding site consensus sequence and two small overlapping ORFs (YAL068W-A and YAL069W);display=Telomeric X element Core sequence on the left arm of Chromosome I;dbxref=SGD:S000028865
 chrII    SGD    nucleotide_match    753    763    .    -    .    ID=TEL02L-XC_nucleotide_match;Name=TEL02L-XC_nucleotide_match;dbxref=SGD:S000028865
 chrII    SGD    binding_site    532    544    .    -    .    ID=TEL02L-XC_binding_site;Name=TEL02L-XC_binding_site;dbxref=SGD:S000028865
-###""".replace("    ","\t")
+###""".replace("    ", "\t")
 
 _GTF2_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',223,790,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',426,933,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',537,792,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1665,2280,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1806,2169,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',2368,2848,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',2479,2707,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrII',7093,9127,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrII',7234,9016,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 223, 790, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 426, 933, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 537, 792, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1665, 2280, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1806, 2169, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 2368, 2848, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 2479, 2707, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 7093, 9127, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 7234, 9016, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
 ]
 
 _GTF2_STOP_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',223,790,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 223, 790, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',426,933,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',537,792,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1665,2280,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1806,2169,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 426, 933, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 537, 792, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1665, 2280, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1806, 2169, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',2368,2848,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',2479,2707,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrII',7093,9127,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrII',7234,9016,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 2368, 2848, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 2479, 2707, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 7093, 9127, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 7234, 9016, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
 ]
 
 _GTF2_STOP_CHROM_FEATURES = [
-    SegmentChain(GenomicSegment('chrI',223,790,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',334,649,'+'),ID='YAL069W_mRNA',gene_aliases='YAL069W',gene_id='YAL069W',name='YAL069W',phase='.',score='.',source='.',transcript_id='YAL069W_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 223, 790, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 334, 649, '+'),
+        ID='YAL069W_mRNA',
+        gene_aliases='YAL069W',
+        gene_id='YAL069W',
+        name='YAL069W',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL069W_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',426,933,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',537,792,'+'),ID='YAL068W-A_mRNA',gene_aliases='YAL068W-A',gene_id='YAL068W-A',name='YAL068W-A',phase='.',score='.',source='.',transcript_id='YAL068W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1665,2280,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',1806,2169,'-'),ID='YAL068C_mRNA',gene_aliases='PAU8,seripauperin PAU8',gene_id='YAL068C',name='PAU8',phase='.',score='.',source='.',transcript_id='YAL068C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 426, 933, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 537, 792, '+'),
+        ID='YAL068W-A_mRNA',
+        gene_aliases='YAL068W-A',
+        gene_id='YAL068W-A',
+        name='YAL068W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1665, 2280, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 1806, 2169, '-'),
+        ID='YAL068C_mRNA',
+        gene_aliases='PAU8,seripauperin PAU8',
+        gene_id='YAL068C',
+        name='PAU8',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL068C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrI',2368,2848,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrI',2479,2707,'+'),ID='YAL067W-A_mRNA',gene_aliases='YAL067W-A',gene_id='YAL067W-A',name='YAL067W-A',phase='.',score='.',source='.',transcript_id='YAL067W-A_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrI', 2368, 2848, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrI', 2479, 2707, '+'),
+        ID='YAL067W-A_mRNA',
+        gene_aliases='YAL067W-A',
+        gene_id='YAL067W-A',
+        name='YAL067W-A',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YAL067W-A_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
-    SegmentChain(GenomicSegment('chrII',7093,9127,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='exon',utr3_source='estimated',utr5_source='estimated'),
-    SegmentChain(GenomicSegment('chrII',7234,9016,'-'),ID='YBL067C_mRNA',gene_aliases='SEO1,putative permease SEO1',gene_id='YBL067C',name='SEO1',phase='.',score='.',source='.',transcript_id='YBL067C_mRNA',type='CDS',utr3_source='estimated',utr5_source='estimated'),
+    SegmentChain(
+        GenomicSegment('chrII', 7093, 9127, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='exon',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
+    SegmentChain(
+        GenomicSegment('chrII', 7234, 9016, '-'),
+        ID='YBL067C_mRNA',
+        gene_aliases='SEO1,putative permease SEO1',
+        gene_id='YBL067C',
+        name='SEO1',
+        phase='.',
+        score='.',
+        source='.',
+        transcript_id='YBL067C_mRNA',
+        type='CDS',
+        utr3_source='estimated',
+        utr5_source='estimated'
+    ),
     StopFeature,
 ]
 
@@ -189,7 +911,9 @@ chrI    .    exon    2369    2848    .    +    .    gene_id "YAL067W-A"; transcr
 chrI    .    CDS    2480    2707    .    +    .    gene_id "YAL067W-A"; transcript_id "YAL067W-A_mRNA"; name "YAL067W-A"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL067W-A"; ID "YAL067W-A_mRNA"; 
 
 chrII    .    exon    7094    9127    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; 
-chrII    .    CDS    7235    9016    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; """.replace("    ","\t")
+chrII    .    CDS    7235    9016    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; """.replace(
+    "    ", "\t"
+)
 
 _GTF2_STOP_FEATURE_TEXT = """chrI    .    exon    224    790    .    +    .    gene_id "YBL069W"; transcript_id "YBL069W_mRNA"; name "YBL069W"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YBL069W"; ID "YBL069W_mRNA"; 
 chrI    .    CDS    335    649    .    +    .    gene_id "YAL069W"; transcript_id "YAL069W_mRNA"; name "YAL069W"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL069W"; ID "YAL069W_mRNA"; 
@@ -203,7 +927,7 @@ chrI    .    exon    2369    2848    .    +    .    gene_id "YAL067W-A"; transcr
 chrI    .    CDS    2480    2707    .    +    .    gene_id "YAL067W-A"; transcript_id "YAL067W-A_mRNA"; name "YAL067W-A"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL067W-A"; ID "YAL067W-A_mRNA"; 
 chrII    .    exon    7094    9127    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; 
 chrII    .    CDS    7235    9016    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA";
-###""".replace("    ","\t")
+###""".replace("    ", "\t")
 
 _GTF2_FEATURE_TEXT_ADD_3 = """chrI    .    exon    224    790    .    +    .    gene_id "YAL069W"; transcript_id "YAL069W_mRNA"; name "YAL069W"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL069W"; ID "YAL069W_mRNA"; 
 chrI    .    CDS    335    646    .    +    .    gene_id "YAL069W"; transcript_id "YAL069W_mRNA"; name "YAL069W"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL069W"; ID "YAL069W_mRNA"; 
@@ -215,91 +939,2168 @@ chrI    .    exon    2369    2848    .    +    .    gene_id "YAL067W-A"; transcr
 chrI    .    CDS    2480    2704    .    +    .    gene_id "YAL067W-A"; transcript_id "YAL067W-A_mRNA"; name "YAL067W-A"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "YAL067W-A"; ID "YAL067W-A_mRNA"; 
 
 chrII    .    exon    7094    9127    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; 
-chrII    .    CDS    7232    9016    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; """.replace("    ","\t")
+chrII    .    CDS    7232    9016    .    -    .    gene_id "YBL067C"; transcript_id "YBL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YBL067C_mRNA"; """.replace(
+    "    ", "\t"
+)
 
-
-REJECTED_NAMES = ["TestBadTranscript1",
-                  "TestBadTranscript2"]
-
+REJECTED_NAMES = ["TestBadTranscript1", "TestBadTranscript2"]
 
 EXPECTED_IVCS = [
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3221892,3222171,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247586,3247710,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111092',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231783,3232074,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241320,3241441,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0089016',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231783,3232074,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241320,3241441,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0089018',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234511,3234799,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3243821,3243945,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252522,3252684,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111049',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228449,3228737,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241781,3241905,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111053',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3226145,3226433,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3239203,3239327,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111056',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3226907,3227195,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244249,3244373,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111060',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3227287,3227575,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3237878,3238002,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111085',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3227659,3227947,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3239203,3239327,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111096',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232168,3232459,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3237105,3237226,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306783',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3226532,3226820,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246726,3246850,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306784',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223220,3223508,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247171,3247295,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306787',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228832,3229123,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3242386,3242510,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111052',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3233380,3233671,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246946,3247070,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111057',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231783,3232074,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244031,3244155,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111061',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230836,3231127,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246520,3246644,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111083',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3227287,3227575,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241070,3241197,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111084',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232168,3232459,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3242795,3242919,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111088',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232168,3232459,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246946,3247070,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252522,3252684,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111100',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3225754,3226042,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3236897,3237018,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111066',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234146,3234434,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3240403,3240527,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251385,3251553,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111067',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3224998,3225286,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3236897,3237018,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251099,3251270,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111071',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231783,3232074,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241320,3241441,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0089019',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3225376,3225664,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238085,3238209,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251099,3251270,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111070',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3233773,3234061,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241781,3241905,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252816,3252987,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111097',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3224035,3224323,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241981,3242105,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251099,3251270,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306776',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3226145,3226433,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238462,3238586,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306779',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230836,3231127,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238286,3238410,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251385,3251553,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306780',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3242190,3242314,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306768',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245095,3245219,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306771',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228832,3229123,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246946,3247070,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111064',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231783,3232074,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244477,3244601,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111074',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234896,3235202,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238678,3238802,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0089020',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3214121,3214289,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3224998,3225286,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247379,3247512,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111063',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3222438,3222723,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241561,3241682,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250836,3250995,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306777',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230468,3230753,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246726,3246850,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111058',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3222438,3222723,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245293,3245420,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250836,3250995,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111075',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3222438,3222723,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3248030,3248154,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111076',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3231222,3231513,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245933,3246051,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306773',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3227659,3227947,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3242591,3242715,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252522,3252684,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111050',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228049,3228337,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244249,3244373,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111051',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232565,3232856,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3240749,3240870,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111054',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223220,3223508,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246311,3246435,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111077',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234146,3234434,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246108,3246232,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111078',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234146,3234434,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245720,3245844,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252522,3252684,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111079',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3229608,3229896,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247795,3247919,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111081',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223220,3223508,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244477,3244601,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111087',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223220,3223508,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3239203,3239327,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111089',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3221892,3222171,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238085,3238209,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252816,3252987,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111098',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228832,3229123,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3239420,3239544,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252236,3252398,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111055',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3233380,3233671,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244477,3244601,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111059',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232168,3232459,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238085,3238209,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111062',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3233380,3233671,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247171,3247295,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3254309,3254471,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111082',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232565,3232856,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3243405,3243529,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111094',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232565,3232856,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3237489,3237613,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306782',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3221191,3221485,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244687,3244811,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252522,3252684,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306774',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3225376,3225664,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3241781,3241905,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111065',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234511,3234799,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244904,3245028,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251099,3251270,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111068',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3229608,3229896,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3239203,3239327,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251099,3251270,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111069',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3229212,3229500,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3244249,3244373,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111101',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3224593,3224881,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247795,3247919,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251682,3251853,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306785',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238678,3238802,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306769',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247586,3247710,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306770',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3243190,3243314,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253447,3253609,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306772',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228832,3229123,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3246726,3246850,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111072',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3228832,3229123,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245095,3245219,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111073',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232989,3233280,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3243611,3243735,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111080',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3232168,3232459,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3237292,3237416,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252816,3252987,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111099',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223220,3223508,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3245507,3245634,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3252816,3252987,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306775',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223621,3223915,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3238965,3239089,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306778',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3223621,3223915,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3242591,3242715,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3250528,3250699,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306786',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234896,3235202,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3243190,3243314,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3251960,3252122,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0111102',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3234896,3235202,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3237662,3237786,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306781',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('2R',3207058,3208269,'-'),GenomicSegment('2R',3209087,3209154,'-'),GenomicSegment('2R',3210064,3210223,'-'),GenomicSegment('2R',3210280,3210461,'-'),GenomicSegment('2R',3210526,3210837,'-'),GenomicSegment('2R',3211323,3211473,'-'),GenomicSegment('2R',3212086,3212242,'-'),GenomicSegment('2R',3213656,3213869,'-'),GenomicSegment('2R',3216793,3216960,'-'),GenomicSegment('2R',3217017,3217194,'-'),GenomicSegment('2R',3217247,3217356,'-'),GenomicSegment('2R',3217421,3218105,'-'),GenomicSegment('2R',3218163,3218319,'-'),GenomicSegment('2R',3218480,3219707,'-'),GenomicSegment('2R',3219765,3219885,'-'),GenomicSegment('2R',3230087,3230386,'-'),GenomicSegment('2R',3235353,3235515,'-'),GenomicSegment('2R',3235635,3236480,'-'),GenomicSegment('2R',3247379,3247512,'-'),GenomicSegment('2R',3249222,3249372,'-'),GenomicSegment('2R',3253970,3254132,'-'),GenomicSegment('2R',3255892,3256237,'-'),GenomicSegment('2R',3265038,3265219,'-'),GenomicSegment('2R',3268975,3269374,'-'),ID='FBtr0306767',cds_genome_start=3208187,cds_genome_end=3265099),
-Transcript(GenomicSegment('3R',14982961,14983694,'+'),GenomicSegment('3R',14984237,14984707,'+'),GenomicSegment('3R',14984780,14985924,'+'),ID='FBtr0083732',cds_genome_start=14983222,cds_genome_end=14985044),
-
-                 ]
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3221892, 3222171, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247586, 3247710, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111092',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231783, 3232074, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241320, 3241441, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0089016',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231783, 3232074, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241320, 3241441, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0089018',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234511, 3234799, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3243821, 3243945, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252522, 3252684, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111049',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228449, 3228737, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241781, 3241905, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111053',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3226145, 3226433, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3239203, 3239327, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111056',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3226907, 3227195, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244249, 3244373, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111060',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3227287, 3227575, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3237878, 3238002, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111085',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3227659, 3227947, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3239203, 3239327, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111096',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232168, 3232459, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3237105, 3237226, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306783',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3226532, 3226820, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246726, 3246850, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306784',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223220, 3223508, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247171, 3247295, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306787',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228832, 3229123, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3242386, 3242510, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111052',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3233380, 3233671, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246946, 3247070, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111057',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231783, 3232074, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244031, 3244155, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111061',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230836, 3231127, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246520, 3246644, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111083',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3227287, 3227575, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241070, 3241197, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111084',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232168, 3232459, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3242795, 3242919, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111088',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232168, 3232459, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246946, 3247070, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252522, 3252684, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111100',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3225754, 3226042, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3236897, 3237018, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111066',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234146, 3234434, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3240403, 3240527, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251385, 3251553, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111067',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3224998, 3225286, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3236897, 3237018, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251099, 3251270, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111071',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231783, 3232074, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241320, 3241441, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0089019',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3225376, 3225664, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238085, 3238209, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251099, 3251270, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111070',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3233773, 3234061, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241781, 3241905, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252816, 3252987, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111097',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3224035, 3224323, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241981, 3242105, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251099, 3251270, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306776',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3226145, 3226433, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238462, 3238586, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306779',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230836, 3231127, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238286, 3238410, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251385, 3251553, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306780',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3242190, 3242314, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306768',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245095, 3245219, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306771',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228832, 3229123, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246946, 3247070, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111064',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231783, 3232074, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244477, 3244601, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111074',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234896, 3235202, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238678, 3238802, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0089020',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3214121, 3214289, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3224998, 3225286, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247379, 3247512, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111063',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3222438, 3222723, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241561, 3241682, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250836, 3250995, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306777',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230468, 3230753, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246726, 3246850, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111058',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3222438, 3222723, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245293, 3245420, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250836, 3250995, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111075',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3222438, 3222723, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3248030, 3248154, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111076',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3231222, 3231513, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245933, 3246051, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306773',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3227659, 3227947, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3242591, 3242715, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252522, 3252684, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111050',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228049, 3228337, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244249, 3244373, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111051',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232565, 3232856, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3240749, 3240870, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111054',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223220, 3223508, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246311, 3246435, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111077',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234146, 3234434, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246108, 3246232, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111078',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234146, 3234434, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245720, 3245844, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252522, 3252684, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111079',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3229608, 3229896, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247795, 3247919, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111081',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223220, 3223508, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244477, 3244601, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111087',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223220, 3223508, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3239203, 3239327, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111089',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3221892, 3222171, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238085, 3238209, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252816, 3252987, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111098',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228832, 3229123, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3239420, 3239544, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252236, 3252398, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111055',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3233380, 3233671, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244477, 3244601, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111059',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232168, 3232459, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238085, 3238209, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111062',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3233380, 3233671, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247171, 3247295, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3254309, 3254471, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111082',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232565, 3232856, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3243405, 3243529, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111094',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232565, 3232856, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3237489, 3237613, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306782',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3221191, 3221485, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244687, 3244811, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252522, 3252684, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306774',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3225376, 3225664, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3241781, 3241905, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111065',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234511, 3234799, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244904, 3245028, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251099, 3251270, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111068',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3229608, 3229896, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3239203, 3239327, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251099, 3251270, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111069',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3229212, 3229500, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3244249, 3244373, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111101',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3224593, 3224881, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247795, 3247919, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251682, 3251853, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306785',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238678, 3238802, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306769',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247586, 3247710, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306770',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3243190, 3243314, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253447, 3253609, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306772',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228832, 3229123, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3246726, 3246850, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111072',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3228832, 3229123, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245095, 3245219, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111073',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232989, 3233280, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3243611, 3243735, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111080',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3232168, 3232459, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3237292, 3237416, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252816, 3252987, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111099',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223220, 3223508, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3245507, 3245634, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3252816, 3252987, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306775',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223621, 3223915, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3238965, 3239089, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306778',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3223621, 3223915, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3242591, 3242715, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3250528, 3250699, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306786',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234896, 3235202, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3243190, 3243314, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3251960, 3252122, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0111102',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3234896, 3235202, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3237662, 3237786, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306781',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('2R', 3207058, 3208269, '-'),
+        GenomicSegment('2R', 3209087, 3209154, '-'),
+        GenomicSegment('2R', 3210064, 3210223, '-'),
+        GenomicSegment('2R', 3210280, 3210461, '-'),
+        GenomicSegment('2R', 3210526, 3210837, '-'),
+        GenomicSegment('2R', 3211323, 3211473, '-'),
+        GenomicSegment('2R', 3212086, 3212242, '-'),
+        GenomicSegment('2R', 3213656, 3213869, '-'),
+        GenomicSegment('2R', 3216793, 3216960, '-'),
+        GenomicSegment('2R', 3217017, 3217194, '-'),
+        GenomicSegment('2R', 3217247, 3217356, '-'),
+        GenomicSegment('2R', 3217421, 3218105, '-'),
+        GenomicSegment('2R', 3218163, 3218319, '-'),
+        GenomicSegment('2R', 3218480, 3219707, '-'),
+        GenomicSegment('2R', 3219765, 3219885, '-'),
+        GenomicSegment('2R', 3230087, 3230386, '-'),
+        GenomicSegment('2R', 3235353, 3235515, '-'),
+        GenomicSegment('2R', 3235635, 3236480, '-'),
+        GenomicSegment('2R', 3247379, 3247512, '-'),
+        GenomicSegment('2R', 3249222, 3249372, '-'),
+        GenomicSegment('2R', 3253970, 3254132, '-'),
+        GenomicSegment('2R', 3255892, 3256237, '-'),
+        GenomicSegment('2R', 3265038, 3265219, '-'),
+        GenomicSegment('2R', 3268975, 3269374, '-'),
+        ID='FBtr0306767',
+        cds_genome_start=3208187,
+        cds_genome_end=3265099
+    ),
+    Transcript(
+        GenomicSegment('3R', 14982961, 14983694, '+'),
+        GenomicSegment('3R', 14984237, 14984707, '+'),
+        GenomicSegment('3R', 14984780, 14985924, '+'),
+        ID='FBtr0083732',
+        cds_genome_start=14983222,
+        cds_genome_end=14985044
+    ),
+]
 
 # from dmel-all-no-analysis-no-fasta-r5.43.gff
 # Dscam1 examples
@@ -986,7 +3787,9 @@ GFF3_TO_TRANSCRIPTS_SORTED = """2R    FlyBase    gene    3207059    3269374    .
 4    TestData    gene    5000    6010    .    +    0    ID=TestBadGene2
 4    TestData    mRNA    5000    6010    .    +    0    ID=TestBadTranscript2;Parent=TestBadGene2
 4    TestData    exon    5000    5010    .    +    0    ID=exon_test21;Parent=TestBadTranscript2;parent_type=mRNA
-2L    TestData    exon    5500    6010    .    +    0    ID=exon_test22;Parent=TestBadTranscript2;parent_type=mRNA""".replace("    ","\t")
+2L    TestData    exon    5500    6010    .    +    0    ID=exon_test22;Parent=TestBadTranscript2;parent_type=mRNA""".replace(
+    "    ", "\t"
+)
 
 GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED = """2R    FlyBase    gene    3207059    3269374    .    -    .    ID=FBgn0033159;Name=Dscam;fullname=Down syndrome cell adhesion molecule;Alias=FBgn0004124,FBgn0010604,FBgn0033159,Neu1,Dscam1,p270,CT39257,l(2)43Bc,43Bc,lethal(2)43Bc,l(2)05518,CG17800,DScam,Drosophila Down syndrome cell adhesion molecule,Down's syndrome Cell Adhesion Molecule,DSCAM,Down syndrome cell-adhesion molecule,Down Syndrome Cell Adhesion Molecule,dscam,Down Syndrome cell adhesion molecule,dScam,DmDscam;Ontology_term=GO:0016319,SO:0000010,SO:0000087,GO:0007411,GO:0005887,GO:0008046,GO:0006909,GO:0007422,GO:0048666,GO:0007413,GO:0043025,GO:0030425,GO:0030424,GO:0021551,GO:0042803,GO:0048846,GO:0070593,GO:0051635,GO:0042802;Dbxref=FlyBase:FBan0017800,FlyBase_Annotation_IDs:CG17800,GB_protein:ABI31027,GB_protein:ABI31036,GB_protein:ABI31050,GB_protein:ABI31041,GB_protein:ABI31040,GB_protein:ABI31048,GB_protein:ABI31031,GB_protein:ABI31033,GB_protein:ABI31055,GB_protein:ABI31053,GB_protein:ABI31037,GB_protein:AAM68883,GB_protein:ABI31035,GB_protein:ABI31043,GB_protein:ABI31039,GB_protein:ABI31067,GB_protein:ABI31075,GB_protein:ABI31054,GB_protein:ABI31073,GB_protein:ABI31030,GB_protein:ABI31061,GB_protein:ABI31057,GB_protein:ABI31056,GB_protein:ABI31079,GB_protein:ABI31029,GB_protein:ABI31064,GB_protein:ABI31069,GB_protein:ABI31078,GB_protein:ABI31080,GB_protein:ABI31077,GB_protein:ABI31028,GB_protein:ABI31066,GB_protein:ABI31052,GB_protein:ABI31032,GB_protein:ABI31068,GB_protein:ABI31042,GB_protein:ABI31046,GB_protein:ABI31072,GB_protein:AAS64901,GB_protein:ABI31034,GB_protein:ABI31062,GB_protein:ABI31051,GB_protein:ABI31070,GB_protein:ABI31044,GB_protein:ABI31058,GB_protein:ABI31047,GB_protein:ABI31049,GB_protein:AAM68884,GB_protein:ABI31059,GB_protein:ABI31060,GB_protein:ABI31071,GB_protein:ABI31081,GB_protein:ABI31074,GB_protein:ABI31038,GB_protein:AAF59271,GB_protein:ABI31045,GB_protein:ABI31063,GB_protein:ABI31076,GB_protein:ABI31065,GB:AA697364,GB:AF260530,GB_protein:AAF71926,GB:AI542894,GB:AQ034165,GB:AW941417,GB:AW944596,GB:AY058789,GB_protein:AAL14018,GB:AY061009,GB_protein:AAL28557,GB:BG640148,GB:BH256401,GB:BH759233,GB:BH759234,GB:BT001877,GB_protein:AAN71649,GB:BZ748857,GB:BZ748858,GB:CL528133,GB:CL528281,GB:CZ466627,GB:CZ477334,GB:CZ482393,GB:CZ482394,GB:CZ482629,GB:CZ489596,UniProt/TrEMBL:Q8IGA5,UniProt/TrEMBL:Q95S10,UniProt/TrEMBL:Q95TG0,UniProt/TrEMBL:Q9NBA1,INTERPRO:IPR003598,INTERPRO:IPR003599,INTERPRO:IPR003961,INTERPRO:IPR007110,UniProt/TrEMBL:Q0E9H9,UniProt/TrEMBL:A1Z6X3,UniProt/TrEMBL:A1Z6X2,UniProt/TrEMBL:A1Z6X1,INTERPRO:IPR013783,EntrezGene:35652,UniProt/TrEMBL:Q0E9J9,UniProt/TrEMBL:Q0E9K0,UniProt/TrEMBL:Q0E9J1,UniProt/TrEMBL:Q0E9K3,UniProt/TrEMBL:Q0E9L9,UniProt/TrEMBL:Q0E9K1,UniProt/TrEMBL:Q0E9H0,UniProt/TrEMBL:Q0E9M2,UniProt/TrEMBL:Q0E9G9,UniProt/TrEMBL:Q0E9I8,UniProt/TrEMBL:Q0E9L5,UniProt/TrEMBL:Q0E9L2,UniProt/TrEMBL:Q0E9H5,UniProt/TrEMBL:Q0E9K2,UniProt/TrEMBL:Q0E9J6,UniProt/TrEMBL:Q0E9L7,UniProt/TrEMBL:Q0E9I3,UniProt/TrEMBL:Q0E9K4,UniProt/TrEMBL:Q0E9I6,UniProt/TrEMBL:Q0E9J4,UniProt/TrEMBL:Q0E9H4,UniProt/TrEMBL:Q0E9H8,UniProt/TrEMBL:Q0E9K6,UniProt/TrEMBL:Q0E9I4,UniProt/TrEMBL:Q0E9H6,UniProt/TrEMBL:Q0E9I9,UniProt/TrEMBL:Q0E9J3,UniProt/TrEMBL:Q0E9J5,UniProt/TrEMBL:Q0E9L3,UniProt/TrEMBL:Q0E9M0,UniProt/TrEMBL:Q0E9I2,UniProt/TrEMBL:Q0E9K9,UniProt/TrEMBL:Q0E9J8,UniProt/TrEMBL:Q0E9J0,UniProt/TrEMBL:Q0E9L6,UniProt/TrEMBL:Q0E9L4,UniProt/TrEMBL:Q0E9I0,UniProt/TrEMBL:Q0E9I7,UniProt/TrEMBL:Q0E9J7,UniProt/TrEMBL:Q0E9K5,UniProt/TrEMBL:Q0E9H7,UniProt/TrEMBL:Q0E9L0,UniProt/TrEMBL:Q0E9M4,UniProt/TrEMBL:Q0E9L8,UniProt/TrEMBL:Q0E9H3,UniProt/TrEMBL:Q0E9M1,UniProt/TrEMBL:Q0E9H1,UniProt/TrEMBL:Q0E9M3,UniProt/TrEMBL:Q0E9I5,UniProt/TrEMBL:Q0E9L1,UniProt/TrEMBL:Q0E9K8,UniProt/TrEMBL:Q0E9K7,UniProt/TrEMBL:Q0E9J2,UniProt/TrEMBL:Q0E9H2,UniProt/TrEMBL:Q0E9I1,INTERPRO:IPR021012,INTERPRO:IPR013098,InterologFinder:35652,BIOGRID:61533,FlyAtlas:HDC04985%3BCG17800-RA%3BCG15693-RA,GenomeRNAi:35652,INTERACTIVEFLY:/hjmuller/dscam1.htm;gbunit=AE013599;derived_computed_cyto=43A4-43B1
 2R    FlyBase    mRNA    3207059    3269374    .    -    .    ID=FBtr0089016;Name=Dscam-RA;Parent=FBgn0033159;Alias=CG17800-RA;Dbxref=FlyBase_Annotation_IDs:CG17800-RA,REFSEQ:NM_165514;score_text=Strongly Supported;score=11
@@ -1668,9 +4471,9 @@ GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED = """2R    FlyBase    gene    3207059   
 4    TestData    gene    5000    6010    .    +    0    ID=TestBadGene1
 4    TestData    mRNA    5000    6010    .    +    0    ID=TestBadTranscript1;Parent=TestBadGene1
 4    TestData    exon    5000    5010    .    +    0    ID=exon_test11;Parent=TestBadTranscript1;parent_type=mRNA
-4    TestData    exon    5500    6010    .    -    0    ID=exon_test12;Parent=TestBadTranscript1;parent_type=mRNA""".replace("    ","\t")
-
-
+4    TestData    exon    5500    6010    .    -    0    ID=exon_test12;Parent=TestBadTranscript1;parent_type=mRNA""".replace(
+    "    ", "\t"
+)
 
 # cat dmel-all-no-analysis-r5.43.gff | grep FBgn0033159 |\
 # grep -v "RNAi_reagent" | grep -v "region" |\
@@ -1682,7 +4485,7 @@ GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED = """2R    FlyBase    gene    3207059   
 
 tmp = GFF3_TO_TRANSCRIPTS_SORTED.split("\n")
 shuffle(tmp)
-GFF3_TO_TRANSCRIPTS_UNSORTED= "\n".join(tmp)
+GFF3_TO_TRANSCRIPTS_UNSORTED = "\n".join(tmp)
 
 GTF2_TO_TRANSCRIPTS_SORTED = """2R    FlyBase    exon    3207059    3208269    .    -    .    gene_id "FBgn0033159"; transcript_id "FBtr0111092"; Name "Dscam-RR"; score_text "Strongly Supported"; Dbxref "FlyBase_Annotation_IDs%3ACG17800-RR%2CREFSEQ%3ANM_001043028"; ID "FBtr0111092";
 2R    FlyBase    exon    3209088    3209154    .    -    .    gene_id "FBgn0033159"; transcript_id "FBtr0111092"; Name "Dscam-RR"; score_text "Strongly Supported"; Dbxref "FlyBase_Annotation_IDs%3ACG17800-RR%2CREFSEQ%3ANM_001043028"; ID "FBtr0111092";
@@ -5172,11 +7975,11 @@ GTF2_TO_TRANSCRIPTS_SORTED = """2R    FlyBase    exon    3207059    3208269    .
 4    TestData    exon    5500    6010    .    -    0    gene_id "TestBadGene1"; transcript_id "TestBadTranscript1"
 4    TestData    exon    5000    5010    .    +    0    gene_id "TestBadGene2"; transcript_id "TestBadTranscript2"
 2L    TestData    exon    5500    6010    .    +    0    gene_id "TestBadGene2"; transcript_id "TestBadTranscript2"
-""".replace("    ","\t")
+""".replace("    ", "\t")
 
 tmp = GTF2_TO_TRANSCRIPTS_SORTED.split("\n")
 shuffle(tmp)
-GTF2_TO_TRANSCRIPTS_UNSORTED= "\n".join(tmp)
+GTF2_TO_TRANSCRIPTS_UNSORTED = "\n".join(tmp)
 
 del tmp
 
@@ -8669,12 +11472,12 @@ GTF2_TO_TRANSCRIPTS_STOP_FEATURE_SORTED = """2R    FlyBase    exon    3207059   
 3R    FlyBase    CDS    14984781    14985041    .    +    .    gene_id "FBgn0002962"; transcript_id "FBtr0083732"; Name "nos-RA"; score_text "Strongly Supported"; Dbxref "FlyBase_Annotation_IDs%3ACG5637-RA%2CREFSEQ%3ANM_057310"; ID "FBtr0083732";
 4    TestData    exon    5000    5010    .    +    0    gene_id "TestBadGene1"; transcript_id "TestBadTranscript1"
 4    TestData    exon    5500    6010    .    -    0    gene_id "TestBadGene1"; transcript_id "TestBadTranscript1"
-""".replace("    ","\t")
-
+""".replace("    ", "\t")
 
 #===============================================================================
 # INDEX: test suites
 #===============================================================================
+
 
 @attr(test="unit")
 class TestGFF3(unittest.TestCase):
@@ -8685,11 +11488,11 @@ class TestGFF3(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.features            = _GFF3_FEATURES
-        cls.stop_features       = _GFF3_STOP_FEATURES
+        cls.features = _GFF3_FEATURES
+        cls.stop_features = _GFF3_STOP_FEATURES
         cls.stop_chrom_features = _GFF3_STOP_CHROM_FEATURES
-        cls.data_str            = _GFF3_FEATURE_TEXT
-        cls.stop_data_str       = _GFF3_STOP_FEATURE_TEXT
+        cls.data_str = _GFF3_FEATURE_TEXT
+        cls.stop_data_str = _GFF3_STOP_FEATURE_TEXT
 
         cls.reader = staticmethod(GFF3_Reader)
 
@@ -8697,14 +11500,18 @@ class TestGFF3(unittest.TestCase):
         self.data = cStringIO.StringIO(self.data_str)
 
     def test_multi_files(self):
-        test_reader = self.reader(cStringIO.StringIO(self.data_str),cStringIO.StringIO(self.data_str))
-        for c, (feature1, feature2) in enumerate(zip(self.features*2,self.reader(self.data))):
-            err_msg = "Failed identity test in reading: %s{%s} vs %s{%s}" % (feature1,feature1.attr,feature2,feature2.attr)
-            self.assertTrue(self.feature_identical(feature1,feature2),err_msg)
+        test_reader = self.reader(
+            cStringIO.StringIO(self.data_str), cStringIO.StringIO(self.data_str)
+        )
+        for c, (feature1, feature2) in enumerate(zip(self.features * 2, self.reader(self.data))):
+            err_msg = "Failed identity test in reading: %s{%s} vs %s{%s}" % (
+                feature1, feature1.attr, feature2, feature2.attr
+            )
+            self.assertTrue(self.feature_identical(feature1, feature2), err_msg)
 
-        self.assertGreater(c,0,"No features read during test!")        
-        
-    def feature_identical(self,feature1,feature2):
+        self.assertGreater(c, 0, "No features read during test!")
+
+    def feature_identical(self, feature1, feature2):
         """Determine whether two |SegmentChain| s are identical,
         requiring that their intervals, types, and all attributes be so.
         Names are not required to be identical
@@ -8720,9 +11527,9 @@ class TestGFF3(unittest.TestCase):
         -------
         bool
         """
-        segment_test = (feature1.spanning_segment.chrom  == feature2.spanning_segment.chrom) and\
-                  (feature1.spanning_segment.strand == feature2.spanning_segment.strand) and\
-                  (feature1.get_position_set()  == feature2.get_position_set())
+        segment_test = (feature1.spanning_segment.chrom  == feature2.spanning_segment.chrom) \
+            and (feature1.spanning_segment.strand == feature2.spanning_segment.strand) \
+            and (feature1.get_position_set()  == feature2.get_position_set())
         type_test = feature1.attr["type"] == feature2.attr["type"]
         attr_test = set(feature1.attr.keys()) == set(feature2.attr.keys())
         for k in feature1.attr:
@@ -8732,39 +11539,59 @@ class TestGFF3(unittest.TestCase):
 
     def test_read(self):
         # tests reading of feature with strict identity checks of positions, attributes, and type
-        for c, (feature1, feature2) in enumerate(zip(self.features,self.reader(self.data))):
-            err_msg = "Failed identity test in reading: %s{%s} vs %s{%s}" % (feature1,feature1.attr,feature2,feature2.attr)
-            self.assertTrue(self.feature_identical(feature1,feature2),err_msg)
+        for c, (feature1, feature2) in enumerate(zip(self.features, self.reader(self.data))):
+            err_msg = "Failed identity test in reading: %s{%s} vs %s{%s}" % (
+                feature1, feature1.attr, feature2, feature2.attr
+            )
+            self.assertTrue(self.feature_identical(feature1, feature2), err_msg)
 
-        self.assertGreater(c,0,"No features read during test!")
+        self.assertGreater(c, 0, "No features read during test!")
 
     def test_stopfeatures_emitted_when_found(self):
         # only counts lengths of features
-        for n,(expected, found) in enumerate(zip(self.stop_features,self.reader(cStringIO.StringIO(self.stop_data_str),return_stopfeatures=True,is_sorted=False))):
-            self.assertEqual(expected,found)
+        for n, (expected, found) in enumerate(zip(
+                self.stop_features, self.reader(cStringIO.StringIO(self.stop_data_str),
+                                                return_stopfeatures=True, is_sorted=False))):
+            self.assertEqual(expected, found)
 
-        self.assertEqual(n+1,len(self.stop_features),"Mismatch in features counted: expected %s, got %s." % (n+1,len(self.stop_features)))
+        self.assertEqual(
+            n + 1, len(self.stop_features),
+            "Mismatch in features counted: expected %s, got %s." % (n + 1, len(self.stop_features))
+        )
 
     def test_stopfeatures_not_emitted_when_ignored(self):
         # only counts lengths of features
-        for n,(expected, found) in enumerate(zip(self.features,self.reader(cStringIO.StringIO(self.stop_data_str),return_stopfeatures=False,is_sorted=False))):
-            self.assertEqual(expected,found)
+        for n, (expected, found) in enumerate(zip(self.features, self.reader(cStringIO.StringIO(
+                self.stop_data_str), return_stopfeatures=False, is_sorted=False))):
+            self.assertEqual(expected, found)
 
-        self.assertEqual(n+1,len(self.features),"Mismatch in features counted: expected %s, got %s." % (n+1,len(self.stop_features)))
+        self.assertEqual(
+            n + 1, len(self.features),
+            "Mismatch in features counted: expected %s, got %s." % (n + 1, len(self.stop_features))
+        )
 
     def test_stopfeatures_emitted_when_sorted_chroms_change(self):
         # only counts lengths of features
-        for n,(expected, found) in enumerate(zip(self.stop_chrom_features,self.reader(cStringIO.StringIO(self.stop_data_str),return_stopfeatures=True,is_sorted=True))):
-            self.assertEqual(expected,found)
+        for n, (expected, found) in enumerate(zip(self.stop_chrom_features, self.reader(
+                cStringIO.StringIO(self.stop_data_str), return_stopfeatures=True, is_sorted=True))):
+            self.assertEqual(expected, found)
 
-        self.assertEqual(n+1,len(self.stop_chrom_features),"Mismatch in features counted: expected %s, got %s." % (n+1,len(self.stop_chrom_features)))
+        self.assertEqual(
+            n + 1, len(self.stop_chrom_features),
+            "Mismatch in features counted: expected %s, got %s." %
+            (n + 1, len(self.stop_chrom_features))
+        )
 
     def test_no_stopfeatures_when_stopfeatures_off_even_if_sorted(self):
         # only counts lengths of features
-        for n,(expected, found) in enumerate(zip(self.features,self.reader(cStringIO.StringIO(self.stop_data_str),return_stopfeatures=False,is_sorted=True))):
-            self.assertEqual(expected,found)
+        for n, (expected, found) in enumerate(zip(self.features, self.reader(cStringIO.StringIO(
+                self.stop_data_str), return_stopfeatures=False, is_sorted=True))):
+            self.assertEqual(expected, found)
 
-        self.assertEqual(n+1,len(self.features),"Mismatch in features counted: expected %s, got %s." % (n+1,len(self.features)))
+        self.assertEqual(
+            n + 1, len(self.features),
+            "Mismatch in features counted: expected %s, got %s." % (n + 1, len(self.features))
+        )
 
 
 @attr(test="unit")
@@ -8773,19 +11600,21 @@ class TestGTF2(TestGFF3):
  
     See http://mblab.wustl.edu/GTF22.html
     """
- 
+
     @classmethod
     def setUpClass(cls):
-        cls.features      = _GTF2_FEATURES
+        cls.features = _GTF2_FEATURES
         cls.stop_features = _GTF2_STOP_FEATURES
         cls.stop_chrom_features = _GTF2_STOP_CHROM_FEATURES
-        cls.data_str      = _GTF2_FEATURE_TEXT
+        cls.data_str = _GTF2_FEATURE_TEXT
         cls.stop_data_str = _GTF2_STOP_FEATURE_TEXT
         cls.reader = staticmethod(GTF2_Reader)
+
 
 #===============================================================================
 # INDEX: test transcript reconstruction methods
 #===============================================================================
+
 
 class AbstractTest_to_Transcripts(unittest.TestCase):
     """Base class for TestGTF2_to_Transcripts and TestGFF3_to_Transcripts"""
@@ -8793,23 +11622,27 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # populate these in subclasses
-        cls.expected_ivcs      = []
+        cls.expected_ivcs = []
         cls.rejected_ivc_names = []
         cls.stop_feature_input = ""
-        cls.sorted_input   = ""
+        cls.sorted_input = ""
         cls.unsorted_input = ""
-        cls.test_method    = None
+        cls.test_method = None
         cls.default_stop_offset = 0
-        
+
     @skip_if_abstract
     def test_output_is_sorted(self):
         transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input))
-        self.assertEqual(len(transcripts),len(self.expected_ivcs),"Mismatch between number of assembled transcripts. Expected %s, got %s." % (len(self.expected_ivcs),len(transcripts)))
-        
-        for tx1, tx2 in zip(self.expected_ivcs,transcripts):
-            self.assertEqual(tx1.get_name(),tx2.get_name())
-   
-    def check_output_against_reference(self,transcripts,stop_offset=0,reference=None):
+        self.assertEqual(
+            len(transcripts), len(self.expected_ivcs),
+            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+            (len(self.expected_ivcs), len(transcripts))
+        )
+
+        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+            self.assertEqual(tx1.get_name(), tx2.get_name())
+
+    def check_output_against_reference(self, transcripts, stop_offset=0, reference=None):
         """Helper function to compare assembled transcripts against 
         the reference supplied in ``self.expected_ivcs``. Test passes
         if the assembled transcripts and reference correspond in order,
@@ -8835,106 +11668,165 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
         transcripts = list(transcripts)
         if reference is None:
             reference = self.expected_ivcs
-        
+
         ref_names = set([X.get_name() for X in reference])
         found_names = set([X.get_name() for X in transcripts])
-        self.assertSetEqual(ref_names,found_names,"Found different transcript names in reference and test sets.\n    r - t: %s\n    t - r: %s" %(ref_names-found_names,found_names-ref_names))
-        self.assertEqual(len(transcripts),len(reference),"Mismatch between number of assembled transcripts. Expected %s, got %s.\n    Extra: %s" % (len(self.expected_ivcs),len(transcripts),found_names - ref_names))
-        
-        for tx1, tx2 in zip(reference,transcripts):
-            self.assertEqual(tx1.spanning_segment.chrom,tx2.spanning_segment.chrom)
-            self.assertEqual(tx1.spanning_segment.strand,tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1),len(tx2),"Number of intervals don't match for %s (%s) and %s (%s) " % (tx1.get_name(),len(tx1),tx2.get_name(),len(tx2))) # number of intervals
+        self.assertSetEqual(
+            ref_names, found_names,
+            "Found different transcript names in reference and test sets.\n    r - t: %s\n    t - r: %s"
+            % (ref_names - found_names, found_names - ref_names)
+        )
+        self.assertEqual(
+            len(transcripts), len(reference),
+            "Mismatch between number of assembled transcripts. Expected %s, got %s.\n    Extra: %s"
+            % (len(self.expected_ivcs), len(transcripts), found_names - ref_names)
+        )
+
+        for tx1, tx2 in zip(reference, transcripts):
+            self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
+            self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
+            self.assertEqual(
+                len(tx1), len(tx2), "Number of intervals don't match for %s (%s) and %s (%s) " %
+                (tx1.get_name(), len(tx1), tx2.get_name(), len(tx2))
+            )  # number of intervals
 
             for n, tx1iv in enumerate(tx1):
-                self.assertEqual(tx1iv,tx2[n],"Failed interval test for %s" % tx1.get_name())
-            
+                self.assertEqual(tx1iv, tx2[n], "Failed interval test for %s" % tx1.get_name())
+
             start_test = (tx1.cds_start is None and tx2.cds_start is None) or\
                      (tx1.cds_start == tx2.cds_start)
             end_test   = (tx1.cds_end is None and tx2.cds_end is None) or\
                       (tx1.cds_end + stop_offset + self.default_stop_offset == tx2.cds_end)
-            
-            self.assertTrue(start_test,"Failed CDS start test for %s and %s: %s expected vs %s found." % (tx1.get_name(),tx2.get_name(),tx1.cds_start,tx2.cds_start))
-            self.assertTrue(end_test,  "Failed CDS end test for %s and %s: %s expected vs %s found." % (tx1.get_name(),tx2.get_name(),tx1.cds_end + stop_offset + self.default_stop_offset,
-                                                                                                        tx2.cds_end))
+
+            self.assertTrue(
+                start_test, "Failed CDS start test for %s and %s: %s expected vs %s found." %
+                (tx1.get_name(), tx2.get_name(), tx1.cds_start, tx2.cds_start)
+            )
+            self.assertTrue(
+                end_test, "Failed CDS end test for %s and %s: %s expected vs %s found." % (
+                    tx1.get_name(), tx2.get_name(),
+                    tx1.cds_end + stop_offset + self.default_stop_offset, tx2.cds_end
+                )
+            )
 
     @skip_if_abstract
     def test_output_is_correct(self):
-        transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input),add_three_for_stop=False)
-        self.check_output_against_reference(transcripts,stop_offset=0)
-    
+        transcripts, _ = self.test_method(
+            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
+        )
+        self.check_output_against_reference(transcripts, stop_offset=0)
+
     @skip_if_abstract
     def test_add_three(self):
-        transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input),add_three_for_stop=True)
-        self.check_output_against_reference(transcripts,stop_offset=3)
- 
+        transcripts, _ = self.test_method(
+            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
+        )
+        self.check_output_against_reference(transcripts, stop_offset=3)
+
     @skip_if_abstract
     def test_not_end_inclusive(self):
-        transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input),end_included=False)
-        self.assertEqual(len(transcripts),len(self.expected_ivcs),"Mismatch between number of assembled transcripts. Expected %s, got %s." % (len(self.expected_ivcs),len(transcripts)))
-        
-        for tx1, tx2 in zip(self.expected_ivcs,transcripts):
-            self.assertEqual(tx1.spanning_segment.chrom,tx2.spanning_segment.chrom) 
-            self.assertEqual(tx1.spanning_segment.strand,tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1),len(tx2)) # number of intervals
+        transcripts, _ = self.test_method(
+            cStringIO.StringIO(self.unsorted_input), end_included=False
+        )
+        self.assertEqual(
+            len(transcripts), len(self.expected_ivcs),
+            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+            (len(self.expected_ivcs), len(transcripts))
+        )
+
+        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+            self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
+            self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
+            self.assertEqual(len(tx1), len(tx2))  # number of intervals
             for n, tx1iv in enumerate(tx1):
-                self.assertEqual(tx1iv.start,tx2[n].start,"Failed end_exclusive start test for %s. Expected %s, got %s." % (tx1.get_name(),tx1iv.start,tx2[n].start))
-                self.assertEqual(tx1iv.end - 1,tx2[n].end,"Failed end_exclusive end   test for %s. Expected %s, got %s." % (tx1.get_name(),tx1iv.end,  tx2[n].end))
-            
+                self.assertEqual(
+                    tx1iv.start, tx2[n].start,
+                    "Failed end_exclusive start test for %s. Expected %s, got %s." %
+                    (tx1.get_name(), tx1iv.start, tx2[n].start)
+                )
+                self.assertEqual(
+                    tx1iv.end - 1, tx2[n].end,
+                    "Failed end_exclusive end   test for %s. Expected %s, got %s." %
+                    (tx1.get_name(), tx1iv.end, tx2[n].end)
+                )
+
     @skip_if_abstract
     def test_rejected(self):
         _, rejected = self.test_method(cStringIO.StringIO(self.unsorted_input))
-        self.assertEqual(len(rejected),len(self.rejected_ivc_names))
-        self.assertGreater(len(rejected),0)
-        
+        self.assertEqual(len(rejected), len(self.rejected_ivc_names))
+        self.assertGreater(len(rejected), 0)
+
 
 class AbstractTestAssembler(AbstractTest_to_Transcripts):
-    
     @skip_if_abstract
     def test_output_is_sorted(self):
         transcripts = list(self.test_class(cStringIO.StringIO(self.unsorted_input)))
-        self.assertEqual(len(transcripts),len(self.expected_ivcs),"Mismatch between number of assembled transcripts. Expected %s, got %s." % (len(self.expected_ivcs),len(transcripts)))
-        
-        for tx1, tx2 in zip(self.expected_ivcs,transcripts):
-            self.assertEqual(tx1.get_name(),tx2.get_name())
-   
+        self.assertEqual(
+            len(transcripts), len(self.expected_ivcs),
+            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+            (len(self.expected_ivcs), len(transcripts))
+        )
+
+        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+            self.assertEqual(tx1.get_name(), tx2.get_name())
+
     @skip_if_abstract
     def test_output_is_correct(self):
-        transcripts = self.test_class(cStringIO.StringIO(self.unsorted_input),add_three_for_stop=False)
-        self.check_output_against_reference(transcripts,stop_offset=0)
-    
+        transcripts = self.test_class(
+            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
+        )
+        self.check_output_against_reference(transcripts, stop_offset=0)
+
     @skip_if_abstract
     def test_add_three(self):
-        transcripts = self.test_class(cStringIO.StringIO(self.unsorted_input),add_three_for_stop=True)
-        self.check_output_against_reference(transcripts,stop_offset=3)
- 
+        transcripts = self.test_class(
+            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
+        )
+        self.check_output_against_reference(transcripts, stop_offset=3)
+
     @skip_if_abstract
     def test_not_end_inclusive(self):
-        transcripts = list(self.test_class(cStringIO.StringIO(self.unsorted_input),end_included=False))
-        self.assertEqual(len(transcripts),len(self.expected_ivcs),"Mismatch between number of assembled transcripts. Expected %s, got %s." % (len(self.expected_ivcs),len(transcripts)))
-        
-        for tx1, tx2 in zip(self.expected_ivcs,transcripts):
-            self.assertEqual(tx1.spanning_segment.chrom,tx2.spanning_segment.chrom) 
-            self.assertEqual(tx1.spanning_segment.strand,tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1),len(tx2)) # number of intervals
+        transcripts = list(
+            self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
+        )
+        self.assertEqual(
+            len(transcripts), len(self.expected_ivcs),
+            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+            (len(self.expected_ivcs), len(transcripts))
+        )
+
+        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+            self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
+            self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
+            self.assertEqual(len(tx1), len(tx2))  # number of intervals
             for n, tx1iv in enumerate(tx1):
-                self.assertEqual(tx1iv.start,tx2[n].start,"Failed end_exclusive start test for %s. Expected %s, got %s." % (tx1.get_name(),tx1iv.start,tx2[n].start))
-                self.assertEqual(tx1iv.end - 1,tx2[n].end,"Failed end_exclusive end   test for %s. Expected %s, got %s." % (tx1.get_name(),tx1iv.end,  tx2[n].end))
-            
+                self.assertEqual(
+                    tx1iv.start, tx2[n].start,
+                    "Failed end_exclusive start test for %s. Expected %s, got %s." %
+                    (tx1.get_name(), tx1iv.start, tx2[n].start)
+                )
+                self.assertEqual(
+                    tx1iv.end - 1, tx2[n].end,
+                    "Failed end_exclusive end   test for %s. Expected %s, got %s." %
+                    (tx1.get_name(), tx1iv.end, tx2[n].end)
+                )
+
     @skip_if_abstract
     def test_rejected(self):
-        reader = self.test_class(cStringIO.StringIO(self.unsorted_input),end_included=False)
-        for _ in reader: # populate rejected transcripts
+        reader = self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
+        for _ in reader:  # populate rejected transcripts
             pass
-        self.assertEqual(len(reader.rejected),len(self.rejected_ivc_names))
-        self.assertGreater(len(reader.rejected),0)
+        self.assertEqual(len(reader.rejected), len(self.rejected_ivc_names))
+        self.assertGreater(len(reader.rejected), 0)
 
     @skip_if_abstract
     def test_with_with_stop_features_and_is_sorted(self):
         buf = cStringIO.StringIO()
-        transcripts = self.test_class(cStringIO.StringIO(self.stop_feature_input),is_sorted=True,printer=buf)
-        self.check_output_against_reference(transcripts,stop_offset=0)
-        
+        transcripts = self.test_class(
+            cStringIO.StringIO(self.stop_feature_input), is_sorted=True, printer=buf
+        )
+        self.check_output_against_reference(transcripts, stop_offset=0)
+
         buf.seek(0)
         out = buf.read()
         # assert there is some number of messages about clearing memory? or something?
@@ -8943,31 +11835,37 @@ class AbstractTestAssembler(AbstractTest_to_Transcripts):
     @skip_if_abstract
     def test_with_stop_features(self):
         buf = cStringIO.StringIO()
-        transcripts = self.test_class(cStringIO.StringIO(self.stop_feature_input),is_sorted=False,printer=buf)
-        self.check_output_against_reference(transcripts,stop_offset=0)
+        transcripts = self.test_class(
+            cStringIO.StringIO(self.stop_feature_input), is_sorted=False, printer=buf
+        )
+        self.check_output_against_reference(transcripts, stop_offset=0)
 
         buf.seek(0)
         out = buf.read()
         # assert there is some number of messages about clearing memory? or something?
         self.assertTrue("Assembling next batch" in out)
-    
+
     @skip_if_abstract
     def test_with_two_input_files(self):
-        transcripts = self.test_class(cStringIO.StringIO(self.unsorted_input),
-                                      cStringIO.StringIO(self.unsorted_input),
-                                      add_three_for_stop=True)
-        self.check_output_against_reference(transcripts,reference=self.expected_ivcs*2,stop_offset=3)
+        transcripts = self.test_class(
+            cStringIO.StringIO(self.unsorted_input),
+            cStringIO.StringIO(self.unsorted_input),
+            add_three_for_stop=True
+        )
+        self.check_output_against_reference(
+            transcripts, reference=self.expected_ivcs * 2, stop_offset=3
+        )
 
 
 @attr(test="unit")
 class TestGTF2_Assembler(AbstractTestAssembler):
     @classmethod
     def setUpClass(cls):
-        cls.expected_ivcs      = EXPECTED_IVCS
+        cls.expected_ivcs = EXPECTED_IVCS
         cls.rejected_ivc_names = REJECTED_NAMES
-        cls.sorted_input       = GTF2_TO_TRANSCRIPTS_SORTED
+        cls.sorted_input = GTF2_TO_TRANSCRIPTS_SORTED
         cls.stop_feature_input = GTF2_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
-        cls.unsorted_input     = GTF2_TO_TRANSCRIPTS_UNSORTED
+        cls.unsorted_input = GTF2_TO_TRANSCRIPTS_UNSORTED
         cls.test_class = GTF2_TranscriptAssembler
 
         # by default, GTF2s do not include stop codon in CDS
@@ -8997,16 +11895,45 @@ chrI    .    3UTR    2705    2848    .    +    .    gene_id "YAL067W-A"; transcr
 chrI    .    5UTR    9017    9127    .    -    .    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
 chrI    .    CDS    7238    9016    .    -    0    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
 chrI    .    3UTR    7094    7237    .    -    .    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
-""".replace("    ","\t")
-        found = list(GTF2_TranscriptAssembler(cStringIO.StringIO(inp),add_three_for_stop=False))
-        expected = [Transcript(GenomicSegment('chrI',223,790,'+'),ID='YAL069W_mRNA',cds_genome_start=334,cds_genome_end=649),
-                    Transcript(GenomicSegment('chrI',426,933,'+'),ID='YAL068W-A_mRNA',cds_genome_start=537,cds_genome_end=792),
-                    Transcript(GenomicSegment('chrI',1665,2280,'-'),ID='YAL068C_mRNA',cds_genome_start=1806,cds_genome_end=2169),
-                    Transcript(GenomicSegment('chrI',2368,2848,'+'),ID='YAL067W-A_mRNA',cds_genome_start=2479,cds_genome_end=2704),
-                    Transcript(GenomicSegment('chrI',7093,9127,'-'),ID='YAL067C_mRNA',cds_genome_start=7237,cds_genome_end=9016),
-                    ]
-        self.assertEqual(len(found),len(expected),"Expected %s transcripts from reconstruction. Found %s" % (expected,found))
-        self.check_output_against_reference(found,reference=expected,stop_offset=3)
+""".replace("    ", "\t")
+        found = list(GTF2_TranscriptAssembler(cStringIO.StringIO(inp), add_three_for_stop=False))
+        expected = [
+            Transcript(
+                GenomicSegment('chrI', 223, 790, '+'),
+                ID='YAL069W_mRNA',
+                cds_genome_start=334,
+                cds_genome_end=649
+            ),
+            Transcript(
+                GenomicSegment('chrI', 426, 933, '+'),
+                ID='YAL068W-A_mRNA',
+                cds_genome_start=537,
+                cds_genome_end=792
+            ),
+            Transcript(
+                GenomicSegment('chrI', 1665, 2280, '-'),
+                ID='YAL068C_mRNA',
+                cds_genome_start=1806,
+                cds_genome_end=2169
+            ),
+            Transcript(
+                GenomicSegment('chrI', 2368, 2848, '+'),
+                ID='YAL067W-A_mRNA',
+                cds_genome_start=2479,
+                cds_genome_end=2704
+            ),
+            Transcript(
+                GenomicSegment('chrI', 7093, 9127, '-'),
+                ID='YAL067C_mRNA',
+                cds_genome_start=7237,
+                cds_genome_end=9016
+            ),
+        ]
+        self.assertEqual(
+            len(found), len(expected),
+            "Expected %s transcripts from reconstruction. Found %s" % (expected, found)
+        )
+        self.check_output_against_reference(found, reference=expected, stop_offset=3)
 
     def test_add_three_for_stop_does_nothing_if_stop_codon_feature_present(self):
         # stop codons should be moved for YAL067W-A and YAL067C, which
@@ -9029,24 +11956,54 @@ chrI    .    3UTR    2705    2848    .    +    .    gene_id "YAL067W-A"; transcr
 chrI    .    5UTR    9017    9127    .    -    .    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
 chrI    .    CDS    7238    9016    .    -    0    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
 chrI    .    3UTR    7094    7237    .    -    .    gene_id "YAL067C"; transcript_id "YAL067C_mRNA"; name "SEO1"; utr5_source "estimated"; utr3_source "estimated"; gene_aliases "SEO1%2Cputative permease SEO1"; ID "YAL067C_mRNA";
-""".replace("    ","\t")
-        found = list(GTF2_TranscriptAssembler(cStringIO.StringIO(inp),add_three_for_stop=True))
-        expected = [Transcript(GenomicSegment('chrI',223,790,'+'),ID='YAL069W_mRNA',cds_genome_start=334,cds_genome_end=649),
-                    Transcript(GenomicSegment('chrI',426,933,'+'),ID='YAL068W-A_mRNA',cds_genome_start=537,cds_genome_end=792),
-                    Transcript(GenomicSegment('chrI',1665,2280,'-'),ID='YAL068C_mRNA',cds_genome_start=1806,cds_genome_end=2169),
-                    Transcript(GenomicSegment('chrI',2368,2848,'+'),ID='YAL067W-A_mRNA',cds_genome_start=2479,cds_genome_end=2707),
-                    Transcript(GenomicSegment('chrI',7093,9127,'-'),ID='YAL067C_mRNA',cds_genome_start=7234,cds_genome_end=9016),
-                    ]
-        self.assertEqual(len(found),len(expected),"Expected %s transcripts from reconstruction. Found %s" % (expected,found))
-        self.check_output_against_reference(found,reference=expected,stop_offset=3)            
+""".replace("    ", "\t")
+        found = list(GTF2_TranscriptAssembler(cStringIO.StringIO(inp), add_three_for_stop=True))
+        expected = [
+            Transcript(
+                GenomicSegment('chrI', 223, 790, '+'),
+                ID='YAL069W_mRNA',
+                cds_genome_start=334,
+                cds_genome_end=649
+            ),
+            Transcript(
+                GenomicSegment('chrI', 426, 933, '+'),
+                ID='YAL068W-A_mRNA',
+                cds_genome_start=537,
+                cds_genome_end=792
+            ),
+            Transcript(
+                GenomicSegment('chrI', 1665, 2280, '-'),
+                ID='YAL068C_mRNA',
+                cds_genome_start=1806,
+                cds_genome_end=2169
+            ),
+            Transcript(
+                GenomicSegment('chrI', 2368, 2848, '+'),
+                ID='YAL067W-A_mRNA',
+                cds_genome_start=2479,
+                cds_genome_end=2707
+            ),
+            Transcript(
+                GenomicSegment('chrI', 7093, 9127, '-'),
+                ID='YAL067C_mRNA',
+                cds_genome_start=7234,
+                cds_genome_end=9016
+            ),
+        ]
+        self.assertEqual(
+            len(found), len(expected),
+            "Expected %s transcripts from reconstruction. Found %s" % (expected, found)
+        )
+        self.check_output_against_reference(found, reference=expected, stop_offset=3)
+
 
 @attr(test="unit")
 class TestGFF3_Assembler(AbstractTestAssembler):
     @classmethod
     def setUpClass(cls):
-        cls.expected_ivcs      = EXPECTED_IVCS
+        cls.expected_ivcs = EXPECTED_IVCS
         cls.rejected_ivc_names = REJECTED_NAMES
-        cls.sorted_input   = GFF3_TO_TRANSCRIPTS_SORTED
+        cls.sorted_input = GFF3_TO_TRANSCRIPTS_SORTED
         cls.unsorted_input = GFF3_TO_TRANSCRIPTS_UNSORTED
         cls.stop_feature_input = GFF3_TO_TRANSCRIPTS_STOP_FEATURE_SORTED
         cls.test_class = GFF3_TranscriptAssembler
@@ -9070,13 +12027,35 @@ chrD	.	CDS	701	800	.	+	.	ID=CDS_with_mRNA_and_shared_ID;Parent=parent_mRNA_of_CD
 """
 
         expected = [
-            Transcript(GenomicSegment("chrA",50,200,"+"),GenomicSegment("chrA",700,800,"+"),ID="CDS_with_shared_id",cds_genome_start=50,cds_genome_end=800),
-            Transcript(GenomicSegment("chrB",50,200,"+"),GenomicSegment("chrB",700,800,"+"),ID="parent_mRNA_of_CDS_with_mRNA",cds_genome_start=50,cds_genome_end=800),
-            Transcript(GenomicSegment("chrC",50,200,"+"),GenomicSegment("chrC",700,800,"+"),ID="parent_mRNA_of_CDS_no_mRNA",cds_genome_start=50,cds_genome_end=800),
-            Transcript(GenomicSegment("chrD",50,200,"+"),GenomicSegment("chrD",700,800,"+"),ID="parent_mRNA_of_CDS_with_mRNA_and_shared_ID",cds_genome_start=50,cds_genome_end=800),
+            Transcript(
+                GenomicSegment("chrA", 50, 200, "+"),
+                GenomicSegment("chrA", 700, 800, "+"),
+                ID="CDS_with_shared_id",
+                cds_genome_start=50,
+                cds_genome_end=800
+            ),
+            Transcript(
+                GenomicSegment("chrB", 50, 200, "+"),
+                GenomicSegment("chrB", 700, 800, "+"),
+                ID="parent_mRNA_of_CDS_with_mRNA",
+                cds_genome_start=50,
+                cds_genome_end=800
+            ),
+            Transcript(
+                GenomicSegment("chrC", 50, 200, "+"),
+                GenomicSegment("chrC", 700, 800, "+"),
+                ID="parent_mRNA_of_CDS_no_mRNA",
+                cds_genome_start=50,
+                cds_genome_end=800
+            ),
+            Transcript(
+                GenomicSegment("chrD", 50, 200, "+"),
+                GenomicSegment("chrD", 700, 800, "+"),
+                ID="parent_mRNA_of_CDS_with_mRNA_and_shared_ID",
+                cds_genome_start=50,
+                cds_genome_end=800
+            ),
+        ]
 
-
-                ]
-       
         found = list(GFF3_TranscriptAssembler(cStringIO.StringIO(text)))
-        self.check_output_against_reference(found,reference=expected,stop_offset=0)
+        self.check_output_against_reference(found, reference=expected, stop_offset=0)

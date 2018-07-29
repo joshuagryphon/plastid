@@ -32,7 +32,8 @@ WARN_FILE_NOT_FOUND = "File '%s' not found."
 
 
 cdef lm * get_lm(lm * my_lm=NULL, int maxmem=0) except NULL:
-    """Allocate or destroy and reallocate a local memory pool, aiming to keep it under `maxmem`
+    """Allocate or destroy and reallocate a local memory pool, aiming to keep
+    it under `maxmem`
 
     Parameters
     ----------

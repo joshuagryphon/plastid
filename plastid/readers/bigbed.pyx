@@ -112,15 +112,16 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 @skipdoc
 class _FromBED_StrAdaptor(object):
-    """Adaptor class to return strings from |BigBedReaders|.
-    Is internally called by BigBedReader when `return_type` is set to :class:`str`,
-    because :class:`str` does not implement a ``from_bed`` method::
+    """Adaptor class to return strings from |BigBedReaders|.  Is internally
+    called by BigBedReader when `return_type` is set to :class:`str`, because
+    :class:`str` does not implement a ``from_bed`` method::
 
         >>> reader = BigBedReader(some_file, return_type=str)
     """
     @staticmethod
     def from_bed(inp):
-        """Dummy method. Returns strings as themselves, instead of parsing a `BED`_ line
+        """Dummy method. Returns strings as themselves, instead of parsing a
+        `BED`_ line
 
         Parameters
         ----------
@@ -138,8 +139,8 @@ cdef class BigBedReader(_BBI_Reader):
     """
     BigBedReader(filename, return_type = SegmentChain, add_three_for_stop = False, maxmem = 0)
 
-    Reader for `BigBed`_ files. This class is useful for both iteration
-    over genomic features one-by-one (like a reader), as well as random access to
+    Reader for `BigBed`_ files. This class is useful for both iteration over
+    genomic features one-by-one (like a reader), as well as random access to
     genomic features that overlap a region of interest (like a |GenomeHash|).
 
     Examples
@@ -150,15 +151,15 @@ cdef class BigBedReader(_BBI_Reader):
         >>> for feature in my_reader:
         >>>    pass # do something with each feature
 
-    `BigBed`_ files can be accessed as dictionaries. To find features overlapping
-    a region of interest::
+    `BigBed`_ files can be accessed as dictionaries. To find features
+    overlapping a region of interest::
 
         >>> roi = GenomicSegment("chrI", 0, 100000, "+")
         >>> for feature in my_reader[roi]:
         >>>     pass # do something with that feature
 
-    Find features overlapping a genomic region of interest `roi`,
-    on either strand::
+    Find features overlapping a genomic region of interest `roi`, on either
+    strand::
 
         >>> for feature in my_reader.get(roi, stranded=False):
         >>>     pass # do something with that feature
@@ -170,30 +171,30 @@ cdef class BigBedReader(_BBI_Reader):
         Path to `BigBed`_ file
 
     return_type : |SegmentChain| or subclass, optional
-        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+        Type of feature to return from assembled subfeatures (Default:
+        |SegmentChain|)
 
     add_three_for_stop : bool, optional
         Some annotation files exclude the stop codon from CDS annotations. If set to
         `True`, three nucleotides will be added to the threeprime end of each
-        CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon
-        feature. (Default: `False`)
+        CDS annotation, **UNLESS** the annotated transcript contains explicit
+        stop_codon feature. (Default: `False`)
 
     maxmem : float, optional
         Maximum desired memory footprint for C objects, in megabytes.
-        May be temporarily exceeded if large queries are requested.
-        Does not include memory footprint of Python objects.
-        (Default: 0, no limit)
+        May be temporarily exceeded if large queries are requested. Does not
+        include memory footprint of Python objects. (Default: 0, no limit)
 
 
     Attributes
     ----------
     extension_fields : OrderedDict
-        Dictionary mapping custom field names to their descriptions,
-        if any custom fields are present
+        Dictionary mapping custom field names to their descriptions, if any
+        custom fields are present
 
     extension_types : OrderedDict
-        Dictionary mapping custom field names to objects that parse their
-        types from strings
+        Dictionary mapping custom field names to objects that parse their types
+        from strings
 
     filename : str
         Path to open BigBed file
@@ -223,20 +224,19 @@ cdef class BigBedReader(_BBI_Reader):
             Path to `BigBed`_ file
 
         return_type : |SegmentChain| or subclass, optional
-            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+            Type of feature to return from assembled subfeatures (Default:
+            |SegmentChain|)
 
         add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations. If set to
-            `True`, three nucleotides will be added to the threeprime end of each
-            CDS annotation, **UNLESS** the annotated transcript contains explicit stop_codon
-            feature. (Default: `False`)
+            Some annotation files exclude the stop codon from CDS annotations.
+            If set to `True`, three nucleotides will be added to the threeprime
+            end of each CDS annotation, **UNLESS** the annotated transcript
+            contains explicit stop_codon feature. (Default: `False`)
 
         maxmem : float
-            Maximum desired memory footprint for C objects, in megabytes.
-            May be temporarily exceeded if large queries are requested.
-            Does not include memory footprint of Python objects.
-            (Default: 0, no limit)
-
+            Maximum desired memory footprint for C objects, in megabytes.  May
+            be temporarily exceeded if large queries are requested.  Does not
+            include memory footprint of Python objects.  (Default: 0, no limit)
         """
         cdef:
             str autosql
@@ -253,7 +253,9 @@ cdef class BigBedReader(_BBI_Reader):
             autosql = self._get_autosql_str()
             try:
                 asql_parser            = AutoSqlDeclaration(autosql)
-                self.extension_fields  = OrderedDict(list(asql_parser.field_comments.items())[-self.num_extension_fields:])
+                self.extension_fields  = OrderedDict(
+                    list(asql_parser.field_comments.items())[-self.num_extension_fields:]
+                )
 
                 for fieldname in self.extension_fields:
                     self.extension_types[fieldname] = asql_parser.field_formatters[fieldname]
@@ -278,7 +280,9 @@ cdef class BigBedReader(_BBI_Reader):
         self.add_three_for_stop = add_three_for_stop
 
     property custom_fields:
-        """BigBedReader.custom_fields is DEPRECATED. Will be removed in plastid v0.5.0. Use BigBedReader.extension_fields in future"""
+        """BigBedReader.custom_fields is DEPRECATED. Will be removed in plastid
+        v0.5.0. Use BigBedReader.extension_fields in future
+        """
         def __get__(self):
             warnings.warn(
                 "BigBedReader.custom_fields is deprecated and will be removed in plastid v0.5.0. Use BigBedReader.extension_fields in the future",
@@ -411,8 +415,8 @@ cdef class BigBedReader(_BBI_Reader):
         return ltmp
 
     def search(self, field_name, *values):
-        """Search indexed fields in the `BigBed`_ file for records matching `value`
-        See `self.indexed_fields` for names of indexed fields and
+        """Search indexed fields in the `BigBed`_ file for records matching
+        `value` See `self.indexed_fields` for names of indexed fields and
         `self.extension_fields` for descriptions of extension fields.
 
         Parameters
@@ -443,11 +447,11 @@ cdef class BigBedReader(_BBI_Reader):
             ['name', 'gene_id']
 
             # find all entries whose 'gene_id' matches 'nanos'
-            >>> bb.search('gene_id','nanos')
+            >>> bb.search('gene_id', 'nanos')
             [ list of matching segmentchains ]
 
             # find all entries whose 'gene_id' matches 'nanos' or 'oskar'
-            >>> bb.search('gene_id','nanos','oskar')
+            >>> bb.search('gene_id', 'nanos', 'oskar')
             [ list of matching segmentchains ]
 
 
@@ -510,7 +514,8 @@ cdef class BigBedReader(_BBI_Reader):
             )
 
     def get(self, roi, bint stranded=True, bint check_unique=True):
-        """Iterate over features that share genomic positions with a region of interest
+        """Iterate over features that share genomic positions with a region of
+        interest
 
         Note
         ----
@@ -582,8 +587,8 @@ cdef class BigBedReader(_BBI_Reader):
             (Default: `True`)
 
         my_lm : lm, optional
-            If not NULL, use this pool of local memory instead of the |BigBedReader|'s.
-            (Default: NULL)
+            If not NULL, use this pool of local memory instead of the
+            |BigBedReader|'s.  (Default: NULL)
 
 
         Yields
@@ -634,8 +639,9 @@ cdef class BigBedReader(_BBI_Reader):
             return _GeneratorWrapper((outfunc(X, extra_columns=etypes) for X in ltmp), "BigBed entries")
 
     def __getitem__(self, roi):
-        """Iterate over features that share genomic positions with a region of interest, on same strand.
-        Unstranded features, if present, are considered to overlap both `rois` on any strand.
+        """Iterate over features that share genomic positions with a region of
+        interest, on same strand.  Unstranded features, if present, are
+        considered to overlap both `rois` on any strand.
 
 
         Parameters
@@ -662,7 +668,8 @@ cdef class BigBedReader(_BBI_Reader):
         Yields
         ------
         object
-            Object of ``self.return_type``, |SegmentChain| or one of its subclasses
+            Object of ``self.return_type``, |SegmentChain| or one of its
+            subclasses
         """
         return _GeneratorWrapper(BigBedIterator(self, maxmem=self._maxmem), "BigBed records")
 
@@ -679,7 +686,8 @@ cdef class BigBedReader(_BBI_Reader):
 def BigBedIterator(BigBedReader reader, maxmem=0):
     """BigBedIterator(reader, maxmem = 0)
 
-    Iterate over records in the `BigBed`_ file, sorted lexically by chromosome and position.
+    Iterate over records in the `BigBed`_ file, sorted lexically by chromosome
+    and position.
 
     Parameters
     ----------
@@ -687,10 +695,9 @@ def BigBedIterator(BigBedReader reader, maxmem=0):
         Reader to iterate over
 
     maxmem : float
-        Maximum desired memory footprint for C objects, in megabytes.
-        May be temporarily exceeded if large queries are requested.
-        Does not include memory footprint of Python objects.
-        (Default: 0, no limit)
+        Maximum desired memory footprint for C objects, in megabytes.  May be
+        temporarily exceeded if large queries are requested.  Does not include
+        memory footprint of Python objects.  (Default: 0, no limit)
 
     Yields
     ------
@@ -730,8 +737,8 @@ def BigBedIterator(BigBedReader reader, maxmem=0):
 @skipdoc
 @deprecated(version="0.5")
 class BPlusTree(object):
-    """Decode B+ Trees, which are used to describe chromosomes and contigs
-    in `BigBed`_ and BigWig files.
+    """Decode B+ Trees, which are used to describe chromosomes and contigs in
+    `BigBed`_ and BigWig files.
 
     See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for
     detailed description of the structures of the `BigBed`_ format, B+ Tree,
@@ -783,7 +790,8 @@ class BPlusTree(object):
             Offset, in bytes, to BPlus Tree Header
 
         byte_order : str
-            Character indicating endian-ness of data (default: `'<'` for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for
+            little-endian)
         """
         self._byte_order = byte_order
         self.filename = filename
@@ -866,7 +874,8 @@ class BPlusTree(object):
             self.chrom_sizes[chrom_name]   = chrom_size
 
     def _walk_tree(self, start_offset=None):
-        """Exhaustively traverses BPlus tree, starting at the node starting at `start_offset`
+        """Exhaustively traverses BPlus tree, starting at the node starting at
+        `start_offset`
 
         Parameters
         ----------
@@ -908,8 +917,8 @@ class BPlusTree(object):
 @skipdoc
 @deprecated(version="0.5")
 class RTree(object):
-    """Decode R Trees, which index genomic coordinates to file positions in `BigBed`_
-    and BigWig files
+    """Decode R Trees, which index genomic coordinates to file positions in
+    `BigBed`_ and BigWig files
 
     See `Kent2010 <http://dx.doi.org/10.1093/bioinformatics/btq351>`_ for
     detailed description of the structures of the BigBed format, B+ Tree,
@@ -955,11 +964,13 @@ class RTree(object):
             Offset, in bytes, to |RTree| header
 
         byte_order : str
-            Character indicating endian-ness of data (default: `'<'` for little-endian)
+            Character indicating endian-ness of data (default: `'<'` for
+            little-endian)
 
         memorize : bool
             If `True`, cache entire tree topology into memory for faster lookup
-            (faster for small files, uses big memory for large files. Default: `False`)
+            (faster for small files, uses big memory for large files. Default:
+            `False`)
         """
         self.filename      = filename
         self.bplus_tree    = bplus_tree
@@ -1015,7 +1026,8 @@ class RTree(object):
         return RTreeHeaderFactory(self.fh, self._byte_order)
 
     def __getitem__(self, roi, start_node_offset=None):
-        """Search |RTree| and return addresses of data blocks covering a region of interest
+        """Search |RTree| and return addresses of data blocks covering a region
+        of interest
 
         Parameters
         ----------
@@ -1029,8 +1041,8 @@ class RTree(object):
         -------
         list
             List of tuples of `(file_offset, bytes_to_read)`  in `BigBed` file
-            specifying data blocks of find records that should be checked for overlap
-            with `roi`
+            specifying data blocks of find records that should be checked for
+            overlap with `roi`
 
         Raises
         ------
@@ -1075,7 +1087,8 @@ class RTree(object):
 
     @staticmethod
     def node_overlaps_roi(node, roi_chrom_id, roi_start_base, roi_end_base):
-        """Determines whether or not an |RTree| node overlaps a region of interest (ROI)
+        """Determines whether or not an |RTree| node overlaps a region of
+        interest (ROI)
 
         Parameters
         ----------
@@ -1129,8 +1142,8 @@ class RTree(object):
         return (items for items in sorted(self.leaf_data.values()))
 
     def _find_leaves(self, start_node_offset=None):
-        """Search |RTree| exhaustively and return addresses of data blocks of all
-        leaves. Leaf data is stored in:
+        """Search |RTree| exhaustively and return addresses of data blocks of
+        all leaves. Leaf data is stored in:
 
             `self.leaf_data`
                 Dictionary mapping leaf node offsets to tuples of
@@ -1141,8 +1154,8 @@ class RTree(object):
         are additionally populated to speed subsequent searches:
 
             `self.node_genome_boundaries`
-                Dictionary all node offsets to tuples of
-                `(start_chromosome_id, start_genomic_base, end_chromosome_id, end_genomic_base)`
+                Dictionary all node offsets to tuples of `(start_chromosome_id,
+                start_genomic_base, end_chromosome_id, end_genomic_base)`
 
 
             `self.node_child_offsets`
@@ -1150,8 +1163,8 @@ class RTree(object):
                 of their child nodes
 
             `self.node_parent_offsets`
-                Dictionary mapping all node offsets to the offset of the parent node
-                for reverse tree traversal
+                Dictionary mapping all node offsets to the offset of the parent
+                node for reverse tree traversal
 
 
         Parameters
@@ -1239,7 +1252,7 @@ ZoomHeaderFactory = BinaryParserFactory(
 
 
 TotalSummaryFactory = BinaryParserFactory(
-    "TotalSummary"
+    "TotalSummary",
     "5Q",
     [
         "bases_covered",
