@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 """This script identify all the unique splice junctions in one or more transcript
 annotations, and exports these as a `BED`_ file with one splice junction per line
 Optionally, this script can also export junctions as a `Tophat`_ ``.juncs`` file.
@@ -60,8 +60,9 @@ from plastid.util.scriptlib.help_formatters import format_module_docstring
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-_ANNOTATION_INPUT_CHOICES = ["BED","BigBed","GTF2","GFF3","PSL"]
-_ANNOTATION_DISABLED = ["add_three","annotation_file"]
+_ANNOTATION_INPUT_CHOICES = ["BED", "BigBed", "GTF2", "GFF3", "PSL"]
+_ANNOTATION_DISABLED = ["add_three", "annotation_file"]
+
 
 def main(argv=sys.argv[1:]):
     """Command-line program
@@ -77,69 +78,77 @@ def main(argv=sys.argv[1:]):
     """
     ap = AnnotationParser(input_choices=_ANNOTATION_INPUT_CHOICES)
     annotation_file_parser = ap.get_parser()
-    
+
     bp = BaseParser()
     base_parser = bp.get_parser()
-    
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[base_parser,annotation_file_parser])
-    parser.add_argument("--export_tophat",default=False,action="store_true",
-                         help="Export tophat `.juncs` file in addition to BED output")
-    parser.add_argument("outbase",type=str,help="Basename for output files")
+
+    # yapf: disable
+    parser = argparse.ArgumentParser(
+        description     = format_module_docstring(__doc__),
+        formatter_class = argparse.RawDescriptionHelpFormatter,
+        parents         =[base_parser, annotation_file_parser]
+    )
+    parser.add_argument(
+        "--export_tophat",
+        default =False,
+        action  ="store_true",
+        help    ="Export tophat `.juncs` file in addition to BED output"
+    )
+    parser.add_argument("outbase", type=str, help="Basename for output files")
+    # yapf: enable
 
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
-    
-    transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
-    
-    with argsopener("%s.bed" % args.outbase,args,"w") as bed_out:
+
+    transcripts = ap.get_transcripts_from_args(args, printer=printer, return_type=SegmentChain)
+
+    with argsopener("%s.bed" % args.outbase, args, "w") as bed_out:
         if args.export_tophat == True:
-            tophat_out = open("%s.juncs" % args.outbase,"w")
-    
-        printer.write("params: " +" ".join(argv))
+            tophat_out = open("%s.juncs" % args.outbase, "w")
+
+        printer.write("params: " + " ".join(argv))
         printer.write("Detecting & comparing junctions...")
         ex_pairs = {}
-        
+
         c = 0
         u = 0
         for chain in transcripts:
-            if len(chain) > 1: # if multi-exon
+            if len(chain) > 1:  # if multi-exon
                 chrom = chain.chrom
                 strand = chain.strand
                 try:
-                    ep = ex_pairs[(chrom,strand)]
+                    ep = ex_pairs[(chrom, strand)]
                 except KeyError:
-                    ex_pairs[(chrom,strand)] = []
-                    ep = ex_pairs[(chrom,strand)]
+                    ex_pairs[(chrom, strand)] = []
+                    ep = ex_pairs[(chrom, strand)]
 
-                for i in range(0,len(chain)-1):
-                    
+                for i in range(0, len(chain) - 1):
+
                     seg1 = chain[i]
-                    seg2 = chain[i+1]
+                    seg2 = chain[i + 1]
                     if c % 1000 == 0 and c > 0:
-                        printer.write("Processed %s junctions. Found %s unique..." % (c,u) )
-                    c+=1
-                    key = (seg1.end,seg2.start)
-                        
+                        printer.write("Processed %s junctions. Found %s unique..." % (c, u))
+                    c += 1
+                    key = (seg1.end, seg2.start)
+
                     if key not in ep:
                         ep.append(key)
                         u += 1
-                        new_chain = SegmentChain(seg1,seg2)
+                        new_chain = SegmentChain(seg1, seg2)
                         bed_out.write(new_chain.as_bed())
                         if args.export_tophat == True:
-                            my_junc = (chrom,seg1.end-1,seg2.start,strand)
+                            my_junc = (chrom, seg1.end - 1, seg2.start, strand)
                             tophat_out.write("%s\t%s\t%s\t%s\n" % my_junc)
-                        
+
                         del new_chain
-                    
+
                     del seg1
                     del seg2
-                    
+
             del chain
-    
-        printer.write("Processed %s total junctions. Found %s unique." % (c,u) )
-    
+
+        printer.write("Processed %s total junctions. Found %s unique." % (c, u))
+
         bed_out.close()
         if args.export_tophat == True:
             tophat_out.close()

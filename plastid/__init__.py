@@ -32,44 +32,52 @@ plastid is divided into the following subpackages:
      
 """
 __version__ = "0.4.8"
-__author__  = "Joshua Griffin Dunn"
+__author__ = "Joshua Griffin Dunn"
 import matplotlib
 matplotlib.use("agg")
 
+from plastid.genomics.roitools import (
+    GenomicSegment,
+    SegmentChain,
+    Transcript,
+)
 
-from plastid.genomics.roitools import (GenomicSegment,
-                                       SegmentChain,
-                                       Transcript)
+from plastid.genomics.genome_array import (
+    BAMGenomeArray,
+    BigWigGenomeArray,
+    GenomeArray,
+    SparseGenomeArray,
+    variable_five_prime_map,
+    five_prime_map,
+    center_map,
+    three_prime_map,
+)
 
-from plastid.genomics.genome_array import (BAMGenomeArray,
-                                           BigWigGenomeArray,
-                                           GenomeArray,
-                                           SparseGenomeArray,
-                                           variable_five_prime_map,
-                                           five_prime_map,
-                                           center_map,
-                                           three_prime_map)
+from plastid.genomics.genome_hash import (
+    GenomeHash,
+    TabixGenomeHash,
+    BigBedGenomeHash,
+)
 
-from plastid.genomics.genome_hash import (GenomeHash,
-                                          TabixGenomeHash,
-                                          BigBedGenomeHash)
-
-from plastid.genomics.map_factories import (StratifiedVariableFivePrimeMapFactory,
-                                            VariableFivePrimeMapFactory,
-                                            FivePrimeMapFactory,
-                                            CenterMapFactory,
-                                            ThreePrimeMapFactory,
-                                            SizeFilterFactory)
+from plastid.genomics.map_factories import (
+    StratifiedVariableFivePrimeMapFactory,
+    VariableFivePrimeMapFactory,
+    FivePrimeMapFactory,
+    CenterMapFactory,
+    ThreePrimeMapFactory,
+    SizeFilterFactory,
+)
 
 from plastid.readers.bed import BED_Reader
 from plastid.readers.bigbed import BigBedReader
-from plastid.readers.gff import (GTF2_Reader,
-                                 GFF3_Reader,
-                                 GTF2_TranscriptAssembler,
-                                 GFF3_TranscriptAssembler)
+from plastid.readers.gff import (
+    GTF2_Reader,
+    GFF3_Reader,
+    GTF2_TranscriptAssembler,
+    GFF3_TranscriptAssembler,
+)
 
 from plastid.readers.psl import PSL_Reader
 from plastid.readers.bigwig import BigWigReader
 from plastid.util.io.openers import read_pl_table, write_pl_table
 from plastid.util.services.exceptions import formatwarning
-

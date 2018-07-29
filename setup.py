@@ -37,13 +37,11 @@ from pkg_resources import parse_version
 
 plastid_version = "0.4.8"
 
-
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
 ver = sys.version_info
 if ver < (2, 7) or ver[0] == 3 and ver[1] < 3:
     raise RuntimeError(version_message)
-
 
 #===============================================================================
 # [CONSTANT]
@@ -56,7 +54,6 @@ if ver < (2, 7) or ver[0] == 3 and ver[1] < 3:
 with open("README.rst") as f:
     long_description = f.read()
 
-
 setup_requires = [
     "numpy>=1.9.0",
     "pysam>=0.8.4",
@@ -67,22 +64,21 @@ packages = find_packages() + [
     "kentUtils",
     "kentUtils.src.inc",
     "kentUtils.src.lib",
-    "kentUtils.samtabix"
+    "kentUtils.samtabix",
 ]
 
-
 # trim dependencies if on readthedocs server, where many dependencies are mocked
-on_rtd = os.environ.get("READTHEDOCS",  None) == "True"
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 if not on_rtd:
     install_requires = [
-                        "scipy>=0.15.1",
-                        "pandas>=0.17.0",
-                        "matplotlib>=1.4.0",
-                        "biopython>=1.64",
-                        "twobitreader>=3.0.0",
-                        "termcolor",
-                        ] + setup_requires
+        "scipy>=0.15.1",
+        "pandas>=0.17.0",
+        "matplotlib>=1.4.0",
+        "biopython>=1.64",
+        "twobitreader>=3.0.0",
+        "termcolor",
+    ] + setup_requires
 else:
     install_requires = ["cython", "numpy", "pysam", "biopython", "termcolor"]
 
@@ -101,24 +97,21 @@ def get_scripts():
     return ["%s = plastid.bin.%s:main" % (X, X) for X in binscripts]
 
 
-
 # required to build C extensions ----------------------------------------------
 
 LIBRARIES = []
 base_path = os.getcwd()
 
-
 # embed method signatures and use Py2 or Py3 char specs, as appropriate
-CYTHON_ARGS= {
-    "embedsignature" : True,
-    "language_level" : sys.version_info[0],
+CYTHON_ARGS = {
+    "embedsignature": True,
+    "language_level": sys.version_info[0],
 }
-
 
 # we add a command class to force rebuild C files from pyx
 # and a corresponding command-line argument
-CYTHONIZE_COMMAND = "recythonize" # command-class command from setup.py
-CYTHONIZE_ARG = "recythonize"     # '--recythonize', passable to sdist, build_ext et c
+CYTHONIZE_COMMAND = "recythonize"  # command-class command from setup.py
+CYTHONIZE_ARG = "recythonize"      # '--recythonize', passable to sdist, build_ext et c
 
 # define options accepted by command-line argument
 CYTHON_OPTIONS = [
@@ -129,11 +122,8 @@ CYTHON_OPTIONS = [
         ),
 ]
 
-
 # turn off --recythonize by default
 CYTHON_DEFAULTS = [False]
-
-
 
 # extension dependencies -------------------------------------------------------
 
@@ -196,14 +186,12 @@ kent_sources = [
     "zlibFace.c",
 ]
 
-
 kent_deps  = [os.path.join(base_path, "kentUtils", "samtabix", X) for X in kent_samtabix]
 kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in kent_sources]
 
-
 #===============================================================================
 # [PLACEHOLDERS]
-# 
+#
 # Placeholders used to build egg_info if C dependencies are not installed.
 #
 # These placeholders enable `pip` to read this file, identify and install
@@ -216,7 +204,7 @@ kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in ken
 #===============================================================================
 
 # will be overwritten
-ext_modules   = []
+ext_modules = []
 DEFINE_MACROS = []
 C_PATHS = []
 
@@ -227,8 +215,6 @@ INCLUDE_PATH = [
 ]
 
 command_classes = {}
-
-
 
 #===============================================================================
 # [REDEFINES]
@@ -261,29 +247,30 @@ try:
     # so we define this macro in the build environment
     # to enable map_factories.pyx to cimport from the correct path
     CYTHON_COMPILE_TIME_ENV = {
-        "PYSAM10" : parse_version(pysam.__version__) >= parse_version("0.10.0")
+        "PYSAM10": parse_version(pysam.__version__) >= parse_version("0.10.0")
     }
 
-    
     # define extensions -------------------------------------------------------
 
     # redefine extensions
     extension_kwargs = {
-        "include_dirs"      : INCLUDE_PATH,
-        "language"          : "c",
-        "cython_directives" : CYTHON_ARGS,
+        "include_dirs": INCLUDE_PATH,
+        "language": "c",
+        "cython_directives": CYTHON_ARGS,
     }
 
     # These extensions have no dependencies on kentUtils,
     # but do have dependencies on pysam
     noinclude_pyx = glob.glob(os.path.join(base_path, "plastid", "genomics", "*.pyx"))
-    ext_modules = [Extension(x.replace(base_path + os.sep, "").replace(".pyx", "").replace(os.sep, "."),
-                                 [x],
-                                 libraries               = LIBRARIES,
-                                 define_macros           = DEFINE_MACROS,
-                                 cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
-                                 **extension_kwargs
-                            ) for x in noinclude_pyx]
+    ext_modules = [
+        Extension(
+            x.replace(base_path + os.sep, "").replace(".pyx", "").replace(os.sep, "."), [x],
+            libraries               = LIBRARIES,
+            define_macros           = DEFINE_MACROS,
+            cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
+            **extension_kwargs
+        ) for x in noinclude_pyx
+    ] # yapf: disable
 
     # The following extensions do link to kentUtils, and also zlib
     bbifile = Extension(
@@ -310,7 +297,6 @@ try:
     ext_modules.append(bigwig)
     ext_modules.append(bigbed)
 
-
     # define helper functions & classes for build -----------------------------
 
     # paths to sources
@@ -319,7 +305,6 @@ try:
         PYX_PATHS.extend([X for X in ex.sources if X.endswith("pyx")])
 
     C_PATHS = [X.replace(".pyx", ".c") for X in PYX_PATHS]
-
 
     def wrap_command_classes(baseclass):
         """Add custom command-line `--recythonize` options to
@@ -335,6 +320,7 @@ try:
         class
             Modified class
         """
+
         class subclass(baseclass):
             user_options = baseclass.user_options + CYTHON_OPTIONS
             new_options = CYTHON_OPTIONS
@@ -342,8 +328,7 @@ try:
 
             def initialize_options(self):
                 baseclass.initialize_options(self)
-                for (op, _, _),  default in zip(self.new_options,
-                        self.new_defaults):
+                for (op, _, _), default in zip(self.new_options, self.new_defaults):
                     setattr(self, op, default)
 
             def finalize_options(self):
@@ -368,7 +353,6 @@ try:
         subclass.__name__ = "cython_%s" % baseclass.__name__
         return subclass
 
-
     class clean_c_files(Command):
         """Remove previously generated .c files"""
         user_options = []
@@ -386,23 +370,22 @@ try:
                     print("clean_c_files: removing %s ..." % file_)
                     os.remove(file_)
 
-
     class build_c_from_pyx(build_ext):
         """Regenerate .c files from pyx files if --CYTHONIZE_ARG or
         CYTHONIZE_COMMAND is added to command line
         """
         user_options = build_ext.user_options + CYTHON_OPTIONS
-        new_options  = CYTHON_OPTIONS
+        new_options = CYTHON_OPTIONS
         new_defaults = CYTHON_DEFAULTS
 
-        cython_args  = CYTHON_ARGS
+        cython_args = CYTHON_ARGS
         include_path = INCLUDE_PATH
         old_extensions = ext_modules
 
         description = "Regenerate .c files from .pyx source"
 
         def initialize_options(self):
-            for (op, _, _),  default in zip(self.new_options, self.new_defaults):
+            for (op, _, _), default in zip(self.new_options, self.new_defaults):
                 setattr(self, op, default)
             build_ext.initialize_options(self)
 
@@ -412,10 +395,11 @@ try:
 
                 self.run_command('clean')
                 print("build_c_from_pyx: regenerating .c files from Cython")
-                extensions = cythonize(ext_modules,
-                                       compiler_directives = CYTHON_ARGS,
-                                       compile_time_env    = CYTHON_COMPILE_TIME_ENV,
-                                       )
+                extensions = cythonize(
+                    ext_modules,
+                    compiler_directives=CYTHON_ARGS,
+                    compile_time_env=CYTHON_COMPILE_TIME_ENV,
+                )
                 self.extensions = extensions
 
             build_ext.finalize_options(self)
@@ -424,26 +408,22 @@ try:
         def run(self):
             pass
 
-
     # setup command classes ---------------------------------------------------
 
     command_classes = {
-        CYTHONIZE_COMMAND : build_c_from_pyx,
-        'build_ext' : wrap_command_classes(build_ext),
-        'install'   : wrap_command_classes(install),
-        'develop'   : wrap_command_classes(develop),
-        'clean'     : clean_c_files,
+        CYTHONIZE_COMMAND: build_c_from_pyx,
+        'build_ext': wrap_command_classes(build_ext),
+        'install': wrap_command_classes(install),
+        'develop': wrap_command_classes(develop),
+        'clean': clean_c_files,
     }
 
 except ImportError:
     print("plastid: Not all requirements pre-installed. Will need to bootstrap.")
 
-
-
 #===============================================================================
 # Program body
 #===============================================================================
-
 
 setup(
 
@@ -514,4 +494,4 @@ setup(
     tests_require    = [ "nose>=1.0" ],
     test_suite       = "nose.collector",
 
-)
+) # yapf: disable

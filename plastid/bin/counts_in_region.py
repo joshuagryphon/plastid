@@ -46,14 +46,19 @@ import numpy
 from plastid.genomics.roitools import SegmentChain
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import argsopener, get_short_name
-from plastid.util.scriptlib.argparsers import (AnnotationParser, AlignmentParser,
-                                               MaskParser, BaseParser)
+from plastid.util.scriptlib.argparsers import (
+    AnnotationParser,
+    AlignmentParser,
+    MaskParser,
+    BaseParser,
+)
 from plastid.util.scriptlib.help_formatters import format_module_docstring
 
 warnings.simplefilter("once")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
-_DISABLED=["normalize"]
+_DISABLED = ["normalize"]
+
 
 def main(argv=sys.argv[1:]):
     """Command-line program
@@ -70,62 +75,61 @@ def main(argv=sys.argv[1:]):
     """
     ap = AnnotationParser()
     annotation_file_parser = ap.get_parser(conflict_handler="resolve")
-    
+
     al = AlignmentParser(disabled=_DISABLED)
-    alignment_file_parser  = al.get_parser(conflict_handler="resolve")
-    
+    alignment_file_parser = al.get_parser(conflict_handler="resolve")
+
     mp = MaskParser()
     mask_file_parser = mp.get_parser()
-    
+
     bp = BaseParser()
     base_parser = bp.get_parser()
-    
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[base_parser,
-                                              alignment_file_parser,
-                                              annotation_file_parser,
-                                              mask_file_parser],
-                                     )
-    parser.add_argument("outfile",type=str,help="Output filename")
-    
+
+    parser = argparse.ArgumentParser(
+        description     = format_module_docstring(__doc__),
+        formatter_class = argparse.RawDescriptionHelpFormatter,
+        parents = [
+            base_parser,
+            alignment_file_parser,
+            annotation_file_parser,
+            mask_file_parser,
+        ],
+    ) # yapf: disable
+    parser.add_argument("outfile", type=str, help="Output filename")
+
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
-    ga          = al.get_genome_array_from_args(args,printer=printer)
-    transcripts = ap.get_transcripts_from_args(args,printer=printer,return_type=SegmentChain)
-    crossmap    = mp.get_genome_hash_from_args(args,printer=printer)
-    
+    ga = al.get_genome_array_from_args(args, printer=printer)
+    transcripts = ap.get_transcripts_from_args(args, printer=printer, return_type=SegmentChain)
+    crossmap = mp.get_genome_hash_from_args(args, printer=printer)
+
     ga_sum = ga.sum()
-    normconst = 1000.0*1e6 / ga_sum
-    
-    with argsopener(args.outfile,args,"w") as fout:
+    normconst = 1000.0 * 1e6 / ga_sum
+
+    with argsopener(args.outfile, args, "w") as fout:
         fout.write("## total_dataset_counts: %s\n" % ga_sum)
         fout.write("region_name\tregion\tcounts\tcounts_per_nucleotide\trpkm\tlength\n")
-        for n,ivc in enumerate(transcripts):
+        for n, ivc in enumerate(transcripts):
             name = ivc.get_name()
             masks = crossmap.get_overlapping_features(ivc)
             ivc.add_masks(*itertools.chain.from_iterable((X for X in masks)))
             if n % 1000 == 0:
                 printer.write("Processed %s regions..." % n)
-                
+
             counts = numpy.nansum(ivc.get_masked_counts(ga))
             length = ivc.masked_length
-            rpnt = numpy.nan if length == 0 else float(counts)/length
-            rpkm = numpy.nan if length == 0 else rpnt * normconst 
-            ltmp = [name,
-                    str(ivc),
-                    "%.8e" % counts,
-                    "%.8e" % rpnt,
-                    "%.8e" % rpkm,
-                    "%d" % length]
+            rpnt = numpy.nan if length == 0 else float(counts) / length
+            rpkm = numpy.nan if length == 0 else rpnt * normconst
+            ltmp = [name, str(ivc), "%.8e" % counts, "%.8e" % rpnt, "%.8e" % rpkm, "%d" % length]
             fout.write("%s\n" % "\t".join(ltmp))
-    
+
         fout.close()
-        
+
     printer.write("Processed %s regions total." % n)
 
     printer.write("Done.")
+
 
 if __name__ == '__main__':
     main()

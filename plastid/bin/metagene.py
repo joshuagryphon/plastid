@@ -156,16 +156,21 @@ from plastid.genomics.roitools import SegmentChain, positions_to_segments
 from plastid.util.io.filters import NameDateWriter
 from plastid.util.io.openers import get_short_name, argsopener, NullWriter
 from plastid.util.scriptlib.help_formatters import format_module_docstring
-from plastid.util.services.exceptions import (ArgumentWarning,
-                                              DataWarning,
-                                              FileFormatWarning)
-from plastid.util.scriptlib.argparsers import (AnnotationParser,
-                                               AlignmentParser,
-                                               PlottingParser,
-                                               MaskParser, BaseParser)
+from plastid.util.services.exceptions import (
+    ArgumentWarning,
+    DataWarning,
+    FileFormatWarning,
+)
+from plastid.util.scriptlib.argparsers import (
+    AnnotationParser,
+    AlignmentParser,
+    PlottingParser,
+    MaskParser,
+    BaseParser,
+)
 from plastid.readers.bigbed import BigBedReader
 
-warnings.simplefilter("once",DataWarning)
+warnings.simplefilter("once", DataWarning)
 
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -173,7 +178,8 @@ printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 # helper functions to generate/handle maximum spanning windows / ROIs
 #===============================================================================
 
-def window_landmark(region,flank_upstream=50,flank_downstream=50,ref_delta=0,landmark=0):
+
+def window_landmark(region, flank_upstream=50, flank_downstream=50, ref_delta=0, landmark=0):
     """Define a window surrounding a landmark in a region, if the region has such a landmark,
     (e.g. a start codon in a transcript), accounting for splicing of the region,
     if the region is discontinuous
@@ -213,29 +219,30 @@ def window_landmark(region,flank_upstream=50,flank_downstream=50,ref_delta=0,lan
         Genomic coordinate of reference point as *(chromosome name, coordinate, strand)*
     """
     if landmark + ref_delta >= flank_upstream:
-        fiveprime_offset   = 0
+        fiveprime_offset = 0
         my_start = landmark + ref_delta - flank_upstream
     else:
-        fiveprime_offset  = flank_upstream - landmark
+        fiveprime_offset = flank_upstream - landmark
         my_start = 0
-    
-    my_end = min(region.length,landmark + ref_delta + flank_downstream)
-    roi    = region.get_subchain(my_start,my_end)
+
+    my_end = min(region.length, landmark + ref_delta + flank_downstream)
+    roi = region.get_subchain(my_start, my_end)
     span = region.spanning_segment
     chrom = span.chrom
     strand = span.strand
-   
+
     if landmark + ref_delta == region.length:
         if span.strand == "+":
-            ref_point = (chrom,span.end,strand)
+            ref_point = (chrom, span.end, strand)
         else:
-            ref_point = (chrom,span.start - 1,strand)
+            ref_point = (chrom, span.start - 1, strand)
     else:
-        ref_point = region.get_genomic_coordinate(landmark+ref_delta)
+        ref_point = region.get_genomic_coordinate(landmark + ref_delta)
 
     return roi, fiveprime_offset, ref_point
-    
-def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
+
+
+def window_cds_start(transcript, flank_upstream, flank_downstream, ref_delta=0):
     """Returns a window surrounding a start codon.
     
     Parameters
@@ -275,11 +282,16 @@ def window_cds_start(transcript,flank_upstream,flank_downstream,ref_delta=0):
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
 
-    return window_landmark(transcript,flank_upstream,flank_downstream,
-                           ref_delta=ref_delta,
-                           landmark=transcript.cds_start)
+    return window_landmark(
+        transcript,
+        flank_upstream,
+        flank_downstream,
+        ref_delta=ref_delta,
+        landmark=transcript.cds_start
+    )
 
-def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
+
+def window_cds_stop(transcript, flank_upstream, flank_downstream, ref_delta=0):
     """Returns a window surrounding a stop codon.
 
     Parameters
@@ -318,14 +330,25 @@ def window_cds_stop(transcript,flank_upstream,flank_downstream,ref_delta=0):
     """
     if transcript.cds_start is None:
         return SegmentChain(), numpy.nan, numpy.nan
-    
-    return window_landmark(transcript,flank_upstream,flank_downstream,
-                           ref_delta=ref_delta,
-                           landmark=transcript.cds_end-3)
 
-def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
-                            window_func=window_cds_start,name=None,
-                            printer=NullWriter()):
+    return window_landmark(
+        transcript,
+        flank_upstream,
+        flank_downstream,
+        ref_delta=ref_delta,
+        landmark=transcript.cds_end - 3
+    )
+
+
+def maximal_spanning_window(
+        regions,
+        mask_hash,
+        flank_upstream,
+        flank_downstream,
+        window_func=window_cds_start,
+        name=None,
+        printer=NullWriter()
+):
     """Create a maximal spanning window over `regions` surrounding a landmark,
     
     The maximal spanning window is created by:
@@ -402,58 +425,63 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
     """
     refpoints = []
     window_size = flank_upstream + flank_downstream
-    
+
     # find common positions
-    position_matrix = numpy.tile(numpy.nan,(len(regions),window_size))
-    for n,region in enumerate(regions):
+    position_matrix = numpy.tile(numpy.nan, (len(regions), window_size))
+    for n, region in enumerate(regions):
         try:
-            my_roi, my_offset, genomic_refpoint = window_func(region,flank_upstream,flank_downstream)
+            my_roi, my_offset, genomic_refpoint = window_func(
+                region, flank_upstream, flank_downstream
+            )
             refpoints.append(genomic_refpoint)
-            
+
             if genomic_refpoint is not numpy.nan and len(my_roi) > 0:
-                pos_list = my_roi.get_position_list() # ascending list of positions
+                pos_list = my_roi.get_position_list()  # ascending list of positions
                 my_len = len(pos_list)
-                assert my_offset + my_len <= window_size 
+                assert my_offset + my_len <= window_size
                 if my_roi.spanning_segment.strand == "+":
-                    position_matrix[n,my_offset:my_offset+my_len] = pos_list
+                    position_matrix[n, my_offset:my_offset + my_len] = pos_list
                 else:
                     my_len = len(pos_list)
-                    position_matrix[n,my_offset:my_offset+my_len] = pos_list[::-1]
-            
+                    position_matrix[n, my_offset:my_offset + my_len] = pos_list[::-1]
+
         except IndexError:
-            warnings.warn("IndexError finding common positions at region '%s'. Ignoring region: " % region.get_name())
-    
+            warnings.warn(
+                "IndexError finding common positions at region '%s'. Ignoring region: " %
+                region.get_name()
+            )
+
     # continue only if refpoints all match
     if len(set(refpoints)) == 1 and numpy.nan not in refpoints:
         new_shared_positions = []
         if len(set(refpoints)) == 1:
-            for i in range(0,position_matrix.shape[1]):
-                col = position_matrix[:,i]
+            for i in range(0, position_matrix.shape[1]):
+                col = position_matrix[:, i]
                 if len(set(col)) == 1 and not numpy.isnan(col[0]):
                     new_shared_positions.append(int(col[0]))
-      
-        # continue only if there exist positions shared between all regions 
+
+        # continue only if there exist positions shared between all regions
         if len(set(new_shared_positions)) > 0:
-    
+
             # define new ROI covering all positions common to all transcripts
-            new_roi = SegmentChain(*positions_to_segments(regions[0].chrom,
-                                                          regions[0].strand,
-                                                          new_shared_positions))
+            new_roi = SegmentChain(
+                *positions_to_segments(regions[0].chrom, regions[0].strand, new_shared_positions)
+            )
             if name is None:
                 name = new_roi.get_name()
-            
+
             new_roi.attr["ID"] = name
 
             if new_roi.spanning_segment.strand == "+":
                 new_roi.attr["thickstart"] = genomic_refpoint[1]
-                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+                new_roi.attr["thickend"] = genomic_refpoint[1] + 1
             else:
                 new_roi.attr["thickstart"] = genomic_refpoint[1]
-                new_roi.attr["thickend"]   = genomic_refpoint[1] + 1
+                new_roi.attr["thickend"] = genomic_refpoint[1] + 1
 
             # having made sure that refpoint is same for all transcripts,
             # we use last ROI and last offset to find new offset
-            # this fails if ref point is at the 3' end of the roi, 
+            # this fails if ref point is at the 3' end of the roi,
             # due to quirks of half-open coordinate systems
             # so we test it explicitly
             if flank_upstream - my_offset == my_roi.length:
@@ -461,16 +489,16 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
             else:
                 zero_point_roi = new_roi.get_segmentchain_coordinate(*genomic_refpoint)
                 new_offset = flank_upstream - zero_point_roi
-    
+
             masks = mask_hash.get_overlapping_features(new_roi)
             mask_segs = []
             for mask in masks:
                 mask_segs.extend(mask.segments)
-            
+
             new_roi.add_masks(*mask_segs)
 
             return new_roi, new_offset
-            
+
     return SegmentChain(), numpy.nan
 
 
@@ -478,10 +506,17 @@ def maximal_spanning_window(regions,mask_hash,flank_upstream,flank_downstream,
 # Subprograms
 #===============================================================================
 
-def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
-                               window_func=window_cds_start,is_sorted=False,
-                               group_by="gene_id",
-                               printer=NullWriter()):
+
+def group_regions_make_windows(
+        source,
+        mask_hash,
+        flank_upstream,
+        flank_downstream,
+        window_func=window_cds_start,
+        is_sorted=False,
+        group_by="gene_id",
+        printer=NullWriter()
+):
     """Group regions of interest by a shared attribute, and generate
     maximal spanning windows for them. Results are given in a table
     suitable for use in ``count`` subprogram. Windows are generated by
@@ -600,27 +635,28 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
     """
     import itertools
     window_size = flank_upstream + flank_downstream
-        
-    dtmp = { "region_id"          : [],
-             "region"             : [],
-             "region_length"      : [],
-             "masked"             : [],
-             "alignment_offset"   : [],
-             "window_size"        : [],
-             "zero_point"         : [],
-             "region_bed"         : [],
-             "threeprime_offset"  : [],
-             }
-    
+
+    dtmp = {
+        "region_id"        : [],
+        "region"           : [],
+        "region_length"    : [],
+        "masked"           : [],
+        "alignment_offset" : [],
+        "window_size"      : [],
+        "zero_point"       : [],
+        "region_bed"       : [],
+        "threeprime_offset": [],
+    } # yapf: disable
+
     transcripts = []
     group_transcript = {}
     last_chrom = None
-    do_loop    = True
+    do_loop = True
     source = iter(source)
     c = -1
 
     # to save memory, we process one chromosome at a time if input file is sorted
-    # knowing that at that moment all transcript parts are assembled    
+    # knowing that at that moment all transcript parts are assembled
     while do_loop == True:
         try:
             tx = next(source)
@@ -632,7 +668,7 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
             if (is_sorted and tx.spanning_segment.chrom != last_chrom) or do_loop == False:
                 last_chrom = tx.spanning_segment.chrom
                 if do_loop == True:
-                    source = itertools.chain([tx],source)
+                    source = itertools.chain([tx], source)
 
                 for tx_chain in transcripts:
                     # if attr is missing, use transcript name, which should be unique
@@ -642,14 +678,18 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
                             group_attr = attr["gene_id"]
                         else:
                             group_attr = tx_chain.get_gene()
-                            warnings.warn("Region '%s' has no gene_id. Inferring gene_id to be '%s'" % (tx_chain.get_name(), group_attr),
-                                          DataWarning)
+                            warnings.warn(
+                                "Region '%s' has no gene_id. Inferring gene_id to be '%s'" %
+                                (tx_chain.get_name(), group_attr), DataWarning
+                            )
                     else:
                         if group_by in attr:
                             group_attr = attr[group_by]
                         else:
-                            warnings.warn("Region '%s' has no attribute '%s', and will not be grouped. Using region name as default group." % (tx_chain.get_name(),group_by),
-                                          DataWarning)
+                            warnings.warn(
+                                "Region '%s' has no attribute '%s', and will not be grouped. Using region name as default group."
+                                % (tx_chain.get_name(), group_by), DataWarning
+                            )
                             group_attr = tx_chain.get_name()
 
                     try:
@@ -662,28 +702,36 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
                 for region_id, tx_list in group_transcript.items():
                     c += 1
                     if c % 1000 == 1:
-                        printer.write("Processed %s genes, included %s ..." % (c,len(list(dtmp.values())[0])))
+                        printer.write(
+                            "Processed %s genes, included %s ..." %
+                            (c, len(list(dtmp.values())[0]))
+                        )
 
-                    name = region_id # name regions after gene id
-                    max_spanning_window, offset =  maximal_spanning_window(tx_list,
-                                                                           mask_hash,
-                                                                           flank_upstream,
-                                                                           flank_downstream,
-                                                                           window_func=window_func,
-                                                                           name=name,
-                                                                           printer=printer)
+                    name = region_id  # name regions after gene id
+                    max_spanning_window, offset = maximal_spanning_window(
+                        tx_list,
+                        mask_hash,
+                        flank_upstream,
+                        flank_downstream,
+                        window_func=window_func,
+                        name=name,
+                        printer=printer
+                    )
 
                     if len(max_spanning_window) > 0:
                         mask_chain = max_spanning_window.get_masks_as_segmentchain()
                         dtmp["region_id"].append(region_id)
                         dtmp["window_size"].append(window_size)
-                        dtmp["region"].append(str(max_spanning_window)) # need to cast to string to keep numpy from converting to array
+
+                        # need to cast `region` to string to keep numpy from converting to array
+                        dtmp["region"].append(str(max_spanning_window))
                         dtmp["masked"].append(str(mask_chain))
                         dtmp["alignment_offset"].append(offset)
                         dtmp["zero_point"].append(flank_upstream)
                         dtmp["region_bed"].append(max_spanning_window.as_bed())
                         dtmp["region_length"].append(max_spanning_window.length)
-                        dtmp["threeprime_offset"].append(window_size - offset - max_spanning_window.length)
+                        dtmp["threeprime_offset"
+                             ].append(window_size - offset - max_spanning_window.length)
 
                 # clean up
                 del transcripts
@@ -700,27 +748,32 @@ def group_regions_make_windows(source,mask_hash,flank_upstream,flank_downstream,
             pass
 
     df = pd.DataFrame(dtmp)
-    df.sort_values(["region_id"],inplace=True)
-    printer.write("Processed %s genes total. Included %s." % (c+1,len(df)))
+    df.sort_values(["region_id"], inplace=True)
+    printer.write("Processed %s genes total. Included %s." % (c + 1, len(df)))
 
     # Warn in case of annotation problems
     if (df["alignment_offset"] == flank_upstream).all():
-        warnings.warn("All maximal spanning windows lack flanks upstream of reference landmark. This occurs e.g. for start codons when annotation files don't contain UTR data. Please check your annotation file.",
-                      DataWarning)
-        
+        warnings.warn(
+            "All maximal spanning windows lack flanks upstream of reference landmark. This occurs e.g. for start codons when annotation files don't contain UTR data. Please check your annotation file.",
+            DataWarning
+        )
+
     # N.b. This warning will only be invoked for zero-length landmarks
     # e.g. won't work for stop codons, which are 3nt wide
     if (df["threeprime_offset"] == flank_downstream).all():
-        warnings.warn("All maximal spanning windows lack flanks downstream of reference landmark. This occurs e.g. for stop codons when annotation files don't contain UTR data. Please check your annotation file.",
-                      DataWarning)
+        warnings.warn(
+            "All maximal spanning windows lack flanks downstream of reference landmark. This occurs e.g. for stop codons when annotation files don't contain UTR data. Please check your annotation file.",
+            DataWarning
+        )
 
     return df
 
+
 _NORM_START_DEFAULT = 20
-_NORM_END_DEFAULT   = 50
+_NORM_END_DEFAULT = 50
 
 
-def _get_norm_region(roi_table,args):
+def _get_norm_region(roi_table, args):
     """Helper function to get normalization region from current and deprecated command-line arguments.
     This function will be removed in plastid v0.5, when the deprecated
     command-line arguments will also be removed.
@@ -745,19 +798,26 @@ def _get_norm_region(roi_table,args):
     if args.normalize_over is not None:
         norm_start, norm_end = args.normalize_over
         norm_start += flank_upstream
-        norm_end   += flank_upstream
+        norm_end += flank_upstream
         if args.norm_region is not None:
-            warnings.warn("`--normalize_over` replaces `--norm_region`, which is deprecated. Ignoring `--norm_region` and using `--normalize_over`. See `metagene count --help` for differences.",ArgumentWarning)
+            warnings.warn(
+                "`--normalize_over` replaces `--norm_region`, which is deprecated. Ignoring `--norm_region` and using `--normalize_over`. See `metagene count --help` for differences.",
+                ArgumentWarning
+            )
     elif args.norm_region is not None:
-        warnings.warn("`--norm_region` is deprecated and will be removed in plastid v0.5. Use `--normalize_over` instead. See `metagene count --help` for differences.",ArgumentWarning)
+        warnings.warn(
+            "`--norm_region` is deprecated and will be removed in plastid v0.5. Use `--normalize_over` instead. See `metagene count --help` for differences.",
+            ArgumentWarning
+        )
         norm_start, norm_end = args.norm_region
     else:
         norm_start = _NORM_START_DEFAULT
-        norm_end   = _NORM_END_DEFAULT
-    
+        norm_end = _NORM_END_DEFAULT
+
     return norm_start, norm_end
 
-def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
+
+def do_count(args, alignment_parser, plot_parser, printer=NullWriter()):
     """Calculate a metagene average over maximal spanning windows specified in `roi_table`, taking the following steps:
 
      1. The **raw counts** at each position in each :term:`maximal spanning window`
@@ -805,126 +865,136 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
 
     plot_parser.set_style_from_args(args)
 
+    # yapf: disable
     outbase = args.outbase
     count_fn     = "%s_rawcounts.txt.gz" % outbase
     normcount_fn = "%s_normcounts.txt.gz" % outbase
     mask_fn      = "%s_mask.txt.gz" % outbase
     profile_fn   = "%s_metagene_profile.txt" % outbase
     fig_fn       = "%s_metagene_overview.%s" % (outbase,args.figformat)
+    # yapf: enable
 
     printer.write("Opening ROI file %s ..." % args.roi_file)
     with open(args.roi_file) as fh:
-        roi_table = pd.read_table(fh,sep="\t",comment="#",index_col=None,header=0)
+        roi_table = pd.read_table(fh, sep="\t", comment="#", index_col=None, header=0)
         fh.close()
-    
+
     # wrapper to deal with multiple command-line arguments
     norm_start, norm_end = _get_norm_region(roi_table, args)
-        
+
     #norm_start, norm_end = args.norm_region
     min_counts = args.min_counts
 
     # open count files
-    ga = alignment_parser.get_genome_array_from_args(args,printer=printer)
-    
+    ga = alignment_parser.get_genome_array_from_args(args, printer=printer)
+
     # following value are identical for all genes, so 0th val is fine
-    window_size    = roi_table["window_size"][0]
+    window_size = roi_table["window_size"][0]
     upstream_flank = roi_table["zero_point"][0]
-    cshape = (len(roi_table),window_size)
+    cshape = (len(roi_table), window_size)
 
     # by default, mask everything
-    counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan,cshape),
-                                  mask=numpy.tile(True,cshape))
-    
-    for i,row in roi_table.iterrows():
+    counts = numpy.ma.MaskedArray(numpy.tile(numpy.nan, cshape), mask=numpy.tile(True, cshape))
+
+    for i, row in roi_table.iterrows():
         if i % 1000 == 1:
             printer.write("Counted %s ROIs ..." % (i))
-            
-        roi    = SegmentChain.from_str(row["region"])
-        mask   = SegmentChain.from_str(row["masked"])
+
+        roi = SegmentChain.from_str(row["region"])
+        mask = SegmentChain.from_str(row["masked"])
         roi.add_masks(*mask)
         offset = int(round((row["alignment_offset"])))
         assert offset + roi.length <= window_size
 
         # take away from masked array
         mvec = roi.get_masked_counts(ga)
-        counts.data[i,offset:offset+roi.length] = mvec.data
-        counts.mask[i,offset:offset+roi.length] = mvec.mask
+        counts.data[i, offset:offset + roi.length] = mvec.data
+        counts.mask[i, offset:offset + roi.length] = mvec.mask
         #counts[i,offset:offset+roi.length] = roi.get_masked_counts(ga)
-    
-    printer.write("Counted %s ROIs total." % (i+1))
-             
-    denominator = numpy.nansum(counts[:,norm_start:norm_end],axis=1)
+
+    printer.write("Counted %s ROIs total." % (i + 1))
+
+    denominator = numpy.nansum(counts[:, norm_start:norm_end], axis=1)
     row_select = denominator >= min_counts
 
     norm_counts = (counts.T.astype(float) / denominator).T
-    norm_counts = numpy.ma.MaskedArray(norm_counts,mask=counts.mask)
+    norm_counts = numpy.ma.MaskedArray(norm_counts, mask=counts.mask)
     norm_counts.mask[numpy.isnan(norm_counts)] = True
     norm_counts.mask[numpy.isinf(norm_counts)] = True
 
     if args.keep == True:
         printer.write("Saving counts to %s ..." % count_fn)
-        numpy.savetxt(count_fn,counts,delimiter="\t",fmt='%.8f')
+        numpy.savetxt(count_fn, counts, delimiter="\t", fmt='%.8f')
         printer.write("Saving normalized counts to %s ..." % normcount_fn)
-        numpy.savetxt(normcount_fn,norm_counts,delimiter="\t")
+        numpy.savetxt(normcount_fn, norm_counts, delimiter="\t")
         printer.write("Saving masks used in profile building to %s ..." % mask_fn)
-        numpy.savetxt(mask_fn,norm_counts.mask,delimiter="\t")
-     
+        numpy.savetxt(mask_fn, norm_counts.mask, delimiter="\t")
+
     try:
         if args.use_mean == True:
             pfunc = numpy.ma.mean
         else:
             pfunc = numpy.ma.median
-            
-        profile = pfunc(norm_counts[row_select],axis=0)
+
+        profile = pfunc(norm_counts[row_select], axis=0)
     except IndexError:
         profile = numpy.zeros(norm_counts.shape[0])
     except ValueError:
         profile = numpy.zeros(norm_counts.shape[0])
 
     if profile.sum() == 0:
-        printer.write("Metagene profile is zero at all positions. %s ROIs made the minimum count cutoff." % row_select.sum())
+        printer.write(
+            "Metagene profile is zero at all positions. %s ROIs made the minimum count cutoff." %
+            row_select.sum()
+        )
         printer.write("Consider lowering --min_counts (currently %s)." % min_counts)
 
-    num_genes = ((~norm_counts.mask)[row_select]).sum(0) 
-    profile_table = pd.DataFrame({ "metagene_average" : profile,
-                                   "regions_counted"  : num_genes,
-                                   "x" : numpy.arange(-upstream_flank,window_size-upstream_flank),
-                                  }
-                                )
+    num_genes = ((~norm_counts.mask)[row_select]).sum(0)
+    profile_table = pd.DataFrame(
+        {
+            "metagene_average": profile,
+            "regions_counted": num_genes,
+            "x": numpy.arange(-upstream_flank, window_size - upstream_flank),
+        }
+    )
 
     printer.write("Saving metagene profile to %s ..." % profile_fn)
-    with argsopener(profile_fn,args,"w") as profile_out:
-        profile_table.to_csv(profile_out,
-                             sep="\t",
-                             header=True,
-                             index=False,
-                             na_rep="nan",
-                             columns=["x","metagene_average","regions_counted"],
-                             )
+    with argsopener(profile_fn, args, "w") as profile_out:
+        profile_table.to_csv(
+            profile_out,
+            sep="\t",
+            header=True,
+            index=False,
+            na_rep="nan",
+            columns=["x", "metagene_average", "regions_counted"],
+        )
         profile_out.close()
 
     # plot
     printer.write("Plotting to %s ..." % fig_fn)
-    rs = norm_counts[row_select,:]
-    p95 = numpy.nanpercentile(rs[rs > 0],95)
+    rs = norm_counts[row_select, :]
+    p95 = numpy.nanpercentile(rs[rs > 0], 95)
     im_args = {
-        "interpolation" : "none",
-        "vmin"          : 0,
-        "vmax"          : p95, # limit color space for better plotting
+        "interpolation": "none",
+        "vmin": 0,
+        "vmax": p95,  # limit color space for better plotting
     }
     if args.cmap is not None:
         im_args["cmap"] = args.cmap
 
     plot_args = {}
-    plot_args["color"] = plot_parser.get_colors_from_args(args,1)[0]
-    
+    plot_args["color"] = plot_parser.get_colors_from_args(args, 1)[0]
+
     fig = plot_parser.get_figure_from_args(args)
     ax = plt.gca()
-    fig, ax = profile_heatmap(norm_counts[row_select],
-                              profile=profile_table["metagene_average"],
-                              axes=ax,
-                              x=profile_table["x"],
-                              im_args=im_args,plot_args=plot_args)
+    fig, ax = profile_heatmap(
+        norm_counts[row_select],
+        profile=profile_table["metagene_average"],
+        axes=ax,
+        x=profile_table["x"],
+        im_args=im_args,
+        plot_args=plot_args
+    )
 
     title = args.title if args.title is not None else "Metagene overview for %s" % outbase
     fig.suptitle(title)
@@ -935,11 +1005,12 @@ def do_count(args,alignment_parser,plot_parser,printer=NullWriter()):
         ax["main"].set_xlabel("Distance (nt) from %s" % landmark)
 
     printer.write("Saving image to %s ..." % fig_fn)
-    fig.savefig(fig_fn,dpi=args.dpi,bbox_inches="tight")
+    fig.savefig(fig_fn, dpi=args.dpi, bbox_inches="tight")
 
     return counts, norm_counts, profile_table
 
-def do_chart(args,plot_parser,printer=NullWriter()): #sample_dict,landmark="landmark",title=None):
+
+def do_chart(args, plot_parser, printer=NullWriter()):
     """Plot metagene profiles against one another
     
     Parameters
@@ -959,43 +1030,52 @@ def do_chart(args,plot_parser,printer=NullWriter()): #sample_dict,landmark="land
     import matplotlib.pyplot as plt
 
     if len(args.labels) == len(args.infiles):
-        samples = { K : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for K,V in zip(args.labels,args.infiles)}
+        samples = {
+            K: pd.read_table(V, sep="\t", comment="#", header=0, index_col=None)
+            for K, V in zip(args.labels, args.infiles)
+        }
     else:
         if len(args.labels) > 0:
-            warnings.warn("Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" % (len(args.infiles),len(args.infiles),len(args.labels)),ArgumentWarning)
-        samples = { get_short_name(V) : pd.read_table(V,sep="\t",comment="#",header=0,index_col=None) for V in args.infiles }
-    
+            warnings.warn(
+                "Expected %s labels supplied for %s infiles; found only %s. Ignoring labels" %
+                (len(args.infiles), len(args.infiles), len(args.labels)), ArgumentWarning
+            )
+        samples = {
+            get_short_name(V): pd.read_table(V, sep="\t", comment="#", header=0, index_col=None)
+            for V in args.infiles
+        }
+
     plot_parser.set_style_from_args(args)
     title = args.title
-    colors = plot_parser.get_colors_from_args(args,len(args.infiles))
+    colors = plot_parser.get_colors_from_args(args, len(args.infiles))
 
     fig = plot_parser.get_figure_from_args(args)
     ax = plt.gca()
     min_x = numpy.inf
     max_x = -numpy.inf
     for n, (k, v) in enumerate(samples.items()):
-        plt.plot(v["x"],v["metagene_average"],label=k,color=colors[n])
-        min_x = min(min_x,min(v["x"]))
-        max_x = max(max_x,max(v["x"]))
-    
-    plt.xlim(min_x,max_x)
+        plt.plot(v["x"], v["metagene_average"], label=k, color=colors[n])
+        min_x = min(min_x, min(v["x"]))
+        max_x = max(max_x, max(v["x"]))
+
+    plt.xlim(min_x, max_x)
     ylim = ax.get_ylim()
-    plt.ylim(0,ylim[1])
-    
+    plt.ylim(0, ylim[1])
+
     plt.xlabel("Distance from %s (nt)" % args.landmark)
     plt.ylabel("Normalized read density (au)")
-    
+
     if title is not None:
         plt.title(title)
-    
-    plt.legend(bbox_to_anchor=(1.02,1.02),loc="upper left",borderaxespad=0)
+
+    plt.legend(bbox_to_anchor=(1.02, 1.02), loc="upper left", borderaxespad=0)
 
     fn = "%s.%s" % (args.outbase, args.figformat)
     printer.write("Saving to %s ..." % fn)
-    fig.savefig(fn,dpi=args.dpi,bbox_inches="tight")
-    
+    fig.savefig(fn, dpi=args.dpi, bbox_inches="tight")
+
     return fig
-        
+
 
 #===============================================================================
 # PROGRAM BODY
@@ -1020,103 +1100,157 @@ def main(argv=sys.argv[1:]):
     pp = PlottingParser()
     mp = MaskParser()
     bp = BaseParser()
-    
-    alignment_file_parser  = al.get_parser()
+
+    alignment_file_parser = al.get_parser()
     annotation_file_parser = an.get_parser()
     mask_file_parser = mp.get_parser()
     plotting_parser = pp.get_parser()
     base_parser = bp.get_parser()
-    
+
     generator_help = "Create ROI file from genome annotation"
     generator_desc = format_module_docstring(group_regions_make_windows.__doc__)
-    
+
     count_help = "Count reads falling into regions of interest, normalize, and average into a metagene profile"
     count_desc = format_module_docstring(do_count.__doc__)
 
     chart_help = "Plot metagene profiles"
     chart_desc = format_module_docstring(do_chart.__doc__)
 
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    subparsers = parser.add_subparsers(title="subcommands",
-                                       description="choose one of the following",
-                                       dest="program")
-    gparser    = subparsers.add_parser("generate",
-                                       help=generator_help,
-                                       description=generator_desc,
-                                       parents=[base_parser,annotation_file_parser,mask_file_parser],
-                                       formatter_class=argparse.RawDescriptionHelpFormatter)
-    cparser    = subparsers.add_parser("count",
-                                       help=count_help,
-                                       description=count_desc,
-                                       parents=[base_parser,alignment_file_parser,plotting_parser],
-                                       formatter_class=argparse.RawDescriptionHelpFormatter)
-    pparser    = subparsers.add_parser("chart",
-                                       help=chart_help,
-                                       description=chart_desc,
-                                       parents=[base_parser,plotting_parser],
-                                       formatter_class=argparse.RawDescriptionHelpFormatter)
-    
+    parser = argparse.ArgumentParser(
+        description=format_module_docstring(__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    subparsers = parser.add_subparsers(
+        title="subcommands", description="choose one of the following", dest="program"
+    )
+    gparser = subparsers.add_parser(
+        "generate",
+        help=generator_help,
+        description=generator_desc,
+        parents=[base_parser, annotation_file_parser, mask_file_parser],
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    cparser = subparsers.add_parser(
+        "count",
+        help=count_help,
+        description=count_desc,
+        parents=[base_parser, alignment_file_parser, plotting_parser],
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    pparser = subparsers.add_parser(
+        "chart",
+        help=chart_help,
+        description=chart_desc,
+        parents=[base_parser, plotting_parser],
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
     # generate subprogram options
-    gparser.add_argument("--landmark",type=str,choices=("cds_start","cds_stop"),
-                         default="cds_start",
-                         help="Landmark around which to build metagene profile (Default: cds_start)")
-    gparser.add_argument("--upstream",type=int,default=50,
-                         help="Nucleotides to include upstream of landmark (Default: 50)")
-    gparser.add_argument("--downstream",type=int,default=50,
-                         help="Nucleotides to include downstream of landmark (Default: 50)")
+    gparser.add_argument(
+        "--landmark",
+        type=str,
+        choices=("cds_start", "cds_stop"),
+        default="cds_start",
+        help="Landmark around which to build metagene profile (Default: cds_start)"
+    )
+    gparser.add_argument(
+        "--upstream",
+        type=int,
+        default=50,
+        help="Nucleotides to include upstream of landmark (Default: 50)"
+    )
+    gparser.add_argument(
+        "--downstream",
+        type=int,
+        default=50,
+        help="Nucleotides to include downstream of landmark (Default: 50)"
+    )
     gparser.add_argument("--group_by",type=str,default="gene_id",
                          help="Attribute (e.g. in GTF2/GFF3 column 9) by which to group regions "+ \
                               "before generating maximal spanning windows "+ \
                               "(Default: group transcripts by gene using 'gene_id' attribute from GTF2, or 'Parent' attribute in GFF3)")
-    gparser.add_argument("outbase",type=str,
-                         help="Basename for output files")
-    
+    gparser.add_argument("outbase", type=str, help="Basename for output files")
+
     # count subprogram options
-    cparser.add_argument("roi_file",type=str,
-                         help="Text file containing maximal spanning windows and offsets, "+
-                              "generated by the ``generate`` subprogram.")
-    cparser.add_argument("--min_counts",type=int,default=10,metavar="N",
-                         help="Minimum counts required in normalization region "+
-                              "to be included in metagene average (Default: 10)")
-    cparser.add_argument("--normalize_over",type=int,nargs=2,metavar="N",
-                         default=None,
-                         #default=(20,50),
-                         help="Portion of each window against which its individual raw count profile"+
-                              " will be normalized. Specify two integers, in nucleotide"+
-                              " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)")
-    cparser.add_argument("--norm_region",type=int,nargs=2,metavar="N",
-                         default=None,
-                         help="Deprecated. Use ``--normalize_over`` instead. "+
-                              "Formerly, Portion of each window against which its individual raw count profile"+
-                              " will be normalized. Specify two integers, in nucleotide"+
-                              " distance, from 5\' end of window. (Default: 70 100)")
-    cparser.add_argument("--landmark",type=str,default=None,
-                         help="Name of landmark at zero point, optional.")
-    cparser.add_argument("--use_mean",default=False,action="store_true",
-                         help="If supplied, use columnwise mean to generate profile (Default: use median)"
-                         )
-    cparser.add_argument("--keep",default=False,action="store_true",
-                        help="Save intermediate count files. Useful for additional computations (Default: False)")
-    cparser.add_argument("outbase",type=str,
-                         help="Basename for output files")
+    cparser.add_argument(
+        "roi_file",
+        type=str,
+        help="Text file containing maximal spanning windows and offsets, " +
+        "generated by the ``generate`` subprogram."
+    )
+    cparser.add_argument(
+        "--min_counts",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Minimum counts required in normalization region " +
+        "to be included in metagene average (Default: 10)"
+    )
+    cparser.add_argument(
+        "--normalize_over",
+        type=int,
+        nargs=2,
+        metavar="N",
+        default=None,
+        #default=(20,50),
+        help="Portion of each window against which its individual raw count profile" +
+        " will be normalized. Specify two integers, in nucleotide" +
+        " distance from landmark (negative for upstream, positive for downstream. Surround negative numbers with quotes.). (Default: 20 50)"
+    )
+    cparser.add_argument(
+        "--norm_region",
+        type=int,
+        nargs=2,
+        metavar="N",
+        default=None,
+        help="Deprecated. Use ``--normalize_over`` instead. " +
+        "Formerly, Portion of each window against which its individual raw count profile" +
+        " will be normalized. Specify two integers, in nucleotide" +
+        " distance, from 5\' end of window. (Default: 70 100)"
+    )
+    cparser.add_argument(
+        "--landmark", type=str, default=None, help="Name of landmark at zero point, optional."
+    )
+    cparser.add_argument(
+        "--use_mean",
+        default=False,
+        action="store_true",
+        help="If supplied, use columnwise mean to generate profile (Default: use median)"
+    )
+    cparser.add_argument(
+        "--keep",
+        default=False,
+        action="store_true",
+        help="Save intermediate count files. Useful for additional computations (Default: False)"
+    )
+    cparser.add_argument("outbase", type=str, help="Basename for output files")
 
     # chart subprogram arguments
-    pparser.add_argument("outbase",type=str,
-                         help="Basename for output file.")
-    pparser.add_argument("infiles",type=str,nargs="+",
-                         help="One or more metagene profiles, generated by the"+
-                              " ``count`` subprogram, which will be plotted together."
-                         )
-    pparser.add_argument("--labels",type=str,nargs="+",default=[],
-                         help="Sample names for each metagene profile (optional).")
-    pparser.add_argument("--landmark",type=str,default=None,
-                         help="Name of landmark at zero point (e.g. 'CDS start' or 'CDS stop'; optional)")
+    pparser.add_argument("outbase", type=str, help="Basename for output file.")
+    pparser.add_argument(
+        "infiles",
+        type=str,
+        nargs="+",
+        help="One or more metagene profiles, generated by the" +
+        " ``count`` subprogram, which will be plotted together."
+    )
+    pparser.add_argument(
+        "--labels",
+        type=str,
+        nargs="+",
+        default=[],
+        help="Sample names for each metagene profile (optional)."
+    )
+    pparser.add_argument(
+        "--landmark",
+        type=str,
+        default=None,
+        help="Name of landmark at zero point (e.g. 'CDS start' or 'CDS stop'; optional)"
+    )
 
-    
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
-    
+
     # 'generate' subprogram
     if args.program == "generate":
         printer.write("Generating ROI file ...")
@@ -1129,70 +1263,78 @@ def main(argv=sys.argv[1:]):
         is_sorted = (args.sorted == True) or \
                     (args.tabix == True) or \
                     (args.annotation_format == "BigBed")
-            
+
         # open annotations
         printer.write("Opening annotation files: %s ..." % ", ".join(args.annotation_files))
-
 
         annotation_message = """`metagene` relies upon relationships between
         transcripts/genes to make maximal spanning windows that cover them. The
         `%s` attribute used to group these is not found in your %s file.
         Consider either (1) using a GTF2 or GFF3 file, (2) creating an extended
         BED file with this additional column, or (3) creating a BigBed file
-        containing this extra column.""".replace("        ","").replace("\n"," ") % (args.group_by, args.annotation_format)
+        containing this extra column.""".replace("        ", "").replace(
+            "\n", " "
+        ) % (args.group_by, args.annotation_format)
 
         if args.annotation_format == "BED":
-            if not isinstance(args.bed_extra_columns, list) or args.group_by not in args.bed_extra_columns:
+            if not isinstance(args.bed_extra_columns,
+                              list) or args.group_by not in args.bed_extra_columns:
                 warnings.warn(annotation_message, FileFormatWarning)
         elif args.annotation_format == "BigBed":
             reader = BigBedReader(args.annotation_files[0])
             if args.group_by not in reader.extension_fields:
                 warnings.warn(annotation_message, FileFormatWarning)
 
-        transcripts = an.get_transcripts_from_args(args,printer=printer)
+        transcripts = an.get_transcripts_from_args(args, printer=printer)
         mask_hash = mp.get_genome_hash_from_args(args)
-        
+
         # get ROIs
-        printer.write("Generating regions of interest ...")   
-        roi_table = group_regions_make_windows(transcripts,
-                                               mask_hash,
-                                               args.upstream,
-                                               args.downstream,
-                                               window_func=map_function,
-                                               printer=printer,
-                                               is_sorted=is_sorted,
-                                               group_by=args.group_by)
-        
+        printer.write("Generating regions of interest ...")
+        roi_table = group_regions_make_windows(
+            transcripts,
+            mask_hash,
+            args.upstream,
+            args.downstream,
+            window_func=map_function,
+            printer=printer,
+            is_sorted=is_sorted,
+            group_by=args.group_by
+        )
+
         roi_file = "%s_rois.txt" % args.outbase
         bed_file = "%s_rois.bed" % args.outbase
         printer.write("Saving to ROIs %s ..." % roi_file)
-        with argsopener(roi_file,args,"w") as roi_fh:
-            roi_table.to_csv(roi_fh,
-                             sep="\t",
-                             header=True,
-                             index=False,
-                             na_rep="nan",
-                             columns=["region_id","window_size","region","masked","alignment_offset","zero_point"]
-                             )
+        with argsopener(roi_file, args, "w") as roi_fh:
+            roi_table.to_csv(
+                roi_fh,
+                sep="\t",
+                header=True,
+                index=False,
+                na_rep="nan",
+                columns=[
+                    "region_id", "window_size", "region", "masked", "alignment_offset", "zero_point"
+                ]
+            )
             roi_fh.close()
-            
+
         printer.write("Saving BED output as %s ..." % bed_file)
-        with argsopener(bed_file,args,"w") as bed_fh:
+        with argsopener(bed_file, args, "w") as bed_fh:
             for roi in roi_table["region_bed"]:
                 bed_fh.write(roi)
-        
+
             bed_fh.close()
-    
+
     # 'count' subprogram
     elif args.program == "count":
-        do_count(args,al,pp,printer)
+        do_count(args, al, pp, printer)
 
     # 'plot' subprogram
     elif args.program == "chart":
-        assert len(args.labels) in (0,len(args.infiles))
-        do_chart(args,pp,printer)
+        assert len(args.labels) in (0, len(args.infiles))
+        do_chart(args, pp, printer)
 
     printer.write("Done.")
+
 
 if __name__ == "__main__":
     main()
