@@ -33,23 +33,33 @@ cdef extern from "<bigWig.h>":
         double val
 
     bbiFile     * bigWigFileOpen(char *fileName)
-    
-    bbiInterval * bigWigIntervalQuery(bbiFile *bwf,
-                                      char *chrom,
-                                      bits32 start,
-                                      bits32 end,
-                                      lm *lm)
-    
-    bigWigValsOnChrom *bigWigValsOnChromNew()
-    
-    void bigWigValsOnChromFree(bigWigValsOnChrom **pChromVals)
-    
-    bint bigWigValsOnChromFetchData(bigWigValsOnChrom *chromVals,
-                                    char *chrom,
-                                    bbiFile *bigWig)
 
-    double bigWigSingleSummary(bbiFile *bwf, char *chrom, int start, int end,
-                               bbiSummaryType summaryType, double defaultVal)
+    bbiInterval * bigWigIntervalQuery(
+        bbiFile *bwf,
+        char *chrom,
+        bits32 start,
+        bits32 end,
+        lm *lm
+    )
+
+    bigWigValsOnChrom *bigWigValsOnChromNew()
+
+    void bigWigValsOnChromFree(bigWigValsOnChrom **pChromVals)
+
+    bint bigWigValsOnChromFetchData(
+        bigWigValsOnChrom *chromVals,
+        char *chrom,
+        bbiFile *bigWig
+    )
+
+    double bigWigSingleSummary(
+        bbiFile *bwf,
+        char *chrom,
+        int start,
+        int end,
+        bbiSummaryType summaryType,
+        double defaultVal
+    )
 
 
 #===============================================================================
@@ -60,8 +70,8 @@ cdef extern from "<bigWig.h>":
 cdef class BigWigReader(_BBI_Reader):
     cdef double fill
     cdef double _sum
-    
-    cdef double _summarize(self,GenomicSegment roi, bbiSummaryType type_)
+
+    cdef double _summarize(self, GenomicSegment roi, bbiSummaryType type_)
     cdef double c_sum(self)
     cdef bigWigValsOnChrom * c_get_chromosome_counts(self, str chrom)
 

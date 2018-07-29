@@ -10,11 +10,10 @@ from pkg_resources import resource_filename, cleanup_resources
 from nose.plugins.attrib import attr
 from plastid.genomics.roitools import GenomicSegment
 
-
 # slight hack to keep imported method from being run as a test
 # can't use unittest.skip, or else no tests will never be run!
 from plastid.bin.test_table_equality import test_dataframe_equality as checkeq
-checkeq.__name__   = "checkeq"
+checkeq.__name__ = "checkeq"
 checkeq.__module__ = "checkeq"
 
 # components we will use in equality tests
@@ -23,10 +22,10 @@ size = 5000
 
 @attr(test="unit")
 class TestTestDataframeEquality(unittest.TestCase):
-    
     @classmethod
     def setUpClass(cls):
-        cls.cols = { "intA"   : numpy.random.randint(0, high=2**16, size=size),
+        cls.cols = {
+         "intA"   : numpy.random.randint(0, high=2**16, size=size),
          "intB"   : numpy.random.randint(-10, high=20, size=size),
          "idxA"   : numpy.arange(size),
          "chrA"   : numpy.array([chr(65+(X%(91-65))) for X in range(size)]),
@@ -36,7 +35,7 @@ class TestTestDataframeEquality(unittest.TestCase):
          "floatB" : (10**-5)*numpy.random.random(size),
          "objA"   : numpy.tile(None, 5000),
          "objB"   : numpy.array([GenomicSegment("chrC", X, X+Y, "+") for X, Y in zip(range(size), numpy.random.randint(2, high=1000, size=size))]),
-       }
+       } # yapf: disable
 
     def test_dataframe_equality_when_identical(self):
         df1 = pd.DataFrame(self.cols)
@@ -47,11 +46,11 @@ class TestTestDataframeEquality(unittest.TestCase):
         df2 = pd.DataFrame(copy.deepcopy(self.cols))
         self.assertTrue(checkeq(df1, df2))
         self.assertTrue(checkeq(df2, df1))
-    
+
     def test_dataframe_equality_within_tol(self):
         tol = 10**-8
-        noiseA = tol/10**2 * numpy.random.randn(size)
-        noiseB = tol/10**2 * numpy.random.randn(size)
+        noiseA = tol / 10**2 * numpy.random.randn(size)
+        noiseB = tol / 10**2 * numpy.random.randn(size)
         df1 = pd.DataFrame(self.cols)
         df2 = copy.deepcopy(df1)
         df2["floatA"] += noiseA
@@ -61,8 +60,8 @@ class TestTestDataframeEquality(unittest.TestCase):
 
     def test_dataframe_inequality_above_tol(self):
         tol = 10**-8
-        noiseA = tol*10**2 * numpy.random.randn(size)
-        noiseB = tol*10**2 * numpy.random.randn(size)
+        noiseA = tol * 10**2 * numpy.random.randn(size)
+        noiseB = tol * 10**2 * numpy.random.randn(size)
         df1 = pd.DataFrame(self.cols)
         df2 = copy.deepcopy(df1)
         df2["floatA"] += noiseA
@@ -72,16 +71,16 @@ class TestTestDataframeEquality(unittest.TestCase):
 
     def test_dataframe_inequality_wrong_columns(self):
         df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({ K : copy.deepcopy(self.cols[K]) for K in sorted(self.cols.keys())[:-2] })
+        df2 = pd.DataFrame({K: copy.deepcopy(self.cols[K]) for K in sorted(self.cols.keys())[:-2]})
         self.assertFalse(checkeq(df1, df2))
         self.assertFalse(checkeq(df2, df1))
-    
+
     def test_dataframe_inequality_wrong_rows(self):
         df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({K : self.cols[K][:size-1000] for K in self.cols.keys()})
+        df2 = pd.DataFrame({K: self.cols[K][:size - 1000] for K in self.cols.keys()})
         self.assertFalse(checkeq(df1, df2))
         self.assertFalse(checkeq(df2, df1))
-    
+
     def check_dataframe_equality_same(self, special_val):
         """Helper function for checking equality when various special values
         are in the same location in both dataframes
@@ -140,22 +139,22 @@ class TestTestDataframeEquality(unittest.TestCase):
         shuffidx = numpy.arange(size)
         shuffle(shuffidx)
         df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({ K : self.cols[K][shuffidx] for K in self.cols.keys()})
+        df2 = pd.DataFrame({K: self.cols[K][shuffidx] for K in self.cols.keys()})
         self.assertTrue(checkeq(df1, df2, sort_columns=["strA"]))
         self.assertTrue(checkeq(df2, df1, sort_columns=["strA"]))
-    
+
     def test_dataframe_equality_with_sort_numeric(self):
         shuffidx = numpy.arange(size)
         shuffle(shuffidx)
         df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({ K : self.cols[K][shuffidx] for K in self.cols.keys()})
+        df2 = pd.DataFrame({K: self.cols[K][shuffidx] for K in self.cols.keys()})
         self.assertTrue(checkeq(df1, df2, sort_columns=["idxA"]))
         self.assertTrue(checkeq(df2, df1, sort_columns=["idxA"]))
- 
+
     def test_dataframe_equality_with_multi_sort(self):
         shuffidx = numpy.arange(size)
         shuffle(shuffidx)
         df1 = pd.DataFrame(self.cols)
-        df2 = pd.DataFrame({ K : self.cols[K][shuffidx] for K in self.cols.keys()})
+        df2 = pd.DataFrame({K: self.cols[K][shuffidx] for K in self.cols.keys()})
         self.assertTrue(checkeq(df1, df2, sort_columns=["strB", "chrA"]))
         self.assertTrue(checkeq(df2, df1, sort_columns=["strB", "chrA"]))

@@ -15,10 +15,10 @@ from plastid.bin.phase_by_size import main
 #===============================================================================
 
 test_info = {
-    "test_method"    : catch_stderr()(main),
-    "module_name"    : "plastid.bin.phase_by_size",
-    "ref_file_path"  : resource_filename("plastid","test/data/command_line"),
-    "temp_file_path" : tempfile.mkdtemp(prefix="phase_by_size"),
+    "test_method": catch_stderr()(main),
+    "module_name": "plastid.bin.phase_by_size",
+    "ref_file_path": resource_filename("plastid", "test/data/command_line"),
+    "temp_file_path": tempfile.mkdtemp(prefix="phase_by_size"),
 }
 
 # Define tests as tuples of:
@@ -26,7 +26,7 @@ test_info = {
 # 2. A list of reference files that output should be compared against
 # 3. A list of output files created by running ``main`` with the arguments provided in (1)
 # 4. A list of strings specifying how equality should be evaluated
-_basename = os.path.join(test_info["temp_file_path"],"test_phase")
+_basename = os.path.join(test_info["temp_file_path"], "test_phase")
 
 #===============================================================================
 # INDEX: tests
@@ -35,18 +35,16 @@ _basename = os.path.join(test_info["temp_file_path"],"test_phase")
 # old test, on annotation file
 phase_by_size_tests = [
     # without ROI file
-    ("%s --min_length 26 --max_length 31 --annotation_files %s --annotation_format BED %s" % (_basename,
-                                                                                             REF_FILES["yeast_mini_bed"],
-                                                                                             COUNT_OPTIONS),
-     [REF_FILES["yeast_phasing"]],
-     [_basename+"_phasing.txt"],
-     [""]
+    (
+        "%s --min_length 26 --max_length 31 --annotation_files %s --annotation_format BED %s" %
+        (_basename, REF_FILES["yeast_mini_bed"], COUNT_OPTIONS), [REF_FILES["yeast_phasing"]],
+        [_basename + "_phasing.txt"], [""]
     ),
     # with ROI file
-    ("%s %s --min_length 26 --max_length 31 %s" % (REF_FILES["yeast_metagene_cds_start"],_basename,COUNT_OPTIONS),
-     [REF_FILES["yeast_phasing_roifile"]],
-     [_basename+"_phasing.txt"],
-     [""]
+    (
+        "%s %s --min_length 26 --max_length 31 %s" %
+        (REF_FILES["yeast_metagene_cds_start"], _basename, COUNT_OPTIONS),
+        [REF_FILES["yeast_phasing_roifile"]], [_basename + "_phasing.txt"], [""]
     ),
 ]
 """Functional tests of :py:mod:`plastid.bin.phase_by_size`.
@@ -63,15 +61,14 @@ Tests are specified as tuples of:
     4. A list of strings specifying how equality should be evaluated
 """
 
-
 #===============================================================================
 # INDEX: test functions
 #===============================================================================
+
 
 @attr(test="functional")
 @attr(speed="slow")
 def do_test():
     """Perform functional test for :py:mod:`plastid.bin.phase_by_size`"""
-    for x in execute_helper(test_info,phase_by_size_tests):
+    for x in execute_helper(test_info, phase_by_size_tests):
         yield x
-

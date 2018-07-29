@@ -8,109 +8,99 @@ from plastid.util.scriptlib.help_formatters import shorten_help,\
                                                            subst_pattern,\
                                                            link_pattern,\
                                                            _separator
+
+
 @attr(test="unit")
 class TestHelpFormatters():
-    
     def test_pyrst_pattern_matches(self):
-        tests = [(":py:class:`plastid.genomics.genome_array.GenomeArray`",
-                  "py",
-                  "class",
-                  "plastid.genomics.genome_array.GenomeArray",
-                  None),
-                 (":py:mod:`plastid.genomics.genome_array`",
-                  "py",
-                  "mod",
-                  "plastid.genomics.genome_array",
-                  None),
-                (":py:obj:`some_obj`",
-                  "py",
-                 "obj",
-                 "some_obj",
-                  None),
-                 (":class:`plastid.genomics.genome_array.GenomeArray`",
-                  None,
-                  "class",
-                  "plastid.genomics.genome_array.GenomeArray",
-                  None),
-                 (":mod:`plastid.genomics.genome_array`",
-                  None,
-                  "mod",
-                  "plastid.genomics.genome_array",
-                  None),
-                (":obj:`some_obj`",
-                 None,
-                 "obj",
-                 "some_obj",
-                  None),
-                (":obj:`some_obj <with pointer>`",
-                 None,
-                 "obj",
-                 "some_obj",
-                 "with pointer"),
-                (":domain:role:`some_arg <with pointer>`",
-                 "domain",
-                 "role",
-                 "some_arg",
-                 "with pointer"),
-                 ]
+        tests = [
+            (
+                ":py:class:`plastid.genomics.genome_array.GenomeArray`", "py", "class",
+                "plastid.genomics.genome_array.GenomeArray", None
+            ),
+            (
+                ":py:mod:`plastid.genomics.genome_array`", "py", "mod",
+                "plastid.genomics.genome_array", None
+            ),
+            (":py:obj:`some_obj`", "py", "obj", "some_obj", None),
+            (
+                ":class:`plastid.genomics.genome_array.GenomeArray`", None, "class",
+                "plastid.genomics.genome_array.GenomeArray", None
+            ),
+            (
+                ":mod:`plastid.genomics.genome_array`", None, "mod",
+                "plastid.genomics.genome_array", None
+            ),
+            (":obj:`some_obj`", None, "obj", "some_obj", None),
+            (":obj:`some_obj <with pointer>`", None, "obj", "some_obj", "with pointer"),
+            (
+                ":domain:role:`some_arg <with pointer>`", "domain", "role", "some_arg",
+                "with pointer"
+            ),
+        ]
         for test, domain, role, argument, pointer in tests:
             groupdict = pyrst_pattern.search(test).groupdict()
-            yield self.check_pyrst_pattern,domain,groupdict["domain"]
-            yield self.check_pyrst_pattern,role,groupdict["role"]
-            yield self.check_pyrst_pattern,argument,groupdict["argument"]
-            yield self.check_pyrst_pattern,pointer,groupdict["pointer"]
-    
+            yield self.check_pyrst_pattern, domain, groupdict["domain"]
+            yield self.check_pyrst_pattern, role, groupdict["role"]
+            yield self.check_pyrst_pattern, argument, groupdict["argument"]
+            yield self.check_pyrst_pattern, pointer, groupdict["pointer"]
+
     @staticmethod
-    def check_pyrst_pattern(expected,found,message=""):
+    def check_pyrst_pattern(expected, found, message=""):
         if len(message) == 0:
-            message = "Expected %s, found %s." % (expected,found)
-        assert_equal(expected,found,message)
-        
+            message = "Expected %s, found %s." % (expected, found)
+        assert_equal(expected, found, message)
+
     def test_pyrst_pattern_nonmatches(self):
-        tests = [(":py:"),
-                 (":py:class:"),
-                 ("`genome_array`"),
-                 # missing one or more backticks
-                 (":py:class:`plastid.genomics.genome_array.GenomeArray"),
-                 (":py:class:plastid.genomics.genome_array.GenomeArray`"),
-                 (":py:class:plastid.genomics.genome_array.GenomeArray"),
-                 # malformed starting token
-                 ("py:class:`plastid.genomics.genome_array.GenomeArray`"),
-                 ]
+        tests = [
+            (":py:"),
+            (":py:class:"),
+            ("`genome_array`"),
+            # missing one or more backticks
+            (":py:class:`plastid.genomics.genome_array.GenomeArray"),
+            (":py:class:plastid.genomics.genome_array.GenomeArray`"),
+            (":py:class:plastid.genomics.genome_array.GenomeArray"),
+            # malformed starting token
+            ("py:class:`plastid.genomics.genome_array.GenomeArray`"),
+        ]
         for test in tests:
-            yield self.check_pyrst_pattern, pyrst_pattern.search(test), None, "rst pattern matches %s" % test
-                
+            yield self.check_pyrst_pattern, pyrst_pattern.search(
+                test
+            ), None, "rst pattern matches %s" % test
+
     def test_subst_pattern_matches(self):
-        assert_equal(subst_pattern.search("|test_replacement|").groups()[0],"test_replacement")
-    
+        assert_equal(subst_pattern.search("|test_replacement|").groups()[0], "test_replacement")
+
     def test_subst_pattern_nonmatches(self):
-        tests = ["|bad_test",
-                 "bad_test|"]
+        tests = ["|bad_test", "bad_test|"]
         for test in tests:
-            assert_true(subst_pattern.search(test) is None,
-                            "substitution pattern matches %s" % test)
+            assert_true(
+                subst_pattern.search(test) is None, "substitution pattern matches %s" % test
+            )
 
     def test_link_pattern_matches(self):
-        assert_equal(link_pattern.search("`My link`_").groups()[0],"My link")
-        assert_equal(link_pattern.search("`Mylink`_").groups()[0],"Mylink")
-        assert_equal(link_pattern.search("`Mylink (with parentheses)`_").groups()[0],"Mylink (with parentheses)")
-        assert_equal(link_pattern.search("`Mylink <with_subs>`_").groups()[0],"Mylink")
-    
+        assert_equal(link_pattern.search("`My link`_").groups()[0], "My link")
+        assert_equal(link_pattern.search("`Mylink`_").groups()[0], "Mylink")
+        assert_equal(
+            link_pattern.search("`Mylink (with parentheses)`_").groups()[0],
+            "Mylink (with parentheses)"
+        )
+        assert_equal(link_pattern.search("`Mylink <with_subs>`_").groups()[0], "Mylink")
+
     def test_link_pattern_nonmatches(self):
-        tests = ["|bad_test",
-                 "bad_test|"]
+        tests = ["|bad_test", "bad_test|"]
         for test in tests:
-            assert_true(link_pattern.search(test) is None,
-                            "substitution pattern matches %s" % test)
+            assert_true(link_pattern.search(test) is None, "substitution pattern matches %s" % test)
 
     def test_shorten_help(self):
-        assert_not_equal, raw_help1,shortened_help1
+        assert_not_equal, raw_help1, shortened_help1
         assert_equal(shorten_help(raw_help1), shortened_help1)
-    
+
     def test_format_module_docstring(self):
         expected = _separator + "\n" + shortened_help1 + "\n" + _separator
         assert_equal(format_module_docstring(raw_help1), expected)
-        assert_equal(format_module_docstring(shortened_help1),expected)
+        assert_equal(format_module_docstring(shortened_help1), expected)
+
 
 #===============================================================================
 # INDEX: test data

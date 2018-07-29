@@ -56,7 +56,8 @@ table_test = catch_stderr()(main)
 # INDEX: test generator functions
 #===============================================================================
 
-def check_one_file(test_info,ref_file,output_file,eq_args):
+
+def check_one_file(test_info, ref_file, output_file, eq_args):
     """Check a single output file produced by a test run against a reference file 
     
     Parameters
@@ -74,12 +75,15 @@ def check_one_file(test_info,ref_file,output_file,eq_args):
         Equality arguments determining how the reference and output file
         should be compared by :py:func:`table_test`
     """
-    retval, failures = table_test([ref_file,output_file]+shlex.split(eq_args),verbose=True)
+    retval, failures = table_test([ref_file, output_file] + shlex.split(eq_args), verbose=True)
     msg = "\n    ".join(failures)
-    err_message = "Unequal output in files %s vs %s, module %s:\n    %s" % (ref_file,output_file,test_info["module_name"],msg)
-    nose.tools.assert_equal(retval,0,msg=err_message)
+    err_message = "Unequal output in files %s vs %s, module %s:\n    %s" % (
+        ref_file, output_file, test_info["module_name"], msg
+    )
+    nose.tools.assert_equal(retval, 0, msg=err_message)
 
-def build_test_lists(test_info,test):
+
+def build_test_lists(test_info, test):
     """Build a list of tests to be performed after one execution of a command-line script.
     
     Parameters
@@ -123,12 +127,13 @@ def build_test_lists(test_info,test):
     argstr, ref_files, test_files, eqarg_groups = test
     test_list = []
     test_list.append([argstr])
-    for ref_file, output_file, eq_args in zip(ref_files,test_files,eqarg_groups):
+    for ref_file, output_file, eq_args in zip(ref_files, test_files, eqarg_groups):
         test_list.append((check_one_file, test_info, ref_file, output_file, eq_args))
 
-    return test_list   
+    return test_list
 
-def execute_helper(test_info,tests):
+
+def execute_helper(test_info, tests):
     """Execute functional tests and evaluate all of their output files.
     This is a test generator function for use with :py:obj:`nose`. To useit,
     import it into a test module, and create a test function as follows::
@@ -181,7 +186,7 @@ def execute_helper(test_info,tests):
     for test in tests:
         _, ref_files, test_files, eqarg_groups = test
         assert len(eqarg_groups) == len(test_files) == len(ref_files)
-        test_list.extend(build_test_lists(test_info,test))
+        test_list.extend(build_test_lists(test_info, test))
 
     for test_item in test_list:
         # if len 1, item is an execute block, which will generate files to be tested next
@@ -193,7 +198,7 @@ def execute_helper(test_info,tests):
                 test_info["test_method"](shlex.split(test_item[0]))
             except Exception as e:
                 # report that there was an error
-                yield check_item_error, test_item,e 
+                yield check_item_error, test_item, e
         # otherwise, item is a test
         else:
             yield test_item
@@ -201,7 +206,8 @@ def execute_helper(test_info,tests):
     if test_info["temp_file_path"] != "":
         shutil.rmtree(test_info["temp_file_path"])
 
-def check_item_error(argstr,e):
+
+def check_item_error(argstr, e):
     """Placeholder function used to raise exceptions when specific test executions fail
     
     Parameters
@@ -212,13 +218,15 @@ def check_item_error(argstr,e):
     e : Exception
         Exception that was raised
     """
-    assert_true(False,"Error executing test %s\n%s" % (argstr,e))
+    assert_true(False, "Error executing test %s\n%s" % (argstr, e))
+
 
 #===============================================================================
 # INDEX: command-line program
 #===============================================================================
 
-def create_test_suite(module_names,base_path,overwrite=False,printer=NullWriter()):
+
+def create_test_suite(module_names, base_path, overwrite=False, printer=NullWriter()):
     """Creates a :py:class:`unittest.TestCase` for the ``main()`` method of
     a command-line python module, and write these to modules
     
@@ -238,16 +246,17 @@ def create_test_suite(module_names,base_path,overwrite=False,printer=NullWriter(
     """
     for module_name in module_names:
         printer.write(module_name)
-        short_name = get_short_name(module_name,separator="\.",terminator="")
-        output_str = TEST_TEMPLATE.replace("${MODULE}",module_name)
-        output_str = output_str.replace("${CAP_SHORT_NAME}",short_name.capitalize())
-        output_str = output_str.replace("${SHORT_NAME}",short_name)
-        output_fn  = os.path.join(base_path,"test_%s.py" % short_name)
+        short_name = get_short_name(module_name, separator="\.", terminator="")
+        output_str = TEST_TEMPLATE.replace("${MODULE}", module_name)
+        output_str = output_str.replace("${CAP_SHORT_NAME}", short_name.capitalize())
+        output_str = output_str.replace("${SHORT_NAME}", short_name)
+        output_fn = os.path.join(base_path, "test_%s.py" % short_name)
         if overwrite or not os.path.exists(output_fn):
             printer.write("Writing %s" % output_fn)
-            with open(output_fn,"w") as fout:
+            with open(output_fn, "w") as fout:
                 fout.write(output_str)
                 fout.close()
+
 
 def main(argv=sys.argv[1:]):
     """Command-line program to generate functional test suites for command-line
@@ -263,23 +272,29 @@ def main(argv=sys.argv[1:]):
         list of command-line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("bin_folder",type=str,
-                        help="Location of command-line modules to write tests for")
-    parser.add_argument("output_folder",type=str,
-                        help="Location of folder in which to write test modules")
-    parser.add_argument("--overwrite",action="store_true",default=False,
-                        help="If supplied, overwrite existing files")
-    
+    parser.add_argument(
+        "bin_folder", type=str, help="Location of command-line modules to write tests for"
+    )
+    parser.add_argument(
+        "output_folder", type=str, help="Location of folder in which to write test modules"
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="If supplied, overwrite existing files"
+    )
+
     args = parser.parse_args(argv)
     modules   = [("plastid.bin.%s" % X).replace(".py","") \
                  for X in filter(lambda x: x.endswith(".py") and "__init__" not in x,
                                  os.listdir(args.bin_folder))]
-    create_test_suite(modules,args.output_folder,overwrite=args.overwrite,printer=printer)
-    
+    create_test_suite(modules, args.output_folder, overwrite=args.overwrite, printer=printer)
+
+
 #===============================================================================
 # INDEX : test template
 #===============================================================================
-
 
 TEST_TEMPLATE = '''#!/usr/bin/env python
 """Test suite for :py:mod:`${MODULE}`"""
@@ -340,6 +355,6 @@ def do_test():
         yield x
 '''
 """Template for functional tests using test generators from :py:obj:`nose`"""
-    
+
 if __name__ == "__main__":
     main()
