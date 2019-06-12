@@ -247,16 +247,11 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     tlen = len(terminator)
     if inpt[-tlen:] == terminator:
         inpt = inpt[:-tlen]
-        
-    pat = r"([^%s]+)+$" % separator
     try:
-        stmp = re.search(pat,inpt).group(1)
+        stmp = re.split(separator, inpt)[-1]
     except AttributeError:
         return inpt
-    #if terminator[0] == ".":
-    #    terminator = "\"" + terminator
-        
-    return stmp
+    return(stmp)
 
 def argsopener(filename,namespace,mode="w",**kwargs):
     """Open a file for writing, and write to it command-line arguments
