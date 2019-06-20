@@ -85,24 +85,25 @@ from abc import abstractmethod
 from plastid.util.services.exceptions import DataWarning, warn, filterwarnings
 
 # use "once" because we want each literal to be shown once
-filterwarnings("once","Could not find formatter for field.*")
-filterwarnings("once","Could not find formatter for field.*")
-filterwarnings("once","Could not convert autoSql value.*")
-filterwarnings("once",".*already found in autoSql declaration.*")
+filterwarnings("once", "Could not find formatter for field.*")
+filterwarnings("once", "Could not find formatter for field.*")
+filterwarnings("once", "Could not convert autoSql value.*")
+filterwarnings("once", ".*already found in autoSql declaration.*")
 
 # regular expressions that recognize various autoSql elements
-_pattern_bits = { "start"   : r"^\s*",
-                  "type"    : r"(?P<type>\w+)",
-                  "name"    : r"\s+(?P<name>\w+)\s*",
-                  "semi"    : r"\s*;\s*",
-                  "comment" : r"\"(?P<comment>[^\"]*)\"",
-                  "size"    : r"\s*\[\s*(?P<size>\w+)\s*\]\s*",
-                  "values"  : r"\s*\(\s*(?P<value_names>[^()]+)\s*\)\s*",
-                  "optionals" : r"(?P<opt1>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?\s*(?P<opt2>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?\s*(?P<opt3>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?", 
-                  "declare_type_name" : r"(?P<declare_type>object|simple|table)\s+(?P<declare_name>\w+)\s+",
-                  #"field_text" :  r"\s*\(\s*(?P<field_text>.+)\s*\)",
-                  "field_text" :  r"\s*\(\s*(?P<field_text>.*)\)",
-                 }
+# TODO: migrate this to Parsimonious or something more sane
+_pattern_bits = { 
+    "start"     : r"^\s*",
+    "type"      : r"(?P<type>\w+)",
+    "name"      : r"\s+(?P<name>\w+)\s*",
+    "semi"      : r"\s*;\s*",
+    "comment"   : r"\"(?P<comment>[^\"]*)\"",
+    "size"      : r"\s*\[\s*(?P<size>\w+)\s*\]\s*",
+    "values"    : r"\s*\(\s*(?P<value_names>[^()]+)\s*\)\s*",
+    "optionals" : r"(?P<opt1>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?\s*(?P<opt2>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?\s*(?P<opt3>\s+primary|\s+auto|\s+index\s*(\[\s*\d+\s*\])?)?", 
+    "declare_type_name" : r"(?P<declare_type>object|simple|table)\s+(?P<declare_name>\w+)\s+",
+    "field_text" :  r"\s*\(\s*(?P<field_text>.*)\)",
+ } # yapf: disable
 
 
 class AbstractAutoSqlElement(object):
@@ -132,30 +133,32 @@ class AbstractAutoSqlElement(object):
     """
     match_str = ""
     match_pattern = re.compile(match_str)
-     
-    def __init__(self,autosql,parent=None,delim="\t"):
+
+    def __init__(self, autosql, parent=None, delim="\t"):
         self.autosql = autosql
-        self.parent  = parent
-        self.delim   = delim
-        self.field_types = { "int"    : (int,    "i"),  #32-bit
-                             "uint"   : (int,    "I"), #32-bit
-                             "short"  : (int,    "h"), #16-bit
-                             "ushort" : (int,    "H"), #16-bit
-                             "byte"   : (int,    "b"), #8-bit
-                             "ubyte"  : (int,    "B"), #8-bit
-                             "float"  : (float,  "f"), #single-precision
-                             "char"   : (str,    "c"), #8-bit
-                             "string" : (str,    "s"), #variable up to 255bytes
-                             "lstring": (str,    "s"),  #variable up to 2billion bytes
-                           }
+        self.parent = parent
+        self.delim = delim
+        self.field_types = {
+            "int"     : (int, "i"),   #32-bit
+            "uint"    : (int, "I"),   #32-bit
+            "short"   : (int, "h"),   #16-bit
+            "ushort"  : (int, "H"),   #16-bit
+            "byte"    : (int, "b"),   #8-bit
+            "ubyte"   : (int, "B"),   #8-bit
+            "float"   : (float, "f"), #single-precision
+            "char"    : (str, "c"),   #8-bit
+            "string"  : (str, "s"),   #variable up to 255bytes
+            "lstring" : (str, "s"),   #variable up to 2billion bytes
+        } # yapf: disable
         self.attr = self.match_pattern.search(autosql).groupdict()
-    
+
     def __repr__(self):
-        return "<%s name=%s type=%s>" % (self.__class__.__name__,
-                                         self.attr["name"],
-                                         self.attr.get("type",self.__class__.__name__))
-    
-    def add_type(self,name,formatter):
+        return "<%s name=%s type=%s>" % (
+            self.__class__.__name__, self.attr["name"],
+            self.attr.get("type", self.__class__.__name__)
+        )
+
+    def add_type(self, name, formatter):
         """Add a type to the parser
         
         Parameters
@@ -168,9 +171,9 @@ class AbstractAutoSqlElement(object):
             an object of the type specified by ``name``
         """
         self.field_types[name] = formatter
-        
+
     @abstractmethod
-    def __call__(self,text,rec=None):
+    def __call__(self, text, rec=None):
         """Parse an OrderedDict matching ``self.autosql`` from a block of delimited text
         
         Parameters
@@ -185,7 +188,7 @@ class AbstractAutoSqlElement(object):
             variables.
         """
         pass
-    
+
     @staticmethod
     def mask_comments(text):
         """Mask all comments in an autoSql block in order to facilitate parsing
@@ -209,15 +212,15 @@ class AbstractAutoSqlElement(object):
         match_locs = []
         for match in cpat.finditer(text):
             my_start = match.start()
-            my_end   = match.end()
+            my_end = match.end()
             match_len = my_end - my_start
-            match_locs.append((my_start+1,my_end-1))
-            text = text[:my_start+1] + "x"*(match_len-2) + text[my_end-1:]
-        
+            match_locs.append((my_start + 1, my_end - 1))
+            text = text[:my_start + 1] + "x" * (match_len - 2) + text[my_end - 1:]
+
         return text, match_locs
 
     @classmethod
-    def matches(cls,text):
+    def matches(cls, text):
         """Determine whether autoSql formatting text matches this autoSql element
         
         Parameters
@@ -283,11 +286,13 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
     :py:meth:`AutoSqlDeclaration.__call__`
         Parse autoSql-formatted blocks of text according to this declaration
     """
-    
-    match_str  = r"".join([_pattern_bits[_X] for _X in ("start","declare_type_name","comment","field_text")])
-    match_pattern = re.compile(match_str,re.S)
 
-    def __init__(self,autosql,parent=None,delim="\n"):
+    match_str = r"".join(
+        [_pattern_bits[_X] for _X in ("start", "declare_type_name", "comment", "field_text")]
+    )
+    match_pattern = re.compile(match_str, re.S)
+
+    def __init__(self, autosql, parent=None, delim="\n"):
         """Create an |AutoSqlDeclaration|
         
         Parameters
@@ -301,76 +306,80 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
         delim : str, optional
             Field delimiter (default: tab)
         """
-        AbstractAutoSqlElement.__init__(self,autosql,parent=parent,delim="\t")
-        
+        AbstractAutoSqlElement.__init__(self, autosql, parent=parent, delim="\t")
+
         # re-do regex match masking out comments, in case the comments
         # contain special characters that would mess up the parsing
         masked_sql, comment_match_locs = self.mask_comments(autosql)
         match_dict = self.match_pattern.search(masked_sql).groupdict()
 
         self.attr["declare_type"] = match_dict["declare_type"]
-        self.attr["name"]         = match_dict["declare_name"]
+        self.attr["name"] = match_dict["declare_name"]
         masked_field_text = match_dict["field_text"]
 
-        self.attr["comment"] = autosql[comment_match_locs[0][0]:comment_match_locs[0][1]].strip("\n").strip("\"")
+        self.attr["comment"] = autosql[comment_match_locs[0][0]:comment_match_locs[0][1]
+                                       ].strip("\n").strip("\"")
         field_text_start = masked_sql.index(masked_field_text)
-        self._field_text  = autosql[field_text_start:field_text_start+len(masked_field_text)]
-        
+        self._field_text = autosql[field_text_start:field_text_start + len(masked_field_text)]
+
         if self.parent is not None:
-            self.parent.add_type(self.attr["declare_name"],self)
-            
+            self.parent.add_type(self.attr["declare_name"], self)
+
         self.field_formatters = OrderedDict()
-        self.field_comments   = OrderedDict()
+        self.field_comments = OrderedDict()
         self._parse_fields()
 
     def _parse_fields(self):
         """Parse fields of an autoSql declaration, and populate
         ``self.field_formatters`` and ``self.field_comments``.
         """
-        # order in which we try to match autoSql fields        
-        match_order = [AutoSqlField,SizedAutoSqlField,ValuesAutoSqlField]
+        # order in which we try to match autoSql fields
+        match_order = [AutoSqlField, SizedAutoSqlField, ValuesAutoSqlField]
 
         # fields are area of string from last starting point to end of comment
-        # first starting point is 0;all subsequent starting points will be end 
+        # first starting point is 0; all subsequent starting points will be end
         # of previous comment
-        
+
         _, comment_locs = self.mask_comments(self._field_text)
         last_index = 0
-        for (_,next_index) in comment_locs:
-            field_str = self._field_text[last_index:next_index+1]
+        for (_, next_index) in comment_locs:
+            field_str = self._field_text[last_index:next_index + 1]
             for field_class in match_order:
                 if field_class.matches(field_str):
                     my_parser = field_class(field_str)
-                    name      = my_parser.attr["name"]
+                    name = my_parser.attr["name"]
                     if name in self.field_formatters:
                         oldname = name
                         i = 1
                         current_formatter = self.field_formatters[name]
-                        current_type = current_formatter.attr.get("type",current_formatter.__class__.__name__) 
-                        new_type = my_parser.attr.get("type",my_parser.__class__.__name__) 
+                        current_type = current_formatter.attr.get(
+                            "type", current_formatter.__class__.__name__
+                        )
+                        new_type = my_parser.attr.get("type", my_parser.__class__.__name__)
                         while name in self.field_formatters:
                             i += 1
-                            name = "%s%s" % (oldname,i)
-                            warn("Element named '%s' of type '%s' already found in autoSql declaration '%s.' Renaming current element of type '%s' to '%s'" % (oldname,
-                                                                                                                                                               current_type,
-                                                                                                                                                               self.attr.get("name","unnamed declaration"),
-                                                                                                                                                               new_type,
-                                                                                                                                                               name),
-                                      DataWarning)
+                            name = "%s%s" % (oldname, i)
+                            warn(
+                                "Element named '%s' of type '%s' already found in autoSql declaration '%s.' Renaming current element of type '%s' to '%s'"
+                                % (
+                                    oldname, current_type,
+                                    self.attr.get("name", "unnamed declaration"), new_type, name
+                                ), DataWarning
+                            )
                         my_parser.attr["name"] = name
-                        
-                    self.field_formatters[name]  = my_parser
-                    self.field_comments[  name]  = my_parser.attr["comment"]
-            
-            last_index = next_index+1
+
+                    self.field_formatters[name] = my_parser
+                    self.field_comments[name] = my_parser.attr["comment"]
+
+            last_index = next_index + 1
 
     def __repr__(self):
-        return "<%s name=%s type=%s fields=[%s]>" % (self.__class__.__name__,
-                                         self.attr["name"],
-                                         self.attr.get("type",self.__class__.__name__),
-                                         ",".join(self.field_formatters.keys()))
-        
-    def __call__(self,text,rec=None):
+        return "<%s name=%s type=%s fields=[%s]>" % (
+            self.__class__.__name__, self.attr["name"],
+            self.attr.get("type", self.__class__.__name__), ",".join(self.field_formatters.keys())
+        )
+
+    def __call__(self, text, rec=None):
         """Parse an OrderedDict matching ``self.autosql`` from a block of delimited text
         
         Parameters
@@ -392,10 +401,11 @@ class AutoSqlDeclaration(AbstractAutoSqlElement):
         items = text.split(self.delim)
         rec = OrderedDict() if rec is None else rec
         obj = OrderedDict()
-        for item, (field_name,formatter) in zip(items,self.field_formatters.items()):
-            obj[field_name] = formatter(item,rec=obj)
-        
+        for item, (field_name, formatter) in zip(items, self.field_formatters.items()):
+            obj[field_name] = formatter(item, rec=obj)
+
         return obj
+
 
 class AutoSqlField(AbstractAutoSqlElement):
     """Parser factory for autoSql fields of type ``fieldType fieldName ';' comment``
@@ -434,10 +444,12 @@ class AutoSqlField(AbstractAutoSqlElement):
         Text delimiter for fields in blocks called by :meth:`__call__`
         (Default: newline)
     """
-    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","name","optionals","semi","comment")])
+    match_str = r"".join(
+        [_pattern_bits[_X] for _X in ("start", "type", "name", "optionals", "semi", "comment")]
+    )
     match_pattern = re.compile(match_str)
 
-    def __init__(self,autosql,parent=None,delim=""):
+    def __init__(self, autosql, parent=None, delim=""):
         """Create an |AutoSqlField|
         
         Parameters
@@ -450,8 +462,8 @@ class AutoSqlField(AbstractAutoSqlElement):
         
         delim : str, optional
             Field delimiter (default: tab)
-        """        
-        AbstractAutoSqlElement.__init__(self,autosql,parent=parent,delim=delim)
+        """
+        AbstractAutoSqlElement.__init__(self, autosql, parent=parent, delim=delim)
         type_ = self.attr["type"]
         try:
             self.formatter = self.field_types[type_][0]
@@ -460,9 +472,12 @@ class AutoSqlField(AbstractAutoSqlElement):
                 self.formatter = self.parent.field_types[type_][0]
             except:
                 self.formatter = str
-                warn("Could not find formatter for field '%s' of type '%s'. Casting to 'string' instead." % (self.attr["name"],type_),DataWarning)
-    
-    def __call__(self,text,rec=None):
+                warn(
+                    "Could not find formatter for field '%s' of type '%s'. Casting to 'string' instead."
+                    % (self.attr["name"], type_), DataWarning
+                )
+
+    def __call__(self, text, rec=None):
         """Parse an value matching the field described by ``self.autosql``
         from a block of delimited text
         
@@ -478,10 +493,10 @@ class AutoSqlField(AbstractAutoSqlElement):
         try:
             return self.formatter(text)
         except ValueError:
-            message = "Could not convert autoSql value '%s' for field '%s' to type '%s'. Casting to 'string' instead. " % (text,
-                                                                                                                           self.attr["name"],
-                                                                                                                           self.formatter.__name__)
-            warn(message,DataWarning) 
+            message = "Could not convert autoSql value '%s' for field '%s' to type '%s'. Casting to 'string' instead. " % (
+                text, self.attr["name"], self.formatter.__name__
+            )
+            warn(message, DataWarning)
             return text
 
 
@@ -527,11 +542,16 @@ class SizedAutoSqlField(AutoSqlField):
     :py:meth:`SizedAutoSqlField.__call__`
         Parse autoSql-formatted blocks of text into the tuples of the object type
         specified by this field  
-    """    
-    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","size","name","optionals","semi","comment")])
+    """
+    match_str = r"".join(
+        [
+            _pattern_bits[_X]
+            for _X in ("start", "type", "size", "name", "optionals", "semi", "comment")
+        ]
+    )
     match_pattern = re.compile(match_str)
 
-    def __init__(self,autosql,size=1,parent=None,delim=","):
+    def __init__(self, autosql, size=1, parent=None, delim=","):
         """Create a |SizedAutoSqlField|
         
         Parameters
@@ -544,15 +564,15 @@ class SizedAutoSqlField(AutoSqlField):
         
         delim : str, optional
             Field delimiter (default: tab)
-        """           
-        AutoSqlField.__init__(self,autosql,parent=parent,delim=delim)
+        """
+        AutoSqlField.__init__(self, autosql, parent=parent, delim=delim)
         try:
             self.attr["size"] = int(self.attr["size"])
             self.attr["size_is_int"] = True
         except ValueError:
             self.attr["size_is_int"] = False
-    
-    def __call__(self,text,rec=None):
+
+    def __call__(self, text, rec=None):
         """Parse an value matching the field described by ``self.autosql``
         from a block of delimited text
         
@@ -574,21 +594,23 @@ class SizedAutoSqlField(AutoSqlField):
         """
         if self.formatter != str:
             try:
-                retval = tuple([self.formatter(X) for X in text.strip().strip(self.delim).split(self.delim)])
+                retval = tuple(
+                    [self.formatter(X) for X in text.strip().strip(self.delim).split(self.delim)]
+                )
             except ValueError:
-                message = "Could not convert autoSql value '%s' in field '%s' to tuple of type '%s'. Leaving as str " % (text,
-                                                                                                                         self.attr["name"],
-                                                                                                                         self.formatter.__name__)
-                warn(message,DataWarning) 
+                message = "Could not convert autoSql value '%s' in field '%s' to tuple of type '%s'. Leaving as str " % (
+                    text, self.attr["name"], self.formatter.__name__
+                )
+                warn(message, DataWarning)
                 return text
         else:
             retval = text
-        
-        if self.attr["size_is_int"] == True:    
+
+        if self.attr["size_is_int"] == True:
             assert len(retval) == self.attr["size"]
         else:
             assert len(retval) == rec[self.attr["size"]]
-        
+
         return retval
 
 
@@ -609,11 +631,16 @@ class ValuesAutoSqlField(AbstractAutoSqlElement):
     delim : str, optional
         Field delimiter (default: tab)    
     """
-    
-    match_str = r"".join([_pattern_bits[_X] for _X in ("start","type","values","name","optionals","semi","comment")])
+
+    match_str = r"".join(
+        [
+            _pattern_bits[_X]
+            for _X in ("start", "type", "values", "name", "optionals", "semi", "comment")
+        ]
+    )
     match_pattern = re.compile(match_str)
-    
-    def __init__(self,autosql,parent=None,delim=","):
+
+    def __init__(self, autosql, parent=None, delim=","):
         """Create a |ValuesAutoSqlField|
         
         Parameters
@@ -626,11 +653,11 @@ class ValuesAutoSqlField(AbstractAutoSqlElement):
         
         delim : str, optional
             Field delimiter (default: tab)
-        """            
-        AbstractAutoSqlElement.__init__(self,autosql,parent=parent,delim=delim)
+        """
+        AbstractAutoSqlElement.__init__(self, autosql, parent=parent, delim=delim)
         self.attr["value_names"] = [X.strip() for X in self.attr["value_names"].split(",")]
 
-    def __call__(self,text,rec=None):
+    def __call__(self, text, rec=None):
         """Parse an value matching the field described by ``self.autosql``
         from a block of delimited text
         
@@ -650,5 +677,7 @@ class ValuesAutoSqlField(AbstractAutoSqlElement):
         set
             set of items found in column 
         """
-        items = set([X.strip() for X in text.strip(self.delim).split(self.delim) if len(X.strip()) > 0])
+        items = set(
+            [X.strip() for X in text.strip(self.delim).split(self.delim) if len(X.strip()) > 0]
+        )
         return items

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 class UniqueFIFO(object):
     """FIFO of unique objects. In other words, if an element already present
     in the FIFO is appended to the FIFO, it is moved to the right end and 
@@ -24,12 +25,13 @@ class UniqueFIFO(object):
     max_size : int
         Maximum size of |UniqueFIFO|
     """
-    def __init__(self,size):
+
+    def __init__(self, size):
         assert size > 0
         self.max_size = size
         self._elements = []
-        
-    def __getitem__(self,idx):
+
+    def __getitem__(self, idx):
         """Fetch Nth item in the |UniqueFIFO|
         
         Parameters
@@ -43,8 +45,8 @@ class UniqueFIFO(object):
             Nth item in the |UniqueFIFO|
         """
         return self._elements[idx]
-    
-    def __contains__(self,el):
+
+    def __contains__(self, el):
         """Determine whether an element is in the |UniqueFIFO|
         
         Parameters
@@ -58,11 +60,11 @@ class UniqueFIFO(object):
             `True` if `el` is in the |UniqueFIFO|, `False` otherwise
         """
         return el in self._elements
-    
+
     def __iter__(self):
         """Iterate over elements in the |UniqueFIFO|"""
         return iter(self._elements)
-    
+
     def __len__(self):
         """Return number of objects presently in the |UniqueFIFO|
         
@@ -73,8 +75,8 @@ class UniqueFIFO(object):
             or equal to `self.max_size`
         """
         return len(self._elements)
-    
-    def append(self,el):
+
+    def append(self, el):
         """Append an item to the |UniqueFIFO|. If the item is already present
         in the |UniqueFIFO|, it is moved to the right end of the FIFO, and the
         length of the |UniqueFIFO| is unchanged. Otherwise, the element is
@@ -89,7 +91,7 @@ class UniqueFIFO(object):
         if el in self:
             # move to front if present
             n = self._elements.index(el)
-            self._elements = self._elements[:n] + self._elements[n+1:] + [el]
+            self._elements = self._elements[:n] + self._elements[n + 1:] + [el]
         else:
             # otherwise append, removing first element
             # if we are too long
@@ -98,7 +100,7 @@ class UniqueFIFO(object):
                 self._elements.append(el)
             else:
                 self._elements.append(el)
-    
+
     def __str__(self):
         return str(self._elements)
 

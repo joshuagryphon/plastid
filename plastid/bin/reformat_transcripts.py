@@ -27,7 +27,7 @@ import sys
 import os
 import copy
 
-from plastid.util.scriptlib.argparsers import (AnnotationParser,BaseParser)
+from plastid.util.scriptlib.argparsers import AnnotationParser, BaseParser
 from plastid.util.services.exceptions import ArgumentWarning, warn
 from plastid.util.io.openers import argsopener, get_short_name
 from plastid.util.io.filters import NameDateWriter
@@ -60,9 +60,20 @@ For details, See the autoSql Grammar specification at:
 https://github.com/ENCODE-DCC/kentUtils/blob/36d6274459f644d5400843b8fa097b380b8f7867/src/hg/autoSql/autoSql.doc
 """
 
-BED12_RESERVED_NAMES = ["chrom","chromStart","chromEnd","name","score","strand",
-                        "thickStart","thickEnd","reserved","blockCount",
-                        "blockSizes","chromStarts"]
+BED12_RESERVED_NAMES = [
+    "chrom",
+    "chromStart",
+    "chromEnd",
+    "name",
+    "score",
+    "strand",
+    "thickStart",
+    "thickEnd",
+    "reserved",
+    "blockCount",
+    "blockSizes",
+    "chromStarts",
+]
 
 DEFAULT_AUTOSQL_STR =\
 """
@@ -84,23 +95,24 @@ table bigbed_columns "%s columns"
 )
 """
 
-AUTOSQL_ROW_FMT_STR = '    string            %s;%s"description of custom field contents"' 
+AUTOSQL_ROW_FMT_STR = '    string            %s;%s"description of custom field contents"'
 
 
-def fix_name(inp,names_used):
+def fix_name(inp, names_used):
     """Append a number if an autoSql field name is duplicated.
     """
     name = inp
     i = 2
     while name in names_used:
-        name = "%s%s" % (inp,i)
+        name = "%s%s" % (inp, i)
         i += 1
-    
+
     names_used.append(name)
     return name
-    
+
+
 #: TODO: no functional test for --extra_columns
-def main(argv=sys.argv[1:]): 
+def main(argv=sys.argv[1:]):
     """Command-line program
     
     Parameters
@@ -117,59 +129,86 @@ def main(argv=sys.argv[1:]):
     annotation_parser = ap.get_parser()
     base_parser = bp.get_parser()
 
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     parents=[base_parser,annotation_parser],
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--no_escape",default=True,action="store_false",
-                        help="If specified and output format is GTF2, special characters in column 9 will be escaped (default: True)")
-    parser.add_argument("--output_format",choices=["BED","GTF2"],default="GTF2",
-                        help="Format of output file. (default: GTF2)")
-    parser.add_argument("--extra_columns",nargs="+",default=[],type=str,
-                        help="Attributes (e.g. 'gene_id' to output as extra columns in extended BED format (BED output only).")
-    parser.add_argument("--empty_value",default="na",type=str,
-                        help="Value to use of an attribute in `extra_columns` is not defined for a particular record (Default: 'na'")
-    parser.add_argument("outfile",metavar="outfile.[ bed | gtf ]",type=str,
-                        help="Output file")
+    parser = argparse.ArgumentParser(
+        description=format_module_docstring(__doc__),
+        parents=[base_parser, annotation_parser],
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--no_escape",
+        default=True,
+        action="store_false",
+        help=
+        "If specified and output format is GTF2, special characters in column 9 will be escaped (default: True)"
+    )
+    parser.add_argument(
+        "--output_format",
+        choices=["BED", "GTF2"],
+        default="GTF2",
+        help="Format of output file. (default: GTF2)"
+    )
+    parser.add_argument(
+        "--extra_columns",
+        nargs="+",
+        default=[],
+        type=str,
+        help=
+        "Attributes (e.g. 'gene_id' to output as extra columns in extended BED format (BED output only)."
+    )
+    parser.add_argument(
+        "--empty_value",
+        default="na",
+        type=str,
+        help=
+        "Value to use of an attribute in `extra_columns` is not defined for a particular record (Default: 'na'"
+    )
+    parser.add_argument("outfile", metavar="outfile.[ bed | gtf ]", type=str, help="Output file")
     args = parser.parse_args(argv)
     bp.get_base_ops_from_args(args)
 
-    end_message = ""    
+    end_message = ""
     extra_cols = args.extra_columns
     if extra_cols is not None:
         if args.output_format == "BED":
-            
+
             # avoid name clashes
             names_used = copy.copy(BED12_RESERVED_NAMES)
-            asql_names = [fix_name(X,names_used) for X in extra_cols]
-            autosql_str = "\n".join(AUTOSQL_ROW_FMT_STR % (X," "*max(15-len(X),2)) for X in asql_names)
-            
+            asql_names = [fix_name(X, names_used) for X in extra_cols]
+            autosql_str = "\n".join(
+                AUTOSQL_ROW_FMT_STR % (X, " " * max(15 - len(X), 2)) for X in asql_names
+            )
+
             file_info = {
-                "outbase" : args.outfile.replace(".bed","").replace(".gtf",""),
-                "numcols" : len(extra_cols),
-                "autosql" : DEFAULT_AUTOSQL_STR % (os.path.basename(args.outfile[:-4]),autosql_str),
-                         
+                "outbase": args.outfile.replace(".bed", "").replace(".gtf", ""),
+                "numcols": len(extra_cols),
+                "autosql": DEFAULT_AUTOSQL_STR % (os.path.basename(args.outfile[:-4]), autosql_str),
             }
             end_message = MAKE_BIGBED_MESSAGE % file_info
         else:
-            warn("`--extra_columns` is ignored for %s-formatted output." % (args.output_format),ArgumentWarning)
-            
-            
-    with argsopener(args.outfile,args,"w") as fout:
+            warn(
+                "`--extra_columns` is ignored for %s-formatted output." % (args.output_format),
+                ArgumentWarning
+            )
+
+    with argsopener(args.outfile, args, "w") as fout:
         c = 0
-        transcripts = ap.get_transcripts_from_args(args,printer=printer)
-        
+        transcripts = ap.get_transcripts_from_args(args, printer=printer)
+
         for transcript in transcripts:
             if args.output_format == "GTF2":
                 fout.write(transcript.as_gtf(escape=args.no_escape))
             elif args.output_format == "BED":
-                fout.write(transcript.as_bed(extra_columns=extra_cols,empty_value=args.empty_value))
+                fout.write(
+                    transcript.as_bed(extra_columns=extra_cols, empty_value=args.empty_value)
+                )
             if c % 1000 == 1:
                 printer.write("Processed %s transcripts ..." % c)
             c += 1
-    
+
     printer.write("Processed %s transcripts total." % c)
     printer.write("Done.")
     print(end_message)
-            
+
+
 if __name__ == "__main__":
     main()

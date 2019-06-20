@@ -16,56 +16,73 @@ from plastid.bin.crossmap import simulate_reads, \
 # INDEX: test case
 #===============================================================================
 
+
 @attr(test="unit")
 class TestCrossmap(unittest.TestCase):
-    
     @classmethod
     def setUpClass(cls):
         cls.ivcs = {
-                     "plus" : [SegmentChain(GenomicSegment("chrA",0,100,"+")),
-                               SegmentChain(GenomicSegment("chrA",50,100,"+")),
-                               SegmentChain(GenomicSegment("chrA",50,51,"+"))
-                              ],
-                      "minus_k25_off0" : [SegmentChain(GenomicSegment("chrA",0+25-1 ,100+25-1,"-")),
-                                          SegmentChain(GenomicSegment("chrA",50+25-1,100+25-1,"-")),
-                                          SegmentChain(GenomicSegment("chrA",50+25-1,51+25-1 ,"-"))
-                                         ],
-                      "minus_k50_off0" : [SegmentChain(GenomicSegment("chrA",0+50-1 ,100+50-1,"-")),
-                                          SegmentChain(GenomicSegment("chrA",50+50-1,100+50-1,"-")),
-                                          SegmentChain(GenomicSegment("chrA",50+50-1,51+50-1 ,"-"))
-                                         ],
-                      "minus_k25_off10" : [SegmentChain(GenomicSegment("chrA",0+25-1-2*10 ,100+25-1-2*10,"-")),
-                                           SegmentChain(GenomicSegment("chrA",50+25-1-2*10,100+25-1-2*10,"-")),
-                                           SegmentChain(GenomicSegment("chrA",50+25-1-2*10,51+25-1-2*10 ,"-"))
-                                          ],
-                      "minus_k50_off10" : [SegmentChain(GenomicSegment("chrA",0+50-1-2*10 ,100+50-1-2*10,"-")),
-                                           SegmentChain(GenomicSegment("chrA",50+50-1-2*10,100+50-1-2*10,"-")),
-                                           SegmentChain(GenomicSegment("chrA",50+50-1-2*10,51+50-1-2*10 ,"-"))
-                                          ],
-                    }
+            "plus": [
+                SegmentChain(GenomicSegment("chrA", 0, 100, "+")),
+                SegmentChain(GenomicSegment("chrA", 50, 100, "+")),
+                SegmentChain(GenomicSegment("chrA", 50, 51, "+"))
+            ],
+            "minus_k25_off0": [
+                SegmentChain(GenomicSegment("chrA", 0 + 25 - 1, 100 + 25 - 1, "-")),
+                SegmentChain(GenomicSegment("chrA", 50 + 25 - 1, 100 + 25 - 1, "-")),
+                SegmentChain(GenomicSegment("chrA", 50 + 25 - 1, 51 + 25 - 1, "-"))
+            ],
+            "minus_k50_off0": [
+                SegmentChain(GenomicSegment("chrA", 0 + 50 - 1, 100 + 50 - 1, "-")),
+                SegmentChain(GenomicSegment("chrA", 50 + 50 - 1, 100 + 50 - 1, "-")),
+                SegmentChain(GenomicSegment("chrA", 50 + 50 - 1, 51 + 50 - 1, "-"))
+            ],
+            "minus_k25_off10": [
+                SegmentChain(
+                    GenomicSegment("chrA", 0 + 25 - 1 - 2 * 10, 100 + 25 - 1 - 2 * 10, "-")
+                ),
+                SegmentChain(
+                    GenomicSegment("chrA", 50 + 25 - 1 - 2 * 10, 100 + 25 - 1 - 2 * 10, "-")
+                ),
+                SegmentChain(
+                    GenomicSegment("chrA", 50 + 25 - 1 - 2 * 10, 51 + 25 - 1 - 2 * 10, "-")
+                )
+            ],
+            "minus_k50_off10": [
+                SegmentChain(
+                    GenomicSegment("chrA", 0 + 50 - 1 - 2 * 10, 100 + 50 - 1 - 2 * 10, "-")
+                ),
+                SegmentChain(
+                    GenomicSegment("chrA", 50 + 50 - 1 - 2 * 10, 100 + 50 - 1 - 2 * 10, "-")
+                ),
+                SegmentChain(
+                    GenomicSegment("chrA", 50 + 50 - 1 - 2 * 10, 51 + 50 - 1 - 2 * 10, "-")
+                )
+            ],
+        }
 
-    def test_simulate_reads(self):  
+    def test_simulate_reads(self):
         fh = cStringIO.StringIO()
-        genome = SeqIO.parse(cStringIO.StringIO(SHORT_FASTA),"fasta")
+        genome = SeqIO.parse(cStringIO.StringIO(SHORT_FASTA), "fasta")
         for seq in genome:
-            simulate_reads(seq,k=25,fh=fh)
+            simulate_reads(seq, k=25, fh=fh)
         fh.seek(0)
         reads = fh.read()
-        self.assertEqual(reads,SHORT_FASTA_KMERS)
-    
+        self.assertEqual(reads, SHORT_FASTA_KMERS)
+
     def test_fasta_name_reader(self):
         # make sure we get out only names of sequences from FASTA file
         reader = FastaNameReader(cStringIO.StringIO(SHORT_FASTA))
-        self.assertEqual(next(reader),"chr50a")
-        self.assertEqual(next(reader),"chr30b")
-        self.assertRaises(StopIteration,reader.next)
-    
+        self.assertEqual(next(reader), "chr50a")
+        self.assertEqual(next(reader), "chr30b")
+        self.assertRaises(StopIteration, reader.next)
+
     def test_revcomp_mask_chain_no_offset(self):
-        for k in (25,50):
-            for offset in (0,10):
-                revlist = [revcomp_mask_chain(X,k,offset) for X in self.ivcs["plus"]]
-                self.assertListEqual(self.ivcs["minus_k%s_off%s" % (k,offset)],revlist)
-    
+        for k in (25, 50):
+            for offset in (0, 10):
+                revlist = [revcomp_mask_chain(X, k, offset) for X in self.ivcs["plus"]]
+                self.assertListEqual(self.ivcs["minus_k%s_off%s" % (k, offset)], revlist)
+
     def test_fa_to_bed(self):
         # test with and without offsets
         # start with block of FASTA formatted sequence:
@@ -79,18 +96,18 @@ class TestCrossmap(unittest.TestCase):
         reader = cStringIO.StringIO(CROSSMAP_BLOCK)
 
         # test without offset
-        blocks1 = list(fa_to_bed(reader,25,offset=0))
-        self.assertListEqual(blocks1,CROSSMAP1)
+        blocks1 = list(fa_to_bed(reader, 25, offset=0))
+        self.assertListEqual(blocks1, CROSSMAP1)
 
         # test with offset
         reader = cStringIO.StringIO(CROSSMAP_BLOCK)
-        blocks2 = list(fa_to_bed(reader,25,offset=1000))
-        self.assertListEqual(blocks2,CROSSMAP2)
-        
+        blocks2 = list(fa_to_bed(reader, 25, offset=1000))
+        self.assertListEqual(blocks2, CROSSMAP2)
+
     def test_fa_to_bed_throws_expected_error(self):
         # test with and without offsets
         # start with unsorted FASTA block
-        
+
         # grab chrA only and randomize order
         reads = cStringIO.StringIO(SHORT_FASTA_KMERS).read().split("\n")
         reads = reads[40:50] + reads[30:40] + reads[0:16] + reads[20:30]
@@ -99,14 +116,14 @@ class TestCrossmap(unittest.TestCase):
 
         # fa_to_bed is a generator, so we need to create a callable to make
         # it a list for it to actually raise the error
-        tfunc = lambda x,y,z: list(fa_to_bed(x,y,offset=z))
-         
-        self.assertRaises(MalformedFileError,tfunc,reader,25,0)
+        tfunc = lambda x, y, z: list(fa_to_bed(x, y, offset=z))
+
+        self.assertRaises(MalformedFileError, tfunc, reader, 25, 0)
 
         reader = cStringIO.StringIO(reads)
-        self.assertRaises(MalformedFileError,tfunc,reader,25,1000)
-        reader  = cStringIO.StringIO(reads)
-        self.assertRaises(MalformedFileError,tfunc,reader,15,0)
+        self.assertRaises(MalformedFileError, tfunc, reader, 25, 1000)
+        reader = cStringIO.StringIO(reads)
+        self.assertRaises(MalformedFileError, tfunc, reader, 15, 0)
 
 
 #===============================================================================
@@ -118,7 +135,7 @@ CCGTGATATGACCTAGGTCGAGAGCTAAGCCTCAATGATGCGCTGGCGAT
 >chr30b
 CCCTCCTTCCGCTGGCCCCGACTGCCCCAG"""
 
-SHORT_FASTA_KMERS=""">chr50a:0(+)
+SHORT_FASTA_KMERS = """>chr50a:0(+)
 CCGTGATATGACCTAGGTCGAGAGC
 >chr50a:1(+)
 CGTGATATGACCTAGGTCGAGAGCT
@@ -186,37 +203,33 @@ CTTCCGCTGGCCCCGACTGCCCCAG
 
 CROSSMAP1 = [
     (
-        SegmentChain(GenomicSegment("chr50a",1,10,"+")),
-        SegmentChain(GenomicSegment("chr50a",1+25-1,10+25-1,"-")),
-    ),
-    (
-        SegmentChain(GenomicSegment("chr50a",19,26,"+")),
-        SegmentChain(GenomicSegment("chr50a",19+25-1,26+25-1,"-")),
-    ),
-    (
-        SegmentChain(GenomicSegment("chr30b",0,6,"+")),
-        SegmentChain(GenomicSegment("chr30b",0+25-1,6+25-1,"-")),
+        SegmentChain(GenomicSegment("chr50a", 1, 10, "+")),
+        SegmentChain(GenomicSegment("chr50a", 1 + 25 - 1, 10 + 25 - 1, "-")),
+    ), (
+        SegmentChain(GenomicSegment("chr50a", 19, 26, "+")),
+        SegmentChain(GenomicSegment("chr50a", 19 + 25 - 1, 26 + 25 - 1, "-")),
+    ), (
+        SegmentChain(GenomicSegment("chr30b", 0, 6, "+")),
+        SegmentChain(GenomicSegment("chr30b", 0 + 25 - 1, 6 + 25 - 1, "-")),
     )
 ]
 
 CROSSMAP2 = [
     (
-        SegmentChain(GenomicSegment("chr50a",1+1000,10+1000,"+")),
-        SegmentChain(GenomicSegment("chr50a",1+25-1-1000,10+25-1-1000,"-")),
-    ),
-    (
-        SegmentChain(GenomicSegment("chr50a",19+1000,26+1000,"+")),
-        SegmentChain(GenomicSegment("chr50a",19+25-1-1000,26+25-1-1000,"-")),
-    ),
-    (
-        SegmentChain(GenomicSegment("chr30b",0+1000,6+1000,"+")),
-        SegmentChain(GenomicSegment("chr30b",0+25-1-1000,6+25-1-1000,"-")),
-    )             
+        SegmentChain(GenomicSegment("chr50a", 1 + 1000, 10 + 1000, "+")),
+        SegmentChain(GenomicSegment("chr50a", 1 + 25 - 1 - 1000, 10 + 25 - 1 - 1000, "-")),
+    ), (
+        SegmentChain(GenomicSegment("chr50a", 19 + 1000, 26 + 1000, "+")),
+        SegmentChain(GenomicSegment("chr50a", 19 + 25 - 1 - 1000, 26 + 25 - 1 - 1000, "-")),
+    ), (
+        SegmentChain(GenomicSegment("chr30b", 0 + 1000, 6 + 1000, "+")),
+        SegmentChain(GenomicSegment("chr30b", 0 + 25 - 1 - 1000, 6 + 25 - 1 - 1000, "-")),
+    )
 ]
 
 # two blocks on chrA, one beginning at position 1, one beginning internally
 # one block on chrB, beginning at position 0
-CROSSMAP_BLOCK=""">chr50a:1(+)
+CROSSMAP_BLOCK = """>chr50a:1(+)
 CGTGATATGACCTAGGTCGAGAGCT
 >chr50a:2(+)
 GTGATATGACCTAGGTCGAGAGCTA
@@ -260,4 +273,4 @@ TCCTTCCGCTGGCCCCGACTGCCCC
 CCTTCCGCTGGCCCCGACTGCCCCA
 >chr30b:5(+)
 CTTCCGCTGGCCCCGACTGCCCCAG
-"""    
+"""

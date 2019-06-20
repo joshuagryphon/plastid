@@ -26,26 +26,27 @@ import pandas as pd
 from plastid.util.io.filters import AbstractWriter
 from collections import Iterable
 
+
 class NullWriter(AbstractWriter):
     """Writes to system-dependent null location.
     On Unix-like systems & OSX, this is typically /dev/null. On Windows, simply "nul"
     """
-    
+
     def __init__(self):
-        self.stream = open(os.devnull,"w")
-    
-    def filter(self,stream):
+        self.stream = open(os.devnull, "w")
+
+    def filter(self, stream):
         return stream
-    
+
     def __repr__(self):
         # unusual repr, but useful for documentation by Sphinx
         return "NullWriter()"
-    
+
     def __str__(self):
         return self.__repr__()
 
 
-def multiopen(inp,fn=None,args=None,kwargs=None):
+def multiopen(inp, fn=None, args=None, kwargs=None):
     """Normalize filename/file-like/list of filename or file-like to a list of appropriate objects
     
     If not list-like, `inp` is converted to a list. Then, for each element `x` in
@@ -74,30 +75,26 @@ def multiopen(inp,fn=None,args=None,kwargs=None):
     """
     if fn is None:
         fn = lambda x, **z: x
-    
+
     if args is None:
         args = ()
-    
+
     if kwargs is None:
         kwargs = {}
-        
-    if isinstance(inp,str):
+
+    if isinstance(inp, str):
         out = [inp]
-    elif isinstance(inp,Iterable):
+    elif isinstance(inp, Iterable):
         out = inp
 
     for obj in out:
-#         if isinstance(obj,(safe_file,IOBase,StringIO.StringIO)): #cStringIO
-#             yield obj
-#         else:
-#             yield fn(obj,**kwargs)
-        if isinstance(obj,str):
-            yield fn(obj,*args,**kwargs)
+        if isinstance(obj, str):
+            yield fn(obj, *args, **kwargs)
         else:
             yield obj
 
 
-def opener(filename,mode="r",**kwargs):
+def opener(filename, mode="r", **kwargs):
     """Open a file, detecting whether it is compressed or not, based upon
     its file extension. Extensions are tested in the following order:
     
@@ -143,12 +140,12 @@ def opener(filename,mode="r",**kwargs):
         call_func = zipfile.ZipFile
     else:
         call_func = open
-    
-    return call_func(filename,mode,**kwargs)
+
+    return call_func(filename, mode, **kwargs)
 
 
-# needs unittest
-def read_pl_table(filename,**kwargs):
+# TODO: needs unittest
+def read_pl_table(filename, **kwargs):
     """Open a table saved by one of :data:`plastid`'s command-line scripts,
     passing default arguments to :func:`pandas.read_table`:
     
@@ -175,18 +172,19 @@ def read_pl_table(filename,**kwargs):
     :class:`pandas.DataFrame`
         Table of results
     """
-    args = { "sep"      : "\t",
-             "comment"  : "#",
-             "index_col"  : None,
-             "header"     : 0,
-        }
+    args = {
+        "sep"       : "\t",
+        "comment"   : "#",
+        "index_col" : None,
+        "header"    : 0,
+    } # yapf: disable
     args.update(kwargs)
-    table = pd.read_table(filename,**args)
+    table = pd.read_table(filename, **args)
     return table
 
 
-# needs unit test
-def write_pl_table(df,filename,sep="\t",header=True,index=None,**kwargs):
+# TODO: needs unit test
+def write_pl_table(df, filename, sep="\t", header=True, index=None, **kwargs):
     """Wrapper function to write DataFrame `df` to a tab-delimited table, with header
 
     Parameters
@@ -200,10 +198,10 @@ def write_pl_table(df,filename,sep="\t",header=True,index=None,**kwargs):
     **kwargs : keyword arguments, optional
         Any keyword argument readable by :meth:`pandas.DataFrame.to_csv`. 
     """
-    return df.to_csv(filename,sep=sep,header=header,index=index,**kwargs)
+    return df.to_csv(filename, sep=sep, header=header, index=index, **kwargs)
 
 
-def get_short_name(inpt,separator=os.path.sep,terminator=""):
+def get_short_name(inpt, separator=os.path.sep, terminator=""):
     """Gives the basename of a filename or module name passed as a string.
     If the string doesn't match the pattern specified by the separator
     and terminator, it is returned unchanged. 
@@ -213,22 +211,22 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
     >>> get_short_name("test")
     'test'
 
-    >>> get_short_name("test.py",terminator=".py")
+    >>> get_short_name("test.py", terminator=".py")
     'test'
 
-    >>> get_short_name("/home/jdoe/test.py",terminator=".py")
+    >>> get_short_name("/home/jdoe/test.py", terminator=".py")
     'test'
 
-    >>> get_short_name("/home/jdoe/test.py.py",terminator=".py")
+    >>> get_short_name("/home/jdoe/test.py.py", terminator=".py")
     'test.py'
 
     >>> get_short_name("/home/jdoe/test.py.2")
     'test.py.2'
     
-    >>> get_short_name("/home/jdoe/test.py.2",terminator=".py")
+    >>> get_short_name("/home/jdoe/test.py.2", terminator=".py")
     'test.py.2'
 
-    >>> get_short_name("plastid.bin.test",separator="\.",terminator="")
+    >>> get_short_name("plastid.bin.test", separator="\.", terminator="")
     'test'
     
     Parameters
@@ -251,9 +249,10 @@ def get_short_name(inpt,separator=os.path.sep,terminator=""):
         stmp = re.split(separator, inpt)[-1]
     except AttributeError:
         return inpt
+
     return(stmp)
 
-def argsopener(filename,namespace,mode="w",**kwargs):
+def argsopener(filename, namespace, mode="w", **kwargs):
     """Open a file for writing, and write to it command-line arguments
     formatted as a pretty-printed dictionary in comment metadata.
     
@@ -278,9 +277,10 @@ def argsopener(filename,namespace,mode="w",**kwargs):
     """
     if "w" not in mode:
         mode += "w"
-    fout = opener(filename,mode,**kwargs)
+    fout = opener(filename, mode, **kwargs)
     fout.write(args_to_comment(namespace))
     return fout
+
 
 def args_to_comment(namespace):
     """Formats a :class:`argparse.Namespace` into a comment block
@@ -297,15 +297,14 @@ def args_to_comment(namespace):
     """
     import datetime
     dtmp = namespace.__dict__
-    ltmp = ["## date = '%s'" % datetime.datetime.today(),
-            "## execstr = '%s'" % " ".join(sys.argv)
-            ]
+    ltmp = ["## date = '%s'" % datetime.datetime.today(), "## execstr = '%s'" % " ".join(sys.argv)]
     ltmp.append("## args = {  ")
     ltmp2 = pretty_print_dict(dtmp).split("\n")[1:-2]
     for i in range(len(ltmp2)):
         ltmp2[i] = "##" + ltmp2[i]
     sout = "\n".join(ltmp) + "\n" + ",\n".join(ltmp2) + "\n##        }\n"
     return sout
+
 
 def pretty_print_dict(dtmp):
     """Pretty prints an un-nested dictionary 
@@ -322,11 +321,12 @@ def pretty_print_dict(dtmp):
     ltmp = []
     keys = dtmp.keys()
     maxlen = 2 + max([len(K) for K in keys])
-    for k,v in sorted(dtmp.items(),key=lambda x: x[0]):
+    for k, v in sorted(dtmp.items(), key=lambda x: x[0]):
         if type(v) == type(""):
             v = "'%s'" % v
         new_k = "'%s'" % k
-        stmp = ("          {0:<%s} : {1}," % maxlen).format(new_k,v)
+        stmp = ("          {0:<%s} : {1}," % maxlen).format(new_k, v)
         ltmp.append(stmp)
+
     sout = "\n".join(ltmp)
     return "{\n%s\n}\n" % sout

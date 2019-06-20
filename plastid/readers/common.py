@@ -23,15 +23,20 @@ except ImportError:
 
 from plastid.util.io.filters import AbstractReader
 from plastid.util.io.openers import NullWriter, multiopen
-from plastid.genomics.roitools import GenomicSegment, SegmentChain, Transcript, add_three_for_stop_codon
+from plastid.genomics.roitools import (
+    GenomicSegment,
+    SegmentChain,
+    Transcript,
+    add_three_for_stop_codon,
+)
 from abc import abstractmethod
-
 
 #===============================================================================
 # INDEX: helper functions
 #===============================================================================
 
-def get_identical_attributes(features,exclude=None):
+
+def get_identical_attributes(features, exclude=None):
     """Return a dictionary of all key-value pairs that are identical for all |SegmentChains| in `features`
     
     Parameters
@@ -52,16 +57,18 @@ def get_identical_attributes(features,exclude=None):
     common_keys = set(features[0].attr.keys())
     for feature in features:
         common_keys &= set(feature.attr.keys())
-    
+
     common_keys -= set(exclude)
-    
+
     dtmp = { K : features[0].attr[K] for K in common_keys \
                  if all([X.attr[K] == features[0].attr[K] for X in features]) == True }
     return dtmp
 
+
 #===============================================================================
 # INDEX: classes
 #===============================================================================
+
 
 class AssembledFeatureReader(AbstractReader):
     """
@@ -125,8 +132,8 @@ class AssembledFeatureReader(AbstractReader):
     rejected : list
         A list of transcript IDs that failed to assemble properly
     """
-    
-    def __init__(self,*streams,**kwargs):
+
+    def __init__(self, *streams, **kwargs):
         """
         AssembledFeatureReader(*streams, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False, **kwargs)
         
@@ -154,26 +161,26 @@ class AssembledFeatureReader(AbstractReader):
         **kwargs
             Other keyword arguments used by specific parsers
         """
-        streams = multiopen(streams,fn=open,kwargs=dict(mode="rb"))
-        
-        if kwargs.get("tabix",False) == True:
+        streams = multiopen(streams, fn=open, kwargs=dict(mode="rb"))
+
+        if kwargs.get("tabix", False) == True:
             self.stream = itertools.chain.from_iterable((_tabix_iteradaptor(X) for X in streams))
         else:
             self.stream = itertools.chain.from_iterable(streams)
 
         self.counter = 0
 
-        self.printer = kwargs.get("printer",NullWriter())
+        self.printer = kwargs.get("printer", NullWriter())
 
-        self.return_type   = kwargs.get("return_type",SegmentChain)        
-        add_three_for_stop = kwargs.get("add_three_for_stop",False)
-        self._finalize =  add_three_for_stop_codon if add_three_for_stop == True else lambda x: x
+        self.return_type = kwargs.get("return_type", SegmentChain)
+        add_three_for_stop = kwargs.get("add_three_for_stop", False)
+        self._finalize = add_three_for_stop_codon if add_three_for_stop == True else lambda x: x
 
-        self.metadata    = {}
-        self.rejected    = []
-    
+        self.metadata = {}
+        self.rejected = []
+
     @abstractmethod
-    def _assemble(self,data):
+    def _assemble(self, data):
         """Assemble features from data. This must be implemented in subclass.
         
         Returns
@@ -181,8 +188,8 @@ class AssembledFeatureReader(AbstractReader):
         |SegmentChain| or subclass
             Next feature assembled from `self.streams`, type specified by `self.return_type`
         """
-    
-    def filter(self,data):
+
+    def filter(self, data):
         """Return next assembled feature from `self.stream`
         
         Returns
@@ -205,9 +212,7 @@ def _tabix_iteradaptor(stream):
     generator
         Generator of tab-delimited string records in `tabix`_ file
     """
-    if not isinstance(stream,(tabix_generic_iterator,
-                              tabix_file_iterator)
-                      ):
-        stream = tabix_file_iterator(stream,pysam.asTuple())
-    
+    if not isinstance(stream, (tabix_generic_iterator, tabix_file_iterator)):
+        stream = tabix_file_iterator(stream, pysam.asTuple())
+
     return (str(X) for X in stream)

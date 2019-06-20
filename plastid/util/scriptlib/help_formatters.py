@@ -19,6 +19,7 @@ See also
 """
 import re
 
+
 def shorten_help(inp):
     """Pretty prints `numpydoc`_-formatted module, class, or function docstrings
     for use in command-line help, by removing some `reStructuredText`_ markup,
@@ -34,25 +35,21 @@ def shorten_help(inp):
     str
         Cleaned helptext
     """
-    inp = pyrst_pattern.sub(r"\g<spacing>\g<argument>",inp)
-    inp = subst_pattern.sub(r"\g<1>",inp)
-    inp = link_pattern.sub(r"\g<1>",inp)
-    
-    tokens = ["Parameters",
-              "Returns",
-              "Yields",
-              "Raises",
-              "Attributes"
-              ]
-    
+    inp = pyrst_pattern.sub(r"\g<spacing>\g<argument>", inp)
+    inp = subst_pattern.sub(r"\g<1>", inp)
+    inp = link_pattern.sub(r"\g<1>", inp)
+
+    tokens = ["Parameters", "Returns", "Yields", "Raises", "Attributes"]
+
     indices = [inp.find("%s" % X) for X in tokens]
     indices.extend([inp.find("    %s" % X.lower()) for X in tokens])
-    
-    for n,idx in enumerate(indices):
+
+    for n, idx in enumerate(indices):
         if idx == -1:
             indices[n] = len(inp)
-    
+
     return inp[:min(indices)].strip() + "\n"
+
 
 def format_module_docstring(inp):
     """Pretty prints module docstrings for use in command-line help,
@@ -71,7 +68,10 @@ def format_module_docstring(inp):
     """
     return _separator + "\n" + shorten_help(inp) + "\n" + _separator
 
-pyrst_pattern = re.compile(r"(?P<spacing>^|\s+)(?::(?P<domain>[^:`<>]+))?:(?P<role>[^:`]*):`(?P<argument>[^`<>]+)(?: +<(?P<pointer>[^`]+)>)?`")
+
+pyrst_pattern = re.compile(
+    r"(?P<spacing>^|\s+)(?::(?P<domain>[^:`<>]+))?:(?P<role>[^:`]*):`(?P<argument>[^`<>]+)(?: +<(?P<pointer>[^`]+)>)?`"
+)
 """RegEx pattern that detects `reStructuredText`_ markup of python tokens
 of the form ``:domain:role:`argument``` or simply ``:role:`argument```,
 if the token is preceded by whitespace or begins a line.
@@ -90,5 +90,5 @@ link_pattern = re.compile(r"`([^`<>]+)( <[^`]+>)?`_")
 and ```Link text <url>`_``
 """
 
-_separator = "\n" + (78*"-") + "\n"
+_separator = "\n" + (78 * "-") + "\n"
 """78-dash long text separator for separating help sections in command-line environments"""

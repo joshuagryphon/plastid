@@ -80,16 +80,15 @@ from io import IOBase
 import termcolor
 
 # color detection hint from http://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
-if hasattr(sys.stderr,"isatty") and sys.stderr.isatty():
+if hasattr(sys.stderr, "isatty") and sys.stderr.isatty():
     colored = termcolor.colored
 else:
     colored = lambda x, **kwargs: str(x)
 
-
-
 #===============================================================================
 # INDEX: readers
 #===============================================================================
+
 
 class AbstractReader(IOBase):
     """Abstract base class for stream-reading filters. These may be wrapped around
@@ -104,8 +103,8 @@ class AbstractReader(IOBase):
         A reader that removes comments from text data
     
     """
-    
-    def __init__(self,stream):
+
+    def __init__(self, stream):
         """Create an |AbstractReader|
         
         Parameters
@@ -113,23 +112,23 @@ class AbstractReader(IOBase):
         stream : file-like
             Input data
         """
-        self.stream=stream
+        self.stream = stream
 
     def isatty(self):
-        return hasattr(self.stream,"isatty") and self.stream.isatty()
-    
+        return hasattr(self.stream, "isatty") and self.stream.isatty()
+
     def writable(self):
         return False
-    
+
     def seekable(self):
         return False
-    
+
     def readable(self):
         return True
-    
+
     def fileno(self):
         raise IOError()
-        
+
     def __next__(self):
         return self.filter(next(self.stream))
 
@@ -172,7 +171,7 @@ class AbstractReader(IOBase):
             lreturn.append(line)
 
         return lreturn
-    
+
     def close(self):
         """Close stream"""
         try:
@@ -181,7 +180,7 @@ class AbstractReader(IOBase):
             pass
 
     @abstractmethod
-    def filter(self,data):
+    def filter(self, data):
         """Method that filters or processes each unit of data.
         Override this in subclasses
         
@@ -210,8 +209,8 @@ class FunctionReader(AbstractReader):
     func : function
         Function to apply to each unit of input in `stream`    
     """
-    
-    def __init__(self,stream,func):
+
+    def __init__(self, stream, func):
         """Create a FunctionReader
         
         Parameters
@@ -223,13 +222,13 @@ class FunctionReader(AbstractReader):
             Function to apply to each unit of input in `stream`
         """
         self.filter = func
-        AbstractReader.__init__(self,stream)
+        AbstractReader.__init__(self, stream)
 
 
 class SkipBlankReader(AbstractReader):
     """Ignores blank/whitespace-only lines in a text stream"""
 
-    def filter(self,line):
+    def filter(self, line):
         """Return next non-blank line of text
         
         Parameters
@@ -245,14 +244,14 @@ class SkipBlankReader(AbstractReader):
             return self.__next__()
         else:
             return line
-        
-        
+
+
 class CommentReader(AbstractReader):
     """Ignore lines beginning with `'#'`, optionally preceded by whitespace
     from a text stream. Comments beginning mid line are left in-place
     """
 
-    def __init__(self,stream):
+    def __init__(self, stream):
         """Create a CommentReader
         
         Parameters
@@ -261,7 +260,7 @@ class CommentReader(AbstractReader):
             Input data
         """
         self.comments = []
-        AbstractReader.__init__(self,stream)
+        AbstractReader.__init__(self, stream)
 
     def get_comments(self):
         """Return all of the comments that have been found so far.
@@ -273,8 +272,8 @@ class CommentReader(AbstractReader):
             Comments found in text
         """
         return self.comments
-    
-    def filter(self,line):
+
+    def filter(self, line):
         """Return next non-commented line of text
         
         Parameters
@@ -296,7 +295,8 @@ class CommentReader(AbstractReader):
 
 class BackwardReader(AbstractReader):
     """Reverses each line of a text stream character-wise."""
-    def filter(self,line):
+
+    def filter(self, line):
         """Return next non-commented line of text
         
         Parameters
@@ -308,8 +308,8 @@ class BackwardReader(AbstractReader):
         -------
         str
             Reversed line of text
-        """        
-        return line [::-1]
+        """
+        return line[::-1]
 
 
 class TeeReader(AbstractReader):
@@ -324,7 +324,7 @@ class TeeReader(AbstractReader):
     TeeListener : an example of a listener class
     """
 
-    def __init__(self,stream):
+    def __init__(self, stream):
         """Create an TeeReader
         
         Parameters
@@ -333,9 +333,9 @@ class TeeReader(AbstractReader):
             Input data
         """
         self.listeners = []
-        AbstractReader.__init__(self,stream)
+        AbstractReader.__init__(self, stream)
 
-    def add_listener(self,listener):
+    def add_listener(self, listener):
         """Register a single listener with this reader
         
         Parameters
@@ -343,8 +343,8 @@ class TeeReader(AbstractReader):
         listener : |TeeListener|-like
         """
         self.listeners.append(listener)
-    
-    def add_listeners(self,*many_listeners):
+
+    def add_listeners(self, *many_listeners):
         """Register one or more listeners with this reader
         
         Parameters
@@ -353,8 +353,8 @@ class TeeReader(AbstractReader):
         """
         for listener in many_listeners:
             self.add_listener(listener)
-    
-    def filter(self,line):
+
+    def filter(self, line):
         """Sends each line to each listener. Complains if listener cannot listen!
         
         Parameters
@@ -372,14 +372,14 @@ class TeeReader(AbstractReader):
                 import warnings
                 warnings.warn("Could not alert listener %s: " % str(listener))
         return line
-    
-    
+
+
 class TeeListener(object):
     """Listener class for TeeFilter. Listeners if registered with a |TeeReader|
     will receive and process each unit of input via its ``alert()`` method"""
-    
+
     @abstractmethod
-    def alert(self,data):
+    def alert(self, data):
         """Process input from a |TeeReader|.
         Override this method to perform the appropriate behavior.
         
@@ -390,16 +390,18 @@ class TeeListener(object):
         """
         pass
 
+
 class TestTeeListener(TeeListener):
     """Example of a TeeListener"""
-    
-    def alert(self,line):
-        print(self.name + " heard something: "+line)
+
+    def alert(self, line):
+        print(self.name + " heard something: " + line)
 
 
 #===============================================================================
 # INDEX: writers
 #===============================================================================
+
 
 class AbstractWriter(IOBase):
     """Abstract base class for stream-writing filters.
@@ -412,7 +414,8 @@ class AbstractWriter(IOBase):
     stream : file-like, open for writing
         Output stream to which filtered/formatted data will be written    
     """
-    def __init__(self,stream):
+
+    def __init__(self, stream):
         """Create an AbstractWriter
         
         Parameters
@@ -423,21 +426,21 @@ class AbstractWriter(IOBase):
         self.stream = stream
 
     def isatty(self):
-        return hasattr(self.stream,"isatty") and self.stream.isatty()
-        
+        return hasattr(self.stream, "isatty") and self.stream.isatty()
+
     def writable(self):
         return True
-    
+
     def seekable(self):
         return False
-    
+
     def readable(self):
         return False
-    
+
     def fileno(self):
         raise IOError()
-            
-    def write(self,data):
+
+    def write(self, data):
         """Write data to `self.stream`
         
         Parameters
@@ -446,7 +449,7 @@ class AbstractWriter(IOBase):
             Whatever data to filter/format. Often string, but not necessary
         """
         self.stream.write(self.filter(data))
-    
+
     def flush(self):
         """Flush `self.stream`"""
         self.stream.flush()
@@ -458,9 +461,9 @@ class AbstractWriter(IOBase):
             self.stream.close()
         except:
             pass
-    
+
     @abstractmethod
-    def filter(self,data):
+    def filter(self, data):
         """Method that filters or processes each unit of data.
         Override this in subclasses
         
@@ -473,7 +476,7 @@ class AbstractWriter(IOBase):
         -------
         object
             formatted data. Often string, but not necessary
-        """ 
+        """
         pass
 
 
@@ -491,7 +494,8 @@ class ColorWriter(AbstractWriter):
         Color text. Delegates to :func:`termcolor.colored` if color is supported.
         Otherwise, returns uncolored text.
     """
-    def __init__(self,stream=None):
+
+    def __init__(self, stream=None):
         """Create a ColorWriter
         
         Parameters
@@ -499,11 +503,11 @@ class ColorWriter(AbstractWriter):
         stream : file-like
             Stream to write to (Default: :obj:`sys.stderr`)
         """
-        AbstractWriter.__init__(self,stream=stream)
-        if hasattr(self.stream,"isatty") and self.stream.isatty():
+        AbstractWriter.__init__(self, stream=stream)
+        if hasattr(self.stream, "isatty") and self.stream.isatty():
             self.color = termcolor.colored
-    
-    def color(self,text,**kwargs):
+
+    def color(self, text, **kwargs):
         """Color `text` with attributes specified in `kwargs` if `stream` supports ANSI color.
         
         See :func:`termcolor.colored` for usage
@@ -518,8 +522,8 @@ class ColorWriter(AbstractWriter):
 
 class NameDateWriter(ColorWriter):
     """Prepend program name, date, and time to each line of output"""
-    
-    def __init__(self,name,line_delimiter="\n",stream=None):
+
+    def __init__(self, name, line_delimiter="\n", stream=None):
         """Create a NameDateWriter
         
         Parameters
@@ -534,18 +538,17 @@ class NameDateWriter(ColorWriter):
             Delimiter, postpended to lines. (Default `'\n'`)
         """
         stream = sys.stderr if stream is None else stream
-        ColorWriter.__init__(self,stream=stream)
+        ColorWriter.__init__(self, stream=stream)
         self.name = name
         self.delimiter = line_delimiter
-        self.fmtstr = "%s %s%s %s%s: {2}%s" % (self.color(name,color="blue",attrs=["bold"]),
-                                               self.color("[",color="blue",attrs=["bold"]),
-                                               self.color("{0}",color="green"),
-                                               self.color("{1}",color="green",attrs=["bold"]),
-                                               self.color("]",color="blue",attrs=["bold"]),
-                                               self.delimiter
-                                              )
-    
-    def filter(self,line):
+        self.fmtstr = "%s %s%s %s%s: {2}%s" % (
+            self.color(name, color="blue", attrs=["bold"]),
+            self.color("[", color="blue", attrs=["bold"]), self.color("{0}", color="green"),
+            self.color("{1}", color="green", attrs=["bold"]),
+            self.color("]", color="blue", attrs=["bold"]), self.delimiter
+        )
+
+    def filter(self, line):
         """Prepend date and time to each line of input
         
         Parameters
@@ -558,23 +561,24 @@ class NameDateWriter(ColorWriter):
         str : Input with date and time prepended
         """
         now = datetime.datetime.now()
-        d   = datetime.datetime.strftime(now,"%Y-%m-%d")
-        t   = datetime.datetime.strftime(now,"%T")
-        return self.fmtstr.format(d,t,line.strip(self.delimiter))
-        
+        d = datetime.datetime.strftime(now, "%Y-%m-%d")
+        t = datetime.datetime.strftime(now, "%T")
+        return self.fmtstr.format(d, t, line.strip(self.delimiter))
+
     # included for backward compatibility
-    def __call__(self,line):
+    def __call__(self, line):
         self.write(line)
 
 
 class CommentWriter(AbstractWriter):
     """Filter out lines beginning with `'#'` from data written to a stream"""
 
-    def filter(self,line):
+    def filter(self, line):
         if line.startswith("#"):
             return ""
         else:
             return line
+
 
 # alias included for backward compatibility
 Printer = NameDateWriter

@@ -13,7 +13,6 @@ cdef class VariableFivePrimeMapFactory:
 
 cdef class StratifiedVariableFivePrimeMapFactory(VariableFivePrimeMapFactory):
     cdef int min_length, max_length, _numlengths
-     
 
 cdef class SizeFilterFactory:
     cdef int min_, max_

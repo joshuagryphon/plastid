@@ -31,35 +31,36 @@ import sys
 import urllib
 import itertools
 
-if sys.version_info >= (3,):
+# yapf: disable
+if sys.version_info >= (3, ):
     import io as cStringIO
     import io as StringIO
     import io
-    xrange = range
-    quote   = urllib.parse.quote
-    unquote = urllib.parse.unquote
+    xrange       = range
+    quote        = urllib.parse.quote
+    unquote      = urllib.parse.unquote
     quote_plus   = urllib.parse.quote_plus
     unquote_plus = urllib.parse.unquote_plus
-    ifilter = filter
-    safe_bytes = lambda x: bytes(x,"utf-8")
-    safe_str   = lambda x: x.decode("utf-8")
-    safe_file  = io.FileIO
-    
+    ifilter      = filter
+    safe_bytes   = lambda x: bytes(x, "utf-8")
+    safe_str     = lambda x: x.decode("utf-8")
+    safe_file    = io.FileIO
+
     # function code
     _func_code_attr = "__code__"
 else:
     import cStringIO
     import StringIO
-    xrange = xrange
-    quote   = urllib.quote
-    unquote = urllib.unquote
+    xrange       = xrange
+    quote        = urllib.quote
+    unquote      = urllib.unquote
     quote_plus   = urllib.quote_plus
     unquote_plus = urllib.unquote_plus
-    ifilter = itertools.ifilter
-    safe_bytes = bytes
-    safe_str   = str
-    safe_file  = file
-    
+    ifilter      = itertools.ifilter
+    safe_bytes   = bytes
+    safe_str     = str
+    safe_file    =   file
+
     # function code
     _func_code_attr = "func_code"
 
@@ -85,4 +86,4 @@ def get_func_code(func):
     code
         Function code
     """
-    return getattr(func,_func_code_attr)
+    return getattr(func, _func_code_attr)

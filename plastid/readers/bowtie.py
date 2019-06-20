@@ -19,8 +19,7 @@ __author__ = "joshua"
 __date__ = "2011-03-18"
 
 from plastid.genomics.roitools import SegmentChain, GenomicSegment
-from plastid.util.io.filters  import AbstractReader
-
+from plastid.util.io.filters import AbstractReader
 
 #===============================================================================
 # INDEX: Readers for various bowtie1-like alignment file formats
@@ -56,20 +55,22 @@ class BowtieReader(AbstractReader):
     |SegmentChain|
         A read alignment
     """
-    def filter(self,line):
+
+    def filter(self, line):
         """Parse a read alignment as |SegmentChain| from a line of `bowtie`_ output"""
         items = line.strip("\n").split("\t")
-        read_name      = items[0]
-        strand         = items[1]
-        ref_seq        = items[2]
-        coord          = int(items[3])
-        attr = { 'seq_as_aligned' : items[4],
-                 'qualstr'        : items[5],
-                 'mismatch_str'   : items[7],
-                 'type'           : "alignment",
-                 'ID'             : read_name,
-               }
-        
-        iv = GenomicSegment(ref_seq,coord,coord+len(attr['seq_as_aligned']),strand)
-        feature = SegmentChain(iv,**attr)
+        read_name = items[0]
+        strand = items[1]
+        ref_seq = items[2]
+        coord = int(items[3])
+        attr = {
+            'seq_as_aligned' : items[4],
+            'qualstr'        : items[5],
+            'mismatch_str'   : items[7],
+            'type'           : "alignment",
+            'ID'             : read_name,
+        } # yapf: disable
+
+        iv = GenomicSegment(ref_seq, coord, coord + len(attr['seq_as_aligned']), strand)
+        feature = SegmentChain(iv, **attr)
         return feature

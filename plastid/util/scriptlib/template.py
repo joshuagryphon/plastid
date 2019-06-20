@@ -26,17 +26,19 @@ def main(argv=sys.argv[1:]):
         Default: sys.argv[1:] (actual command-line arguments)
     """
     # fill out command-line program here
-    
+
     # add parents from plastid.scriptlib.argparsers as necessary
-    parser = argparse.ArgumentParser(description=format_module_docstring(__doc__),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     parents=[])
+    parser = argparse.ArgumentParser(
+        description=format_module_docstring(__doc__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[]
+    )
 
     # add your own argument
-    parser.add_argument("--foo",type=str,help="Some argument foo")
+    parser.add_argument("--foo", type=str, help="Some argument foo")
 
     args = parser.parse_args(argv)
-    
+
     # write program body
     pass
 

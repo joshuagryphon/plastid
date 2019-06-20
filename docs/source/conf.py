@@ -21,12 +21,11 @@ import plastid
 
 # -- General configuration ------------------------------------------------
 
-
-
 project = u'plastid'
 copyright = u'2014, Joshua G. Dunn'
-version = str(plastid.__version__) # |version|
-release = "%s-r%s" % (plastid.__version__,str(datetime.date.today()).replace("-","_")) # |release|
+version = str(plastid.__version__)  # |version|
+release = "%s-r%s" % (plastid.__version__, str(datetime.date.today()).replace("-", "_")
+                      )  # |release|
 
 # set up substitutions file for automated crossreferences
 rst_prolog = """
@@ -47,11 +46,10 @@ extensions = [
     #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'numpydoc', 
+    'numpydoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.argdoc',
-    ]
-
+]
 
 html_static_path = ["_static"]
 
@@ -63,20 +61,17 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    
+
 # sphinx autodoc config -------------------------------------------------------
 
 autodoc_default_flags = [
-#    "show-inheritance",
     "undoc-members",
     "special-members",
-#     "private-members",
     "inherited-members",
 ]
-autodoc_member_order           = "groupwise"
-autodoc_docstring_signature    = True
+autodoc_member_order = "groupwise"
+autodoc_docstring_signature = True
 numpydoc_class_members_toctree = False
-
 
 # never document these methods/attributes
 exclude_always = {
@@ -95,10 +90,10 @@ exclude_always = {
     "__subclasshook__",
     "__weakref__",
     "__del__"
-}
+} # yapf: disable
 
 # document these only if their docstrings don't match those of their base classes
-exclude_if_no_redoc_base_classes = [object,unittest.TestCase]
+exclude_if_no_redoc_base_classes = [object, unittest.TestCase]
 exclude_if_no_redoc = {
     "__init__",
     "__getattribute__",
@@ -115,7 +110,7 @@ exclude_if_no_redoc = {
 exclude_if_no_redoc |= set(dir(unittest.TestCase))
 
 
-def autodoc_skip_member(app,what,name,obj,skip,options):
+def autodoc_skip_member(app, what, name, obj, skip, options):
     """Do not generate documentation for functions/methods/classes/objects that
     either:
     
@@ -160,41 +155,45 @@ def autodoc_skip_member(app,what,name,obj,skip,options):
             skip = True
         elif name.startswith("_"):
             skip = True
-        elif getattr(obj,"plastid_skipdoc",False) == True:
+        elif getattr(obj, "plastid_skipdoc", False) == True:
             skip = True
         elif name in exclude_if_no_redoc:
             for cls in exclude_if_no_redoc_base_classes:
-                if isinstance(obj,cls):
+                if isinstance(obj, cls):
                     try:
-                        base_doc = getattr(cls,name).__doc__
+                        base_doc = getattr(cls, name).__doc__
                     except AttributeError:
                         base_doc = ""
                     skip |= obj.__doc__ == base_doc
-            
+
     return skip
 
+
 # intersphinx config ------------------------------------------------------------
-intersphinx_mapping = { "python" : ("http://docs.python.org",None),
-                        "numpy"  : ("http://docs.scipy.org/doc/numpy/",None),
-                        "scipy"  : ("http://docs.scipy.org/doc/scipy/reference/",None),
-                        "pysam"  : ("http://pysam.readthedocs.io/en/latest",None),
-                        "pandas" : ("http://pandas-docs.github.io/pandas-docs-travis/",None),
-                        "HTSeq"  : ("http://www-huber.embl.de/users/anders/HTSeq/doc",None),
-                        "matplotlib"   : ("http://matplotlib.org/",None),
-                        "twobitreader" : ("https://pythonhosted.org/twobitreader/",None),
-                        "cython"       : ("http://docs.cython.org",None),
-                        }
+intersphinx_mapping = {
+    "python": ("http://docs.python.org", None),
+    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
+    "pysam": ("http://pysam.readthedocs.io/en/latest", None),
+    "pandas": ("http://pandas-docs.github.io/pandas-docs-travis/", None),
+    "HTSeq": ("http://www-huber.embl.de/users/anders/HTSeq/doc", None),
+    "matplotlib": ("http://matplotlib.org/", None),
+    "twobitreader": ("https://pythonhosted.org/twobitreader/", None),
+    "cython": ("http://docs.cython.org", None),
+}
 
 # -- Mocking of imports ------------------------------------------------
+
 
 class Mock(mock.Mock):
     """Proxy class to stand in for modules/packages that can't be built
     or installed on readthedocs.org .
     
     Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html"""
+
     @classmethod
     def __getattr__(cls, name):
-            return Mock()
+        return Mock()
 
 mock_modules = [ # can't mock matplotlib, numpy, or pysam
     'pandas',
@@ -213,8 +212,9 @@ sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
 def setup(app):
     """Activate custom event handlers for autodoc"""
-    app.connect("autodoc-skip-member",autodoc_skip_member)
+    app.connect("autodoc-skip-member", autodoc_skip_member)
     app.add_stylesheet('css/custom.css')
+
 
 # ------------------------------------------------------------------------------
 
@@ -226,7 +226,6 @@ source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
-
 
 #language = None
 
@@ -264,16 +263,12 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
-
 # -- Options for HTML output ----------------------------------------------
-
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #html_theme_options = {}
-
-
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -340,26 +335,24 @@ pygments_style = 'sphinx'
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'plastid-doc'
 
-
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'plastid.tex', u'Plastid Documentation',
-   u'Joshua G. Dunn', 'manual'),
+    ('index', 'plastid.tex', u'Plastid Documentation', u'Joshua G. Dunn', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -382,19 +375,14 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'plastid', u'plastid Documentation',
-     [u'Joshua Griffin Dunn'], 1)
-]
+man_pages = [('index', 'plastid', u'plastid Documentation', [u'Joshua Griffin Dunn'], 1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -402,9 +390,10 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'plastid', u'plastid Documentation',
-   u'Joshua Griffin Dunn', 'plastid', 'One line description of project.',
-   'Miscellaneous'),
+    (
+        'index', 'plastid', u'plastid Documentation', u'Joshua Griffin Dunn', 'plastid',
+        'One line description of project.', 'Miscellaneous'
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -418,4 +407,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-

@@ -192,7 +192,7 @@ GenomeArrays also offer utilities for summing and normalization::
     >>> genome_array.to_bedgraph(open("some_file_normalized.wig","w"),"my_normalized_track","+")
 
 """
-__date__ =  "May 3, 2011"
+__date__ = "May 3, 2011"
 __author__ = "joshua"
 from abc import abstractmethod
 import itertools
@@ -214,8 +214,7 @@ from plastid.util.io.openers import NullWriter, multiopen
 
 from plastid.genomics.map_factories import *
 
-MIN_CHR_SIZE = int(10*1e6) # 10 Mb minimum size for unspecified chromosomes 
-
+MIN_CHR_SIZE = int(10 * 1e6)  # 10 Mb minimum size for unspecified chromosomes
 
 #===============================================================================
 # INDEX: Mapping functions for GenomeArray and SparseGenomeArray.
@@ -225,7 +224,8 @@ MIN_CHR_SIZE = int(10*1e6) # 10 Mb minimum size for unspecified chromosomes
 #        See function documentation for more details
 #===============================================================================
 
-def center_map(feature,**kwargs):
+
+def center_map(feature, **kwargs):
     """Center-mapping function used as an argument to :py:meth:`GenomeArray.add_from_bowtie`.
     A user-specified number of bases is optionally removed from each side of each
     read alignment, and the `N` remaining bases are each apportioned `1/N`
@@ -252,27 +252,28 @@ def center_map(feature,**kwargs):
     """
     nibble = kwargs["nibble"]
     read_length = feature.length
-    if read_length <= 2*nibble:
-        warn("File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these." % (read_length,2*nibble),
-             DataWarning)
+    if read_length <= 2 * nibble:
+        warn(
+            "File contains read alignments shorter (%s nt) than `2*'nibble'` value of %s nt. Ignoring these."
+            % (read_length, 2 * nibble), DataWarning
+        )
         return []
 
+    # yapf: disable
     span = feature.spanning_segment
     strand = span.strand
     chrom  = span.chrom
-    offset = kwargs.get("offset",0)
-    value  = float(kwargs.get("value",1.0))
+    offset = kwargs.get("offset", 0)
+    value  = float(kwargs.get("value", 1.0))
     sign   = -1 if strand == "-" else 1
-    start  = span.start + nibble + sign*offset
-    end    = span.end   - nibble + sign*offset
-    seg = GenomicSegment(chrom,
-                         start,
-                         end,
-                         strand)
-    frac = value/len(seg)
-    return [(seg,frac)]
+    start  = span.start + nibble + sign * offset
+    end    = span.end - nibble + sign * offset
+    seg    = GenomicSegment(chrom, start, end, strand)
+    frac   = value / len(seg)
+    return [(seg, frac)]
 
-def five_prime_map(feature,**kwargs):
+
+def five_prime_map(feature, **kwargs):
     """Fiveprime mapping function used as an argument to :py:meth:`GenomeArray.add_from_bowtie`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
     
@@ -292,27 +293,27 @@ def five_prime_map(feature,**kwargs):
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    offset  = kwargs.get("offset",0)
+    offset = kwargs.get("offset", 0)
     read_length = feature.length
     if offset > read_length:
-        warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-             DataWarning)
+        warn(
+            "File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." %
+            (read_length, offset), DataWarning
+        )
         return []
 
-    value   = kwargs.get("value",1.0)
+    value = kwargs.get("value", 1.0)
     span = feature.spanning_segment
     strand = span.strand
-    if strand in ("+","."):
+    if strand in ("+", "."):
         start = span.start + offset
     else:
         start = span.end - 1 - offset
-    seg = GenomicSegment(span.chrom,
-                         start,
-                         start+1,
-                         strand)
-    return [(seg,value)]
+    seg = GenomicSegment(span.chrom, start, start + 1, strand)
+    return [(seg, value)]
 
-def three_prime_map(feature,**kwargs):
+
+def three_prime_map(feature, **kwargs):
     """Threeprime mapping function used as an argument to :py:meth:`GenomeArray.add_from_bowtie`.
     Reads are mapped at a user-specified offset from the threeprime end of the alignment.
     
@@ -332,27 +333,27 @@ def three_prime_map(feature,**kwargs):
     list
         tuples of `(GenomicSegment,float value over segment)`
     """
-    offset  = kwargs.get("offset",0)
+    offset = kwargs.get("offset", 0)
     read_length = feature.length
     if offset > read_length:
-        warn("File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." % (read_length,offset),
-             DataWarning)
+        warn(
+            "File contains read alignments shorter (%s nt) than offset (%s nt). Ignoring." %
+            (read_length, offset), DataWarning
+        )
         return []
 
-    value   = kwargs.get("value",1.0)
+    value = kwargs.get("value", 1.0)
     span = feature.spanning_segment
     strand = span.strand
-    if strand in ("+","."):
+    if strand in ("+", "."):
         start = span.end - 1 - offset
     else:
         start = span.start + offset
-    seg = GenomicSegment(span.chrom,
-                         start,
-                         start+1,
-                         strand)
-    return [(seg,value)]
+    seg = GenomicSegment(span.chrom, start, start + 1, strand)
+    return [(seg, value)]
 
-def variable_five_prime_map(feature,**kwargs):
+
+def variable_five_prime_map(feature, **kwargs):
     """Fiveprime variable mapping function used as an argument to :py:meth:`GenomeArray.add_from_bowtie`.
     Reads are mapped at a user-specified offset from the fiveprime end of the alignment.
     The offset for a read of a given length is supplied in `kwargs[offset][readlen]`
@@ -375,37 +376,34 @@ def variable_five_prime_map(feature,**kwargs):
     """
     span = feature.spanning_segment
     strand = span.strand
-    value   = kwargs.get("value",1.0)
-    offset  = kwargs["offset"].get(len(span),kwargs["offset"].get("default",None))
+    value = kwargs.get("value", 1.0)
+    offset = kwargs["offset"].get(len(span), kwargs["offset"].get("default", None))
     feature_length = feature.length
     if offset is None:
-        warn("No offset for reads of length %s. Ignoring." % feature_length,DataWarning)
+        warn("No offset for reads of length %s. Ignoring." % feature_length, DataWarning)
         return []
     if offset >= feature_length:
-        warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset,feature_length))
+        warn("Offset (%s nt) longer than read length %s. Ignoring" % (offset, feature_length))
 
-    if strand in ("+","."):
+    if strand in ("+", "."):
         start = span.start + offset
     else:
         start = span.end - 1 - offset
-    seg = GenomicSegment(span.chrom,
-                         start,
-                         start+1,
-                         strand)
-    return [(seg,value)]    
+    seg = GenomicSegment(span.chrom, start, start + 1, strand)
+    return [(seg, value)]
 
-    
 
 #===============================================================================
 # GenomeArray classes
 #===============================================================================
 
-_DEFAULT_STRANDS = ("+","-")
+_DEFAULT_STRANDS = ("+", "-")
+
 
 class AbstractGenomeArray(object):
     """Abstract base class for all |GenomeArray|-like objects"""
-    
-    def __init__(self,chr_lengths=None,strands=None):
+
+    def __init__(self, chr_lengths=None, strands=None):
         """
         Parameters
         ----------
@@ -419,14 +417,14 @@ class AbstractGenomeArray(object):
         strands : sequence, optional
             Strands for the |AbstractGenomeArray|. (Default: `("+","-")`)
         """
-        self._chroms       = {}
-        self._strands      = _DEFAULT_STRANDS if strands is None else strands
-        self._sum          = None
-        self._normalize    = False
+        self._chroms = {}
+        self._strands = _DEFAULT_STRANDS if strands is None else strands
+        self._sum = None
+        self._normalize = False
 
     def __str__(self):
         return repr(self)
-    
+
     def __repr__(self):
         stmp = "<%s len=%s sum=%s chroms=" % (self.__class__.__name__, len(self), self.sum())
         stmp += ",".join(self.chroms())
@@ -434,7 +432,7 @@ class AbstractGenomeArray(object):
         stmp += ">"
         return stmp
 
-    def __contains__(self,chrom):
+    def __contains__(self, chrom):
         """Return `True` if `chrom` is defined in the array, otherwise False
         
         Returns
@@ -451,10 +449,10 @@ class AbstractGenomeArray(object):
         -------
         int
         """
-        return len(self._strands)*sum(self.lengths().values())
-    
+        return len(self._strands) * sum(self.lengths().values())
+
     @abstractmethod
-    def __getitem__(self,roi):
+    def __getitem__(self, roi):
         """Retrieve array of counts from a region of interest. The values in
         the returned array are in 5' to 3' with respect to `seg` rather than
         the genome (i.e. are reversed for reverse-strand features).
@@ -476,12 +474,12 @@ class AbstractGenomeArray(object):
             Fetch a spliced vector of data covering a |SegmentChain|
         """
         pass
-    
-    @abstractmethod    
+
+    @abstractmethod
     def reset_sum(self):
         """Reset sum to total mapped reads in the GenomeArray"""
 
-    def set_sum(self,val):
+    def set_sum(self, val):
         """Set sum used for normalization to an arbitrary value (e.g. from another dataset)
         
         Parameters
@@ -490,7 +488,7 @@ class AbstractGenomeArray(object):
             a number
         """
         self._sum = val
-        
+
     def sum(self):
         """Return the total number of aligned reads or the sum of the 
         quantitative data across all positions in the GenomeArray
@@ -506,10 +504,10 @@ class AbstractGenomeArray(object):
         """
         if self._sum is None:
             self.reset_sum()
-        
+
         return self._sum
 
-    def set_normalize(self,value=True):
+    def set_normalize(self, value=True):
         """Toggle normalization of reported values to reads per million mapped in the dataset
         
         Parameters
@@ -518,7 +516,7 @@ class AbstractGenomeArray(object):
             If `True`, all values fetched will be normalized to reads
             per million. If `False`, all values will not be normalized.
         """
-        assert value in (True,False)
+        assert value in (True, False)
         self._normalize = value
 
     def chroms(self):
@@ -530,7 +528,7 @@ class AbstractGenomeArray(object):
             Chromosome names as strings
         """
         return self._chroms.keys()
-    
+
     def strands(self):
         """Return a tuple of strands in the GenomeArray
         
@@ -561,8 +559,9 @@ class MutableAbstractGenomeArray(AbstractGenomeArray):
     """Abstract base class for |GenomeArray|-like objects whose values can be
     changed
     """
+
     @abstractmethod
-    def __setitem__(self,seg,val):
+    def __setitem__(self, seg, val):
         """Set values in |MutableAbstractGenomeArray| over a region of interest.
         
         Parameters
@@ -623,8 +622,8 @@ class BAMGenomeArray(AbstractGenomeArray):
     to change the data in-place, the |BAMGenomeArray| can be converted to a
     |GenomeArray| or |SparseGenomeArray| via :meth:`~BAMGenomeArray.to_genome_array`
     """
-    
-    def __init__(self,*bamfiles,**kwargs): #mapping=None):
+
+    def __init__(self, *bamfiles, **kwargs):  #mapping=None):
         """Create a |BAMGenomeArray|
         
         Parameters
@@ -655,24 +654,24 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.map_factories.CenterMapFactory
             map each read fractionally to every position in the read, optionally trimming positions from the ends first
         """
-        if len(bamfiles) == 1 and isinstance(bamfiles[0],list):
+        if len(bamfiles) == 1 and isinstance(bamfiles[0], list):
             bamfiles = bamfiles[0]
-            
-        bamfiles = list(multiopen(bamfiles,fn=pysam.AlignmentFile,args=("rb",)))
+
+        bamfiles = list(multiopen(bamfiles, fn=pysam.AlignmentFile, args=("rb", )))
         #bamfiles = [pysam.AlignmentFile(X,"rb") if isinstance(X,str) else X for X in bamfiles]
-        self.bamfiles     = bamfiles
-        self.map_fn       = kwargs.get("mapping",CenterMapFactory()) # if mapping is None else mapping
-        self._strands     = ("+","-",".")
-        self._normalize   = False
-        
+        self.bamfiles = bamfiles
+        self.map_fn = kwargs.get("mapping", CenterMapFactory())  # if mapping is None else mapping
+        self._strands = ("+", "-", ".")
+        self._normalize = False
+
         self._chr_lengths = {}
         for bamfile in self.bamfiles:
-            for k,v in zip(bamfile.references,bamfile.lengths):
-                self._chr_lengths[k] = max(self._chr_lengths.get(k,0),v)
-        
+            for k, v in zip(bamfile.references, bamfile.lengths):
+                self._chr_lengths[k] = max(self._chr_lengths.get(k, 0), v)
+
         self._chroms = sorted(list(self._chr_lengths.keys()))
 
-        self._filters     = OrderedDict()
+        self._filters = OrderedDict()
         self._update()
 
     def __del__(self):
@@ -689,13 +688,13 @@ class BAMGenomeArray(AbstractGenomeArray):
         reads.
         """
         self._sum = sum([X.mapped for X in self.bamfiles])
-        
+
     def _update(self):
         """Updates mapping function to suit mapping rules
         """
         self.reset_sum()
 
-    def add_filter(self,name,func):
+    def add_filter(self, name, func):
         """Apply a function to filter reads retrieved from regions before mapping and counting
         
         Parameters
@@ -721,8 +720,8 @@ class BAMGenomeArray(AbstractGenomeArray):
             generate filter functions that gate read alignments on size
         """
         self._filters[name] = func
-    
-    def remove_filter(self,name):
+
+    def remove_filter(self, name):
         """Remove a generic filter
         
         Parameters
@@ -737,7 +736,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         retval = self._filters.pop(name)
         return retval
-    
+
     def chroms(self):
         """Returns a list of chromosomes
         
@@ -757,8 +756,8 @@ class BAMGenomeArray(AbstractGenomeArray):
             mapping chromosome names to lengths
         """
         return self._chr_lengths
-        
-    def get_reads_and_counts(self,roi,roi_order=True):
+
+    def get_reads_and_counts(self, roi, roi_order=True):
         """Return :term:`read alignments` covering a |GenomicSegment|, and a
         count vector mapping reads to each positions in the |GenomicSegment|,
         following the rule specified by :meth:`~BAMGenomeArray.set_mapping`.
@@ -788,46 +787,51 @@ class BAMGenomeArray(AbstractGenomeArray):
             if bamfiles not sorted or not indexed
         """
         # fetch reads
-        chrom  = roi.chrom
+        chrom = roi.chrom
         strand = roi.strand
-        start  = roi.start
-        end    = roi.end
-        
+        start = roi.start
+        end = roi.end
+
         if chrom not in self.chroms():
             # FIXME: generalize to N-D
-            shape = [1] + getattr(self.map_fn,"shape",[])
+            shape = [1] + getattr(self.map_fn, "shape", [])
             return [], numpy.zeros(shape)
 
-        reads = itertools.chain.from_iterable((X.fetch(reference=chrom,
-                                               start=start,
-                                               end=end,
-                                               # until_eof=True, # this could speed things up. need to test/investigate
-                                               ) for X in self.bamfiles))
-            
+        reads = itertools.chain.from_iterable(
+            (
+                X.fetch(
+                    reference=chrom,
+                    start=start,
+                    end=end,
+                    # until_eof=True, # this could speed things up. need to test/investigate
+                ) for X in self.bamfiles
+            )
+        )
+
         # filter by strand
         if strand == "+":
-            reads = ifilter(lambda x: x.is_reverse is False,reads)
+            reads = ifilter(lambda x: x.is_reverse is False, reads)
         elif strand == "-":
-            reads = ifilter(lambda x: x.is_reverse is True,reads)
-        
+            reads = ifilter(lambda x: x.is_reverse is True, reads)
+
         # Pass through additional filters (e.g. size filters, if they have
         # been added)
         for my_filter in self._filters.values():
-            reads = ifilter(my_filter,reads)
-        
+            reads = ifilter(my_filter, reads)
+
         # retrieve selected parts of regions
-        reads,count_array = self.map_fn(list(reads),roi)
-        
+        reads, count_array = self.map_fn(list(reads), roi)
+
         # normalize to reads per million if normalization flag is set
         if self._normalize is True:
             count_array = count_array / float(self.sum()) * 1e6
-        
+
         if roi_order == True and strand == "-":
-            count_array = count_array[...,::-1]
+            count_array = count_array[..., ::-1]
 
         return reads, count_array
 
-    def get_reads(self,roi):
+    def get_reads(self, roi):
         """Returns reads covering a |GenomicSegment|. Reads are strand-matched
         to `roi` by default, and are included or excluded depending upon the
         rule specified by :meth:`~BAMGenomeArray.set_mapping`. To obtain unstranded
@@ -854,7 +858,7 @@ class BAMGenomeArray(AbstractGenomeArray):
         reads, _ = self.get_reads_and_counts(roi)
         return reads
 
-    def __getitem__(self,roi): 
+    def __getitem__(self, roi):
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -882,9 +886,9 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self.get(roi,roi_order=True)
+        return self.get(roi, roi_order=True)
 
-    def get(self,roi,roi_order=True): 
+    def get(self, roi, roi_order=True):
         """Retrieve array of counts from a region of interest, following
         the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         Values in the vector are ordered 5' to 3' relative to `roi`
@@ -916,10 +920,10 @@ class BAMGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        if isinstance(roi,SegmentChain):
+        if isinstance(roi, SegmentChain):
             return roi.get_counts(self)
 
-        _, count_array = self.get_reads_and_counts(roi,roi_order=roi_order)
+        _, count_array = self.get_reads_and_counts(roi, roi_order=roi_order)
 
         return count_array
 
@@ -927,8 +931,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         """Return the docstring of the current mapping function
         """
         return self.map_fn.__doc__
-    
-    def set_mapping(self,mapping_function):
+
+    def set_mapping(self, mapping_function):
         """Change the mapping rule
         
         Parameters
@@ -957,8 +961,8 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         self.map_fn = mapping_function
         self._update()
-    
-    def to_genome_array(self,array_type=None):
+
+    def to_genome_array(self, array_type=None):
         """Converts |BAMGenomeArray| to a |GenomeArray| or |SparseGenomeArray|
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`
 
@@ -974,16 +978,16 @@ class BAMGenomeArray(AbstractGenomeArray):
         """
         if array_type is None:
             array_type = GenomeArray
-            
-        ga = array_type(chr_lengths=self.lengths(),strands=self.strands())
+
+        ga = array_type(chr_lengths=self.lengths(), strands=self.strands())
         for chrom in self.chroms():
             for strand in self.strands():
-                seg = GenomicSegment(chrom,0,self.lengths()[chrom]-1,strand)
+                seg = GenomicSegment(chrom, 0, self.lengths()[chrom] - 1, strand)
                 ga[seg] = self[seg]
 
         return ga
 
-    def to_variable_step(self,fh,trackname,strand,window_size=100000,printer=None,**kwargs):
+    def to_variable_step(self, fh, trackname, strand, window_size=100000, printer=None, **kwargs):
         """Write the contents of the |BAMGenomeArray| to a variableStep `Wiggle`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1014,26 +1018,27 @@ class BAMGenomeArray(AbstractGenomeArray):
         printer = NullWriter() if printer is None else printer
         fh.write("track type=wiggle_0 name=%s" % trackname)
         if kwargs is not None:
-            for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
-                fh.write(" %s=%s" % (k,v))
+            for k, v in sorted(kwargs.items(), key=lambda x: x[0]):
+                fh.write(" %s=%s" % (k, v))
         fh.write("\n")
 
         for chrom in sorted(self.chroms()):
             my_size = self.lengths()[chrom]
             printer.write("Writing chromosome %s..." % chrom)
             fh.write("variableStep chrom=%s span=1\n" % chrom)
-            window_starts = xrange(0,self._chr_lengths[chrom],window_size)
+            window_starts = xrange(0, self._chr_lengths[chrom], window_size)
             for my_start in window_starts:
-                my_end = min(my_start + window_size,my_size)
-                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),
-                                    roi_order=False)
+                my_end = min(my_start + window_size, my_size)
+                my_counts = self.get(
+                    GenomicSegment(chrom, my_start, my_end, strand), roi_order=False
+                )
                 if my_counts.sum() > 0:
                     for idx in my_counts.nonzero()[0]:
                         genomic_x = my_start + idx
                         val = my_counts[idx]
-                        fh.write("%s\t%s\n" % (genomic_x + 1,val))
+                        fh.write("%s\t%s\n" % (genomic_x + 1, val))
 
-    def to_bedgraph(self,fh,trackname,strand,window_size=100000,printer=None,**kwargs):
+    def to_bedgraph(self, fh, trackname, strand, window_size=100000, printer=None, **kwargs):
         """Write the contents of the |BAMGenomeArray| to a `bedGraph`_ file
         under the mapping rule set by :meth:`~BAMGenomeArray.set_mapping`.
         
@@ -1067,29 +1072,35 @@ class BAMGenomeArray(AbstractGenomeArray):
         # write header
         fh.write("track type=bedGraph name=%s" % trackname)
         if kwargs is not None:
-            for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
-                fh.write(" %s=%s" % (k,v))
+            for k, v in sorted(kwargs.items(), key=lambda x: x[0]):
+                fh.write(" %s=%s" % (k, v))
         fh.write("\n")
-        
+
         for chrom in sorted(self.chroms()):
             printer.write("Writing chromosome %s..." % chrom)
-            window_starts = xrange(0,self._chr_lengths[chrom],window_size)
+            window_starts = xrange(0, self._chr_lengths[chrom], window_size)
             my_size = self.lengths()[chrom]
             for my_start in window_starts:
-                my_end   = min(my_start + window_size,my_size) 
-                my_counts = self.get(GenomicSegment(chrom,my_start,my_end,strand),roi_order=False)
-                
+                my_end = min(my_start + window_size, my_size)
+                my_counts = self.get(
+                    GenomicSegment(chrom, my_start, my_end, strand),
+                    roi_order=False
+                )
+
                 if my_counts.sum() > 0:
                     genomic_start_x = my_start
-                    last_val        = my_counts[0]
+                    last_val = my_counts[0]
 
                     for x, val in enumerate(my_counts[1:]):
                         if val != last_val:
                             genomic_end_x = 1 + x + my_start
                             #write line: chrom chromStart chromEnd dataValue. 0-based half-open
                             if last_val > 0:
-                                fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,genomic_end_x,last_val))
-                            
+                                fh.write(
+                                    "%s\t%s\t%s\t%s\n" %
+                                    (chrom, genomic_start_x, genomic_end_x, last_val)
+                                )
+
                             #update variables
                             last_val = val
                             genomic_start_x = genomic_end_x
@@ -1097,10 +1108,7 @@ class BAMGenomeArray(AbstractGenomeArray):
                             continue
                     # write out last values for window
                     if last_val > 0:
-                        fh.write("%s\t%s\t%s\t%s\n" % (chrom,genomic_start_x,
-                                                       my_end,
-                                                       last_val))
-
+                        fh.write("%s\t%s\t%s\t%s\n" % (chrom, genomic_start_x, my_end, last_val))
 
 
 class BigWigGenomeArray(AbstractGenomeArray):
@@ -1116,7 +1124,8 @@ class BigWigGenomeArray(AbstractGenomeArray):
         (Default: 0, No maximum)        
     
     """
-    def __init__(self,maxmem=0,**kwargs): #,fill=0.0):
+
+    def __init__(self, maxmem=0, **kwargs):
         """Create a |BigWigGenomeArray|.
         
         `BigWig`_ files may be added to the array via
@@ -1129,25 +1138,16 @@ class BigWigGenomeArray(AbstractGenomeArray):
             May be temporarily exceeded if large queries are requested.
             (Default: 0, No maximum)        
         """
-#         """
-#         
-#         Parameters
-#         ----------
-#         fill : float, optional
-#             Default fill value for data missing in the `BigWig`_ file.
-#             Default value is 0, as `wiggle`_, `bedGraph`_ and `BigWig`_
-#             files often don't explicitly list zero positions.
-#         """
         self._strand_dict = {}
         self._normalize = False
-        self._chromset  = None
-        self._sum       = None
-        self._lengths   = None
-        self._strands   = []
-        self._maxmem    = maxmem
-        self.fill       = 0.0 # fill
-    
-    def __getitem__(self,roi):
+        self._chromset = None
+        self._sum = None
+        self._lengths = None
+        self._strands = []
+        self._maxmem = maxmem
+        self.fill = 0.0  # fill
+
+    def __getitem__(self, roi):
         """Retrieve array of counts from a region of interest.
         
         Parameters
@@ -1166,9 +1166,9 @@ class BigWigGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self.get(roi,roi_order=True)
+        return self.get(roi, roi_order=True)
 
-    def get(self,roi,roi_order=True):
+    def get(self, roi, roi_order=True):
         """Retrieve array of counts from a region of interest.
         
         Parameters
@@ -1191,27 +1191,31 @@ class BigWigGenomeArray(AbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        if isinstance(roi,SegmentChain):
+        if isinstance(roi, SegmentChain):
             return roi.get_counts(self)
-        
+
         strand = roi.strand
-        sdict  = self._strand_dict
-        
+        sdict = self._strand_dict
+
         count_vec = numpy.zeros(len(roi))
         if strand in sdict:
             for bw in sdict[strand]:
-                count_vec += bw.get(roi,roi_order=False) # we flip later to save operations
+                 # we flip strand later to save operations
+                count_vec += bw.get(roi, roi_order=False)
         else:
-            warnings.warn("Strand '%s' not in BigWigGenomeArray (has %s)." % (strand,", ".join(sdict.keys())),DataWarning)
+            warnings.warn(
+                "Strand '%s' not in BigWigGenomeArray (has %s)." %
+                (strand, ", ".join(sdict.keys())), DataWarning
+            )
 
         if self._normalize is True:
             count_vec = count_vec / float(self.sum()) * 1e6
-        
+
         if roi_order == True and strand == "-":
             count_vec = count_vec[::-1]
-            
+
         return count_vec
-        
+
     def strands(self):
         """Return a tuple of strands in the GenomeArray
         
@@ -1219,9 +1223,9 @@ class BigWigGenomeArray(AbstractGenomeArray):
         -------
         tuple
             Chromosome strands as strings
-        """        
-        return self._strands #sorted(tuple(self._strand_dict.keys()))
-    
+        """
+        return self._strands
+
     def chroms(self):
         """Return a list of chromosomes in the GenomeArray
         
@@ -1229,7 +1233,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         -------
         list
             Chromosome names as strings
-        """        
+        """
         if self._chromset is not None:
             return self._chromset
         else:
@@ -1237,10 +1241,10 @@ class BigWigGenomeArray(AbstractGenomeArray):
             for ltmp in self._strand_dict.values():
                 for bw in ltmp:
                     chromset.extend(bw.chroms.keys())
-        
+
             self._chromset = set(chromset)
             return self._chromset
-    
+
     def lengths(self):
         """Return a dictionary mapping chromosome names to lengths.
         When two strands report different lengths for a chromosome, the
@@ -1250,7 +1254,7 @@ class BigWigGenomeArray(AbstractGenomeArray):
         -------
         dict
             Dictionary mapping chromosome names to chromosome lengths
-        """        
+        """
         if self._lengths is not None:
             return self._lengths
         else:
@@ -1258,13 +1262,13 @@ class BigWigGenomeArray(AbstractGenomeArray):
             for ltmp in self._strand_dict.values():
                 for bw in ltmp:
                     sizedict = bw.chroms
-                    for k,v in sizedict.items():
-                        lengths[k] = max(lengths.get(k,0),v)
-            
+                    for k, v in sizedict.items():
+                        lengths[k] = max(lengths.get(k, 0), v)
+
             self._lengths = lengths
             return lengths
-        
-    def add_from_bigwig(self,filename,strand):
+
+    def add_from_bigwig(self, filename, strand):
         """Import additional data from a `BigWig`_ file
         
         Parameters
@@ -1276,15 +1280,15 @@ class BigWigGenomeArray(AbstractGenomeArray):
             Strand to which data should be added. `'+'`, `'-'`, or `'.'`
         """
         self._chromset = None
-        self._lengths  = None
-        self._sum      = None
-        bw = BigWigReader(filename,fill=self.fill,maxmem=self._maxmem)
-        
+        self._lengths = None
+        self._sum = None
+        bw = BigWigReader(filename, fill=self.fill, maxmem=self._maxmem)
+
         try:
             self._strand_dict[strand].append(bw)
-        except KeyError:       
+        except KeyError:
             self._strand_dict[strand] = [bw]
-            
+
         self._strands = sorted(self._strand_dict.keys())
 
     def reset_sum(self):
@@ -1293,10 +1297,10 @@ class BigWigGenomeArray(AbstractGenomeArray):
         for ltmp in self._strand_dict.values():
             for bw in ltmp:
                 my_sum += bw.sum()
- 
-        self._sum = my_sum       
+
+        self._sum = my_sum
         return my_sum
-    
+
     def to_genome_array(self):
         """Converts |BigWigGenomeArray| to a |GenomeArray|
 
@@ -1304,18 +1308,18 @@ class BigWigGenomeArray(AbstractGenomeArray):
         -------
         |GenomeArray|
         """
-        ga = GenomeArray(chr_lengths=self.lengths(),strands=self.strands())
+        ga = GenomeArray(chr_lengths=self.lengths(), strands=self.strands())
         for chrom, length in self.lengths().items():
             for strand in self._strands:
-                region = GenomicSegment(chrom,0,length,strand)
-                for reader in self._strand_dict.get(strand,[]):
-                    old = ga.get(region,roi_order = False)
+                region = GenomicSegment(chrom, 0, length, strand)
+                for reader in self._strand_dict.get(strand, []):
+                    old = ga.get(region, roi_order=False)
                     new = old + reader.get_chromosome_counts(chrom)
-                    ga.__setitem__(region,new,roi_order = False) 
+                    ga.__setitem__(region, new, roi_order=False)
 
         return ga
-        
-        
+
+
 class GenomeArray(MutableAbstractGenomeArray):
     """Array-like data structure that maps numerical values (e.g. read :term:`counts`
     or conservation data, et c) to nucleotide positions in a genome.
@@ -1346,8 +1350,8 @@ class GenomeArray(MutableAbstractGenomeArray):
     strands : sequence
         Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)    
     """
-    def __init__(self,chr_lengths=None,strands=None,
-                 min_chr_size=MIN_CHR_SIZE):
+
+    def __init__(self, chr_lengths=None, strands=None, min_chr_size=MIN_CHR_SIZE):
         """Create a |GenomeArray|
         
         Parameters
@@ -1370,11 +1374,11 @@ class GenomeArray(MutableAbstractGenomeArray):
         strands : sequence
             Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """
-        self._chroms       = {}
-        self._strands      = _DEFAULT_STRANDS if strands is None else strands
-        self.min_chr_size  = min_chr_size
-        self._sum          = None
-        self._normalize    = False
+        self._chroms = {}
+        self._strands = _DEFAULT_STRANDS if strands is None else strands
+        self.min_chr_size = min_chr_size
+        self._sum = None
+        self._normalize = False
         if chr_lengths is not None:
             for chrom in chr_lengths.keys():
                 self._chroms[chrom] = {}
@@ -1386,8 +1390,8 @@ class GenomeArray(MutableAbstractGenomeArray):
         """Reset the sum of the |GenomeArray| to the sum of all positions in the array
         """
         self._sum = sum([X.sum() for X in self.iterchroms()])
-        
-    def _has_same_dimensions(self,other):
+
+    def _has_same_dimensions(self, other):
         """Return `True` if `self` and `other` have the chromosomes, strands, and chromosome lengths
         
         Parameters
@@ -1403,7 +1407,7 @@ class GenomeArray(MutableAbstractGenomeArray):
         assert self.strands() == other.strands()
         assert self.lengths() == other.lengths()
 
-    def __eq__(self,other,tol=1e-10):
+    def __eq__(self, other, tol=1e-10):
         """Test equality between `self` and `other`.
         
         To be equal, both |GenomeArrays| must have identical values at all
@@ -1422,25 +1426,31 @@ class GenomeArray(MutableAbstractGenomeArray):
         onz = other.nonzero()
         for chrom in set(self.chroms()) | set(other.chroms()):
             for strand in set(self.strands()) | set(other.strands()):
-                self_nonzero_vec  = snz.get(chrom,{K : numpy.array([]) for K in self.strands()}).get(strand,numpy.array([]))
-                other_nonzero_vec = onz.get(chrom,{K : numpy.array([]) for K in other.strands()}).get(strand,numpy.array([]))
+                self_nonzero_vec = snz.get(chrom,
+                                           {K: numpy.array([])
+                                            for K in self.strands()}).get(strand, numpy.array([]))
+                other_nonzero_vec = onz.get(chrom, {K: numpy.array([])
+                                                    for K in other.strands()
+                                                    }).get(strand, numpy.array([]))
 
                 if len(self_nonzero_vec) != len(other_nonzero_vec):
                     return False
-                
+
                 # indices of nonzero positions must be same
                 if (self_nonzero_vec != other_nonzero_vec).any():
                     return False
-                
+
                 # values of nonzero positions must be same
                 if len(self_nonzero_vec) > 0:
-                    test_seg = GenomicSegment(chrom,self_nonzero_vec.min(),self_nonzero_vec.max(),strand)
+                    test_seg = GenomicSegment(
+                        chrom, self_nonzero_vec.min(), self_nonzero_vec.max(), strand
+                    )
                     if not (self[test_seg] - other[test_seg] <= tol).all():
                         return False
 
         return True
-        
-    def __getitem__(self,roi):
+
+    def __getitem__(self, roi):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand
@@ -1462,9 +1472,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        return self.get(roi,roi_order=True)
-    
-    def get(self,roi,roi_order=True):
+        return self.get(roi, roi_order=True)
+
+    def get(self, roi, roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand
@@ -1490,18 +1500,18 @@ class GenomeArray(MutableAbstractGenomeArray):
         plastid.genomics.roitools.SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        if isinstance(roi,SegmentChain):
+        if isinstance(roi, SegmentChain):
             return roi.get_counts(self)
-        
-        chrom  = roi.chrom
+
+        chrom = roi.chrom
         strand = roi.strand
-        start  = roi.start
-        end    = roi.end
+        start = roi.start
+        end = roi.end
         try:
             assert roi.end < len(self._chroms[chrom][strand])
         except AssertionError:
             my_len = len(self._chroms[chrom][strand])
-            new_size = max(my_len + 10000,end + 10000)
+            new_size = max(my_len + 10000, end + 10000)
             for my_strand in self.strands():
                 new_strand = copy.deepcopy(self._chroms[roi.chrom][my_strand])
                 new_strand.resize(new_size)
@@ -1512,17 +1522,17 @@ class GenomeArray(MutableAbstractGenomeArray):
                 self._chroms[chrom] = {}
                 for my_strand in self.strands():
                     self._chroms[chrom][my_strand] = numpy.zeros(self.min_chr_size)
-        
+
         vals = self._chroms[chrom][strand][start:end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
-            
+
         if roi_order == True and strand == "-":
             vals = vals[::-1]
 
         return vals
-    
-    def __setitem__(self,seg,val,roi_order=True):
+
+    def __setitem__(self, seg, val, roi_order=True):
         """Set values in the |GenomeArray| over a region of interest.
         
         If the `seg` is outside the bounds of the current |GenomeArray|,
@@ -1548,60 +1558,62 @@ class GenomeArray(MutableAbstractGenomeArray):
         """
         self._sum = None
 
-        if isinstance(seg,SegmentChain):
-            if isinstance(val,numpy.ndarray):
+        if isinstance(seg, SegmentChain):
+            if isinstance(val, numpy.ndarray):
                 if seg.spanning_segment.strand == "-":
                     val = val[::-1]
 
             x = 0
             for subseg in seg:
-                if isinstance(val,numpy.ndarray):
-                    subval = val[x:x+len(subseg)]
+                if isinstance(val, numpy.ndarray):
+                    subval = val[x:x + len(subseg)]
                 else:
                     subval = val
                 x += len(subseg)
-                self.__setitem__(subseg,subval,roi_order=False)
+                self.__setitem__(subseg, subval, roi_order=False)
 
             return
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn(
+                "Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",
+                DataWarning
+            )
 
         self.set_normalize(False)
 
-
-        chrom  = seg.chrom
+        chrom = seg.chrom
         strand = seg.strand
-        start  = seg.start
-        end    = seg.end
-        if strand == "-" and isinstance(val,numpy.ndarray) and roi_order == True:
+        start = seg.start
+        end = seg.end
+        if strand == "-" and isinstance(val, numpy.ndarray) and roi_order == True:
             val = val[::-1]
 
         try:
             assert end < len(self._chroms[seg.chrom][seg.strand])
         except AssertionError:
             my_len = len(self._chroms[chrom][strand])
-            new_size = max(my_len + 10000,end + 10000)
+            new_size = max(my_len + 10000, end + 10000)
             for my_strand in self.strands():
-                # this looks silly; but resize() can't work in-place iwth refs to array
+                # copy then resize, because resize() can't work in-place with refs to array
                 new_strand = copy.deepcopy(self._chroms[chrom][my_strand])
                 new_strand.resize(new_size)
-                self._chroms[chrom][my_strand]  = new_strand
+                self._chroms[chrom][my_strand] = new_strand
         except KeyError:
             assert strand in self.strands()
             if chrom not in self.keys():
                 self._chroms[chrom] = {}
                 for my_strand in self.strands():
-                    self._chroms[chrom][my_strand] = numpy.zeros(self.min_chr_size) 
-            
+                    self._chroms[chrom][my_strand] = numpy.zeros(self.min_chr_size)
+
         self._chroms[chrom][strand][start:end] = val
         self.set_normalize(old_normalize)
 
     def keys(self):
         """Return names of chromosomes in the GenomeArray"""
         return self.chroms()
-    
+
     def iterchroms(self):
         """Return an iterator of each chromosome strand array
         
@@ -1613,9 +1625,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         for chrom in self.keys():
             for strand in self.strands():
                 yield self._chroms[chrom][strand]
-    
-    # no unit test for this
-    def plot(self,chroms=None,strands=None,**plot_kw):
+
+    #TODO: no unit test for this
+    def plot(self, chroms=None, strands=None, **plot_kw):
         """Create a plot of coverage along tracks or chromosomes
         
         Parameters
@@ -1638,32 +1650,32 @@ class GenomeArray(MutableAbstractGenomeArray):
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        fig_kw = { 'figsize' : (8,10) }
-        colors = { "+" : "blue", "-" : "orange", "." : "darkgreen" }        
-        
+        fig_kw = {'figsize': (8, 10)}
+        colors = {"+": "blue", "-": "orange", ".": "darkgreen"}
+
         if chroms is None:
             chroms = self.keys()
-        
+
         if strands is None:
             strands = self.strands()
-            
+
         fig_kw.update(plot_kw)
-        f, axes = plt.subplots(nrows=len(chroms),**fig_kw)
+        f, axes = plt.subplots(nrows=len(chroms), **fig_kw)
         plt.subplots_adjust(hspace=0.3)
-        for n,chrom in enumerate(sorted(chroms)):
-            x = numpy.arange(0,self.lengths()[chrom])
+        for n, chrom in enumerate(sorted(chroms)):
+            x = numpy.arange(0, self.lengths()[chrom])
             for strand in strands:
                 multiplier = -1 if strand == "-" else 1
-                axes[n].plot(x,self._chroms[chrom][strand]*multiplier,
-                             label=strand,
-                             color=colors[strand])
+                axes[n].plot(
+                    x, self._chroms[chrom][strand] * multiplier, label=strand, color=colors[strand]
+                )
                 axes[n].set_title(chrom)
                 axes[n].set_ylabel("Counts")
                 axes[n].set_xlabel("Position (nt)")
-                axes[n].ticklabel_format(useOffset=1,style='plain',axis='x')
-        
+                axes[n].ticklabel_format(useOffset=1, style='plain', axis='x')
+
         return f
-    
+
     def nonzero(self):
         """Return the indices of chromosomal positions with non-zero values
         at each chromosome/strand pair. Results are returned as a hierarchical
@@ -1681,8 +1693,8 @@ class GenomeArray(MutableAbstractGenomeArray):
             for strand in self.strands():
                 d_out[key][strand] = self._chroms[key][strand].nonzero()[0]
         return d_out
-    
-    def apply_operation(self,other,func,mode="same"):
+
+    def apply_operation(self, other, func, mode="same"):
         """Applies a binary operator to a copy of `self` and to `other` elementwise.
         `other` may be a scalar quantity or another |GenomeArray|. In both cases,
         a new |GenomeArray| is returned, and `self` is left unmodified.
@@ -1736,19 +1748,22 @@ class GenomeArray(MutableAbstractGenomeArray):
         new_array = GenomeArray.like(self)
         old_normalize = self._normalize
         if old_normalize == True:
-            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn(
+                "Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",
+                DataWarning
+            )
 
         if type(other) == self.__class__:
-            if mode == "same":       
+            if mode == "same":
                 self._has_same_dimensions(other)
                 for chrom in self.keys():
                     for strand in self.strands():
-                        seg = GenomicSegment(chrom,0,len(self._chroms[chrom][strand]),strand)
-                        new_array[seg] = func(self[seg],other[seg])               
+                        seg = GenomicSegment(chrom, 0, len(self._chroms[chrom][strand]), strand)
+                        new_array[seg] = func(self[seg], other[seg])
             elif mode == "all":
-                chroms    = {}.fromkeys(set(self.keys()) | set(other.keys()))
-                strands   = set(self.strands()) | set(other.strands())
-                new_array = GenomeArray(chroms,strands=strands)
+                chroms = {}.fromkeys(set(self.keys()) | set(other.keys()))
+                strands = set(self.strands()) | set(other.strands())
+                new_array = GenomeArray(chroms, strands=strands)
                 for chrom in chroms:
                     if chrom in self.keys() and chrom in other.keys():
                         for strand in strands:
@@ -1756,43 +1771,51 @@ class GenomeArray(MutableAbstractGenomeArray):
                                 sc = copy.deepcopy(self._chroms[chrom][strand])
                                 oc = copy.deepcopy(other._chroms[chrom][strand])
                                 if len(sc) > len(oc):
-                                    oc.resize(len(sc),refcheck=False)
+                                    oc.resize(len(sc), refcheck=False)
                                 elif len(oc) > len(sc):
-                                    sc.resize(len(oc),refcheck=False)
-                                new_array._chroms[chrom][strand] = func(sc,oc)
+                                    sc.resize(len(oc), refcheck=False)
+                                new_array._chroms[chrom][strand] = func(sc, oc)
                             elif strand in self.strands():
-                                new_array._chroms[chrom][strand] = func(copy.deepcopy(self._chroms[chrom][strand]),0)
+                                new_array._chroms[chrom][strand] = func(
+                                    copy.deepcopy(self._chroms[chrom][strand]), 0
+                                )
                             else:
-                                new_array._chroms[chrom][strand] = func(copy.deepcopy(other._chroms[chrom][strand]),0)
+                                new_array._chroms[chrom][strand] = func(
+                                    copy.deepcopy(other._chroms[chrom][strand]), 0
+                                )
                     elif chrom in self.keys():
                         for strand in strands:
-                            new_array._chroms[chrom][strand] = func(copy.deepcopy(self[chrom][strand]),0)
+                            new_array._chroms[chrom][strand] = func(
+                                copy.deepcopy(self[chrom][strand]), 0
+                            )
                     else:
                         for strand in strands:
-                            new_array._chroms[chrom][strand] = func(copy.deepcopy(other[chrom][strand]),0)
+                            new_array._chroms[chrom][strand] = func(
+                                copy.deepcopy(other[chrom][strand]), 0
+                            )
             elif mode == "truncate":
                 my_strands = set(self.strands()) & set(other.strands())
-                my_chroms  = set(self.chroms())  & set(other.chroms())
+                my_chroms = set(self.chroms()) & set(other.chroms())
                 for chrom in my_chroms:
                     for strand in my_strands:
                         sc = copy.deepcopy(self._chroms[chrom][strand])
                         oc = copy.deepcopy(other._chroms[chrom][strand])
                         if len(sc) > len(oc):
-                            sc.resize(len(oc),refcheck=False)
+                            sc.resize(len(oc), refcheck=False)
                         elif len(oc) > len(sc):
-                            oc.resize(len(sc),refcheck=False)
-                        new_array._chroms[chrom][strand] = func(sc,oc)
+                            oc.resize(len(sc), refcheck=False)
+                        new_array._chroms[chrom][strand] = func(sc, oc)
             else:
                 raise ValueError("Mode not understood. Must be 'same', 'all', or 'truncate.'")
         else:
             for chrom in self.keys():
                 for strand in self.strands():
-                    new_array._chroms[chrom][strand] = func(self._chroms[chrom][strand],other)
+                    new_array._chroms[chrom][strand] = func(self._chroms[chrom][strand], other)
 
         self.set_normalize(old_normalize)
         return new_array
-        
-    def __add__(self,other,mode="all"):
+
+    def __add__(self, other, mode="all"):
         """Add `other` to `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, addition is elementwise.
@@ -1828,8 +1851,8 @@ class GenomeArray(MutableAbstractGenomeArray):
         |GenomeArray|
         """
         return self.apply_operation(other, operator.add, mode=mode)
-        
-    def __mul__(self,other,mode="all"):
+
+    def __mul__(self, other, mode="all"):
         """Multiply `other` by `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, multiplication is elementwise.
@@ -1865,8 +1888,8 @@ class GenomeArray(MutableAbstractGenomeArray):
         |GenomeArray|
         """
         return self.apply_operation(other, operator.mul, mode=mode)
-        
-    def __sub__(self,other,mode="all"):
+
+    def __sub__(self, other, mode="all"):
         """Subtract `other` from `self`, returning a new |GenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |GenomeArray|. In the latter case, subtraction is elementwise.
@@ -1901,10 +1924,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         -------
         |GenomeArray|
         """
-        return self.__add__(other*-1)
-    
-    def add_from_bowtie(self,fh,mapfunc,min_length=25,
-                          max_length=numpy.inf,**trans_args):
+        return self.__add__(other * -1)
+
+    def add_from_bowtie(self, fh, mapfunc, min_length=25, max_length=numpy.inf, **trans_args):
         """Import alignment data in native `bowtie`_ format to the current GenomeArray
         
         Parameters
@@ -1947,13 +1969,13 @@ class GenomeArray(MutableAbstractGenomeArray):
         for feature in BowtieReader(fh):
             span_len = len(feature.spanning_segment)
             if span_len >= min_length and span_len <= max_length:
-                tuples = mapfunc(feature,**trans_args)
+                tuples = mapfunc(feature, **trans_args)
                 for seg, val in tuples:
                     self[seg] += val
-        
+
         self._sum = None
 
-    def add_from_wiggle(self,fh,strand):
+    def add_from_wiggle(self, fh, strand):
         """Import data from a `Wiggle`_ or `bedGraph`_ file to current GenomeArray
         
         Parameters
@@ -1965,13 +1987,13 @@ class GenomeArray(MutableAbstractGenomeArray):
             Strand to which data should be added. `'+'`, `'-'`, or `'.'`
         """
         assert strand in self.strands()
-        for chrom,start,stop,val in WiggleReader(fh):
-            seg = GenomicSegment(chrom,start,stop,strand)
+        for chrom, start, stop, val in WiggleReader(fh):
+            seg = GenomicSegment(chrom, start, stop, strand)
             self[seg] += val
 
         self._sum = None
-        
-    def to_variable_step(self,fh,trackname,strand,printer=None,**kwargs):
+
+    def to_variable_step(self, fh, trackname, strand, printer=None, **kwargs):
         """Export the contents of the GenomeArray to a variable step
         `Wiggle`_ file. For sparse data, `bedGraph`_ can be more efficient format.
         
@@ -1999,8 +2021,8 @@ class GenomeArray(MutableAbstractGenomeArray):
         printer = NullWriter() if printer is None else printer
         fh.write("track type=wiggle_0 name=%s" % trackname)
         if kwargs is not None:
-            for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
-                fh.write(" %s=%s" % (k,v))
+            for k, v in sorted(kwargs.items(), key=lambda x: x[0]):
+                fh.write(" %s=%s" % (k, v))
         fh.write("\n")
         nonzero = self.nonzero()
         for chrom in sorted(nonzero):
@@ -2009,9 +2031,9 @@ class GenomeArray(MutableAbstractGenomeArray):
             indices = nonzero[chrom][strand]
             for idx in indices:
                 val = self._chroms[chrom][strand][self._slicewrap(idx)]
-                fh.write("%s\t%s\n" % (idx+1, val))
-                
-    def to_bedgraph(self,fh,trackname,strand,printer=None,**kwargs):
+                fh.write("%s\t%s\n" % (idx + 1, val))
+
+    def to_bedgraph(self, fh, trackname, strand, printer=None, **kwargs):
         """Write the contents of the GenomeArray to a `bedGraph`_ file
         
         See the `bedGraph spec <https://cgwb.nci.nih.gov/goldenPath/help/bedgraph.html>`_
@@ -2038,29 +2060,29 @@ class GenomeArray(MutableAbstractGenomeArray):
         printer = NullWriter() if printer is None else printer
         fh.write("track type=bedGraph name=%s" % trackname)
         if kwargs is not None:
-            for k,v in sorted(kwargs.items(),key = lambda x: x[0]):
-                fh.write(" %s=%s" % (k,v))
+            for k, v in sorted(kwargs.items(), key=lambda x: x[0]):
+                fh.write(" %s=%s" % (k, v))
         fh.write("\n")
         nonzero = self.nonzero()
         for chrom in sorted(nonzero):
             printer.write("Writing chromosome %s..." % chrom)
             if self._chroms[chrom][strand].sum() > 0:
                 last_val = 0
-                last_x   = 0
+                last_x = 0
                 nz = nonzero[chrom][strand]
-                for x in range(nz.min(),nz.max()+1):
+                for x in range(nz.min(), nz.max() + 1):
                     val = self._chroms[chrom][strand][self._slicewrap(x)]
                     if val != last_val:
-                        #write line: chrom chromStart chromEnd dataValue
-                        fh.write("%s\t%s\t%s\t%s\n" % (chrom,last_x,x,last_val))
-                        #update variables
+                        # line is: chrom chromStart chromEnd dataValue
+                        fh.write("%s\t%s\t%s\t%s\n" % (chrom, last_x, x, last_val))
+                        # prepare for next loop
                         last_val = val
                         last_x = x
                     else:
                         continue
-                # write last line
-                fh.write("%s\t%s\t%s\t%s\n" % (chrom,last_x,x+1,last_val))
-        
+                # write final line, not included in loop
+                fh.write("%s\t%s\t%s\t%s\n" % (chrom, last_x, x + 1, last_val))
+
     @staticmethod
     def like(other):
         """Return a |GenomeArray| of same dimension as the input array
@@ -2074,9 +2096,9 @@ class GenomeArray(MutableAbstractGenomeArray):
         GenomeArray
             empty |GenomeArray| of same size as `other`
         """
-        return GenomeArray(other.lengths(),strands=other.strands())
+        return GenomeArray(other.lengths(), strands=other.strands())
 
-    def _slicewrap(self,x):
+    def _slicewrap(self, x):
         """Helper function to wrap coordinates for VariableStep/`bedGraph`_ export"""
         return x
 
@@ -2108,7 +2130,8 @@ class SparseGenomeArray(GenomeArray):
     strands : sequence
         Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)    
     """
-    def __init__(self,chr_lengths=None,strands=None,min_chr_size=MIN_CHR_SIZE):
+
+    def __init__(self, chr_lengths=None, strands=None, min_chr_size=MIN_CHR_SIZE):
         """Create a |SparseGenomeArray|
 
         Parameters
@@ -2132,17 +2155,17 @@ class SparseGenomeArray(GenomeArray):
         strands : sequence
             Sequence of strand names for the |GenomeArray|. (Default: `('+','-')`)
         """ % MIN_CHR_SIZE
-        self._chroms       = {}
-        self._strands      = _DEFAULT_STRANDS if strands is None else strands
-        self._sum          = None
-        self._normalize    = False
+        self._chroms = {}
+        self._strands = _DEFAULT_STRANDS if strands is None else strands
+        self._sum = None
+        self._normalize = False
         self.min_chr_size = min_chr_size
         if chr_lengths is not None:
             for chrom in chr_lengths.keys():
                 self._chroms[chrom] = {}
                 for strand in self._strands:
                     l = chr_lengths[chrom]
-                    self._chroms[chrom][strand] = scipy.sparse.dok_matrix((1,l))
+                    self._chroms[chrom][strand] = scipy.sparse.dok_matrix((1, l))
 
     def lengths(self):
         """Return a dictionary mapping chromosome names to lengths. In the
@@ -2157,10 +2180,10 @@ class SparseGenomeArray(GenomeArray):
         d_out = {}.fromkeys(self.keys())
         for key in d_out:
             d_out[key] = max([self._chroms[key][X].shape[1] for X in self.strands()])
-        
+
         return d_out
 
-    def get(self,roi,roi_order=True):
+    def get(self, roi, roi_order=True):
         """Retrieve array of counts from a region of interest (`roi`)
         with values in vector ordered 5' to 3' relative to `roi`
         rather than genome (i.e. are reversed for reverse-strand
@@ -2186,28 +2209,29 @@ class SparseGenomeArray(GenomeArray):
         SegmentChain.get_counts
             Fetch a spliced vector of data covering a |SegmentChain|
         """
-        if isinstance(roi,SegmentChain):
+        if isinstance(roi, SegmentChain):
             return roi.get_counts(self)
 
         if roi.chrom not in self:
-            self._chroms[roi.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
-                                       for K in self.strands()
-                                      }
+            self._chroms[roi.chrom] = {
+                K: copy.deepcopy(scipy.sparse.dok_matrix((1, self.min_chr_size)))
+                for K in self.strands()
+            }
         if roi.end > self._chroms[roi.chrom][roi.strand].shape[1]:
             for strand in self.strands():
-                self._chroms[roi.chrom][strand].resize((1,roi.end+10000))
+                self._chroms[roi.chrom][strand].resize((1, roi.end + 10000))
 
-        vals = self._chroms[roi.chrom][roi.strand][0,roi.start:roi.end]
+        vals = self._chroms[roi.chrom][roi.strand][0, roi.start:roi.end]
         if self._normalize is True:
             vals = 1e6 * vals / self.sum()
-            
-        vals = vals.toarray().reshape(vals.shape[1],)
+
+        vals = vals.toarray().reshape(vals.shape[1], )
         if roi.strand == "-" and roi_order == True:
             vals = vals[::-1]
 
         return vals
 
-    def __setitem__(self,seg,val,roi_order=True):
+    def __setitem__(self, seg, val, roi_order=True):
         """Set values in the |SparseGenomeArray| over a region of interest.
         
         If the `seg` is outside the bounds of the current |GenomeArray|,
@@ -2233,43 +2257,47 @@ class SparseGenomeArray(GenomeArray):
        """
         self._sum = None
 
-        if isinstance(seg,SegmentChain):
-            if isinstance(val,numpy.ndarray):
+        if isinstance(seg, SegmentChain):
+            if isinstance(val, numpy.ndarray):
                 if seg.spanning_segment.strand == "-":
                     val = val[::-1]
 
             x = 0
             for subseg in seg:
-                if isinstance(val,numpy.ndarray):
-                    subval = val[x:x+len(subseg)]
+                if isinstance(val, numpy.ndarray):
+                    subval = val[x:x + len(subseg)]
                 else:
                     subval = val
                 x += len(subseg)
-                self.__setitem__(subseg,subval,roi_order=False)
+                self.__setitem__(subseg, subval, roi_order=False)
 
             return
 
         old_normalize = self._normalize
 
-        if isinstance(val,numpy.ndarray) and seg.strand == "-" and roi_order == True:
+        if isinstance(val, numpy.ndarray) and seg.strand == "-" and roi_order == True:
             val = val[::-1]
 
         if old_normalize == True:
-            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn(
+                "Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",
+                DataWarning
+            )
         self.set_normalize(False)
 
         if seg.chrom not in self:
-            self._chroms[seg.chrom] = { K : copy.deepcopy(scipy.sparse.dok_matrix((1,self.min_chr_size)))
-                                       for K in self.strands()
-                                      }
+            self._chroms[seg.chrom] = {
+                K: copy.deepcopy(scipy.sparse.dok_matrix((1, self.min_chr_size)))
+                for K in self.strands()
+            }
         if seg.end > self._chroms[seg.chrom][seg.strand].shape[1]:
             for strand in self.strands():
-                self._chroms[seg.chrom][strand].resize((1,seg.end+10000))
-        
-        self._chroms[seg.chrom][seg.strand][0,seg.start:seg.end] = val
+                self._chroms[seg.chrom][strand].resize((1, seg.end + 10000))
+
+        self._chroms[seg.chrom][seg.strand][0, seg.start:seg.end] = val
         self.set_normalize(old_normalize)
 
-    def __mul__(self,other,mode=None):
+    def __mul__(self, other, mode=None):
         """Multiply `other` by `self`, returning a new |SparseGenomeArray|
         and leaving `self` unchanged. `other` may be a scalar quantity or
         another |SparseGenomeArray|. In the latter case, multiplication is elementwise.
@@ -2304,19 +2332,21 @@ class SparseGenomeArray(GenomeArray):
         -------
         |SparseGenomeArray|
         """
-        if isinstance(other,GenomeArray):
+        if isinstance(other, GenomeArray):
             new_array = SparseGenomeArray.like(self)
-            chroms    = set(self.keys()) & set(other.keys())
-            strands   = set(self.strands()) & set(other.strands())
+            chroms = set(self.keys()) & set(other.keys())
+            strands = set(self.strands()) & set(other.strands())
             for chrom in chroms:
                 for strand in strands:
-                    new_array._chroms[chrom][strand] = self._chroms[chrom][strand].multiply(other._chroms[chrom][strand])
-                    
+                    new_array._chroms[chrom][strand] = self._chroms[chrom][strand].multiply(
+                        other._chroms[chrom][strand]
+                    )
+
             return new_array
         else:
-            return self.apply_operation(other,operator.mul,mode=mode)
-        
-    def apply_operation(self,other,func,mode=None):
+            return self.apply_operation(other, operator.mul, mode=mode)
+
+    def apply_operation(self, other, func, mode=None):
         """Apply a binary operator to a copy of `self` and to `other` elementwise.
         `other` may be a scalar quantity or another |GenomeArray|. In both cases,
         a new |SparseGenomeArray| is returned, and `self` is left unmodified.
@@ -2371,38 +2401,49 @@ class SparseGenomeArray(GenomeArray):
 
         old_normalize = self._normalize
         if old_normalize == True:
-            warn("Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",DataWarning)
+            warn(
+                "Temporarily turning off normalization during value set. It will be re-enabled automatically when complete.",
+                DataWarning
+            )
         self.set_normalize(False)
 
-        if isinstance(other,GenomeArray):
-            chroms    = {}.fromkeys(set(self.keys()) | set(other.keys()),10)
-            strands   = set(self.strands()) | set(other.strands())
-            new_array = SparseGenomeArray(chroms,strands=strands)
+        if isinstance(other, GenomeArray):
+            chroms = {}.fromkeys(set(self.keys()) | set(other.keys()), 10)
+            strands = set(self.strands()) | set(other.strands())
+            new_array = SparseGenomeArray(chroms, strands=strands)
             for chrom in chroms:
                 if chrom in self.keys() and chrom in other.keys():
                     for strand in strands:
                         if strand in self.strands() and strand in other.strands():
                             sc = self._chroms[chrom][strand]
                             oc = other._chroms[chrom][strand]
-                            new_array._chroms[chrom][strand] = func(sc,oc)
+                            new_array._chroms[chrom][strand] = func(sc, oc)
                         elif strand in self.strands():
-                            new_array._chroms[chrom][strand] = func(copy.deepcopy(self._chroms[chrom][strand]),0)
+                            new_array._chroms[chrom][strand] = func(
+                                copy.deepcopy(self._chroms[chrom][strand]), 0
+                            )
                         else:
-                            new_array._chroms[chrom][strand] = func(copy.deepcopy(other._chroms[chrom][strand]),0)
+                            new_array._chroms[chrom][strand] = func(
+                                copy.deepcopy(other._chroms[chrom][strand]), 0
+                            )
                 elif chrom in self.keys():
                     for strand in strands:
-                        new_array._chroms[chrom][strand] = func(copy.deepcopy(self[chrom][strand]),0)
+                        new_array._chroms[chrom][strand] = func(
+                            copy.deepcopy(self[chrom][strand]), 0
+                        )
                 else:
                     for strand in strands:
-                        new_array._chroms[chrom][strand] = func(copy.deepcopy(other[chrom][strand]),0)
+                        new_array._chroms[chrom][strand] = func(
+                            copy.deepcopy(other[chrom][strand]), 0
+                        )
         else:
             for chrom in self.keys():
                 for strand in self.strands():
-                    new_array._chroms[chrom][strand] = func(self._chroms[chrom][strand],other)
+                    new_array._chroms[chrom][strand] = func(self._chroms[chrom][strand], other)
 
         self.set_normalize(old_normalize)
-        return new_array    
-    
+        return new_array
+
     def nonzero(self):
         """Return the indices of chromosomal positions with non-zero values
         at each chromosome/strand pair. Results are returned as a hierarchical
@@ -2418,14 +2459,14 @@ class SparseGenomeArray(GenomeArray):
         for key in self.keys():
             d_out[key] = {}
             for strand in self.strands():
-                # need to sort because dok doens't guarantee sorted indices in nonzero()                
+                # need to sort because dok doens't guarantee sorted indices in nonzero()
                 d_out[key][strand] = numpy.array(sorted(self._chroms[key][strand].nonzero()[1]))
-                
+
         return d_out
 
-    def _slicewrap(self,x):
+    def _slicewrap(self, x):
         """Helper function to wrap coordinates for VariableStep/`bedGraph`_ export"""
-        return (0,x)
+        return (0, x)
 
     @staticmethod
     def like(other):
@@ -2440,4 +2481,4 @@ class SparseGenomeArray(GenomeArray):
         |SparseGenomeArray|
             of same size as `other`
         """
-        return SparseGenomeArray(other.lengths(),strands=other.strands())
+        return SparseGenomeArray(other.lengths(), strands=other.strands())

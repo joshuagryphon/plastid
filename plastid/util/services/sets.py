@@ -12,7 +12,8 @@ Exported functions
 """
 import copy
 
-def merge_sets(list_of_sets,printer=None):
+
+def merge_sets(list_of_sets, printer=None):
     """Merges sets in a list if they have one or more common member,
     until all groups sharing common members are merged.
     
@@ -48,22 +49,24 @@ def merge_sets(list_of_sets,printer=None):
     """
     # first, simplify sets to remove redundancy
     list_of_sets = frozenset([frozenset(X) for X in list_of_sets])
-    
+
     # count up all members
     all_members = []
     for my_set in list_of_sets:
         all_members.extend(my_set)
 
     all_members = set(all_members)
-        
+
     # ignore singletons in merge process
     multis = [X for X in list_of_sets if len(X) > 1]
-    if  printer is not None:
-        stmp = "Starting with %s sets, %s distinct members, and %s groups with multiple items ..." % (len(list_of_sets), len(all_members),len(multis))
+    if printer is not None:
+        stmp = "Starting with %s sets, %s distinct members, and %s groups with multiple items ..." % (
+            len(list_of_sets), len(all_members), len(multis)
+        )
         printer.write(stmp)
-        
+
     # find remaining singletons post-merge
-    merged_multis = _merge_sets(multis,printer=printer)
+    merged_multis = _merge_sets(multis, printer=printer)
     merged_members = []
     for my_set in merged_multis:
         merged_members.extend(my_set)
@@ -73,8 +76,9 @@ def merge_sets(list_of_sets,printer=None):
     unmerged_sets = [set([X]) for X in unmerged_members]
 
     return sorted([set(X) for X in merged_multis] + unmerged_sets)
-    
-def _merge_sets(list_of_sets,printer=None):
+
+
+def _merge_sets(list_of_sets, printer=None):
     """Inner loop function for :func:`merge_sets`.
 
     Parameters
@@ -114,9 +118,10 @@ def _merge_sets(list_of_sets,printer=None):
         return [set(X) for X in ltmp]
     # otherwise, recurse
     else:
-        return _merge_sets(ltmp,printer=printer)
+        return _merge_sets(ltmp, printer=printer)
 
-def get_random_sets(num_sets,max_len=3,members=list("abcdefghijklmnop")):
+
+def get_random_sets(num_sets, max_len=3, members=list("abcdefghijklmnop")):
     """Generates random sets of members
 
     Parameters
@@ -139,11 +144,9 @@ def get_random_sets(num_sets,max_len=3,members=list("abcdefghijklmnop")):
     import numpy.random
     lout = []
     for _ in range(num_sets):
-        num_in_set = numpy.random.randint(1,max_len+1)
+        num_in_set = numpy.random.randint(1, max_len + 1)
         stmp = set()
         for _ in range(num_in_set):
-            stmp |= { members[numpy.random.randint(len(members))] }
+            stmp |= {members[numpy.random.randint(len(members))]}
         lout.append(stmp)
     return lout
-
-   

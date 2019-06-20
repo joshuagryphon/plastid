@@ -92,8 +92,8 @@ See Also
 `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_.
     GFF & GTF descriptions at UCSC
 """
-__author__="joshua"
-__date__ ="$Dec 1, 2010 11:00:55 AM$"
+__author__ = "joshua"
+__date__ = "$Dec 1, 2010 11:00:55 AM$"
 import itertools
 import gc
 import copy
@@ -181,42 +181,24 @@ _DEFAULT_GFF3_GENE_TYPES = {
     "gene_with_stop_codon_read_through",
     "gene_with_stop_codon_redefined_as_pyrrollysine",
     "gene_with_stop_codon_redefined_as_selenocysteine",
-    "gene_with_transcript_with_translational_frameshift",
-    "proviral_gene",
-    "endogenous_retroviral_gene",
-    "non_functional_homolog_of_pseudogene",
-    "non_processed_pseudogene",
-    "cassette_pseudogene",
-    "duplicated_pseudogene",
-    "nuclear_mt_pseudogene",
-    "pseudogene_by_unequal_crossing_over",
-    "unitary_pseudogene",
-    "polymorphic_pseudogene",
-    "processed_pseudogene",
-    "transposable_element_pseudogene",
-    "recombinatorially_rearranged_gene",
-    "recombinatorially_inverted_gene",
-    "recombinatorially_rearranged_vertebrate_immune_system_gene",
-    "rescue_gene",
-    "wild_type_rescue_gene",
-    "retrogene",
-    "silenced_gene",
-    "gene_silenced_by_DNA_modification",
-    "gene_silenced_by_DNA_methylation",
-    "gene_silenced_by_histone_modification",
-    "gene_silenced_by_histone_deacetylation",
-    "gene_silenced_by_histone_methylation",
-    "gene_silenced_by_RNA_interference",
-    "transgene",
-    "floxed_gene",
-    "translationally_regulated_gene",
-    "transposable_element_gene",
-    "engineered_foreign_transposable_element_gene"
+    "gene_with_transcript_with_translational_frameshift", "proviral_gene",
+    "endogenous_retroviral_gene", "non_functional_homolog_of_pseudogene",
+    "non_processed_pseudogene", "cassette_pseudogene", "duplicated_pseudogene",
+    "nuclear_mt_pseudogene", "pseudogene_by_unequal_crossing_over", "unitary_pseudogene",
+    "polymorphic_pseudogene", "processed_pseudogene", "transposable_element_pseudogene",
+    "recombinatorially_rearranged_gene", "recombinatorially_inverted_gene",
+    "recombinatorially_rearranged_vertebrate_immune_system_gene", "rescue_gene",
+    "wild_type_rescue_gene", "retrogene", "silenced_gene", "gene_silenced_by_DNA_modification",
+    "gene_silenced_by_DNA_methylation", "gene_silenced_by_histone_modification",
+    "gene_silenced_by_histone_deacetylation", "gene_silenced_by_histone_methylation",
+    "gene_silenced_by_RNA_interference", "transgene", "floxed_gene",
+    "translationally_regulated_gene", "transposable_element_gene",
+    "engineered_foreign_transposable_element_gene",
 }
 """GFF3 gene types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
 
 _DEFAULT_GFF3_TRANSCRIPT_TYPES = {
-     "transcript",
+    "transcript",
     "mature_transcript",
     "enzymatic_RNA",
     "mRNA",
@@ -332,7 +314,7 @@ _DEFAULT_GFF3_TRANSCRIPT_TYPES = {
     "edited_transcript_by_A_to_I_substitution",
     "non_functional_homolog_of_pseudogenic_transcript",
     "pseudogenic_transcript",
- }
+}
 """GFF3 mature transcript types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
 
 _DEFAULT_GFF3_EXON_TYPES = {
@@ -350,24 +332,24 @@ _DEFAULT_GFF3_EXON_TYPES = {
 }
 """GFF3 exon feature types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
 
-_DEFAULT_GFF3_CDS_TYPES = { 
-     "CDS",
-     "CDS_fragment",
-     "CDS_indpendently_known",
-     "CDS_predicted",
+_DEFAULT_GFF3_CDS_TYPES = {
+    "CDS",
+    "CDS_fragment",
+    "CDS_indpendently_known",
+    "CDS_predicted",
 }
 """GFF3 CDS feature types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
-
 
 #===============================================================================
 # INDEX: Readers for GFF formats
 #===============================================================================
 
-StopFeature = SegmentChain(GenomicSegment("Stop",0,1,"."),type="StopFeature",ID="StopFeature")
+StopFeature = SegmentChain(GenomicSegment("Stop", 0, 1, "."), type="StopFeature", ID="StopFeature")
 """Special |SegmentChain| emitted from GFF readers when the special line "###" is 
 encountered, indicating that all previously returned features may be assembled 
 into full objects. Also emitted when a GFF is sorted by chromosome, and
 the chromosome name changes"""
+
 
 class AbstractGFF_Reader(AbstractReader):
     """Abstract base class for GFF readers.
@@ -379,8 +361,8 @@ class AbstractGFF_Reader(AbstractReader):
     metadata : dict
         Dictionary of metadata found in file headers
     """
-    
-    def __init__(self,*streams,**kwargs): #stream,adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False):
+
+    def __init__(self, *streams, **kwargs):
         """Create an |AbstractGFF_Reader|
         
         Parameters
@@ -415,31 +397,31 @@ class AbstractGFF_Reader(AbstractReader):
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)        
         """
         #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
-        stream = itertools.chain.from_iterable(multiopen(streams,fn=open))
-        if kwargs.get("tabix",False) == True:
+        stream = itertools.chain.from_iterable(multiopen(streams, fn=open))
+        if kwargs.get("tabix", False) == True:
             stream = ("\t".join(X) for X in stream)
-        
-        self.chromosomes  = {}
-        self.metadata     = {}
-        self.line_queue   = []
 
-        self.adjust_to_0         = kwargs.get("adjust_to_0",True)
-        self.end_included        = kwargs.get("end_included",True)
-        self.return_stopfeatures = kwargs.get("return_stopfeatures",True)
-        self.is_sorted           = kwargs.get("is_sorted",False)
-        
+        self.chromosomes = {}
+        self.metadata = {}
+        self.line_queue = []
+
+        self.adjust_to_0 = kwargs.get("adjust_to_0", True)
+        self.end_included = kwargs.get("end_included", True)
+        self.return_stopfeatures = kwargs.get("return_stopfeatures", True)
+        self.is_sorted = kwargs.get("is_sorted", False)
+
         line = next(stream)
         while line[0:2] == "##":
             self._parse_metatokens(line[2:])
             line = next(stream)
-        
+
         self.line_queue.append(line)
         self._last_chrom = None
-        
-        self.stream = itertools.chain(self.line_queue,SkipBlankReader(stream))
-        super(AbstractGFF_Reader,self).__init__(self.stream)
 
-    def _parse_metatokens(self,inp):
+        self.stream = itertools.chain(self.line_queue, SkipBlankReader(stream))
+        super(AbstractGFF_Reader, self).__init__(self.stream)
+
+    def _parse_metatokens(self, inp):
         """Parses metadata embedded in a GFF stream, and stores
         these in appropriate attributes.
         
@@ -456,19 +438,19 @@ class AbstractGFF_Reader(AbstractReader):
         if len(items) > 0:
             key = items[0]
             if key == "FASTA":
-                raise StopIteration() #e.g. is end of features
+                raise StopIteration()
             elif key == "sequence-region":
                 try:
-                    self.chromosomes[items[1]] = (items[2],items[3])
+                    self.chromosomes[items[1]] = (items[2], items[3])
                 except IndexError:
                     self.chromosomes[items[1]] = tuple(items[1:])
             elif key in self.metadata.keys():
                 self.metadata[key] += ";" + " ".join(items[1:])
             else:
                 self.metadata[key] = " ".join(items[1:])
-    
+
     @abstractmethod
-    def _parse_tokens(self,attr_string):
+    def _parse_tokens(self, attr_string):
         """Placeholder function to parse column 9, which is formatted 
         differently in different GFF subtypes. Implement this 
         in subclasses
@@ -484,8 +466,8 @@ class AbstractGFF_Reader(AbstractReader):
             Dictionary of parsed tokens from ninth GFF column
         """
         pass
-    
-    def _parse_genomic_feature(self,line):
+
+    def _parse_genomic_feature(self, line):
         """Parse GFF lines into |SegmentChain| objects
 
         Parameters
@@ -497,6 +479,7 @@ class AbstractGFF_Reader(AbstractReader):
         -------
         |SegmentChain|
         """
+        # yapf: disable
         items = line.rstrip("\n").split("\t")
         chrom        = items[0]
         source       = items[1]
@@ -507,12 +490,15 @@ class AbstractGFF_Reader(AbstractReader):
         strand       = items[6]
         phase        = items[7]
         attr_string  = items[8]            
+
         info_dict = self._parse_tokens(attr_string)
         info_dict['source'] = source
         info_dict['score']  = score
         info_dict['phase']  = phase
+        info_dict['type']   = feature_type        
+        # yapf: enable
+
         my_iv = GenomicSegment(chrom,start,end,strand)            
-        info_dict['type'] = feature_type        
         my_feature = SegmentChain(my_iv,**info_dict)
 
         if chrom != self._last_chrom:
@@ -520,12 +506,12 @@ class AbstractGFF_Reader(AbstractReader):
             self._last_chrom = chrom
             if old_chrom is not None:
                 if self.is_sorted == True and self.return_stopfeatures == True:
-                    self.stream = itertools.chain([line],self.stream)
+                    self.stream = itertools.chain([line], self.stream)
                     return StopFeature
 
-        return my_feature    
-    
-    def filter(self,line):
+        return my_feature
+
+    def filter(self, line):
         """Parses lines of the GFF stream into |SegmentChain|
         When metadata is found, temporarily delegates processing to 
         :meth:`_parse_metatokens`, and then reads the next genomic feature
@@ -553,7 +539,7 @@ class AbstractGFF_Reader(AbstractReader):
         else:
             return self._parse_genomic_feature(line)
 
-    
+
 class GFF3_Reader(AbstractGFF_Reader):
     """
     GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
@@ -626,8 +612,8 @@ class GFF3_Reader(AbstractGFF_Reader):
         ('ARS102', 'ARS', 'chrI:649-1791(.)')
         [rest of output omitted]
     """
-    
-    def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
+
+    def __init__(self, *streams, **kwargs):
         """
         GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
         
@@ -657,13 +643,9 @@ class GFF3_Reader(AbstractGFF_Reader):
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
          """
-        super(GFF3_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
-#                                          adjust_to_0=True,
-#                                          end_included=end_included,
-#                                          return_stopfeatures=return_stopfeatures,
-#                                          is_sorted=is_sorted,tabix=tabix)
-    
-    def _parse_tokens(self,inp):
+        super(GFF3_Reader, self).__init__(*streams, adjust_to_0=True, **kwargs)
+
+    def _parse_tokens(self, inp):
         """Parse column 9 of `GFF3`_ into attribute dictionary
 
         Parameters
@@ -677,9 +659,9 @@ class GFF3_Reader(AbstractGFF_Reader):
             Dictionary of parsed tokens from ninth `GFF3`_ column
         """
         return parse_GFF3_tokens(inp)
-    
-            
-class GTF2_Reader(AbstractGFF_Reader): 
+
+
+class GTF2_Reader(AbstractGFF_Reader):
     """
     GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
     
@@ -747,7 +729,8 @@ class GTF2_Reader(AbstractGFF_Reader):
     metadata : dict
         Dictionary of metadata found in file headers
     """
-    def __init__(self,*streams,**kwargs): #,end_included=True,return_stopfeatures=False,is_sorted=False,tabix=False):
+
+    def __init__(self, *streams, **kwargs):
         """
         GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
         
@@ -777,13 +760,9 @@ class GTF2_Reader(AbstractGFF_Reader):
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         """
-        super(GTF2_Reader,self).__init__(*streams,adjust_to_0=True,**kwargs)
-#                                          adjust_to_0=True,
-#                                          end_included=end_included,
-#                                          return_stopfeatures=return_stopfeatures,
-#                                          is_sorted=is_sorted,tabix=tabix)
-        
-    def _parse_tokens(self,inp):
+        super(GTF2_Reader, self).__init__(*streams, adjust_to_0=True, **kwargs)
+
+    def _parse_tokens(self, inp):
         """Parse column 9 of `GTF2`_ into dictionary
 
         Parameters
@@ -797,6 +776,7 @@ class GTF2_Reader(AbstractGFF_Reader):
             Dictionary of parsed tokens from ninth `GTF2`_ column
         """
         return parse_GTF2_tokens(inp)
+
 
 class AbstractGFF_Assembler(AssembledFeatureReader):
     """Abstract base class for readers that assemble composite features
@@ -821,8 +801,8 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
     rejected : list
         A list of transcript IDs that failed to assemble properly
     """
-    
-    def __init__(self,*streams,**kwargs):
+
+    def __init__(self, *streams, **kwargs):
         """Create a |AbstractGFF_Assembler|
         
         Parameters
@@ -855,58 +835,61 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         **kwargs
             Other keyword arguments used by specific parsers
         """
-        
-        tabix = kwargs.get("tabix",False)
-        end_included = kwargs.get("end_included",True)
-        return_stopfeatures = kwargs.get("return_stopfeatures",True)
-        is_sorted = kwargs.get("is_sorted",False)
+
+        tabix = kwargs.get("tabix", False)
+        end_included = kwargs.get("end_included", True)
+        return_stopfeatures = kwargs.get("return_stopfeatures", True)
+        is_sorted = kwargs.get("is_sorted", False)
         reader_class = kwargs.get("reader_class")
-        
+
         streams = multiopen(streams, open)
-        
+
         iterables = []
         for stream in streams:
-            iterables.append(reader_class(stream,
-                                          end_included=end_included,
-                                          return_stopfeatures=return_stopfeatures,
-                                          is_sorted=is_sorted,
-                                          tabix=tabix))
+            iterables.append(
+                reader_class(
+                    stream,
+                    end_included=end_included,
+                    return_stopfeatures=return_stopfeatures,
+                    is_sorted=is_sorted,
+                    tabix=tabix
+                )
+            )
             iterables.append([StopFeature])
-            
-        self.stream = itertools.chain.from_iterable(iterables)
-        
 
-        self.printer       = kwargs.get("printer",NullWriter())
-        self.return_type   = kwargs.get("return_type",SegmentChain)        
-        self.add_three_for_stop = kwargs.get("add_three_for_stop",False)
+        self.stream = itertools.chain.from_iterable(iterables)
+
+        self.printer = kwargs.get("printer", NullWriter())
+        self.return_type = kwargs.get("return_type", SegmentChain)
+        self.add_three_for_stop = kwargs.get("add_three_for_stop", False)
 
         self.metadata = {}
         self.rejected = []
-        self.counter  = 0
-        
+        self.counter = 0
+
         self._transcript_cache = iter([])
         self._feature_cache = {}
-    
-    def _finalize(self,tx):
+
+    def _finalize(self, tx):
         return tx
-    
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         return self.__next__()
 
     @abstractmethod
-    def _collect(self,feature):
+    def _collect(self, feature):
         """Collect relevant features of transcripts
         
         Parameters
         ----------
         feature : |SegmentChain|
             Feature to collect
-        """        
+        """
         pass
-    
+
     @abstractmethod
     def _assemble_transcripts(self):
         """Assemble |Transcript| objects from collected features 
@@ -915,14 +898,14 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         -------
         list
             list of transcripts
-        """        
+        """
         pass
-    
+
     @abstractmethod
     def _reset(self):
         """Release memory and reset internal hashes"""
         pass
-        
+
     def __next__(self):
         """Return next assembled transcript from GFF, using lazy evaluation as follows:
          
@@ -945,14 +928,14 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
             # read GTF2/GFF3, populating feature_cache and building transcripts
             # only after termination triggers (StopFeature or EOF)
             sys.exc_traceback = None
-            try: # if GTF2/GFF3 features, collect until StopIteration
+            try:  # if GTF2/GFF3 features, collect until StopIteration
                 for feature in self.stream:
                     self.counter += 1
-                    if feature == StopFeature: # if GTF2 is sorted or contains ###, raise stop, assemble, and free memory
+                    if feature == StopFeature:  # if GTF2 is sorted or contains ###, raise stop, assemble, and free memory
                         raise StopIteration()
                     else:
                         self._collect(feature)
-            except StopIteration: # end of GTF2/GFF3 feature stream, assemble transcripts
+            except StopIteration:  # end of GTF2/GFF3 feature stream, assemble transcripts
                 self.printer.write("Assembling next batch of transcripts ...")
                 transcripts, rejected = self._assemble_transcripts()
                 if len(transcripts) > 0:
@@ -964,7 +947,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
                     self.rejected.extend(rejected)
                     self._reset()
 
-                else: # happens when we get two StopFeatures in a row
+                else:  # happens when we get two StopFeatures in a row
                     return self.__next__()
             return self._finalize(next(self._transcript_cache))
 
@@ -1053,16 +1036,17 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     # transcripts can be represented as collections of exons + cds
     # or cds + UTRs, et c. We consider all UTR and exons as exons
     # and CDS, and start & stop codons as CDS areas
-    _feature_map = { "exon"  : ["exon_like"],
-                     "5UTR"  : ["exon_like"],
-                     "3UTR"  : ["exon_like"],
-                     "CDS"   : ["CDS_like","exon_like"],
-                     "start_codon" : ["CDS_like","exon_like"],
-                     "stop_codon"  : ["CDS_like","exon_like"],
-                   }
-    dtmp = { "exon_like" : {}, "CDS_like" : {} }
+    _feature_map = {
+        "exon": ["exon_like"],
+        "5UTR": ["exon_like"],
+        "3UTR": ["exon_like"],
+        "CDS" : ["CDS_like", "exon_like"],
+        "start_codon": ["CDS_like", "exon_like"],
+        "stop_codon" : ["CDS_like", "exon_like"],
+    } # yapf: disable
+    dtmp = {"exon_like": {}, "CDS_like": {}}
 
-    def __init__(self,*streams,**kwargs):
+    def __init__(self, *streams, **kwargs):
         """
         GTF2_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
         
@@ -1091,11 +1075,10 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         """
-        AbstractGFF_Assembler.__init__(self,*streams,reader_class=GTF2_Reader,**kwargs)
-        self._feature_cache = { "exon_like" : {}, "CDS_like" : {}}
+        AbstractGFF_Assembler.__init__(self, *streams, reader_class=GTF2_Reader, **kwargs)
+        self._feature_cache = {"exon_like": {}, "CDS_like": {}}
 
-
-    def _collect(self,feature):
+    def _collect(self, feature):
         """Collect transcript component CDS and exons objects from `self.streams`, and populate `self._feature_cache`
         
         Parameters
@@ -1103,7 +1086,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         feature : |SegmentChain|
             Feature to collect
         """
-        feature_classes = self._feature_map.get(feature.attr["type"],None)
+        feature_classes = self._feature_map.get(feature.attr["type"], None)
         if feature_classes is not None:
             tname = feature.attr.get("transcript_id")
             for feature_class in feature_classes:
@@ -1123,9 +1106,10 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         """
         rejected_transcripts = []
         transcripts = []
-        for tname in set(self._feature_cache["exon_like"].keys()) | set(self._feature_cache["CDS_like"].keys()):
-            exons = self._feature_cache["exon_like"].pop(tname,[])
-            cds = self._feature_cache["CDS_like"].pop(tname,[])
+        for tname in set(self._feature_cache["exon_like"].keys()) | set(
+                self._feature_cache["CDS_like"].keys()):
+            exons = self._feature_cache["exon_like"].pop(tname, [])
+            cds = self._feature_cache["CDS_like"].pop(tname, [])
             if len(exons) > 0:
                 exons = sorted(exons)
                 exon_segments = [X.spanning_segment for X in exons]
@@ -1133,43 +1117,49 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 # if cds but no exons, create exons since they are implied
                 exons = sorted(cds)
                 exon_segments = [X.spanning_segment for X in exons]
-            
+
             # propagate attributes that are the same in all exons/cds
             # to parent. This should include `gene_id` and `transcript_id`
             attr = get_identical_attributes(exons + cds)
             if len(cds) > 0:
                 cds = sorted(cds)
-                attr["cds_genome_end"]   = cds[-1].spanning_segment.end
+                attr["cds_genome_end"] = cds[-1].spanning_segment.end
                 attr["cds_genome_start"] = cds[0].spanning_segment.start
-            
+
             try:
-                my_tx = Transcript(*tuple(exon_segments),**attr)
+                my_tx = Transcript(*tuple(exon_segments), **attr)
                 if self.add_three_for_stop == True:
                     # only move stop codons if no exon feature is of type "stop_codon"
-                    if "stop_codon" not in set([X.attr["type"] for X in exons]): 
+                    if "stop_codon" not in set([X.attr["type"] for X in exons]):
                         my_tx = add_three_for_stop_codon(my_tx)
-                        
+
                 transcripts.append(my_tx)
             except ValueError:
-                warn("Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands." % tname,DataWarning)
+                warn(
+                    "Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands."
+                    % tname, DataWarning
+                )
                 # transcripts with exons on two strands
                 rejected_transcripts.append(tname)
             except KeyError:
                 # transcripts where CDS ends outside bounds of transcript
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
-                warn("Rejecting transcript '%s' because start or stop codons are outside exon boundaries." % tname,DataWarning)
+                warn(
+                    "Rejecting transcript '%s' because start or stop codons are outside exon boundaries."
+                    % tname, DataWarning
+                )
         transcripts.sort()
         sys.exc_traceback = None
 
         return transcripts, rejected_transcripts
-        
+
     def _reset(self):
         """Release memory and reset internal hashes"""
         del self._feature_cache
         gc.collect()
         del gc.garbage[:]
-        self._feature_cache = { "exon_like" : {}, "CDS_like" : {}}
+        self._feature_cache = {"exon_like": {}, "CDS_like": {}}
 
 
 class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
@@ -1319,7 +1309,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
            name will also trigger assembly of collected features.
     """
 
-    def __init__(self,*streams,**kwargs):
+    def __init__(self, *streams, **kwargs):
         """
         GFF3_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
         
@@ -1370,16 +1360,16 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             For details on assembly see the :class:`class docstring <GFF3_TranscriptAssembler>`,
             above.
         """
-        AbstractGFF_Assembler.__init__(self,*streams,reader_class=GFF3_Reader,**kwargs)
-        self.transcript_types = set(kwargs.get("transcript_types",_DEFAULT_GFF3_TRANSCRIPT_TYPES))
-        self.exon_types       = set(kwargs.get("exon_types",_DEFAULT_GFF3_EXON_TYPES))
-        self.cds_types = set(kwargs.get("cds_types",_DEFAULT_GFF3_CDS_TYPES))
+        AbstractGFF_Assembler.__init__(self, *streams, reader_class=GFF3_Reader, **kwargs)
+        self.transcript_types = set(kwargs.get("transcript_types", _DEFAULT_GFF3_TRANSCRIPT_TYPES))
+        self.exon_types = set(kwargs.get("exon_types", _DEFAULT_GFF3_EXON_TYPES))
+        self.cds_types  = set(kwargs.get("cds_types", _DEFAULT_GFF3_CDS_TYPES)) # yapf: disable
         self.transcript_components = self.exon_types | self.cds_types
         self._feature_cache = {}
         self._tx_features = {}
         self._reset()
 
-    def _collect(self,feature):
+    def _collect(self, feature):
         """Collect CDS and exon components of transcripts from `self.streams`, and populate `self._feature_cache`
         
         Parameters
@@ -1388,31 +1378,33 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             Feature to collect
         """
         feature_name = feature.get_name()
-        
+
         if feature.attr["type"] in self.transcript_types:
             try:
                 self._tx_features[feature_name].append(feature)
             except KeyError:
                 self._tx_features[feature_name] = [feature]
                 sys.exc_traceback = None
-        
+
         elif feature.attr["type"] in self.transcript_components:
             # assume parent is transcript ID.
             # If no Parent, assume transcript is described as exon or CDS
-            # with identical ID attributes 
+            # with identical ID attributes
 
-            tnames = feature.attr.get("Parent",[feature.attr.get("ID",[])])
+            tnames = feature.attr.get("Parent", [feature.attr.get("ID", [])])
 
             if len(tnames) == 0:
-                warn("Found %s at %s with no `Parent` or `ID`. Ignoring." % (feature.attr["type"],str(feature.spanning_segment)),
-                     DataWarning)
+                warn(
+                    "Found %s at %s with no `Parent` or `ID`. Ignoring." %
+                    (feature.attr["type"], str(feature.spanning_segment)), DataWarning
+                )
             for tname in tnames:
                 try:
                     self._feature_cache[feature.attr["type"]][tname].append(feature)
                 except KeyError:
                     self._feature_cache[feature.attr["type"]][tname] = [feature]
                     sys.exc_traceback = None
-                                    
+
     def _assemble_transcripts(self):
         """Assemble |Transcript| s from components in `self._feature_cache`
         
@@ -1421,7 +1413,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         list
             list of transcripts
         """
-        rejected   = []
+        rejected = []
         transcripts = []
         tx_features_counted = []
 
@@ -1438,23 +1430,23 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
             exons = []
             for type_ in self.exon_types:
-                exons.extend(self._feature_cache[type_].get(tname,[]))
+                exons.extend(self._feature_cache[type_].get(tname, []))
 
             cds = []
             for cds_type in self.cds_types:
-                cds.extend(self._feature_cache[cds_type].get(tname,[]))
+                cds.extend(self._feature_cache[cds_type].get(tname, []))
 
             # if transcript is represented, not just implied, use its attributes
             if tname in self._tx_features:
-            
+
                 # use transcript name as gene if no Parent
-                gene_id = self._tx_features[tname][0].attr.get("Parent",[tname])
+                gene_id = self._tx_features[tname][0].attr.get("Parent", [tname])
 
                 # gene IDs are now returned as lists from GFF3 parser
                 gene_id = ",".join(sorted(gene_id))
 
                 # get attr from transcript object
-                attr       = self._tx_features[tname][0].attr
+                attr = self._tx_features[tname][0].attr
                 attr["ID"] = tname
                 attr["transcript_id"] = tname
                 attr["gene_id"] = gene_id
@@ -1463,58 +1455,61 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             # TODO: make sure "Parent" will carry over sensibly from lists
             else:
                 attr = get_identical_attributes(exons + cds)
-                attr["ID"]   = tname
+                attr["ID"] = tname
                 attr["transcript_id"] = tname
                 attr["type"] = "mRNA"
 
             exon_segments = [X.spanning_segment for X in exons]
-            cds_segments  = [X.spanning_segment for X in cds]
+            cds_segments = [X.spanning_segment for X in cds]
 
             if len(exon_segments) + len(cds_segments) > 0:
                 # transcript with child features
                 if len(cds) > 0:
-                    cds   = sorted(cds)
+                    cds = sorted(cds)
                     attr["cds_genome_start"] = cds[0].spanning_segment.start
-                    attr["cds_genome_end"]   = cds[-1].spanning_segment.end
-        
+                    attr["cds_genome_end"] = cds[-1].spanning_segment.end
+
                 try:
-                    my_tx = Transcript(*tuple(exon_segments+cds_segments),**attr)
+                    my_tx = Transcript(*tuple(exon_segments + cds_segments), **attr)
                     if self.add_three_for_stop == True:
                         my_tx = add_three_for_stop_codon(my_tx)
-                    
-                    transcripts.append(my_tx)     
-                                   
+
+                    transcripts.append(my_tx)
+
                 except ValueError:
-                    warn("Rejecting transcript '%s' because it contains exons on multiple strands." % tname,DataWarning)
+                    warn(
+                        "Rejecting transcript '%s' because it contains exons on multiple strands." %
+                        tname, DataWarning
+                    )
                     # transcripts with exons on two strands
                     rejected.append(tname)
                 except KeyError:
                     # transcripts where CDS ends outside bounds of transcript
-                    # there are 25 of these in flybase r5.43
-                    warn("Rejecting transcript '%s because start or stop codons are outside exon boundaries." % tname,DataWarning)
+                    # ideally this would not occur but does in rare cases
+                    # e.g. there are 25 of these in flybase r5.43
+                    warn(
+                        "Rejecting transcript '%s because start or stop codons are outside exon boundaries."
+                        % tname, DataWarning
+                    )
                     rejected.append(tname)
             else:
                 # transcript that has multiple subfeatures with shared ID but no children
                 attr = self._tx_features[tname][0].attr
                 attr["ID"] = tname
                 attr["transcript_id"] = tname
-                segments  = [X.spanning_segment for X in self._tx_features[tname]]
-                my_tx = Transcript(*tuple(segments),**attr)
+                segments = [X.spanning_segment for X in self._tx_features[tname]]
+                my_tx = Transcript(*tuple(segments), **attr)
                 transcripts.append(my_tx)
-            
+
             sys.exc_traceback = None
 
-        
         return transcripts, rejected
-        
+
     def _reset(self):
         """Release memory and reset internal hashes"""
         del self._feature_cache
         del self._tx_features
         gc.collect()
         del gc.garbage[:]
-        self._tx_features = {}  
-        self._feature_cache = { X : copy.deepcopy({}) for X in self.transcript_components }
-            
-
-
+        self._tx_features = {}
+        self._feature_cache = {X: copy.deepcopy({}) for X in self.transcript_components}

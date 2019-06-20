@@ -5,8 +5,9 @@ Installation
    :local:
 
 
-Bioconda
---------
+
+From Bioconda
+-------------
 
 .. image:: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square
   :target: http://bioconda.github.io/recipes/plastid/README.html
@@ -25,44 +26,30 @@ This will install all of the necesary dependencies for ``plastid`` in an
 isolated environment.
 
 
-PyPi
-----
+From PyPi
+---------
 
 Install package
 ...............
 
 Stable versions of :data:`plastid` can be fetched from `PyPi`_ using `Pip`_.
-Due to some quirks in Python packaging `Cython`_, `numpy`_ , `pysam`_ must be
-installed first:
-
 Simply type from the terminal:
 
 .. code-block:: shell
 
-   $ sudo pip install numpy pysam cython
    $ sudo pip install plastid
 
 or, for a single-user install:
 
 .. code-block:: shell
 
-   $ pip install --user numpy pysam cython
    $ pip install --user plastid
 
 Test your installation within Python:
 
 .. code-block:: python
 
-   >>> import plastid
-
-If installation fails with a message that an object in `numpy`_ or `pysam`_ is
-the wrong size, the included C files may need to be regenerated.
-
-To do so, first make sure all the dependencies are installed. Then type:
-
-.. code-block:: shell
-
-   $ pip install --verbose --user --no-cache-dir --install-option="--recythonize" plastid
+   >>> from plastid import *
 
 And then re-test the installation. If installation continues to fail, please see
 :ref:`faq-install-fails` for common errors or `our issue tracker`_ to report a
@@ -71,7 +58,12 @@ new one.
 
 Set ``PATH`` variable
 .....................
-Command-line scripts will be installed wherever system configuration dictates. On OSX and many varities of linux, the install path for a single-user install is ``~/bin`` or ``~/.local/bin``. For system-wide installs, the path is typically ``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by adding to your ``.bashrc``, ``.bash_profile``, or ``.profile``:
+
+Command-line scripts will be installed wherever system configuration dictates.
+On OSX and many varities of linux, the install path for a single-user install is
+``~/bin`` or ``~/.local/bin``. For system-wide installs, the path is typically
+``/usr/local/bin``. Make sure the appropriate location is in your ``PATH`` by
+adding to your ``.bashrc``, ``.bash_profile``, or ``.profile``:
 
 .. code-block:: shell
 
@@ -114,31 +106,47 @@ The easiest way to install :data:`Plastid` inside a sandbox is to use
 
    # Fresh install of plastid.
    # Note- no use of `sudo` here. It confuses the virtualenv
-   (venv) $ pip install numpy pysam cython
    (venv) $ pip install --no-cache-dir plastid
 
    # test
    (venv) $ python -c "from plastid import *"
 
 
-
 Development versions
 --------------------
-To fetch the latest development versions, clone it from `our github repository <plastid_repo>`_. From the terminal:
+
+Install from git
+................
+
+To fetch the latest development versions, clone it from `our github repository
+<plastid_repo>`_. From the terminal:
 
 .. code-block:: shell
 
    # get the source
    $ git clone git://github.com/joshuagryphon/plastid.git
 
-   # Do to a quirk in Python setup scripts (fixed in new versions of pip),
-   # numpy, cython, and pysam must must be installed first:
-   $ pip install --user --upgrade numpy pysam
-
-   # Install in develop mode. Use `--recythonize` flag to regenerate
-   # C files if necessary (e.g. after upgrading pysam)
+   # Install in develop mode. Use `--recythonize` flag to regenerate C files
+   # if necessary (e.g. after upgrading pysam)
    $ cd plastid
    $ pip install --install-option='--recythonize' --user -e .
+
+
+Rebuild source
+..............
+
+If you make alterations to any of the cython sources, or if install fails,
+you can build extensions or install using the ``--recythonize`` option:
+
+.. code-block:: shell
+
+   # inside plastid folder
+   $ python setup.py build_ext --recythonize --inplace
+
+   # or
+   $ pip install --user -e . --install-option='--recythonize'
+
+..
 
 
 Non-Python Dependencies
@@ -146,15 +154,20 @@ Non-Python Dependencies
 
 Plastid has a number of non-Python dependencies:
 
- - A full build system for C compiling (e.g. `GCC <gcc.gnu.org>`_ or `clang <clang.llvm.org>`_)
- - `zlib <www.zlib.net>`_, including its headers
+- A full build system for C compiling (e.g. `GCC <https://gcc.gnu.org>`_ or
+  `clang <https://clang.llvm.org>`_)
+  
+- `zlib <https://www.zlib.net>`_, including its headers
 
 
-The following are not required for full functionality, but are required for specific functions or just plain useful:
+The following are not required for full functionality, but are required for
+specific functions or just plain useful:
 
- - `bowtie`_ (not `bowtie 2`_) for use in  :py:mod:`~plastid.bin.crossmap`
- - `Jim Kent's utilities`_ for converting BED to BigBed files
- - `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_
+- `bowtie`_ (not `bowtie 2`_) for use in  :py:mod:`~plastid.bin.crossmap`
+
+- `Jim Kent's utilities`_ for converting BED to BigBed files
+
+- `The FASTX toolkit <http://hannonlab.cshl.edu/fastx_toolkit/>`_   
 
 
 
@@ -162,12 +175,12 @@ Troubleshooting
 ---------------
 
 :data:`plastid` installs fairly easily in most Linux and Macintosh setups. If
-you run into issues running or installing, please see our
-FAQ section on :ref:`installation <faq-run>`
-and then `our issue tracker`_ to see if anybody else has encountered your issue,
-and if instructions already exist.
+you run into issues running or installing, please see our FAQ section on
+:ref:`installation <faq-run>` and then `our issue tracker`_ to see if anybody
+else has encountered your issue, and if instructions already exist.
 
 Frequently, problems can be solved by installing :data:`plastid` in a clean
 environment. For instructions, see :ref:`install-inside-venv`, above.
 
-For other troubleshooting, please see our FAQ section on :ref:`installation <faq-run>`.
+For other troubleshooting, please see our FAQ section on :ref:`installation
+<faq-run>`.

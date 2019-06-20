@@ -8,11 +8,11 @@ cdef:
     str WARN_CHROM_NOT_FOUND
 
 #===============================================================================
-# INDEX: Common info for all bigwig files 
+# INDEX: Common info for all bigwig files
 #===============================================================================
 
 DEF bigBedSig = 0x8789F2EB
-DEF bigWigSig = 0x888FFC26 
+DEF bigWigSig = 0x888FFC26
 
 cdef extern from "<common.h>" nogil:
     ctypedef unsigned char   Bits
@@ -22,22 +22,22 @@ cdef extern from "<common.h>" nogil:
     ctypedef unsigned long long bits64
 
     void freeMem(void *pt)
-#     
+#
 #     cdef struct fileOffsetSize:
 #         fileOffsetSize * next
 #         bits64           offset
 #         bits64           size
-    
+
 
 
 cdef extern from "<bits.h>":
-    
+
     # find index of next set bit
     int bitFindSet(Bits *b, int startIx, int bitCount)
-    
+
     # find index of next clear bit
     int bitFindClear(Bits *b, int startIX, int bitCount)
-    
+
     # read next bit
     bint bitReadOne(Bits *b, int bitIx)
 
@@ -48,13 +48,13 @@ cdef extern from "<localmem.h>":
         size_t blockSize
         size_t allignMask
         size_t allignAdd
-        
+
     cdef struct lmBlock:
         lmBlock *next
         char *free
         char *end
         char *extra
-    
+
     lm * lmInit(int blockSize)
     size_t lmAvailable(lm *lm)
     size_t lmSize(lm *lm)
@@ -65,7 +65,7 @@ cdef extern from "<localmem.h>":
 
 cdef extern from "<bbiFile.h>":
     cdef struct bbiZoomLevel:
-        bbiZoomLevel *next 
+        bbiZoomLevel *next
         bits32 reductionLevel
         bits64 dataOffset
         bits64 indexOffset
@@ -161,7 +161,7 @@ cdef extern from "<bbiFile.h>":
 #         bits32 endBase;              # Ending base position. */
 #         bits64 fileSize;             # Total size of index file. */
 #         bits32 itemsPerSlot;         # Max number of items to put in each index slot at lowest level. */
-#     
+#
 #         struct fileOffsetSize *cirTreeEnumerateBlocks(struct cirTreeFile *crf)
 
 

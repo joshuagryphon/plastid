@@ -6,10 +6,10 @@ from nose.plugins.attrib import attr
 from plastid.util.services.mini2to3 import cStringIO
 from plastid.util.io.filters import SkipBlankReader, CommentReader, FunctionReader
 
-
 #===============================================================================
 # INDEX: test cases
 #===============================================================================
+
 
 @attr(test="unit")
 class TestSkipBlankReader(unittest.TestCase):
@@ -21,53 +21,55 @@ class TestSkipBlankReader(unittest.TestCase):
     def test_read(self):
         fin = self.get_stream()
         lines = fin.read().strip().split("\n")
-        self.assertEqual(len(lines),30)
+        self.assertEqual(len(lines), 30)
         for line in lines:
-            self.assertNotEqual(line.strip(),"")
+            self.assertNotEqual(line.strip(), "")
         fin.close()
 
     def test_readlines(self):
         lines = self.get_stream().readlines()
-        self.assertEqual(len(lines),30)
+        self.assertEqual(len(lines), 30)
         for line in lines:
-            self.assertNotEqual(line.strip(),"")
+            self.assertNotEqual(line.strip(), "")
 
     def test_iter(self):
-        for n,line in enumerate(self.get_stream()):
-            self.assertNotEqual(line.strip(),"")
+        for n, line in enumerate(self.get_stream()):
+            self.assertNotEqual(line.strip(), "")
 
-        self.assertEqual(n,29)
+        self.assertEqual(n, 29)
 
 
 @attr(test="unit")
 class TestCommentReader(TestSkipBlankReader):
     """TestCase for :py:class:`CommentReader`"""
-   
+
     def get_stream(self):
         return CommentReader(cStringIO.StringIO(_COMMENT_TEXT))
-    
+
     def test_get_comments(self):
         reader = self.get_stream()
         comments = reader.get_comments()
         # comments should not be populated until we have read
-        self.assertEquals(len(comments),0)
+        self.assertEquals(len(comments), 0)
         reader.read()
         # comments should be found afterwards
-        self.assertEquals(len(comments),5)
+        self.assertEquals(len(comments), 5)
         for comment in comments:
             self.assertTrue(comment.startswith("#"))
+
 
 @attr(test="unit")
 class TestFunctionReader(unittest.TestCase):
     def test_via_backwards(self):
-        reader = FunctionReader(cStringIO.StringIO(_NL_TEXT),lambda x: x[::-1])
-        for line1, line2 in zip(reader,cStringIO.StringIO(_NL_TEXT)):
-            self.assertEqual(line1,line2[::-1])
+        reader = FunctionReader(cStringIO.StringIO(_NL_TEXT), lambda x: x[::-1])
+        for line1, line2 in zip(reader, cStringIO.StringIO(_NL_TEXT)):
+            self.assertEqual(line1, line2[::-1])
 
     def test_via_upper(self):
-        reader = FunctionReader(cStringIO.StringIO(_NL_TEXT),str.upper)
-        for line1, line2 in zip(reader,cStringIO.StringIO(_NL_TEXT)):
-            self.assertEqual(line1,line2.upper())
+        reader = FunctionReader(cStringIO.StringIO(_NL_TEXT), str.upper)
+        for line1, line2 in zip(reader, cStringIO.StringIO(_NL_TEXT)):
+            self.assertEqual(line1, line2.upper())
+
 
 #===============================================================================
 # INDEX: test data
@@ -111,8 +113,6 @@ _NL_TEXT = """1	Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi v
 
 
 """
-
-
 
 _COMMENT_TEXT = """1	Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vitae ipsum vel
      2	nisi dapibus dapibus in vel neque. Proin nec consectetur arcu. Praesent

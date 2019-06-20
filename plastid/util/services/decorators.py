@@ -44,7 +44,8 @@ import warnings
 import types
 from plastid.util.services.mini2to3 import get_func_code
 from plastid.util.services.exceptions import warn_explicit_onceperfamily
-                       
+
+
 def notimplemented(func):
     """NotImplemented annotation decorator.
     Calls to functions annotated with this decorator raise
@@ -60,18 +61,20 @@ def notimplemented(func):
     function
         wrapped function
     """
+
     @functools.wraps(func)
-    def new_func(*args,**kwargs):
+    def new_func(*args, **kwargs):
         func_code = get_func_code(func)
         message = "NotImplementedException: call to unimplemented "+\
                   "function %s in module %s line %s" % (func.__name__,
                                                         func.__module__,
                                                         func_code.co_firstlineno + 1)
- 
+
         raise NotImplementedError(message)
-    
+
     return new_func
-    
+
+
 def notused(func):
     """Notused annotation decorator. Only for marking code.
 
@@ -85,11 +88,13 @@ def notused(func):
     function
         wrapped function
     """
+
     @functools.wraps(func)
-    def new_func(*args,**kwargs):
-        return func(*args,**kwargs)
-    
+    def new_func(*args, **kwargs):
+        return func(*args, **kwargs)
+
     return new_func
+
 
 def catch_warnings(simple_filter="ignore"):
     """Function factory producing function decorators that suppress warnings
@@ -129,6 +134,7 @@ def catch_warnings(simple_filter="ignore"):
     warnings
         Warnings module, especially sections on warnings filters
     """
+
     def decorator(func):
         """Function decorator that catches warnings of type %s
         
@@ -142,19 +148,21 @@ def catch_warnings(simple_filter="ignore"):
         function
             Wrapped function
         """ % simple_filter
+
         @functools.wraps(func)
-        def new_func(*args,**kwargs):
+        def new_func(*args, **kwargs):
             with warnings.catch_warnings():
                 warnings.simplefilter(simple_filter)
-                result = func(*args,**kwargs)
-            
+                result = func(*args, **kwargs)
+
             return result
-        
+
         return new_func
-    
+
     return decorator
 
-def deprecated(func=None,version=None,instead=None):
+
+def deprecated(func=None, version=None, instead=None):
     """Deprecation annotation decorator for functions or classes. Wrapped
     functions or classes will raise FutureWarnings with called or instantiated,
     respectively.
@@ -175,49 +183,58 @@ def deprecated(func=None,version=None,instead=None):
     -------
     object
         wrapped function or class
-    """    
-    
+    """
+
     def decorator(func_or_class):
         message = "is deprecated and will be removed from module %s in " % func_or_class.__module__
         if version is not None:
             message += ("plastid version %s." % version)
         else:
             message += "future versions of plastid."
-            
+
         if instead is not None:
             message += " Use %s instead." % instead
-        
+
         message = "%s '%s' " + message
         # Based on useful hints from http://wiki.python.org/moin/PythonDecoratorLibrary
-        if isinstance(func_or_class,types.FunctionType):
+        if isinstance(func_or_class, types.FunctionType):
             message = message % ("Function", func_or_class.__name__)
+
             @functools.wraps(func_or_class)
-            def new_func(*args,**kwargs):
+            def new_func(*args, **kwargs):
                 func_code = get_func_code(func_or_class)
-                warn_explicit_onceperfamily(message,
-                                            category = FutureWarning,
-                                            filename = func_code.co_filename,
-                                            lineno = func_code.co_firstlineno + 1)
-                return func_or_class(*args,**kwargs)
-            
+                warn_explicit_onceperfamily(
+                    message,
+                    category=FutureWarning,
+                    filename=func_code.co_filename,
+                    lineno=func_code.co_firstlineno + 1
+                )
+                return func_or_class(*args, **kwargs)
+
             return new_func
         # two tests here. Top line for Python 2.7. Bottom for 3.x
         elif (sys.version_info <= (3,) and (isinstance(func_or_class,types.ClassType) or isinstance(func_or_class,types.TypeType))) \
               or isinstance(func_or_class,type):
             old_init = func_or_class.__init__
             message = message % ("Class", func_or_class.__name__)
+
             @functools.wraps(func_or_class.__init__)
-            def new_func(self,*args,**kwargs):
-                warn_explicit_onceperfamily(message,
-                                            category = FutureWarning,
-                                            filename = sys._getframe(1).f_globals["__name__"],
-                                            lineno = sys._getframe(1).f_lineno )
-                return old_init(self,*args,**kwargs)
-            
+            def new_func(self, *args, **kwargs):
+                warn_explicit_onceperfamily(
+                    message,
+                    category=FutureWarning,
+                    filename=sys._getframe(1).f_globals["__name__"],
+                    lineno=sys._getframe(1).f_lineno
+                )
+                return old_init(self, *args, **kwargs)
+
             func_or_class.__init__ = new_func
             return func_or_class
         else:
-            raise TypeError("Attempt to deprecate '%s', a %s. Only functions and classes can be deprecated." % (func_or_class.__name__,type(func_or_class)))
+            raise TypeError(
+                "Attempt to deprecate '%s', a %s. Only functions and classes can be deprecated." %
+                (func_or_class.__name__, type(func_or_class))
+            )
 
     if func is not None:
         return decorator(func)
@@ -242,15 +259,20 @@ def skip_if_abstract(func):
         wrapped function
     """
     import unittest
-    
+
     @functools.wraps(func)
-    def new_func(*args,**kwargs):
+    def new_func(*args, **kwargs):
         if "Abstract" in args[0].__class__.__name__:
-            return unittest.skip("Skipping all tests from abstract class (don't worry, this is expected).")(func)
+            return unittest.skip(
+                "Skipping all tests from abstract class (don't worry, this is expected)."
+            )(
+                func
+            )
         else:
-            return func(*args,**kwargs)
-        
+            return func(*args, **kwargs)
+
     return new_func
+
 
 def catch_stderr(buf=None):
     """Function factory producing decorators that capture stderr to a buffer
@@ -291,7 +313,8 @@ def catch_stderr(buf=None):
     function
         Function decorator
     """
-    def decorator(func,buf=buf):
+
+    def decorator(func, buf=buf):
         """Decorator that suppresses standard error output from a function
         
         Parameters
@@ -305,27 +328,28 @@ def catch_stderr(buf=None):
             wrapped function    
         """
         if buf is None:
-            buf = open(os.devnull,"a")
+            buf = open(os.devnull, "a")
 
         @functools.wraps(func)
-        def new_func(*args,**kwargs):
+        def new_func(*args, **kwargs):
             stderr_fd = os.dup(sys.__stderr__.fileno())
-            new_fd  = buf.fileno()#tmpfile.fileno()
-            os.dup2(new_fd,sys.stderr.fileno())
+            new_fd = buf.fileno()
+            os.dup2(new_fd, sys.stderr.fileno())
             try:
-                result = func(*args,**kwargs)
+                result = func(*args, **kwargs)
             except BaseException as e:
-                sys.stderr.flush() 
-                os.dup2(stderr_fd,sys.stderr.fileno())
-                raise(e)
+                sys.stderr.flush()
+                os.dup2(stderr_fd, sys.stderr.fileno())
+                raise (e)
 
-            sys.stderr.flush() 
-            os.dup2(stderr_fd,sys.stderr.fileno())
+            sys.stderr.flush()
+            os.dup2(stderr_fd, sys.stderr.fileno())
             return result
 
         return new_func
 
     return decorator
+
 
 # cannot write unit tests for this because nose substitutes
 # a StringIO object for sys.stdout, which messes up the file descriptor
@@ -369,7 +393,8 @@ def catch_stdout(buf=None):
     function
         Function decorator
     """
-    def decorator(func,buf=buf):
+
+    def decorator(func, buf=buf):
         """Decorator that suppresses standard error output from a function
         
         Parameters
@@ -387,26 +412,28 @@ def catch_stdout(buf=None):
             wrapped function    
         """
         if buf is None:
-            buf = open(os.devnull,"a")
-            
+            buf = open(os.devnull, "a")
+
         @functools.wraps(func)
-        def new_func(*args,**kwargs):
+        def new_func(*args, **kwargs):
             stdout_fd = os.dup(sys.stdout.fileno())
-            new_fd  = buf.fileno()
-            os.dup2(new_fd,sys.stdout.fileno())
+            new_fd = buf.fileno()
+            os.dup2(new_fd, sys.stdout.fileno())
             try:
-                result = func(*args,**kwargs)
+                result = func(*args, **kwargs)
             except BaseException as e:
                 sys.stdout.flush()
-                os.dup2(stdout_fd,sys.stdout.fileno())
-                raise(e)
+                os.dup2(stdout_fd, sys.stdout.fileno())
+                raise (e)
 
             sys.stdout.flush()
-            os.dup2(stdout_fd,sys.stdout.fileno())
+            os.dup2(stdout_fd, sys.stdout.fileno())
             return result
 
         return new_func
+
     return decorator
+
 
 def in_separate_process(func):
     """Decorator that runs a function in a separate process, to force garbage collection
@@ -428,25 +455,27 @@ def in_separate_process(func):
     multiprocessing
         Python multiprocessing module, for writing parallel programs
     """
+
     @functools.wraps(func)
-    def new_func(*args,**kwargs):
+    def new_func(*args, **kwargs):
         import multiprocessing
         recv_pipe, send_pipe = multiprocessing.Pipe(False)
-        
-        def temp_func(conn,args,kwargs):
-            result = func(*args,**kwargs)
+
+        def temp_func(conn, args, kwargs):
+            result = func(*args, **kwargs)
             conn.send(result)
             conn.close()
-        
-        proc = multiprocessing.Process(target=temp_func,args=(send_pipe,args,kwargs))
+
+        proc = multiprocessing.Process(target=temp_func, args=(send_pipe, args, kwargs))
         proc.start()
         proc.join()
         result = recv_pipe.recv()
         recv_pipe.close()
-        
+
         return result
-            
+
     return new_func
+
 
 def parallelize(func):
     """Decorator to parallelize the running of a single-parameter function
@@ -471,17 +500,18 @@ def parallelize(func):
     multiprocessing
         Python multiprocessing module, for writing parallel programs
     """
+
     @functools.wraps(func)
-    def new_func(args,processes=4,chunksize=None,**kwargs):
+    def new_func(args, processes=4, chunksize=None, **kwargs):
         import multiprocessing
-        pf = functools.partial(func,**kwargs)
+        pf = functools.partial(func, **kwargs)
         pool = multiprocessing.Pool(processes=processes)
-        pool_results = pool.map(pf,args,chunksize=chunksize)
+        pool_results = pool.map(pf, args, chunksize=chunksize)
         pool.close()
         pool.join()
-         
+
         return pool_results
-     
+
     message = """
      
     Notes
@@ -495,12 +525,13 @@ def parallelize(func):
     #. This function additionally takes the keyword argument ``processes``,
        which determines how many processes it will use.
     """
-     
+
     if new_func.__doc__ is not None:
         new_func.__doc__ += message
     else:
-        new_func.__doc__ = message 
+        new_func.__doc__ = message
     return new_func
+
 
 def skipdoc(func_or_class):
     """Instruct Sphinx not to generate documentation for ``func_or_class``

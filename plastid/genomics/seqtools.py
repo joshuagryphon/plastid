@@ -17,28 +17,50 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from twobitreader import TwoBitFile
 
-IUPAC_TABLE = { "A" : "A",
-                "C" : "C",
-                "T" : ("T","U"),
-                "U" : ("T","U"),
-                "G" : "G",
-                "N" : ("A","C","T","G","U"),
-                "R" : ("A","G"),     # puRines
-                "Y" : ("C","T","U"), # pYrimidines
-                "S" : ("G","C"),     # Strong binding
-                "W" : ("A","T","U"), # Weak binding
-                "K" : ("G","T","U"),
-                "M" : ("A","C"),
-                "B" : ("C","G","T","U"),
-                "D" : ("A","G","T","U"),
-                "H" : ("A","C","T","U"),
-                "V" : ("A","C","G"),
-               }
+IUPAC_TABLE = {
+    "A": "A",
+    "C": "C",
+    "T": ("T", "U"),
+    "U": ("T", "U"),
+    "G": "G",
+    "N": ("A", "C", "T", "G", "U"),
+
+    # puRines
+    "R": ("A", "G"),
+
+    # pYrimidines
+    "Y": ("C", "T", "U"),
+
+    # Strong binding
+    "S": ("G", "C"),
+
+    # Weak binding
+    "W": ("A", "T", "U"),
+
+     # Keto-functionalized
+    "K": ("G", "T", "U"),
+
+    # aMino-functionalized
+    "M": ("A", "C"),
+
+    # B = any but A
+    "B": ("C", "G", "T", "U"),
+
+    # C = any but C
+    "D": ("A", "G", "T", "U"),
+
+    # H = any but G
+    "H": ("A", "C", "T", "U"),
+
+    # V = any but T or U
+    "V": ("A", "C", "G"),
+}
 """Dictionary mapping IUPAC nucleotide symbols to tuples of nucleotides
 they represent (e.g. R -> (A, G) )
 """
 
-def seq_to_regex(inp,flags=0):
+
+def seq_to_regex(inp, flags=0):
     """Convert a nucleotide sequence of IUPAC nucleotide characters as a regular expression.
     Ambiguous IUPAC characters are converted to groups (e.g. `'Y'` to `'[CTU]'`),
     and T and U are considered equivalent.
@@ -66,14 +88,15 @@ def seq_to_regex(inp,flags=0):
     """
     out = []
     for ch in inp:
-        if len(IUPAC_TABLE.get(ch,ch)) == 1:
+        if len(IUPAC_TABLE.get(ch, ch)) == 1:
             out.append(ch)
         else:
-            out.append("["+"".join(IUPAC_TABLE.get(ch,ch))+"]")
-    
-    return re.compile("".join(out),flags=flags)
+            out.append("[" + "".join(IUPAC_TABLE.get(ch, ch)) + "]")
 
-def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
+    return re.compile("".join(out), flags=flags)
+
+
+def mutate_seqs(seqs, nucleotides="NACTG", mutations=1):
     """Generate all sequences within `mutations` distance from a reference sequence
     
     Parameters
@@ -94,7 +117,7 @@ def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
         all sequences within `mutations` substitutions from the sequence(s)
         specified in `seqs`
     """
-    if isinstance(seqs,str):
+    if isinstance(seqs, str):
         seqs = [seqs]
     if mutations == 0:
         return set(seqs)
@@ -106,10 +129,12 @@ def mutate_seqs(seqs,nucleotides="NACTG",mutations=1):
                     newseq = list(seq)[:]
                     newseq[i] = nuc
                     seqsout.append("".join(newseq))
-        seqsout.extend(mutate_seqs(seqsout,nucleotides=nucleotides,mutations=mutations-1))
+
+        seqsout.extend(mutate_seqs(seqsout, nucleotides=nucleotides, mutations=mutations - 1))
         return set(seqsout) | set(seqs)
 
-def random_seq(size,nucleotides="ACTG"):
+
+def random_seq(size, nucleotides="ACTG"):
     """Generate a random nucleotide sequence of length `size` and composition `nucleotides`
     
     Parameters
@@ -126,12 +151,13 @@ def random_seq(size,nucleotides="ACTG"):
     -------
     str : randomized DNA sequence
     """
-    seq = "".join([nucleotides[random.randrange(0,len(nucleotides))] for _ in range(0,size)])
+    seq = "".join([nucleotides[random.randrange(0, len(nucleotides))] for _ in range(0, size)])
     return seq
 
 
-def revive(twobitreader,seqname):
-    _TwoBitSeqProxy(twobitreader[seqname],twobitreader)
+def revive(twobitreader, seqname):
+    _TwoBitSeqProxy(twobitreader[seqname], twobitreader)
+
 
 class _TwoBitSeqProxy(object):
     """Adaptor class that fetches :class:`Bio.SeqRecord.SeqRecord`
@@ -139,22 +165,25 @@ class _TwoBitSeqProxy(object):
 
     Defines `seq` property and :meth:`~_TwoBitSeqProxy.reverse_complement` method
     """
-    def __init__(self,twobitfile,key):
+
+    def __init__(self, twobitfile, key):
         """
         Parameters
         ----------
         twobitseq : :class:`twobitfile.TwoBitSequence`
         """
-        self.name        = key
+        self.name = key
         self._twobitfile = twobitfile
-        self.twobitseq   = twobitfile[key]
-        self._seq        = None
+        self.twobitseq = twobitfile[key]
+        self._seq = None
 
     def __reduce__(self):
-        return (_TwoBitSeqProxy,(self._twobitfile,self.name))
+        return (_TwoBitSeqProxy, (self._twobitfile, self.name))
 
-    def __getitem__(self,slice_):
-        return SeqRecord(Seq(self.twobitseq.get_slice(min_=slice_.start,max_=slice_.stop),generic_dna))
+    def __getitem__(self, slice_):
+        return SeqRecord(
+            Seq(self.twobitseq.get_slice(min_=slice_.start, max_=slice_.stop), generic_dna)
+        )
 
     def __len__(self):
         return len(self.twobitseq)
@@ -163,13 +192,13 @@ class _TwoBitSeqProxy(object):
         """Return sequence in `self.twobitseq` as str"""
         return str(self.twobitseq)
 
-    def __getattr__(self,attr):
+    def __getattr__(self, attr):
         if attr == "seq":
             if self._seq is None:
-                self._seq = Seq(str(self.twobitseq),generic_dna)
+                self._seq = Seq(str(self.twobitseq), generic_dna)
 
             return self._seq
-    
+
     def reverse_complement(self):
         """Return the reverse complement of the TwoBitSequence
 
@@ -185,22 +214,23 @@ class TwoBitSeqRecordAdaptor(object):
     """Adaptor class that makes a :class:`twobitreader.TwoBitFile` behave
     like a dictionary of :class:`Bio.SeqRecord.SeqRecord` objects.
     """
-    def __init__(self,fh):
+
+    def __init__(self, fh):
         self.twobitfile = TwoBitFile(fh)
         self._filename = fh
-        self._chroms = { K : _TwoBitSeqProxy(self.twobitfile,K) for K in self.twobitfile }
+        self._chroms = {K: _TwoBitSeqProxy(self.twobitfile, K) for K in self.twobitfile}
 
     def __reduce__(self):
-        return (TwoBitSeqRecordAdaptor, (self._filename,))
+        return (TwoBitSeqRecordAdaptor, (self._filename, ))
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         return self._chroms[key]
 
-    def __getattr__(self,attr):
+    def __getattr__(self, attr):
         try:
-            return getattr(self._chroms,attr)
+            return getattr(self._chroms, attr)
         except AttributeError:
-            return getattr(self.twobitfile,attr)
+            return getattr(self.twobitfile, attr)
 
     def __iter__(self):
         return iter(self._chroms)

@@ -11,6 +11,7 @@
 """
 import numpy
 
+
 def guess_formatter(inp):
     """Guesses the format of input, trying `bool`, `int`, `float`, then `str`.
     Correctly parses `nan`s and `Inf`s. Converts `None` to `nan`
@@ -35,7 +36,8 @@ def guess_formatter(inp):
             return number(inp)
         except ValueError:
             return str(inp)
-    
+
+
 def number(inp):
     """Parses numbers from strings, preferring int over float.
     Parses `nan`, `Nan`, `None`, `none`, `inf`, and `-inf`
@@ -57,15 +59,15 @@ def number(inp):
     ValueError
         if `inp` cannot be converted to a number
     """
-    if inp in ("nan","NaN","na","None","none"):
+    if inp in ("nan", "NaN", "na", "None", "none"):
         return numpy.nan
-    elif inp in ("inf","Inf"):
+    elif inp in ("inf", "Inf"):
         return numpy.inf
-    elif inp in ("-inf","-Inf"):
+    elif inp in ("-inf", "-Inf"):
         return -numpy.inf
     else:
         try:
-            # note: in python bools are also ints! 
+            # note: in python bools are also ints!
             # isinstance(True,int) == True
             val = int(inp)
         except ValueError:

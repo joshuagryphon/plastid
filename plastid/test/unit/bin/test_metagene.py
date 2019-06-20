@@ -17,27 +17,45 @@ from plastid.bin.metagene import window_landmark, \
                                      group_regions_make_windows
 from plastid.util.services.mini2to3 import cStringIO
 
-_FLANKS = [(0,100),
-           (50,100),
-           (100,50),
-           (100,0)
-           ]
+_FLANKS = [
+    (0,100),
+    (50,100),
+    (100,50),
+    (100,0),
+]
 """Regions upstream and downstream from landmarks to request"""
 
-def check_equality(roi1,roi2,err_str=""):
-    """Make sure two |SegmentChain| are equal by testing equality of position sets, chromosomes, and strands"""
-    assert_set_equal(roi1.get_position_set(),roi2.get_position_set(),"%s ROIs unequal: unequal position sets %s vs %s" % (err_str,str(roi1),str(roi2)))
-    if roi1.length > 0:
-        assert_equal(roi1.spanning_segment.strand,roi2.spanning_segment.strand,"%s ROI strand mismatch: %s vs %s" % (err_str,roi1.spanning_segment.strand,roi2.spanning_segment.strand))
-        assert_equal(roi1.spanning_segment.chrom,roi2.spanning_segment.chrom,"%s ROI chromosome mismatch: %s vs %s" % (err_str,roi1.spanning_segment.chrom,roi2.spanning_segment.chrom))
 
-def check_window(tx_ivc,
-                 known_roi,known_offset,known_ref_point,
-                 flank_up,
-                 flank_down,
-                 test_method,
-                 test_name,
-                 ref_delta=0):
+def check_equality(roi1, roi2, err_str=""):
+    """Make sure two |SegmentChain| are equal by testing equality of position sets, chromosomes, and strands"""
+    assert_set_equal(
+        roi1.get_position_set(), roi2.get_position_set(),
+        "%s ROIs unequal: unequal position sets %s vs %s" % (err_str, str(roi1), str(roi2))
+    )
+    if roi1.length > 0:
+        assert_equal(
+            roi1.spanning_segment.strand, roi2.spanning_segment.strand,
+            "%s ROI strand mismatch: %s vs %s" %
+            (err_str, roi1.spanning_segment.strand, roi2.spanning_segment.strand)
+        )
+        assert_equal(
+            roi1.spanning_segment.chrom, roi2.spanning_segment.chrom,
+            "%s ROI chromosome mismatch: %s vs %s" %
+            (err_str, roi1.spanning_segment.chrom, roi2.spanning_segment.chrom)
+        )
+
+
+def check_window(
+        tx_ivc,
+        known_roi,
+        known_offset,
+        known_ref_point,
+        flank_up,
+        flank_down,
+        test_method,
+        test_name,
+        ref_delta=0
+):
     """Helper function to test output of window landmark functions
     
     Parameters
@@ -69,31 +87,45 @@ def check_window(tx_ivc,
     ref_delta : int, optional
         Distance from reference landmark at which to center windows
     """
-    err_str = ("Failed %s on %s (strand: '%s', up: %s, down: %s). " % (test_name,str(tx_ivc),tx_ivc.spanning_segment.strand,flank_up,flank_down)) + "%s unequal (%s vs %s)"
-    test_roi, test_offset, test_ref_point = test_method(tx_ivc,flank_up,flank_down,ref_delta=ref_delta)
-    check_equality(SegmentChain.from_str(known_roi),test_roi)
+    err_str = (
+        "Failed %s on %s (strand: '%s', up: %s, down: %s). " %
+        (test_name, str(tx_ivc), tx_ivc.spanning_segment.strand, flank_up, flank_down)
+    ) + "%s unequal (%s vs %s)"
+    test_roi, test_offset, test_ref_point = test_method(
+        tx_ivc, flank_up, flank_down, ref_delta=ref_delta
+    )
+    check_equality(SegmentChain.from_str(known_roi), test_roi)
 
     # if no landmark
-    if numpy.isnan(known_offset) or isinstance(known_ref_point,float) and numpy.isnan(known_ref_point):
-        assert_true(numpy.isnan(test_offset),msg=err_str % ("offset",known_offset,test_offset))
-        assert_true(numpy.isnan(test_ref_point),msg=err_str % ("ref_point",known_ref_point,test_ref_point))
+    if numpy.isnan(known_offset) or isinstance(known_ref_point,
+                                               float) and numpy.isnan(known_ref_point):
+        assert_true(numpy.isnan(test_offset), msg=err_str % ("offset", known_offset, test_offset))
+        assert_true(
+            numpy.isnan(test_ref_point),
+            msg=err_str % ("ref_point", known_ref_point, test_ref_point)
+        )
     # if landmark
     else:
-        assert_equal(known_offset,test_offset,msg=err_str % ("offset",known_offset,test_offset))
-        assert_equal(known_ref_point,test_ref_point,msg=err_str % ("ref_point",known_ref_point,test_ref_point))
+        assert_equal(known_offset, test_offset, msg=err_str % ("offset", known_offset, test_offset))
+        assert_equal(
+            known_ref_point,
+            test_ref_point,
+            msg=err_str % ("ref_point", known_ref_point, test_ref_point)
+        )
+
 
 @attr(test="unit")
 def test_window_cds_start():
     # test case, 1 transcript with CDS at first nucleotide
     # test case, 1 transcript with CDS internal
     # test case, 1 transcript with no CDS
-    
+
     # for all, with and without changed upstream, downstream flanks
-    for flank_up,flank_down in _FLANKS:
+    for flank_up, flank_down in _FLANKS:
         for txid in _CDS_START_QUERIES:
             tx_ivc = _TRANSCRIPTS[txid]
-            known_vals = _CDS_START_RESULTS["%s_%s_%s" % (tx_ivc.get_name(),flank_up,flank_down)]
-            ltmp = [check_window,tx_ivc]
+            known_vals = _CDS_START_RESULTS["%s_%s_%s" % (tx_ivc.get_name(), flank_up, flank_down)]
+            ltmp = [check_window, tx_ivc]
             ltmp.extend(known_vals)
             ltmp.append(flank_up)
             ltmp.append(flank_down)
@@ -101,18 +133,19 @@ def test_window_cds_start():
             ltmp.append("window_cds_start")
             yield tuple(ltmp)
 
+
 @attr(test="unit")
 def test_window_cds_stop():
     # test case, 1 transcript with CDS stop at final nucleotide
     # test case, 1 transcript with CDS stop internal
     # test case, 1 transcript with no CDS
- 
+
     # for all, with and without changed upstream, downstream flanks
-    for flank_up,flank_down in _FLANKS:
+    for flank_up, flank_down in _FLANKS:
         for txid in _CDS_STOP_QUERIES:
             tx_ivc = _TRANSCRIPTS[txid]
-            known_vals = _CDS_STOP_RESULTS["%s_%s_%s" % (tx_ivc.get_name(),flank_up,flank_down)]
-            ltmp = [check_window,tx_ivc]
+            known_vals = _CDS_STOP_RESULTS["%s_%s_%s" % (tx_ivc.get_name(), flank_up, flank_down)]
+            ltmp = [check_window, tx_ivc]
             ltmp.extend(known_vals)
             ltmp.append(flank_up)
             ltmp.append(flank_down)
@@ -120,18 +153,20 @@ def test_window_cds_stop():
             ltmp.append("window_cds_stop")
             yield tuple(ltmp)
 
+
 @attr(test="unit")
 def test_window_cds_stop_with_ref_delta():
     # test case, 1 transcript with CDS stop at final nucleotide
     # test case, 1 transcript with CDS stop internal
     # test case, 1 transcript with no CDS
- 
+
     # for all, with and without changed upstream, downstream flanks
-    for flank_up,flank_down in _FLANKS:
+    for flank_up, flank_down in _FLANKS:
         for txid in _CDS_STOP_QUERIES:
             tx_ivc = _TRANSCRIPTS[txid]
-            known_vals = _CDS_STOP_WITH_DELTA_RESULTS["%s_%s_%s" % (tx_ivc.get_name(),flank_up,flank_down)]
-            ltmp = [check_window,tx_ivc]
+            known_vals = _CDS_STOP_WITH_DELTA_RESULTS["%s_%s_%s" %
+                                                      (tx_ivc.get_name(), flank_up, flank_down)]
+            ltmp = [check_window, tx_ivc]
             ltmp.extend(known_vals)
             ltmp.append(flank_up)
             ltmp.append(flank_down)
@@ -140,44 +175,48 @@ def test_window_cds_stop_with_ref_delta():
             ltmp.append(3)
             yield tuple(ltmp)
 
-def check_window_landmark(ivc,landmark,flank_up=50,flank_down=100):
+
+def check_window_landmark(ivc, landmark, flank_up=50, flank_down=100):
     test_roi, test_offset, (test_chrom,test_pos,test_strand) = window_landmark(ivc,flank_up,flank_down,landmark)
-    
+
     # make sure position of interest matches what we gave window_landmark
-    ref_chrom,ref_pos,ref_strand = ivc.get_genomic_coordinate(landmark)
-    assert_equal(ref_chrom,test_chrom)
-    assert_equal(ref_pos,test_pos)
-    assert_equal(ref_strand,test_strand)
+    ref_chrom, ref_pos, ref_strand = ivc.get_genomic_coordinate(landmark)
+    assert_equal(ref_chrom, test_chrom)
+    assert_equal(ref_pos, test_pos)
+    assert_equal(ref_strand, test_strand)
 
     # make sure position is in roi
     assert_true(test_pos in test_roi.get_position_set())
-    
+
     # assure test roi length + offset == flank_up + flank_down
     # which it always should, unless the landmark is very close
     # to the edge of the transcript, in which case it should be smaller
     if landmark + flank_down <= test_roi.length:
-        assert_equal(test_offset+test_roi.length,flank_up+flank_down)
+        assert_equal(test_offset + test_roi.length, flank_up + flank_down)
     else:
-        assert_less_equal(test_offset+test_roi.length,flank_up+flank_down)
-    
+        assert_less_equal(test_offset + test_roi.length, flank_up + flank_down)
+
     # test offset in roi is correct relative to offset and flank
     # only relevant for plus-strand
-    roi_pos = test_roi.get_segmentchain_coordinate(test_chrom,test_pos,test_strand)
-    assert_equal(roi_pos + test_offset,flank_up)
+    roi_pos = test_roi.get_segmentchain_coordinate(test_chrom, test_pos, test_strand)
+    assert_equal(roi_pos + test_offset, flank_up)
+
 
 @attr(test="unit")
 def test_window_landmark():
     # test cases: plus and minus-strand IVCs with splicing
     flank_up = 50
     flank_down = 100
-    my_segmentchains = [SegmentChain(GenomicSegment("chrA",50,350,"+"),GenomicSegment("chrA",500,900,"+")),
-               SegmentChain(GenomicSegment("chrA",50,350,"-"),GenomicSegment("chrA",500,900,"-")),
-               ]
+    my_segmentchains = [
+        SegmentChain(GenomicSegment("chrA", 50, 350, "+"), GenomicSegment("chrA", 500, 900, "+")),
+        SegmentChain(GenomicSegment("chrA", 50, 350, "-"), GenomicSegment("chrA", 500, 900, "-")),
+    ]
     for my_segmentchain in my_segmentchains:
-        for landmark in range(0,700,50):
+        for landmark in range(0, 700, 50):
             yield check_window_landmark, my_segmentchain, landmark, flank_up, flank_down
 
-def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up,flank_down):
+
+def check_maximal_window(test_name, genome_hash, test_group, result_groups, flank_up, flank_down):
     """
     test_name : str
         Descriptive name of test
@@ -205,38 +244,50 @@ def check_maximal_window(test_name,genome_hash,test_group,result_groups,flank_up
     #    masked
     #    alignment_offset
     #    zero_point
-    err_str = ("Failed %s (up: %s, down: %s). " % (test_name,flank_up,flank_down)) + "%s unequal (%s vs %s)"
+    err_str = ("Failed %s (up: %s, down: %s). " %
+               (test_name, flank_up, flank_down)) + "%s unequal (%s vs %s)"
     tx_ivcs = (_TRANSCRIPTS[X] for X in test_group)
-    roi_table = group_regions_make_windows(tx_ivcs,genome_hash,flank_up,flank_down,window_cds_start)
-    roi_table.sort(columns=["region"],inplace=True)
+    roi_table = group_regions_make_windows(
+        tx_ivcs, genome_hash, flank_up, flank_down, window_cds_start
+    )
+    roi_table.sort_values("region", inplace=True)
     trows = [X[1] for X in roi_table.iterrows()]
-    result_groups = sorted(result_groups,key=lambda x: x[0])
+    result_groups = sorted(result_groups, key=lambda x: x[0])
     REGION = 0
 
     c = 0
-    
-    for n,result_group in enumerate(result_groups):
+
+    for n, result_group in enumerate(result_groups):
         # if no landmark
         if numpy.isnan(result_group[1]) or numpy.isnan(result_group[2]):
-            c += 1 # increment counter for input that will have no output
-            
+            c += 1  # increment counter for input that will have no output
+
         # if landmark
         else:
-            check_equality(SegmentChain.from_str(result_group[0]),
-                           SegmentChain.from_str(trows[n-c]["region"]),test_name) 
-            assert_equal(result_group[1],
-                         trows[n-c]["alignment_offset"],
-                         msg=err_str % ("offset",result_group[1],trows[n-c]["alignment_offset"]))
-            assert_equal(result_group[2],
-                         trows[n-c]["zero_point"],
-                         msg=err_str % ("ref_point",result_group[1],trows[n-c]["zero_point"]))
+            check_equality(
+                SegmentChain.from_str(result_group[0]),
+                SegmentChain.from_str(trows[n - c]["region"]), test_name
+            )
+            assert_equal(
+                result_group[1],
+                trows[n - c]["alignment_offset"],
+                msg=err_str % ("offset", result_group[1], trows[n - c]["alignment_offset"])
+            )
+            assert_equal(
+                result_group[2],
+                trows[n - c]["zero_point"],
+                msg=err_str % ("ref_point", result_group[1], trows[n - c]["zero_point"])
+            )
             if len(result_group) == 4:
-                assert_equal(result_group[3],
-                             trows[n-c]["masked"],
-                             msg=err_str % ("mask",result_group[3],trows[n-c]["masked"]))
+                assert_equal(
+                    result_group[3],
+                    trows[n - c]["masked"],
+                    msg=err_str % ("mask", result_group[3], trows[n - c]["masked"])
+                )
 
-    assert_equal(n+1-c,len(roi_table))
-    
+    assert_equal(n + 1 - c, len(roi_table))
+
+
 @attr(test="unit")
 def test_group_regions_make_windows_finds_maximal_window():
     # test case, 3 transcripts same start
@@ -245,10 +296,12 @@ def test_group_regions_make_windows_finds_maximal_window():
     # test case including ncRNAs
     # for all, with and without changed upstream, downstream flanks
     empty_hash = GenomeHash([])
-    for flank_up,flank_down in _FLANKS:
+    for flank_up, flank_down in _FLANKS:
         for test_name, test_group in _DO_GENERATE_MAX_WINDOW.items():
-            result_group = _DO_GENERATE_MAX_WINDOW_RESULTS["%s_%s_%s" % (test_name,flank_up,flank_down)]
+            result_group = _DO_GENERATE_MAX_WINDOW_RESULTS["%s_%s_%s" %
+                                                           (test_name, flank_up, flank_down)]
             yield check_maximal_window, test_name, empty_hash, test_group, [result_group], flank_up, flank_down
+
 
 @attr(test="unit")
 def test_group_regions_make_windows_multiple_genes():
@@ -256,15 +309,18 @@ def test_group_regions_make_windows_multiple_genes():
     flank_up = 50
     flank_down = 100
     for test_name, test_group in _DO_GENERATE_MULTI_GENE.items():
-        result_groups = _DO_GENERATE_MULTI_GENE_RESULTS["%s_%s_%s" % (test_name,flank_up,flank_down)]
+        result_groups = _DO_GENERATE_MULTI_GENE_RESULTS["%s_%s_%s" %
+                                                        (test_name, flank_up, flank_down)]
         yield check_maximal_window, test_name, empty_hash, test_group, result_groups, flank_up, flank_down
+
 
 @attr(test="unit")
 def test_group_regions_make_windows_finds_masks():
     crossmap = GenomeHash(_MASKS)
-    for flank_up,flank_down in _FLANKS:
+    for flank_up, flank_down in _FLANKS:
         for test_name, test_group in _DO_GENERATE_MAX_WINDOW.items():
-            result_group = _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED["%s_%s_%s" % (test_name,flank_up,flank_down)]
+            result_group = _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED["%s_%s_%s" %
+                                                                  (test_name, flank_up, flank_down)]
             yield check_maximal_window, test_name, crossmap, test_group, [result_group], flank_up, flank_down
 
 
@@ -273,11 +329,10 @@ def test_group_regions_make_windows_finds_masks():
 #===============================================================================
 
 _MASKS = [
-    SegmentChain.from_str("2L:7985694-7985744(+)"),         
+    SegmentChain.from_str("2L:7985694-7985744(+)"),
     SegmentChain.from_str("3R:4519879-4519891(-)"),
     SegmentChain.from_str("4:50-50000(+)"),
 ]
-
 
 _TRANSCRIPTS_GFF = """##gff-version 3
 3R    FlyBase    mRNA    4517211    4523544    .    -    .    ID=FBtr0081950;Name=hb-RB;Parent=FBgn0001180;Alias=FBtr0002097,FBtr0002098,CG9786-RB,hb[+]R2.8;Dbxref=FlyBase_Annotation_IDs:CG9786-RB,REFSEQ:NM_169234;score_text=Strongly Supported;score=11
@@ -390,10 +445,13 @@ _TRANSCRIPTS_GFF = """##gff-version 3
 2L    FlyBase    CDS    9397177    9397746    .    -    0    ID=CDS_FBgn0032115:1_867;Name=CG4438-cds;Parent=FBtr0303900;parent_type=mRNA
 2L    FlyBase    CDS    9397177    9397746    .    -    0    ID=CDS_FBgn0032115:2_867;Name=CG4438-cds;Parent=FBtr0079813;parent_type=mRNA
 2L    FlyBase    exon    9397833    9397988    .    -    .    ID=FBgn0032115:3;Name=CG4438:3;Parent=FBtr0079813,FBtr0303900;parent_type=mRNA
-""".replace("    ","\t")
+""".replace("    ", "\t")
 """GFF of transcripts used in these tests"""
 
-_TRANSCRIPTS = { X.get_name() : X for X in GFF3_TranscriptAssembler(SkipBlankReader(cStringIO.StringIO(_TRANSCRIPTS_GFF))) }
+_TRANSCRIPTS = {
+    X.get_name(): X
+    for X in GFF3_TranscriptAssembler(SkipBlankReader(cStringIO.StringIO(_TRANSCRIPTS_GFF)))
+}
 """|Transcript| representation of transcripts used in these tests"""
 
 _CDS_START_QUERIES = [ 
@@ -407,7 +465,7 @@ _CDS_START_QUERIES = [
     "FBtr0079531_no_cds",                  
     "FBtr0079531_no_utr",                  
     "FBtr0079531_at_splice",    
-]
+] # yapf: disable
 """IDs of individual |Transcript| s to use in :py:func:`test_window_cds_start`"""
 
 _CDS_START_RESULTS = {
@@ -465,7 +523,7 @@ _CDS_START_RESULTS = {
     'FBtr0079531_short_utr_100_0': ('2L:7985664-7985674(+)',90,('2L', 7985674, '+')),
     'FBtr0079531_short_utr_100_50': ('2L:7985664-7985724(+)',90,('2L', 7985674, '+')),
     'FBtr0079531_short_utr_50_100': ('2L:7985664-7985768^7985833-7985839(+)',40,('2L', 7985674, '+')),     
-}
+} # yapf: disable
 """Expected results of CDS start queries"""
 
 _CDS_STOP_QUERIES = [ 
@@ -479,7 +537,7 @@ _CDS_STOP_QUERIES = [
     "FBtr0079531_no_cds",                  
     "FBtr0079531_no_utr",                  
     "FBtr0079531_at_splice",    
-]
+] # yapf: disable
 """IDs of individual |Transcript| s to use in :py:func:`test_window_cds_stop`"""
 
 _CDS_STOP_RESULTS = {
@@ -523,7 +581,7 @@ _CDS_STOP_RESULTS = {
     'FBtr0081950_short_utr_100_0': ('3R:4517602-4517702(-)',0,('3R', 4517601, '-')),
     'FBtr0081950_short_utr_100_50': ('3R:4517589-4517702(-)',0,('3R', 4517601, '-')),
     'FBtr0081950_short_utr_50_100': ('3R:4517589-4517652(-)',0,('3R', 4517601, '-'))             
-}
+} # yapf: disable
 """Expected results of queries"""
 
 _CDS_STOP_WITH_DELTA_RESULTS = {
@@ -567,7 +625,7 @@ _CDS_STOP_WITH_DELTA_RESULTS = {
     'FBtr0081950_short_utr_100_0': ('3R:4517599-4517699(-)',0,('3R', 4517598, '-')),
     'FBtr0081950_short_utr_100_50': ('3R:4517589-4517699(-)',0,('3R', 4517598, '-')),
     'FBtr0081950_short_utr_50_100': ('3R:4517589-4517649(-)',0,('3R', 4517598, '-'))
-}
+} # yapf: disable
 
 _DO_GENERATE_MAX_WINDOW = {
     "3_same_start_plus"      : ["FBtr0306336","FBtr0079531","FBtr0079531_short_utr"],
@@ -587,7 +645,7 @@ _DO_GENERATE_MAX_WINDOW = {
 
     "stop_max_spanning_window_threeprime_minus" : ["FBtr0079813","FBtr0303900"],
 
-}
+} # yapf: disable
 
 _DO_GENERATE_MAX_WINDOW_RESULTS = {
     '3_diff_minus_ncrna_minus_0_100': ['na', nan, nan],
@@ -625,22 +683,20 @@ _DO_GENERATE_MAX_WINDOW_RESULTS = {
     '3_same_start_plus2_0_100': ['2L:7985674-7985768^7985833-7985839(+)', 0, 0],
     '3_same_start_plus2_100_0': ['na', nan, nan],
     '3_same_start_plus2_100_50': ['2L:7985674-7985724(+)', 100, 100],
-    '3_same_start_plus2_50_100': ['2L:7985674-7985768^7985833-7985839(+)',50,50],
+    '3_same_start_plus2_50_100': ['2L:7985674-7985768^7985833-7985839(+)', 50, 50],
     '3_same_start_plus_0_100': ['2L:7985674-7985768^7985833-7985839(+)', 0, 0],
     '3_same_start_plus_100_0': ['2L:7985664-7985674(+)', 90, 100],
     '3_same_start_plus_100_50': ['2L:7985664-7985724(+)', 90, 100],
     '3_same_start_plus_50_100': ['2L:7985664-7985768^7985833-7985839(+)', 40, 50],
-    
-    'stop_max_spanning_window_threeprime_minus_0_100': ['2L:9397646-9397746(-)',  0,   0],
-    'stop_max_spanning_window_threeprime_minus_100_0': ['2L:9397746-9397764(-)',  0,   100],
-    'stop_max_spanning_window_threeprime_minus_100_50': ['2L:9397696-9397764(-)', 82,  100],
-    'stop_max_spanning_window_threeprime_minus_50_100': ['2L:9397646-9397764(-)', 32,  50],
-    
-    'stop_max_spanning_window_threeprime_plus_0_100': ['2L:8997663-8997668(+)',   0,   0],
-    'stop_max_spanning_window_threeprime_plus_100_0': ['2L:8997640-8997663(+)',   77,  100],
-    'stop_max_spanning_window_threeprime_plus_100_50': ['2L:8997640-8997668(+)',  77,  100],
-    'stop_max_spanning_window_threeprime_plus_50_100': ['2L:8997640-8997668(+)',  27,  50],  
-}
+    'stop_max_spanning_window_threeprime_minus_0_100': ['2L:9397646-9397746(-)', 0, 0],
+    'stop_max_spanning_window_threeprime_minus_100_0': ['2L:9397746-9397764(-)', 0, 100],
+    'stop_max_spanning_window_threeprime_minus_100_50': ['2L:9397696-9397764(-)', 82, 100],
+    'stop_max_spanning_window_threeprime_minus_50_100': ['2L:9397646-9397764(-)', 32, 50],
+    'stop_max_spanning_window_threeprime_plus_0_100': ['2L:8997663-8997668(+)', 0, 0],
+    'stop_max_spanning_window_threeprime_plus_100_0': ['2L:8997640-8997663(+)', 77, 100],
+    'stop_max_spanning_window_threeprime_plus_100_50': ['2L:8997640-8997668(+)', 77, 100],
+    'stop_max_spanning_window_threeprime_plus_50_100': ['2L:8997640-8997668(+)', 27, 50],
+} # yapf: disable
 
 _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED = {
     '3_diff_minus_ncrna_minus_0_100': ['na', nan, nan, 'na'],
@@ -694,20 +750,29 @@ _DO_GENERATE_MAX_WINDOW_RESULTS_MASKED = {
     'stop_max_spanning_window_threeprime_plus_100_0': ['2L:8997640-8997663(+)',   77,  100],
     'stop_max_spanning_window_threeprime_plus_100_50': ['2L:8997640-8997668(+)',  77,  100],
     'stop_max_spanning_window_threeprime_plus_50_100': ['2L:8997640-8997668(+)',  27,  50],      
-}
+} # yapf: disable
 
 _DO_GENERATE_MULTI_GENE = {
-    "3_same_start"         : _DO_GENERATE_MAX_WINDOW["3_same_start_plus"] + _DO_GENERATE_MAX_WINDOW["3_same_start_minus"],
-    "3_same_start_1_ncrna" : _DO_GENERATE_MAX_WINDOW["3_same_plus_ncrna_plus"] + _DO_GENERATE_MAX_WINDOW["3_same_start_minus"],
-    "same_and_diff"        : _DO_GENERATE_MAX_WINDOW["3_diff_start_plus"] + _DO_GENERATE_MAX_WINDOW["3_same_start_minus"]
+    "3_same_start":
+    _DO_GENERATE_MAX_WINDOW["3_same_start_plus"] + _DO_GENERATE_MAX_WINDOW["3_same_start_minus"],
+    "3_same_start_1_ncrna":
+    _DO_GENERATE_MAX_WINDOW["3_same_plus_ncrna_plus"] +
+    _DO_GENERATE_MAX_WINDOW["3_same_start_minus"],
+    "same_and_diff":
+    _DO_GENERATE_MAX_WINDOW["3_diff_start_plus"] + _DO_GENERATE_MAX_WINDOW["3_same_start_minus"]
 }
 
 _DO_GENERATE_MULTI_GENE_RESULTS = {
-    "3_same_start_50_100"         : [_DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"],
-                                     _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_plus_50_100"],
-                                     ],
-    "3_same_start_1_ncrna_50_100" : [_DO_GENERATE_MAX_WINDOW_RESULTS["3_same_plus_ncrna_plus_50_100"],
-                                     _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"]],
-    "same_and_diff_50_100"        : [_DO_GENERATE_MAX_WINDOW_RESULTS["3_diff_start_plus_50_100"],
-                                     _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"]],
+    "3_same_start_50_100": [
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"],
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_plus_50_100"],
+    ],
+    "3_same_start_1_ncrna_50_100": [
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_plus_ncrna_plus_50_100"],
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"]
+    ],
+    "same_and_diff_50_100": [
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_diff_start_plus_50_100"],
+        _DO_GENERATE_MAX_WINDOW_RESULTS["3_same_start_minus_50_100"]
+    ],
 }
