@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    ="-w build_errors.txt"
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = sphinx-build -n
 PAPER         =
 BUILDDIR      = build
 
