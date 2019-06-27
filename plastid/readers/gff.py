@@ -108,6 +108,9 @@ from plastid.genomics.roitools import Transcript, SegmentChain, \
 from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
 from plastid.util.services.exceptions import DataWarning, warn
 
+
+_IS_PY37 = sys.version_info >= (3,7,0)
+
 #===============================================================================
 # INDEX: SO v2.5.3 feature types
 #   see: http://www.sequenceontology.org/resources/intro.html
@@ -430,22 +433,19 @@ class AbstractGFF_Reader(AbstractReader):
         inp : str
             line of GFF input
             
-        Raises
-        ------
-        StopIteration : when no features remain in file
         """
         items = inp.rstrip().split()
         if len(items) > 0:
             key = items[0]
-            if key == "FASTA":
-                raise StopIteration()
-            elif key == "sequence-region":
+            if key == "sequence-region":
                 try:
                     self.chromosomes[items[1]] = (items[2], items[3])
                 except IndexError:
                     self.chromosomes[items[1]] = tuple(items[1:])
+
             elif key in self.metadata.keys():
                 self.metadata[key] += ";" + " ".join(items[1:])
+
             else:
                 self.metadata[key] = " ".join(items[1:])
 
@@ -492,14 +492,14 @@ class AbstractGFF_Reader(AbstractReader):
         attr_string  = items[8]            
 
         info_dict = self._parse_tokens(attr_string)
-        info_dict['source'] = source
-        info_dict['score']  = score
-        info_dict['phase']  = phase
-        info_dict['type']   = feature_type        
+        info_dict["source"] = source
+        info_dict["score"]  = score
+        info_dict["phase"]  = phase
+        info_dict["type"]   = feature_type        
         # yapf: enable
 
-        my_iv = GenomicSegment(chrom,start,end,strand)            
-        my_feature = SegmentChain(my_iv,**info_dict)
+        my_iv = GenomicSegment(chrom, start, end, strand)
+        my_feature = SegmentChain(my_iv, **info_dict)
 
         if chrom != self._last_chrom:
             old_chrom = self._last_chrom
@@ -526,16 +526,22 @@ class AbstractGFF_Reader(AbstractReader):
         |SegmentChain|
             Next feature in file
         """
-        if line[0:3] == "###":
+        if line.startswith("###"):
             if self.return_stopfeatures == True:
                 return StopFeature
             else:
                 return self.__next__()
-        elif line[0:2] == "##":
+
+        elif line.startswith("##FASTA"):
+            return StopFeature
+
+        elif line.startswith("##"):
             self._parse_metatokens(line[2:])
             return self.__next__()
-        elif line[0:1] == "#":
+
+        elif line.startswith("#"):
             return self.__next__()
+
         else:
             return self._parse_genomic_feature(line)
 
