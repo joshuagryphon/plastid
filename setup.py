@@ -55,7 +55,7 @@ with open("README.rst") as f:
     long_description = f.read()
 
 setup_requires = [
-    "numpy>=1.9.0",
+    "numpy>=1.9.4",
     "pysam>=0.8.4",
     "cython>=0.22.0",
 ]
