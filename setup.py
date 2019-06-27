@@ -290,6 +290,7 @@ try:
     bigbed = Extension(
         "plastid.readers.bigbed",
         ["plastid/readers/bigbed.pyx"] + kent_deps,
+        libraries=LIBRARIES + ["z"],
         **extension_kwargs
     )
 
