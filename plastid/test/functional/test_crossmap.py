@@ -126,6 +126,6 @@ def setUpModule():
     with open(os.devnull, "a") as null:
         try:
             subprocess.check_call(args, stdout=null, stderr=subprocess.STDOUT)
-        except CalledProcessError as e:
+        except subprocess.CalledProcessError as e:
             print("Could not build bowtie index for crossmap test.")
             raise e
