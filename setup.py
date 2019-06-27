@@ -220,7 +220,7 @@ command_classes = {}
 # [REDEFINES]
 #
 # Detect if dependencies required to build C extensions are pre-installed
-# if so, overwrite values fromi the section above
+# if so, overwrite values from the section above
 #===============================================================================
 
 try:
