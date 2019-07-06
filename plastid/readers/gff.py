@@ -19,8 +19,9 @@ feature having its own record on its own line -- two interfaces for reading
         individual exon and CDS features, and assemble these into |Transcripts|.
 
         Features are read from `GTF2`_/`GFF3`_ files, grouped by `transcript_id`,
-        `Parent`, or `ID` attributes, depending on file type. Assembled |Transcripts|
-        are yielded only when their component features have fully been collected.
+        `Parent`, or `ID` attributes, depending on file type. Assembled
+        |Transcripts| are yielded only when their component features have fully
+        been collected.
 
     Low-level parsing of simple features
         |GTF2_Reader| and |GFF3_Reader| read raw features (such as individual
@@ -317,7 +318,8 @@ _DEFAULT_GFF3_TRANSCRIPT_TYPES = {
     "non_functional_homolog_of_pseudogenic_transcript",
     "pseudogenic_transcript",
 }
-"""GFF3 mature transcript types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
+"""GFF3 mature transcript types as annotated by `SO 2.5.3
+<http://www.sequenceontology.org/resources/intro.html>`_"""
 
 _DEFAULT_GFF3_EXON_TYPES = {
     "exon",
@@ -332,7 +334,8 @@ _DEFAULT_GFF3_EXON_TYPES = {
     "three_prime_noncoding_exon",
     "pseudogenic_exon",
 }
-"""GFF3 exon feature types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
+"""GFF3 exon feature types as annotated by `SO 2.5.3
+<http://www.sequenceontology.org/resources/intro.html>`_"""
 
 _DEFAULT_GFF3_CDS_TYPES = {
     "CDS",
@@ -340,17 +343,30 @@ _DEFAULT_GFF3_CDS_TYPES = {
     "CDS_indpendently_known",
     "CDS_predicted",
 }
-"""GFF3 CDS feature types as annotated by `SO 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_"""
+"""GFF3 CDS feature types as annotated by `SO 2.5.3
+<http://www.sequenceontology.org/resources/intro.html>`_"""
 
 #===============================================================================
 # INDEX: Readers for GFF formats
 #===============================================================================
 
 StopFeature = SegmentChain(GenomicSegment("Stop", 0, 1, "."), type="StopFeature", ID="StopFeature")
-"""Special |SegmentChain| emitted from GFF readers when the special line "###" is
-encountered, indicating that all previously returned features may be assembled
-into full objects. Also emitted when a GFF is sorted by chromosome, and
-the chromosome name changes"""
+"""Special |SegmentChain| emitted from GFF readers when:
+
+- the special line ``###`` is encountered
+- the special line ``###FASTA`` is encountered
+- a GFF file is marked as sorted, and the contig/chromosome changes
+- the source stream of features is changed
+
+indicating that all previously returned features may be assembled into full
+objects.
+
+.. note::
+
+   Because :obj:`StopFeature` is zero-length, it does not evaluate as equal to
+   itself. Use ``x is StopFeature`` or ``x is not StopFeature`` it testing for
+   equality.
+"""
 
 
 class AbstractGFF_Reader(AbstractReader):
@@ -383,10 +399,10 @@ class AbstractGFF_Reader(AbstractReader):
             or not (half-open intervals). (Default: `True`)
 
         return_stopfeatures : bool, optional
-            If `True`, will return a special |SegmentChain| called :obj:`StopFeature`
-            signifying that all previously emitted GFF entries may be assembled
-            into complete entities. These are emitted when the line `'###'`
-            is encountered in a GFF. (Default: `True`)
+            If `True`, will return a special |SegmentChain| called
+            :obj:`StopFeature` signifying that all previously emitted GFF
+            entries may be assembled into complete entities. These are emitted
+            when the line `'###'` is encountered in a GFF. (Default: `True`)
 
         is_sorted : bool, optional
             If True and `return_stopfeatures` is True, assume the GFF is sorted.
@@ -398,7 +414,6 @@ class AbstractGFF_Reader(AbstractReader):
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         """
-        #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
         stream = itertools.chain.from_iterable(multiopen(streams, fn=open))
         if kwargs.get("tabix", False) == True:
             stream = ("\t".join(X) for X in stream)
@@ -581,9 +596,9 @@ class GFF3_Reader(AbstractGFF_Reader):
         is encountered in a `GFF3`_. (Default: `False`)
 
     is_sorted : bool, optional
-        If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is sorted.
-        The reader will return :obj:`StopFeature` when the chromosome name
-        of a given feature differs from that of the previous feature.
+        If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is
+        sorted.  The reader will return :obj:`StopFeature` when the chromosome
+        name of a given feature differs from that of the previous feature.
         (Default: `False`)
 
     tabix : boolean, optional
@@ -639,10 +654,10 @@ class GFF3_Reader(AbstractGFF_Reader):
             is encountered in a `GFF3`_. (Default: `False`)
 
         is_sorted : bool, optional
-            If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is sorted.
-            The reader will return :obj:`StopFeature` when the chromosome name
-            of a given feature differs from that of the previous feature.
-            (Default: `False`)
+            If `True` and `return_stopfeatures` is `True`, assume the `GFF3`_ is
+            sorted.  The reader will return :obj:`StopFeature` when the
+            chromosome name of a given feature differs from that of the previous
+            feature.  (Default: `False`)
 
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
@@ -694,15 +709,15 @@ class GTF2_Reader(AbstractGFF_Reader):
         (Default: `True`)
 
     return_stopfeatures : bool, optional
-        If `True`, will return a special |SegmentChain|  called :py:obj:`StopFeature`
-        signifying that all previously emitted SegmentChains may be assembled
-        into complete entities. These are emitted when the line "###"
-        is encountered in a `GTF2`_. (Default: `False`)
+        If `True`, will return a special |SegmentChain| called
+        :py:obj:`StopFeature` signifying that all previously emitted
+        SegmentChains may be assembled into complete entities. These are emitted
+        when the line "###" is encountered in a `GTF2`_. (Default: `False`)
 
     is_sorted : bool, optional
-        If `True` and `return_stopfeatures` is `True`, assume the `GTF2`_ is sorted
-        by chromosome. The reader will return :obj:`StopFeature` when
-        the chromosome name of a given feature differs from that of the previous
+        If `True` and `return_stopfeatures` is `True`, assume the `GTF2`_ is
+        sorted by chromosome. The reader will return :obj:`StopFeature` when the
+        chromosome name of a given feature differs from that of the previous
         feature. (Default: `False`)
 
     tabix : boolean, optional
@@ -750,16 +765,17 @@ class GTF2_Reader(AbstractGFF_Reader):
             or not (half-open intervals). (Default: `True`)
 
         return_stopfeatures : bool, optional
-            If `True`, will return a special |SegmentChain|  called :py:obj:`StopFeature`
-            signifying that all previously emitted SegmentChains may be assembled
-            into complete entities. These are emitted when the line "###"
-            is encountered in a `GTF2`_. (Default: `False`)
+            If `True`, will return a special |SegmentChain| called
+            :py:obj:`StopFeature` signifying that all previously emitted
+            SegmentChains may be assembled into complete entities. These are
+            emitted when the line "###" is encountered in a `GTF2`_. (Default:
+            `False`)
 
         is_sorted : bool, optional
-            If `True` and `return_stopfeatures` is `True`, assume the `GTF2`_ is sorted
-            by chromosome. The reader will return :obj:`StopFeature` when
-            the chromosome name of a given feature differs from that of the previous
-            feature. (Default: `False`)
+            If `True` and `return_stopfeatures` is `True`, assume the `GTF2`_ is
+            sorted by chromosome. The reader will return :obj:`StopFeature` when
+            the chromosome name of a given feature differs from that of the
+            previous feature. (Default: `False`)
 
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
@@ -820,12 +836,13 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
             (Default: `False`)
 
         return_type : |SegmentChain| or subclass, optional
-            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+            Type of feature to return from assembled subfeatures (Default:
+            |SegmentChain|)
 
         add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations. If set to
-            `True`, three nucleotides will be added to the threeprime end of each
-            CDS annotation. (Default: `False`)
+            Some annotation files exclude the stop codon from CDS annotations.
+            If set to `True`, three nucleotides will be added to the threeprime
+            end of each CDS annotation. (Default: `False`)
 
         printer : file-like, optional
             Logger implementing a ``write()`` method. (Default: |NullWriter|)
@@ -940,13 +957,10 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
             #     - switch between source files in `self.stream`
             if feature is not StopFeature:
                 self._collect(feature)
-                continue
 
             # if stop signal is reached, clear memory, because those features
             # no longer needed
             else:
-
-
                 self.printer.write("Assembling next batch of transcripts ...")
                 transcripts, rejected = self._assemble_transcripts()
 
@@ -981,8 +995,9 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         |Transcript|
             Next complex feature in annotation (usually a transcript)
         """
-        for my_tx in itertools.chain.from_iterable(self._get_transcript_batches()):
-            yield self._finalize(my_tx)
+        for my_batch in self._get_transcript_batches():
+            for my_tx in my_batch:
+                yield self._finalize(my_tx)
 
 
 class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
@@ -1012,13 +1027,14 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         (Default: `False`)
 
     return_type : |SegmentChain| or subclass, optional
-        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+        Type of feature to return from assembled subfeatures (Default:
+        |SegmentChain|)
 
     add_three_for_stop : bool, optional
-        Some annotation files exclude the stop codon from CDS annotations. If set to
-        `True`, three nucleotides will be added to the threeprime end of each
-        CDS annotation, UNLESS the annotated transcript contains explicit `stop_codon`
-        feature. (Default: `False`)
+        Some annotation files exclude the stop codon from CDS annotations. If
+        set to `True`, three nucleotides will be added to the threeprime end of
+        each CDS annotation, UNLESS the annotated transcript contains explicit
+        `stop_codon` feature. (Default: `False`)
 
     printer : file-like, optional
         Logger implementing a ``write()`` method. Default: |NullWriter|
@@ -1064,7 +1080,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         Logger implementing a ``write()`` method.
 
     rejected : list
-        A list of transcript IDs from transcripts that failed to assemble properly
+        A list of transcript IDs from transcripts that failed to assemble
+        properly
     """
     # transcripts can be represented as collections of exons + cds
     # or cds + UTRs, et c. We consider all UTR and exons as exons
@@ -1112,7 +1129,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         self._feature_cache = {"exon_like": {}, "CDS_like": {}}
 
     def _collect(self, feature):
-        """Collect transcript component CDS and exons objects from `self.streams`, and populate `self._feature_cache`
+        """Collect transcript component CDS and exons objects from
+        `self.streams`, and populate `self._feature_cache`
 
         Parameters
         ----------
@@ -1139,8 +1157,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         """
         rejected_transcripts = []
         transcripts = []
-        for tname in set(self._feature_cache["exon_like"].keys()) | set(
-                self._feature_cache["CDS_like"].keys()):
+        for tname in set(self._feature_cache["exon_like"].keys()) \
+                | set(self._feature_cache["CDS_like"].keys()):
             exons = self._feature_cache["exon_like"].pop(tname, [])
             cds = self._feature_cache["CDS_like"].pop(tname, [])
             if len(exons) > 0:
@@ -1169,8 +1187,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 transcripts.append(my_tx)
             except ValueError:
                 warn(
-                    "Rejecting transcript '%s' because it contains exons on multiple chromosomes or strands."
-                    % tname, DataWarning
+                    "Rejecting transcript '%s' because it contains exons on "
+                    "multiple chromosomes or strands." % tname, DataWarning
                 )
                 # transcripts with exons on two strands
                 rejected_transcripts.append(tname)
@@ -1179,8 +1197,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
                 # there are 25 of these in flybase r5.43
                 rejected_transcripts.append(tname)
                 warn(
-                    "Rejecting transcript '%s' because start or stop codons are outside exon boundaries."
-                    % tname, DataWarning
+                    "Rejecting transcript '%s' because start or stop codons "
+                    "are outside exon boundaries." % tname, DataWarning
                 )
         transcripts.sort()
         sys.exc_traceback = None
@@ -1216,12 +1234,13 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         (Default: `False`)
 
     return_type : |SegmentChain| or subclass, optional
-        Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+        Type of feature to return from assembled subfeatures (Default:
+        |SegmentChain|)
 
     add_three_for_stop : bool, optional
-        Some annotation files exclude the stop codon from CDS annotations. If set to
-        `True`, three nucleotides will be added to the threeprime end of each
-        CDS annotation. (Default: `False`)
+        Some annotation files exclude the stop codon from CDS annotations. If
+        set to `True`, three nucleotides will be added to the threeprime end of
+        each CDS annotation. (Default: `False`)
 
     transcript_types : list, optional
         List of `GFF3`_ feature types that should be considered as transcripts
@@ -1281,22 +1300,24 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         Logger implementing a ``write()`` method.
 
     rejected : list
-        A list of transcript IDs from transcripts that failed to assemble properly
+        A list of transcript IDs from transcripts that failed to assemble
+        properly
 
 
     Notes
     -----
    `GFF3`_ schemas vary
-       `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
-       by allowing users to supply `transcript_types` and `exon_types`, to indicate
-       which sorts of features should be included. By default, we use a
-       subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
+       `GFF3`_ files can have many different schemas of hierarchy. We deal with
+       that here by allowing users to supply `transcript_types` and
+       `exon_types`, to indicate which sorts of features should be included. By
+       default, we use a subset of the schema set out in `Seqence Ontology 2.5.3
+       <http://www.sequenceontology.org/resources/intro.html>`_
 
        Briefly:
 
         1. The GFF3 file is combed for transcripts of the types specified by
-           `transcript_types`, exons specified by `exon_types`, and CDS specified by
-           types listed in `cds_types`.
+        `transcript_types`, exons specified by `exon_types`, and CDS specified
+        by types listed in `cds_types`.
 
         2. Exons and CDS are matched with their parent transcripts by matching
            the `Parent` attributes of CDS and exons to the `ID` of transcripts.
@@ -1321,12 +1342,12 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
            any transcript-type features that share its `ID` attribute.
 
    Identity relationships between elements vary between `GFF3`_ files
-       Different `GFF3`_ files specify discontiguous features differently. For example,
-       in `Flybase`_, different exons of a transcript will have unique IDs, but will share
-       the same `'Parent'` attribute in column 9 of the GFF. In `Wormbase`_, however, different
-       exons of the same transcript will share the same ID. Here, we first
-       check for the Flybase style (by Parent), then fall back to Wormbase
-       style (by shared ID).
+       Different `GFF3`_ files specify discontiguous features differently. For
+       example, in `Flybase`_, different exons of a transcript will have unique
+       IDs, but will share the same `'Parent'` attribute in column 9 of the GFF.
+       In `Wormbase`_, however, different exons of the same transcript will
+       share the same ID. Here, we first check for the Flybase style (by
+       Parent), then fall back to Wormbase style (by shared ID).
 
    Transcript assembly
        To save memory, transcripts are assembled lazily as follows:
@@ -1356,16 +1377,17 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             (Default: `False`)
 
         return_type : |SegmentChain| or subclass, optional
-            Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
+            Type of feature to return from assembled subfeatures (Default:
+            |SegmentChain|)
 
         add_three_for_stop : bool, optional
-            Some annotation files exclude the stop codon from CDS annotations. If set to
-            `True`, three nucleotides will be added to the threeprime end of each
-            CDS annotation. (Default: `False`)
+            Some annotation files exclude the stop codon from CDS annotations.
+            If set to `True`, three nucleotides will be added to the threeprime
+            end of each CDS annotation. (Default: `False`)
 
         transcript_types : list, optional
-            List of `GFF3`_ feature types that should be considered as transcripts
-            (Default: as specified in SO 2.5.3 )
+            List of `GFF3`_ feature types that should be considered as
+            transcripts (Default: as specified in SO 2.5.3 )
 
         exon_types : list, optional
             List of `GFF3`_ feature types that should be considered as exons or
@@ -1388,10 +1410,11 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         Notes
         -----
         Sequence Ontology 2.5.3
-            By default, this assembler constructs transcripts following a subset of the `GFF3`_
-            schema from the `SO Consortium <http://www.sequenceontology.org/resources/intro.html>`_.
-            For details on assembly see the :class:`class docstring <GFF3_TranscriptAssembler>`,
-            above.
+            By default, this assembler constructs transcripts following a subset
+            of the `GFF3`_ schema from the `SO Consortium
+            <http://www.sequenceontology.org/resources/intro.html>`_.  For
+            details on assembly see the :class:`class docstring
+            <GFF3_TranscriptAssembler>`, above.
         """
         AbstractGFF_Assembler.__init__(self, *streams, reader_class=GFF3_Reader, **kwargs)
         self.transcript_types = set(kwargs.get("transcript_types", _DEFAULT_GFF3_TRANSCRIPT_TYPES))
@@ -1512,8 +1535,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
                 except ValueError:
                     warn(
-                        "Rejecting transcript '%s' because it contains exons on multiple strands." %
-                        tname, DataWarning
+                        "Rejecting transcript '%s' because it contains exons "
+                        " on multiple strands." % tname, DataWarning
                     )
                     # transcripts with exons on two strands
                     rejected.append(tname)
@@ -1522,8 +1545,8 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
                     # ideally this would not occur but does in rare cases
                     # e.g. there are 25 of these in flybase r5.43
                     warn(
-                        "Rejecting transcript '%s because start or stop codons are outside exon boundaries."
-                        % tname, DataWarning
+                        "Rejecting transcript '%s because start or stop codons "
+                        "are outside exon boundaries." % tname, DataWarning
                     )
                     rejected.append(tname)
             else:
