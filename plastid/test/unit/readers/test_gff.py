@@ -19,6 +19,9 @@ from plastid.readers.gff import GTF2_Reader,\
                              StopFeature
 from plastid.util.services.decorators import skip_if_abstract
 
+from plastid.test.common import sup_data
+
+
 #===============================================================================
 # INDEX: test data
 #===============================================================================
@@ -11632,15 +11635,16 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
 
     @skip_if_abstract
     def test_output_is_sorted(self):
-        transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input))
-        self.assertEqual(
-            len(transcripts), len(self.expected_ivcs),
-            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
-            (len(self.expected_ivcs), len(transcripts))
-        )
+        with sup_data:
+            transcripts, _ = self.test_method(cStringIO.StringIO(self.unsorted_input))
+            self.assertEqual(
+                len(transcripts), len(self.expected_ivcs),
+                "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+                (len(self.expected_ivcs), len(transcripts))
+            )
 
-        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
-            self.assertEqual(tx1.get_name(), tx2.get_name())
+            for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+                self.assertEqual(tx1.get_name(), tx2.get_name())
 
     def check_output_against_reference(self, transcripts, stop_offset=0, reference=None):
         """Helper function to compare assembled transcripts against 
@@ -11711,56 +11715,63 @@ class AbstractTest_to_Transcripts(unittest.TestCase):
 
     @skip_if_abstract
     def test_output_is_correct(self):
-        transcripts, _ = self.test_method(
-            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
-        )
-        self.check_output_against_reference(transcripts, stop_offset=0)
+        with sup_data:
+            transcripts, _ = self.test_method(
+                cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
+            )
+            self.check_output_against_reference(transcripts, stop_offset=0)
 
     @skip_if_abstract
     def test_add_three(self):
-        transcripts, _ = self.test_method(
-            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
-        )
-        self.check_output_against_reference(transcripts, stop_offset=3)
+        with sup_data:
+            transcripts, _ = self.test_method(
+                cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
+            )
+            self.check_output_against_reference(transcripts, stop_offset=3)
 
     @skip_if_abstract
     def test_not_end_inclusive(self):
-        transcripts, _ = self.test_method(
-            cStringIO.StringIO(self.unsorted_input), end_included=False
-        )
-        self.assertEqual(
-            len(transcripts), len(self.expected_ivcs),
-            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
-            (len(self.expected_ivcs), len(transcripts))
-        )
+        with sup_data:
+            transcripts, _ = self.test_method(
+                cStringIO.StringIO(self.unsorted_input), end_included=False
+            )
+            self.assertEqual(
+                len(transcripts), len(self.expected_ivcs),
+                "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+                (len(self.expected_ivcs), len(transcripts))
+            )
 
-        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
-            self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
-            self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1), len(tx2))  # number of intervals
-            for n, tx1iv in enumerate(tx1):
-                self.assertEqual(
-                    tx1iv.start, tx2[n].start,
-                    "Failed end_exclusive start test for %s. Expected %s, got %s." %
-                    (tx1.get_name(), tx1iv.start, tx2[n].start)
-                )
-                self.assertEqual(
-                    tx1iv.end - 1, tx2[n].end,
-                    "Failed end_exclusive end   test for %s. Expected %s, got %s." %
-                    (tx1.get_name(), tx1iv.end, tx2[n].end)
-                )
+            for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+                self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
+                self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
+                self.assertEqual(len(tx1), len(tx2))  # number of intervals
+                for n, tx1iv in enumerate(tx1):
+                    self.assertEqual(
+                        tx1iv.start, tx2[n].start,
+                        "Failed end_exclusive start test for %s. Expected %s, got %s." %
+                        (tx1.get_name(), tx1iv.start, tx2[n].start)
+                    )
+                    self.assertEqual(
+                        tx1iv.end - 1, tx2[n].end,
+                        "Failed end_exclusive end   test for %s. Expected %s, got %s." %
+                        (tx1.get_name(), tx1iv.end, tx2[n].end)
+                    )
 
     @skip_if_abstract
     def test_rejected(self):
-        _, rejected = self.test_method(cStringIO.StringIO(self.unsorted_input))
-        self.assertEqual(len(rejected), len(self.rejected_ivc_names))
-        self.assertGreater(len(rejected), 0)
+        with sup_data:
+            _, rejected = self.test_method(cStringIO.StringIO(self.unsorted_input))
+            self.assertEqual(len(rejected), len(self.rejected_ivc_names))
+            self.assertGreater(len(rejected), 0)
 
 
 class AbstractTestAssembler(AbstractTest_to_Transcripts):
+
     @skip_if_abstract
     def test_output_is_sorted(self):
-        transcripts = list(self.test_class(cStringIO.StringIO(self.unsorted_input)))
+        with sup_data:
+            transcripts = list(self.test_class(cStringIO.StringIO(self.unsorted_input)))
+
         self.assertEqual(
             len(transcripts), len(self.expected_ivcs),
             "Mismatch between number of assembled transcripts. Expected %s, got %s." %
@@ -11772,93 +11783,101 @@ class AbstractTestAssembler(AbstractTest_to_Transcripts):
 
     @skip_if_abstract
     def test_output_is_correct(self):
-        transcripts = self.test_class(
-            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
-        )
-        self.check_output_against_reference(transcripts, stop_offset=0)
+        with sup_data:
+            transcripts = self.test_class(
+                cStringIO.StringIO(self.unsorted_input), add_three_for_stop=False
+            )
+            self.check_output_against_reference(transcripts, stop_offset=0)
 
     @skip_if_abstract
     def test_add_three(self):
-        transcripts = self.test_class(
-            cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
-        )
-        self.check_output_against_reference(transcripts, stop_offset=3)
+        with sup_data:
+            transcripts = self.test_class(
+                cStringIO.StringIO(self.unsorted_input), add_three_for_stop=True
+            )
+            self.check_output_against_reference(transcripts, stop_offset=3)
 
     @skip_if_abstract
     def test_not_end_inclusive(self):
-        transcripts = list(
-            self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
-        )
-        self.assertEqual(
-            len(transcripts), len(self.expected_ivcs),
-            "Mismatch between number of assembled transcripts. Expected %s, got %s." %
-            (len(self.expected_ivcs), len(transcripts))
-        )
+        with sup_data:
+            transcripts = list(
+                self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
+            )
+            self.assertEqual(
+                len(transcripts), len(self.expected_ivcs),
+                "Mismatch between number of assembled transcripts. Expected %s, got %s." %
+                (len(self.expected_ivcs), len(transcripts))
+            )
 
-        for tx1, tx2 in zip(self.expected_ivcs, transcripts):
-            self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
-            self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
-            self.assertEqual(len(tx1), len(tx2))  # number of intervals
-            for n, tx1iv in enumerate(tx1):
-                self.assertEqual(
-                    tx1iv.start, tx2[n].start,
-                    "Failed end_exclusive start test for %s. Expected %s, got %s." %
-                    (tx1.get_name(), tx1iv.start, tx2[n].start)
-                )
-                self.assertEqual(
-                    tx1iv.end - 1, tx2[n].end,
-                    "Failed end_exclusive end   test for %s. Expected %s, got %s." %
-                    (tx1.get_name(), tx1iv.end, tx2[n].end)
-                )
+            for tx1, tx2 in zip(self.expected_ivcs, transcripts):
+                self.assertEqual(tx1.spanning_segment.chrom, tx2.spanning_segment.chrom)
+                self.assertEqual(tx1.spanning_segment.strand, tx2.spanning_segment.strand)
+                self.assertEqual(len(tx1), len(tx2))  # number of intervals
+                for n, tx1iv in enumerate(tx1):
+                    self.assertEqual(
+                        tx1iv.start, tx2[n].start,
+                        "Failed end_exclusive start test for %s. Expected %s, got %s." %
+                        (tx1.get_name(), tx1iv.start, tx2[n].start)
+                    )
+                    self.assertEqual(
+                        tx1iv.end - 1, tx2[n].end,
+                        "Failed end_exclusive end   test for %s. Expected %s, got %s." %
+                        (tx1.get_name(), tx1iv.end, tx2[n].end)
+                    )
 
     @skip_if_abstract
     def test_rejected(self):
-        reader = self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
-        for _ in reader:  # populate rejected transcripts
-            pass
-        self.assertEqual(len(reader.rejected), len(self.rejected_ivc_names))
-        self.assertGreater(len(reader.rejected), 0)
+        with sup_data:
+            reader = self.test_class(cStringIO.StringIO(self.unsorted_input), end_included=False)
+            for _ in reader:  # populate rejected transcripts
+                pass
+            self.assertEqual(len(reader.rejected), len(self.rejected_ivc_names))
+            self.assertGreater(len(reader.rejected), 0)
 
     @skip_if_abstract
     def test_with_with_stop_features_and_is_sorted(self):
-        buf = cStringIO.StringIO()
-        transcripts = self.test_class(
-            cStringIO.StringIO(self.stop_feature_input), is_sorted=True, printer=buf
-        )
-        self.check_output_against_reference(transcripts, stop_offset=0)
+        with sup_data:
+            buf = cStringIO.StringIO()
+            transcripts = self.test_class(
+                cStringIO.StringIO(self.stop_feature_input), is_sorted=True, printer=buf
+            )
+            self.check_output_against_reference(transcripts, stop_offset=0)
 
-        buf.seek(0)
-        out = buf.read()
-        # assert there is some number of messages about clearing memory? or something?
-        self.assertTrue("Assembling next batch" in out)
+            buf.seek(0)
+            out = buf.read()
+            # assert there is some number of messages about clearing memory? or something?
+            self.assertTrue("Assembling next batch" in out)
 
     @skip_if_abstract
     def test_with_stop_features(self):
-        buf = cStringIO.StringIO()
-        transcripts = self.test_class(
-            cStringIO.StringIO(self.stop_feature_input), is_sorted=False, printer=buf
-        )
-        self.check_output_against_reference(transcripts, stop_offset=0)
+        with sup_data:
+            buf = cStringIO.StringIO()
+            transcripts = self.test_class(
+                cStringIO.StringIO(self.stop_feature_input), is_sorted=False, printer=buf
+            )
+            self.check_output_against_reference(transcripts, stop_offset=0)
 
-        buf.seek(0)
-        out = buf.read()
-        # assert there is some number of messages about clearing memory? or something?
-        self.assertTrue("Assembling next batch" in out)
+            buf.seek(0)
+            out = buf.read()
+            # assert there is some number of messages about clearing memory? or something?
+            self.assertTrue("Assembling next batch" in out)
 
     @skip_if_abstract
     def test_with_two_input_files(self):
-        transcripts = self.test_class(
-            cStringIO.StringIO(self.unsorted_input),
-            cStringIO.StringIO(self.unsorted_input),
-            add_three_for_stop=True
-        )
-        self.check_output_against_reference(
-            transcripts, reference=self.expected_ivcs * 2, stop_offset=3
-        )
+        with sup_data:
+            transcripts = self.test_class(
+                cStringIO.StringIO(self.unsorted_input),
+                cStringIO.StringIO(self.unsorted_input),
+                add_three_for_stop=True
+            )
+            self.check_output_against_reference(
+                transcripts, reference=self.expected_ivcs * 2, stop_offset=3
+            )
 
 
 @attr(test="unit")
 class TestGTF2_Assembler(AbstractTestAssembler):
+
     @classmethod
     def setUpClass(cls):
         cls.expected_ivcs = EXPECTED_IVCS
