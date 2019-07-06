@@ -9,7 +9,7 @@
 Summary
 -------
 
-Because `GTF2`_/`GFF3`_ files are hierarchically structured -- i.e. a complex 
+Because `GTF2`_/`GFF3`_ files are hierarchically structured -- i.e. a complex
 feature can be assembled from several component features; each component
 feature having its own record on its own line -- two interfaces for reading
 `GTF2`_/`GFF3`_ files are included:
@@ -17,16 +17,16 @@ feature having its own record on its own line -- two interfaces for reading
     Assembly of transcripts from exon, CDS, & UTR annotations
         |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler| collect
         individual exon and CDS features, and assemble these into |Transcripts|.
-        
+
         Features are read from `GTF2`_/`GFF3`_ files, grouped by `transcript_id`,
         `Parent`, or `ID` attributes, depending on file type. Assembled |Transcripts|
         are yielded only when their component features have fully been collected.
-        
+
     Low-level parsing of simple features
         |GTF2_Reader| and |GFF3_Reader| read raw features (such as individual
         exons, stop codons, SNPs, et c) from `GTF2`_/`GFF3`_ files. Each line
         is returned as a |SegmentChain|.
-        
+
 Module contents
 ---------------
 
@@ -63,7 +63,7 @@ them into transcripts::
 In contrast, |GTF2_TranscriptAssembler| and |GFF3_TranscriptAssembler| reconstruct
 transcripts from their components, based upon their `transcript_id`, `ID`, or
 `Parent` attributes. Note how all features are of type `mRNA`, and how some
-contain multiple exons (coordinates separated by `'^'`):: 
+contain multiple exons (coordinates separated by `'^'`)::
 
     >>> transcript_reader = GTF2_TranscriptAssembler("some_file.gtf")
     >>> for transcript in reader:
@@ -88,7 +88,7 @@ See Also
 
 `GTF2.2 specification <http://mblab.wustl.edu/GTF22.html>`_
     Hosted by the Brent lab
-    
+
 `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_.
     GFF & GTF descriptions at UCSC
 """
@@ -109,7 +109,6 @@ from plastid.readers.gff_tokens import parse_GFF3_tokens, parse_GTF2_tokens
 from plastid.util.services.exceptions import DataWarning, warn
 
 
-_IS_PY37 = sys.version_info >= (3,7,0)
 
 #===============================================================================
 # INDEX: SO v2.5.3 feature types
@@ -348,17 +347,17 @@ _DEFAULT_GFF3_CDS_TYPES = {
 #===============================================================================
 
 StopFeature = SegmentChain(GenomicSegment("Stop", 0, 1, "."), type="StopFeature", ID="StopFeature")
-"""Special |SegmentChain| emitted from GFF readers when the special line "###" is 
-encountered, indicating that all previously returned features may be assembled 
+"""Special |SegmentChain| emitted from GFF readers when the special line "###" is
+encountered, indicating that all previously returned features may be assembled
 into full objects. Also emitted when a GFF is sorted by chromosome, and
 the chromosome name changes"""
 
 
 class AbstractGFF_Reader(AbstractReader):
     """Abstract base class for GFF readers.
-    
+
     Parses GFF streams line by line into |GenomicSegment|
-    
+
     Attributes
     ----------
     metadata : dict
@@ -367,17 +366,17 @@ class AbstractGFF_Reader(AbstractReader):
 
     def __init__(self, *streams, **kwargs):
         """Create an |AbstractGFF_Reader|
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
             One or more input streams or filenames pointing to GFF information
-        
+
         adjust_to_0 : bool, optional
             Boolean, whether or not to adjust feature
             indices to a 0 base. True for `GTF2`_ and `GFF3`_
             files, as these are 1-indexed. (Default: `True`)
-                                
+
         end_included : bool, optional
             Boolean, whether the end coordinate is
             included in the feature (closed or 'end-included' intervals)
@@ -394,10 +393,10 @@ class AbstractGFF_Reader(AbstractReader):
             The reader will return :obj:`StopFeature` when the chromosome name
             of a given feature differs from that of the previous feature.
             (Default: `False`)
-            
+
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
-            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)        
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
         """
         #adjust_to_0=True,end_included=True,return_stopfeatures=True,is_sorted=False,tabix=False
         stream = itertools.chain.from_iterable(multiopen(streams, fn=open))
@@ -427,12 +426,12 @@ class AbstractGFF_Reader(AbstractReader):
     def _parse_metatokens(self, inp):
         """Parses metadata embedded in a GFF stream, and stores
         these in appropriate attributes.
-        
+
         Parameters
         ----------
         inp : str
             line of GFF input
-            
+
         """
         items = inp.rstrip().split()
         if len(items) > 0:
@@ -451,8 +450,8 @@ class AbstractGFF_Reader(AbstractReader):
 
     @abstractmethod
     def _parse_tokens(self, attr_string):
-        """Placeholder function to parse column 9, which is formatted 
-        differently in different GFF subtypes. Implement this 
+        """Placeholder function to parse column 9, which is formatted
+        differently in different GFF subtypes. Implement this
         in subclasses
 
         Parameters
@@ -489,13 +488,13 @@ class AbstractGFF_Reader(AbstractReader):
         score        = items[5]
         strand       = items[6]
         phase        = items[7]
-        attr_string  = items[8]            
+        attr_string  = items[8]
 
         info_dict = self._parse_tokens(attr_string)
         info_dict["source"] = source
         info_dict["score"]  = score
         info_dict["phase"]  = phase
-        info_dict["type"]   = feature_type        
+        info_dict["type"]   = feature_type
         # yapf: enable
 
         my_iv = GenomicSegment(chrom, start, end, strand)
@@ -513,14 +512,14 @@ class AbstractGFF_Reader(AbstractReader):
 
     def filter(self, line):
         """Parses lines of the GFF stream into |SegmentChain|
-        When metadata is found, temporarily delegates processing to 
+        When metadata is found, temporarily delegates processing to
         :meth:`_parse_metatokens`, and then reads the next genomic feature
-        
+
         Parameters
         ----------
         line
             Next line from GFF stream
-        
+
         Returns
         -------
         |SegmentChain|
@@ -530,17 +529,17 @@ class AbstractGFF_Reader(AbstractReader):
             if self.return_stopfeatures == True:
                 return StopFeature
             else:
-                return self.__next__()
+                return next(self)
 
         elif line.startswith("##FASTA"):
             return StopFeature
 
         elif line.startswith("##"):
             self._parse_metatokens(line[2:])
-            return self.__next__()
+            return next(self)
 
         elif line.startswith("#"):
-            return self.__next__()
+            return next(self)
 
         else:
             return self._parse_genomic_feature(line)
@@ -549,27 +548,27 @@ class AbstractGFF_Reader(AbstractReader):
 class GFF3_Reader(AbstractGFF_Reader):
     """
     GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
-    
+
     Read raw features in `GFF3`_ files as |SegmentChains|.
-    
+
     Users who wish to reconstruct |Transcripts| from raw features should instead
     use |GFF3_TranscriptAssembler|, which performs this task automatically.
-    
+
     Assumes input stream to use 1-indexed coordinates, in compliance with the
     `Sequence Ontology GFF3 specification <http://song.sourceforge.net/gff3.shtml>`_.
-    
+
     `GFF3`_ attributes (from column 9) for each record are stored in its ``attr``
     dictionary. Names and values of attributes are unescaped. The values for the
     attributes `Parent`, `Alias`, `Dbxref`, `dbxref`, and `Note`, if present, are
     lists rather than strings, because the `GFF3`_ spec enables these to have
-    multiple values. 
+    multiple values.
 
-    
+
     Parameters
     ----------
     *streams : one or more str or file-like
         One or more input streams or filenames pointing to GFF information
-    
+
     end_included : bool, optional
         Boolean, whether the end coordinate is included in the feature (closed
         or 'end-included' intervals) or not (half-open intervals). All
@@ -586,23 +585,23 @@ class GFF3_Reader(AbstractGFF_Reader):
         The reader will return :obj:`StopFeature` when the chromosome name
         of a given feature differs from that of the previous feature.
         (Default: `False`)
-        
+
     tabix : boolean, optional
         `streams` point to `tabix`_-compressed files or are open
         :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
-        
-    
+
+
     Attributes
     ----------
     metadata : dict
         Dictionary of metadata found in file headers
-        
-        
+
+
     Examples
     --------
-    
+
     Read raw features from a `GFF3`_ file::
-    
+
         >>> feature_reader = GFF3_Reader(open("./some_file.gff"))
         >>> for feature in feature_reader:
         >>>     print(feature.get_name(), feature.attr["type"], str(feature))
@@ -622,12 +621,12 @@ class GFF3_Reader(AbstractGFF_Reader):
     def __init__(self, *streams, **kwargs):
         """
         GFF3_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
             One or more input streams or filenames pointing to GFF information
-        
+
         end_included : bool, optional
             Boolean, whether the end coordinate is
             included in the feature (closed or 'end-included' intervals)
@@ -644,7 +643,7 @@ class GFF3_Reader(AbstractGFF_Reader):
             The reader will return :obj:`StopFeature` when the chromosome name
             of a given feature differs from that of the previous feature.
             (Default: `False`)
-            
+
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
@@ -670,25 +669,25 @@ class GFF3_Reader(AbstractGFF_Reader):
 class GTF2_Reader(AbstractGFF_Reader):
     """
     GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
-    
+
     Read raw features in `GTF2`_ files as |SegmentChains|. To assemble transcripts
     from raw features, use |GTF2_TranscriptAssembler|.
-    
+
     Assumes input to comply with the
     `GTF2 specification <http://mblab.wustl.edu/GTF22.html>`_. Each element must:
-    
+
       - use 1-indexed, fully-closed coordinates
       - have defined `gene_id` and `transcript_id` attributes
-    
+
     All |SegmentChain| objects returned by the reader have 0-indexed,
     half-open coordinates in keeping with Python conventions.
-    
-        
+
+
     Parameters
     ----------
     *streams : one or more str or file-like
         One or more input streams or filenames pointing to GFF information
-    
+
     end_included : bool, optional
         Boolean, whether the end coordinate is included in the feature (closed
         or 'end-included' intervals) or not (half-open intervals).
@@ -705,15 +704,15 @@ class GTF2_Reader(AbstractGFF_Reader):
         by chromosome. The reader will return :obj:`StopFeature` when
         the chromosome name of a given feature differs from that of the previous
         feature. (Default: `False`)
-        
+
     tabix : boolean, optional
         `streams` point to `tabix`_-compressed files or are open
-        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)    
-    
+        :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
+
     Examples
     --------
     Read raw features from a `GTF2`_ file::
-    
+
         >>> feature_reader = GTF2_Reader(open("some_file.gtf"))
         >>> for feature in reader:
         >>>     print(feature.get_name(),feature.attr["type"],str(feature))
@@ -739,12 +738,12 @@ class GTF2_Reader(AbstractGFF_Reader):
     def __init__(self, *streams, **kwargs):
         """
         GTF2_Reader(*streams, end_included=True, return_stopfeatures=False, is_sorted=False, tabix=False)
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
             One or more input streams or filenames pointing to GFF information
-        
+
         end_included : bool, optional
             Boolean, whether the end coordinate is
             included in the feature (closed or 'end-included' intervals)
@@ -761,7 +760,7 @@ class GTF2_Reader(AbstractGFF_Reader):
             by chromosome. The reader will return :obj:`StopFeature` when
             the chromosome name of a given feature differs from that of the previous
             feature. (Default: `False`)
-            
+
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
@@ -788,13 +787,13 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
     """Abstract base class for readers that assemble composite features
     -- e.g. |Transcript| objects -- from one or more features in one or
     more streams of `GTF2`_ or `GFF3`_ data.
-    
-    
+
+
     Attributes
     ----------
     stream : file-like
         Input stream, usually constructed from or more open filehandles
-    
+
     metadata : dict
         Various attributes gleaned from the stream, if any
 
@@ -810,7 +809,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
 
     def __init__(self, *streams, **kwargs):
         """Create a |AbstractGFF_Assembler|
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
@@ -819,7 +818,7 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         is_sorted : bool, optional
             GFF is sorted by chromosome name, allowing some memory savings
             (Default: `False`)
-        
+
         return_type : |SegmentChain| or subclass, optional
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
@@ -827,17 +826,17 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
             Some annotation files exclude the stop codon from CDS annotations. If set to
             `True`, three nucleotides will be added to the threeprime end of each
             CDS annotation. (Default: `False`)
-        
+
         printer : file-like, optional
             Logger implementing a ``write()`` method. (Default: |NullWriter|)
-        
+
         reader_class : class
             |GFF3_Reader| or |GTF2_Reader|
 
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
-                                
+
         **kwargs
             Other keyword arguments used by specific parsers
         """
@@ -879,16 +878,10 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
     def _finalize(self, tx):
         return tx
 
-    def __iter__(self):
-        return self
-
-    def next(self):
-        return self.__next__()
-
     @abstractmethod
     def _collect(self, feature):
         """Collect relevant features of transcripts
-        
+
         Parameters
         ----------
         feature : |SegmentChain|
@@ -898,8 +891,8 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
 
     @abstractmethod
     def _assemble_transcripts(self):
-        """Assemble |Transcript| objects from collected features 
-        
+        """Assemble |Transcript| objects from collected features
+
         Returns
         -------
         list
@@ -912,66 +905,100 @@ class AbstractGFF_Assembler(AssembledFeatureReader):
         """Release memory and reset internal hashes"""
         pass
 
-    def __next__(self):
-        """Return next assembled transcript from GFF, using lazy evaluation as follows:
-         
-        #.  If there exist assembled transcripts in `self._transript_cache`,
-            return the next object. Objects in the cache are stored
-            lexically.
-         
-        #.  Otherwise, collect features from the GFF stream until either
-            a :obj:`StopFeature` or EOF is encountered. At that point, assemble
-            transcripts and store them in the iterator `self._transcript_cache`
-         
-        Returns
-        -------
+    def _get_transcript_batches(self):
+        """Lazily assemble batches of transcripts from components in
+        `self.stream`, when signals in `self.stream` indicate it is safe to
+        assemble transcripts from previously collected features. This feature is
+        called by `self.__iter__`, which returns individual transcripts.
+
+        Signals that can signify safety to assemble previous transcripts
+        include:
+
+         - The special line ``###``, which indicates that the preceding
+           collection of lines in a GFF3 file are safe to assemble
+
+         - The special line ``###FASTA`` which indicates end of the feature
+           section of a GFF3 file
+
+         - A change in reference files (if multiple input files were given)
+
+        When an assembly signal is given, transcripts are assembled an internal
+        caches of collected feature are reset to free memory.
+
+
+        Yields
+        ------
+        list
+            Sorted list of transcripts in current GFF block
+        """
+        for feature in self.stream:
+            self.counter += 1
+
+            # collect features until a stop signal, such as:
+            #     - change of contig if GTF2/GFF3 is sorted
+            #     - '###FASTA' block, indicating end of features
+            #     - switch between source files in `self.stream`
+            if feature is not StopFeature:
+                self._collect(feature)
+                continue
+
+            # if stop signal is reached, clear memory, because those features
+            # no longer needed
+            else:
+
+
+                self.printer.write("Assembling next batch of transcripts ...")
+                transcripts, rejected = self._assemble_transcripts()
+
+                # remove previously assembled transcripts
+                # these lines required to free memory in Python 2.7
+                # and early versions of Python 3.x
+                gc.collect()
+                del gc.garbage[:]
+
+                # sort and prep next set of transcripts
+                transcripts = sorted(transcripts)
+                self.rejected.extend(rejected)
+                self._reset()
+                yield transcripts
+
+        # assemble any remaining features into transcripts, e.g. if no
+        # stop signals present within a single file
+        transcripts, rejected = self._assemble_transcripts()
+        gc.collect()
+        del gc.garbage[:]
+
+        transcripts = sorted(transcripts)
+        self.rejected.extend(rejected)
+        self._reset()
+        yield transcripts
+
+    def __iter__(self):
+        """Return next assembled transcript from GFF
+
+        Yields
+        ------
         |Transcript|
             Next complex feature in annotation (usually a transcript)
         """
-        try:
-            return self._finalize(next(self._transcript_cache))
-        except StopIteration:
-            # read GTF2/GFF3, populating feature_cache and building transcripts
-            # only after termination triggers (StopFeature or EOF)
-            sys.exc_traceback = None
-            try:  # if GTF2/GFF3 features, collect until StopIteration
-                for feature in self.stream:
-                    self.counter += 1
-                    if feature == StopFeature:  # if GTF2 is sorted or contains ###, raise stop, assemble, and free memory
-                        raise StopIteration()
-                    else:
-                        self._collect(feature)
-            except StopIteration:  # end of GTF2/GFF3 feature stream, assemble transcripts
-                self.printer.write("Assembling next batch of transcripts ...")
-                transcripts, rejected = self._assemble_transcripts()
-                if len(transcripts) > 0:
-                    del self._transcript_cache
-                    gc.collect()
-                    del gc.garbage[:]
-                    transcripts = sorted(transcripts)
-                    self._transcript_cache = iter(transcripts)
-                    self.rejected.extend(rejected)
-                    self._reset()
-
-                else:  # happens when we get two StopFeatures in a row
-                    return self.__next__()
-            return self._finalize(next(self._transcript_cache))
+        for my_tx in itertools.chain.from_iterable(self._get_transcript_batches()):
+            yield self._finalize(my_tx)
 
 
 class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     """
     GTF2_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
-        
+
     Assemble |Transcripts| from raw features in `GTF2`_ format.
-    
+
     Exons and CDS features are grouped by shared ``transcript_id``.
     Attributes that have common values for all exons and CDS within a transcript
     are propagated up to the `attr` dict of the assembled |Transcript|. Other
     attributes from individual CDS or exon components are discarded.
-     
+
     The assembler functions as an iterator. Within each chromosome, transcripts
     are returned in lexical order.
-    
+
     For access to raw features, instead use |GTF2_Reader|.
 
 
@@ -983,7 +1010,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     is_sorted : bool, optional
         `GTF2`_ is sorted by chromosome name, allowing some memory savings
         (Default: `False`)
-    
+
     return_type : |SegmentChain| or subclass, optional
         Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
@@ -992,10 +1019,10 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         `True`, three nucleotides will be added to the threeprime end of each
         CDS annotation, UNLESS the annotated transcript contains explicit `stop_codon`
         feature. (Default: `False`)
-    
+
     printer : file-like, optional
         Logger implementing a ``write()`` method. Default: |NullWriter|
-        
+
     tabix : boolean, optional
         `streams` point to `tabix`_-compressed files or are open
         :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
@@ -1004,11 +1031,11 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     Examples
     --------
     Assemble transcripts from a `GTF2`_ file::
-    
+
         >>> transcript_reader = GTF2_TranscriptAssembler(open("some_file.gtf"))
         >>> for transcript in reader:
         >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript)) # do something
-    
+
         ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
         ('YBL092W_mRNA',   'mRNA',  'chrII:45643-45644^45977-46440(+)')
         ('YBL057C_mRNA',   'mRNA',  'chrII:112749-113427^113444-113450(-)')
@@ -1026,7 +1053,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     ----------
     streams : file-like
         Input streams, usually constructed from one or more open filehandles
-    
+
     metadata : dict
         Various attributes gleaned from the streams, if any
 
@@ -1055,7 +1082,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     def __init__(self, *streams, **kwargs):
         """
         GTF2_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
@@ -1064,7 +1091,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
         is_sorted : bool, optional
             `GTF2`_ is sorted by chromosome name, allowing some memory savings
             (Default: `False`)
-        
+
         return_type : |SegmentChain| or subclass, optional
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
@@ -1073,10 +1100,10 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
             `True`, three nucleotides will be added to the threeprime end of each
             CDS annotation, UNLESS the annotated transcript contains explicit `stop_codon`
             feature. (Default: `False`)
-        
+
         printer : file-like, optional
             Logger implementing a ``write()`` method. Default: |NullWriter|
-            
+
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
             :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
@@ -1086,7 +1113,7 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
 
     def _collect(self, feature):
         """Collect transcript component CDS and exons objects from `self.streams`, and populate `self._feature_cache`
-        
+
         Parameters
         ----------
         feature : |SegmentChain|
@@ -1105,8 +1132,8 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
     def _assemble_transcripts(self):
         """Assemble |Transcript| objects from `self._feature_cache`,
         mapping transcript IDs to corresponding CDS and exon features.
-        
-        Attributes common to all CDS and exons for a given transcript (e.g. 
+
+        Attributes common to all CDS and exons for a given transcript (e.g.
         `gene_id` and `transcript_id`) are propagated up to the |Transcript|.
         Other component attributes are discarded.
         """
@@ -1171,23 +1198,23 @@ class GTF2_TranscriptAssembler(AbstractGFF_Assembler):
 class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     """
     GFF3_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
-    
+
     Assemble |Transcripts| from raw features in `GFF3`_ format.
-    
+
     Within a chromosome, transcripts are returned in lexical order. Features
     that do not constitute portions of transcripts (e.g.  origins of replication)
     are ignored. For access to those, read raw features using |GFF3_Reader|.
-    
-    
+
+
     Parameters
     ----------
     streams : one or more str or file-like
         One or more input streams or filenames pointing to `GFF3`_ data
-    
+
     is_sorted : bool, optional
         `GFF3`_ is sorted by chromosome name, allowing some memory savings
         (Default: `False`)
-    
+
     return_type : |SegmentChain| or subclass, optional
         Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
@@ -1195,7 +1222,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         Some annotation files exclude the stop codon from CDS annotations. If set to
         `True`, three nucleotides will be added to the threeprime end of each
         CDS annotation. (Default: `False`)
-    
+
     transcript_types : list, optional
         List of `GFF3`_ feature types that should be considered as transcripts
         (Default: as specified in SO 2.5.3 )
@@ -1204,15 +1231,15 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         List of `GFF3`_ feature types that should be considered as exons or
         contributing to transcript nucleotide positions
         during transcript assembly (Default: as specified in SO 2.5.3 )
-    
+
     cds_types : list, optional
         List of `GFF3`_ feature types that should be considered as CDS or
         contributing to transcript coding regions during transcript assembly
         (Default: as specified in SO 2.5.3 )
-    
+
     printer : file-like, optional
         Logger implementing a ``write()`` method. Default: |NullWriter|
-        
+
     tabix : boolean, optional
         `streams` point to `tabix`_-compressed files or are open
         :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
@@ -1221,11 +1248,11 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     Examples
     --------
     Assemble transcripts from a `GFF3`_ file::
-        
+
         >>> transcript_reader = GFF3_TranscriptAssembler(open("some_file.gff"))
         >>> for transcript in reader:
         >>>     print(transcript.get_name(),transcript.attr["type"],str(transcript)) # do something
-    
+
         ('YAL030W_mRNA',   'mRNA',  'chrI:87262-87387^87500-87857(+)')
         ('YBL092W_mRNA',   'mRNA',  'chrII:45643-45644^45977-46440(+)')
         ('YBL057C_mRNA',   'mRNA',  'chrII:112749-113427^113444-113450(-)')
@@ -1243,7 +1270,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     ----------
     streams : file-like
         Input stream, usually constructed from or more open filehandles
-    
+
     metadata : dict
         Various attributes gleaned from the stream, if any
 
@@ -1255,22 +1282,22 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
     rejected : list
         A list of transcript IDs from transcripts that failed to assemble properly
-    
+
 
     Notes
     -----
    `GFF3`_ schemas vary
        `GFF3`_ files can have many different schemas of hierarchy. We deal with that here
        by allowing users to supply `transcript_types` and `exon_types`, to indicate
-       which sorts of features should be included. By default, we use a 
+       which sorts of features should be included. By default, we use a
        subset of the schema set out in `Seqence Ontology 2.5.3 <http://www.sequenceontology.org/resources/intro.html>`_
 
        Briefly:
-        
+
         1. The GFF3 file is combed for transcripts of the types specified by
-           `transcript_types`, exons specified by `exon_types`, and CDS specified by 
+           `transcript_types`, exons specified by `exon_types`, and CDS specified by
            types listed in `cds_types`.
-        
+
         2. Exons and CDS are matched with their parent transcripts by matching
            the `Parent` attributes of CDS and exons to the `ID` of transcripts.
            Transcripts are then constructed from those intervals, and coding
@@ -1303,11 +1330,11 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
    Transcript assembly
        To save memory, transcripts are assembled lazily as follows:
-    
-       #.  If there exist assembled transcripts in `self._transript_cache`, 
+
+       #.  If there exist assembled transcripts in `self._transript_cache`,
            return the next transcript. Transcripts in the cache are stored
            lexically.
-        
+
        #.  Otherwise, collect features from the `GFF3`_ stream until either a
            `'###'` line or EOF is encountered. Then, assemble transcripts and
            store them in `self._transcript_cache`. Delete unused features
@@ -1318,16 +1345,16 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
     def __init__(self, *streams, **kwargs):
         """
         GFF3_TranscriptAssembler(*streams, is_sorted=False, return_type=SegmentChain, add_three_for_stop=False, printer=None, tabix=False)
-        
+
         Parameters
         ----------
         *streams : one or more str or file-like
             One or more input streams or filenames pointing to `GFF3`_ data
-        
+
         is_sorted : bool, optional
             `GFF3`_ is sorted by chromosome name, allowing some memory savings
             (Default: `False`)
-        
+
         return_type : |SegmentChain| or subclass, optional
             Type of feature to return from assembled subfeatures (Default: |SegmentChain|)
 
@@ -1335,7 +1362,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             Some annotation files exclude the stop codon from CDS annotations. If set to
             `True`, three nucleotides will be added to the threeprime end of each
             CDS annotation. (Default: `False`)
-        
+
         transcript_types : list, optional
             List of `GFF3`_ feature types that should be considered as transcripts
             (Default: as specified in SO 2.5.3 )
@@ -1344,20 +1371,20 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
             List of `GFF3`_ feature types that should be considered as exons or
             contributing to transcript nucleotide positions
             during transcript assembly (Default: as specified in SO 2.5.3 )
-        
+
         cds_types : list, optional
             List of `GFF3`_ feature types that should be considered as CDS or
             contributing to transcript coding regions during transcript assembly
             (Default: as specified in SO 2.5.3 )
-        
+
         printer : file-like, optional
             Logger implementing a ``write()`` method. Default: |NullWriter|
-            
+
         tabix : boolean, optional
             `streams` point to `tabix`_-compressed files or are open
-            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)        
-        
-        
+            :class:`~pysam.ctabix.tabix_file_iterator` (Default: `False`)
+
+
         Notes
         -----
         Sequence Ontology 2.5.3
@@ -1376,8 +1403,9 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
         self._reset()
 
     def _collect(self, feature):
-        """Collect CDS and exon components of transcripts from `self.streams`, and populate `self._feature_cache`
-        
+        """Collect CDS and exon components of transcripts from `self.streams`,
+        and populate `self._feature_cache`
+
         Parameters
         ----------
         feature : |SegmentChain|
@@ -1413,7 +1441,7 @@ class GFF3_TranscriptAssembler(AbstractGFF_Assembler):
 
     def _assemble_transcripts(self):
         """Assemble |Transcript| s from components in `self._feature_cache`
-        
+
         Returns
         -------
         list
