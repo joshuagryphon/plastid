@@ -13,33 +13,33 @@ The script's operation is divided into three subprograms:
 Generate
     The :func:`generate <do_generate>` mode pre-process a genome annotation
     as follows:
-    
-     #. All genes whose transcripts share exact exons are collapsed to 
-        "merged" genes. 
-        
+
+     #. All genes whose transcripts share exact exons are collapsed to
+        "merged" genes.
+
      #. Positions covered by more than one merged gene on the same strand
-        are excluded from analysis, and subtracted from each merged genes. 
-    
+        are excluded from analysis, and subtracted from each merged genes.
+
      #. Remaining positions in each merged gene are then divided
         into the following groups:
 
             *exon*
                 all positions in all transcripts mapping to the merged gene
-    
+
             *CDS*
                 positions which appear in coding regions in *all* transcript
                 isoforms mapping to the merged gene. i.e. These positions
                 are never part of a fiveprime or threeprime UTR in *any*
                 transcript mapping to the merged gene
-    
+
             *UTR5*
                 positions which are annotated only as *5' UTR* in all
                 transcript isoforms mapping to the merged gene
-    
+
             *UTR3*
                 positions which are annotated only as *3 UTR* in all
                 transcript isoforms mapping to the merged gene
-    
+
             *masked*
                 positions excluded from analyses as directed in an optional
                 :term:`mask file`
@@ -66,7 +66,7 @@ Generate
 
 
 Count
-    The :func:`count <do_count>` mode counts the number and density of 
+    The :func:`count <do_count>` mode counts the number and density of
     read alignments in each sub-region (*exon*, *CDS*, *UTR5*, and *UTR3*)
     of each gene.
 
@@ -248,7 +248,7 @@ def process_partial_group(transcripts, mask_hash, printer):
         Dictionary mapping unique transcript IDs to |Transcripts|.
         This set should be complete in the sense that it should contain
         all transcripts that have any chance of mutually overlapping
-        each other (e.g. all on same chromosome and strand). 
+        each other (e.g. all on same chromosome and strand).
 
     mask_hash : |GenomeHash|
         |GenomeHash| of regions to exclude from analysis
@@ -498,26 +498,26 @@ def process_partial_group(transcripts, mask_hash, printer):
 
 def do_generate(args, annotation_parser, mask_parser):
     """Generate gene position files from gene annotations.
-    
+
      1. Genes whose transcripts share exons are first collapsed into merged
         genes.
-        
+
      2. Within merged genes, all positions are classified. All positions are
         included in a set called *exon*. All positions that appear as coding
         regions in all transcripts (i.e. are never part of a 5'UTR or 3'UTR)
         included in a set called *CDS*. Similarly, all positions that appear
         as 5' UTR or 3' UTR in all transcripts are included in sets called
         *UTR5* or *UTR3*, respectively.
-    
+
      3. Genomic positions that are overlapped by multiple merged genes are
         excluded from the position sets for those genes.
-    
+
      4. If a :term:`mask file` is supplied, positions annotated in the mask file
         are also excluded
-    
+
      5. Output is given as a series of `BED`_ files and a `positions` file
         containing the same data.
-    
+
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
@@ -566,25 +566,29 @@ def do_generate(args, annotation_parser, mask_parser):
                 (args.tabix == True) or \
                 (args.annotation_format == "BigBed")
 
-    annotation_message = """`cs` relies upon relationships between
-    transcripts and genes to collapse transcripts to genes for quantitation.
-    Gene-transcript relationships are not generally preserved in BED or BigBed
-    files, and a `gene_id` column could not be found in the input data. This
-    may yield nonsensical results in the output.
-
-    Consider either (1) using a GTF2 or GFF3 file or (2) creating an extended
-    BED or BigBed file with a `gene_id` column.""".replace("    ", "").replace("\n", " ")
+    annotation_message = (
+        "`cs` relies upon relationships between transcripts and genes "
+        "to collapse transcripts to genes for quantitation. "
+        "Gene-transcript relationships are not generally preserved in BED "
+        "or BigBed files, and a `gene_id` column could not be found in the "
+        "input data. This may yield nonsensical results in the output. "
+        "Consider either (1) using a GTF2 or GFF3 file or (2) creating an "
+        "extended BED or BigBed file with a `gene_id` column."
+    )
 
     if args.annotation_format == "BED":
         if not isinstance(args.bed_extra_columns, list) \
             or 'gene_id' not in args.bed_extra_columns:
             warnings.warn(annotation_message, FileFormatWarning)
+
     elif args.annotation_format == "BigBed":
         reader = BigBedReader(args.annotation_files[0])
         if 'gene_id' not in reader.extension_fields:
             warnings.warn(annotation_message, FileFormatWarning)
 
-    source = annotation_parser.get_transcripts_from_args(args, printer=printer)
+    source = iter(
+        annotation_parser.get_transcripts_from_args(args, printer=printer)
+    )
     mask_hash = mask_parser.get_genome_hash_from_args(args)
 
     # loop conditions
@@ -661,12 +665,13 @@ def do_generate(args, annotation_parser, mask_parser):
 
 
 def do_count(args, alignment_parser):
-    """Count the number and density covering each merged gene in an annotation made made using the `generate` subcommand).
-    
+    """Count the number and density covering each merged gene in an annotation
+    made made using the `generate` subcommand).
+
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
-        command-line arguments for ``count`` subprogram    
+        command-line arguments for ``count`` subprogram
     """
     # we expect many zero-lenght segmentchains, so turn these off for now
     warnings.filterwarnings(
@@ -732,16 +737,16 @@ def do_count(args, alignment_parser):
 @skipdoc
 def read_count_file(fh, genes_to_include=None):
     """Read rows selected by gene name from a count file
-    
+
     Parameters
     ----------
     fname : str
         Name of output file from cs.py
-        
+
     genes_to_include : list or None
         List of genes to include in output.
         If `None`, all are included
-    
+
     Returns
     -------
     :class:`pandas.DataFrame`
@@ -750,7 +755,9 @@ def read_count_file(fh, genes_to_include=None):
     """
     df = read_pl_table(fh)
     if genes_to_include is not None:
-        import_mask = numpy.array([True if X in genes_to_include else False for X in df["region"]])
+        import_mask = numpy.array(
+            [True if X in genes_to_include else False for X in df["region"]]
+        )
         return df[import_mask]
     else:
         return df
@@ -758,19 +765,20 @@ def read_count_file(fh, genes_to_include=None):
 
 @skipdoc
 def get_bin_mask_by_summed_key(rep_a, rep_b, bins, key="exon_reads"):
-    """Bins genes into groups based upon the summed counts in samples `rep_a` and `rep_b`
-    
+    """Bins genes into groups based upon the summed counts in samples `rep_a`
+    and `rep_b`
+
     Parameters
     ----------
     rep_a : :class:`pandas.DataFrame`
         replicate a, from :func:`read_count_file`
-        
+
     rep_b : :class:`pandas.DataFrame`
         replicate b, from :func:`read_count_file`
-        
+
     bins : :class:`numpy.ndarray`
         sequence of bins, specified as floors
-        
+
     key : str, optional
         quantity on which to perform binning (Default: `exon_reads`)
 
@@ -797,19 +805,20 @@ def get_bin_mask_by_summed_key(rep_a, rep_b, bins, key="exon_reads"):
 
 @skipdoc
 def get_nonzero_either_mask(vector_a, vector_b):
-    """Returns a numpy array of boolean values indicating where values in two vectors are both greater than zero.
-    
+    """Returns a numpy array of boolean values indicating where values in two
+    vectors are both greater than zero.
+
     Parameters
     ----------
     vector_a : numpy.ndarray
         Array of counts or RPKM
-        
+
     vector_b : numpy.ndarray
         Array of counts or RPKM
-    
+
     Returns
     -------
-    numpy.ndarray    
+    numpy.ndarray
         Boolean array that is `True` where both `vector_a` and `vector_b`
         have values greater than zero, and `False` elsewhere.
     """
@@ -818,13 +827,14 @@ def get_nonzero_either_mask(vector_a, vector_b):
 
 @skipdoc
 def get_short_samplename(inp):
-    """Creates a sample legend label from a sample filename by removing everything including and after ``".txt"``
+    """Creates a sample legend label from a sample filename by removing
+    everything including and after ``".txt"``
 
     Parameters
     ----------
     inp : str
         filename
-        
+
     Returns
     -------
     str
@@ -846,7 +856,7 @@ def do_scatter(
         min_y    = 10**-3
 ): # yapf: disable
     """Scatter plot helper for cs `chart` subprogram
-    
+
     Parameters
     ----------
     x, y : :class:`numpy.ndarray`
@@ -865,7 +875,7 @@ def do_scatter(
         If not `None`, an x-axis label
 
     ylabel : str or None, optional
-        If not `None`, a y-axis label    
+        If not `None`, a y-axis label
 
     min_x,min_y : float
         value to which low x- or y-values will respectively be truncated
@@ -920,14 +930,14 @@ def do_scatter(
 
 def do_chart(args, plot_parser):
     """Produce a set of charts comparing multiple samples pairwise.
-    
+
     Charts include histograms of log2 fold changes and scatter plots with
     correlation coefficients, both generated for raw count and RPKM data.
 
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
-        command-line arguments for ``chart`` subprogram       
+        command-line arguments for ``chart`` subprogram
     """
     plot_parser.set_style_from_args(args)
 
@@ -958,7 +968,8 @@ def do_chart(args, plot_parser):
             assert (samples[ki]["region"] == samples[kj]["region"]).all()
         except AssertionError:
             printer.write(
-                "Mismatched line entries for samples %s and %s. Were different gene lists used for counting?"
+                "Mismatched line entries for samples %s and %s. "
+                "Were different gene lists used for counting?"
                 % (ki, kj)
             )
 
@@ -1235,7 +1246,7 @@ def do_chart(args, plot_parser):
 
 def main(argv=sys.argv[1:]):
     """Command-line program
-    
+
     Parameters
     ----------
     argv : list, optional
@@ -1310,8 +1321,10 @@ def main(argv=sys.argv[1:]):
         "position_file",
         type    = str,
         metavar = "file.positions",
-        help    =
-        "File assigning positions to genes or transcripts (made using 'generate' subcommand)"
+        help    = (
+            "File assigning positions to genes or transcripts "
+            "(made using 'generate' subcommand)"
+        )
     )
     cparser.add_argument("outbase", type=str, help="Basename for output files")
 
@@ -1346,8 +1359,11 @@ def main(argv=sys.argv[1:]):
         metavar='gene_list.txt',
         nargs="?",
         default=None,
-        help=
-        "Optional. File listing regions (genes or transcripts), one per line, to include in comparisons. If not given, all genes are included."
+        help=(
+            "Optional. File listing regions (genes or transcripts), one per "
+            "line, to include in comparisons. If not given, all genes are "
+            "included."
+        )
     )
     pparser.add_argument("outbase", type=str, help="Basename for output files")
 

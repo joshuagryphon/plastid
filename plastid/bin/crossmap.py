@@ -4,10 +4,10 @@ multimapping reads under a given set of alignment parameters. These positions
 are saved in a `BED`_-formatted :term:`mask file`, so that they may be excluded
 as from further analyses.
 
-To identify multimapping regions, a genome sequence is diced into :term:`k-mers <k-mer>`
-and the :term:`k-mers` aligned back to the genome. Positions in the genome that
-give rise to :term:`k-mers <k-mer>` that align equally well to more than one
-genomic location are then marked as multimapping..
+To identify multimapping regions, a genome sequence is diced into :term:`k-mers
+<k-mer>` and the :term:`k-mers` aligned back to the genome. Positions in the
+genome that give rise to :term:`k-mers <k-mer>` that align equally well to more
+than one genomic location are then marked as multimapping..
 
 `k` is specified by the user, as are the alignment parameters.
 
@@ -20,9 +20,9 @@ The following files are made:
         Final :term:`mask file` annotation, in `BED`_ format
 
     OUTBASE_READLENGTH_MISMATCHES_CHROMOSOME_kmers.fa
-        :term:`K-mers <k-mer>` derived from chromosome `CHROMOSOME`. These files can
-        be reused in subsequent runs allowing a different number of mismatches,
-        using the ``--have_kmers`` option
+        :term:`K-mers <k-mer>` derived from chromosome `CHROMOSOME`. These
+        files can be reused in subsequent runs allowing a different number of
+        mismatches, using the ``--have_kmers`` option
 
 where:
 
@@ -87,6 +87,7 @@ from plastid.util.services.mini2to3 import xrange
 from plastid.util.services.exceptions import MalformedFileError
 from plastid.util.scriptlib.argparsers import SequenceParser, BaseParser
 
+
 namepat = re.compile(r"(.*):([0-9]+)\(\+\)")
 printer = NameDateWriter(get_short_name(inspect.stack()[-1][1]))
 
@@ -110,9 +111,9 @@ BigBedMessage = """Crossmap complete and saved as 'OUTFILE.bed'.
 
 
 def simulate_reads(seq_record, fh=sys.stdout, k=30):
-    """Chops a DNA sequence into :term:`k-mers <k-mer>`, mimicking a sequencing run.
-    Output is delivered in fasta format. Sequences are named for position of
-    origin using 0-based indices.
+    """Chops a DNA sequence into :term:`k-mers <k-mer>`, mimicking a sequencing
+    run.  Output is delivered in fasta format. Sequences are named for position
+    of origin using 0-based indices.
 
     Parameters
     ----------
@@ -195,7 +196,8 @@ def revcomp_mask_chain(seg, k, offset=0):
 
 
 def fa_to_bed(toomany_fh, k, offset=0):
-    """Create a `BED`_ file indicating genomic origins of reads in a `bowtie`_ ``toomany`` file
+    """Create a `BED`_ file indicating genomic origins of reads in a `bowtie`_
+    ``toomany`` file
 
     Parameters
     ----------
@@ -249,13 +251,11 @@ def fa_to_bed(toomany_fh, k, offset=0):
             else:
                 msg = "k-mers are not sorted at read '%s' ! Aborting." % read_name
                 raise MalformedFileError(toomany_fh, msg, line_num=n)
+
     if chrom is not None:
         plus_chain = SegmentChain(GenomicSegment(chrom, start_pos, last_pos + 1, "+"))
         minus_chain = revcomp_mask_chain(plus_chain, k, offset)
         yield plus_chain, minus_chain
-
-    # if zero features, stop yield
-    raise StopIteration()
 
 
 def chrom_worker(chrom_seq, args=None):
@@ -380,7 +380,7 @@ def main(argv=sys.argv[1:]):
         "ebwt",
         type = str,
         help =
-        "Bowtie index of genome against which crossmap will be made. In most cases,  should be generated from the same sequences that are in `sequence_file`."
+        "Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `sequence_file`."
     )
 # yapf: enable
     parser.add_argument("outbase", type=str, help="Basename for output files")

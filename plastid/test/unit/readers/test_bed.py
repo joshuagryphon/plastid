@@ -32,6 +32,7 @@ from plastid.test.data.annotations.py100transcripts import control_transcripts
 #===============================================================================
 # INDEX: test suites
 #===============================================================================
+
 @attr(test="unit")
 class TestBED():
     """Test case for BED input/output"""

@@ -3,29 +3,29 @@
 
   - build :class:`argparse.ArgumentParser` objects for various data types
     used in genomics
-  
+
   - parse those arguments into useful file types
-  
+
 
 Arguments are grouped into the following sets:
 
     ===========================================================   ======================================
-    **Parameter/argument set**                                    **Parser building class**            
+    **Parameter/argument set**                                    **Parser building class**
     -----------------------------------------------------------   --------------------------------------
     Generic parameters (e.g. for error reporting, logging)        :class:`BaseParser`
-    
+
     :term:`Read alignments` or :term:`count files <count file>`   :class:`AlignmentParser`
-    
+
     Genomic feature or mask annotations                           :class:`AnnotationParser`
-    
+
     Genomic sequence files                                        :class:`SequenceParser`
-    
+
     Plotting parameters for charts                                :class:`PlottingParser`
     ===========================================================   ======================================
 
 
 Example
--------     
+-------
 To use any of these in your own command line scripts, follow these steps:
 
   #. Import one or more of the classes above::
@@ -39,26 +39,26 @@ To use any of these in your own command line scripts, follow these steps:
      :py:class:`~argparse.ArgumentParser`::
 
          >>> ap = AnnotationParser()
-        
+
          # create annotation file parser
          >>> annotation_file_parser = ap.get_parser(disabled=["some_option_to_disable"])
-        
+
          # create my own parser, incorporating flags from annotation_file_parser
-         >>>> my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])     
-    
+         >>>> my_own_parser = argparse.ArgumentParser(parents=[annotation_file_parser])
+
          # add script-specific arguments
          >>> my_own_parer.add_argument("positional_argument",type=str)
          >>> my_own_parser.add_argument("--foo",type=int,default=5,help="Some option")
          >>> my_own_parser.add_argument("--bar",type=str,default="a string",help="Another option")
-     
+
   #. Then, use the second parse the arguments::
 
          >>> args = parser.parse_args()
-        
+
          # get transcript objects from arguments
          # this will be an iterator over |Transcripts|
          >>> transcripts = ap.get_transcripts_from_args(args)
-        
+
          >>> pass # rest of your script
 
 
@@ -82,15 +82,22 @@ import warnings
 import pkg_resources
 import pysam
 
-from plastid.util.services.exceptions import MalformedFileError, ArgumentWarning,\
-                                             DataWarning, FileFormatWarning, filterwarnings
+from plastid.util.services.exceptions import (
+    MalformedFileError,
+    ArgumentWarning,
+    DataWarning,
+    FileFormatWarning,
+    filterwarnings,
+)
 from plastid.util.services.decorators import deprecated
 from plastid.util.io.openers import opener, NullWriter
 from plastid.util.io.filters import CommentReader
 from plastid.genomics.roitools import Transcript, SegmentChain
-from plastid.readers.gff import _DEFAULT_GFF3_TRANSCRIPT_TYPES,\
-                                _DEFAULT_GFF3_EXON_TYPES,\
-                                _DEFAULT_GFF3_CDS_TYPES
+from plastid.readers.gff import (
+    _DEFAULT_GFF3_TRANSCRIPT_TYPES,
+    _DEFAULT_GFF3_EXON_TYPES,
+    _DEFAULT_GFF3_CDS_TYPES,
+)
 
 #===============================================================================
 # INDEX: Constants used in parsers below
@@ -152,32 +159,32 @@ _DEFAULT_PLOTTING_TITLE = "Plotting options"
 
 class Parser(object):
     """Base class for argument parser factories used below
-        
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group. 
-        
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
     disabled : list, optional
         list of parameter names that should be disabled from parser,
-        without preceding dashes    
+        without preceding dashes
     """
 
     def __init__(self, groupname=None, prefix="", disabled=None, **kwargs):
         """Create a parser
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group. 
-            
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -196,41 +203,43 @@ class Parser(object):
             self, parser=None, groupname=None, arglist=None, title=None, description=None, **kwargs
     ):
         """Create an populate :class:`argparse.ArgumentParser` with arguments
-        
+
         Parameters
         ----------
         parser : :class:`argparse.ArgumentParser` or None, optional
-            If `None`, a new parser will be created, and arguments will be added
-            to it. If not `None`, arguments will be added to `parser`.
+            If `None`, a new parser will be created, and arguments will be
+            added to it. If not `None`, arguments will be added to `parser`.
             (Default: `None`)
-            
+
         groupname : str or None, optional
             If not `None`, default to `self.groupname`. If either `groupname`
             or `self.groupname` is not `None`, an option group with this name
             will be added to `parser`, and arguments added to that groupname
-            instead of the main argument group of `parser`. In this case, `title`
-            and `description` will be applied to the option group instead of to `parser`.
-            Default : `None`)
-            
+            instead of the main argument group of `parser`. In this case,
+            `title` and `description` will be applied to the option group
+            instead of to `parser`.  Default : `None`)
+
         arglist : list, optional
             If not `None`, arguments in this list will be added to `parser`.
             Otherwise, arguments will be taken from `self.arguments`.
-            
-            The list should be a list of tuples of ('argument_name',dict_of_options),
-            where `argument_name` is a string, and `dict_of_options` a dictionary
-            of keyword arguments to pass to :meth:`argparse.ArgumentParser.add_argument`.
-            
+
+            The list should be a list of tuples of
+            ('argument_name',dict_of_options), where `argument_name` is a
+            string, and `dict_of_options` a dictionary of keyword arguments to
+            pass to :meth:`argparse.ArgumentParser.add_argument`.
+
         title : str, optional
             Optional title for parser
-            
+
         description : str, optional
             Optional description for parser
 
 
         kwargs : keyword arguments
-            Additional arguments passed during creation of :class:`argparse.ArgumentParser`
-        
-        
+            Additional arguments passed during creation of
+            :class:`argparse.ArgumentParser`
+
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -262,18 +271,18 @@ class Parser(object):
 
 class AlignmentParser(Parser):
     """Parser for files containing read alignments or quantitative data.
-    
-    Checks for additional mapping rules and command-line arguments 
+
+    Checks for additional mapping rules and command-line arguments
     by checking the entrypoints ``plastid.mapping_rules`` and
     ``plastid.mapping_options``
-    
-        
+
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group. 
+        If not, arguments will be in the main group.
 
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
@@ -284,9 +293,9 @@ class AlignmentParser(Parser):
 
     input_choices : list, optional
         list of permitted alignment file type choices for input
-    
+
     allow_mapping : bool, optional
-        Enable/disable user configuration of mapping rules (default: True)    
+        Enable/disable user configuration of mapping rules (default: True)
     """
     def __init__(
             self,
@@ -297,13 +306,13 @@ class AlignmentParser(Parser):
             allow_mapping=True
     ): # yapf: disable
         """Create a parser for read alignments and/or quantitative data
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group. 
+            If not, arguments will be in the main group.
 
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
@@ -314,7 +323,7 @@ class AlignmentParser(Parser):
 
         input_choices : list, optional
             list of permitted alignment file type choices for input
-        
+
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
@@ -350,9 +359,11 @@ class AlignmentParser(Parser):
                     type=int,
                     default=25,
                     metavar="N",
-                    help="Minimum read length required to be included" +
-                    " (BAM & bowtie files only. Default: %(default)s)"
-                )
+                    help=(
+                        "Minimum read length required to be included "
+                        "(BAM & bowtie files only. Default: %(default)s)"
+                    ),
+                ),
             ),
             (
                 "max_length",
@@ -360,9 +371,11 @@ class AlignmentParser(Parser):
                     type=int,
                     default=100,
                     metavar="N",
-                    help="Maximum read length permitted to be included" +
-                    " (BAM & bowtie files only. Default: %(default)s)"
-                )
+                    help=(
+                        "Maximum read length permitted to be included "
+                        "(BAM & bowtie files only. Default: %(default)s)"
+                    ),
+                ),
             ),
         ]
 
@@ -372,9 +385,12 @@ class AlignmentParser(Parser):
                 dict(
                     action="store_true",
                     default=False,
-                    help="Use slower but memory-efficient implementation " +
-                    "for big genomes or for memory-limited computers. For wiggle & bowtie files only."
-                )
+                    help=(
+                        "Use slower but memory-efficient implementation "
+                        "for big genomes or for memory-limited computers. "
+                        "For wiggle & bowtie files only."
+                    ),
+                ),
             ),
         ]
 
@@ -384,8 +400,11 @@ class AlignmentParser(Parser):
                 dict(
                     type=float,
                     default=0,
-                    help=
-                    "Maximum desired memory footprint in MB to devote to BigBed/BigWig files. May be exceeded by large queries. (Default: 0, No maximum)"
+                    help=(
+                        "Maximum desired memory footprint in MB to devote to "
+                        "BigBed/BigWig files. May be exceeded by large queries. "
+                        "(Default: 0, No maximum)"
+                    )
                 )
             ),
         ]
@@ -409,9 +428,12 @@ class AlignmentParser(Parser):
                         action="store_const",
                         const="fiveprime_variable",
                         dest="%smapping" % prefix,
-                        help="Map read alignment to a variable offset from 5' position of read, " +
-                        "with offset determined by read length. Requires `--offset` below"
-                    )
+                        help=(
+                            "Map read alignment to a variable offset from 5' "
+                            "position of read, with offset determined by read "
+                            "length. Requires `--offset` below"
+                        ),
+                    ),
                 ),
                 (
                     "fiveprime",
@@ -420,7 +442,7 @@ class AlignmentParser(Parser):
                         const="fiveprime",
                         dest="%smapping" % prefix,
                         help="Map read alignment to 5' position."
-                    )
+                    ),
                 ),
                 (
                     "threeprime",
@@ -429,7 +451,7 @@ class AlignmentParser(Parser):
                         const="threeprime",
                         dest="%smapping" % prefix,
                         help="Map read alignment to 3' position"
-                    )
+                    ),
                 ),
                 (
                     "center",
@@ -437,9 +459,11 @@ class AlignmentParser(Parser):
                         action="store_const",
                         const="center",
                         dest="%smapping" % prefix,
-                        help="Subtract N positions from each end of read, " +
-                        "and add 1/(length-N), to each remaining position, " +
-                        "where N is specified by `--nibble`"
+                        help=(
+                            "Subtract N positions from each end of read, "
+                            "and add 1/(length-N), to each remaining position, "
+                            "where N is specified by `--nibble`"
+                        )
                     )
                 ),
             ]
@@ -449,15 +473,19 @@ class AlignmentParser(Parser):
                     dict(
                         default=0,
                         metavar="OFFSET",
-                        help="For `--fiveprime` or `--threeprime`, provide an integer " +
-                        "representing the offset into the read, " +
-                        "starting from either the 5\' or 3\' end, at which data " +
-                        "should be plotted. For `--fiveprime_variable`, " +
-                        "provide the filename of a two-column tab-delimited text " +
-                        "file, in which first column represents read length or the " +
-                        "special keyword `'default'`, and the second column represents " +
-                        "the offset from the five prime end of that read length at which the read should be mapped. (Default: %(default)s)"
-                    )
+                        help=( 
+                            "For `--fiveprime` or `--threeprime`, provide an integer "
+                            "representing the offset into the read, starting "
+                            "from either the 5\' or 3\' end, at which data "
+                            "should be plotted. For `--fiveprime_variable`, "
+                            "provide the filename of a two-column tab-delimited "
+                            "text file, in which first column represents read "
+                            "length or the special keyword `'default'`, and "
+                            "the second column represents the offset from the "
+                            "five prime end of that read length at which the "
+                            "read should be mapped. (Default: %(default)s)"
+                        ),
+                    ),
                 ),
                 (
                     "nibble",
@@ -465,9 +493,12 @@ class AlignmentParser(Parser):
                         type=int,
                         default=0,
                         metavar="N",
-                        help="For use with `--center` only. nt to remove from each " +
-                        "end of read before mapping (Default: %(default)s)"
-                    )
+                        help=(
+                            "For use with `--center` only. nt to remove from "
+                            "each end of read before mapping "
+                            "(Default: %(default)s)"
+                        ),
+                    ),
                 ),
             ]
 
@@ -511,31 +542,31 @@ class AlignmentParser(Parser):
             description=_DEFAULT_ALIGNMENT_FILE_PARSER_DESCRIPTION,
             **kwargs
     ):
-        """Return an :py:class:`~argparse.ArgumentParser` that opens
-        alignment (`BAM`_,  or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
-         
-        In the case of `bowtie`_ or `BAM`_ import, also parse arguments for mapping
-        rules (e.g. fiveprime end mapping, threeprime end mapping, et c) and optional 
-        read length filters
-        
-        
+        """Return an :py:class:`~argparse.ArgumentParser` that opens alignment
+        (`BAM`_,  or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
+
+        In the case of `bowtie`_ or `BAM`_ import, also parse arguments for
+        mapping rules (e.g. fiveprime end mapping, threeprime end mapping, et
+        c) and optional read length filters
+
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         title : str, optional
             title for option group (used in command-line help screen)
-                
+
         description : str, optional
             description of parser (used in command-line help screen)
 
         kwargs : keyword arguments
             Additional arguments to pass to :meth:`Parser.get_parser`
 
-            
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -551,7 +582,11 @@ class AlignmentParser(Parser):
         if len(extra_args) > 0:
             # use mutator function- add new parser to `parser`
             Parser.get_parser(
-                self, parser=parser, arglist=extra_args, title=title, description=description
+                self,
+                parser=parser,
+                arglist=extra_args,
+                title=title,
+                description=description,
             )
 
         if self.allow_mapping == True:
@@ -577,29 +612,36 @@ class AlignmentParser(Parser):
     def get_genome_array_from_args(self, args, printer=None):
         """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
         from arguments parsed by :py:func:`get_alignment_file_parser`
-        
+
         Parameters
         ----------
         args : :py:class:`argparse.Namespace`
             Arguments from the parser
-    
+
         printer : file-like, optional
-            A stream to which stderr-like info can be written (default: |NullWriter|) 
-        
-        
+            A stream to which stderr-like info can be written (default:
+            |NullWriter|)
+
+
         Returns
         -------
         |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|
         """
-        from plastid.genomics.genome_array import GenomeArray, SparseGenomeArray,\
-                                                   BAMGenomeArray, BigWigGenomeArray,\
-                                                   SizeFilterFactory, CenterMapFactory,\
-                                                   FivePrimeMapFactory, ThreePrimeMapFactory,\
-                                                   VariableFivePrimeMapFactory,\
-                                                   five_prime_map,  \
-                                                   three_prime_map, \
-                                                   center_map,      \
-                                                   variable_five_prime_map
+        from plastid.genomics.genome_array import (
+            GenomeArray,
+            SparseGenomeArray,
+            BAMGenomeArray,
+            BigWigGenomeArray,
+            SizeFilterFactory,
+            CenterMapFactory,
+            FivePrimeMapFactory,
+            ThreePrimeMapFactory,
+            VariableFivePrimeMapFactory,
+            five_prime_map,
+            three_prime_map,
+            center_map,
+            variable_five_prime_map,
+        )
 
         args = PrefixNamespaceWrapper(args, self.prefix)
         disabled = self.disabled
@@ -644,7 +686,8 @@ class AlignmentParser(Parser):
                 elif map_rule == "fiveprime_variable":
                     if str(args.offset) == "0":
                         printer.write(
-                            "Please specify a filename to use for fiveprime variable offsets in --offset."
+                            "Please specify a filename to use for fiveprime "
+                            "variable offsets in --offset."
                         )
                         sys.exit(1)
                     offset_dict = _parse_variable_offset_file(CommentReader(open(args.offset)))
@@ -653,7 +696,8 @@ class AlignmentParser(Parser):
                     map_function = functools.partial(self.bamfuncs[map_rule], args=args)
                 else:
                     printer.write(
-                        "Mapping rule '%s' not implemented for BAM input. Exiting." % map_rule
+                        "Mapping rule '%s' not implemented for BAM input. "
+                        "Exiting." % map_rule
                     )
                     sys.exit(1)
                 ga.set_mapping(map_function)
@@ -687,7 +731,8 @@ class AlignmentParser(Parser):
                         transformation = variable_five_prime_map
                         if str(args.offset) == "0":
                             printer.write(
-                                "Please specify a filename to use for fiveprime variable offsets in --offset."
+                                "Please specify a filename to use for "
+                                "fiveprime variable offsets in --offset."
                             )
                             sys.exit(1)
                         else:
@@ -710,8 +755,8 @@ class AlignmentParser(Parser):
                             trans_args["args"] = args
                         else:
                             printer.write(
-                                "Mapping rule '%s' not implemented for bowtie input. Exiting." %
-                                map_rule
+                                "Mapping rule '%s' not implemented for bowtie "
+                                "input. Exiting." % map_rule
                             )
                             sys.exit(1)
 
@@ -744,14 +789,14 @@ class AlignmentParser(Parser):
 
 class AnnotationParser(Parser):
     """Parser for annotation files in various formats
-    
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group.         
-    
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
@@ -761,9 +806,9 @@ class AnnotationParser(Parser):
 
     input_choices : list, optional
         list of permitted alignment file type choices for input
-    
+
     allow_mapping : bool, optional
-        Enable/disable user configuration of mapping rules (default: True)    
+        Enable/disable user configuration of mapping rules (default: True)
     """
 
     def __init__(
@@ -774,14 +819,14 @@ class AnnotationParser(Parser):
             input_choices=("BED", "BigBed", "GTF2", "GFF3")
     ):
         """Create a parser for genomic features in an annotation file
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -791,7 +836,7 @@ class AnnotationParser(Parser):
 
         input_choices : list, optional
             list of permitted alignment file type choices for input
-        
+
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
@@ -813,9 +858,12 @@ class AnnotationParser(Parser):
                 dict(
                     choices=input_choices,
                     default="GTF2",
-                    help=
-                    "Format of %sannotation_files (Default: GTF2). Note: GFF3 assembly assumes SO v.2.5.2 feature ontologies, which may or may not match your specific file."
-                    % prefix
+                    help=(
+                        "Format of %sannotation_files (Default: GTF2). "
+                        "Note: GFF3 assembly assumes SO v.2.5.2 feature "
+                        "ontologies, which may or may not match your specific "
+                        "file." % prefix
+                    )
                 )
             ),
             (
@@ -823,8 +871,13 @@ class AnnotationParser(Parser):
                 dict(
                     default=False,
                     action="store_true",
-                    help=
-                    "If supplied, coding regions will be extended by 3 nucleotides at their 3\' ends (except for GTF2 files that explicitly include `stop_codon` features). Use if your annotation file excludes stop codons from CDS."
+                    help=(
+                        "If supplied, coding regions will be extended by 3 "
+                        "nucleotides at their 3\' ends (except for GTF2 files "
+                        "that explicitly include `stop_codon` features). "
+                        "Use if your annotation file excludes stop codons "
+                        "from CDS."
+                    ),
                 )
             ),
             (
@@ -832,9 +885,11 @@ class AnnotationParser(Parser):
                 dict(
                     default=False,
                     action="store_true",
-                    help=
-                    "%sannotation_files are tabix-compressed and indexed (Default: False). Ignored for BigBed files."
-                    % prefix
+                    help=(
+                        "%sannotation_files are tabix-compressed and indexed "
+                        "(Default: False). Ignored for BigBed files."
+                        % prefix
+                    )
                 )
             ),
             (
@@ -842,8 +897,10 @@ class AnnotationParser(Parser):
                 dict(
                     default=False,
                     action="store_true",
-                    help="%sannotation_files are sorted by chromosomal position (Default: False)" %
-                    prefix
+                    help=(
+                        "%sannotation_files are sorted by chromosomal position "
+                        "(Default: False)" % prefix
+                    )
                 )
             ),
         ]
@@ -883,18 +940,18 @@ class AnnotationParser(Parser):
             **kwargs
     ):
         """Return an :class:`~argparse.ArgumentParser` that opens annotation files.
-         
+
         Parameters
         ----------
         title : str, optional
             title for option group (used in command-line help screen)
-                
+
         description : str, optional
             description of parser (used in command-line help screen)
 
         kwargs : keyword arguments
             Additional arguments to pass to :meth:`Parser.get_parser`
-            
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -916,36 +973,38 @@ class AnnotationParser(Parser):
         return parser
 
     def get_transcripts_from_args(self, args, printer=None, return_type=None, require_sort=False):
-        """Return a generator of |Transcript| objects from arguments parsed by :func:`get_annotation_file_parser`
-        
+        """Return a generator of |Transcript| objects from arguments parsed by
+        :func:`get_annotation_file_parser`
+
         Parameters
         ----------
         args : :py:class:`argparse.Namespace`
             Namespace object from :py:func:`get_annotation_file_parser`
-        
+
         printer : file-like, optional
-            A stream to which stderr-like info can be written (Default: |NullWriter|) 
-        
+            A stream to which stderr-like info can be written (Default: |NullWriter|)
+
         return_type : |SegmentChain| or subclass, optional
             Type of object to return (Default: |Transcript|)
-    
+
         require_sort : bool, optional
             If True, quit if the annotation file(s) are not sorted or indexed
-        
+
         Returns
         -------
         iterator
             |Transcript| objects, either in order of appearance (if input was a
-            `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by chromosome,
-            start coordinate, end coordinate, and then strand (if input was `GTF2`_
-            or `GFF3`_).
-        
-        
+            `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by
+            chromosome, start coordinate, end coordinate, and then strand (if
+            input was `GTF2`_ or `GFF3`_).
+
+
         See Also
         --------
         get_annotation_file_parser
-            Function that creates :py:class:`argparse.ArgumentParser` whose output
-            :py:class:`~argparse.Namespace` is processed by this function    
+            Function that creates :py:class:`argparse.ArgumentParser` whose
+            output :py:class:`~argparse.Namespace` is processed by this
+            function
         """
 
         return self.get_segmentchains_from_args(
@@ -953,22 +1012,23 @@ class AnnotationParser(Parser):
         )
 
     def get_segmentchains_from_args(self, args, printer=None, return_type=None, require_sort=False):
-        """Return a generator of |SegmentChain| objects from arguments parsed by :py:func:`get_annotation_file_parser`
-        
+        """Return a generator of |SegmentChain| objects from arguments parsed
+        by :py:func:`get_annotation_file_parser`
+
         Parameters
         ----------
         args : :py:class:`argparse.Namespace`
             Namespace object from :py:func:`get_annotation_file_parser`
-        
+
         printer : file-like, optional
-            A stream to which stderr-like info can be written (Default: |NullWriter|) 
-        
+            A stream to which stderr-like info can be written (Default: |NullWriter|)
+
         return_type : |SegmentChain| or subclass, optional
             Type of object to return (Default: |Transcript|)
-    
+
         require_sort : bool, optional
             If True, quit if the annotation file(s) are not sorted or indexed
-        
+
         Returns
         -------
         iterator
@@ -976,13 +1036,13 @@ class AnnotationParser(Parser):
             `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by chromosome,
             start coordinate, end coordinate, and then strand (if input was `GTF2`_
             or `GFF3`_).
-        
-        
+
+
         See Also
         --------
         get_annotation_file_parser
             Function that creates :py:class:`argparse.ArgumentParser` whose output
-            :py:class:`~argparse.Namespace` is processed by this function    
+            :py:class:`~argparse.Namespace` is processed by this function
         """
         if printer is None:
             printer = NullWriter()
@@ -994,19 +1054,22 @@ class AnnotationParser(Parser):
         disabled = self.disabled
 
         if require_sort == True and 'sorted' not in disabled:
-            if args.annotation_format in ("BED","GTF2","GFF3") and \
-                args.sorted == False and 'tabix' not in disabled and\
-                args.tabix == False:
+            if args.annotation_format in ("BED", "GTF2", "GFF3") \
+                and args.sorted == False \
+                and 'tabix' not in disabled \
+                and args.tabix == False:
+
                 printer.write(
-                    "Using unsorted/unindexed annotation files requires impractical amounts of memory."
+                    "Using unsorted/unindexed annotation files requires "
+                    "impractical amounts of memory."
                 )
                 if args.annotation_format == "BED":
                     printer.write(
                         """Convert BED to BigBed using Jim Kent's bedToBigBed utility as follows:
-    
+
         $ sort -k1,1 -k2,2n my_file > my_file_sorted.bed
         $ bedToBigBed my_file_sorted.bed chrom.sizes my_file_sorted.bb
-    
+
     See https://github.com/ENCODE-DCC/kentUtils/tree/master/src/product/scripts
     for download & documentation of Kent utilities"""
                     )
@@ -1044,7 +1107,7 @@ class AnnotationParser(Parser):
             if tabix == True:
                 warnings.warn(
                     "Tabix compression is incompatible with BigBed files. Ignoring.",
-                    ArgumentWarning
+                    ArgumentWarning,
                 )
 
             from plastid.readers.bigbed import BigBedReader
@@ -1068,12 +1131,17 @@ class AnnotationParser(Parser):
 
         if args.annotation_format in ("GFF3", "GTF2"):
             from plastid.readers.gff import GFF3_TranscriptAssembler, GTF2_TranscriptAssembler
-            if 'sorted' not in disabled and args.sorted == False and \
-               'tabix' not in disabled and args.tabix == False and \
-               any((os.stat(X).st_size >= _GFF_SORT_SIZE for X in args.annotation_files)):
-                msg = """Transcript assembly on large FORMAT files can require a lot of memory.
-    Consider using a sorted file with the '--sorted' flag and/or tabix-compression.
-    """
+            if 'sorted' not in disabled \
+                and args.sorted == False \
+                and 'tabix' not in disabled \
+                and args.tabix == False \
+                and any((os.stat(X).st_size >= _GFF_SORT_SIZE for X in args.annotation_files)):
+
+                msg = (
+                    "Transcript assembly on large FORMAT files can require "
+                    "a lot of memory. Consider using a sorted file with "
+                    "the '--sorted' flag and/or tabix-compression. "
+                )
                 msg += GFF_SORT_MESSAGE
                 msg = msg.replace("FORMAT", args.annotation_format)
                 warnings.warn(msg, ArgumentWarning)
@@ -1121,27 +1189,27 @@ class AnnotationParser(Parser):
 
     def get_genome_hash_from_args(self, args, printer=None):
         """Return a |GenomeHash| of regions from command-line arguments
-    
+
         Parameters
         ----------
         args : :py:class:`argparse.Namespace`
             Namespace object from :py:func:`get_mask_file_parser`
-        
+
         printer : file-like
-            A stream to which stderr-like info can be written (Default: |NullWriter|) 
-    
-    
+            A stream to which stderr-like info can be written (Default: |NullWriter|)
+
+
         Returns
         -------
         |GenomeHash|
             Hashed data structure of masked genomic regions
-            
-        
+
+
         See Also
         --------
         get_mask_file_parser
             Function that creates :py:class:`argparse.ArgumentParser` whose output
-            :py:class:`~argparse.Namespace` is processed by this function  
+            :py:class:`~argparse.Namespace` is processed by this function
         """
         from plastid.genomics.genome_hash import GenomeHash, BigBedGenomeHash, TabixGenomeHash
         from plastid.readers.bed import BED_Reader
@@ -1158,8 +1226,11 @@ class AnnotationParser(Parser):
                 "Opening mask annotation file(s) %s ..." % ", ".join(args.annotation_files)
             )
             if args.annotation_format in ("BED", "GTF2", "GFF3") and args.tabix == False:
-                msg = """Unindexed mask files can require lots of memory in large (e.g. mammalian) genomes.
-    Consider converting to BigBed or using tabix to index your mask file."""
+                msg = (
+                    "Unindexed mask files can require lots of memory in large "
+                    "(e.g. mammalian) genomes. Consider converting to BigBed "
+                    "or using tabix to index your mask file."
+                )
                 warnings.warn(msg, ArgumentWarning)
 
             if len(args.annotation_files) > 0:
@@ -1194,14 +1265,14 @@ class AnnotationParser(Parser):
 
 class MaskParser(AnnotationParser):
     """Create a parser for masking genomic features given in an annotation file
-    
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group.         
-    
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
@@ -1211,7 +1282,7 @@ class MaskParser(AnnotationParser):
 
     input_choices : list, optional
         list of permitted alignment file type choices for input
-    
+
     allow_mapping : bool, optional
         Enable/disable user configuration of mapping rules (default: True)
     """
@@ -1224,14 +1295,14 @@ class MaskParser(AnnotationParser):
             input_choices=("BED", "BigBed", "GTF2", "GFF3", "PSL")
     ):
         """Create a parser for genomic features in an annotation file
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -1241,7 +1312,7 @@ class MaskParser(AnnotationParser):
 
         input_choices : list, optional
             list of permitted alignment file type choices for input
-        
+
         allow_mapping : bool, optional
             Enable/disable user configuration of mapping rules (default: True)
         """
@@ -1254,25 +1325,27 @@ class MaskParser(AnnotationParser):
         )
 
     def get_parser(self, title=_MASK_PARSER_TITLE, description=_MASK_PARSER_DESCRIPTION, **kwargs):
-        """Return an :py:class:`~argparse.ArgumentParser` that opens annotation files as masks
-        alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_, `bedGraph`_) files.
-         
+        """Return an :py:class:`~argparse.ArgumentParser` that opens annotation
+        files as masks alignment (`BAM`_ or `bowtie`_) or count (`Wiggle`_,
+        `bedGraph`_) files.
+
         Parameters
         ----------
         title : str, optional
             title for option group (used in command-line help screen)
-                
+
         description : str, optional
             description of parser (used in command-line help screen)
 
         arglist : list, optional
             If not `None`, arguments in this list will be added to `parser`.
             Otherwise, arguments will be taken from `self.arguments`.
-            
-            The list should be a list of tuples of ('argument_name',dict_of_options),
-            where `argument_name` is a string, and `dict_of_options` a dictionary
-            of keyword arguments to pass to :meth:`argparse.ArgumentParser.add_argument`.
-            
+
+            The list should be a list of tuples of
+            ('argument_name',dict_of_options), where `argument_name` is a
+            string, and `dict_of_options` a dictionary of keyword arguments to
+            pass to :meth:`argparse.ArgumentParser.add_argument`.
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -1287,14 +1360,14 @@ class MaskParser(AnnotationParser):
 
 class SequenceParser(AnnotationParser):
     """Parser for sequence files
-            
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group.         
-    
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
@@ -1314,14 +1387,14 @@ class SequenceParser(AnnotationParser):
             input_choices=("fasta", "fastq", "twobit", "genbank", "embl"),
     ):
         """Create a parser for genomic sequence
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -1360,25 +1433,25 @@ class SequenceParser(AnnotationParser):
             **kwargs
     ):
         """Return an :py:class:`~argparse.ArgumentParser` that opens sequence files
-         
+
         Parameters
         ----------
-        
+
         title : str, optional
             title for option group (used in command-line help screen)
-            
+
         description : str, optional
             description of parser (used in command-line help screen)
 
         kwargs : keyword arguments
             Additional arguments to pass to :meth:`Parser.get_parser`
 
-            
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
-        
-        
+
+
         See also
         --------
         get_seqdict_from_args
@@ -1390,20 +1463,20 @@ class SequenceParser(AnnotationParser):
 
     def get_seqdict_from_args(self, args, index=True, printer=None):
         """Retrieve a dictionary-like object of sequences
-    
+
         Parameters
         ----------
         args : :py:class:`argparse.Namespace`
             Namespace object from :py:func:`get_sequence_file_parser`
-        
+
         index : bool, optional
             If sequence format is anything other than twobit, open with
             lazily-evaluating :func:`Bio.SeqIO.index` instead of
             :func:`Bio.SeqIO.to_dict` (Default: `True`)
-            
+
         printer : file-like
-            A stream to which stderr-like info can be written (Default: |NullWriter|) 
-    
+            A stream to which stderr-like info can be written (Default: |NullWriter|)
+
         Returns
         -------
         dict-like
@@ -1433,32 +1506,32 @@ class SequenceParser(AnnotationParser):
 
 class PlottingParser(Parser):
     """Parser for plotting options
-        
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group.         
-    
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
     disabled : list, optional
         list of parameter names that should be disabled from parser,
-        without preceding dashes    
+        without preceding dashes
     """
 
     def __init__(self, groupname="plotting_options", prefix="", disabled=None):
         """Create a parser for plotting arguments
-        
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -1486,7 +1559,7 @@ class PlottingParser(Parser):
                     type=str,
                     choices=filetypes,
                     help="File format for figure(s); Default: %(default)s)"
-                )
+                ),
             ),
             (
                 "figsize",
@@ -1495,8 +1568,11 @@ class PlottingParser(Parser):
                     default=None,
                     type=float,
                     metavar="N",
-                    help="Figure width and height, in inches. (Default: use matplotlibrc params)"
-                )
+                    help=(
+                        "Figure width and height, in inches. "
+                        "(Default: use matplotlibrc params)"
+                    ),
+                ),
             ),
             ("title", dict(type=str, default=None, help="Base title for plot(s).")),
             (
@@ -1504,9 +1580,13 @@ class PlottingParser(Parser):
                 dict(
                     type=str,
                     default=None,
-                    help=
-                    "Matplotlib color map from which palette will be made (e.g. 'Blues','autumn','Set1'; default: use colors from ``--stylesheet`` if given, or color cycle in matplotlibrc)"
-                )
+                    help=(
+                        "Matplotlib color map from which palette will be made "
+                        "(e.g. 'Blues','autumn','Set1'; default: use colors "
+                        "from ``--stylesheet`` "
+                        "if given, or color cycle in matplotlibrc)"
+                    ),
+                ),
             ),
             ("dpi", dict(type=int, default=150, help="Figure resolution (Default: %(default)s)")),
         ]
@@ -1522,7 +1602,10 @@ class PlottingParser(Parser):
                         dict(
                             default=None,
                             choices=stylesheets,
-                            help="Use this matplotlib stylesheet instead of matplotlibrc params"
+                            help=(
+                                "Use this matplotlib stylesheet instead "
+                                "of matplotlibrc params"
+                            ),
                         )
                     )
                 )
@@ -1530,18 +1613,18 @@ class PlottingParser(Parser):
             pass
 
     def get_parser(self, title=_DEFAULT_PLOTTING_TITLE, description=None):
-        """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
-    
+        """Return an :py:class:`~argparse.ArgumentParser` to control plotting
+
         Parameters
         ----------
-            
+
         title : str, optional
             title for option group (used in command-line help screen)
-            
+
         description : str, optional
             description of parser (used in command-line help screen)
-        
-       
+
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -1564,21 +1647,22 @@ class PlottingParser(Parser):
             pass
 
     def get_figure_from_args(self, args, **kwargs):
-        """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
-    
-        A new figure is created with parameters specified in `args`. If these are 
-        not found, values found in `**kwargs` will instead be used. If these are 
+        """Return a :class:`matplotlib.figure.Figure` following arguments from
+        :func:`get_plotting_parser`
+
+        A new figure is created with parameters specified in `args`. If these are
+        not found, values found in `**kwargs` will instead be used. If these are
         not found, we fall back to matplotlibrc values.
-    
+
         Parameters
         ----------
         args : :class:`argparse.Namespace`
             Namespace object from :func:`get_plotting_parser`
-    
+
         kwargs : keyword arguments
             Fallback arguments for items not defined in `args`, plus any other
             keyword arguments.
-    
+
         Returns
         -------
         :class:`matplotlib.figure.Figure`
@@ -1588,7 +1672,8 @@ class PlottingParser(Parser):
         args = PrefixNamespaceWrapper(args, self.prefix)
 
         fargs = {}
-        # keep this loop in place in case we add additional command line attributes as fig properties later
+        # keep this loop in place in case we add additional
+        # command line attributes as fig properties later
         for attr in ("figsize", ):
             if attr in kwargs:
                 v = kwargs[attr]
@@ -1603,27 +1688,28 @@ class PlottingParser(Parser):
         return plt.figure(**kwargs)
 
     def get_colors_from_args(self, args, num_colors):
-        """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
-    
+        """Return a list of colors from arguments parsed by a parser from
+        :func:`get_plotting_parser`
+
         If a matplotlib colormap is specified in `args.figcolors`, colors will be
         generated from that map.
-    
-        Otherwise, if a stylesheet is specified, colors will be fetched from 
+
+        Otherwise, if a stylesheet is specified, colors will be fetched from
         the stylesheet's color cycle.
-        
+
         Otherwise, colors will be chosen from the default color cycle specified
         ``matplotlibrc``.
-    
-    
+
+
         Parameters
         ----------
         args : :class:`argparse.Namespace`
             Namespace object from :func:`get_plotting_parser`
-    
+
         num_colors : int
             Number of colors to fetch
-        
-    
+
+
         Returns
         -------
         list
@@ -1660,20 +1746,20 @@ class PlottingParser(Parser):
 
 class BaseParser(Parser):
     """Parser basic options
-    
+
     Parameters
     ----------
     groupname : str, optional
         Name of argument group. If not `None`, an argument group with
         the specified name will be created and added to the parser.
-        If not, arguments will be in the main group.         
-    
+        If not, arguments will be in the main group.
+
     prefix : str, optional
         string prefix to add to default argument options (Default: "")
 
     disabled : list, optional
         list of parameter names that should be disabled from parser,
-        without preceding dashes    
+        without preceding dashes
     """
 
     def __init__(
@@ -1682,15 +1768,16 @@ class BaseParser(Parser):
             prefix="",
             disabled=None,
     ):
-        """Create a parser for basic options for command-line scripts, such as warnings and logging
-        
+        """Create a parser for basic options for command-line scripts, such as
+        warnings and logging
+
         Parameters
         ----------
         groupname : str, optional
             Name of argument group. If not `None`, an argument group with
             the specified name will be created and added to the parser.
-            If not, arguments will be in the main group.         
-        
+            If not, arguments will be in the main group.
+
         prefix : str, optional
             string prefix to add to default argument options (Default: "")
 
@@ -1705,18 +1792,18 @@ class BaseParser(Parser):
 #         self.level_desc = ["--silent","--quiet","--verbose","--raise"]
 
     def get_parser(self, title=None, description=None):
-        """Return an :py:class:`~argparse.ArgumentParser`     
-    
+        """Return an :py:class:`~argparse.ArgumentParser`
+
         Parameters
         ----------
-            
+
         title : str, optional
             title for option group (used in command-line help screen)
-            
+
         description : str, optional
             description of parser (used in command-line help screen)
-        
-       
+
+
         Returns
         -------
         :class:`argparse.ArgumentParser`
@@ -1737,8 +1824,12 @@ class BaseParser(Parser):
             "--verbose",
             dest="warnlevel",
             action="count",
-            help=
-            "Increase verbosity. With '-v', show every warning. With '-vv', turn warnings into exceptions. Cannot use with '-q'. (Default: show each type of warning once)"
+            help=(
+                "Increase verbosity. With '-v', show every warning. "
+                "With '-vv', turn warnings into exceptions. "
+                "Cannot use with '-q'. "
+                "(Default: show each type of warning once)"
+            )
         )
         p.set_defaults(warnlevel=0)
 
@@ -1758,8 +1849,11 @@ class BaseParser(Parser):
             action = actions[warnlevel + 1]
         except IndexError:
             warnings.warn(
-                "Invalid warning level. Expected 0-3, found %s. Defaulting to level 1 (`--once`)." %
-                warnlevel, UserWarning
+                (
+                    "Invalid warning level. Expected 0-3, found %s. "
+                    "Defaulting to level 1 (`--once`)." % warnlevel
+                ),
+                UserWarning,
             )
             action = actions[1]
 
@@ -1843,7 +1937,7 @@ def get_alignment_file_parser(
 def get_genome_array_from_args(args, prefix="", disabled=None, printer=None):
     """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
     from arguments parsed by :py:func:`get_alignment_file_parser`
-    
+
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
@@ -1857,21 +1951,21 @@ def get_genome_array_from_args(args, prefix="", disabled=None, printer=None):
     disabled : list, optional
         list of parameter names that were disabled when the argparser was created
         in :py:func:`get_alignment_file_parser`. (Default: ``[]``)
-        
+
     printer : file-like, optional
-        A stream to which stderr-like info can be written (default: |NullWriter|) 
-    
-    
+        A stream to which stderr-like info can be written (default: |NullWriter|)
+
+
     Returns
     -------
     |GenomeArray|, |SparseGenomeArray|, or |BAMGenomeArray|
-    
-    
+
+
     See Also
     --------
     get_alignment_file_parser
         Function that creates :py:class:`~argparse.ArgumentParser` whose output
-        :py:class:`~argparse.Namespace` is processed by this function        
+        :py:class:`~argparse.Namespace` is processed by this function
     """
     tmp = AlignmentParser(prefix=prefix, disabled=disabled)
     return tmp.get_genome_array_from_args(args, printer=printer)
@@ -1893,35 +1987,35 @@ def get_annotation_file_parser(
 ):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
-     
+
     Parameters
     ----------
     input_choices : list, optional
         list of permitted alignment file type choices.
         (Default: '["BED","BigBed","GTF2","GFF3"]'). 'PSL'_ may also be added
-        
+
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
         string prefix to add to default argument options (Default: `''`)
-    
+
     title : str, optional
         title for option group (used in command-line help screen)
-        
+
     description : str, optional
         description of parser (used in command-line help screen)
-    
+
     return_subparsers : bool, optional
         if True, additionally return a dictionary of subparser option groups,
         to which additional options may be added (Default: `False`)
-    
+
     Returns
     -------
     :class:`argparse.ArgumentParser`
-    
-    
+
+
     See also
     --------
     get_transcripts_from_args
@@ -1942,32 +2036,33 @@ def get_annotation_file_parser(
 def get_transcripts_from_args(
         args, prefix="", disabled=[], printer=NullWriter(), return_type=None, require_sort=False
 ):
-    """Return a list of |Transcript| objects from arguments parsed by :py:func:`get_annotation_file_parser`
-    
+    """Return a list of |Transcript| objects from arguments parsed by
+    :py:func:`get_annotation_file_parser`
+
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
         Namespace object from :py:func:`get_annotation_file_parser`
-    
+
     prefix : str, optional
         string prefix to add to default argument options.
         Must be same prefix that was added in call to :py:func:`get_annotation_file_parser`
         (Default: `''`)
-        
+
     disabled : list, optional
         list of parameter names that were disabled when the annotation file
-        parser was created by :py:func:`get_annotation_file_parser`. 
+        parser was created by :py:func:`get_annotation_file_parser`.
         (Default: `[]`)
-            
+
     printer : file-like, optional
-        A stream to which stderr-like info can be written (Default: |NullWriter|) 
-    
+        A stream to which stderr-like info can be written (Default: |NullWriter|)
+
     return_type : |SegmentChain| or subclass, optional
         Type of object to return (Default: |Transcript|)
 
     require_sort : bool, optional
         If True, quit if the annotation file(s) are not sorted or indexed
-    
+
     Returns
     -------
     iterator
@@ -1975,13 +2070,13 @@ def get_transcripts_from_args(
         `BED`_, `BigBed`_, or `PSL`_ file), or sorted lexically by chromosome,
         start coordinate, end coordinate, and then strand (if input was `GTF2`_
         or `GFF3`_).
-    
-    
+
+
     See Also
     --------
     get_annotation_file_parser
         Function that creates :py:class:`argparse.ArgumentParser` whose output
-        :py:class:`~argparse.Namespace` is processed by this function    
+        :py:class:`~argparse.Namespace` is processed by this function
     """
     tmp = AnnotationParser(groupname="annotation_options", prefix=prefix, disabled=disabled)
     return tmp.get_transcripts_from_args(
@@ -1997,33 +2092,34 @@ def get_segmentchain_file_parser(
         title=_DEFAULT_ANNOTATION_PARSER_TITLE,
         description=_DEFAULT_ANNOTATION_PARSER_DESCRIPTION
 ):
-    """Create an :class:`~argparse.ArgumentParser` to open annotation files as |SegmentChains|
-    
+    """Create an :class:`~argparse.ArgumentParser` to open annotation files as
+    |SegmentChains|
+
     Parameters
     ----------
     input_choices : list, optional
         list of permitted alignment file type choices
         (Default: `["BED","BigBed","GTF2","GFF3", "PSL"]`)
-        
+
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
         string prefix to add to default argument options (Default: `''`)
-    
+
     title : str, optional
         title for option group (used in command-line help screen)
-        
+
     description : str, optional
         description of parser (used in command-line help screen)
- 
+
 
     Returns
     -------
     :class:`argparse.ArgumentParser`
-    
-    
+
+
     See Also
     --------
     get_segmentchains_from_args
@@ -2045,8 +2141,8 @@ def get_segmentchains_from_args(
         args, prefix="", disabled=[], printer=NullWriter(), require_sort=False
 ):
     """Return a list of |SegmentChain| objects from arguments parsed by an
-    :py:class:`~argparse.ArgumentParser` created by :py:func:`get_segmentchain_file_parser`
-    
+    :class:`~argparse.ArgumentParser` created by :func:`get_segmentchain_file_parser`
+
     Parameters
     ----------
     args : :py:class:`argparse.Namespace`
@@ -2054,34 +2150,34 @@ def get_segmentchains_from_args(
 
     prefix : str, optional
         string prefix to add to default argument options.
-        Must be same prefix that was added in call to :py:func:`get_segmentchain_file_parser`
-        (Default: "")
-        
+        Must be same prefix that was added in call to
+        :py:func:`get_segmentchain_file_parser` (Default: "")
+
     disabled : list, optional
         list of parameter names that were disabled when the annotation file
-        parser was created by :py:func:`get_segmentchain_file_parser`. 
+        parser was created by :py:func:`get_segmentchain_file_parser`.
         (Default: ``[]``)
-                
+
     printer : file-like
-        A stream to which stderr-like info can be written (Default: |NullWriter|) 
-    
+        A stream to which stderr-like info can be written (Default: |NullWriter|)
+
     require_sort : bool, optional
         If True, quit if the annotation file(s) are not sorted or indexed
 
-    
+
     Returns
     -------
     iterator
         sequence of |SegmentChain| objects, either in order of appearance
         (if input was a BED or PSL file), or sorted lexically by chromosome,
         start coordinate, end coordinate, and then strand (if input was) GTF or GFF
-    
-    
+
+
     See Also
     --------
     get_segmentchain_file_parser
         Function that creates :py:class:`argparse.ArgumentParser` whose output
-        :py:class:`~argparse.Namespace` is processed by this function    
+        :py:class:`~argparse.Namespace` is processed by this function
     """
     disabled.append([prefix + "add_three"])
     return get_transcripts_from_args(
@@ -2096,26 +2192,27 @@ def get_segmentchains_from_args(
 
 @deprecated(version="0.5.0", instead="AnnotationParser")
 def get_mask_file_parser(prefix="mask_", disabled=[]):
-    """Create an :class:`~argparse.ArgumentParser` to open annotation files that describe regions of the genome to mask from analyses
-    
+    """Create an :class:`~argparse.ArgumentParser` to open annotation files
+    that describe regions of the genome to mask from analyses
+
     Parameters
     ----------
     prefix : str, optional
         Prefix to add to default argument options (Default: `'mask_'`)
-        
+
     disabled : list, optional
-        list of parameter names to disable from the mask file parser 
+        list of parameter names to disable from the mask file parser
         (Default: `[]`. `add_three` is always disabled.)
 
     Returns
     -------
     argparse.ArgumentParser
-    
+
     See Also
     --------
     get_genome_hash_from_mask_args
         function that parses the :py:class:`~argparse.Namespace` returned
-        by this :py:class:`~argparse.ArgumentParser`    
+        by this :py:class:`~argparse.ArgumentParser`
     """
     tmp = AnnotationParser(
         groupname="%s_options" % prefix,
@@ -2134,27 +2231,27 @@ def get_genome_hash_from_mask_args(args, prefix="mask_", printer=NullWriter()):
     ----------
     args : :py:class:`argparse.Namespace`
         Namespace object from :py:func:`get_mask_file_parser`
-    
+
     prefix : str, optional
         string prefix to add to default argument options.
         Must be same prefix that was added in call to :py:func:`get_mask_file_parser`
         (Default: "mask_")
-    
+
     printer : file-like
-        A stream to which stderr-like info can be written (Default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|)
 
 
     Returns
     -------
     |GenomeHash|
         Hashed data structure of masked genomic regions
-        
-    
+
+
     See Also
     --------
     get_mask_file_parser
         Function that creates :py:class:`argparse.ArgumentParser` whose output
-        :py:class:`~argparse.Namespace` is processed by this function  
+        :py:class:`~argparse.Namespace` is processed by this function
     """
     tmp = AnnotationParser(groupname="mask_options", prefix=prefix)
     return tmp.get_genome_hash_from_args(args, printer=printer)
@@ -2175,32 +2272,32 @@ def get_sequence_file_parser(
 ):
     """Return an :py:class:`~argparse.ArgumentParser` that opens
     annotation files from `BED`_, `BigBed`_, `GTF2`_, or `GFF3`_ formats
-     
+
     Parameters
     ----------
     input_choices : list, optional
         list of permitted sequence file type choices.
         (Default: '["FASTA","twobit","genbank","embl"]').
-        
+
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
         string prefix to add to default argument options (Default: `''`)
-    
+
     title : str, optional
         title for option group (used in command-line help screen)
-        
+
     description : str, optional
         description of parser (used in command-line help screen)
-    
-   
+
+
     Returns
     -------
     :class:`argparse.ArgumentParser`
-    
-    
+
+
     See also
     --------
     get_seqdict_from_args
@@ -2219,19 +2316,19 @@ def get_seqdict_from_args(args, index=True, prefix="", printer=NullWriter()):
     ----------
     args : :py:class:`argparse.Namespace`
         Namespace object from :py:func:`get_sequence_file_parser`
-    
+
     prefix : str, optional
         string prefix to add to default argument options.
-        Must be same prefix that was added in call to :py:func:`get_sequence_file_parser`
-        (Default: "")
-   
+        Must be same prefix that was added in call to
+        :py:func:`get_sequence_file_parser` (Default: "")
+
     index : bool, optional
         If sequence format is anything other than twobit, open with
         lazily-evaluating :func:`Bio.SeqIO.index` instead of
         :func:`Bio.SeqIO.to_dict` (Default: `True`)
-        
+
     printer : file-like
-        A stream to which stderr-like info can be written (Default: |NullWriter|) 
+        A stream to which stderr-like info can be written (Default: |NullWriter|)
 
     Returns
     -------
@@ -2250,30 +2347,30 @@ def get_seqdict_from_args(args, index=True, prefix="", printer=NullWriter()):
 
 @deprecated(version="0.5.0", instead="PlottingParser")
 def get_plotting_parser(prefix="", disabled=[], title=_DEFAULT_PLOTTING_TITLE):
-    """Return an :py:class:`~argparse.ArgumentParser` to control plotting     
+    """Return an :py:class:`~argparse.ArgumentParser` to control plotting
 
     Parameters
     ----------
-        
+
     disabled : list, optional
         list of parameter names that should be disabled from parser
         without preceding dashes
 
     prefix : str, optional
         string prefix to add to default argument options (Default: `''`)
-    
+
     title : str, optional
         title for option group (used in command-line help screen)
-        
+
     description : str, optional
         description of parser (used in command-line help screen)
-    
-   
+
+
     Returns
     -------
     :class:`argparse.ArgumentParser`
-    
-    
+
+
     See also
     --------
     get_colors_from_args
@@ -2285,10 +2382,11 @@ def get_plotting_parser(prefix="", disabled=[], title=_DEFAULT_PLOTTING_TITLE):
 
 @deprecated(version="0.5.0", instead="PlottingParser.get_figure_from_args()")
 def get_figure_from_args(args, **kwargs):
-    """Return a :class:`matplotlib.figure.Figure` following arguments from :func:`get_plotting_parser`
+    """Return a :class:`matplotlib.figure.Figure` following arguments from
+    :func:`get_plotting_parser`
 
-    A new figure is created with parameters specified in `args`. If these are 
-    not found, values found in `**kwargs` will instead be used. If these are 
+    A new figure is created with parameters specified in `args`. If these are
+    not found, values found in `**kwargs` will instead be used. If these are
     not found, we fall back to matplotlibrc values.
 
     Parameters
@@ -2311,14 +2409,15 @@ def get_figure_from_args(args, **kwargs):
 
 @deprecated(version="0.5.0", instead="PlottingParser.get_colors_from_args()")
 def get_colors_from_args(args, num_colors):
-    """Return a list of colors from arguments parsed by a parser from :func:`get_plotting_parser`
+    """Return a list of colors from arguments parsed by a parser from
+    :func:`get_plotting_parser`
 
     If a matplotlib colormap is specified in `args.figcolors`, colors will be
     generated from that map.
 
-    Otherwise, if a stylesheet is specified, colors will be fetched from 
+    Otherwise, if a stylesheet is specified, colors will be fetched from
     the stylesheet's color cycle.
-    
+
     Otherwise, colors will be chosen from the default color cycle specified
     ``matplotlibrc``.
 
@@ -2330,7 +2429,7 @@ def get_colors_from_args(args, num_colors):
 
     num_colors : int
         Number of colors to fetch
-    
+
 
     Returns
     -------
@@ -2351,39 +2450,39 @@ class PrefixNamespaceWrapper(object):
     objects created by :py:func:`get_alignment_file_parser` or
     :py:func:`get_annotation_file_parser` with non-empty ``prefix`` values,
     as if no prefix had been used.
-    
+
     Attributes
     ----------
     namespace : :py:class:`~argparse.Namespace`
         Result of calling :py:meth:`argparse.ArgumentParser.parse_args`
-    
+
     prefix : str
         Prefix that will be prepended to names of attributes of `self.namespace`
         before they are fetched. Must match prefix that was used in creation
         of the :py:class:`argparse.ArgumentParser` that created `self.namespace`
-    
+
     See Also
     --------
     get_annotation_file_parser
-    
+
     get_alignment_file_parser
-    
+
     get_genome_array_from_args
-    
+
     get_transcripts_from_args
     """
 
     def __init__(self, namespace, prefix):
         """Create a |PrefixNamespaceWrapper|
-        
+
         Parameters
         ----------
         namespace : :py:class:`~argparse.Namespace`
             Result of calling :py:meth:`argparse.ArgumentParser.parse_args`
-        
+
         prefix : str
-            Prefix that will be prepended to items from the :py:class:`~argparse.Namespace`
-            before they are checked 
+            Prefix that will be prepended to items from the
+            :py:class:`~argparse.Namespace` before they are checked
         """
         self.namespace = namespace
         self.prefix = prefix
@@ -2391,7 +2490,7 @@ class PrefixNamespaceWrapper(object):
     def __getattr__(self, k):
         """Fetch an attribute from `self.namespace`, appending `self.prefix` to `k`
         before fetching
-        
+
         Parameters
         ----------
         k : str
@@ -2409,14 +2508,14 @@ def _parse_variable_offset_file(fh):
     """Read a variable-offset text file into a dictionary.
     These text files contain two columns and are tab-delimited. The first column
     specifies the read length, or contains the special value `'default'`. The
-    second column specifies the offset from the 5' end of that read length to 
+    second column specifies the offset from the 5' end of that read length to
     use.
-    
+
     Parameters
     ----------
     fh : file-like
         open filehandle pointing to data
-    
+
     Returns
     -------
     dict
@@ -2440,7 +2539,8 @@ def _parse_variable_offset_file(fh):
         except ValueError:
             name = getattr(fh, "__name__", "Variable offset file")
             raise MalformedFileError(
-                name, "Non integer value for key '%s' on line:\n\t%s" % (key, line.strip("\n"))
+                name,
+                "Non integer value for key '%s' on line:\n\t%s" % (key, line.strip("\n")),
             )
         if key in my_dict:
             name = getattr(fh, "__name__", "Variable offset file")
@@ -2451,8 +2551,11 @@ def _parse_variable_offset_file(fh):
             except ValueError:
                 name = getattr(fh, "__name__", "Variable offset file")
                 raise MalformedFileError(
-                    name, "Non integer value for value '%s' on line:\n\t%s" %
-                    (items[1], line.strip("\n"))
+                    name,
+                    (
+                        "Non integer value for value '%s' on line:\n\t%s" %
+                        (items[1], line.strip("\n"))
+                    ),
                 )
 
     return my_dict

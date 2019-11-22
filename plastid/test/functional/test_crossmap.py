@@ -51,6 +51,13 @@ _kmers = os.path.join(test_info["temp_file_path"], ((_outbase_str % 0) + "_26_0"
 # INDEX: definition of tests
 #        The first we specify explicitly,
 #        the remaining we generate programmatically
+#
+# There are four tests total:
+# 
+#    1. 0 0 mismatches, 0 offset, k=26, single process, and save k-mers
+#    2. 0 mismatches, 12 offset, k=26, single process, use pre-existing k-mers
+#    3. 2 mismatches, 12 offset, k=26, single process, use pre-existing k-mers
+#    4. 0 mismatches, 12 offset, k=26, four processes, use pre-existing k-mers
 #===============================================================================
 
 # first test generates kmer file
