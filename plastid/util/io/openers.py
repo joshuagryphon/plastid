@@ -24,7 +24,7 @@ import sys
 import os
 import pandas as pd
 from plastid.util.io.filters import AbstractWriter
-from collections import Iterable
+from plastid.util.services.mini2to3 import Iterable
 
 
 class NullWriter(AbstractWriter):
