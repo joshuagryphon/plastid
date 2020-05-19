@@ -5,8 +5,9 @@ Major changes to ``plastid`` are documented here. Version numbers for the
 project follow the conventions described in :pep:`440` and
 `Semantic versioning 2.0.0 <http://semver.org/>`_.
 
+
 Unreleased
-----------
+------------------------------
 
 Changes are predominantly for maintenance, bugfixes, and streamlining.
 
@@ -14,7 +15,7 @@ Changes are predominantly for maintenance, bugfixes, and streamlining.
 Changed
 .......
 
-- Iterators rewritten for compatibility with Python 3.7 and forward (per
+- Iterators rewritten for compatibility with Python 3.7 and Python 3.8 (per
   instructions in :pep:`479` )
 
 - As a result, **while readers in** :mod:`plastid.readers` **are still
