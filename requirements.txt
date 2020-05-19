@@ -1,9 +1,10 @@
-numpy>=1.9.4
-scipy>=0.15.1
-cython>=0.22
-pysam>=0.8.4
-pandas>=0.17.0
-matplotlib>=1.4.0
-biopython>=1.64
-twobitreader>=3.0.0
-termcolor
+# JGD: this environment validated 2020-05-19 with GCC 7.4.0
+biopython==1.73
+Cython==0.29.7
+matplotlib==2.2.4
+numpy==1.13.3
+pandas==0.24.2
+pysam==0.15.2
+scipy==1.2.1
+termcolor==1.1.0
+twobitreader==3.1.6
