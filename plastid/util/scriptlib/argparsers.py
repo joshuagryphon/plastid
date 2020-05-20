@@ -1919,7 +1919,7 @@ PLASTID_WARNINGS = [
 #===============================================================================
 
 
-@deprecated(version="0.5.0", instead="AlignmentParser")
+@deprecated(version="0.6.0", instead="AlignmentParser")
 def get_alignment_file_parser(
         input_choices=("BAM", "bigwig", "bowtie", "wiggle"),
         disabled=None,
@@ -1933,7 +1933,7 @@ def get_alignment_file_parser(
     return tmp.get_parser(title=title, description=description)
 
 
-@deprecated(version="0.5.0", instead="AlignmentParser.get_genome_array_from_args()")
+@deprecated(version="0.6.0", instead="AlignmentParser.get_genome_array_from_args()")
 def get_genome_array_from_args(args, prefix="", disabled=None, printer=None):
     """Return a |GenomeArray|, |SparseGenomeArray| or |BAMGenomeArray|
     from arguments parsed by :py:func:`get_alignment_file_parser`
@@ -1976,7 +1976,7 @@ def get_genome_array_from_args(args, prefix="", disabled=None, printer=None):
 #===============================================================================
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser")
+@deprecated(version="0.6.0", instead="AnnotationParser")
 def get_annotation_file_parser(
         input_choices=["BED", "BigBed", "GTF2", "GFF3"],
         disabled=[],
@@ -2032,7 +2032,7 @@ def get_annotation_file_parser(
     return parser
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser.get_transcripts_from_args()")
+@deprecated(version="0.6.0", instead="AnnotationParser.get_transcripts_from_args()")
 def get_transcripts_from_args(
         args, prefix="", disabled=[], printer=NullWriter(), return_type=None, require_sort=False
 ):
@@ -2084,7 +2084,7 @@ def get_transcripts_from_args(
     )
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser.get_parser()")
+@deprecated(version="0.6.0", instead="AnnotationParser.get_parser()")
 def get_segmentchain_file_parser(
         input_choices=["BED", "BigBed", "GTF2", "GFF3", "PSL"],
         disabled=[],
@@ -2136,7 +2136,7 @@ def get_segmentchain_file_parser(
     )
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser.get_transcripts_from_args()")
+@deprecated(version="0.6.0", instead="AnnotationParser.get_transcripts_from_args()")
 def get_segmentchains_from_args(
         args, prefix="", disabled=[], printer=NullWriter(), require_sort=False
 ):
@@ -2190,7 +2190,7 @@ def get_segmentchains_from_args(
     )
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser")
+@deprecated(version="0.6.0", instead="AnnotationParser")
 def get_mask_file_parser(prefix="mask_", disabled=[]):
     """Create an :class:`~argparse.ArgumentParser` to open annotation files
     that describe regions of the genome to mask from analyses
@@ -2223,7 +2223,7 @@ def get_mask_file_parser(prefix="mask_", disabled=[]):
     return tmp.get_parser(_MASK_PARSER_TITLE, _MASK_PARSER_DESCRIPTION)
 
 
-@deprecated(version="0.5.0", instead="AnnotationParser.get_genome_hash()")
+@deprecated(version="0.6.0", instead="AnnotationParser.get_genome_hash()")
 def get_genome_hash_from_mask_args(args, prefix="mask_", printer=NullWriter()):
     """Return a |GenomeHash| of regions from command-line arguments
 
@@ -2262,7 +2262,7 @@ def get_genome_hash_from_mask_args(args, prefix="mask_", printer=NullWriter()):
 #===============================================================================
 
 
-@deprecated(version="0.5.0", instead="SequenceParser")
+@deprecated(version="0.6.0", instead="SequenceParser")
 def get_sequence_file_parser(
         input_choices=("fasta", "fastq", "twobit", "genbank", "embl"),
         disabled=(),
@@ -2308,7 +2308,7 @@ def get_sequence_file_parser(
     return tmp.get_parser(title=title, description=description)
 
 
-@deprecated(version="0.5.0", instead="SequenceParser.get_seqdict_from_args()")
+@deprecated(version="0.6.0", instead="SequenceParser.get_seqdict_from_args()")
 def get_seqdict_from_args(args, index=True, prefix="", printer=NullWriter()):
     """Retrieve a dictionary-like object of sequences
 
@@ -2345,7 +2345,7 @@ def get_seqdict_from_args(args, index=True, prefix="", printer=NullWriter()):
 #===============================================================================
 
 
-@deprecated(version="0.5.0", instead="PlottingParser")
+@deprecated(version="0.6.0", instead="PlottingParser")
 def get_plotting_parser(prefix="", disabled=[], title=_DEFAULT_PLOTTING_TITLE):
     """Return an :py:class:`~argparse.ArgumentParser` to control plotting
 
@@ -2380,7 +2380,7 @@ def get_plotting_parser(prefix="", disabled=[], title=_DEFAULT_PLOTTING_TITLE):
     return tmp.get_parser(title=title)
 
 
-@deprecated(version="0.5.0", instead="PlottingParser.get_figure_from_args()")
+@deprecated(version="0.6.0", instead="PlottingParser.get_figure_from_args()")
 def get_figure_from_args(args, **kwargs):
     """Return a :class:`matplotlib.figure.Figure` following arguments from
     :func:`get_plotting_parser`
@@ -2407,7 +2407,7 @@ def get_figure_from_args(args, **kwargs):
     return tmp.get_figure_from_args(args, **kwargs)
 
 
-@deprecated(version="0.5.0", instead="PlottingParser.get_colors_from_args()")
+@deprecated(version="0.6.0", instead="PlottingParser.get_colors_from_args()")
 def get_colors_from_args(args, num_colors):
     """Return a list of colors from arguments parsed by a parser from
     :func:`get_plotting_parser`
