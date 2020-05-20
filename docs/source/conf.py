@@ -171,15 +171,15 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 
 # intersphinx config ------------------------------------------------------------
 intersphinx_mapping = {
-    "python": ("http://docs.python.org", None),
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
-    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "pysam": ("http://pysam.readthedocs.io/en/latest", None),
-    "pandas": ("http://pandas-docs.github.io/pandas-docs-travis/", None),
-    "HTSeq": ("http://www-huber.embl.de/users/anders/HTSeq/doc", None),
-    "matplotlib": ("http://matplotlib.org/", None),
-    "twobitreader": ("https://pythonhosted.org/twobitreader/", None),
-    "cython": ("http://docs.cython.org", None),
+    "cython"       : ("https://docs.cython.org/en/latest/", None),
+    "HTSeq"        : ("https://www-huber.embl.de/users/anders/HTSeq/doc/", None),
+    "matplotlib"   : ("https://matplotlib.org/", None),
+    "numpy"        : ("https://numpy.org/doc/stable/", None),
+    "pandas"       : ("https://pandas-docs.github.io/pandas-docs-travis/", None),
+    "pysam"        : ("https://pysam.readthedocs.io/en/latest/", None),
+    "python"       : ("https://docs.python.org/3/", None),
+    "scipy"        : ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "twobitreader" : ("https://pythonhosted.org/twobitreader/", None),
 }
 
 # -- Mocking of imports ------------------------------------------------

@@ -294,7 +294,7 @@ for single-end dUTP data; or :ref:`faq-paired-end` for info on using
 Why do some scripts report fractional count numbers?
 ....................................................
 
-Fractional counts for :term:`read alignments` arise when using a alignment
+Fractional counts for :term:`alignments` arise when using a alignment
 :term:`mapping rule` that maps reads fractionally over multiple positions (such
 as ``--center`` mapping). See the  discussion of :doc:`concepts/mapping_rules`,
 where these are discussed in depth.
