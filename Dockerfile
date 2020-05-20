@@ -12,6 +12,7 @@ RUN apt-get update \
         build-essential \
         curl \
         git \
+        gfortran \
         libatlas3-base \
         libatlas-base-dev \
         libfreetype6 \
@@ -57,12 +58,13 @@ ENV PROJECT_HOME=/usr/src/plastid
 WORKDIR $PROJECT_HOME
 COPY . .
 
-# Install
-# RUN python setup.py clean && pip install -e .
-# Verify successful build by importing
-# RUN python -c "from plastid import *"
+# Install default in Python 3
+RUN python3 setup.py clean && pip3 install -e .
 
-# Download data to run tests
+# Verify successful build by importing
+RUN python3 -c "from plastid import *"
+
+# Download data required to run full test suite
 RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
         https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0 \
     && cd plastid/test \
