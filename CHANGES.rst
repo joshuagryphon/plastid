@@ -6,7 +6,7 @@ project follow the conventions described in :pep:`440` and
 `Semantic versioning 2.0.0 <http://semver.org/>`_.
 
 
-Unreleased
+plastid [0.5.0] = [2020-05-20]
 ------------------------------
 
 Changes are predominantly for maintenance, bugfixes, and streamlining.
