@@ -64,8 +64,7 @@ isolated environment.
 PyPI
 ....
 
-``plastid`` can be installed directly from PyPI, but requires numpy, pysam,
-and cython to be installed first i.e.::
+``plastid`` can be installed directly from PyPI
 
     $ pip install numpy pysam cython
     $ pip install plastid
@@ -76,6 +75,68 @@ regenerating the included C source files from the original Cython code. To
 do this type::
 
     $ pip install --upgrade  --install-option='--recythonize' plastid
+
+
+Running the tests
+-----------------
+
+- **NOTE**: to run the entire test suite you'll first need to download our `test
+  dataset
+  <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
+  and unpack it into `plastid/test/data`.
+
+We use nose_ as our test runner, and test under different versions of Python
+using tox_. To completely control the environment (e.g. compilers et c), we
+recommend running the tests inside the Docker_ container, which contains 
+large data files needed for the tests that aren't packaged with ``plastid`` by
+default:
+
+.. code-block:: shell
+
+   # build & run the Docker image from within the project folder
+   $ docker build -t plastid .
+   $ docker run -it plastid
+
+   # inside the container, run the tests over all default configurations
+   root@plastid $ tox
+
+
+Our tox_ config lets developers run subsets of tests rather than the full suite.
+All positional arguments are passed through to ``nosetests``
+
+.. code-block:: shell
+
+   # run all tests within the plastid.test.unit subpackage
+   root@plastid $ tox plastid.test.unit
+
+   # run tests in two files
+   root@plastid $ tox plastid.test.unit.genomics.readers.test_bed plastid.test.unit.util.io.test_binary
+
+By default, tox_ recompiles all C extensions before running the tests. This can
+be slow. To avoid doing that, set the environment variable `PLASTID_NOREBUILD`
+to `true`:
+
+.. code-block:: shell
+
+   # run unit tests without rebuilding the C extensions
+   root@plastid $ env PLASTID_NOREBUILD=true tox plastid.test.unit
+
+Finally, if you only want to test in some, not all environments, you can do so
+with typical tox_ syntax:
+
+.. code-block:: shell
+
+   # list available test environments
+   root@plastid $ tox -l
+   py35-pysam_latest-numpy_latest
+   py36-pysam_latest-numpy_latest
+   py37-pysam_latest-numpy_latest
+   py38-pysam_latest-numpy_latest
+   py37-pysam_152-numpy_194
+
+   # run only in 2 selected environments
+   root@plastid $ tox -e py36-pysam_latest-numpy_latest,py37-pysam_152-numpy_194 plastid.test.unit
+
 
 
 Links & help
