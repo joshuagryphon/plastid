@@ -76,6 +76,13 @@ Fixed
 - And others as well
 
 
+Removed
+.......
+
+- ``BigBedReader.custom_fields`` was removed in favor of its non-deprecated
+  alias, ``BigBedReader.extension_fields``
+
+
 
 plastid [0.4.8] = [2017-04-09]
 ------------------------------
