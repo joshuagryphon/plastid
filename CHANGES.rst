@@ -9,7 +9,7 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ------------------------------
 
-New changes will accumulate here as they are made.
+- Updates to package metadata and docs
 
 
 plastid [0.5.0] = [2020-05-20]
