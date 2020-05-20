@@ -18,15 +18,10 @@ docs/source/class_substitutions.txt :
 	docs/bin/get_class_substitutions plastid plastid
 	mv plastid_substitutions.txt docs/source/class_substitutions.txt
 
-docs/build/html : docs/source/class_substitutions.txt | docs/source/generated
-	cp CHANGES.rst docs/source
+docs/build/html : docs/source/class_substitutions.txt 
 	$(MAKE) html -C docs
 
-docs/source/generated :
-	sphinx-apidoc -M -e -o docs/source/generated plastid
-	#rm docs/source/generated/plastid.test*rst
-
-docs : | docs/build/html docs/source/generated
+docs : | docs/build/html
 
 cleandoc : 
 	rm -rf docs/build
