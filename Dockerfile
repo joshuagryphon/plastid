@@ -47,16 +47,17 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
         python3.5 \
         python3.5-dev
 
-# Upgrade pip3 and install tox, which will handle installation of all
-# dependencies inside virtual environments running various version of Python
-RUN pip3 install --upgrade pip \
-    && pip3 install tox
-
-
 # Copy source code into project
 ENV PROJECT_HOME=/usr/src/plastid
 WORKDIR $PROJECT_HOME
 COPY . .
+
+# Upgrade pip3 and install tox, which will handle installation of all
+# dependencies inside virtual environments running various version of Python
+RUN pip3 install --upgrade pip \
+    && pip3 install \
+        tox \
+        -r requirements.txt
 
 # Install default in Python 3
 RUN python3 setup.py clean && pip3 install -e .
