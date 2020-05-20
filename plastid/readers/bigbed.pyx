@@ -279,17 +279,6 @@ cdef class BigBedReader(_BBI_Reader):
 
         self.add_three_for_stop = add_three_for_stop
 
-    property custom_fields:
-        """BigBedReader.custom_fields is DEPRECATED. Will be removed in plastid
-        v0.5.0. Use BigBedReader.extension_fields in future
-        """
-        def __get__(self):
-            warnings.warn(
-                "BigBedReader.custom_fields is deprecated and will be removed in plastid v0.5.0. Use BigBedReader.extension_fields in the future",
-                UserWarning
-            )
-            return self.extension_fields
-
     property num_chroms:
         """Number of chromosomes in the `BigBed`_ file"""
         def __get__(self):

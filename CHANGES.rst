@@ -9,6 +9,12 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ------------------------------
 
+New changes will accumulate here as they are made.
+
+
+plastid [0.5.0] = [2020-05-20]
+------------------------------
+
 Changes are predominantly for maintenance, bugfixes, and streamlining.
 
 
@@ -74,6 +80,13 @@ Fixed
   ``from plastid import *``
 
 - And others as well
+
+
+Removed
+.......
+
+- ``BigBedReader.custom_fields`` was removed in favor of its non-deprecated
+  alias, ``BigBedReader.extension_fields``
 
 
 

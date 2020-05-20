@@ -35,7 +35,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from pkg_resources import parse_version
 
-plastid_version = "0.4.8"
+plastid_version = "0.5.0"
 
 # require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
 version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."

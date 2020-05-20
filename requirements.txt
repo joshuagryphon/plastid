@@ -1,4 +1,6 @@
 # JGD: this environment validated 2020-05-19 with GCC 7.4.0
+
+# for running
 biopython==1.73
 Cython==0.29.7
 matplotlib==2.2.4
@@ -8,3 +10,10 @@ pysam==0.15.2
 scipy==1.2.1
 termcolor==1.1.0
 twobitreader==3.1.6
+
+# for testing
+mock==3.0.4
+nose==1.3.7
+tox==3.12.1
+virtualenv==16.5.0
+
