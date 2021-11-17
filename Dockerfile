@@ -15,10 +15,14 @@ RUN apt-get update \
         gfortran \
         libatlas3-base \
         libatlas-base-dev \
+        libbz2-dev \
+        libcurl4 \
+        libcurl4-openssl-dev \
         libfreetype6 \
         libfreetype6-dev \
         liblapack3 \
         liblapack-dev \
+        liblzma-dev \
         libpng16-16 \
         libpng-dev \
         libssl-dev \
@@ -56,12 +60,18 @@ COPY . .
 
 # Upgrade pip and install tox, which will handle installation of all
 # dependencies inside virtual environments running various version of Python
+#
+# Note, we're installing pip and everything below under Python 3.6,
+# while the system default version is 3.8.
+#
+# This may seem weird, but plastid is tested against package versions
+# that no longer build under 3.8.
 RUN curl -o get-pip.py -sSL https://bootstrap.pypa.io/get-pip.py \
     && python3.6 get-pip.py "pip==21.3.1" \
     && pip install tox
 
-# Install default in Python 3. We do this do enable documentation to build
-# inside the container, without having to activate a tox env
+# We do this do enable documentation to build inside the container, without
+# having to activate a tox env
 RUN pip install -r requirements.txt \
     && python3.6 setup.py clean \
     && pip install -e .

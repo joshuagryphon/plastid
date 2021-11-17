@@ -11,6 +11,20 @@ Unreleased
 
 New changes will accumulate here as they are made.
 
+Added
+.....
+
+- Dockerization, to further control test environments, and make this release
+  release more future-proof
+
+
+Removed
+.......
+
+- Dropped support for Python versions 2.7–3.5. These may still run, but
+  are no longer tested.
+
+
 
 plastid [0.5.0] = [2020-05-20]
 ------------------------------
