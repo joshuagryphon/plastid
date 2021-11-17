@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM phusion/baseimage:focal-1.1.0
 LABEL maintainer "Joshua Griffin Dunn"
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -23,20 +23,12 @@ RUN apt-get update \
         libpng-dev \
         libssl-dev \
         pkg-config \
-        python3 \
-        python3-pip \
-        python3.6-dev \
-        python3.7-dev \
-        python3.8-dev \
-        python3.6 \
-        python3.7 \
-        python3.8 \
         software-properties-common \
         sudo \
         vim \
         zlib1g-dev 
 
-# Install Python 3.5 as a legacy version
+# Install Python 3.6-3.9
 RUN add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install \
@@ -44,26 +36,38 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
         --verbose-versions \
         --allow-change-held-packages \
         -o Dpkg::Options::="--force-confdef" \
-        python3.5 \
-        python3.5-dev
+        python \
+        python-dev \
+        python3.6 \
+        python3.6-dev \
+        python3.7 \
+        python3.7-dev \
+        python3.7-venv \
+        python3.7-distutils \
+        python3.9 \
+        python3.9-dev \
+        python3.9-venv \
+        python3.9-distutils
 
 # Copy source code into project
 ENV PROJECT_HOME=/usr/src/plastid
 WORKDIR $PROJECT_HOME
 COPY . .
 
-# Upgrade pip3 and install tox, which will handle installation of all
+# Upgrade pip and install tox, which will handle installation of all
 # dependencies inside virtual environments running various version of Python
-RUN pip3 install --upgrade pip \
-    && pip3 install \
-        tox \
-        -r requirements.txt
+RUN curl -o get-pip.py -sSL https://bootstrap.pypa.io/get-pip.py \
+    && python3.6 get-pip.py "pip==21.3.1" \
+    && pip install tox
 
-# Install default in Python 3
-RUN python3 setup.py clean && pip3 install -e .
+# Install default in Python 3. We do this do enable documentation to build
+# inside the container, without having to activate a tox env
+RUN pip install -r requirements.txt \
+    && python3.6 setup.py clean \
+    && pip install -e .
 
 # Verify successful build by importing
-RUN python3 -c "from plastid import *"
+RUN python3.6 -c "from plastid import *"
 
 # Download data required to run full test suite
 RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
