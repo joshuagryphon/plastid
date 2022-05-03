@@ -71,14 +71,15 @@ For large genomes (e.g. vertebrate, plant, or some *very* big amoebas):
 """
 __author__ = "joshua"
 import argparse
-import sys
-import os
-import subprocess
-import re
+import functools
+import glob
 import inspect
 import multiprocessing
+import os
+import re
 import shutil
-import functools
+import subprocess
+import sys
 from plastid.util.io.filters import NameDateWriter, AbstractReader
 from plastid.util.io.openers import get_short_name, argsopener
 from plastid.genomics.roitools import SegmentChain, positionlist_to_segments, GenomicSegment
@@ -308,7 +309,9 @@ def chrom_worker(chrom_seq, args=None):
                 os.remove(toomany_file)
 
             else:
-                printer.write("Could not find multimapper source file '%s' ." % toomany_file)
+                printer.write(
+                    "Could not find multimapper source file '%s' ." % toomany_file
+                )
 
     except OSError as e:
         printer.write("Alignment failed for chromosome '%s': %s" % (name, e))
@@ -335,14 +338,20 @@ def main(argv=sys.argv[1:]):
     """
     sp = SequenceParser()
     bp = BaseParser()
-# yapf: disable
-    parser = argparse.ArgumentParser(description     = format_module_docstring(__doc__),
-                                     formatter_class = argparse.RawDescriptionHelpFormatter,
-                                     parents         = [bp.get_parser(), sp.get_parser()])
-    parser.add_argument("-k", dest="read_length", metavar="READ_LENGTH",
-                        type=int, default=29,
-                        help="K-mer length to generate from input file. " +\
-                             "(Default: 29)")
+
+    parser = argparse.ArgumentParser(
+        description     = format_module_docstring(__doc__),
+        formatter_class = argparse.RawDescriptionHelpFormatter,
+        parents         = [bp.get_parser(), sp.get_parser()],
+    )
+    parser.add_argument(
+        "-k",
+        dest    = "read_length",
+        metavar = "READ_LENGTH",
+        type    = int,
+        default = 29,
+        help    = "K-mer length to generate from input file. (Default: 29)",
+    )
     parser.add_argument(
         "--offset",
         type    = int,
@@ -350,39 +359,56 @@ def main(argv=sys.argv[1:]):
         help    =
         "Offset from 5' end of plus-strand read at which to attribute score (Default: 14)"
     )
-    parser.add_argument("--mismatches", metavar="N",
-                        type=int, default=0,
-                        help="Number of mismatches tolerated in alignment. " +\
-                           "(Default: 0)")
+    parser.add_argument(
+        "--mismatches",
+        metavar="N",
+        type=int,
+        default=0,
+        help="Number of mismatches tolerated in alignment. (Default: 0)"
+    )
     parser.add_argument(
         "--bowtie",
         dest    = "bowtie",
         default = "/usr/bin/bowtie",
         type    = str,
-        help    = "Location of bowtie binary (Default: ``/usr/bin/bowtie``)")
-    parser.add_argument("--have_kmers", default=False, action="store_true",
-                        help="If specified,  use k-mer files from previous run. "+\
-                             " In this case 'sequence_file' should be the value "+\
-                             "'outbase' from the k-mer files you want to use.")
+        help    = "Location of bowtie binary (Default: /usr/bin/bowtie)",
+    )
+    parser.add_argument(
+        "--have_kmers",
+        default=False,
+        action="store_true",
+        help=(
+            "If specified,  use k-mer files from previous run. In this case "
+            "'sequence_file' should be the value 'outbase' from the k-mer "
+            "files you want to use. (Default: False)"
+        ),
+    )
     parser.add_argument(
         "--save_kmers",
         default = False,
         action  = "store_true",
-        help    = "Save k-mer files for reuse in a subsequent run.")
+        help    = "Save k-mer files for reuse in a subsequent run.",
+    )
     parser.add_argument(
         "-p",
         "--processes",
         type    = int,
         default = 2,
         metavar = "N",
-        help    = "Number of processes to use (should be <= number of chromosomes")
+        help    = (
+            "Number of processes to use (should be <= number of chromosomes; "
+            "default: 2)"
+        ),
+    )
     parser.add_argument(
         "ebwt",
         type = str,
-        help =
-        "Bowtie index of genome against which crossmap will be made. In most cases, should be generated from the same sequences that are in `sequence_file`."
+        help = (
+            "Bowtie index of genome against which crossmap will be made. "
+            "In most cases, should be generated from the same sequences that "
+            "are in `sequence_file`."
+        ),
     )
-# yapf: enable
     parser.add_argument("outbase", type=str, help="Basename for output files")
 
     args = parser.parse_args(argv)
@@ -393,7 +419,6 @@ def main(argv=sys.argv[1:]):
     bed_file = "%s_crossmap.bed" % base
 
     if args.have_kmers == True:
-        import glob
         kmer_files = glob.glob(args.sequence_file + "*kmers.fa")
         seq_pat = re.compile(r".*_([^_]*)_kmers.fa")
         seqs = {seq_pat.search(X).groups()[0]: X for X in kmer_files}
@@ -420,8 +445,10 @@ def main(argv=sys.argv[1:]):
 
     printer.write("Done.")
     printer.write(
-        BigBedMessage.replace("OUTFILE", bed_file.replace(".bed",
-                                                          "")).replace("BOWTIE_INDEX", args.ebwt)
+        BigBedMessage.replace(
+            "OUTFILE",
+            bed_file.replace(".bed", "")
+        ).replace("BOWTIE_INDEX", args.ebwt)
     )
 
 
