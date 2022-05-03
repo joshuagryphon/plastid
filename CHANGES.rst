@@ -9,7 +9,9 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ------------------------------
 
-New changes will accumulate here as they are made.
+Note, this is a maintenance release, and likely the final release unless
+a new maintainer is found.
+
 
 Added
 .....
@@ -18,11 +20,18 @@ Added
   release more future-proof
 
 
+Changed
+.......
+
+- Bumped minimum requirements to reasonable 2022 standards.
+
+
 Removed
 .......
 
-- Dropped support for Python versions 2.7–3.5. These may still run, but
+- Dropped support for Python versions 2.7–3.5. These *might* still run, but
   are no longer tested.
+
 
 
 
