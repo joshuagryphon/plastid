@@ -33,6 +33,10 @@ Removed
   are no longer tested.
 
 
+plastid [0.5.1] = [2020-05-20]
+------------------------------
+
+- Updates to package metadata and docs
 
 
 plastid [0.5.0] = [2020-05-20]

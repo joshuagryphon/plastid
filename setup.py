@@ -35,7 +35,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from pkg_resources import parse_version
 
-plastid_version = "0.5.0"
+plastid_version = "0.5.1"
 
 
 #===============================================================================
@@ -428,7 +428,7 @@ setup(
     author           = "Joshua Griffin Dunn",
     author_email     = "joshua.g.dunn@gmail.com",
     maintainer       = "Joshua Griffin Dunn",
-    maintainer_email = "Joshua Griffin Dunn",
+    maintainer_email = "joshua.g.dunn@gmail.com",
     long_description =  long_description,
 
     description      = "Tools for analysis of genomics & sequencing data",
