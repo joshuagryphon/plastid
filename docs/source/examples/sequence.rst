@@ -107,10 +107,9 @@ Tools for further manipulating sequence (e.g. reverse-complementing, translating
 are supplied in `Biopython`_'s `Seq`_ and `SeqRecord`_ objects::
 
    >>> # SeqRecord examples
-   >>> from Bio.Alphabet import generic_dna
    >>> from Bio.Seq import Seq
 
-   >>> seq = Seq(transcripts[0].get_cds().get_sequence(genome),generic_dna)
+   >>> seq = Seq(transcripts[0].get_cds().get_sequence(genome))
    >>> seq.translate()
    Seq('MPATDTNSTHTTPLHPEDQHTLPLHHSTTQPHVQTSDKHADKQHRTQMELDAAD...PW*', HasStopCodon(ExtendedIUPACProtein(), '*'))
 

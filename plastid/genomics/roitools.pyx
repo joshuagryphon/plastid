@@ -135,10 +135,8 @@ cimport numpy
 from numpy.ma import MaskedArray as MaskedArray
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
 
 from plastid.util.services.exceptions import DataWarning, warn
-from plastid.util.services.decorators import deprecated
 from plastid.plotting.colors import get_str_from_rgb255, get_str_from_rgb, get_rgb255
 from plastid.readers.gff_tokens import make_GFF3_tokens, make_GTF2_tokens
 
@@ -3383,7 +3381,7 @@ cdef class SegmentChain(object):
             stmp = "".join([str(X.seq) if isinstance(X, SeqRecord) else X for X in ltmp])
 
             if self.strand == "-"  and stranded == True:
-                stmp = str(Seq(stmp, generic_dna).reverse_complement())
+                stmp = str(Seq(stmp).reverse_complement())
 
         return stmp
 
