@@ -37,11 +37,6 @@ from pkg_resources import parse_version
 
 plastid_version = "0.5.0"
 
-# require python >= 2.7 (for 2.x) or >= 3.3 (for 3.x branch)
-version_message = "plastid requires Python >= 2.7 or >= 3.3. Aborting installation."
-ver = sys.version_info
-if ver < (2, 7) or ver[0] == 3 and ver[1] < 3:
-    raise RuntimeError(version_message)
 
 #===============================================================================
 # [CONSTANT]
@@ -445,14 +440,8 @@ setup(
 
     classifiers      = [
          'Development Status :: 5 - Production/Stable',
-
-         'Programming Language :: Python :: 2.7',
-         'Programming Language :: Python :: 3.3',
-         'Programming Language :: Python :: 3.4',
-         'Programming Language :: Python :: 3.5',
          'Programming Language :: Python :: 3.6',
-         'Programming Language :: Python :: 3.7',
-         'Programming Language :: Python :: 3.8',
+         'Programming Language :: Python :: 3.9',
 
          'Topic :: Scientific/Engineering :: Bio-Informatics',
          'Topic :: Software Development :: Libraries',
@@ -464,7 +453,6 @@ setup(
          'Operating System :: POSIX',
          'Natural Language :: English',
     ],
-
 
     zip_safe = False,
     packages = packages,
