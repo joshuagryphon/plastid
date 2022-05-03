@@ -1,4 +1,4 @@
-FROM phusion/baseimage:focal-1.1.0
+FROM phusion/baseimage:focal-1.2.0
 LABEL maintainer "Joshua Griffin Dunn"
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -44,10 +44,7 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
         python-dev \
         python3.6 \
         python3.6-dev \
-        python3.7 \
-        python3.7-dev \
-        python3.7-venv \
-        python3.7-distutils \
+        python3.6-distutils \
         python3.9 \
         python3.9-dev \
         python3.9-venv \
@@ -60,24 +57,9 @@ COPY . .
 
 # Upgrade pip and install tox, which will handle installation of all
 # dependencies inside virtual environments running various version of Python
-#
-# Note, we're installing pip and everything below under Python 3.6,
-# while the system default version is 3.8.
-#
-# This may seem weird, but plastid is tested against package versions
-# that no longer build under 3.8.
 RUN curl -o get-pip.py -sSL https://bootstrap.pypa.io/get-pip.py \
-    && python3.6 get-pip.py "pip==21.3.1" \
-    && pip install tox
-
-# We do this do enable documentation to build inside the container, without
-# having to activate a tox env
-RUN pip install -r requirements.txt \
-    && python3.6 setup.py clean \
-    && pip install -e .
-
-# Verify successful build by importing
-RUN python3.6 -c "from plastid import *"
+    && python3 get-pip.py "pip==22.0.4" \
+    && pip install tox==3.25.0
 
 # Download data required to run full test suite
 RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
@@ -88,7 +70,6 @@ RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
 
 # Force build of C-extensions for all test versions
 # RUN tox -r --notest
-
 
 # Set some useful variables
 ENV HOME=/root

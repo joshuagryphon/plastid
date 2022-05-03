@@ -28,7 +28,7 @@ This package provides:
 
 #. A set of scripts that implement common sequencing analyses
 
-#. A set of classes for exploratory data anlysis. These provide simple
+#. A set of classes for exploratory data analysis. These provide simple
    and consistent interfaces for manipulating genomic features,
    read alignments, and quantitative data; and readily interface with
    existing scientific tools, like the SciPy stack.
@@ -58,7 +58,7 @@ bioinformatics software. Once you have ``Bioconda`` installed, installing
     $ conda create -n plastid plastid
     $ source activate plastid
 
-This will install all of the necesary dependencies for ``plastid`` in an
+This will install all of the necessary dependencies for ``plastid`` in an
 isolated environment.
 
 PyPI
@@ -128,14 +128,12 @@ with typical tox_ syntax:
 
    # list available test environments
    root@plastid $ tox -l
-   py35-pysam_latest-numpy_latest
-   py36-pysam_latest-numpy_latest
-   py37-pysam_latest-numpy_latest
-   py38-pysam_latest-numpy_latest
-   py37-pysam_152-numpy_194
+   py36-pinned
+   py36-latest
+   py39-latest
 
    # run only in 2 selected environments
-   root@plastid $ tox -e py36-pysam_latest-numpy_latest,py37-pysam_152-numpy_194 plastid.test.unit
+   root@plastid $ tox -e py36-pinned,py39-latest plastid.test.unit
 
 
 
