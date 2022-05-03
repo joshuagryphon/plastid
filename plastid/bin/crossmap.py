@@ -357,9 +357,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "--bowtie",
         dest    = "bowtie",
-        default = "/usr/local/bin/bowtie",
+        default = "/usr/bin/bowtie",
         type    = str,
-        help    = "Location of bowtie binary (Default: ``/usr/local/bin/bowtie``)")
+        help    = "Location of bowtie binary (Default: ``/usr/bin/bowtie``)")
     parser.add_argument("--have_kmers", default=False, action="store_true",
                         help="If specified,  use k-mer files from previous run. "+\
                              " In this case 'sequence_file' should be the value "+\

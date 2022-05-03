@@ -40,6 +40,7 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
         --verbose-versions \
         --allow-change-held-packages \
         -o Dpkg::Options::="--force-confdef" \
+        bowtie \
         python \
         python-dev \
         python3.6 \
@@ -59,7 +60,7 @@ COPY . .
 # dependencies inside virtual environments running various version of Python
 RUN curl -o get-pip.py -sSL https://bootstrap.pypa.io/get-pip.py \
     && python3 get-pip.py "pip==22.0.4" \
-    && pip install tox==3.25.0
+    && pip install -r requirements-test.txt
 
 # Download data required to run full test suite
 RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
@@ -68,8 +69,9 @@ RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
     && tar -jxvf plastid_test_data.tar.bz2 \
     && rm plastid_test_data.tar.bz2
 
-# Force build of C-extensions for all test versions
-# RUN tox -r --notest
+# Configure test environments & verify build
+RUN cat requirements.txt | sed -e "s/=.*//" >requirements-latest.txt \
+    && tox -r --notest
 
 # Set some useful variables
 ENV HOME=/root
