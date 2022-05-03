@@ -1,7 +1,7 @@
 # JGD: this environment validated 2020-05-19 with GCC 7.4.0
 
 # for running
-biopython==1.73
+biopython==1.79
 Cython==0.29.7
 matplotlib==2.2.4
 numpy==1.13.3

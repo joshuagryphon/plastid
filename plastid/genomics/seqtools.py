@@ -12,7 +12,6 @@ Contents
    IUPAC_TABLE
 """
 import random, re
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from twobitreader import TwoBitFile
@@ -182,7 +181,7 @@ class _TwoBitSeqProxy(object):
 
     def __getitem__(self, slice_):
         return SeqRecord(
-            Seq(self.twobitseq.get_slice(min_=slice_.start, max_=slice_.stop), generic_dna)
+            Seq(self.twobitseq.get_slice(min_=slice_.start, max_=slice_.stop))
         )
 
     def __len__(self):
@@ -195,7 +194,7 @@ class _TwoBitSeqProxy(object):
     def __getattr__(self, attr):
         if attr == "seq":
             if self._seq is None:
-                self._seq = Seq(str(self.twobitseq), generic_dna)
+                self._seq = Seq(str(self.twobitseq))
 
             return self._seq
 

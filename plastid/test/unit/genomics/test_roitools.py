@@ -18,7 +18,6 @@ from nose.plugins.attrib import attr
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import generic_dna
 from plastid.test.ref_files import MINI
 from plastid.readers.gff import (
     GTF2_TranscriptAssembler,
@@ -1475,7 +1474,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
     def test_get_sequence_seqrecord(self):
         """Test `get_sequence()` and `get_fasta()` with a SeqRecord genome"""
         my_seq = "TCTAGA" + 50 * "A" + "CCGCGG" + 30 * "T"
-        genome = {"chrA": SeqRecord(Seq(my_seq, generic_dna))}
+        genome = {"chrA": SeqRecord(Seq(my_seq))}
 
         my_revcomp = str(genome["chrA"].reverse_complement().seq)
 
@@ -1511,7 +1510,7 @@ chrI    .    stop_codon    7235    7238    .    -    .    gene_id "YAL067C"; tra
         my_seq = "TCTAGA" + 50 * "A" + "CCGCGG" + 30 * "T"
         genome = {"chrA": my_seq}
 
-        my_revcomp = str(SeqRecord(Seq(genome["chrA"], generic_dna)).reverse_complement().seq)
+        my_revcomp = str(SeqRecord(Seq(genome["chrA"])).reverse_complement().seq)
 
         iv1p = GenomicSegment("chrA", 0, 6, "+")
         iv2p = GenomicSegment("chrA", 56, 62, "+")
