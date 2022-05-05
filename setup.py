@@ -56,9 +56,6 @@ packages += [
     "kent",
     "kent.src",
     "kent.src.lib",
-    "kent.src.lib.tests",
-    "kent.src.lib.tests.expected",
-    "kent.src.lib.tests.input",
     "kent.src.lib.font",
     "kent.src.lib.alpha",
     "kent.src.lib.x86_64",
@@ -68,7 +65,6 @@ packages += [
     "kent.src.lib.ppc",
     "kent.src.inc",
     "kent.src.htslib",
-    "kent.src.htslib.test",
     "kent.src.htslib.htslib",
     "kent.src.htslib.cram",
 ]
