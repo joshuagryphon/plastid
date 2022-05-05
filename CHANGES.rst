@@ -36,6 +36,11 @@ Removed
 - Dropped support for Python versions 2.7–3.5. These *might* still run, but
   are no longer tested.
 
+- Deprecated classes: ``BPlusTree``, ``RTree``
+
+- Deprecated methods: of ``SegmentChain.get_length()`` and
+  ``SegmentChain.get_masked_length()``
+
 
 plastid [0.5.1] = [2020-05-20]
 ------------------------------

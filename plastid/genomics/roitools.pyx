@@ -2172,37 +2172,6 @@ cdef class SegmentChain(object):
 
         return gene
 
-    def get_length(self):
-        """Return total length, in nucleotides, of `self`
-
-        Returns
-        -------
-        int
-        """
-        cdef str name = self.__class__.__name__
-        warn(
-            "%s.get_length() is deprecated and will be removed in future versions. Use %s.length property instead"
-            % (name,name),
-             DeprecationWarning
-        )
-        return self.length
-
-    def get_masked_length(self):
-        """Return the total length, in nucleotides, of positions in `self`
-        that have not been masked using :meth:`SegmentChain.add_masks`
-
-        Returns
-        -------
-        int
-        """
-        cdef str name = self.__class__.__name__
-        warn(
-            "%s.get_masked_length() is deprecated and will be removed in future versions. Use %s.masked_length property instead"
-            % (name,name),
-            DeprecationWarning
-        )
-        return self.masked_length
-
     cdef bint c_add_segments(self, tuple segments) except False:
         """Add |GenomicSegments| to `self`. If there are
         already segments in the chain, the incoming segments must be
@@ -2348,8 +2317,8 @@ cdef class SegmentChain(object):
         SegmentChain.reset_masks
         """
         warn(
-            "SegmentChain.get_masks() is deprecated and will soon be removed from `plastid`. Use SegmentChain.mask_segments instead",
-            UserWarning
+            "SegmentChain.get_masks() is deprecated and will soon be removed "
+            "from `plastid`. Use SegmentChain.mask_segments instead"
         )
         if self._mask_segments is None:
             return []

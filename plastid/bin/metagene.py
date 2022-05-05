@@ -774,10 +774,11 @@ _NORM_END_DEFAULT = 50
 
 
 def _get_norm_region(roi_table, args):
-    """Helper function to get normalization region from current and deprecated command-line arguments.
-    This function will be removed in plastid v0.5, when the deprecated
-    command-line arguments will also be removed.
-    
+    """Helper function to get normalization region from current and deprecated
+    command-line arguments.  This function will be removed in plastid v0.6.1,
+    when the deprecated command-line arguments will also be removed.
+
+
     Parameters
     ----------
     roi_table : :class:`pandas.DataFrame`
@@ -793,7 +794,7 @@ def _get_norm_region(roi_table, args):
         Start and end of normalization region, with respect to start of window,
         including `alignment_offset`.
     """
-    # TODO: remove --norm_region in Plastid v0.5
+    # TODO: remove --norm_region in Plastid v0.6.1
     flank_upstream = roi_table["zero_point"][0]
     if args.normalize_over is not None:
         norm_start, norm_end = args.normalize_over
