@@ -35,7 +35,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from pkg_resources import parse_version
 
-plastid_version = "0.6.0"
+plastid_version = "0.6.1"
 
 
 #===============================================================================
