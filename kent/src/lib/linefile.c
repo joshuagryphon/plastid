@@ -13,7 +13,8 @@
 #include "linefile.h"
 #include "pipeline.h"
 #include "localmem.h"
-#include "cheapcgi.h"
+// 2022-05-04 JGD: commented to simplify build of plastid
+// #include "cheapcgi.h"
 #include "udc.h"
 #include "htslib/tbx.h"
 
@@ -44,10 +45,12 @@ static char *ZIP_READ[] = {"gzip", "-dc", NULL};
 
 char **result = NULL;
 char *fileNameDecoded = cloneString(fileName);
+/* 2022-05-04 JGD: commented to simplify build of plastid
 if (startsWith("http://" , fileName)
  || startsWith("https://", fileName)
  || startsWith("ftp://",   fileName))
     cgiDecode(fileName, fileNameDecoded, strlen(fileName));
+*/
 
 if      (endsWith(fileNameDecoded, ".gz"))
     result = GZ_READ;

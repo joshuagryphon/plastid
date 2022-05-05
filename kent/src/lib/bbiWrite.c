@@ -13,7 +13,8 @@
 #include "bPlusTree.h"
 #include "bbiFile.h"
 #include "bbiAlias.h"
-#include "net.h"
+//2022-05-04 JGD: commented to simplify build of plastid
+//#include "net.h"
 #include "obscure.h"
 #include "bigBed.h"
 
@@ -97,7 +98,8 @@ struct hash *bbiChromSizesFromFile(char *fileName)
 /* Read two column file into hash keyed by chrom. */
 {
 struct hash *hash = hashNew(0);
-struct lineFile *lf = netLineFileOpen(fileName);
+// 2022-05-04 JGD: changed from netLineFileOpen to ease plastid compilation
+struct lineFile *lf = lineFileOpen(fileName, TRUE);
 char *row[2];
 while (lineFileRow(lf, row))
     hashAddInt(hash, row[0], sqlUnsigned(row[1]));

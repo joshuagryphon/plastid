@@ -251,6 +251,9 @@ MgFont *mgLargeFixedFont();
 MgFont *mgHugeFixedFont();
 
 /* Adobe fonts from xfree project. */
+
+/* 2022-05-04 JGD: commented to simplify build of plastid
+
 MgFont *mgCourier8Font();
 MgFont *mgCourier10Font();
 MgFont *mgCourier12Font();
@@ -279,9 +282,12 @@ MgFont *mgTimes14Font();
 MgFont *mgTimes18Font();
 MgFont *mgTimes24Font();
 MgFont *mgTimes34Font();
+*/
+
 
 /* free Meslo font */
-MgFont *mgMenloMediumFont();
+// 2022-05-04 JGD: commented to simplify build of plastid
+//MgFont *mgMenloMediumFont();
 
 void mgText(struct memGfx *mg, int x, int y, Color color, 
 	MgFont *font, char *text);
@@ -318,13 +324,15 @@ char *mgFontSizeBackwardsCompatible(char *size);
 /* Given "size" argument that may be in old tiny/small/medium/big/huge format,
  * return it in new numerical string format. Do NOT free the return string*/
 
-MgFont *mgFontForSizeAndStyle(char *textSize, char *fontType);
+//2022-05-04 JGD: commented to simplify build of plastid
+//MgFont *mgFontForSizeAndStyle(char *textSize, char *fontType);
 /* Get a font of given size and style.  Abort with error message if not found.
  * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
  * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok.
  * The fontType should be "medium", "bold", or "fixed" */
 
-MgFont *mgFontForSize(char *textSize);
+//2022-05-04 JGD: commented to simplify build of plastid
+//MgFont *mgFontForSize(char *textSize);
 /* Get a font of given size and style.  Abort with error message if not found.
  * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
  * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok. */

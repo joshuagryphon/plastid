@@ -32,8 +32,9 @@
 #include "linefile.h"
 #include "portable.h"
 #include "sig.h"
-#include "net.h"
-#include "cheapcgi.h"
+// 2022-05-04 JGD: commented to simplify build of plastid
+//#include "net.h"
+//#include "cheapcgi.h"
 #include "htmlPage.h"
 #include "udc.h"
 #include "hex.h"
@@ -267,7 +268,8 @@ if (ci == NULL || ci->socket <= 0)
     file->ios.numConnects++;
     if (ci->redirUrl)
 	{
-	url = transferParamsToRedirectedUrl(url, ci->redirUrl);
+        // 2022-05-04 JGD: commented to simplify build of plastid
+	url = NULL; //transferParamsToRedirectedUrl(url, ci->redirUrl);
 	}
     // IMPORTANT NOTE: byterange is not a real URL parameter, this is a hack to pass
     // the range to the net.c functions, which then parse it.
@@ -276,12 +278,14 @@ if (ci == NULL || ci->socket <= 0)
 	{
 	safef(rangeUrl, sizeof(rangeUrl), "%s;byterange=%lld-%lld",
 	      url, offset, (offset + size - 1));
-	sd = netUrlOpen(rangeUrl);
+        // 2022-05-04 JGD: commented to simplify build of plastid
+	sd = NULL; //netUrlOpen(rangeUrl);
 	}
     else
 	{
 	safef(rangeUrl, sizeof(rangeUrl), "%s;byterange=%lld-", url, offset);
-	sd = ci->socket = netUrlOpenSockets(rangeUrl, &(ci->ctrlSocket));
+        // 2022-05-04 JGD: commented to simplify build of plastid
+	sd = ci->socket = NULL; //netUrlOpenSockets(rangeUrl, &(ci->ctrlSocket));
 	ci->offset = offset;
 	}
     if (sd < 0)
@@ -290,8 +294,8 @@ if (ci == NULL || ci->socket <= 0)
 	{
 	char *newUrl = NULL;
 	int newSd = 0;
-	if (!netSkipHttpHeaderLinesHandlingRedirect(sd, rangeUrl, &newSd, &newUrl))
-	    return -1;
+	/*if (!netSkipHttpHeaderLinesHandlingRedirect(sd, rangeUrl, &newSd, &newUrl))
+	    return -1;*/
 	if (newUrl)
 	    {
 	    freeMem(newUrl); 
@@ -347,6 +351,7 @@ static boolean udcInfoViaLocal(char *url, struct udcRemoteFileInfo *retInfo)
 /* Fill in *retTime with last modified time for file specified in url.
  * Return FALSE if file does not even exist. */
 {
+/* 2022-05-04 JGD: commented to simplify build of plastid
 verbose(4, "checking remote info on %s\n", url);
 url = assertLocalUrl(url);
 struct stat status;
@@ -355,6 +360,7 @@ if (ret < 0)
     return FALSE;
 retInfo->updateTime = status.st_mtime;
 retInfo->size = status.st_size;
+*/
 return TRUE;
 }
 
@@ -513,152 +519,154 @@ boolean udcInfoViaHttp(char *url, struct udcRemoteFileInfo *retInfo)
 /* Gets size and last modified time of URL
  * and returns status of HEAD or GET byterange 0-0. */
 {
-verbose(4, "checking http remote info on %s\n", url);
-// URLs passed into here should not have byterange clause.
-int redirectCount = 0;
-struct hash *hash;
-int status;
-char *sizeString = NULL;
-/*
- For caching, sites should support byte-range and last-modified.
- However, several groups including ENCODE have made sites that use CGIs to 
- dynamically generate hub text files such as hub.txt, genome.txt, trackDb.txt.
- Byte-range and last-modified are difficult to support for this case,
- so they do without them, effectively defeat caching. Every 5 minutes (udcTimeout),
- they get re-downloaded, even when the data has not changed.  
-*/
-while (TRUE)
-    {
-    hash = newHash(0);
-    status = netUrlHead(url, hash);
-    sizeString = hashFindValUpperCase(hash, "Content-Length:");
-    if (status == 200 && sizeString)
-	break;
-    /*
-    Using HEAD with HIPPAA-compliant signed AmazonS3 URLs generates 403.
-    The signed URL generated for GET cannot be used with HEAD.
-    Instead call GET with byterange=0-0 in netUrlFakeHeadByGet().
-    This supplies both size via Content-Range response header,
-    as well as Last-Modified header which is important for caching.
-    There are also sites which support byte-ranges 
-    but they do not return Content-Length with HEAD.
-    */
-    if (status == 403 || (status==200 && !sizeString))
-	{ 
-	hashFree(&hash);
-	hash = newHash(0);
-	status = netUrlFakeHeadByGet(url, hash);
-	if (status == 206) 
-	    break;
-	if (status == 200)  // helps get more info to user
-	    break;
-	}
-    if (status != 301 && status != 302 && status != 307 && status != 308)
-	return FALSE;
-    ++redirectCount;
-    if (redirectCount > 5)
-	{
-	warn("code %d redirects: exceeded limit of 5 redirects, %s", status, url);
-	return FALSE;
-	}
-    char *newUrl = hashFindValUpperCase(hash, "Location:");
-     if (!newUrl)
-	{
-	warn("code %d redirects: redirect location missing, %s", status, url);
-	return FALSE;
-	}
-
-    // path may be relative
-    if (hasProtocol(newUrl))
-	{
-        newUrl = cloneString(newUrl);
-	}
-    else
-	{
-	newUrl = expandUrlOnBase(url, newUrl);
-	}
-
-    retInfo->ci.redirUrl = newUrl;
-    url = transferParamsToRedirectedUrl(url, newUrl);		
-    hashFree(&hash);
-    }
-
-char *sizeHeader = NULL;
-if (status == 200)
-    {
-    sizeHeader = "Content-Length:";
-    // input pattern: Content-Length: 2738262
-    }
-if (status == 206)
-    {
-    sizeHeader = "Content-Range:";
-    // input pattern: Content-Range: bytes 0-99/2738262
-    }
-
-sizeString = hashFindValUpperCase(hash, sizeHeader);
-if (sizeString)
-    {
-    char *parseString = sizeString;
-    if (status == 206)
-	{
-	parseString = strchr(sizeString, '/');
-	if (!parseString)
-	    {
-	    warn("Header value %s is missing '/' in %s in response for url %s", 
-		sizeString, sizeHeader, url);
-	    return FALSE;
-	    }
-	++parseString; // skip past slash
-	}
-    if (parseString)
-	{
-	retInfo->size = atoll(parseString);
-	}
-    else
-	{
-	warn("Header value %s is missing or invalid in %s in response for url %s", 
-	    sizeString, sizeHeader, url);
-	return FALSE;
-	}
-    }
-else
-    {
-    warn("Response is missing required header %s for url %s", sizeHeader, url);
-    return FALSE;
-    }
-
-char *lastModString = hashFindValUpperCase(hash, "Last-Modified:");
-if (lastModString == NULL)
-    {
-    // Date is a poor substitute!  It will always appear that the cache is stale.
-    // But at least we can read files from dropbox.com.
-    lastModString = hashFindValUpperCase(hash, "Date:");
-    if (lastModString == NULL)
-	{
-	hashFree(&hash);
-	errAbort("No Last-Modified: or Date: returned in header for %s, can't proceed, sorry", url);
-	}
-    }
-
-struct tm tm;
-time_t t;
-// Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
-// This will always be GMT
-if (strptime(lastModString, "%a, %d %b %Y %H:%M:%S %Z", &tm) == NULL)
-    { /* Handle error */;
-    hashFree(&hash);
-    errAbort("unable to parse last-modified string [%s]", lastModString);
-    }
-t = mktimeFromUtc(&tm);
-if (t == -1)
-    { /* Handle error */;
-    hashFree(&hash);
-    errAbort("mktimeFromUtc failed while converting last-modified string [%s] from UTC time", lastModString);
-    }
-retInfo->updateTime = t;
-
-hashFree(&hash);
-return status;
+// 2022-05-04 JGD: commented to simplify build of plastid
+//verbose(4, "checking http remote info on %s\n", url);
+//// URLs passed into here should not have byterange clause.
+//int redirectCount = 0;
+//struct hash *hash;
+//int status;
+//char *sizeString = NULL;
+///*
+// For caching, sites should support byte-range and last-modified.
+// However, several groups including ENCODE have made sites that use CGIs to 
+// dynamically generate hub text files such as hub.txt, genome.txt, trackDb.txt.
+// Byte-range and last-modified are difficult to support for this case,
+// so they do without them, effectively defeat caching. Every 5 minutes (udcTimeout),
+// they get re-downloaded, even when the data has not changed.  
+//*/
+//while (TRUE)
+//    {
+//    hash = newHash(0);
+//    status = netUrlHead(url, hash);
+//    sizeString = hashFindValUpperCase(hash, "Content-Length:");
+//    if (status == 200 && sizeString)
+//	break;
+//    /*
+//    Using HEAD with HIPPAA-compliant signed AmazonS3 URLs generates 403.
+//    The signed URL generated for GET cannot be used with HEAD.
+//    Instead call GET with byterange=0-0 in netUrlFakeHeadByGet().
+//    This supplies both size via Content-Range response header,
+//    as well as Last-Modified header which is important for caching.
+//    There are also sites which support byte-ranges 
+//    but they do not return Content-Length with HEAD.
+//    */
+//    if (status == 403 || (status==200 && !sizeString))
+//	{ 
+//	hashFree(&hash);
+//	hash = newHash(0);
+//	status = netUrlFakeHeadByGet(url, hash);
+//	if (status == 206) 
+//	    break;
+//	if (status == 200)  // helps get more info to user
+//	    break;
+//	}
+//    if (status != 301 && status != 302 && status != 307 && status != 308)
+//	return FALSE;
+//    ++redirectCount;
+//    if (redirectCount > 5)
+//	{
+//	warn("code %d redirects: exceeded limit of 5 redirects, %s", status, url);
+//	return FALSE;
+//	}
+//    char *newUrl = hashFindValUpperCase(hash, "Location:");
+//     if (!newUrl)
+//	{
+//	warn("code %d redirects: redirect location missing, %s", status, url);
+//	return FALSE;
+//	}
+//
+//    // path may be relative
+//    if (hasProtocol(newUrl))
+//	{
+//        newUrl = cloneString(newUrl);
+//	}
+//    else
+//	{
+//	newUrl = expandUrlOnBase(url, newUrl);
+//	}
+//
+//    retInfo->ci.redirUrl = newUrl;
+//    url = transferParamsToRedirectedUrl(url, newUrl);		
+//    hashFree(&hash);
+//    }
+//
+//char *sizeHeader = NULL;
+//if (status == 200)
+//    {
+//    sizeHeader = "Content-Length:";
+//    // input pattern: Content-Length: 2738262
+//    }
+//if (status == 206)
+//    {
+//    sizeHeader = "Content-Range:";
+//    // input pattern: Content-Range: bytes 0-99/2738262
+//    }
+//
+//sizeString = hashFindValUpperCase(hash, sizeHeader);
+//if (sizeString)
+//    {
+//    char *parseString = sizeString;
+//    if (status == 206)
+//	{
+//	parseString = strchr(sizeString, '/');
+//	if (!parseString)
+//	    {
+//	    warn("Header value %s is missing '/' in %s in response for url %s", 
+//		sizeString, sizeHeader, url);
+//	    return FALSE;
+//	    }
+//	++parseString; // skip past slash
+//	}
+//    if (parseString)
+//	{
+//	retInfo->size = atoll(parseString);
+//	}
+//    else
+//	{
+//	warn("Header value %s is missing or invalid in %s in response for url %s", 
+//	    sizeString, sizeHeader, url);
+//	return FALSE;
+//	}
+//    }
+//else
+//    {
+//    warn("Response is missing required header %s for url %s", sizeHeader, url);
+//    return FALSE;
+//    }
+//
+//char *lastModString = hashFindValUpperCase(hash, "Last-Modified:");
+//if (lastModString == NULL)
+//    {
+//    // Date is a poor substitute!  It will always appear that the cache is stale.
+//    // But at least we can read files from dropbox.com.
+//    lastModString = hashFindValUpperCase(hash, "Date:");
+//    if (lastModString == NULL)
+//	{
+//	hashFree(&hash);
+//	errAbort("No Last-Modified: or Date: returned in header for %s, can't proceed, sorry", url);
+//	}
+//    }
+//
+//struct tm tm;
+//time_t t;
+//// Last-Modified: Wed, 15 Nov 1995 04:58:08 GMT
+//// This will always be GMT
+//if (strptime(lastModString, "%a, %d %b %Y %H:%M:%S %Z", &tm) == NULL)
+//    { /* Handle error */;
+//    hashFree(&hash);
+//    errAbort("unable to parse last-modified string [%s]", lastModString);
+//    }
+//t = mktimeFromUtc(&tm);
+//if (t == -1)
+//    { /* Handle error */;
+//    hashFree(&hash);
+//    errAbort("mktimeFromUtc failed while converting last-modified string [%s] from UTC time", lastModString);
+//    }
+//retInfo->updateTime = t;
+//
+//hashFree(&hash);
+//return status;
+return FALSE;
 }
 
 
@@ -669,24 +677,25 @@ return status;
 boolean udcInfoViaFtp(char *url, struct udcRemoteFileInfo *retInfo)
 /* Gets size and last modified time of FTP URL */
 {
-verbose(4, "checking ftp remote info on %s\n", url);
-long long size = 0;
-time_t t, tUtc;
-struct tm *tm = NULL;
-// TODO: would be nice to add int *retCtrlSocket to netGetFtpInfo so we can stash 
-// in retInfo->connInfo and keep socket open.
-boolean ok = netGetFtpInfo(url, &size, &tUtc);
-if (!ok)
-    return FALSE;
-// Convert UTC to localtime
-tm = localtime(&tUtc);
-t = mktimeFromUtc(tm);
-if (t == -1)
-    { /* Handle error */;
-    errAbort("mktimeFromUtc failed while converting FTP UTC last-modified time %ld to local time", (long) tUtc);
-    }
-retInfo->size = size;
-retInfo->updateTime = t;
+// 2022-05-04 JGD: commented to simplify build of plastid
+//verbose(4, "checking ftp remote info on %s\n", url);
+//long long size = 0;
+//time_t t, tUtc;
+//struct tm *tm = NULL;
+//// TODO: would be nice to add int *retCtrlSocket to netGetFtpInfo so we can stash 
+//// in retInfo->connInfo and keep socket open.
+//boolean ok = netGetFtpInfo(url, &size, &tUtc);
+//if (!ok)
+//    return FALSE;
+//// Convert UTC to localtime
+//tm = localtime(&tUtc);
+//t = mktimeFromUtc(tm);
+//if (t == -1)
+//    { /* Handle error */;
+//    errAbort("mktimeFromUtc failed while converting FTP UTC last-modified time %ld to local time", (long) tUtc);
+//    }
+//retInfo->size = size;
+//retInfo->updateTime = t;
 return TRUE;
 }
 
@@ -1234,7 +1243,7 @@ else
     if (udcCacheEnabled())
         {
         /* Make directory. */
-        makeDirsOnPath(file->cacheDir);
+        //makeDirsOnPath(file->cacheDir);
 
         /* Figure out a little bit about the extent of the good cached data if any. Open bits bitmap. */
         setInitialCachedDataBounds(file, useCacheInfo);

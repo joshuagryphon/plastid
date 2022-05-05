@@ -765,46 +765,47 @@ else
 #endif
 }
 
-void mgTextCentered(struct memGfx *mg, int x, int y, int width, int height, 
-	Color color, MgFont *font, char *text)
-/* Draw a line of text centered in box defined by x/y/width/height */
-{
-int fWidth, fHeight;
-int xoff, yoff;
-fWidth = mgFontStringWidth(font, text);
-fHeight = mgFontPixelHeight(font);
-xoff = x + (width - fWidth)/2;
-yoff = y + (height - fHeight)/2;
-if (font == mgSmallFont())
-    {
-    xoff += 1;
-    yoff += 1;
-    }
-mgText(mg, xoff, yoff, color, font, text);
-}
-
-void mgTextRight(struct memGfx *mg, int x, int y, int width, int height, 
-	Color color, MgFont *font, char *text)
-/* Draw a line of text right justified in box defined by x/y/width/height */
-{
-int fWidth, fHeight;
-int xoff, yoff;
-fWidth = mgFontStringWidth(font, text);
-fHeight = mgFontPixelHeight(font);
-xoff = x + width - fWidth - 1;
-yoff = y + (height - fHeight)/2;
-if (font == mgSmallFont())
-    {
-    xoff += 1;
-    yoff += 1;
-    }
-mgText(mg, xoff, yoff, color, font, text);
-}
+// 2022-05-04 JGD: commented to simplify build of plastid
+//void mgTextCentered(struct memGfx *mg, int x, int y, int width, int height, 
+//	Color color, MgFont *font, char *text)
+///* Draw a line of text centered in box defined by x/y/width/height */
+//{
+//int fWidth, fHeight;
+//int xoff, yoff;
+//fWidth = mgFontStringWidth(font, text);
+//fHeight = mgFontPixelHeight(font);
+//xoff = x + (width - fWidth)/2;
+//yoff = y + (height - fHeight)/2;
+//if (font == mgSmallFont())
+//    {
+//    xoff += 1;
+//    yoff += 1;
+//    }
+//mgText(mg, xoff, yoff, color, font, text);
+//}
+//
+//void mgTextRight(struct memGfx *mg, int x, int y, int width, int height, 
+//	Color color, MgFont *font, char *text)
+///* Draw a line of text right justified in box defined by x/y/width/height */
+//{
+//int fWidth, fHeight;
+//int xoff, yoff;
+//fWidth = mgFontStringWidth(font, text);
+//fHeight = mgFontPixelHeight(font);
+//xoff = x + width - fWidth - 1;
+//yoff = y + (height - fHeight)/2;
+//if (font == mgSmallFont())
+//    {
+//    xoff += 1;
+//    yoff += 1;
+//    }
+//mgText(mg, xoff, yoff, color, font, text);
+//}
 
 int mgFontPixelHeight(MgFont *font)
 /* How high in pixels is font? */
 {
-return font_cel_height(font);
+return 0; //font_cel_height(font);
 }
 
 int mgGetFontPixelHeight(struct memGfx *mg, MgFont *font)
@@ -816,7 +817,7 @@ return mgFontPixelHeight(font);
 int mgFontLineHeight(MgFont *font)
 /* How many pixels to next line ideally? */
 {
-return font_line_height(font);
+return 0; //font_line_height(font);
 }
 
 int mgFontWidth(MgFont *font, char *chars, int charCount)
@@ -881,87 +882,89 @@ else
     }
 }
 
-MgFont *mgFontForSizeAndStyle(char *textSize, char *fontType)
-/* Get a font of given size and style.  Abort with error message if not found.
- * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
- * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok.
- * The fontType should be "medium", "bold", or "fixed" */
-{
-textSize = mgFontSizeBackwardsCompatible(textSize);
-MgFont *font = NULL;
-if (sameString(fontType,"bold"))
-    {
-    if (sameString(textSize, "6"))
-	 font = mgTinyBoldFont();
-    else if (sameString(textSize, "8"))
-	 font = mgHelveticaBold8Font();
-    else if (sameString(textSize, "10"))
-	 font = mgHelveticaBold10Font();
-    else if (sameString(textSize, "12"))
-	 font = mgHelveticaBold12Font();
-    else if (sameString(textSize, "14"))
-	 font = mgHelveticaBold14Font();
-    else if (sameString(textSize, "18"))
-	 font = mgHelveticaBold18Font();
-    else if (sameString(textSize, "24"))
-	 font = mgHelveticaBold24Font();
-    else if (sameString(textSize, "34"))
-	 font = mgHelveticaBold34Font();
-    else
-	 errAbort("unknown textSize %s", textSize);
-    }
-else if (sameString(fontType,"fixed"))
-    {
-    if (sameString(textSize, "6"))
-	 font = mgTinyFixedFont();
-    else if (sameString(textSize, "8"))
-	 font = mgCourier8Font();
-    else if (sameString(textSize, "10"))
-	 font = mgCourier10Font();
-    else if (sameString(textSize, "12"))
-	 font = mgCourier12Font();
-    else if (sameString(textSize, "14"))
-	 font = mgCourier14Font();
-    else if (sameString(textSize, "18"))
-	 font = mgCourier18Font();
-    else if (sameString(textSize, "24"))
-	 font = mgCourier24Font();
-    else if (sameString(textSize, "34"))
-	 font = mgCourier34Font();
-    else
-	 errAbort("unknown textSize %s", textSize);
-    }
-else
-    {
-    if (sameString(textSize, "6"))
-	 font = mgTinyFont();
-    else if (sameString(textSize, "8"))
-	 font = mgSmallFont();
-    else if (sameString(textSize, "10"))
-	 font = mgHelvetica10Font();
-    else if (sameString(textSize, "12"))
-	 font = mgHelvetica12Font();
-    else if (sameString(textSize, "14"))
-	 font = mgHelvetica14Font();
-    else if (sameString(textSize, "18"))
-	 font = mgHelvetica18Font();
-    else if (sameString(textSize, "24"))
-	 font = mgHelvetica24Font();
-    else if (sameString(textSize, "34"))
-	 font = mgHelvetica34Font();
-    else
-	 errAbort("unknown textSize %s", textSize);
-    }
-return font;
-}
+// 2022-05-04 JGD: commented to simplify build of plastid
+//MgFont *mgFontForSizeAndStyle(char *textSize, char *fontType)
+///* Get a font of given size and style.  Abort with error message if not found.
+// * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
+// * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok.
+// * The fontType should be "medium", "bold", or "fixed" */
+//{
+//textSize = mgFontSizeBackwardsCompatible(textSize);
+//MgFont *font = NULL;
+//if (sameString(fontType,"bold"))
+//    {
+//    if (sameString(textSize, "6"))
+//	 font = mgTinyBoldFont();
+//    else if (sameString(textSize, "8"))
+//	 font = mgHelveticaBold8Font();
+//    else if (sameString(textSize, "10"))
+//	 font = mgHelveticaBold10Font();
+//    else if (sameString(textSize, "12"))
+//	 font = mgHelveticaBold12Font();
+//    else if (sameString(textSize, "14"))
+//	 font = mgHelveticaBold14Font();
+//    else if (sameString(textSize, "18"))
+//	 font = mgHelveticaBold18Font();
+//    else if (sameString(textSize, "24"))
+//	 font = mgHelveticaBold24Font();
+//    else if (sameString(textSize, "34"))
+//	 font = mgHelveticaBold34Font();
+//    else
+//	 errAbort("unknown textSize %s", textSize);
+//    }
+//else if (sameString(fontType,"fixed"))
+//    {
+//    if (sameString(textSize, "6"))
+//	 font = mgTinyFixedFont();
+//    else if (sameString(textSize, "8"))
+//	 font = mgCourier8Font();
+//    else if (sameString(textSize, "10"))
+//	 font = mgCourier10Font();
+//    else if (sameString(textSize, "12"))
+//	 font = mgCourier12Font();
+//    else if (sameString(textSize, "14"))
+//	 font = mgCourier14Font();
+//    else if (sameString(textSize, "18"))
+//	 font = mgCourier18Font();
+//    else if (sameString(textSize, "24"))
+//	 font = mgCourier24Font();
+//    else if (sameString(textSize, "34"))
+//	 font = mgCourier34Font();
+//    else
+//	 errAbort("unknown textSize %s", textSize);
+//    }
+//else
+//    {
+//    if (sameString(textSize, "6"))
+//	 font = mgTinyFont();
+//    else if (sameString(textSize, "8"))
+//	 font = mgSmallFont();
+//    else if (sameString(textSize, "10"))
+//	 font = mgHelvetica10Font();
+//    else if (sameString(textSize, "12"))
+//	 font = mgHelvetica12Font();
+//    else if (sameString(textSize, "14"))
+//	 font = mgHelvetica14Font();
+//    else if (sameString(textSize, "18"))
+//	 font = mgHelvetica18Font();
+//    else if (sameString(textSize, "24"))
+//	 font = mgHelvetica24Font();
+//    else if (sameString(textSize, "34"))
+//	 font = mgHelvetica34Font();
+//    else
+//	 errAbort("unknown textSize %s", textSize);
+//    }
+//return font;
+//}
 
-MgFont *mgFontForSize(char *textSize)
-/* Get a font of given size and style.  Abort with error message if not found.
- * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
- * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok. */
-{
-return mgFontForSizeAndStyle(textSize, "medium");
-}
+// 2022-05-04 JGD: commented to simplify build of plastid
+//MgFont *mgFontForSize(char *textSize)
+///* Get a font of given size and style.  Abort with error message if not found.
+// * The textSize should be 6,8,10,12,14,18,24 or 34.  For backwards compatibility
+// * textSizes of "tiny" "small", "medium", "large" and "huge" are also ok. */
+//{
+//return mgFontForSizeAndStyle(textSize, "medium");
+//}
 
 
 void mgSlowDot(struct memGfx *mg, int x, int y, int colorIx)
@@ -1013,36 +1016,37 @@ char *mgGetHint(char *hint)
 return "";
 }
 
-void vgMgMethods(struct vGfx *vg)
-/* Fill in virtual graphics methods for memory based drawing. */
-{
-vg->pixelBased = TRUE;
-vg->close = (vg_close)mgFree;
-vg->dot = (vg_dot)mgSlowDot;
-vg->getDot = (vg_getDot)mgSlowGetDot;
-vg->box = (vg_box)mgDrawBox;
-vg->line = (vg_line)mgDrawLine;
-vg->text = (vg_text)mgText;
-vg->textRight = (vg_textRight)mgTextRight;
-vg->textCentered = (vg_textCentered)mgTextCentered;
-vg->textInBox = (vg_textInBox)mgTextInBox;
-vg->findColorIx = (vg_findColorIx)mgFindColor;
-vg->colorIxToRgb = (vg_colorIxToRgb)mgColorIxToRgb;
-vg->setWriteMode = (vg_setWriteMode)mgSetWriteMode;
-vg->setClip = (vg_setClip)mgSetClip;
-vg->unclip = (vg_unclip)mgUnclip;
-vg->verticalSmear = (vg_verticalSmear)mgVerticalSmear;
-vg->fillUnder = (vg_fillUnder)mgFillUnder;
-vg->drawPoly = (vg_drawPoly)mgDrawPoly;
-vg->circle = (vg_circle)mgCircle;
-vg->ellipse = (vg_ellipse)mgEllipse;
-vg->curve = (vg_curve)mgCurve;
-vg->setHint = (vg_setHint)mgSetHint;
-vg->getHint = (vg_getHint)mgGetHint;
-vg->getFontPixelHeight = (vg_getFontPixelHeight)mgGetFontPixelHeight;
-vg->getFontStringWidth = (vg_getFontStringWidth)mgGetFontStringWidth;
-vg->setFontMethod = (vg_setFontMethod)mgSetFontMethod;
-}
+// 2022-05-04 JGD: commented to simplify build of plastid
+//void vgMgMethods(struct vGfx *vg)
+///* Fill in virtual graphics methods for memory based drawing. */
+//{
+//vg->pixelBased = TRUE;
+//vg->close = (vg_close)mgFree;
+//vg->dot = (vg_dot)mgSlowDot;
+//vg->getDot = (vg_getDot)mgSlowGetDot;
+//vg->box = (vg_box)mgDrawBox;
+//vg->line = (vg_line)mgDrawLine;
+//vg->text = (vg_text)mgText;
+//vg->textRight = (vg_textRight)mgTextRight;
+//vg->textCentered = (vg_textCentered)mgTextCentered;
+//vg->textInBox = (vg_textInBox)mgTextInBox;
+//vg->findColorIx = (vg_findColorIx)mgFindColor;
+//vg->colorIxToRgb = (vg_colorIxToRgb)mgColorIxToRgb;
+//vg->setWriteMode = (vg_setWriteMode)mgSetWriteMode;
+//vg->setClip = (vg_setClip)mgSetClip;
+//vg->unclip = (vg_unclip)mgUnclip;
+//vg->verticalSmear = (vg_verticalSmear)mgVerticalSmear;
+//vg->fillUnder = (vg_fillUnder)mgFillUnder;
+//vg->drawPoly = (vg_drawPoly)mgDrawPoly;
+//vg->circle = (vg_circle)mgCircle;
+//vg->ellipse = (vg_ellipse)mgEllipse;
+//vg->curve = (vg_curve)mgCurve;
+//vg->setHint = (vg_setHint)mgSetHint;
+//vg->getHint = (vg_getHint)mgGetHint;
+//vg->getFontPixelHeight = (vg_getFontPixelHeight)mgGetFontPixelHeight;
+//vg->getFontStringWidth = (vg_getFontStringWidth)mgGetFontStringWidth;
+//vg->setFontMethod = (vg_setFontMethod)mgSetFontMethod;
+//}
 
 
 struct hslColor mgRgbToHsl(struct rgbColor rgb)
