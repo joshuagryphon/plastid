@@ -1324,7 +1324,7 @@ cdef class SegmentChain(object):
 
     See Also
     --------
-	Transcript
+    Transcript
         Transcript subclass, additionally providing richer `GTF2`_, `GFF3`_,
         and `BED`_ export, as well as methods for fetching coding regions
         and UTRs as subsegments

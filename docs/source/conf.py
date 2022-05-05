@@ -22,10 +22,9 @@ import plastid
 # -- General configuration ------------------------------------------------
 
 project = u'plastid'
-copyright = u'2014, Joshua G. Dunn'
-version = str(plastid.__version__)  # |version|
-release = "%s-r%s" % (plastid.__version__, str(datetime.date.today()).replace("-", "_")
-                      )  # |release|
+copyright = u'2014-2022, Joshua G. Dunn'
+version = "0.5.1"
+
 
 # set up substitutions file for automated crossreferences
 rst_prolog = """
@@ -43,15 +42,15 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    #'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc',
     'sphinxcontrib.bibtex',
-    'sphinxcontrib.argdoc',
+#    'sphinxcontrib.argdoc',
 ]
 
 html_static_path = ["_static"]
+bibtex_bibfiles = ["zreferences.bib"]
 
 # theming, compatibility both for local and builds on readthedocs -------------
 
@@ -64,11 +63,11 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 
 # sphinx autodoc config -------------------------------------------------------
 
-autodoc_default_flags = [
-    "undoc-members",
-    "special-members",
-    "inherited-members",
-]
+autodoc_default_options = {
+    "undoc-members" : None,
+    "special-members" : None,
+    "inherited-members" : None,
+}
 autodoc_member_order = "groupwise"
 autodoc_docstring_signature = True
 numpydoc_class_members_toctree = False
@@ -189,13 +188,15 @@ class Mock(mock.Mock):
     """Proxy class to stand in for modules/packages that can't be built
     or installed on readthedocs.org .
     
-    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html"""
+    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html
+    """
 
     @classmethod
     def __getattr__(cls, name):
         return Mock()
 
-mock_modules = [ # can't mock matplotlib, numpy, or pysam
+# can't mock matplotlib, numpy, or pysam
+mock_modules = [
     'pandas',
     'scipy',
     'scipy.misc',
@@ -205,6 +206,8 @@ mock_modules = [ # can't mock matplotlib, numpy, or pysam
     'twobitreader',
 ]
 
+#autodoc_mock_imports = ["pandas", "scipy", "twobitreader"]
+
 sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
 # setup custom info ------------------------------------------------------------
@@ -213,7 +216,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 def setup(app):
     """Activate custom event handlers for autodoc"""
     app.connect("autodoc-skip-member", autodoc_skip_member)
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
 
 
 # ------------------------------------------------------------------------------
