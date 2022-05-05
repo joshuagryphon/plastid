@@ -31,7 +31,7 @@ plastid is divided into the following subpackages:
     ==============    =========================================================
      
 """
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __author__ = "Joshua Griffin Dunn"
 import matplotlib
 matplotlib.use("agg")

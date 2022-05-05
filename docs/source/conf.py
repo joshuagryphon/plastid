@@ -23,7 +23,7 @@ import plastid
 
 project = u'plastid'
 copyright = u'2014-2022, Joshua G. Dunn'
-version = "0.6.0"
+version = "0.6.1"
 
 
 # set up substitutions file for automated crossreferences
