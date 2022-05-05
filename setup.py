@@ -511,11 +511,7 @@ setup(
     package_data = package_data,
 
     package_dir = {
-        "plastid"            : "plastid",
-#        "kentUtils"          : "kentUtils",
-#        "kentUtils.src.inc"  : os.path.join("kentUtils", "src", "inc"),
-#        "kentUtils.src.lib"  : os.path.join("kentUtils", "src", "lib"),
-#        "kentUtils.samtabix" : os.path.join("kentUtils", "samtabix"),
+        "plastid"  : "plastid",
     },
 
     entry_points = {
