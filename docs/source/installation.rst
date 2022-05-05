@@ -156,7 +156,11 @@ Plastid has a number of non-Python dependencies:
 
 - A full build system for C compiling (e.g. `GCC <https://gcc.gnu.org>`_ or
   `clang <https://clang.llvm.org>`_)
-  
+ 
+- libcrypto
+
+- libssl
+
 - `zlib <https://www.zlib.net>`_, including its headers
 
 

@@ -63,13 +63,18 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 
 # sphinx autodoc config -------------------------------------------------------
 
+autodoc_mock_imports = ["pandas", "scipy", "twobitreader"]
+
 autodoc_default_options = {
     "undoc-members" : None,
     "special-members" : None,
     "inherited-members" : None,
 }
+
 autodoc_member_order = "groupwise"
+
 autodoc_docstring_signature = True
+
 numpydoc_class_members_toctree = False
 
 # never document these methods/attributes
@@ -168,47 +173,20 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
     return skip
 
 
-# intersphinx config ------------------------------------------------------------
+# intersphinx config -----------------------------------------------------------
+
 intersphinx_mapping = {
     "cython"       : ("https://docs.cython.org/en/latest/", None),
     "HTSeq"        : ("https://www-huber.embl.de/users/anders/HTSeq/doc/", None),
-    "matplotlib"   : ("https://matplotlib.org/", None),
+    "matplotlib"   : ("https://matplotlib.org/stable/", None),
     "numpy"        : ("https://numpy.org/doc/stable/", None),
     "pandas"       : ("https://pandas-docs.github.io/pandas-docs-travis/", None),
     "pysam"        : ("https://pysam.readthedocs.io/en/latest/", None),
     "python"       : ("https://docs.python.org/3/", None),
-    "scipy"        : ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "scipy"        : ("https://docs.scipy.org/doc/scipy/", None),
     "twobitreader" : ("https://pythonhosted.org/twobitreader/", None),
 }
 
-# -- Mocking of imports ------------------------------------------------
-
-
-class Mock(mock.Mock):
-    """Proxy class to stand in for modules/packages that can't be built
-    or installed on readthedocs.org .
-    
-    Thanks to https://read-the-docs.readthedocs.org/en/latest/faq.html
-    """
-
-    @classmethod
-    def __getattr__(cls, name):
-        return Mock()
-
-# can't mock matplotlib, numpy, or pysam
-mock_modules = [
-    'pandas',
-    'scipy',
-    'scipy.misc',
-    'scipy.optimize',
-    'scipy.stats',
-    'scipy.sparse',
-    'twobitreader',
-]
-
-#autodoc_mock_imports = ["pandas", "scipy", "twobitreader"]
-
-sys.modules.update((mod_name, Mock()) for mod_name in mock_modules)
 
 # setup custom info ------------------------------------------------------------
 
