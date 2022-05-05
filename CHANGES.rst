@@ -9,21 +9,25 @@ project follow the conventions described in :pep:`440` and
 Unreleased
 ------------------------------
 
-Note, this is a maintenance release, and likely the final release unless
-a new maintainer is found.
+This is a maintenance release meant to leave this package in a reasonable state,
+as it is only sporadically maintained.
 
 
 Added
 .....
 
 - Dockerization, to further control test environments, and make this release
-  release more future-proof
+  release more future-proof. Test environments now include Python 3.6 and 3.9.
 
 
 Changed
 .......
 
 - Bumped minimum requirements to reasonable 2022 standards.
+
+- Upgraded embedded Kent & HTSlib source code
+
+- Clarified licenses
 
 
 Removed
