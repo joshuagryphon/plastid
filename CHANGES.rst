@@ -6,7 +6,7 @@ project follow the conventions described in :pep:`440` and
 `Semantic versioning 2.0.0 <http://semver.org/>`_.
 
 
-Unreleased
+plastid [0.6.0] = [2022-05-05]
 ------------------------------
 
 This is a maintenance release meant to leave this package in a reasonable state,
