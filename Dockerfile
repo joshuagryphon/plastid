@@ -64,7 +64,7 @@ RUN curl -o get-pip.py -sSL https://bootstrap.pypa.io/get-pip.py \
 
 # Download data required to run full test suite
 RUN curl -L -o plastid/test/plastid_test_data.tar.bz2 \
-        https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0 \
+        https://www.dropbox.com/s/np3wlfvp6gx8tb8/2022-05-04.plastid-test-data.tar.bz2?dl=0 \
     && cd plastid/test \
     && tar -jxvf plastid_test_data.tar.bz2 \
     && rm plastid_test_data.tar.bz2

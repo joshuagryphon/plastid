@@ -66,11 +66,11 @@ See also
 `UCSC file format FAQ <http://genome.ucsc.edu/FAQ/FAQformat.html>`_
     Descriptions of BED, GTF2, GFF3 and other text-based formats.
 """
-import struct
-import zlib
 import itertools
+import struct
 import sys
 import warnings
+import zlib
 from collections import OrderedDict, Iterable
 from plastid.genomics.roitools import GenomicSegment, SegmentChain, add_three_for_stop_codon
 from plastid.readers.autosql import AutoSqlDeclaration
@@ -106,6 +106,8 @@ from plastid.genomics.c_common cimport (
 )
 
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
+
+
 #===============================================================================
 # INDEX: BigBedReader
 #===============================================================================

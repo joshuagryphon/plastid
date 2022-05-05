@@ -27,9 +27,9 @@ In addition:
 """
 __author__ = "Joshua Griffin Dunn"
 
+import glob
 import os
 import sys
-import glob
 from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
@@ -56,10 +56,10 @@ setup_requires = [
 ]
 
 packages = find_packages() + [
-    "kentUtils",
-    "kentUtils.src.inc",
-    "kentUtils.src.lib",
-    "kentUtils.samtabix",
+#    "kent",
+#    "kent.src.inc",
+#    "kent.src.lib",
+#    "kent.samtabix",
 ]
 
 # trim dependencies if on readthedocs server, where many dependencies are mocked
@@ -94,7 +94,7 @@ def get_scripts():
 
 # required to build C extensions ----------------------------------------------
 
-LIBRARIES = []
+LIBRARIES = ["ssl", "crypto", "z"]
 base_path = os.getcwd()
 
 # embed method signatures and use Py2 or Py3 char specs, as appropriate
@@ -132,9 +132,33 @@ CYTHON_DEFAULTS = [False]
 # and plastid.readers.bbi_file
 
 kent_samtabix = [
-    "kstring.c",
     "bgzf.c",
-    "index.c",
+    os.path.join("cram", "cram_codecs.c"),
+    os.path.join("cram", "cram_decode.c"),
+    os.path.join("cram", "cram_encode.c"),
+    os.path.join("cram", "cram_index.c"),
+    os.path.join("cram", "cram_io.c"),
+    os.path.join("cram", "cram_samtools.c"),
+    os.path.join("cram", "cram_stats.c"),
+    os.path.join("cram", "files.c"),
+    os.path.join("cram", "mFILE.c"),
+    os.path.join("cram", "open_trace_file.c"),
+    os.path.join("cram", "pooled_alloc.c"),
+    os.path.join("cram", "rANS_static.c"),
+    os.path.join("cram", "sam_header.c"),
+    os.path.join("cram", "string_alloc.c"),
+    os.path.join("cram", "thread_pool.c"),
+    os.path.join("cram", "vlen.c"),
+    os.path.join("cram", "zfio.c"),
+    "faidx.c",
+    "hfile.c",
+    "hfile_net.c",
+    "hts.c",
+    "knetfile.c",
+    "kstring.c",
+    "md5.c",
+    "sam.c",
+    "tbx.c",
 ]
 
 kent_sources = [
@@ -142,6 +166,7 @@ kent_sources = [
     "asParse.c",
     "base64.c",
     "basicBed.c",
+    "bbiAlias.c",
     "bbiRead.c",
     "bbiWrite.c",
     "bigBed.c",
@@ -151,21 +176,28 @@ kent_sources = [
     "bwgQuery.c",
     "bwgValsOnChrom.c",
     "cirTree.c",
+    "colHash.c",
     "common.c",
     "dlist.c",
     "dnautil.c",
     "dystring.c",
     "errAbort.c",
     "ffAli.c",
+    "freeType.c",
+    "gemfont.c", # remove later by editing memgfx.c?
     "hash.c",
+    "hex.c",
     "hmmstats.c",
-    "https.c",
+    "htmlColor.c",
     "internet.c",
     "intExp.c",
     "kxTok.c",
     "linefile.c",
     "localmem.c",
+    "mgCircle.c",
+    "mgPolygon.c",
     "memalloc.c",
+    "memgfx.c",
     "obscure.c",
     "osunix.c",
     "pipeline.c",
@@ -181,8 +213,18 @@ kent_sources = [
     "zlibFace.c",
 ]
 
-kent_deps  = [os.path.join(base_path, "kentUtils", "samtabix", X) for X in kent_samtabix]
-kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in kent_sources]
+#kent_deps  = [os.path.join(base_path, "kentUtils", "samtabix", X) for X in kent_samtabix]
+#kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in kent_sources]
+
+kent_deps  = [os.path.join(base_path, "kent", "src", "htslib", X) for X in kent_samtabix]
+kent_deps += [os.path.join(base_path, "kent", "src", "lib", X) for X in kent_sources]
+all_deps = kent_deps
+
+#hts_cram_deps = glob.glob(os.path.join(base_path, "kent", "src", "htslib", "cram", "*.c"))
+#hts_deps = glob.glob(os.path.join(base_path, "kent", "src", "htslib", "*.c"))
+#kent_deps = glob.glob(os.path.join(base_path, "kent", "src", "lib", "*.c"))
+
+#all_deps = hts_cram_deps + hts_deps + kent_deps
 
 #===============================================================================
 # [PLACEHOLDERS]
@@ -205,8 +247,12 @@ C_PATHS = []
 
 # will be extended
 INCLUDE_PATH = [
-    os.path.join(base_path, "kentUtils", "src", "inc"),
-    os.path.join(base_path, "kentUtils", "samtabix"),
+#    os.path.join(base_path, "kentUtils", "src", "inc"),
+#    os.path.join(base_path, "kentUtils", "samtabix"),
+#    os.path.join(base_path, "kent", "src", "htslib", "cram", "cram"),
+#    os.path.join(base_path, "kent", "src", "htslib", "cram"),
+    os.path.join(base_path, "kent", "src", "htslib"),
+    os.path.join(base_path, "kent", "src", "inc"),
 ]
 
 command_classes = {}
@@ -270,22 +316,22 @@ try:
     # The following extensions do link to kentUtils, and also zlib
     bbifile = Extension(
         "plastid.readers.bbifile",
-        ["plastid/readers/bbifile.pyx"] + kent_deps,
-        libraries=LIBRARIES + ["z"],
+        ["plastid/readers/bbifile.pyx"] + all_deps,
+        libraries=LIBRARIES,
         **extension_kwargs
     )
 
     bigwig = Extension(
         "plastid.readers.bigwig",
-        ["plastid/readers/bigwig.pyx"] + kent_deps,
-        libraries=LIBRARIES + ["z"],
+        ["plastid/readers/bigwig.pyx"] + all_deps,
+        libraries=LIBRARIES,
         **extension_kwargs
     )
 
     bigbed = Extension(
         "plastid.readers.bigbed",
-        ["plastid/readers/bigbed.pyx"] + kent_deps,
-        libraries=LIBRARIES + ["z"],
+        ["plastid/readers/bigbed.pyx"] + all_deps,
+        libraries=LIBRARIES,
         **extension_kwargs
     )
 

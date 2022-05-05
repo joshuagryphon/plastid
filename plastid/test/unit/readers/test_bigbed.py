@@ -431,7 +431,7 @@ class test_BigBedReader(unittest.TestCase):
     def test_indexed_fields(self):
         reader = BigBedReader(self.bb_indexed)
         self.assertEqual(
-            sorted(["gene_id", "name", "Name", "Alias"]), sorted(reader.indexed_fields)
+            sorted(["gene_id", "name", "name2", "Alias"]), sorted(reader.indexed_fields)
         )
 
     def test_indexed_fields_no_as_no_index(self):
@@ -451,7 +451,7 @@ class test_BigBedReader(unittest.TestCase):
         found = list(reader.search("name", "should_have_no_match"))
         self.assertEqual([], found)
 
-        found = list(reader.search("Name", "Sam-S-RE"))
+        found = list(reader.search("name2", "Sam-S-RE"))
         expected = [
             SegmentChain(
                 GenomicSegment('2L', 106902, 107000, '+'),
@@ -464,7 +464,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RE', 'CG2674-RE']'",
                 ID='FBtr0089437',
-                Name='Sam-S-RE',
+                name2='Sam-S-RE',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -488,7 +488,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RE', 'CG2674-RE']'",
                 ID='FBtr0089437',
-                Name='Sam-S-RE',
+                name2='Sam-S-RE',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -503,7 +503,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 110754, 111337, '+'),
                 Alias='na',
                 ID='FBtr0308091',
-                Name='Sam-S-RK',
+                name2='Sam-S-RK',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -522,7 +522,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114210, '+'),
                 Alias="'['M(2)21AB-RB', 'CG2674-RB']'",
                 ID='FBtr0089428',
-                Name='Sam-S-RB',
+                name2='Sam-S-RB',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -540,7 +540,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RA', 'CG2674-RA']'",
                 ID='FBtr0089429',
-                Name='Sam-S-RA',
+                name2='Sam-S-RA',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -557,7 +557,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias='na',
                 ID='FBtr0330656',
-                Name='Sam-S-RL',
+                name2='Sam-S-RL',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -575,7 +575,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114210, '+'),
                 Alias="'['M(2)21AB-RH', 'CG2674-RH']'",
                 ID='FBtr0089432',
-                Name='Sam-S-RH',
+                name2='Sam-S-RH',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -593,7 +593,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RD', 'CG2674-RD']'",
                 ID='FBtr0089430',
-                Name='Sam-S-RD',
+                name2='Sam-S-RD',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -611,7 +611,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RC', 'CG2674-RC']'",
                 ID='FBtr0089431',
-                Name='Sam-S-RC',
+                name2='Sam-S-RC',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -629,7 +629,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RF', 'CG2674-RF']'",
                 ID='FBtr0089433',
-                Name='Sam-S-RF',
+                name2='Sam-S-RF',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -647,7 +647,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RI', 'CG2674-RI']'",
                 ID='FBtr0089434',
-                Name='Sam-S-RI',
+                name2='Sam-S-RI',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -665,7 +665,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RJ', 'CG2674-RJ']'",
                 ID='FBtr0089435',
-                Name='Sam-S-RJ',
+                name2='Sam-S-RJ',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -682,7 +682,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114210, '+'),
                 Alias="'['M(2)21AB-RG', 'CG2674-RG']'",
                 ID='FBtr0089436',
-                Name='Sam-S-RG',
+                name2='Sam-S-RG',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -697,7 +697,7 @@ class test_BigBedReader(unittest.TestCase):
         reader = BigBedReader(self.bb_indexed)
         found = list(reader.search("name", "should_have_no_match", "should_also_have_no_match"))
         self.assertEqual([], found)
-        found = list(reader.search("Name", "Sam-S-RE", "Sam-S-RK"))
+        found = list(reader.search("name2", "Sam-S-RE", "Sam-S-RK"))
         expected = [
             SegmentChain(
                 GenomicSegment('2L', 106902, 107000, '+'),
@@ -710,7 +710,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 113433, 114432, '+'),
                 Alias="'['M(2)21AB-RE', 'CG2674-RE']'",
                 ID='FBtr0089437',
-                Name='Sam-S-RE',
+                name2='Sam-S-RE',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
@@ -725,7 +725,7 @@ class test_BigBedReader(unittest.TestCase):
                 GenomicSegment('2L', 110754, 111337, '+'),
                 Alias='na',
                 ID='FBtr0308091',
-                Name='Sam-S-RK',
+                name2='Sam-S-RK',
                 color='#000000',
                 gene_id='FBgn0005278',
                 score='0.0',
