@@ -39,12 +39,8 @@ plastid_version = "0.5.1"
 
 
 #===============================================================================
-# [CONSTANT]
-#
-# Setup that does not require pre-installation of C dependencies
+# Package metadata
 #===============================================================================
-
-# metadata ---------------------------------------------------------------------
 
 with open("README.rst") as f:
     long_description = f.read()
@@ -55,12 +51,35 @@ setup_requires = [
     "cython>=0.22.0",
 ]
 
-packages = find_packages() + [
-#    "kent",
-#    "kent.src.inc",
-#    "kent.src.lib",
-#    "kent.samtabix",
+packages = find_packages()
+packages += [
+    "kent",
+    "kent.src",
+    "kent.src.lib",
+    "kent.src.lib.tests",
+    "kent.src.lib.tests.expected",
+    "kent.src.lib.tests.input",
+    "kent.src.lib.font",
+    "kent.src.lib.alpha",
+    "kent.src.lib.x86_64",
+    "kent.src.lib.sparc",
+    "kent.src.lib.i386",
+    "kent.src.lib.i686",
+    "kent.src.lib.ppc",
+    "kent.src.inc",
+    "kent.src.htslib",
+    "kent.src.htslib.test",
+    "kent.src.htslib.htslib",
+    "kent.src.htslib.cram",
 ]
+
+kent_dep_filetypes = ["README", "LICENSE", "AUTHORS", "*.c", "*.h", "*.ps", "*.pss"]
+
+package_data = {
+    X : kent_dep_filetypes for X in packages
+}
+package_data[""] = ["*.pyx", "*.pxd"]
+
 
 # trim dependencies if on readthedocs server, where many dependencies are mocked
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
@@ -86,52 +105,30 @@ def get_scripts():
     list
         list of strings describing command-line scripts
     """
-    binscripts = [X.replace(".py", "") for X in filter(lambda x: x.endswith(".py") and \
-                                                                "__init__" not in x,
-                                                      os.listdir(os.path.join("plastid",  "bin")))]
+    binscripts = [
+        X.replace(".py", "") for X in filter(
+            lambda x: x.endswith(".py") and  "__init__" not in x,
+            os.listdir(os.path.join("plastid",  "bin")),
+        )
+    ]
     return ["%s = plastid.bin.%s:main" % (X, X) for X in binscripts]
 
 
-# required to build C extensions ----------------------------------------------
 
-LIBRARIES = ["ssl", "crypto", "z"]
+#===============================================================================
+#
+# Define extension dependencies
+#
+# Build an extension of portions of Jim Kent's utilities, which are needed by
+# BigBedReader and BigWigReader. Kent utilities additionally depend upon
+# htslib, which comes bundled with the Kent sources.
+#
+#===============================================================================
+
+libraries = ["ssl", "crypto", "z"]
 base_path = os.getcwd()
 
-# embed method signatures and use Py2 or Py3 char specs, as appropriate
-CYTHON_ARGS = {
-    "embedsignature": True,
-    "language_level": sys.version_info[0],
-}
-
-# we add a command class to force rebuild C files from pyx
-# and a corresponding command-line argument
-CYTHONIZE_COMMAND = "recythonize"  # command-class command from setup.py
-CYTHONIZE_ARG = "recythonize"      # '--recythonize', passable to sdist, build_ext et c
-
-# define options accepted by command-line argument
-CYTHON_OPTIONS = [
-        (CYTHONIZE_ARG,
-         None,
-         "If supplied,  use Cython to regenerate .c sources from pyx files " +\
-         "(default False)"
-        ),
-]
-
-# turn off --recythonize by default
-CYTHON_DEFAULTS = [False]
-
-# extension dependencies -------------------------------------------------------
-
-# Build an extension of portions of Jim Kent's utilities,  which are needed by
-# BigWigReader. The Kent utilities come under a permissive license that
-# allows redistribution and modification for any use, including commercial,
-# with the exception of src/portimpl.h, which appears to have its own license.
-# Sources included here have therefore been modified not to depend on portimpl.h.
-#
-# JK's utilities are compiled into plastid.readers.bigwig, plastid.readers.bigbed,
-# and plastid.readers.bbi_file
-
-kent_samtabix = [
+kent_htslib = [
     "bgzf.c",
     os.path.join("cram", "cram_codecs.c"),
     os.path.join("cram", "cram_decode.c"),
@@ -184,7 +181,7 @@ kent_sources = [
     "errAbort.c",
     "ffAli.c",
     "freeType.c",
-    "gemfont.c", # remove later by editing memgfx.c?
+    "gemfont.c",
     "hash.c",
     "hex.c",
     "hmmstats.c",
@@ -213,18 +210,9 @@ kent_sources = [
     "zlibFace.c",
 ]
 
-#kent_deps  = [os.path.join(base_path, "kentUtils", "samtabix", X) for X in kent_samtabix]
-#kent_deps += [os.path.join(base_path, "kentUtils", "src", "lib", X) for X in kent_sources]
-
-kent_deps  = [os.path.join(base_path, "kent", "src", "htslib", X) for X in kent_samtabix]
+kent_deps  = [os.path.join(base_path, "kent", "src", "htslib", X) for X in kent_htslib]
 kent_deps += [os.path.join(base_path, "kent", "src", "lib", X) for X in kent_sources]
-all_deps = kent_deps
 
-#hts_cram_deps = glob.glob(os.path.join(base_path, "kent", "src", "htslib", "cram", "*.c"))
-#hts_deps = glob.glob(os.path.join(base_path, "kent", "src", "htslib", "*.c"))
-#kent_deps = glob.glob(os.path.join(base_path, "kent", "src", "lib", "*.c"))
-
-#all_deps = hts_cram_deps + hts_deps + kent_deps
 
 #===============================================================================
 # [PLACEHOLDERS]
@@ -240,22 +228,41 @@ all_deps = kent_deps
 #
 #===============================================================================
 
-# will be overwritten
 ext_modules = []
-DEFINE_MACROS = []
-C_PATHS = []
+define_macros = []
+c_paths = []
 
-# will be extended
-INCLUDE_PATH = [
-#    os.path.join(base_path, "kentUtils", "src", "inc"),
-#    os.path.join(base_path, "kentUtils", "samtabix"),
-#    os.path.join(base_path, "kent", "src", "htslib", "cram", "cram"),
-#    os.path.join(base_path, "kent", "src", "htslib", "cram"),
+include_paths = [
     os.path.join(base_path, "kent", "src", "htslib"),
     os.path.join(base_path, "kent", "src", "inc"),
 ]
 
 command_classes = {}
+
+
+# embed method signatures and use Py2 or Py3 char specs, as appropriate
+CYTHON_ARGS = {
+    "embedsignature": True,
+    "language_level": sys.version_info[0],
+}
+
+# we add a command class to force rebuild C files from pyx
+# and a corresponding command-line argument
+CYTHONIZE_COMMAND = "recythonize"  # command-class command from setup.py
+CYTHONIZE_ARG = "recythonize"      # '--recythonize', passable to sdist, build_ext et c
+
+# define options accepted by command-line argument
+CYTHON_OPTIONS = [
+        (CYTHONIZE_ARG,
+         None,
+         "If supplied,  use Cython to regenerate .c sources from pyx files " +\
+         "(default False)"
+        ),
+]
+
+# turn off --recythonize by default
+CYTHON_DEFAULTS = [False]
+
 
 #===============================================================================
 # [REDEFINES]
@@ -271,17 +278,19 @@ try:
     from Cython.Distutils.extension import Extension
     from Cython.Build import cythonize
 
-    # extend include paths
+    # Add numpy & Pysam headers to include paths
+    # These are structured differently between the two projects,
+    # hence the type checking.
     for mod in (numpy, pysam):
         ipart = mod.get_include()
         if isinstance(ipart, str):
-            INCLUDE_PATH.append(ipart)
+            include_paths.append(ipart)
         elif isinstance(ipart, (list, tuple)):
-            INCLUDE_PATH.extend(ipart)
+            include_paths.extend(ipart)
         else:
             raise ValueError("Could not parse include path: %s" % ipart)
 
-    DEFINE_MACROS = pysam.get_defines()
+    define_macros = pysam.get_defines()
 
     # determine Pysam version
     # Several classes that we cimport moved in pysam 0.10.0,
@@ -295,7 +304,7 @@ try:
 
     # redefine extensions
     extension_kwargs = {
-        "include_dirs": INCLUDE_PATH,
+        "include_dirs": include_paths,
         "language": "c",
         "cython_directives": CYTHON_ARGS,
     }
@@ -306,8 +315,8 @@ try:
     ext_modules = [
         Extension(
             x.replace(base_path + os.sep, "").replace(".pyx", "").replace(os.sep, "."), [x],
-            libraries               = LIBRARIES,
-            define_macros           = DEFINE_MACROS,
+            libraries               = libraries,
+            define_macros           = define_macros,
             cython_compile_time_env = CYTHON_COMPILE_TIME_ENV,
             **extension_kwargs
         ) for x in noinclude_pyx
@@ -316,22 +325,22 @@ try:
     # The following extensions do link to kentUtils, and also zlib
     bbifile = Extension(
         "plastid.readers.bbifile",
-        ["plastid/readers/bbifile.pyx"] + all_deps,
-        libraries=LIBRARIES,
+        ["plastid/readers/bbifile.pyx"] + kent_deps,
+        libraries=libraries,
         **extension_kwargs
     )
 
     bigwig = Extension(
         "plastid.readers.bigwig",
-        ["plastid/readers/bigwig.pyx"] + all_deps,
-        libraries=LIBRARIES,
+        ["plastid/readers/bigwig.pyx"] + kent_deps,
+        libraries=libraries,
         **extension_kwargs
     )
 
     bigbed = Extension(
         "plastid.readers.bigbed",
-        ["plastid/readers/bigbed.pyx"] + all_deps,
-        libraries=LIBRARIES,
+        ["plastid/readers/bigbed.pyx"] + kent_deps,
+        libraries=libraries,
         **extension_kwargs
     )
 
@@ -342,11 +351,11 @@ try:
     # define helper functions & classes for build -----------------------------
 
     # paths to sources
-    PYX_PATHS = []
+    pyx_paths = []
     for ex in ext_modules:
-        PYX_PATHS.extend([X for X in ex.sources if X.endswith("pyx")])
+        pyx_paths.extend([X for X in ex.sources if X.endswith("pyx")])
 
-    C_PATHS = [X.replace(".pyx", ".c") for X in PYX_PATHS]
+    c_paths = [X.replace(".pyx", ".c") for X in pyx_paths]
 
     def wrap_command_classes(baseclass):
         """Add custom command-line `--recythonize` options to
@@ -380,7 +389,7 @@ try:
                     setattr(self, CYTHONIZE_ARG, True)
 
             def run(self):
-                have_all = all([os.access(X, os.F_OK) for X in C_PATHS])
+                have_all = all([os.access(X, os.F_OK) for X in c_paths])
                 if have_all == False:
                     print("Could not find .c files. Regenerating via recythonize.")
                     setattr(self, CYTHONIZE_ARG, True)
@@ -407,7 +416,7 @@ try:
             pass
 
         def run(self):
-            for file_ in C_PATHS:
+            for file_ in c_paths:
                 if os.access(file_, os.F_OK):
                     print("clean_c_files: removing %s ..." % file_)
                     os.remove(file_)
@@ -421,7 +430,7 @@ try:
         new_defaults = CYTHON_DEFAULTS
 
         cython_args = CYTHON_ARGS
-        include_path = INCLUDE_PATH
+        include_path = include_paths
         old_extensions = ext_modules
 
         description = "Regenerate .c files from .pyx source"
@@ -463,6 +472,7 @@ try:
 except ImportError:
     print("plastid: Not all requirements pre-installed. Will need to bootstrap.")
 
+
 #===============================================================================
 # Program body
 #===============================================================================
@@ -502,20 +512,14 @@ setup(
 
     zip_safe = False,
     packages = packages,
-    package_data = {
-        "" : ["*.pyx", "*.pxd"],
-        "kentUtils"          : ["README*"],
-        "kentUtils.src.inc"  : ["*.h"],
-        "kentUtils.src.lib"  : kent_sources + ["README"],
-        "kentUtils.samtabix" : kent_samtabix + ["*.h", "COPYING", "README*", "AUTHORS"],
-    },
+    package_data = package_data,
 
     package_dir = {
         "plastid"            : "plastid",
-        "kentUtils"          : "kentUtils",
-        "kentUtils.src.inc"  : os.path.join("kentUtils", "src", "inc"),
-        "kentUtils.src.lib"  : os.path.join("kentUtils", "src", "lib"),
-        "kentUtils.samtabix" : os.path.join("kentUtils", "samtabix"),
+#        "kentUtils"          : "kentUtils",
+#        "kentUtils.src.inc"  : os.path.join("kentUtils", "src", "inc"),
+#        "kentUtils.src.lib"  : os.path.join("kentUtils", "src", "lib"),
+#        "kentUtils.samtabix" : os.path.join("kentUtils", "samtabix"),
     },
 
     entry_points = {
