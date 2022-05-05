@@ -20,7 +20,7 @@ was written by Joshua Dunn in `Jonathan Weissman's lab
 analysis of ribosome profiling and RNA-seq data. Versions of it have been used
 in several publications.
 
-``plastid``'s intended audience includes computational and traditional
+``plastid`` intended audience includes computational and traditional
 biologists, software developers, and even those who are new to sequencing
 analysis. It is released under the BSD 3-Clause license.
 
@@ -81,13 +81,11 @@ Running the tests
 -----------------
 
 - **NOTE**: to run the entire test suite you'll first need to download our `test
-  dataset
-  <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
-  and unpack it into `plastid/test/data`.
+  dataset`_ and unpack it into `plastid/test/data`.
 
-We use nose_ as our test runner, and test under different versions of Python
-using tox_. To completely control the environment (e.g. compilers et c), we
-recommend running the tests inside the Docker_ container, which contains 
+We use ``nose`` as our test runner, and test under different versions of Python
+using ``tox``. To completely control the environment (e.g. compilers et c), we
+recommend running the tests inside the Docker container, which contains 
 large data files needed for the tests that aren't packaged with ``plastid`` by
 default:
 
@@ -101,8 +99,8 @@ default:
    root@plastid $ tox
 
 
-Our tox_ config lets developers run subsets of tests rather than the full suite.
-All positional arguments are passed through to ``nosetests``
+Our ``tox`` config lets developers run subsets of tests rather than the full
+suite.  All positional arguments are passed through to ``nosetests``
 
 .. code-block:: shell
 
@@ -112,9 +110,9 @@ All positional arguments are passed through to ``nosetests``
    # run tests in two files
    root@plastid $ tox plastid.test.unit.genomics.readers.test_bed plastid.test.unit.util.io.test_binary
 
-By default, tox_ recompiles all C extensions before running the tests. This can
-be slow. To avoid doing that, set the environment variable `PLASTID_NOREBUILD`
-to `true`:
+By default, ``tox`` recompiles all C extensions before running the tests. This
+can be slow. To avoid doing that, set the environment variable
+`PLASTID_NOREBUILD` to `true`:
 
 .. code-block:: shell
 
@@ -122,7 +120,7 @@ to `true`:
    root@plastid $ env PLASTID_NOREBUILD=true tox plastid.test.unit
 
 Finally, if you only want to test in some, not all environments, you can do so
-with typical tox_ syntax:
+with typical ``tox`` syntax:
 
 .. code-block:: shell
 
@@ -144,11 +142,3 @@ Links & help
 
 - `Our github repo <https://github.com/joshuagryphon/plastid>`_
 
-- Subscribe to our mailing list by emailing ``listserv@listserv.ucsf.edu``
-  with the message *subscribe plastidinfo firstname lastname* and an empty
-  subject line
-
-- `Test dataset <https://www.dropbox.com/s/np3wlfvp6gx8tb8/2022-05-04.plastid-test-data.tar.bz2?dl=0>`_,
-  for development or validation of installations
-
-- `Bioconda <bioconda.github.io>`_

@@ -482,6 +482,7 @@ setup(
     maintainer       = "Joshua Griffin Dunn",
     maintainer_email = "joshua.g.dunn@gmail.com",
     long_description =  long_description,
+    long_description_content_type = "text/x-rst",
 
     description      = "Tools for analysis of genomics & sequencing data",
     license          = "BSD 3-Clause",
