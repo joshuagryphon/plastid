@@ -6,7 +6,7 @@ For documentation, see `our home page
 <http://readthedocs.io>`_.
 
 To run the tests, download the `test dataset
-<https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_
+<https://www.dropbox.com/s/np3wlfvp6gx8tb8/2022-05-04.plastid-test-data.tar.bz2?dl=0>`_
 and unpack it into ``plastid/test``.
 
 
@@ -94,8 +94,8 @@ default:
 .. code-block:: shell
 
    # build & run the Docker image from within the project folder
-   $ docker build -t plastid .
-   $ docker run -it plastid
+   $ docker build --pull -t plastid .
+   $ docker run -it --rm plastid
 
    # inside the container, run the tests over all default configurations
    root@plastid $ tox
@@ -148,7 +148,7 @@ Links & help
   with the message *subscribe plastidinfo firstname lastname* and an empty
   subject line
 
-- `Test dataset <https://www.dropbox.com/s/h17go7tnas4hpby/plastid_test_data.tar.bz2?dl=0>`_,
+- `Test dataset <https://www.dropbox.com/s/np3wlfvp6gx8tb8/2022-05-04.plastid-test-data.tar.bz2?dl=0>`_,
   for development or validation of installations
 
 - `Bioconda <bioconda.github.io>`_
